@@ -1,4 +1,11 @@
 
+#' Compute edge lengths in graph
+#'
+#' @param P Vertex matrix
+#' @param E Edge matrix
+#'
+#' @return Vector with lengths
+#' @export
 compute.lengths <- function(P,E){
   L <- NULL
   for(i in 1:dim(E)[1]){
@@ -7,7 +14,15 @@ compute.lengths <- function(P,E){
   return(L)
 }
 
-#compute the mesh with a given mesh width h
+#' compute the mesh with a given mesh width h
+#'
+#' @param P Vertex matrix of graph
+#' @param E Edge matrix of graph
+#' @param h desired mesh width
+#' @param n desired number of vertices per edge in the graph
+#'
+#' @return list
+#' @export
 graph.mesh <- function(P,E,h,n=NULL){
   L <- compute.lengths(P,E)
   n.e <- NULL

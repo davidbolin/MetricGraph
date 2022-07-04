@@ -150,6 +150,7 @@ corrector.invrese.e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param sigma  matern param
 #' @param nu     shape param
 #' @param L      interval length
+#' @return The corrector matrix
 corrector <- function(kappa, sigma, nu=3/2, L = 1){
 
     B <- corrector.invrese.e(kappa, sigma, nu, L)
@@ -294,98 +295,29 @@ build.C.beta1 <- function(L, kappa, sigma, nu){
     return(sigma^2*solve(solve(C_0) -0.5*diag(2)/kappa^2))
 }
 
-#' computes matrices needed for graph for beta=1
-#' @param P vertices
-#' @param E edges
-#' @param kappa  matern parameter
-#' @param sigma  matern parameter
-#' @param n  number of nodes to include per edge
-#' @return a list with elements:
-#'     Sigma : Covariance matrix of 'free' processes and derivatives on the edges
-#'     A : Matrix that implements the Kirchoff constraints
-#'     rep.ind : the indices of the repeated nodes
-#'     p.ind : the indices in Sigma corresponding to the process
-#'     d.ind : the indices in Sigma corresponding to the derivative
-#'     P : matrix with the locations of the nodes where Sigma is evaluated
-build.Sigma.beta1 <- function(P,E,kappa,sigma,n){
 
-    #edge lengths
-    L <- sqrt((P[E[,2],1]-P[E[,1],1])^2 + (P[E[,2],2]-P[E[,1],2])^2)
+#' Derivatives of the Matern covariance
+#'
+#' @param h distances where the covariance should be evaluated
+#' @param kappa range parameter
+#' @param nu smoothness parameter
+#' @param sigma standard deviation
+#' @param deriv order of derivative
+#'
+#' @return covariance function
+#' @export
+matern.derivative <- function(h, kappa, nu, sigma,deriv=1)
+{
+  if(deriv==1){
+    C = h*matern.covariance(h,kappa=kappa,nu=nu-1,sigma=sigma)
+    C[h==0] = 0
+  } else if (deriv == 2){
+    C = matern.covariance(h,kappa=kappa,nu=nu-1,sigma=sigma)+
+      h*matern.derivative(h,kappa=kappa,nu=nu-1,sigma=sigma,deriv=1)
 
-    #number of vertices
-    n.v <- dim(P)[1]
-
-    #number of edges
-    n.e <- dim(E)[1]
-
-    Sigma <- matrix(0,nrow=2*n*length(L),ncol=2*n*length(L))
-
-    p.inds <- vector("list",n.v) #indices of process at vertices
-    d.inds <- vector("list",n.v) #indices of derivative at vertices
-    d.sign <- vector("list",n.v) #sign of derivative
-    proc.index <- NULL #indices for process nodes
-    deri.index <- NULL #indices for derivative nodes
-    P.sigma <- NULL #coorinates of nodes
-
-    #loop over edges and construct free covariances
-    for(i in 1:n.e){
-        C <- build.C.beta1(L[i], kappa=kappa, sigma=sigma, nu=3/2)
-        x <- seq(from=0,to=L[i],length.out = n)
-        P.sigma <- cbind(P.sigma, P[E[i,1],]+outer(P[E[i,2],]-P[E[i,1],],seq(from=0,to=1,length.out=n)))
-        S1 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = L[i])
-        S2 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = L[i], deriv = c(0,1))
-        S3 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = L[i], deriv = c(1,1))
-        Sigma[(i-1)*2*n + (1:(2*n)),(i-1)*2*n + (1:(2*n))]  <- rbind(cbind(S1, S2), cbind(t(S2),S3))
-
-        p.inds[[E[i,1]]] <- c(p.inds[[E[i,1]]],(i-1)*2*n + 1)
-        p.inds[[E[i,2]]] <- c(p.inds[[E[i,2]]],(i-1)*2*n + n)
-
-        d.inds[[E[i,1]]] <- c(d.inds[[E[i,1]]],(i-1)*2*n + n + 1)
-        d.inds[[E[i,2]]] <- c(d.inds[[E[i,2]]],(i-1)*2*n + 2*n)
-
-        d.sign[[E[i,1]]] <- c(d.sign[[E[i,1]]],1)
-        d.sign[[E[i,2]]] <- c(d.sign[[E[i,2]]],-1)
-
-        proc.index <- c(proc.index,(i-1)*2*n + (1:n))
-        deri.index <- c(deri.index,(i-1)*2*n + n + (1:n))
-    }
-
-    #now build A matrix
-    i <- j <- x <- NULL
-    n.c = 0 #number of constraints
-    for(k in 1:n.v){
-        n.c <- n.c+1
-        d <- length(p.inds[[k]]) #degree of vertex
-        i <- c(i,rep(n.c,d))
-        j <- c(j,d.inds[[k]])
-        x <- c(x,d.sign[[k]])
-        if(d>1){
-            for(kk in 1:(d-1)){
-                n.c <- n.c + 1
-                i <- c(i,rep(n.c,2))
-                j <- c(j,p.inds[[k]][kk:(kk+1)])
-                x <- c(x,c(1,-1))
-            }
-        }
-    }
-    A <- Matrix::sparseMatrix(i=i,j=j,x=x,dims=c(n.c,2*n*n.e))
-
-    #fix index vectors with the indices
-    rep.ind <- NULL
-    for(k in 1:dim(P)[1]){
-        d <-length(p.inds[[k]])
-        if(d>1){
-            rep.ind <- c(rep.ind, p.inds[[k]][2:d],d.inds[[k]][2:d])
-            proc.index <- setdiff(proc.index,p.inds[[k]][2:d])
-            deri.index <- setdiff(deri.index,p.inds[[k]][2:d])
-        }
-
-    }
-
-    return(list(Sigma=Sigma,
-                A=A,
-                rep.ind = rep.ind,
-                p.ind = proc.index,
-                d.ind = deri.index,
-                P = t(P.sigma[,!duplicated(t(P.sigma))])))
+  } else {
+    C = (deriv-1)*matern.derivative(h,kappa=kappa,nu=nu-1,sigma=sigma,deriv=deriv-2) +
+      h*matern.derivative(h,kappa=kappa,nu=nu-1,sigma=sigma,deriv=deriv-1)
+  }
+  return(-(kappa^2/(2*(nu-1)))*as.matrix(C))
 }
