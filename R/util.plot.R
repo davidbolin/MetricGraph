@@ -1,5 +1,21 @@
 
-plot.graph <- function(P,E,f=NULL,nc=100,rgl=FALSE,N.e=NULL,
+#' Plots of graphs
+#'
+#' @param P Vertex matrix of graph
+#' @param E Edge matrix of graph
+#' @param f function to plot
+#' @param nc number of colors to use
+#' @param rgl Use RGL plot?
+#' @param N.e Number of points at which the function is define on each edge
+#' @param add Add plot to existing plot p (for RGL)?
+#' @param p Plot to add results to
+#' @param col color to use
+#' @param size size of elements to plot
+#' @param plot.vertices plot the vertices of the graph?
+#'
+#' @return The plot object
+#' @export
+plot_graph <- function(P,E,f=NULL,nc=100,rgl=FALSE,N.e=NULL,
                        add=FALSE,p=NULL,col=NULL,size=6,plot.vertices=TRUE){
   if(rgl==FALSE){
     plot(x=NULL,xlim=c(min(P[,1]),max(P[,1])),ylim=c(min(P[,2]),max(P[,2])))

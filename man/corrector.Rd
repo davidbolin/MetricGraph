@@ -17,6 +17,9 @@ corrector(kappa, sigma, nu = 3/2, L = 1)
 
 \item{L}{interval length}
 }
+\value{
+The corrector matrix
+}
 \description{
 The corrector matrix, A, such that neumann is:
 r(t,s)  =r_0(t-s) - phi(t) A phi(s)
