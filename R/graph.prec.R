@@ -2,6 +2,7 @@
 #' @param P (n x 2) Vertex locations
 #' @param E (m x 2) Edges
 #' @param kappa  matern parameter
+#' @export
 Q.vertex.exp <- function(P,E,kappa,l=NULL,adjust=FALSE){
   if(is.null(l)){
     l <- sqrt((P[E[,2],1]-P[E[,1],1])^2 + (P[E[,2],2]-P[E[,1],2])^2)
