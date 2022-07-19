@@ -19,6 +19,16 @@ Thus graphs can only be connected by end points
 \describe{
 \item{\code{El}}{length of edges}
 
+\item{\code{EID}}{ID of edges}
+
+\item{\code{Points}}{Observations in SpatialPointsDataFrame}
+
+\item{\code{y}}{the data connected to P}
+
+\item{\code{PtE}}{Points to Line (connected to Points),
+[,1] - edge index,
+[,2] - distance along the line (i.e. distance to inital point)}
+
 \item{\code{V}}{poisition in the space}
 
 \item{\code{EtV}}{[,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge}
@@ -33,6 +43,7 @@ Thus graphs can only be connected by end points
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-GPGraph::graph-new}{\code{graph.obj$new()}}
+\item \href{#method-GPGraph::graph-add_observations}{\code{graph.obj$add_observations()}}
 \item \href{#method-GPGraph::graph-get_name}{\code{graph.obj$get_name()}}
 \item \href{#method-GPGraph::graph-clone}{\code{graph.obj$clone()}}
 }
@@ -48,7 +59,29 @@ Thus graphs can only be connected by end points
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Lines}}{sp object SpatialLinesDataFrame or list(Lines)}
+\item{\code{Lines.in}}{sp object SpatialLinesDataFrame or SpatialLines
+
+add observations to the object}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations}{}}}
+\subsection{Method \code{add_observations()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$add_observations(Spoints, y = NULL, y.index = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations}
+
+\item{\code{y}}{(n x 1) the value of the observations}
+
+\item{\code{y.index}}{(string, int) position in Spoints where y is located}
 }
 \if{html}{\out{</div>}}
 }
