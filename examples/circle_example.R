@@ -2,6 +2,7 @@
 graphics.off()
 library(GPGraph)
 library(sp)
+library(maptools)
 dbh = 20
 kappa <- 0.5
 sp.dbh = spCircle(dbh/2, centerPoint=c(x=30,y=80), spID='tree.1')

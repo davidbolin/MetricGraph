@@ -1,5 +1,6 @@
 library(sp)
 library(Matrix)
+library(rgeos)
 #'
 #' A general graph objects,
 #' builds an object of sp::Lines object each Lines is assumes to be an edge.
@@ -72,7 +73,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     }
     for(ind in unique(PtE[,1])){
         index.p = PtE[,1]==ind
-        PtE[index.p,2]=gProject(self$Lines[ind,], Spoints[index.p,])
+        PtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,])
     }
 
     self$Points = Spoints

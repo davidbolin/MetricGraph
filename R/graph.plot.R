@@ -12,7 +12,7 @@ library(ggplot2)
 plot_curve <- function(data.to.plot, Line_edge, gg = NULL){
 
   data.to.plot.order <- data.to.plot[order(data.to.plot[,1]),]
-  p2 <- gInterpolate(Line_edge, data.to.plot.order[,1])
+  p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[,1])
   coords <-p2@coords
   if(is.null(gg)){
     gg <- ggplot2::ggplot(data.frame(x = coords[,1],

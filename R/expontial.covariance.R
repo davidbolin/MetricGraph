@@ -123,7 +123,7 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
 
   if(is.null(t)){
     t  = seq(0,1,length.out=nt+2)[c(-1,-(nt+2))]
-    t <- gProject(Line,gInterpolate(Line, t, normalized = T))
+    t <- rgeos::gProject(Line,rgeos::gInterpolate(Line, t, normalized = T))
   }
   t_end <- c(0, l_e)
   t <- unique(t)
