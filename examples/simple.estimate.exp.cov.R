@@ -9,11 +9,11 @@ library(sp)
 set.seed(2)
 graphics.off()
 nt <- 200
-kappa <- 5
+kappa <- 0.5
 sigma_e <- 0.01
-sigma   <- 1
+sigma   <- 2
 theta <-  c(sigma_e,kappa,sigma)
-line.line <- Line(rbind(c(30,80),c(80,80)))
+line.line <- Line(rbind(c(30,80),c(100,80)))
 graph <- graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"))))
 Q <- Q.exp(theta[2:3], graph$V, graph$EtV, graph$El)
 R <- chol(Q)

@@ -208,10 +208,10 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
     AtY[1:length(py)] = (y - mu_X[1:length(py)])/theta[1]^2
     mu_X = mu_X + as.vector(Matrix::solve(Q_X,AtY))
   }
-  R_X <- Matrix::chol(Q_X)
+  R_X <- Matrix::Cholesky(Q_X)
   x <- rep(0, length(t))
   z <- rnorm(dim(R_X)[1])
-  x[-index_E] <- mu_X + as.vector(solve(R_X,solve(R_X,z,system = 'Lt'), system='Pt'))
+  x[-index_E] <- mu_X + as.vector(Matrix::solve(R_X,Matrix::solve(R_X,z,system = 'Lt'), system='Pt'))
   x[index_E] <- u_e
 
   x_out <- matrix(0,nrow=length(t0),2)
