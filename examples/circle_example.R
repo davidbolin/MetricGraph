@@ -42,8 +42,9 @@ X2 <- sample.line.expontial(c(0.0001,1,kappa),
                            c(0,0),
                            Line = graph2$Lines[1,],
                            graph2$El[1],
-                           py = graph2$PtE[1,1],
+                           py = graph2$PtE[1,2],
                            y  = 10
                            )
+
 fig <- plot_curve(X2, graph2$Lines[1,])
 print(fig)

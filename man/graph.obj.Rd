@@ -27,7 +27,7 @@ Thus graphs can only be connected by end points
 
 \item{\code{PtE}}{Points to Line (connected to Points),
 [,1] - edge index,
-[,2] - distance along the line (i.e. distance to inital point)}
+[,2] - distance along the line (i.e. distance to initial point)}
 
 \item{\code{V}}{poisition in the space}
 
@@ -44,6 +44,7 @@ Thus graphs can only be connected by end points
 \itemize{
 \item \href{#method-GPGraph::graph-new}{\code{graph.obj$new()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{graph.obj$add_observations()}}
+\item \href{#method-GPGraph::graph-add_observations2}{\code{graph.obj$add_observations2()}}
 \item \href{#method-GPGraph::graph-get_name}{\code{graph.obj$get_name()}}
 \item \href{#method-GPGraph::graph-clone}{\code{graph.obj$clone()}}
 }
@@ -81,7 +82,28 @@ add observations to the object}
 
 \item{\code{y}}{(n x 1) the value of the observations}
 
-\item{\code{y.index}}{(string, int) position in Spoints where y is located}
+\item{\code{y.index}}{(string, int) position in Spoints where y is located
+add observations to the object}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-add_observations2"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations2}{}}}
+\subsection{Method \code{add_observations2()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$add_observations2(y, PtE, Spoints = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{(n x 1) the value of the observations}
+
+\item{\code{PtE}}{(n x 2) edge index, distance on index}
+
+\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations}
 }
 \if{html}{\out{</div>}}
 }

@@ -22,7 +22,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
 
   #' @field PtE Points to Line (connected to Points),
   #'  [,1] - edge index,
-  #'  [,2] - distance along the line (i.e. distance to inital point)
+  #'  [,2] - distance along the line (i.e. distance to initial point)
   PtE = NULL,
 
   #' @field V poisition in the space
@@ -80,6 +80,26 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     self$PtE = PtE
   },
 
+  #' add observations to the object
+  #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
+  #' @param y        (n x 1) the value of the observations
+  #' @param PtE      (n x 2) edge index, distance on index
+  add_observations2 = function(y, PtE, Spoints=NULL){
+
+    self$y   = y
+    self$PtE = PtE
+    if(is.null(Spoints)){
+      Edges <- unique(self$PtE[,1])
+      coords <- c()
+      for(e in Edges){
+        ind <- self$PtE[,1] == e
+        points <- rgeos::gInterpolate(graph$Lines[e,], self$PtE[, 2], normalized = F)
+        coords <- rbind(coords, points@coords)
+      }
+      Spoints <- sp::SpatialPoints(coords)
+    }
+    self$Points = Spoints
+  },
 
   get_name = function(){return('GPGraph::graph')})
 )

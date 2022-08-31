@@ -2,12 +2,13 @@
 % Please edit documentation in R/expontial.covariance.R
 \name{Q.exp.line}
 \alias{Q.exp.line}
-\title{Compute the precision matrix of observations one a line}
+\title{Compute the precision matrix of observations one a line
+That is the inverse of the exponential covariance at the observation location t}
 \usage{
 Q.exp.line(theta, t, t_sorted = FALSE)
 }
 \arguments{
-\item{theta}{- kappa}
+\item{theta}{- kappa, sigma}
 
 \item{t}{- (n x 1) relative position on the line start with 0 end with 1}
 
@@ -17,4 +18,5 @@ Q.exp.line(theta, t, t_sorted = FALSE)
 }
 \description{
 Compute the precision matrix of observations one a line
+That is the inverse of the exponential covariance at the observation location t
 }

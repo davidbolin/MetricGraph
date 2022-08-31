@@ -2,12 +2,13 @@
 % Please edit documentation in R/expontial.covariance.R
 \name{Q.exp}
 \alias{Q.exp}
-\title{Building the precision matrix for the expontial case on each vertex}
+\title{Building the precision matrix for all the vertex in
+the expontial case}
 \usage{
 Q.exp(theta, V, EtV, El)
 }
 \arguments{
-\item{theta}{- kappa}
+\item{theta}{- kappa, sigma}
 
 \item{V}{vertex position}
 
@@ -19,5 +20,6 @@ Q.exp(theta, V, EtV, El)
 Q (precision matrix)
 }
 \description{
-Building the precision matrix for the expontial case on each vertex
+Building the precision matrix for all the vertex in
+the expontial case
 }
