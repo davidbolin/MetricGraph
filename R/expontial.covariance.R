@@ -8,6 +8,22 @@ r_1 <- function(D,theta){
   return( ( theta[2]^2/(2 * theta[1]))* exp( -theta[1] * abs(D)))
 }
 
+#' plot the exponential covariance for parameter set
+#' @param theta - sigma_e, kappa, sigma
+#' @export
+plot_r_1 <-function(theta, t = NULL){
+  if(is.null(t)){
+    r_0 <- r_1(0, theta[2:3])
+    r_p <- -log(0.05)/theta[2]
+    t <- seq(0, r_p,length.out = 100)
+  }
+  r_  <- r_1(t,theta[2:3])
+  if(t[1]==0)
+    r_[1] = r_[1] + theta[1]^2
+  plot(t,r_,type='l')
+
+}
+
 #'
 #' the expontial circular covariance
 #' @param t     - locations
@@ -44,9 +60,11 @@ r_1_circle <- function(t,l_e, theta){
 #' @param V vertex position
 #' @param EtV [,2-3] index of upper and lower edge
 #' @param El length of each vertex
+#' @param BC boundary condition =0 neumann, 1 = correct boundary to stationary
+#' @param build (bool) if true return Q the precision matrix otherwise return list(i,j,x, nv)
 #' @return Q (precision matrix)
 #' @export
-Q.exp <- function(theta, V,EtV, El){
+Q.exp <- function(theta, V,EtV, El, BC = 1, build=T){
 
   kappa <- theta[1]
   sigma <- theta[2]
@@ -88,11 +106,28 @@ Q.exp <- function(theta, V,EtV, El){
     }
   }
   n.v <- dim(V)[1]
-  Q <- Matrix::sparseMatrix(i=i_[1:count],
-                            j=j_[1:count],
-                            x=(2*kappa / sigma^2)*x_[1:count],
-                            dims=c(n.v, n.v))
-  return(Q)
+  if(BC==1){
+    i.table <- table(i_[1:count])
+    index = as.integer(names(which(i.table<3)))
+    i_ <- c(i_[1:count], index)
+    j_ <- c(j_[1:count], index)
+    x_ <- c(x_[1:count], rep(0.5, length(index)))
+    count <- count + length(index)
+  }
+  if(build){
+    Q <- Matrix::sparseMatrix(i=i_[1:count],
+                              j=j_[1:count],
+                              x=(2*kappa / sigma^2)*x_[1:count],
+                              dims=c(n.v, n.v))
+
+
+    return(Q)
+  }else{
+    return(list(i = i_[1:count],
+                j = j_[1:count],
+                x  = (2*kappa / sigma^2)*x_[1:count],
+                dims=c(n.v, n.v)))
+  }
 }
 #'
 #' Compute the precision matrix of observations one a line
@@ -170,12 +205,14 @@ Q.exp.line <- function(theta, t,  t_sorted=FALSE){
 #' @param  nt    - (1 x 1) number of equidistance points to sample from if t is  null
 #' @param  py    - (n x 1) observation location
 #' @param  y     - (n x 1) observations
+#' @param  sample - (bool) if true sample else return mean
 #' @export
-sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=NULL, y=NULL){
+sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=NULL, y=NULL, sample=TRUE){
 
   if(is.null(t)){
-    t  = seq(0,1,length.out=nt+2)[c(-1,-(nt+2))]
-    t <- rgeos::gProject(Line,rgeos::gInterpolate(Line, t, normalized = T))
+    t  = seq(0,1,length.out=nt)
+    #t <- rgeos::gProject(Line,rgeos::gInterpolate(Line, t, normalized = T))
+    t <- t * l_e
   }
   t_end <- c(0, l_e)
   t <- unique(t)
@@ -188,6 +225,10 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
     }
 
     ind_remove_t <- which(t %in% c(t_end,py))
+    if(length(ind_remove_t)>0)
+      t <- t[-ind_remove_t]
+  }else{
+    ind_remove_t <- which(t %in% t_end)
     if(length(ind_remove_t)>0)
       t <- t[-ind_remove_t]
   }
@@ -208,11 +249,19 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
     AtY[1:length(py)] = (y - mu_X[1:length(py)])/theta[1]^2
     mu_X = mu_X + as.vector(Matrix::solve(Q_X,AtY))
   }
-  R_X <- Matrix::Cholesky(Q_X)
+
   x <- rep(0, length(t))
-  z <- rnorm(dim(R_X)[1])
-  x[-index_E] <- mu_X + as.vector(Matrix::solve(R_X,Matrix::solve(R_X,z,system = 'Lt'), system='Pt'))
-  x[index_E] <- u_e
+
+  if(sample){
+    R_X <- Matrix::Cholesky(Q_X, LDL = FALSE, perm = TRUE)
+    z <- rnorm(dim(R_X)[1])
+    x[-index_E] <- mu_X + as.vector(Matrix::solve(R_X,Matrix::solve(R_X,z,system = 'Lt'), system='Pt'))
+    x[index_E] <- u_e
+  }else{
+    x[-index_E] <- mu_X
+    x[index_E] <- u_e
+
+  }
 
   x_out <- matrix(0,nrow=length(t0),2)
   x_out[,1] <- t0
@@ -224,22 +273,25 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
   return(x_out)
 
 }
+
 #'
-#' Computes the log likelihood function fo theta for the graph object
+#' Computes the posterior expectation for each node in the graph
 #' @param theta     - (sigma_e, sigma, kappa)
 #' @param graph.obj - graphical object
+#' @param rem.edge  - remove edge
 #' @export
-likelihood.exp.graph <- function(theta, graph.obj){
+poster.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
   sigma_e <- theta[1]
   #build Q
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
-  R <- Matrix::Cholesky(Q, LDL = FALSE, perm = TRUE)
-  loglik <- 0.5*Matrix::determinant(R)$modulus[1]
-  Qp <- Q
+  Qp.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El, build=F)
   #build BSIGMAB
   Qpmu <- rep(0, nrow(graph.obj$V))
-  obs.edges <- unique(graph.obj$PtE[,1])
 
+  obs.edges <- unique(graph.obj$PtE[,1])
+  if(is.null(rem.edge)==F)
+    obs.edges <- setdiff(obs.edges, rem.edge)
+  i_ <- j_ <- x_ <- rep(0,4*length(obs.edges))
+  count <- 0
   for(e in obs.edges){
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
@@ -261,14 +313,150 @@ likelihood.exp.graph <- function(theta, graph.obj){
     if(E[1]==E[2]){
       Qpmu[E[1]]    <- Qpmu[E[1]]     +  sum(t(Sigma_iB)%*%y_i)
       Qp[E[1],E[1]] <-  Qp[E[1],E[1]] +  sum(Bt %*% Sigma_iB)
+      i_[count+1] <- E[1]
+      j_[count+1] <- E[1]
+      x_[count+1] <- sum(Bt %*% Sigma_iB)
+      count <- count + 1
+    }else{
+      i_[count+(1:4)] <- c(E[1],E[1],E[2],E[2])
+      j_[count+(1:4)] <- c(E[1],E[2],E[1],E[2])
+      x_[count+(1:4)] <- c(BtSinvB[1,1], BtSinvB[1,2], BtSinvB[1,2], BtSinvB[2,2] )
+      count <- count + 4
+      Qpmu[E]    <- Qpmu[E] + t(Sigma_iB)%*%y_i
+    }
+  }
+  i_ <- c(Qp.list$i, i_[1:count])
+  j_ <- c(Qp.list$j, j_[1:count])
+  x_ <- c(Qp.list$x, x_[1:count])
+  Qp <- Matrix::sparseMatrix(i= i_,
+                             j= j_,
+                             x= x_,
+                             dims=Qp.list$dims)
+
+
+  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+
+  v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Qpmu,system = 'P'), system='L')))
+  Qpmu <- as.vector(Matrix::solve(R,Matrix::solve(R, v,system = 'Lt'), system='Pt'))
+
+  return(Qpmu)
+
+}
+#'
+#' Computes the posterior expectation for each observation in the graph
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graphical object
+#' @param leave.edge.out - compute the expectation of the graph if the observatrions are not on the edge
+#' @export
+poster.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
+
+  sigma_e = theta[1]
+
+  Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  if(leave.edge.out==F)
+    V.post <- poster.mean.exp(theta, graph)
+
+
+  y_hat <- rep(0, length(graph$y))
+  Qpmu <- rep(0, nrow(graph.obj$V))
+  obs.edges <- unique(graph.obj$PtE[,1])
+
+  for(e in obs.edges){
+
+    if(leave.edge.out==T)
+      V.post <- poster.mean.exp(theta, graph, rem.edge = e)
+
+    obs.id <- graph.obj$PtE[,1] == e
+    y_i <- graph.obj$y[obs.id]
+    l <- graph.obj$El[e]
+    D_matrix <- as.matrix(dist(c(0,l,graph.obj$PtE[obs.id,2])))
+    S <- r_1(D_matrix,theta[2:3])
+
+    #covariance update see Art p.17
+    E.ind         <- c(1:2)
+    Obs.ind       <- -E.ind
+    Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
+
+    E <- graph$EtV[e,2:3]
+    y_hat[obs.id] <- t(Bt)%*%V.post[E]
+    if(leave.edge.out==F){
+      Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+      Sigma_noise  <- Sigma_i
+      diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+
+      y_hat[obs.id] <- y_hat[obs.id] +  Sigma_i%*%solve(Sigma_noise,y_i-y_hat[obs.id] )
+    }
+  }
+  return(y_hat)
+  #()
+}
+
+#'
+#' Computes the log likelihood function fo theta for the graph object
+#' @param theta     - (sigma_e, sigma, kappa)
+#' @param graph.obj - graphical object
+#' @export
+likelihood.exp.graph <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+
+  Q.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El, build=F)
+
+  Qp <- Matrix::sparseMatrix(i = Q.list$i,
+                             j = Q.list$j,
+                             x = Q.list$x,
+                             dims=Q.list$dims)
+  R <- Matrix::Cholesky(Q, LDL = FALSE, perm = TRUE)
+  loglik <- 0.5*Matrix::determinant(R)$modulus[1]
+
+  #build BSIGMAB
+  Qpmu <- rep(0, nrow(graph.obj$V))
+  obs.edges <- unique(graph.obj$PtE[,1])
+
+  i_ <- j_ <- x_ <- rep(0,4*length(obs.edges))
+  count <- 0
+  for(e in obs.edges){
+    obs.id <- graph.obj$PtE[,1] == e
+    y_i <- graph.obj$y[obs.id]
+    l <- graph.obj$El[e]
+    D_matrix <- as.matrix(dist(c(0,l,graph.obj$PtE[obs.id,2])))
+    S <- r_1(D_matrix,theta[2:3])
+
+    #covariance update see Art p.17
+    E.ind         <- c(1:2)
+    Obs.ind       <- -E.ind
+    Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
+    Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+    diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    R <- chol(Sigma_i)
+    Sigma_iB      <- solve(Sigma_i, t(Bt))
+    BtSinvB       <- Bt %*% Sigma_iB
+
+    E <- graph$EtV[e,2:3]
+    if(E[1]==E[2]){
+      Qpmu[E[1]]    <- Qpmu[E[1]]     +  sum(t(Sigma_iB)%*%y_i)
+      i_[count+1] <- E[1]
+      j_[count+1] <- E[1]
+      x_[count+1] <- sum(Bt %*% Sigma_iB)
     }else{
       Qpmu[E]    <- Qpmu[E] + t(Sigma_iB)%*%y_i
-      Qp[E,E] <- Qp[E,E] + BtSinvB + t(BtSinvB)
-      Qp[E,E] <- 0.5*(Qp[E,E] + t(Qp[E,E]))
+      i_[count+(1:4)] <- c(E[1],E[1],E[2],E[2])
+      j_[count+(1:4)] <- c(E[1],E[2],E[1],E[2])
+      x_[count+(1:4)] <- c(BtSinvB[1,1], BtSinvB[1,2], BtSinvB[1,2], BtSinvB[2,2] )
+      count <- count + 4
     }
     loglik <- loglik - 0.5  * t(y_i)%*%solve(Sigma_i,y_i)
     loglik <- loglik - sum(log(diag(R)))
   }
+
+  i_ <- c(Q.list$i, i_[1:count])
+  j_ <- c(Q.list$j, j_[1:count])
+  x_ <- c(Q.list$x, x_[1:count])
+  Qp <- Matrix::sparseMatrix(i= i_,
+                             j= j_,
+                             x= x_,
+                             dims=Q.list$dims)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
   loglik <- loglik - 0.5*Matrix::determinant(R)$modulus[1]
 

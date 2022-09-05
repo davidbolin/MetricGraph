@@ -4,11 +4,15 @@
 \alias{plot_curve}
 \title{plot a continous curve}
 \usage{
-plot_curve(data.to.plot, Line_edge, gg = NULL)
+plot_curve(data.to.plot, Line_edge, normalized = F, gg = NULL, ...)
 }
 \arguments{
 \item{data.to.plot}{(m x 2) [,1] position on curve (in length)
 [,2] value}
+
+\item{normalized}{(bool) is the position in relative length}
+
+\item{gg}{(ggplot pbj) add to gg obj if not null}
 
 \item{Line}{(SpatialLinesDataFrame,SpatialLines)}
 }

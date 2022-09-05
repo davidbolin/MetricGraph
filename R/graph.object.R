@@ -25,7 +25,8 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
   #'  [,2] - distance along the line (i.e. distance to initial point)
   PtE = NULL,
 
-  #' @field V poisition in the space
+  #' @field V poisition in the space [,1] - id [,-1] - point
+  #'
   V =  NULL,
   #' @field EtV [,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge
   EtV = NULL,

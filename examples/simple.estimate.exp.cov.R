@@ -6,17 +6,17 @@
 library(GPGraph)
 library(Matrix)
 library(sp)
-set.seed(2)
+set.seed(4)
 graphics.off()
-nt <- 200
+nt <- 100
 kappa <- 0.5
 sigma_e <- 0.01
 sigma   <- 2
 theta <-  c(sigma_e,kappa,sigma)
-line.line <- Line(rbind(c(30,80),c(100,80)))
+line.line <- Line(rbind(c(30,80),c(120,80)))
 graph <- graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"))))
 Q <- Q.exp(theta[2:3], graph$V, graph$EtV, graph$El)
-R <- chol(Q)
+R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
 X0 <- as.vector(solve(R, solve(R,rnorm(2), system = 'Lt')
                      , system = 'Pt'))
 X <- sample.line.expontial(theta,

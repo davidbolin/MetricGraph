@@ -29,7 +29,7 @@ Thus graphs can only be connected by end points
 [,1] - edge index,
 [,2] - distance along the line (i.e. distance to initial point)}
 
-\item{\code{V}}{poisition in the space}
+\item{\code{V}}{poisition in the space [,1] - id [,-1] - point}
 
 \item{\code{EtV}}{[,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge}
 

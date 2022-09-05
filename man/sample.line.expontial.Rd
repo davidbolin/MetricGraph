@@ -12,7 +12,8 @@ sample.line.expontial(
   Line = NULL,
   nt = 100,
   py = NULL,
-  y = NULL
+  y = NULL,
+  sample = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ sample.line.expontial(
 \item{py}{- (n x 1) observation location}
 
 \item{y}{- (n x 1) observations}
+
+\item{sample}{- (bool) if true sample else return mean}
 }
 \description{
 sample a line given end points
