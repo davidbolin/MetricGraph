@@ -4,7 +4,7 @@
 \alias{build.C.beta1}
 \title{computes C matrix for beta=1}
 \usage{
-build.C.beta1(L, kappa, sigma, nu)
+build.C.beta1(L, kappa, sigma)
 }
 \arguments{
 \item{L}{edge length}

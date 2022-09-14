@@ -187,6 +187,7 @@ corrector.neumann.free <- function(kappa, sigma, nu=3/2, L = 1){
 #' computes the covariance of free space (r'=0) neumann boundary
 #' @param s (n x 1) location
 #' @param t (n x 1) location
+#' @export
 matern.neumann.free <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0)){
 
     if(nu==3/2){
@@ -220,6 +221,7 @@ matern.neumann.free <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0
 #' @param nu     shape param
 #' @param L      interval length
 #' @param deriv  derivative order s, t
+#' @export
 matern.neumann.free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv = c(0,0)){
 
     if(nu==3/2){
@@ -262,6 +264,7 @@ matern.neumann.free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv =
 #' @param nu     shape param
 #' @param L      interval length
 #' @param deriv  derivative order s, t
+#' @export
 matern.neumann.c <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0)){
 
     if(nu==1/2){
@@ -290,7 +293,8 @@ matern.neumann.c <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0)){
 #' @param kappa  matern parameter
 #' @param sigma  matern parameter
 #' @param nu  matern parameter
-build.C.beta1 <- function(L, kappa, sigma, nu){
+#' @export
+build.C.beta1 <- function(L, kappa, sigma){
     C_0 <- matern.neumann.free(c(0,L),c(0,L),kappa,sigma=1, nu=3/2, L=L,deriv=c(1,1))
     return(sigma^2*solve(solve(C_0) -0.5*diag(2)/kappa^2))
 }

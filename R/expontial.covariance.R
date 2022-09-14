@@ -64,7 +64,7 @@ r_1_circle <- function(t,l_e, theta){
 #' @param build (bool) if true return Q the precision matrix otherwise return list(i,j,x, nv)
 #' @return Q (precision matrix)
 #' @export
-Q.exp <- function(theta, V,EtV, El, BC = 1, build=T){
+Q.exp <- function(theta, V, EtV, El, BC = 1, build=T){
 
   kappa <- theta[1]
   sigma <- theta[2]
@@ -107,6 +107,7 @@ Q.exp <- function(theta, V,EtV, El, BC = 1, build=T){
   }
   n.v <- dim(V)[1]
   if(BC==1){
+    #does this work for circle?
     i.table <- table(i_[1:count])
     index = as.integer(names(which(i.table<3)))
     i_ <- c(i_[1:count], index)

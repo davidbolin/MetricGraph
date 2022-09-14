@@ -1,6 +1,7 @@
 library(sp)
 library(Matrix)
 library(rgeos)
+library(CB)
 #'
 #' A general graph objects,
 #' builds an object of sp::Lines object each Lines is assumes to be an edge.
@@ -14,6 +15,11 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
   #' @field EID ID of edges
   EID = NULL,
 
+  #' @field A constraint matrix, just to setup Kirchoff constraint
+  A = NULL,
+
+  #' @field CBobj svd stuct obj
+  CBobj = NULL,
   #' @field Points Observations in SpatialPointsDataFrame
   Points  = NULL,
 
@@ -102,8 +108,70 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     self$Points = Spoints
   },
 
-  get_name = function(){return('GPGraph::graph')})
-)
+
+
+  #' build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
+  #' @param alpha (int) which type of constraint (currently only 2 implemented)
+  #' @param edge_constraint (bool) if true add constraint on vertices of degree 1.
+  buildA = function(alpha, edge_constraint=FALSE){
+
+    if(alpha==2){
+      nE = dim(self$EtV)[1]
+      i_  =  rep(0, 2*dim(self$EtV)[1])
+      j_  =  rep(0, 2*dim(self$EtV)[1])
+      x_  =  rep(0, 2*dim(self$EtV)[1])
+
+      count_constraint = 0
+      count            = 0
+      for(v in 1:dim(self$V)[1]){
+        lower.edges  = which(self$EtV[,2]%in%v)
+        upper.edges  = which(self$EtV[,3]%in%v)
+        n_e = length(lower.edges) + length(upper.edges)
+        #derivative constraint
+        if((edge_constraint & n_e ==1) | n_e > 1) {
+          i_[count + 1:n_e] <- count_constraint + 1
+          j_[count + 1:n_e] <- c(4 * (lower.edges-1) + 2, 4 * (upper.edges-1) + 4)
+          x_[count + 1:n_e]     <- c( 1*length(lower.edges),-
+                                      1*length(upper.edges))
+          count <- count + n_e
+          count_constraint <- count_constraint + 1
+        }
+        if(n_e > 1){
+          if(length(upper.edges)==0){
+            edges <- cbind(lower.edges, 1)
+
+          }else if(length(lower.edges)==0){
+            edges <- cbind(upper.edges, 3)
+
+          }else{
+            edges <- rbind(cbind(lower.edges, 1),
+                           cbind(upper.edges, 3))
+
+          }
+          for(i in 2:n_e){
+            i_[count + 1:2]   <- count_constraint + 1
+            j_[count + 1:2] <- c(4 * (edges[i-1,1] - 1) + edges[i-1, 2],
+                                 4 * (edges[i,1]   - 1) + edges[i,   2])
+            x_[count + 1:2]     <- c(1,-1)
+            count <- count + 2
+            count_constraint <- count_constraint + 1
+          }
+        }
+      }
+      A <- Matrix::sparseMatrix(i    = i_[1:count],
+                                j    = j_[1:count],
+                                x    = x_[1:count],
+                                dims = c(count_constraint, 4*nE))
+      self$A = A
+
+      self$CBobj <- CB::c_basis2_cpp(self$A)
+      self$CBobj$T <- t(self$CBobj$T)
+    }else{
+      error("only alpha=2 implimented")
+    }
+  }
+
+))
 
 #' Assume that there is only one line each Lines@Lines
 #' @param Lines object

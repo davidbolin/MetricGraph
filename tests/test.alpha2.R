@@ -1,43 +1,84 @@
 library(GPGraph)
-loc <- c(0,0.5,1,1.5)
-#loc <- seq(from=0,to=1,length.out=10)
-kappa=10
-tau = 1
-sigma=1
+library(rSPDE)
+#library(testthat)
+set.seed(1)
+kappa <- 0.1*runif(1)+0.1
+sigma <- runif(1)+1
 
-Q.list <- Q.alpha2.line(loc,kappa,tau)
-Q <- solve(Q.list$Sigma)
-Q.partial <- Q.list$Q[c(Q.list$ind.proc,Q.list$ind.der),c(Q.list$ind.proc,Q.list$ind.der)]
+c <- 1/(4*kappa^3)
 
-print(Q)
-print(Q.partial)
-1.0*abs(Q.partial-Q)>1e-8
-pattern <- Q
-pattern[abs(pattern)<1e-10]=0
-pattern[abs(pattern)>1e-10]=1
+test_that("Check agrement covariance function agrees", {
+
+  x <- seq(0,1,length.out=10)
+  testthat::expect_equal( GPGraph::r_2(x, c(kappa,sigma)), rSPDE::matern.covariance(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+})
 
 
-l = 0.5
-x <- loc[1:2]
-C <- GPGraph:::build.C.beta1(0.5, kappa=kappa, sigma=sigma, nu=3/2)
-S1 <- GPGraph:::matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = l)
-S2 <- GPGraph:::matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = l, deriv = c(0,1))
-S3 <- GPGraph:::matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = l, deriv = c(1,1))
-Sigma  <- rbind(cbind(S1, S2), cbind(t(S2),S3))
-Q.true <- solve(Sigma)
+test_that("Check agrement derivative covariance function agrees", {
+  x <- seq(-1,1,length.out=20)
+  testthat::expect_equal( GPGraph::r_2(x, c(kappa,sigma),1), GPGraph::matern.derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+})
+test_that("Check agrement derivative covariance function agrees", {
+  x <- seq(-1,1,length.out=20)
+  testthat::expect_equal( GPGraph::r_2(x, c(kappa,sigma),2), GPGraph::matern.derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
+})
 
-T = kappa*l
-const <- 2*kappa*tau^2/((1-2*T^2)^2 - 2*exp(2*T)*(2*T^2+1)+exp(4*T))
-q1 <- exp(4*T) - (1-2*T^2)^2 + 4*T*exp(2*T)
-q2 <- 4*T*exp(2*T)
-q3 <- 2*exp(T)*(2*T^2*(T-1)-T-exp(2*T)*(T+1)+1)
-q4 <- 2*T*exp(T)*(2*T^2-exp(2*T)-1)
-q5 <- -kappa^2*(1-2*T^2)^2 + exp(2*T)*(2*kappa^2+4*(kappa^2-1)*T^2 - 4*T - 2) - (kappa^2-2)*exp(4*T)
-q6 <- 2*exp(T)*(-2*T^3 - 2*T^2 + T + exp(2*T)*(T-1)+1)
-Q <- -const*matrix(c(kappa^2*q1,kappa*q2,kappa^2*q3,kappa*q4,
-                kappa*q2,q5,kappa*q4,q6,
-                kappa^2*q3, kappa*q4, kappa^2*q1, kappa*q2,
-                kappa*q4, q6, kappa*q2, q5),4,4)
-Q <- Q[c(1,3,2,4),c(1,3,2,4)]
-print(Q.true)
-print(Q)
+test_that("Check agrement covariance matrix", {
+  l_e <- runif(1) + 0.5
+  x_ <- c(0,l_e)
+  D <- outer(x_,x_,"-")
+  r <- rSPDE::matern.covariance(D, kappa=kappa, nu=3/2, sigma=sigma)
+  r1 <- -GPGraph::matern.derivative(D,  kappa=kappa, sigma=sigma, nu=3/2, deriv = 1)
+  r2 <- -GPGraph::matern.derivative(D,  kappa=kappa, sigma=sigma, nu=3/2, deriv = 2)
+  Sigma.0 <- rbind(cbind(r, r1), cbind(t(r1),r2))*c
+  r_00 <- GPGraph::r_2(D, c(kappa,sigma))
+  r_01 <- - GPGraph::r_2(D, c(kappa,sigma),1)
+  r_11 <- - GPGraph::r_2(D, c(kappa,sigma),2)
+
+  Sigma_ <- rbind(cbind(r_00, r_01), cbind(t(r_01),r_11))
+  testthat::expect_equal( c(Sigma.0), c(Sigma_), tol=1e-9)
+})
+l_e <- runif(1) + 0.5
+x_ <- c(0,l_e)
+D <- outer(x_,x_,"-")
+r_00 <- GPGraph::r_2(D, c(kappa,sigma))
+r_01 <- - GPGraph::r_2(D, c(kappa,sigma),1)
+r_11 <- - GPGraph::r_2(D, c(kappa,sigma),2)
+# order by node not derivative
+R_00 <- matrix(c(r_00[1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
+R_01 <- matrix(c(r_00[2], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
+R_node <- rbind(cbind(R_00, R_01), cbind(t(R_01),R_00))
+Q_adj = solve(R_node)-0.5 * solve(rbind(cbind(R_00, matrix(0,2,2)), cbind(matrix(0,2,2),R_00)))
+
+
+build.C.beta1 <- function(L, kappa, sigma){
+  C_0 <- matern.neumann.free(c(0,L),c(0,L),kappa,sigma=1, nu=3/2, L=L,deriv=c(1,1))
+  return(sigma^2*solve(solve(C_0) -0.5*diag(2)/kappa^2))
+}
+C <- build.C.beta1(l_e, kappa, sigma)
+r_free.2 <- matern.neumann.free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e)
+rd1_free.2 <- matern.neumann.free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e, deriv = c(0,1))
+rd2_free.2 <- matern.neumann.free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e, deriv = c(1,1))
+Sigma.2  <- rbind(cbind(r_free.2, rd1_free.2), cbind(t(rd1_free.2),rd2_free.2))*c
+Sigma.2 <- Sigma.2[c(1,3,2,4), c(1,3,2,4)] #order by nodes
+
+test_that("test agrement precision matrix and article method", {
+  testthat::expect_equal( c(Q_adj), c(solve(Sigma.2)), tol=1e-9)
+})
+
+
+test_that("test adjusted covariance matrix against article formula",{
+  R00R0l <-rbind(cbind(R_00,R_01),cbind(t(R_01),R_00))
+  Adj <- solve(rbind(cbind(R_00,-R_01),cbind(-t(R_01),R_00)))
+  R_adj <- R_node + R00R0l%*%Adj%*%R00R0l
+  testthat::expect_equal( c(Sigma.2), c(R_adj), tol=1e-9)
+})
+
+#T_ <- l_e*kappa
+#C <- (2*kappa*sigma^(-2))/((1- 2 * T_^2)^2 - 2*exp(2*T_) * (2 * T_^2 + 1) + exp(4* T_))
+#q_1 <- exp(4*T_) - (1- 2 * T_)^2 + 4  * T_ * exp(2*T_)
+#q_2 = 4* T_ * exp(2*T_)
+#Q_11 <- C*q_1*kappa^2
+#Q_12 <- C * q_2 * kappa
+
+

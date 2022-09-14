@@ -21,6 +21,10 @@ Thus graphs can only be connected by end points
 
 \item{\code{EID}}{ID of edges}
 
+\item{\code{A}}{constraint matrix, just to setup Kirchoff constraint}
+
+\item{\code{CBobj}}{svd stuct obj}
+
 \item{\code{Points}}{Observations in SpatialPointsDataFrame}
 
 \item{\code{y}}{the data connected to P}
@@ -45,7 +49,7 @@ Thus graphs can only be connected by end points
 \item \href{#method-GPGraph::graph-new}{\code{graph.obj$new()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{graph.obj$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{graph.obj$add_observations2()}}
-\item \href{#method-GPGraph::graph-get_name}{\code{graph.obj$get_name()}}
+\item \href{#method-GPGraph::graph-buildA}{\code{graph.obj$buildA()}}
 \item \href{#method-GPGraph::graph-clone}{\code{graph.obj$clone()}}
 }
 }
@@ -101,7 +105,8 @@ add observations to the object}
 \describe{
 \item{\code{y}}{(n x 1) the value of the observations}
 
-\item{\code{PtE}}{(n x 2) edge index, distance on index}
+\item{\code{PtE}}{(n x 2) edge index, distance on index
+build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)}
 
 \item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations}
 }
@@ -109,13 +114,22 @@ add observations to the object}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-get_name"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-get_name}{}}}
-\subsection{Method \code{get_name()}}{
+\if{html}{\out{<a id="method-GPGraph::graph-buildA"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-buildA}{}}}
+\subsection{Method \code{buildA()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{graph.obj$get_name()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$buildA(alpha, edge_constraint = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{alpha}}{(int) which type of constraint (currently only 2 implemented)}
+
+\item{\code{edge_constraint}}{(bool) if true add constraint on vertices of degree 1.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-clone"></a>}}
