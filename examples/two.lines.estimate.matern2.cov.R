@@ -45,6 +45,7 @@ lik <- likelihood.matern2.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.matern2.graph(exp(x),graph) )
 print(exp(res$par))
 lik2 <- likelihood.matern2.graph(exp(res$par),graph)
+M <- posterior.mean.matern2(exp(res$par),graph)
 r_p <- 4.743859/theta[2]
 t <- seq(0, r_p,length.out = 100)
 plot(t, r_2(t,theta[2:3]),type='l', ylim=c(0,max(r_2(0,theta[2:3]),

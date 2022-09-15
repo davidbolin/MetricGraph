@@ -102,12 +102,12 @@ sample.line.matern2 <-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=N
   mu_X <- - t(SinvS)%*%(0-u_e)
 
   if(is.null(py)==F){
-    index_y <- 3:length(py)
-    Sigma_Y <- Sigma_X[index_y,index_y]
+    index_y <- 1:length(py)
+    Sigma_Y <- Sigma_X[index_y,index_y,drop=F]
     Matrix::diag(Sigma_Y) <-  Matrix::diag(Sigma_Y) + theta[1]^2
-    SinvS <- solve(Sigma_Y,Sigma_X[index_y,] )
-    Sigma_X <- Sigma_X - Sigma_X[,index_y]%*%SinvS
-    AtY = rep(0,dim(Q_X)[1])
+
+    SinvS <- solve(Sigma_Y,Sigma_X[index_y,,drop=F] )
+    Sigma_X <- Sigma_X - Sigma_X[,index_y,drop=F]%*%SinvS
     mu_X = mu_X + t(SinvS)%*%(y- mu_X[index_y])
   }
 
@@ -463,5 +463,222 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   return(loglik[1])
 }
 
+
+
+#'
+#' Computes the posterior mean
+#' @param theta     - (sigma_e, sigma, kappa)
+#' @param graph.obj - graphical object
+#' @export
+posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
+  sigma_e <- theta[1]
+  #build Q
+
+  n_const <- length(graph$CBobj$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CBobj$T[-ind.const,]
+  Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+
+  #build BSIGMAB
+  Qpmu      <- rep(0, 4*nrow(graph.obj$EtV))
+  obs.edges <- unique(graph.obj$PtE[,1])
+  if(is.null(rem.edge)==F)
+    obs.edges <- setdiff(obs.edges, rem.edge)
+
+  i_ <- j_ <- x_ <- rep(0,16*length(obs.edges))
+  count <- 0
+  for(e in obs.edges){
+    obs.id <- graph.obj$PtE[,1] == e
+    y_i <- graph.obj$y[obs.id]
+    l <- graph.obj$El[e]
+    t <- c(0,l,graph.obj$PtE[obs.id,2])
+
+    D <- outer (t, t, `-`)
+    S <- matrix(0, length(t)+2, length(t)+2 )
+
+    d.index <- c(1,2)
+    S[-d.index, -d.index] <- r_2(D,                          theta[2:3])
+    S[ d.index,  d.index] <- -r_2(as.matrix(dist(c(0,l))),   theta[2:3], 2)
+    S[d.index,  -d.index] <- -r_2(D[1:2,],                   theta[2:3], 1)
+    S[-d.index,  d.index] <- t(S[d.index,  -d.index])
+
+    #covariance update see Art p.17
+    E.ind         <- c(1:4)
+    Obs.ind       <- -E.ind
+    Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind,drop=F])
+    Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+    diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+
+    R <- chol(Sigma_i, pivot=T)
+    #Sigma_iB      <- solve(Sigma_i, t(Bt))
+    Sigma_iB <- t(Bt)
+    Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R, backsolve(R, t(Bt[,attr(R,"pivot")]), transpose = TRUE), upper.tri = TRUE)
+    BtSinvB       <- Bt %*% Sigma_iB
+
+    E <- graph$EtV[e,2:3]
+    if(E[1]==E[2]){
+      error("circle not implemented")
+    }else{
+      BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
+      Qpmu[4*(e-1)+1:4]    <- Qpmu[4*(e-1)+1:4] + (t(Sigma_iB)%*%y_i)[c(3,1,4,2)]
+
+      #lower edge precision u
+      i_[count + 1] <- 4*(e-1) + 1
+      j_[count + 1] <- 4*(e-1) + 1
+      x_[count + 1] <- BtSinvB[1, 1]
+
+      #lower edge  u'
+      i_[count + 2] <- 4*(e-1) + 2
+      j_[count + 2] <- 4*(e-1) + 2
+      x_[count + 2] <- BtSinvB[2, 2]
+
+      #upper edge  u
+      i_[count + 3] <- 4*(e-1) + 3
+      j_[count + 3] <- 4*(e-1) + 3
+      x_[count + 3] <- BtSinvB[3, 3]
+
+      #upper edge  u'
+      i_[count + 4] <- 4*(e-1) + 4
+      j_[count + 4] <- 4*(e-1) + 4
+      x_[count + 4] <- BtSinvB[4, 4]
+
+      #lower edge  u, u'
+      i_[count + 5] <- 4*(e-1) + 1
+      j_[count + 5] <- 4*(e-1) + 2
+      x_[count + 5] <- BtSinvB[1, 2]
+      i_[count + 6] <- 4*(e-1) + 2
+      j_[count + 6] <- 4*(e-1) + 1
+      x_[count + 6] <- BtSinvB[1, 2]
+
+      #upper edge  u, u'
+      i_[count + 7] <- 4*(e-1) + 3
+      j_[count + 7] <- 4*(e-1) + 4
+      x_[count + 7] <- BtSinvB[3, 4]
+      i_[count + 8] <- 4*(e-1) + 4
+      j_[count + 8] <- 4*(e-1) + 3
+      x_[count + 8] <- BtSinvB[3, 4]
+
+      #lower edge  u, upper edge  u,
+      i_[count + 9]  <- 4*(e-1) + 1
+      j_[count + 9]  <- 4*(e-1) + 3
+      x_[count + 9]  <- BtSinvB[1, 3]
+      i_[count + 10] <- 4*(e-1) + 3
+      j_[count + 10] <- 4*(e-1) + 1
+      x_[count + 10] <- BtSinvB[1, 3]
+
+      #lower edge  u, upper edge  u',
+      i_[count + 11] <- 4*(e-1) + 1
+      j_[count + 11] <- 4*(e-1) + 4
+      x_[count + 11] <- BtSinvB[1, 4]
+      i_[count + 12] <- 4*(e-1) + 4
+      j_[count + 12] <- 4*(e-1) + 1
+      x_[count + 12] <- BtSinvB[1, 4]
+
+      #lower edge  u', upper edge  u,
+      i_[count + 13] <- 4*(e-1) + 2
+      j_[count + 13] <- 4*(e-1) + 3
+      x_[count + 13] <- BtSinvB[2, 3]
+      i_[count + 14] <- 4*(e-1) + 3
+      j_[count + 14] <- 4*(e-1) + 2
+      x_[count + 14] <- BtSinvB[2, 3]
+
+      #lower edge  u', upper edge  u,
+      i_[count + 13] <- 4*(e-1) + 2
+      j_[count + 13] <- 4*(e-1) + 3
+      x_[count + 13] <- BtSinvB[2, 3]
+      i_[count + 14] <- 4*(e-1) + 3
+      j_[count + 14] <- 4*(e-1) + 2
+      x_[count + 14] <- BtSinvB[2, 3]
+
+      #lower edge  u', upper edge  u',
+      i_[count + 15] <- 4*(e-1) + 2
+      j_[count + 15] <- 4*(e-1) + 4
+      x_[count + 15] <- BtSinvB[2, 4]
+      i_[count + 16] <- 4*(e-1) + 4
+      j_[count + 16] <- 4*(e-1) + 2
+      x_[count + 16] <- BtSinvB[2, 4]
+
+      count <- count + 16
+    }
+  }
+  i_ <- i_[1:count]
+  j_ <- j_[1:count]
+  x_ <- x_[1:count]
+  BtSB <- Matrix::sparseMatrix(i= i_,
+                               j= j_,
+                               x= x_,
+                               dims=dim(Q))
+  Qp <- Q + BtSB
+  Qp <- Tc%*%Qp%*%t(Tc)
+  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+
+  v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Tc%*%Qpmu,system = 'P'), system='L')))
+  Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))
+
+
+  return(t(Tc)%*%Qpmu)
+}
+
+
+#'
+#' Computes the posterior expectation for each observation in the graph
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graphical object
+#' @param leave.edge.out - compute the expectation of the graph if the observatrions are not on the edge
+#' @export
+posterior.mean.obs.matern2 <- function(theta, graph.obj, leave.edge.out = F){
+
+  sigma_e = theta[1]
+
+  Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  if(leave.edge.out==F)
+    E.post <- posterior.mean.matern2(theta, graph)
+
+
+  y_hat <- rep(0, length(graph$y))
+  Qpmu <- rep(0, nrow(graph.obj$V))
+  obs.edges <- unique(graph.obj$PtE[,1])
+
+  for(e in obs.edges){
+
+    if(leave.edge.out==T)
+      E.post <- posterior.mean.matern2(theta, graph, rem.edge = e)
+
+    obs.id <- graph.obj$PtE[,1] == e
+    y_i <- graph.obj$y[obs.id]
+    l <- graph.obj$El[e]
+    t <- c(0,l,graph.obj$PtE[obs.id,2])
+    D <- outer (t, t, `-`)
+    S <- matrix(0, length(t)+2, length(t)+2 )
+
+    d.index <- c(1,2)
+    S[-d.index, -d.index] <- r_2(D,                          theta[2:3])
+    S[ d.index,  d.index] <- -r_2(as.matrix(dist(c(0,l))),   theta[2:3], 2)
+    S[d.index,  -d.index] <- -r_2(D[1:2,],                   theta[2:3], 1)
+    S[-d.index,  d.index] <- t(S[d.index,  -d.index])
+
+
+
+    #covariance update see Art p.17
+    E.ind         <- c(1:4)
+    Obs.ind       <- -E.ind
+    Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
+
+
+
+
+    u_e <- E.post[4*(e-1) + c(2,4,1,2)]
+    y_hat[obs.id] <- t(Bt)%*%u_e
+    if(leave.edge.out==F){
+      Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+      Sigma_noise  <- Sigma_i
+      diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+
+      y_hat[obs.id] <- y_hat[obs.id] +  Sigma_i%*%solve(Sigma_noise,y_i-y_hat[obs.id] )
+    }
+  }
+  return(y_hat)
+  #()
+}
 
 

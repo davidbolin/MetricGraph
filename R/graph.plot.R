@@ -34,14 +34,18 @@ plot_curve <- function(data.to.plot, Line_edge, normalized=F ,gg = NULL,...){
 #' @param posterior.mean - (function) takes theta, and graph computees posterior mean
 #' @param sample.line    - (function) takes theta, and graph computees posterior mean
 #' @param theta          - params
+#' @param byVertex       - if byVertex V.i is by vertex ortherwise by edge
 #' @export
-plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, ...){
+plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, byVertex=T, ...){
 
   V.post.mean <- posterior.mean(theta, graph)
   for(i in 1:dim(graph$EtV)[1]){
 
-
-    V.i <-   V.post.mean[graph$EtV[i,2:3]]
+    if(byVertex)
+      V.i <-   V.post.mean[graph$EtV[i,2:3]]
+    else{
+      V.i <-   V.post.mean[4*(i-1) + 1:4]
+    }
     ind <- which(graph$PtE[,1] == i)
     if(length(ind)==0){
       X.i   <- sample.line(theta,

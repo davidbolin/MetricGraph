@@ -281,7 +281,7 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
 #' @param graph.obj - graphical object
 #' @param rem.edge  - remove edge
 #' @export
-poster.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
+posterior.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
   sigma_e <- theta[1]
   #build Q
   Qp.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El, build=F)
@@ -349,13 +349,13 @@ poster.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
 #' @param graph.obj      - graphical object
 #' @param leave.edge.out - compute the expectation of the graph if the observatrions are not on the edge
 #' @export
-poster.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
+posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
 
   sigma_e = theta[1]
 
   Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
   if(leave.edge.out==F)
-    V.post <- poster.mean.exp(theta, graph)
+    V.post <- posterior.mean.exp(theta, graph)
 
 
   y_hat <- rep(0, length(graph$y))
@@ -365,7 +365,7 @@ poster.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
   for(e in obs.edges){
 
     if(leave.edge.out==T)
-      V.post <- poster.mean.exp(theta, graph, rem.edge = e)
+      V.post <- posterior.mean.exp(theta, graph, rem.edge = e)
 
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]

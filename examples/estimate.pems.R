@@ -14,7 +14,7 @@ PtE[,1] <- PtE[,1] + 1
 Y_loc <- read.csv('data.pems/graph_sensor_locations_bay.csv',header=F)
 Y <- read.csv('data.pems/Y.csv',header=T, row.names = NULL)
 #clean and merge lines
-
+Y <- as.matrix(Y[,-1])
 TE <- table(c(EtV$V1,EtV$V2))
 #length(names(TE)[TE1=2]) 320 namn
 
@@ -24,39 +24,40 @@ graph$V <- as.matrix(V)
 graph$El <- as.matrix(EtV[,4])
 graph$EtV <- as.matrix(EtV[,1:3])
 graph$PtE <- as.matrix(PtE)
-graph$y <- as.matrix(Y[,-1])[1,]
+graph$y <- colMeans(Y)#Y[1,]-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
 graph$buildA(2, F)
-theta <-  c(7.043030174, 0.000139784, 0.537848369)
+theta <- c( 5.2304330393, 0.0005867353, 0.3531667695)
 #plot covariance for the parameters
 lik <- likelihood.exp.graph(theta,graph)
-#res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
+res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
 #res <- optim(log(theta[c(1,3)]), function(x) -likelihood.exp.graph(c(exp(x[1]),theta[2],exp(x[2])),graph) )
 #theta <- c(exp(res$par[1]),theta[2],exp(res$par[2]))
 
-theta2 <- c(5.715744728, 0.003110966, 0.007238214)
-#res <- optim(log(theta2), function(x) -likelihood.matern2.graph(exp(x),graph) )
+theta2 <- c(5.308288435, 0.001029679, 0.001714127)
+res <- optim(log(theta2), function(x) -likelihood.matern2.graph(exp(x),graph) )
+lik2 <- likelihood.matern2.graph(theta2, graph)
 #theta2 <- exp(res$par)
 
-plot_r_1(theta)
+#plot_r_1(theta)
 
 #plot points
 
 fig <- plot_obs(graph) +  scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
-
-
-gg <- plot_posterior_mean(graph, poster.mean.exp, sample.line.expontial, theta, size=0.3)
+gg <- plot_posterior_mean(graph, posterior.mean.matern2, sample.line.matern2, theta2, byVertex=F, size=0.3)
+gg <- plot_posterior_mean(graph, posterior.mean.exp, sample.line.expontial, theta, size=0.3)
 gg <- gg +  scale_colour_gradientn(colours = heat.colors(10))
 print(gg)
 #leavoe one line out cross val
-Y_ <- poster.mean.obs.exp(theta,graph)
-
-fig <- plot_obs(graph, Y_) + scale_colour_gradientn(colours = heat.colors(10))
+Y_1 <- posterior.mean.obs.exp(theta,graph)
+Y_2 <- posterior.mean.obs.matern2(theta2,graph)
+fig <- plot_obs(graph, Y_2-graph$y ) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
 
 
-Y_leave <- poster.mean.obs.exp(theta,graph,leave.edge.out =T)
+Y_1_leave <- posterior.mean.obs.exp(theta,graph,leave.edge.out =T)
+Y_2_leave <- posterior.mean.obs.matern2(theta2,graph,leave.edge.out =T)
 
-fig <- plot_obs(graph, Y_leave) + scale_colour_gradientn(colours = heat.colors(10))
+fig <- plot_obs(graph, Y_1-graph$y) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
