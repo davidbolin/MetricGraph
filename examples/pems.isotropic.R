@@ -37,7 +37,7 @@ like.exp <- function(theta,graph){
   R <- chol(Sigma)
   return(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y))
 }
-theta <- c(1,200,1)
+theta <- c(1,1,1)
 res <- optim(log(theta), function(x) -like.exp(exp(x),graph))
 
 theta <- exp(res$par)
@@ -52,5 +52,5 @@ for(i in 1:length(graph$PtV)){
   y_L[i] <- mu.p[graph$PtV[i]]
 }
 
-fig <- plot_obs(graph, y_L, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+fig <- plot_obs(graph, graph$y[1:10], y_loc = Y_loc[1:10,]) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)

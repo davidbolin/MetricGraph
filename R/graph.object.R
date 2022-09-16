@@ -104,7 +104,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     ind <- which(self$PtE[,1]%in%E)
     for(i in ind){
       if( self$PtE[i,2]>= t*l_e-1e-10){
-        self$PtE[i,1] <- self$nE
+        self$PtE[i,1] <- length(self$El) #self$nE #
         self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
       }
     }

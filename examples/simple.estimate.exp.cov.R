@@ -8,7 +8,7 @@ library(Matrix)
 library(sp)
 set.seed(4)
 graphics.off()
-nt <- 50
+nt <- 100
 kappa <- 0.5
 sigma_e <- 0.01
 sigma   <- 2

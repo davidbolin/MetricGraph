@@ -28,7 +28,7 @@ graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
 graph$observation_to_vertex()
 graph$buildA(2, F)
-theta <- c( 7.0445645557, 0.0001397926, 0.5379517219)
+theta <- c(13.571104569,  0.008735699 , 2.240048545)
 #plot covariance for the parameters
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
