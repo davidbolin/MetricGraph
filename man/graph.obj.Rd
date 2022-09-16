@@ -33,6 +33,9 @@ Thus graphs can only be connected by end points
 [,1] - edge index,
 [,2] - distance along the line (i.e. distance to initial point)}
 
+\item{\code{PtV}}{Points to Vertex observations to vertex
+[,1] - vertex index,}
+
 \item{\code{V}}{poisition in the space [,1] - id [,-1] - point}
 
 \item{\code{EtV}}{[,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge}
@@ -47,6 +50,8 @@ Thus graphs can only be connected by end points
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-GPGraph::graph-new}{\code{graph.obj$new()}}
+\item \href{#method-GPGraph::graph-split_line}{\code{graph.obj$split_line()}}
+\item \href{#method-GPGraph::graph-observation_to_vertex}{\code{graph.obj$observation_to_vertex()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{graph.obj$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{graph.obj$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildA}{\code{graph.obj$buildA()}}
@@ -66,10 +71,40 @@ Thus graphs can only be connected by end points
 \describe{
 \item{\code{Lines.in}}{sp object SpatialLinesDataFrame or SpatialLines
 
+split line by point}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-split_line"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-split_line}{}}}
+\subsection{Method \code{split_line()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$split_line(E, t)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{E}}{- edge to be split}
+
+\item{\code{t}}{- normalized distance to lower edge
+add vertces on all observations
+
 add observations to the object}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-observation_to_vertex"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-observation_to_vertex}{}}}
+\subsection{Method \code{observation_to_vertex()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$observation_to_vertex()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}

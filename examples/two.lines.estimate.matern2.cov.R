@@ -7,14 +7,14 @@ library(GPGraph)
 library(Matrix)
 library(sp)
 library(CB)
-set.seed(4)
+set.seed(15)
 graphics.off()
-nt <- 400
-kappa <- 0.07
+nt <- 300
+kappa <- 0.2
 sigma_e <- 0.1
 sigma   <- 0.1
 theta <-  c(sigma_e,kappa,sigma)
-line.line2 <- Line(rbind(c(30,80),c(120,80)))
+line.line2 <- Line(rbind(c(30,80),c(140,80)))
 line.line <- Line(rbind(c(30,00),c(30,80)))
 
 graph <-  graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),

@@ -8,13 +8,15 @@ library(Matrix)
 library(sp)
 set.seed(4)
 graphics.off()
-nt <- 100
+nt <- 50
 kappa <- 0.5
 sigma_e <- 0.01
 sigma   <- 2
 theta <-  c(sigma_e,kappa,sigma)
 line.line <- Line(rbind(c(30,80),c(120,80)))
 graph <- graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"))))
+
+
 Q <- Q.exp(theta[2:3], graph$V, graph$EtV, graph$El)
 R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
 X0 <- as.vector(solve(R, solve(R,rnorm(2), system = 'Lt')
@@ -28,7 +30,7 @@ X <- sample.line.expontial(theta,
 X[,2] <- X[,2] + sigma_e*rnorm(nt)
 points <- rgeos::gInterpolate(graph$Lines[1,], X[,1], normalized = T)
 graph$add_observations2(y = X[,2], PtE = cbind(1,X[,1]), Spoints = points)
-
+graph$observation_to_vertex()
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
 print(exp(res$par))

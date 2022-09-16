@@ -31,6 +31,10 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
   #'  [,2] - distance along the line (i.e. distance to initial point)
   PtE = NULL,
 
+  #' @field PtV Points to Vertex observations to vertex
+  #'  [,1] - vertex index,
+  PtV  = NULL,
+
   #' @field V poisition in the space [,1] - id [,-1] - point
   #'
   V =  NULL,
@@ -54,6 +58,73 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     self$V   <- list_obj$V
     self$EtV <- list_obj$EtV
     self$El  <- list_obj$El
+  },
+
+  #' split line by point
+  #' @param E          - edge to be split
+  #' @param t          - normalized distance to lower edge
+  split_line = function(E, t){
+    Line <- graph$Lines[E,]
+
+    val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=T)
+    ind <-  (val_line <= t)
+    Point <- gInterpolate(Line, t, normalized=TRUE)
+    Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
+    Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
+
+
+    if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
+      self$Lines <-rbind(self$Lines[1:E-1,],
+                          SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"), data=Line@data,match.ID = FALSE),
+                          self$Lines[-(1:E),],
+                          SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"), data=Line@data,match.ID = FALSE))
+    }else{
+      self$Lines <-rbind(self$Lines[1:E-1,],
+                         as(do.call(rbind,  Line1), "SpatialLines"),
+                         self$Lines[-(1:E),],
+                         as(do.call(rbind,  Line2), "SpatialLines"))
+
+    }
+    newV <- max(graph$V[,1])+1
+    self$V <- rbind(self$V,c(newV, Point@coords))
+
+    l_e <- self$El[E]
+    self$El[E] <- t*l_e
+    self$El <- rbind(self$El, (1-t)*l_e)
+    self$nE <- self$nE + 1
+    self$EtV <- rbind(self$EtV,
+                      c(max(self$EtV[,1])+1, newV,self$EtV[E, 3]))
+    self$EtV[E, 3] <- newV
+    ind <- which(self$PtE[,1]%in%E)
+    for(i in ind){
+      if( self$PtE[i,2]>= t*l_e-1e-10){
+        self$PtE[i,1] <- self$nE
+        self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
+      }
+    }
+  },
+
+  #' add vertces on all observations
+  #'
+  observation_to_vertex =function(){
+
+    l <- length(self$PtE[,1])
+    self$PtV <- rep(0,l)
+    for(i in 1:l){
+        e <- self$PtE[i,1]
+        t <- self$PtE[i,2]
+        l_e <- self$El[e]
+        if(abs(t)<10^-10){
+          self$PtE[i,2] <- 0
+          self$PtV[i] <- self$EtV[e,2]
+        }else if(t>l_e-10^-10){
+          self$PtE[i,2] <- l_e
+          self$PtV[i] <- self$EtV[e,3]
+        }else{
+          self$split_line(e, t/l_e)
+          self$PtV[i] <- dim(self$V)[1]
+        }
+    }
   },
 
   #' add observations to the object
@@ -100,7 +171,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
       coords <- c()
       for(e in Edges){
         ind <- self$PtE[,1] == e
-        points <- rgeos::gInterpolate(graph$Lines[e,], self$PtE[, 2], normalized = F)
+        points <- rgeos::gInterpolate(graph$Lines[e,], self$PtE[e, 2], normalized = F)
         coords <- rbind(coords, points@coords)
       }
       Spoints <- sp::SpatialPoints(coords)

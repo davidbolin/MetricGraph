@@ -423,14 +423,6 @@ likelihood.matern2.graph <- function(theta, graph.obj){
       j_[count + 14] <- 4*(e-1) + 2
       x_[count + 14] <- BtSinvB[2, 3]
 
-      #lower edge  u', upper edge  u,
-      i_[count + 13] <- 4*(e-1) + 2
-      j_[count + 13] <- 4*(e-1) + 3
-      x_[count + 13] <- BtSinvB[2, 3]
-      i_[count + 14] <- 4*(e-1) + 3
-      j_[count + 14] <- 4*(e-1) + 2
-      x_[count + 14] <- BtSinvB[2, 3]
-
       #lower edge  u', upper edge  u',
       i_[count + 15] <- 4*(e-1) + 2
       j_[count + 15] <- 4*(e-1) + 4
@@ -460,6 +452,9 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   #Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))
 
   loglik <- loglik + 0.5  * t(v)%*%v
+  #prior
+  loglik <- loglik - (2)*log(theta[2]) - 0.5/theta[2]
+
   return(loglik[1])
 }
 

@@ -26,6 +26,7 @@ graph$EtV <- as.matrix(EtV[,1:3])
 graph$PtE <- as.matrix(PtE)
 graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
+graph$observation_to_vertex()
 graph$buildA(2, F)
 theta <- c( 7.0445645557, 0.0001397926, 0.5379517219)
 #plot covariance for the parameters
@@ -34,7 +35,7 @@ res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
 #res <- optim(log(theta[c(1,3)]), function(x) -likelihood.exp.graph(c(exp(x[1]),theta[2],exp(x[2])),graph) )
 #theta <- c(exp(res$par[1]),theta[2],exp(res$par[2]))
 
-theta2 <- c(6.472275581, 0.001355840, 0.002836539)
+theta2 <- c(6.531191638, 0.006921311, 0.020689930)
 res <- optim(log(theta2), function(x) -likelihood.matern2.graph( exp(x),graph) )
 lik2 <- likelihood.matern2.graph(theta2, graph)
 #theta2 <- exp(res$par)

@@ -427,8 +427,8 @@ likelihood.exp.graph <- function(theta, graph.obj){
     #covariance update see Art p.17
     E.ind         <- c(1:2)
     Obs.ind       <- -E.ind
-    Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
-    Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+    Bt            <- solve(S[E.ind, E.ind,drop=F],S[E.ind, Obs.ind,drop=F])
+    Sigma_i       <- S[Obs.ind,Obs.ind,drop=F] - S[Obs.ind, E.ind,drop=F] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
     R <- chol(Sigma_i)
     Sigma_iB      <- solve(Sigma_i, t(Bt))
