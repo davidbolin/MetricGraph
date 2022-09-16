@@ -52,5 +52,19 @@ for(i in 1:length(graph$PtV)){
   y_L[i] <- mu.p[graph$PtV[i]]
 }
 
-fig <- plot_obs(graph, graph$y[1:10], y_loc = Y_loc[1:10,]) + scale_colour_gradientn(colours = heat.colors(10))
+fig <- plot_obs(graph,Y_1_leave2-y_L, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+print(fig)
+
+theta.exp <- c(9.4726902736, 0.0001559032, 0.3745814561)
+res <- optim(log(theta.exp), function(x) -likelihood.exp.graph.stupid(exp(x),graph) )
+theta.exp <- exp(res$par)
+Y_1_leave2 <- posterior.leave.stupid(theta.exp,graph)
+Q <- Q.exp(theta.exp[2:3], graph$V, graph$EtV, graph$El)
+Sigma <- as.matrix(solve(Q))
+SigmaO <- Sigma[graph$PtV,graph$PtV]
+diag(SigmaO) <- diag(SigmaO)  +  theta.exp[1]^2
+i <- 2
+fig <- plot_obs(graph,SigmaO[i,]/SigmaO[i,i], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+print(fig)
+fig <- plot_obs(graph,Sigma.o[i,]/Sigma.o[i,i], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
