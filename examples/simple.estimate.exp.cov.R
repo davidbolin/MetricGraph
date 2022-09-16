@@ -8,8 +8,8 @@ library(Matrix)
 library(sp)
 set.seed(4)
 graphics.off()
-nt <- 100
-kappa <- 0.5
+nt <- 200
+kappa <- 0.1
 sigma_e <- 0.01
 sigma   <- 2
 theta <-  c(sigma_e,kappa,sigma)
@@ -33,6 +33,8 @@ graph$add_observations2(y = X[,2], PtE = cbind(1,X[,1]), Spoints = points)
 graph$observation_to_vertex()
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
+print(exp(res$par))
+res <- optim(log(theta), function(x) -likelihood.exp.graph.stupid(exp(x),graph) )
 print(exp(res$par))
 plot(X[,1],X[,2])
 

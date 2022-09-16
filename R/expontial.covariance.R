@@ -394,6 +394,44 @@ posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
   #()
 }
 
+
+posterior.mean.stupid <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Sigma <- as.matrix(solve(Q))
+  SigmaO <- Sigma[graph.obj$PtV,graph.obj$PtV]
+  diag(SigmaO) <- diag(SigmaO)  +  sigma_e^2
+
+  return( Sigma[,graph$PtV]%*%solve(SigmaO,graph.obj$y))
+}
+
+posterior.leave.stupid <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Sigma <- as.matrix(solve(Q))
+  SigmaO <- Sigma[graph.obj$PtV,graph.obj$PtV]
+  diag(SigmaO) <- diag(SigmaO)  +  sigma_e^2
+  y_p <- rep(0,length(graph.obj$y))
+  for(i in 1:length(graph.obj$y)){
+    mu_p <-  Sigma[,graph.obj$PtV[-i]]%*%solve(SigmaO[-i,-i],graph.obj$y[-i])
+    y_p[i] <- mu_p[graph.obj$PtV[i]]
+  }
+
+  return( y_p)
+}
+
+likelihood.exp.graph.stupid <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  diag(Sigma) <- diag(Sigma)  +  sigma_e^2
+  R <- chol(Sigma)
+  return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y))
+}
+
 #'
 #' Computes the log likelihood function fo theta for the graph object
 #' @param theta     - (sigma_e, sigma, kappa)

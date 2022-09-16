@@ -28,10 +28,11 @@ graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
 graph$observation_to_vertex()
 graph$buildA(2, F)
-theta <- c(13.571104569,  0.008735699 , 2.240048545)
+theta <- c(9.4726902736, 0.0001559032, 0.3745814561)
 #plot covariance for the parameters
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
+res <- optim(log(theta), function(x) -likelihood.exp.graph.stupid(exp(x),graph) )
 #res <- optim(log(theta[c(1,3)]), function(x) -likelihood.exp.graph(c(exp(x[1]),theta[2],exp(x[2])),graph) )
 #theta <- c(exp(res$par[1]),theta[2],exp(res$par[2]))
 
@@ -51,6 +52,7 @@ gg <- plot_posterior_mean(graph, posterior.mean.exp, sample.line.expontial, thet
 gg <- gg +  scale_colour_gradientn(colours = heat.colors(10))
 print(gg)
 #leavoe one line out cross val
+Y_2 <- posterior.mean.stupid(theta,graph)[graph$PtV]
 Y_1 <- posterior.mean.obs.exp(theta,graph)
 Y_2 <- posterior.mean.obs.matern2(theta2,graph)
 fig <- plot_obs(graph, Y_2-graph$y ) + scale_colour_gradientn(colours = heat.colors(10))
@@ -58,6 +60,7 @@ print(fig)
 
 
 Y_1_leave <- posterior.mean.obs.exp(theta,graph,leave.edge.out =T)
+Y_1_leave2 <- posterior.leave.stupid(theta,graph)
 Y_2_leave <- posterior.mean.obs.matern2(theta2,graph,leave.edge.out =T)
 
 fig <- plot_obs(graph, Y_1-graph$y) + scale_colour_gradientn(colours = heat.colors(10))
