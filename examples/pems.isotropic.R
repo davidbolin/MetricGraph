@@ -32,8 +32,8 @@ graph$observation_to_vertex()
 graph$compute_resdist()
 
 like.exp <- function(theta,graph){
-  Sigma <- theta[1]*exp(-theta[2]*graph$res.dist[graph$PtV,graph$PtV]) +
-    theta[3]*diag(rep(1,length(graph$y)))
+  Sigma <- theta[1] ^2*exp(-theta[2]*graph$res.dist[graph$PtV,graph$PtV]) +
+    theta[3]^2*diag(rep(1,length(graph$y)))
   R <- chol(Sigma)
   return(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y))
 }
@@ -42,10 +42,15 @@ res <- optim(log(theta), function(x) -like.exp(exp(x),graph))
 
 theta <- exp(res$par)
 
-Sigma <- theta[1]*exp(-theta[2]*graph$res.dist)
-Sigma.o <- theta[1]*exp(-theta[2]*graph$res.dist[graph$PtV,graph$PtV]) + theta[3]*diag(rep(1,length(graph$y)))
+Sigma <- theta[1]^2*exp(-theta[2]*graph$res.dist)
+Sigma.o <- theta[1]^2*exp(-theta[2]*graph$res.dist[graph$PtV,graph$PtV]) + theta[3]^2*diag(rep(1,length(graph$y)))
 
 mu.p <- Sigma[,graph$PtV]%*%solve(Sigma.o,graph$y)
+y_L <- rep(0, length(graph$y))
+for(i in 1:length(graph$PtV)){
+  mu.p_i <- Sigma[,graph$PtV[-i]]%*%solve(Sigma.o[-i,-i],graph$y[-i])
+  y_L[i] <- mu.p[graph$PtV[i]]
+}
 
-fig <- plot_obs(graph, mu.p[graph$PtV]) + scale_colour_gradientn(colours = heat.colors(10))
+fig <- plot_obs(graph, y_L, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)

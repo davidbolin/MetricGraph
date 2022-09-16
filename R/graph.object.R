@@ -70,7 +70,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
   #' @param E          - edge to be split
   #' @param t          - normalized distance to lower edge
   split_line = function(E, t){
-    Line <- graph$Lines[E,]
+    Line <- self$Lines[E,]
 
     val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=T)
     ind <-  (val_line <= t)
@@ -91,7 +91,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
                          as(do.call(rbind,  Line2), "SpatialLines"))
 
     }
-    newV <- max(graph$V[,1])+1
+    newV <- max(self$V[,1])+1
     self$V <- rbind(self$V,c(newV, Point@coords))
 
     l_e <- self$El[E]
@@ -206,7 +206,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
       coords <- c()
       for(e in Edges){
         ind <- self$PtE[,1] == e
-        points <- rgeos::gInterpolate(graph$Lines[e,], self$PtE[e, 2], normalized = F)
+        points <- rgeos::gInterpolate(self$Lines[e,], self$PtE[e, 2], normalized = F)
         coords <- rbind(coords, points@coords)
       }
       Spoints <- sp::SpatialPoints(coords)

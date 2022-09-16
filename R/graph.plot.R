@@ -79,19 +79,17 @@ plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, byVer
 #' @param graph (graph.obj)
 #' @param yhat - (n x 1) prediction of the obsveration
 #' @export
-plot_obs<- function(graph, yhat=NULL){
+plot_obs<- function(graph, y, y_loc){
   xyl <- c()
   ind <- 1:dim(graph$EtV)[1]
   for(i in ind){
 
-    xyl <- rbind(xyl, cbind(Lines[i,]$geometry[[1]][,1:2],i))
+    xyl <- rbind(xyl, cbind(fortify(graph$Lines[i,])[,1:2],i))
   }
-  obs <- graph$y
-  if(is.null(yhat)==F)
-    obs <- obs - yhat
+  obs <- y
   fig <- ggplot()+
     geom_path(data= data.frame(x=xyl[,1], y=xyl[,2], group=xyl[,3]), mapping = aes(x=x, y=y, group=group), size = 0.1)+
-    geom_point(data=data.frame(x=Y_loc[,2],y=Y_loc[,3],obs=obs),mapping= aes(y, x, color = obs))
+    geom_point(data=data.frame(x=y_loc[,2],y=y_loc[,3],obs=obs),mapping= aes(y, x, color = obs))
 
     return(fig)
 }

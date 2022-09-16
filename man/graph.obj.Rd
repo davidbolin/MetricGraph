@@ -43,6 +43,10 @@ Thus graphs can only be connected by end points
 \item{\code{nE}}{number of edges}
 
 \item{\code{Lines}}{List of Lines object for building the graph}
+
+\item{\code{geo.dist}}{Geodesic distance matrix}
+
+\item{\code{geo.dist}}{Resistance distance matrix}
 }
 \if{html}{\out{</div>}}
 }
@@ -51,6 +55,8 @@ Thus graphs can only be connected by end points
 \itemize{
 \item \href{#method-GPGraph::graph-new}{\code{graph.obj$new()}}
 \item \href{#method-GPGraph::graph-split_line}{\code{graph.obj$split_line()}}
+\item \href{#method-GPGraph::graph-compute_geodist}{\code{graph.obj$compute_geodist()}}
+\item \href{#method-GPGraph::graph-compute_resdist}{\code{graph.obj$compute_resdist()}}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{graph.obj$observation_to_vertex()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{graph.obj$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{graph.obj$add_observations2()}}
@@ -90,12 +96,34 @@ split line by point}
 \item{\code{E}}{- edge to be split}
 
 \item{\code{t}}{- normalized distance to lower edge
+compute shortest path distances
+
+compute resistance metric
+
 add vertces on all observations
 
 add observations to the object}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-compute_geodist"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_geodist}{}}}
+\subsection{Method \code{compute_geodist()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$compute_geodist()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-compute_resdist"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist}{}}}
+\subsection{Method \code{compute_resdist()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$compute_resdist()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-observation_to_vertex"></a>}}
