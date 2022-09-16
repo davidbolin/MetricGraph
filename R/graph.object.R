@@ -45,6 +45,12 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
   #' @field Lines List of Lines object for building the graph
   Lines = NULL, #sp object contaning the lines
 
+  #' @field geo.dist Geodesic distance matrix
+  geo.dist = NULL,
+
+  #' @field geo.dist Resistance distance matrix
+  res.dist = NULL,
+
   #' @param Lines.in sp object SpatialLinesDataFrame or SpatialLines
   #'
   initialize = function(Lines.in = NULL) {
@@ -102,6 +108,35 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
         self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
       }
     }
+  },
+
+  #' compute shortest path distances
+  #'
+  compute_geodist = function(){
+    g <- graph(edges = c(t(self$EtV[,2:3])), directed=FALSE)
+    E(g)$weight <- self$El
+    self$geo.dist <- distances(g)
+  },
+
+  #' compute resistance metric
+  #'
+  compute_resdist = function(){
+    if(is.null(self$geo.dist)){
+      self$compute_geodist()
+    }
+    n.v <- dim(self$V)[1]
+    L <- matrix(0,n.v,n.v)
+    for(i in 1:dim(self$El)[1]){
+      tmp <- -1/self$geo.dist[self$EtV[i,2], self$EtV[i,3]]
+      L[self$EtV[i,3],self$EtV[i,2]] <- L[self$EtV[i,2],self$EtV[i,3]] <- tmp
+    }
+    for(i in 1:n.v){
+      L[i,i] <- -sum(L[i,-i])
+    }
+    L[1,1] <- L[1,1] + 1
+
+    Li <- solve(L)
+    self$res.dist <- -2*Li + t(diag(Li))%x%rep(1,n.v) + t(rep(1,n.v))%x%diag(Li)
   },
 
   #' add vertces on all observations

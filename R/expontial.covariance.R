@@ -343,6 +343,8 @@ posterior.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
   return(Qpmu)
 
 }
+
+
 #'
 #' Computes the posterior expectation for each observation in the graph
 #' @param theta          - (sigma_e, sigma, kappa)
