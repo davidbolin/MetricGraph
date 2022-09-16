@@ -613,7 +613,7 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
   v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Tc%*%Qpmu,system = 'P'), system='L')))
-  Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))
+  Qpmu <- as.vector(Matrix::solve(R,Matrix::solve(R, v,system = 'Lt'), system='Pt'))
 
 
   return(t(Tc)%*%Qpmu)

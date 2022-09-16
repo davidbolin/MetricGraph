@@ -131,8 +131,8 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
         if((edge_constraint & n_e ==1) | n_e > 1) {
           i_[count + 1:n_e] <- count_constraint + 1
           j_[count + 1:n_e] <- c(4 * (lower.edges-1) + 2, 4 * (upper.edges-1) + 4)
-          x_[count + 1:n_e]     <- c( 1*length(lower.edges),-
-                                      1*length(upper.edges))
+          x_[count + 1:n_e]     <- c( rep(1,length(lower.edges)),
+                                      rep(-1,length(upper.edges)))
           count <- count + n_e
           count_constraint <- count_constraint + 1
         }

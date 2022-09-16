@@ -24,18 +24,18 @@ graph$V <- as.matrix(V)
 graph$El <- as.matrix(EtV[,4])
 graph$EtV <- as.matrix(EtV[,1:3])
 graph$PtE <- as.matrix(PtE)
-graph$y <- colMeans(Y)#Y[1,]-colMeans(Y)#as.matrix(Y[,-1])[1,]
+graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
 graph$buildA(2, F)
-theta <- c( 5.2304330393, 0.0005867353, 0.3531667695)
+theta <- c( 7.0445645557, 0.0001397926, 0.5379517219)
 #plot covariance for the parameters
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )
 #res <- optim(log(theta[c(1,3)]), function(x) -likelihood.exp.graph(c(exp(x[1]),theta[2],exp(x[2])),graph) )
 #theta <- c(exp(res$par[1]),theta[2],exp(res$par[2]))
 
-theta2 <- c(5.308288435, 0.001029679, 0.001714127)
-res <- optim(log(theta2), function(x) -likelihood.matern2.graph(exp(x),graph) )
+theta2 <- c(6.472275581, 0.001355840, 0.002836539)
+res <- optim(log(theta2), function(x) -likelihood.matern2.graph( exp(x),graph) )
 lik2 <- likelihood.matern2.graph(theta2, graph)
 #theta2 <- exp(res$par)
 

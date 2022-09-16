@@ -4,7 +4,7 @@
 \alias{posterior.mean.matern2}
 \title{Computes the posterior mean}
 \usage{
-posterior.mean.matern2(theta, graph.obj)
+posterior.mean.matern2(theta, graph.obj, rem.edge = NULL)
 }
 \arguments{
 \item{theta}{- (sigma_e, sigma, kappa)}

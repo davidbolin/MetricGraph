@@ -9,7 +9,7 @@ library(sp)
 library(CB)
 set.seed(4)
 graphics.off()
-nt <- 100
+nt <- 400
 kappa <- 0.07
 sigma_e <- 0.1
 sigma   <- 0.1
