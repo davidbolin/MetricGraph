@@ -71,34 +71,37 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   #' @param E Edge to be split
   #' @param t Normalized distance to first edge
   split_line = function(E, t){
-    Line <- self$Lines[E,]
+      Line <- self$Lines[E,]
 
-    val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=T)
-    ind <-  (val_line <= t)
-    Point <- gInterpolate(Line, t, normalized=TRUE)
-    Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
-    Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
+      val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=T)
+      ind <-  (val_line <= t)
+      Point <- gInterpolate(Line, t, normalized=TRUE)
+      Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
+      Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
 
-    if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
-      self$Lines <-rbind(self$Lines[1:E-1,],
-                          SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
-                                                data=Line@data,match.ID = FALSE),
-                          self$Lines[-(1:E),],
-                          SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
-                                                data=Line@data,match.ID = FALSE))
-    }else{
-      self$Lines <-rbind(self$Lines[1:E-1,],
-                         as(do.call(rbind,  Line1), "SpatialLines"),
-                         self$Lines[-(1:E),],
-                         as(do.call(rbind,  Line2), "SpatialLines"))
+      if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
+        self$Lines <-rbind(self$Lines[1:E-1,],
+                            SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
+                                                  data=Line@data,match.ID = FALSE),
+                            self$Lines[-(1:E),],
+                            SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
+                                                  data=Line@data,match.ID = FALSE))
+      }else{
+        self$Lines <-rbind(self$Lines[1:E-1,],
+                           as(do.call(rbind,  Line1), "SpatialLines"),
+                           self$Lines[-(1:E),],
+                           as(do.call(rbind,  Line2), "SpatialLines"))
 
-    }
+      }
+
+
     newV <- max(self$V[,1])+1
     self$V <- rbind(self$V,c(newV, Point@coords))
 
+
     l_e <- self$El[E]
     self$El[E] <- t*l_e
-    self$El <- rbind(self$El, (1-t)*l_e)
+    self$El <- c(self$El, (1-t)*l_e)
     self$nE <- self$nE + 1
     self$EtV <- rbind(self$EtV,
                       c(max(self$EtV[,1])+1, newV,self$EtV[E, 3]))
@@ -155,8 +158,8 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     l <- length(self$PtE[,1])
     self$PtV <- rep(0,l)
     for(i in 1:l){
-        e <- self$PtE[i,1]
-        t <- self$PtE[i,2]
+        e <- as.vector(self$PtE[i,1])
+        t <- as.vector(self$PtE[i,2])
         l_e <- self$El[e]
         if(abs(t)<10^-10){
           self$PtE[i,2] <- 0

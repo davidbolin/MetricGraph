@@ -441,10 +441,9 @@ posterior.leave.stupid <- function(theta, graph.obj){
 #'
 #' @param theta          - (sigma_e, sigma, kappa)
 #' @param graph.obj      - graph object
-#'
 #' @return The log-likelihood
 #' @export
-likelihood.exp.graph.stupid <- function(theta, graph.obj){
+likelihood.exp.graph.covariance <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
   Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
