@@ -50,6 +50,26 @@ theta.graph <- c(9.478923, 7.154005, 1.160011e-05)
 res <- optim(log(theta.graph), function(x) -likelihood.graph_laplacian(exp(x),graph) )
 theta.graph <- exp(res$par)
 
+# Fit alpha=2 model
+graph$buildA(2, F)
+theta.alpha2 <- c(1.710348e+01, 8.084454e-04, 2.525945e-01)
+res <- optim(log(theta.alpha2), function(x) -likelihood.graph.covariance(exp(x),graph,alpha=2) )
+theta.alpha2 <- exp(res$par)
+
+theta.alpha2 <- c(1.710348e+01, 1.084454e-05, 0.00002)
+n.c <- 1:length(graph$CBobj$S)
+Q <- Q.matern2(c(theta.alpha2[3],theta.alpha2[2]), graph$V, graph$EtV, graph$El, BC = 1)
+Qtilde <- (graph$CBobj$T)%*%Q%*%t(graph$CBobj$T)
+Qtilde <- Qtilde[-n.c,-n.c]
+Sigma.overdetermined  = t(graph$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph$CBobj$T[-n.c,])
+index.obs <-  4*(graph$PtE[,1]-1) + (1 * (graph$PtE[,2]==0)) + (3 * (graph$PtE[,2]!= 0))
+Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+image.plot(Sigma)
+fig <- plot_obs(graph,Sigma[1,], y_loc = Y_loc) + scale_colour_gradientn(colours = viridis(10))
+print(fig)
+
+Sigma.res <- theta.res[3]^2*exp(-theta.res[2]*graph$res.dist[graph$PtV,graph$PtV])
+image.plot(Sigma.res)
 #cross validation
 K <- 5 #number of groups in cross validation
 n.y <- length(graph$y)
@@ -60,10 +80,12 @@ ind <- ind[sample(1:n.y,n.y)]
 y_L_iso <- posterior.crossvalidation(theta.res, graph, model = "isoExp",ind = ind)
 Y_L_exp <- posterior.crossvalidation(theta.exp,graph, model = "alpha1",ind = ind)
 Y_L_graph <- posterior.crossvalidation(theta.graph,graph, model ="GL",ind = ind)
+Y_L_alpha2 <- posterior.crossvalidation(theta.alpha2,graph, model = "alpha2",ind = ind)
 result <- data.frame(MSE = c(var(graph$y-y_L_iso),
                             var(Y_L_exp-graph$y),
-                            var(Y_L_graph-graph$y)),
-                    row.names = c("isoExp","alpha1","GL"))
+                            var(Y_L_graph-graph$y),
+                            var(Y_L_alpha2 - graph$y)),
+                    row.names = c("isoExp","alpha1","GL", "alpha2"))
 print(result)
 
 

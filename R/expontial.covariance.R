@@ -443,12 +443,23 @@ posterior.leave.stupid <- function(theta, graph.obj){
 #' @param graph.obj      - graph object
 #' @return The log-likelihood
 #' @export
-likelihood.exp.graph.covariance <- function(theta, graph.obj){
-  sigma_e <- theta[1]
-  #build Q
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
-  Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
-  diag(Sigma) <- diag(Sigma)  +  sigma_e^2
+likelihood.graph.covariance <- function(theta, graph.obj,alpha=1){
+
+  #build covariance matrix
+  if(alpha==1){
+    Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+    Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  } else if (alpha == 2){
+    n.c <- 1:length(graph.obj$CBobj$S)
+    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
+    Qtilde <- Qtilde[-n.c,-n.c]
+    Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
+    index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (graph.obj$PtE[,2]==0)) + (3 * (graph.obj$PtE[,2]!= 0))
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+  }
+
+  diag(Sigma) <- diag(Sigma)  +  theta[1]^2
   R <- chol(Sigma)
   return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y))
 }
@@ -499,8 +510,18 @@ posterior.crossvalidation <- function(theta,
   sigma_e <- theta[1]
   n.v <- dim(graph$V)[1]
   if(model == "isoExp"){
-    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist)
-    Sigma.o <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+    Sigma.o <- Sigma
+    diag(Sigma.o) <- diag(Sigma.o) + theta[1]^2
+  } else if(model == "alpha2"){
+    n.c <- 1:length(graph.obj$CBobj$S)
+    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
+    Qtilde <- Qtilde[-n.c,-n.c]
+    Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
+    index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (graph.obj$PtE[,2]==0)) + (3 * (graph.obj$PtE[,2]!= 0))
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+    Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + theta[1]^2
   } else if(model == "alpha1" || model == "GL"){
     if(model == "alpha1"){
@@ -514,16 +535,14 @@ posterior.crossvalidation <- function(theta,
     stop("Wrong model choice.")
   }
 
-
-
   if(is.null(ind)){
     ind <- 1:length(graph.obj$y)
   }
   y_p <- rep(0,length(graph.obj$y))
   for(j in 1:length(unique(ind))){
     i <- which(ind == j)
-    if(model == "isoExp"){
-        y_p[i] <-Sigma[graph.obj$PtV[i],graph.obj$PtV[-i]]%*%solve(Sigma.o[-i,-i],graph.obj$y[-i])
+    if(model == "isoExp" || model == "alpha2"){
+        y_p[i] <-Sigma[i,-i]%*%solve(Sigma.o[-i,-i],graph.obj$y[-i])
     } else {
       A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
       mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))

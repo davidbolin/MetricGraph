@@ -129,7 +129,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     }
     n.v <- dim(self$V)[1]
     L <- Matrix(0,n.v,n.v)
-    for(i in 1:dim(self$El)[1]){
+    for(i in 1:length(self$El)){
       tmp <- -1/self$geo.dist[self$EtV[i,2], self$EtV[i,3]]
       L[self$EtV[i,3],self$EtV[i,2]] <- L[self$EtV[i,2],self$EtV[i,3]] <- tmp
     }
@@ -146,7 +146,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   compute_laplacian = function(){
     n.v <- dim(self$V)[1]
     Wmat <- Matrix(0,n.v,n.v)
-    for(i in 1:dim(self$El)[1]){
+    for(i in 1:length(self$El)){
       Wmat[self$EtV[i,2],self$EtV[i,3]] <- Wmat[self$EtV[i,3],self$EtV[i,2]] <- 1/self$El[i]
     }
     self$Laplacian <- Diagonal(n.v,as.vector(Matrix::rowSums(Wmat))) - Wmat
@@ -282,7 +282,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
                                 dims = c(count_constraint, 4*nE))
       self$A = A
 
-      self$CBobj <- CB::c_basis2_cpp(self$A)
+      self$CBobj <- CB::c_basis2(self$A)
       self$CBobj$T <- t(self$CBobj$T)
     }else{
       error("only alpha=2 implimented")
