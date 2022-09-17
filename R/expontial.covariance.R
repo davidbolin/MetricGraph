@@ -478,28 +478,58 @@ likelihood.exp.graph.v2 <- function(theta, graph.obj){
   return(as.double(l))
 }
 
-#' Prediction for alpha=1 assuming observations at vertices
+#' Prediction for models assuming observations at vertices
 #'
-#' @param theta          - (sigma_e, sigma, kappa)
-#' @param graph.obj      - graph object
+#' @param theta Estimated model parameters (sigma_e, sigma, kappa)
+#' @param graph.obj Graph object
+#' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
+#' graph Laplacian, and "isoExp" gives isotropic exponential
+#' @param ind Indices for cross validation. It should be a vector of the same length as the
+#' data, with integer values representing each group in the cross-validation.
+#' If NULL, leave-one-out cross validation is performed.
 #'
-#' @return Leave-one-out predictions
+#' @return Vector with all predictions
 #' @export
-posterior.leave.v2 <- function(theta, graph.obj){
+posterior.crossvalidation <- function(theta,
+                                      graph.obj,
+                                      model = "alpha1",
+                                      ind = NULL)
+  {
+  #setup matrices for prediction
   sigma_e <- theta[1]
-  #build Q
   n.v <- dim(graph$V)[1]
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
-  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
-  Q.p <- Q  + t(A)%*%A/sigma_e^2
-  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
-  y_p <- rep(0,length(graph.obj$y))
-  for(i in 1:length(graph.obj$y)){
-    A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
-    mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))
-    y_p[i] <- mu.p[graph.obj$PtV[i]]
+  if(model == "isoExp"){
+    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist)
+    Sigma.o <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+    diag(Sigma.o) <- diag(Sigma.o) + theta[1]^2
+  } else if(model == "alpha1" || model == "GL"){
+    if(model == "alpha1"){
+      Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+    } else if(model == "GL"){
+      Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+    }
+    A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+    Q.p <- Q  + t(A)%*%A/sigma_e^2
+  } else {
+    stop("Wrong model choice.")
   }
 
+
+
+  if(is.null(ind)){
+    ind <- 1:length(graph.obj$y)
+  }
+  y_p <- rep(0,length(graph.obj$y))
+  for(j in 1:length(unique(ind))){
+    i <- which(ind == j)
+    if(model == "isoExp"){
+        y_p[i] <-Sigma[graph.obj$PtV[i],graph.obj$PtV[-i]]%*%solve(Sigma.o[-i,-i],graph.obj$y[-i])
+    } else {
+      A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
+      mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))
+      y_p[i] <- mu.p[graph.obj$PtV[i]]
+    }
+  }
   return( y_p)
 }
 
@@ -530,30 +560,6 @@ likelihood.graph_laplacian <- function(theta, graph.obj){
   return(as.double(l))
 }
 
-#' Prediction for the graph-Laplacian model
-#'
-#' @param theta          - (sigma_e, sigma, kappa)
-#' @param graph.obj      - graph object
-#'
-#' @return Leave-one-out predictions
-#' @export
-posterior.leave.graph_laplacian <- function(theta, graph.obj){
-  sigma_e <- theta[1]
-  #build Q
-  n.v <- dim(graph.obj$V)[1]
-  Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
-  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
-  Q.p <- Q  + t(A)%*%A/sigma_e^2
-  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
-  y_p <- rep(0,length(graph.obj$y))
-  for(i in 1:length(graph.obj$y)){
-    A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
-    mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))
-    y_p[i] <- mu.p[graph.obj$PtV[i]]
-  }
-
-  return( y_p)
-}
 
 #'
 #' Computes the log likelihood function fo theta for the graph object
