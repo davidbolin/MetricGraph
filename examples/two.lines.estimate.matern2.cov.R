@@ -6,7 +6,6 @@
 library(GPGraph)
 library(Matrix)
 library(sp)
-library(CB)
 set.seed(15)
 graphics.off()
 nt <- 300

@@ -53,7 +53,7 @@ print(gg)
 #leavoe one line out cross val
 Y_1 <- posterior.mean.obs.exp(theta,graph)
 Y_2 <- posterior.mean.obs.matern2(theta2,graph)
-fig <- plot_obs(graph, Y_2-graph$y ) + scale_colour_gradientn(colours = heat.colors(10))
+fig <- plot_obs(graph, Y_2, y ) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
 
 
