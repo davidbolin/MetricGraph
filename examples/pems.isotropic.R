@@ -26,7 +26,8 @@ graph$EtV <- as.matrix(EtV[,1:3])
 graph$PtE <- as.matrix(PtE)
 graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
-
+fig <- plot_obs(graph,graph$y, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+print(fig)
 graph$observation_to_vertex()
 
 graph$compute_resdist()
@@ -43,28 +44,35 @@ res <- optim(log(theta), function(x) -like.exp(exp(x),graph))
 theta <- exp(res$par)
 
 Sigma <- theta[1]^2*exp(-theta[2]*graph$res.dist)
+Sigma.i <- theta[1]^2*exp(-theta[2]*graph$res.dist[graph$PtV,graph$PtV])
 Sigma.o <- theta[1]^2*exp(-theta[2]*graph$res.dist[graph$PtV,graph$PtV]) + theta[3]^2*diag(rep(1,length(graph$y)))
 
 mu.p <- Sigma[,graph$PtV]%*%solve(Sigma.o,graph$y)
+y_f <- mu.p[graph$PtV]
 y_L <- rep(0, length(graph$y))
 for(i in 1:length(graph$PtV)){
   mu.p_i <- Sigma[,graph$PtV[-i]]%*%solve(Sigma.o[-i,-i],graph$y[-i])
-  y_L[i] <- mu.p[graph$PtV[i]]
+  y_L[i] <- mu.p_i[graph$PtV[i]]
 }
-
-fig <- plot_obs(graph,Y_1_leave2-y_L, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+cat('var res= ',var(graph$y-y_L),'\n')
+fig <- plot_obs(graph,y_L, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
 
 theta.exp <- c(9.4726902736, 0.0001559032, 0.3745814561)
 res <- optim(log(theta.exp), function(x) -likelihood.exp.graph.stupid(exp(x),graph) )
 theta.exp <- exp(res$par)
 Y_1_leave2 <- posterior.leave.stupid(theta.exp,graph)
+cat('var exp= ',var(Y_1_leave2-graph$y),'\n')
 Q <- Q.exp(theta.exp[2:3], graph$V, graph$EtV, graph$El)
-Sigma <- as.matrix(solve(Q))
-SigmaO <- Sigma[graph$PtV,graph$PtV]
+Sigma <- as.matrix(solve(Q))[graph$PtV,graph$PtV]
+SigmaO <- Sigma
 diag(SigmaO) <- diag(SigmaO)  +  theta.exp[1]^2
-i <- 2
-fig <- plot_obs(graph,SigmaO[i,]/SigmaO[i,i], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+i <- 1
+fig <- plot_obs(graph,Sigma[i,]/Sigma[i,i], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
-fig <- plot_obs(graph,Sigma.o[i,]/Sigma.o[i,i], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+fig <- plot_obs(graph,Sigma.i[i,]/Sigma.i[i,i], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+print(fig)
+
+Eige <- eigen(Sigma.o)
+fig <- plot_obs(graph,Eige$vectors[,4], y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)

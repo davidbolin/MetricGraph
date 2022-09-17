@@ -440,7 +440,7 @@ likelihood.exp.graph.stupid <- function(theta, graph.obj){
 likelihood.exp.graph <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  #Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
 
   Q.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El, build=F)
 
@@ -448,7 +448,7 @@ likelihood.exp.graph <- function(theta, graph.obj){
                              j = Q.list$j,
                              x = Q.list$x,
                              dims=Q.list$dims)
-  R <- Matrix::Cholesky(Q, LDL = FALSE, perm = TRUE)
+  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
   loglik <- 0.5*Matrix::determinant(R)$modulus[1]
 
   #build BSIGMAB

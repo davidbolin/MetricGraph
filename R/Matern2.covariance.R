@@ -453,7 +453,7 @@ likelihood.matern2.graph <- function(theta, graph.obj){
 
   loglik <- loglik + 0.5  * t(v)%*%v
   #prior
-  loglik <- loglik - (2)*log(theta[2]) - 0.5/theta[2]
+  #loglik <- loglik - (2)*log(theta[2]) - 0.5/theta[2]
 
   return(loglik[1])
 }
