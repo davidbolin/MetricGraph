@@ -1,17 +1,11 @@
-library(sp)
-library(Matrix)
-library(rgeos)
-library(CB)
-#'
-#' A general graph objects,
-#' builds an object of sp::Lines object each Lines is assumes to be an edge.
+#' A general graph object
+#' @details Builds an object of sp::Lines object each Lines is assumes to be an edge.
 #' Thus graphs can only be connected by end points
 #' @export
-#'
-graph.obj <-  R6::R6Class("GPGraph::graph", list(
-
+graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field El length of edges
   El = NULL,
+
   #' @field EID ID of edges
   EID = NULL,
 
@@ -20,6 +14,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
 
   #' @field CBobj svd stuct obj
   CBobj = NULL,
+
   #' @field Points Observations in SpatialPointsDataFrame
   Points  = NULL,
 
@@ -36,23 +31,29 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
   PtV  = NULL,
 
   #' @field V poisition in the space [,1] - id [,-1] - point
-  #'
   V =  NULL,
+
   #' @field EtV [,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge
   EtV = NULL,
+
   #' @field nE number of edges
   nE= 0,
+
   #' @field Lines List of Lines object for building the graph
-  Lines = NULL, #sp object contaning the lines
+  Lines = NULL,
 
   #' @field geo.dist Geodesic distance matrix
   geo.dist = NULL,
 
-  #' @field geo.dist Resistance distance matrix
+  #' @field res.dist Resistance distance matrix
   res.dist = NULL,
 
+  #' @field Laplacian The weighted graph Laplacian
+  Laplacian = NULL,
+
+  #' @description Create a new graph object
   #' @param Lines.in sp object SpatialLinesDataFrame or SpatialLines
-  #'
+  #' @return A new graph object
   initialize = function(Lines.in = NULL) {
     if(is.null(Lines.in))
       return()
@@ -66,9 +67,9 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     self$El  <- list_obj$El
   },
 
-  #' split line by point
-  #' @param E          - edge to be split
-  #' @param t          - normalized distance to lower edge
+  #' @description Split line by point
+  #' @param E Edge to be split
+  #' @param t Normalized distance to first edge
   split_line = function(E, t){
     Line <- self$Lines[E,]
 
@@ -78,12 +79,13 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
     Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
 
-
     if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
       self$Lines <-rbind(self$Lines[1:E-1,],
-                          SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"), data=Line@data,match.ID = FALSE),
+                          SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
+                                                data=Line@data,match.ID = FALSE),
                           self$Lines[-(1:E),],
-                          SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"), data=Line@data,match.ID = FALSE))
+                          SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
+                                                data=Line@data,match.ID = FALSE))
     }else{
       self$Lines <-rbind(self$Lines[1:E-1,],
                          as(do.call(rbind,  Line1), "SpatialLines"),
@@ -110,22 +112,20 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     }
   },
 
-  #' compute shortest path distances
-  #'
+  #' @description Compute shortest path distances
   compute_geodist = function(){
     g <- graph(edges = c(t(self$EtV[,2:3])), directed=FALSE)
     E(g)$weight <- self$El
     self$geo.dist <- distances(g)
   },
 
-  #' compute resistance metric
-  #'
+  #' @description Compute resistance metric
   compute_resdist = function(){
     if(is.null(self$geo.dist)){
       self$compute_geodist()
     }
     n.v <- dim(self$V)[1]
-    L <- matrix(0,n.v,n.v)
+    L <- Matrix(0,n.v,n.v)
     for(i in 1:dim(self$El)[1]){
       tmp <- -1/self$geo.dist[self$EtV[i,2], self$EtV[i,3]]
       L[self$EtV[i,3],self$EtV[i,2]] <- L[self$EtV[i,2],self$EtV[i,3]] <- tmp
@@ -139,9 +139,18 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     self$res.dist <- -2*Li + t(diag(Li))%x%rep(1,n.v) + t(rep(1,n.v))%x%diag(Li)
   },
 
-  #' add vertces on all observations
-  #'
-  observation_to_vertex =function(){
+  #' @description Compute graph Laplacian
+  compute_laplacian = function(){
+    n.v <- dim(self$V)[1]
+    Wmat <- Matrix(0,n.v,n.v)
+    for(i in 1:dim(self$El)[1]){
+      Wmat[self$EtV[i,2],self$EtV[i,3]] <- Wmat[self$EtV[i,3],self$EtV[i,2]] <- 1/self$El[i]
+    }
+    self$Laplacian <- Diagonal(n.v,as.vector(Matrix::rowSums(Wmat))) - Wmat
+  },
+
+  #' @description Add observation locations as vertices in the graph
+  observation_to_vertex = function(){
 
     l <- length(self$PtE[,1])
     self$PtV <- rep(0,l)
@@ -162,7 +171,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     }
   },
 
-  #' add observations to the object
+  #' @description Add observations to the object
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y        (n x 1) the value of the observations
   #' @param y.index (string, int) position in Spoints where y is located
@@ -193,7 +202,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
     self$PtE = PtE
   },
 
-  #' add observations to the object
+  #' @description add observations to the object
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y        (n x 1) the value of the observations
   #' @param PtE      (n x 2) edge index, distance on index
@@ -216,7 +225,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
 
 
 
-  #' build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
+  #' @description build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
   #' @param alpha (int) which type of constraint (currently only 2 implemented)
   #' @param edge_constraint (bool) if true add constraint on vertices of degree 1.
   buildA = function(alpha, edge_constraint=FALSE){
@@ -279,10 +288,9 @@ graph.obj <-  R6::R6Class("GPGraph::graph", list(
 
 ))
 
-#' Assume that there is only one line each Lines@Lines
+#' Assume that there is only one line each Lines
 #' @param Lines object
-#' @return V, EtV, El
-#' from Line to vertex
+#' @return A list with elements V, EtV, El
 #' @export
 vertex.to.line <- function(Lines){
   lines <- c()

@@ -348,7 +348,7 @@ posterior.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
 #'
 #' Computes the posterior expectation for each observation in the graph
 #' @param theta          - (sigma_e, sigma, kappa)
-#' @param graph.obj      - graphical object
+#' @param graph.obj      - graph object
 #' @param leave.edge.out - compute the expectation of the graph if the observatrions are not on the edge
 #' @export
 posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
@@ -395,6 +395,13 @@ posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
 }
 
 
+#' posterior mean calculation not using sparsity
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return The posterior mean
+#' @export
 posterior.mean.stupid <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
@@ -406,6 +413,13 @@ posterior.mean.stupid <- function(theta, graph.obj){
   return( Sigma[,graph$PtV]%*%solve(SigmaO,graph.obj$y))
 }
 
+#' prediction not using sparsity
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return Leave-one-out predictions
+#' @export
 posterior.leave.stupid <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
@@ -422,6 +436,14 @@ posterior.leave.stupid <- function(theta, graph.obj){
   return( y_p)
 }
 
+
+#' Likelihood evaluation not using sparsity
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return The log-likelihood
+#' @export
 likelihood.exp.graph.stupid <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
@@ -432,10 +454,112 @@ likelihood.exp.graph.stupid <- function(theta, graph.obj){
   return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y))
 }
 
+#' Log-likelihood calculation for alpha=1 without integration
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return The log-likelihood
+#' @export
+likelihood.exp.graph.v2 <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  n.v <- dim(graph.obj$V)[1]
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+  Q.p <- Q  + t(A)%*%A/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
+
+  R <- chol(Q)
+  R.p <- chol(Q.p)
+
+  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - length(graph.obj$y)*log(sigma_e)
+  v <- graph.obj$y - A%*%mu.p
+  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2)
+  return(as.double(l))
+}
+
+#' Prediction for alpha=1 assuming observations at vertices
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return Leave-one-out predictions
+#' @export
+posterior.leave.v2 <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  n.v <- dim(graph$V)[1]
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+  Q.p <- Q  + t(A)%*%A/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
+  y_p <- rep(0,length(graph.obj$y))
+  for(i in 1:length(graph.obj$y)){
+    A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
+    mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))
+    y_p[i] <- mu.p[graph.obj$PtV[i]]
+  }
+
+  return( y_p)
+}
+
+#' Log-likelihood calculation for graph Laplacian model
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return The log-likelihood
+#' @export
+likelihood.graph_laplacian <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  n.v <- dim(graph.obj$V)[1]
+
+  Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+
+  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+  Q.p <- Q  + t(A)%*%A/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
+
+  R <- chol(Q)
+  R.p <- chol(Q.p)
+
+  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - length(graph$y)*log(sigma_e)
+  v <- graph$y - A%*%mu.p
+  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2)
+  return(as.double(l))
+}
+
+#' Prediction for the graph-Laplacian model
+#'
+#' @param theta          - (sigma_e, sigma, kappa)
+#' @param graph.obj      - graph object
+#'
+#' @return Leave-one-out predictions
+#' @export
+posterior.leave.graph_laplacian <- function(theta, graph.obj){
+  sigma_e <- theta[1]
+  #build Q
+  n.v <- dim(graph.obj$V)[1]
+  Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+  Q.p <- Q  + t(A)%*%A/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
+  y_p <- rep(0,length(graph.obj$y))
+  for(i in 1:length(graph.obj$y)){
+    A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
+    mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))
+    y_p[i] <- mu.p[graph.obj$PtV[i]]
+  }
+
+  return( y_p)
+}
+
 #'
 #' Computes the log likelihood function fo theta for the graph object
 #' @param theta     - (sigma_e, sigma, kappa)
-#' @param graph.obj - graphical object
+#' @param graph.obj - graph object
 #' @export
 likelihood.exp.graph <- function(theta, graph.obj){
   sigma_e <- theta[1]

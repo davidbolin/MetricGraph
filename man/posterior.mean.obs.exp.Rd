@@ -9,7 +9,7 @@ posterior.mean.obs.exp(theta, graph.obj, leave.edge.out = F)
 \arguments{
 \item{theta}{- (sigma_e, sigma, kappa)}
 
-\item{graph.obj}{- graphical object}
+\item{graph.obj}{- graph object}
 
 \item{leave.edge.out}{- compute the expectation of the graph if the observatrions are not on the edge}
 }

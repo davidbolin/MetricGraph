@@ -2,12 +2,14 @@ Package: GPGraph
 Type: Package
 Title: Gaussian fields on metric graphs
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
-Depends: R (>= 3.5.0), Matrix, rSPDE, viridis, plotly, ggplot2, rgeos, igraph
+Authors@R: c(
+    person("David", "Bolin", email = "davidbolin@gmail.com", role = c("cre", "aut")),
+    person("Jonas", "Wallin", email = "jonas.wallin81@gmail.com", role = c("aut")))
+Maintainer: David Bolin <davidbolin@gmail.com>
+Description: Functions for specifying Gaussian random fields on metric graphs and 
+    using them for data analysis.
+License: GPL (>=3)
+Depends: R (>= 3.5.0), Matrix, rSPDE, viridis, plotly, ggplot2, rgeos, igraph, CB, sp
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.0

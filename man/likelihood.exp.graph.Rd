@@ -9,7 +9,7 @@ likelihood.exp.graph(theta, graph.obj)
 \arguments{
 \item{theta}{- (sigma_e, sigma, kappa)}
 
-\item{graph.obj}{- graphical object}
+\item{graph.obj}{- graph object}
 }
 \description{
 Computes the log likelihood function fo theta for the graph object

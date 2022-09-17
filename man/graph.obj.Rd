@@ -2,16 +2,14 @@
 % Please edit documentation in R/graph.object.R
 \name{graph.obj}
 \alias{graph.obj}
-\title{A general graph objects,
-builds an object of sp::Lines object each Lines is assumes to be an edge.
-Thus graphs can only be connected by end points}
+\title{A general graph object}
 \description{
-A general graph objects,
-builds an object of sp::Lines object each Lines is assumes to be an edge.
-Thus graphs can only be connected by end points
+A general graph object
 
-A general graph objects,
-builds an object of sp::Lines object each Lines is assumes to be an edge.
+A general graph object
+}
+\details{
+Builds an object of sp::Lines object each Lines is assumes to be an edge.
 Thus graphs can only be connected by end points
 }
 \section{Public fields}{
@@ -46,7 +44,9 @@ Thus graphs can only be connected by end points
 
 \item{\code{geo.dist}}{Geodesic distance matrix}
 
-\item{\code{geo.dist}}{Resistance distance matrix}
+\item{\code{res.dist}}{Resistance distance matrix}
+
+\item{\code{Laplacian}}{The weighted graph Laplacian}
 }
 \if{html}{\out{</div>}}
 }
@@ -57,6 +57,7 @@ Thus graphs can only be connected by end points
 \item \href{#method-GPGraph::graph-split_line}{\code{graph.obj$split_line()}}
 \item \href{#method-GPGraph::graph-compute_geodist}{\code{graph.obj$compute_geodist()}}
 \item \href{#method-GPGraph::graph-compute_resdist}{\code{graph.obj$compute_resdist()}}
+\item \href{#method-GPGraph::graph-compute_laplacian}{\code{graph.obj$compute_laplacian()}}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{graph.obj$observation_to_vertex()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{graph.obj$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{graph.obj$add_observations2()}}
@@ -68,6 +69,7 @@ Thus graphs can only be connected by end points
 \if{html}{\out{<a id="method-GPGraph::graph-new"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-new}{}}}
 \subsection{Method \code{new()}}{
+Create a new graph object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$new(Lines.in = NULL)}\if{html}{\out{</div>}}
 }
@@ -75,17 +77,19 @@ Thus graphs can only be connected by end points
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Lines.in}}{sp object SpatialLinesDataFrame or SpatialLines
-
-split line by point}
+\item{\code{Lines.in}}{sp object SpatialLinesDataFrame or SpatialLines}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new graph object
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-split_line"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-split_line}{}}}
 \subsection{Method \code{split_line()}}{
+Split line by point
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$split_line(E, t)}\if{html}{\out{</div>}}
 }
@@ -93,16 +97,9 @@ split line by point}
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{E}}{- edge to be split}
+\item{\code{E}}{Edge to be split}
 
-\item{\code{t}}{- normalized distance to lower edge
-compute shortest path distances
-
-compute resistance metric
-
-add vertces on all observations
-
-add observations to the object}
+\item{\code{t}}{Normalized distance to first edge}
 }
 \if{html}{\out{</div>}}
 }
@@ -111,6 +108,7 @@ add observations to the object}
 \if{html}{\out{<a id="method-GPGraph::graph-compute_geodist"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_geodist}{}}}
 \subsection{Method \code{compute_geodist()}}{
+Compute shortest path distances
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$compute_geodist()}\if{html}{\out{</div>}}
 }
@@ -120,8 +118,19 @@ add observations to the object}
 \if{html}{\out{<a id="method-GPGraph::graph-compute_resdist"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist}{}}}
 \subsection{Method \code{compute_resdist()}}{
+Compute resistance metric
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$compute_resdist()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-compute_laplacian"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_laplacian}{}}}
+\subsection{Method \code{compute_laplacian()}}{
+Compute graph Laplacian
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph.obj$compute_laplacian()}\if{html}{\out{</div>}}
 }
 
 }
@@ -129,6 +138,7 @@ add observations to the object}
 \if{html}{\out{<a id="method-GPGraph::graph-observation_to_vertex"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-observation_to_vertex}{}}}
 \subsection{Method \code{observation_to_vertex()}}{
+Add observation locations as vertices in the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$observation_to_vertex()}\if{html}{\out{</div>}}
 }
@@ -138,6 +148,7 @@ add observations to the object}
 \if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations}{}}}
 \subsection{Method \code{add_observations()}}{
+Add observations to the object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$add_observations(Spoints, y = NULL, y.index = NULL)}\if{html}{\out{</div>}}
 }
@@ -149,8 +160,7 @@ add observations to the object}
 
 \item{\code{y}}{(n x 1) the value of the observations}
 
-\item{\code{y.index}}{(string, int) position in Spoints where y is located
-add observations to the object}
+\item{\code{y.index}}{(string, int) position in Spoints where y is located}
 }
 \if{html}{\out{</div>}}
 }
@@ -159,6 +169,7 @@ add observations to the object}
 \if{html}{\out{<a id="method-GPGraph::graph-add_observations2"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations2}{}}}
 \subsection{Method \code{add_observations2()}}{
+add observations to the object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$add_observations2(y, PtE, Spoints = NULL)}\if{html}{\out{</div>}}
 }
@@ -168,8 +179,7 @@ add observations to the object}
 \describe{
 \item{\code{y}}{(n x 1) the value of the observations}
 
-\item{\code{PtE}}{(n x 2) edge index, distance on index
-build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)}
+\item{\code{PtE}}{(n x 2) edge index, distance on index}
 
 \item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations}
 }
@@ -180,6 +190,7 @@ build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. s
 \if{html}{\out{<a id="method-GPGraph::graph-buildA"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-buildA}{}}}
 \subsection{Method \code{buildA()}}{
+build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph.obj$buildA(alpha, edge_constraint = FALSE)}\if{html}{\out{</div>}}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph.object.R
 \name{vertex.to.line}
 \alias{vertex.to.line}
-\title{Assume that there is only one line each Lines@Lines}
+\title{Assume that there is only one line each Lines}
 \usage{
 vertex.to.line(Lines)
 }
@@ -10,9 +10,8 @@ vertex.to.line(Lines)
 \item{Lines}{object}
 }
 \value{
-V, EtV, El
-from Line to vertex
+A list with elements V, EtV, El
 }
 \description{
-Assume that there is only one line each Lines@Lines
+Assume that there is only one line each Lines
 }
