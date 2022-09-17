@@ -318,7 +318,7 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   Tc <- graph$CBobj$T[-ind.const,]
   Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
   R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc), LDL = FALSE, perm = TRUE)
-  loglik <- 0.5*Matrix::determinant(R)$modulus[1]
+  loglik <- Matrix::determinant(R)$modulus[1]
 
   #build BSIGMAB
   Qpmu      <- rep(0, 4*nrow(graph.obj$EtV))
@@ -446,7 +446,7 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   Qp <- Q + BtSB
   Qp <- Tc%*%Qp%*%t(Tc)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
-  loglik <- loglik - 0.5*Matrix::determinant(R)$modulus[1]
+  loglik <- loglik - Matrix::determinant(R)$modulus[1]
 
   v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Tc%*%Qpmu,system = 'P'), system='L')))
   #Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))

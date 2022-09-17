@@ -48,15 +48,18 @@ X[,2] <- X[,2] + sigma_e*rnorm(nt)
 graph$add_observations2(y = X[,2], PtE = X[,c(3,1)])
 graph$observation_to_vertex()
 lik <- likelihood.exp.graph(theta,graph)
-lik_diff <- lik - likelihood.exp.graph(theta+c(1,0,0),graph)
+#lik_diff <- lik - likelihood.exp.graph(theta+c(1,0,0),graph)
 
 
 lik.v2 <- likelihood.exp.graph.v2(theta,graph)
-lik_diff.v2 <- lik.v2 - likelihood.exp.graph.v2(theta+c(1,0,0),graph)
+#lik_diff.v2 <- lik.v2 - likelihood.exp.graph.v2(theta+c(1,0,0),graph)
 
 lik.cov <-  likelihood.exp.graph.covariance(theta,graph)
 
 test_that("Check agrement beteen covariance and precision matrix formulation", {
-  expect_equal(lik.v2,lik.cov, tolerance=1e-10)
+  expect_equal(as.matrix(lik.v2),as.matrix(lik.cov), tolerance=1e-10)
 })
 
+test_that("Check agrement beteen covariance and precision matrix formulation 2", {
+  expect_equal(as.matrix(lik),as.matrix(lik.cov), tolerance=1e-10)
+})

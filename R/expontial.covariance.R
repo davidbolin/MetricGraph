@@ -473,7 +473,7 @@ likelihood.exp.graph.v2 <- function(theta, graph.obj){
   R.p <- chol(Q.p)
 
   l <- sum(log(diag(R))) - sum(log(diag(R.p))) - length(graph.obj$y)*log(sigma_e)
-  v <- graph.obj$y - A%*%mu.p
+  v <- graph.obj$y  - A%*%mu.p
   l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2)
   return(as.double(l))
 }
@@ -572,13 +572,13 @@ likelihood.exp.graph <- function(theta, graph.obj){
                              x = Q.list$x,
                              dims=Q.list$dims)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
-  loglik <- 0.5*Matrix::determinant(R)$modulus[1]
-
+  loglik <- Matrix::determinant(R)$modulus[1]
   #build BSIGMAB
   Qpmu <- rep(0, nrow(graph.obj$V))
   obs.edges <- unique(graph.obj$PtE[,1])
 
   i_ <- j_ <- x_ <- rep(0,4*length(obs.edges))
+
   count <- 0
   for(e in obs.edges){
     obs.id <- graph.obj$PtE[,1] == e
@@ -597,7 +597,7 @@ likelihood.exp.graph <- function(theta, graph.obj){
     Sigma_iB      <- solve(Sigma_i, t(Bt))
     BtSinvB       <- Bt %*% Sigma_iB
 
-    E <- graph$EtV[e,2:3]
+    E <- graph.obj$EtV[e,2:3]
     if(E[1]==E[2]){
       Qpmu[E[1]]    <- Qpmu[E[1]]     +  sum(t(Sigma_iB)%*%y_i)
       i_[count+1] <- E[1]
@@ -610,6 +610,7 @@ likelihood.exp.graph <- function(theta, graph.obj){
       x_[count+(1:4)] <- c(BtSinvB[1,1], BtSinvB[1,2], BtSinvB[1,2], BtSinvB[2,2] )
       count <- count + 4
     }
+
     loglik <- loglik - 0.5  * t(y_i)%*%solve(Sigma_i,y_i)
     loglik <- loglik - sum(log(diag(R)))
   }
@@ -621,8 +622,10 @@ likelihood.exp.graph <- function(theta, graph.obj){
                              j= j_,
                              x= x_,
                              dims=Q.list$dims)
+
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
-  loglik <- loglik - 0.5*Matrix::determinant(R)$modulus[1]
+
+  loglik <- loglik - Matrix::determinant(R)$modulus[1]
 
   v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Qpmu,system = 'P'), system='L')))
   #Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))
