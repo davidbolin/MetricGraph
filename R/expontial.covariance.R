@@ -453,11 +453,11 @@ likelihood.graph.covariance <- function(theta, graph.obj,model = "alpha1"){
     Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
   } else if (model == "alpha2"){
     n.c <- 1:length(graph.obj$CBobj$S)
-    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Q <- Q.matern2(c(theta[2],theta[3]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
     Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
     Qtilde <- Qtilde[-n.c,-n.c]
     Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
-    index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (graph.obj$PtE[,2]==0)) + (3 * (graph.obj$PtE[,2]!= 0))
+    index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (abs(graph.obj$PtE[,2])<1e-14)) + (3 * (abs(graph.obj$PtE[,2])>1e-14))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL"){
     Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
@@ -469,7 +469,11 @@ likelihood.graph.covariance <- function(theta, graph.obj,model = "alpha1"){
   }
 
   diag(Sigma) <- diag(Sigma)  +  theta[1]^2
-  R <- chol(Sigma)
+
+  R <- chol(Sigma,pivot=T)
+
+  if(attr(R,"rank") < dim(R)[1])
+    return(-Inf)
   return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y) - n.o*log(2*pi)/2)
 }
 

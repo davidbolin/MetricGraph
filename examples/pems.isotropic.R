@@ -64,12 +64,12 @@ cv.res <- posterior.crossvalidation.covariance(theta.res, graph, model = "isoExp
 cv.alpha1 <- posterior.crossvalidation.covariance(theta.exp,graph, model = "alpha1",ind = ind)
 cv.gl <- posterior.crossvalidation.covariance(theta.graph,graph, model ="GL",ind = ind)
 cv.alpha2 <- posterior.crossvalidation.covariance(theta.alpha2,graph, model = "alpha2",ind = ind)
-result <- data.frame(RMSE = c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse, cv.alhpa2$rmse),
-                     MAE = c(cv.res$mae, cv.alpha1$mae, cv.gl$mae, cv.alhpa2$mae),
-                     LS = c(cv.res$logscore, cv.alpha1$logscore, cv.gl$logscore, cv.alhpa2$logscore),
-                     CRPS = c(cv.res$crps, cv.alpha1$crps, cv.gl$crps, cv.alhpa2$crps),
-                     SCRPS = c(cv.res$scrps, cv.alpha1$scrps, cv.gl$scrps, cv.alhpa2$scrps),
-                     like = c(like.res, like.alpha1, like.graph, like.alpha2),
+result <- data.frame(RMSE = c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse, cv.alpha2$rmse),
+                     MAE = c(cv.res$mae, cv.alpha1$mae, cv.gl$mae, cv.alpha2$mae),
+                     LS = -c(cv.res$logscore, cv.alpha1$logscore, cv.gl$logscore, cv.alpha2$logscore),
+                     CRPS = -c(cv.res$crps, cv.alpha1$crps, cv.gl$crps, cv.alpha2$crps),
+                     SCRPS = -c(cv.res$scrps, cv.alpha1$scrps, cv.gl$scrps, cv.alpha2$scrps),
+                     nlike = -c(like.res, like.alpha1, like.graph, like.alpha2),
                     row.names = c("isoExp","alpha1","GL", "alpha2"))
 print(result)
 
