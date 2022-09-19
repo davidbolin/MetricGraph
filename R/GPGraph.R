@@ -24,4 +24,5 @@
 #' @name GPGraph
 #' @import Matrix
 #' @importFrom igraph graph distances
+#' @importFrom rSPDE matern.covariance
 NULL

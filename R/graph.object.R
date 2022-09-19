@@ -282,7 +282,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
                                 dims = c(count_constraint, 4*nE))
       self$A = A
 
-      self$CBobj <- CB::c_basis2_cpp(self$A)
+      self$CBobj <- c_basis2(self$A)
       self$CBobj$T <- t(self$CBobj$T)
     }else{
       error("only alpha=2 implimented")
