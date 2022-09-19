@@ -59,7 +59,7 @@ build.Sigma.beta1 <- function(P,E,kappa,sigma,n){
 
   #loop over edges and construct free covariances
   for(i in 1:n.e){
-    C <- build.C.beta1(L[i], kappa=kappa, sigma=sigma, nu=3/2)
+    C <- build.C.beta1(L[i], kappa=kappa, sigma=sigma)
     x <- seq(from=0,to=L[i],length.out = n)
     P.sigma <- cbind(P.sigma, P[E[i,1],]+outer(P[E[i,2],]-P[E[i,1],],seq(from=0,to=1,length.out=n)))
     S1 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=sigma, nu=3/2, L = L[i])
