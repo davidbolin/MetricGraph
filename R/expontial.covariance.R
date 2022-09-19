@@ -443,13 +443,15 @@ posterior.leave.stupid <- function(theta, graph.obj){
 #' @param graph.obj      - graph object
 #' @return The log-likelihood
 #' @export
-likelihood.graph.covariance <- function(theta, graph.obj,alpha=1){
+likelihood.graph.covariance <- function(theta, graph.obj,model = "alpha1"){
 
+  n.o <- length(graph.obj$y)
+  n.v <- dim(graph$V)[1]
   #build covariance matrix
-  if(alpha==1){
+  if(model == "alpha1"){
     Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
     Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
-  } else if (alpha == 2){
+  } else if (model == "alpha2"){
     n.c <- 1:length(graph.obj$CBobj$S)
     Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
     Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
@@ -457,12 +459,87 @@ likelihood.graph.covariance <- function(theta, graph.obj,alpha=1){
     Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
     index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (graph.obj$PtE[,2]==0)) + (3 * (graph.obj$PtE[,2]!= 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+  } else if (model == "GL"){
+    Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+    Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  } else if (model == "isoExp"){
+    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+  } else {
+    stop("wrong model choice.")
   }
 
   diag(Sigma) <- diag(Sigma)  +  theta[1]^2
   R <- chol(Sigma)
-  return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y))
+  return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y) - n.o*log(2*pi)/2)
 }
+
+#' Prediction for models assuming observations at vertices
+#'
+#' @param theta Estimated model parameters (sigma_e, sigma, kappa)
+#' @param graph.obj Graph object
+#' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
+#' graph Laplacian, and "isoExp" gives isotropic exponential
+#' @param ind Indices for cross validation. It should be a vector of the same length as the
+#' data, with integer values representing each group in the cross-validation.
+#' If NULL, leave-one-out cross validation is performed.
+#' @details This function does not use sparsity for any model.
+#'
+#' @return Vector with all predictions
+#' @export
+posterior.crossvalidation.covariance <- function(theta,
+                                      graph.obj,
+                                      model = "alpha1",
+                                      ind = NULL)
+{
+  n.o <- length(graph.obj$y)
+  n.v <- dim(graph$V)[1]
+  #build covariance matrix
+  if(model == "alpha1"){
+    Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+    Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  } else if (model == "alpha2"){
+    n.c <- 1:length(graph.obj$CBobj$S)
+    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
+    Qtilde <- Qtilde[-n.c,-n.c]
+    Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
+    index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (graph.obj$PtE[,2]==0)) + (3 * (graph.obj$PtE[,2]!= 0))
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+  } else if (model == "GL"){
+    Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+    Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  } else if (model == "isoExp"){
+    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+  } else {
+    stop("wrong model choice.")
+  }
+  Sigma.o <- Sigma
+  diag(Sigma.o) <- diag(Sigma.o)  +  theta[1]^2
+  if(is.null(ind)){
+    ind <- 1:length(graph.obj$y)
+  }
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0,length(graph.obj$y))
+  mae <- rmse <- rep(0,length(graph.obj$y))
+  for(j in 1:length(unique(ind))){
+    i <- which(ind == j)
+    mu.p[i] <-Sigma[i,-i]%*%solve(Sigma.o[-i,-i],graph.obj$y[-i])
+    Sigma.p <- Sigma.o[i,i] - Sigma.o[i,-i]%*%solve(Sigma.o[-i,-i],Sigma.o[-i,i])
+    var.p[i] <- diag(Sigma.p)
+    logscore[i] <- LS(graph.obj$y[i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph.obj$y[i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph.obj$y[i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph.obj$y[i] - mu.p[i])
+    rmse[i] <- (graph.obj$y[i] - mu.p[i])^2
+  }
+  return(list(mu = mu.p,
+              var = var.p,
+              logscore = mean(logscore),
+              crps = mean(crps),
+              scrps = mean(scrps),
+              mae = mean(mae),
+              rmse = mean(rmse)))
+}
+
 
 #' Log-likelihood calculation for alpha=1 without integration
 #'

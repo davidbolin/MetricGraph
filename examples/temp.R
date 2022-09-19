@@ -38,3 +38,5 @@ Qtilde <- Qtilde[-n.c,-n.c]
 Sigma.overdetermined  = t(graph$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph$CBobj$T[-n.c,])
 index.obs <-  4*(graph$PtE[,1]-1) + (1 * (graph$PtE[,2]==0)) + (3 * (graph$PtE[,2]!= 0))
 Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+fig <- plot_obs(graph,Sigma[1,], y_loc = Y_loc) + scale_colour_gradientn(colours = viridis(10))
+print(fig)

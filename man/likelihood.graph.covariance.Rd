@@ -4,7 +4,7 @@
 \alias{likelihood.graph.covariance}
 \title{Likelihood evaluation not using sparsity}
 \usage{
-likelihood.graph.covariance(theta, graph.obj, alpha = 1)
+likelihood.graph.covariance(theta, graph.obj, model = "alpha1")
 }
 \arguments{
 \item{theta}{- (sigma_e, sigma, kappa)}
