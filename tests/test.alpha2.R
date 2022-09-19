@@ -112,6 +112,6 @@ graph.temp$buildA(2, F)
 lik2 <-likelihood.graph.covariance(theta, graph.temp, model="alpha2")
 
 test_that("test if computing covariance are equivalent",{
-
+  expect_equal(as.matrix(lik),as.matrix(lik2), tolerance=1e-10)
 })
 
