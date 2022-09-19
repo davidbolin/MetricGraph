@@ -172,6 +172,12 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
           self$PtV[i] <- dim(self$V)[1]
         }
     }
+    if(!is.null(self$geo.dist)){
+      self$compute_geodist()
+    }
+    if(!is.null(self$res.dist)){
+      self$compute_resdist()
+    }
   },
 
   #' @description Add observations to the object
