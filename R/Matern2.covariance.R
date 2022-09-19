@@ -313,9 +313,9 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph.obj$CBobj$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const,]
+  Tc <- graph.obj$CBobj$T[-ind.const,]
   Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
   R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc), LDL = FALSE, perm = TRUE)
   loglik <- Matrix::determinant(R)$modulus[1]
@@ -356,7 +356,7 @@ likelihood.matern2.graph <- function(theta, graph.obj){
     Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R, backsolve(R, t(Bt[,attr(R,"pivot")]), transpose = TRUE), upper.tri = TRUE)
     BtSinvB       <- Bt %*% Sigma_iB
 
-    E <- graph$EtV[e,2:3]
+    E <- graph.obj$EtV[e,2:3]
     if(E[1]==E[2]){
       error("circle not implemented")
     }else{
@@ -451,7 +451,8 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Tc%*%Qpmu,system = 'P'), system='L')))
   #Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))
 
-  loglik <- loglik + 0.5  * t(v)%*%v
+  n.o <- length(graph.obj$y)
+  loglik <- loglik + 0.5  * t(v)%*%v  - 0.5 * n.o*log(2*pi)
   #prior
   #loglik <- loglik - (2)*log(theta[2]) - 0.5/theta[2]
 
@@ -469,9 +470,9 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
   sigma_e <- theta[1]
   #build Q
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph.obj$CBobj$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const,]
+  Tc <- graph.obj$CBobj$T[-ind.const,]
   Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
 
   #build BSIGMAB
@@ -510,7 +511,7 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
     Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R, backsolve(R, t(Bt[,attr(R,"pivot")]), transpose = TRUE), upper.tri = TRUE)
     BtSinvB       <- Bt %*% Sigma_iB
 
-    E <- graph$EtV[e,2:3]
+    E <- graph.obj$EtV[e,2:3]
     if(E[1]==E[2]){
       error("circle not implemented")
     }else{
