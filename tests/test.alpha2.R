@@ -74,11 +74,44 @@ test_that("test adjusted covariance matrix against article formula",{
   testthat::expect_equal( c(Sigma.2), c(R_adj), tol=1e-9)
 })
 
-#T_ <- l_e*kappa
-#C <- (2*kappa*sigma^(-2))/((1- 2 * T_^2)^2 - 2*exp(2*T_) * (2 * T_^2 + 1) + exp(4* T_))
-#q_1 <- exp(4*T_) - (1- 2 * T_)^2 + 4  * T_ * exp(2*T_)
-#q_2 = 4* T_ * exp(2*T_)
-#Q_11 <- C*q_1*kappa^2
-#Q_12 <- C * q_2 * kappa
+set.seed(13)
+nt <- 40
+kappa <- 0.3
+sigma_e <- 0.1
+sigma   <- 1
+theta <-  c(sigma_e,kappa,sigma)
+line.line2 <- Line(rbind(c(30,80),c(140,80)))
+line.line <- Line(rbind(c(30,00),c(30,80)))
 
+graph.temp <-  graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
+                                              Lines(list(line.line2),ID="2"))))
+Q <- Q.matern2(theta[2:3], graph.temp$V, graph.temp$EtV, graph.temp$El, BC = 1)
+graph.temp$buildA(2, F)
+Qmod <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
+Qtilde <- Qmod
+Qtilde <- Qtilde[-c(1:2),-c(1:2)]
+R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
+V0 <- as.vector(solve(R, solve(R,rnorm(6), system = 'Lt')
+                      , system = 'Pt'))
+u_e <- t(graph.temp$CBobj$T)%*%c(0,0,V0)
+X <- c()
+for(i in 1:length(graph.temp$El)){
+  X <- rbind(X,cbind(sample.line.matern2(theta,
+                                         u_e[4*(i-1) +1:4],
+                                         Line = graph.temp$Lines[i,],
+                                         graph.temp$El[i],
+                                         nt = nt),i))
+}
+X[,2] <- X[,2] + sigma_e*rnorm(nt)
+
+graph.temp$add_observations2(y = X[,2], PtE = X[,c(3,1)])
+graph.temp$buildA(2, F)
+lik <- likelihood.matern2.graph(theta,graph.temp)
+graph.temp$observation_to_vertex()
+graph.temp$buildA(2, F)
+lik2 <-likelihood.graph.covariance(theta, graph.temp, model="alpha2")
+
+test_that("test if computing covariance are equivalent",{
+
+})
 

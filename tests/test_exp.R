@@ -54,7 +54,7 @@ lik <- likelihood.exp.graph(theta,graph)
 lik.v2 <- likelihood.exp.graph.v2(theta,graph)
 #lik_diff.v2 <- lik.v2 - likelihood.exp.graph.v2(theta+c(1,0,0),graph)
 
-lik.cov <-  likelihood.exp.graph.covariance(theta,graph)
+lik.cov <-  likelihood.graph.covariance(theta,graph, model="alpha1")
 
 test_that("Check agrement beteen covariance and precision matrix formulation", {
   expect_equal(as.matrix(lik.v2),as.matrix(lik.cov), tolerance=1e-10)

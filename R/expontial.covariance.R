@@ -446,7 +446,7 @@ posterior.leave.stupid <- function(theta, graph.obj){
 likelihood.graph.covariance <- function(theta, graph.obj,model = "alpha1"){
 
   n.o <- length(graph.obj$y)
-  n.v <- dim(graph$V)[1]
+  n.v <- dim(graph.obj$V)[1]
   #build covariance matrix
   if(model == "alpha1"){
     Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
@@ -564,9 +564,10 @@ likelihood.exp.graph.v2 <- function(theta, graph.obj){
   R <- chol(Q)
   R.p <- chol(Q.p)
 
-  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - length(graph.obj$y)*log(sigma_e)
+  n.o <- length(graph.obj$y)
+  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
   v <- graph.obj$y  - A%*%mu.p
-  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2)
+  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
   return(as.double(l))
 }
 
@@ -654,9 +655,10 @@ likelihood.graph_laplacian <- function(theta, graph.obj){
   R <- chol(Q)
   R.p <- chol(Q.p)
 
-  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - length(graph$y)*log(sigma_e)
+  n.o <- length(graph.obj$y)
+  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
   v <- graph$y - A%*%mu.p
-  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2)
+  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
   return(as.double(l))
 }
 
@@ -732,11 +734,11 @@ likelihood.exp.graph <- function(theta, graph.obj){
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
   loglik <- loglik - Matrix::determinant(R)$modulus[1]
-
+  n.o <- length(graph.obj$y)
   v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Qpmu,system = 'P'), system='L')))
   #Qpmu <- as.vector(solve(R,solve(R, v,system = 'Lt'), system='Pt'))
 
-  loglik <- loglik + 0.5  * t(v)%*%v
+  loglik <- loglik + 0.5  * t(v)%*%v - 0.5 * n.o*log(2*pi)
   return(loglik[1])
 }
 
