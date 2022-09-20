@@ -460,21 +460,23 @@ likelihood.graph.covariance <- function(theta, graph.obj,model = "alpha1"){
     index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (abs(graph.obj$PtE[,2])<1e-14)) + (3 * (abs(graph.obj$PtE[,2])>1e-14))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL"){
-    Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+    Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
+    Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  } else if (model == "GL2"){
+    Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
+    Q <- Q%*%Q
     Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
   } else if (model == "isoExp"){
-    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+    Sigma <- as.matrix(theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV]))
   } else {
     stop("wrong model choice.")
   }
 
   diag(Sigma) <- diag(Sigma)  +  theta[1]^2
 
-  R <- chol(Sigma,pivot=T)
+  R <- chol(Sigma)
 
-  if(attr(R,"rank") < dim(R)[1])
-    return(-Inf)
-  return(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y) - n.o*log(2*pi)/2)
+  return(as.double(-sum(log(diag(R))) - 0.5*t(graph.obj$y)%*%solve(Sigma,graph.obj$y) - n.o*log(2*pi)/2))
 }
 
 #' Prediction for models assuming observations at vertices
@@ -496,7 +498,7 @@ posterior.crossvalidation.covariance <- function(theta,
                                       ind = NULL)
 {
   n.o <- length(graph.obj$y)
-  n.v <- dim(graph$V)[1]
+  n.v <- dim(graph.obj$V)[1]
   #build covariance matrix
   if(model == "alpha1"){
     Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
@@ -510,10 +512,14 @@ posterior.crossvalidation.covariance <- function(theta,
     index.obs <-  4*(graph.obj$PtE[,1]-1) + (1 * (graph.obj$PtE[,2]==0)) + (3 * (graph.obj$PtE[,2]!= 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL"){
-    Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+    Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
+    Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
+  } else if (model == "GL2"){
+    Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
+    Q <- Q%*%Q
     Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
   } else if (model == "isoExp"){
-    Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
+    Sigma <- as.matrix(theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV]))
   } else {
     stop("wrong model choice.")
   }
@@ -555,9 +561,8 @@ posterior.crossvalidation.covariance <- function(theta,
 likelihood.exp.graph.v2 <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  n.v <- dim(graph.obj$V)[1]
   Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
-  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+  A <- Diagonal(graph.obj$nV,rep(1,graph.obj$nV))[graph.obj$PtV,]
   Q.p <- Q  + t(A)%*%A/sigma_e^2
   mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
 
@@ -590,7 +595,6 @@ posterior.crossvalidation <- function(theta,
   {
   #setup matrices for prediction
   sigma_e <- theta[1]
-  n.v <- dim(graph$V)[1]
   if(model == "isoExp"){
     Sigma <- theta[3]^2*exp(-theta[2]*graph.obj$res.dist[graph.obj$PtV,graph.obj$PtV])
     Sigma.o <- Sigma
@@ -609,9 +613,9 @@ posterior.crossvalidation <- function(theta,
     if(model == "alpha1"){
       Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
     } else if(model == "GL"){
-      Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+      Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
     }
-    A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+    A <- Diagonal(graph.obj$nV,rep(1,graph.obj$nV))[graph.obj$PtV,]
     Q.p <- Q  + t(A)%*%A/sigma_e^2
   } else {
     stop("Wrong model choice.")
@@ -626,7 +630,7 @@ posterior.crossvalidation <- function(theta,
     if(model == "isoExp" || model == "alpha2"){
         y_p[i] <-Sigma[i,-i]%*%solve(Sigma.o[-i,-i],graph.obj$y[-i])
     } else {
-      A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV[-i],]
+      A <- Diagonal(graph.obj$nV,rep(1,graph.obj$nV))[graph.obj$PtV[-i],]
       mu.p <- solve(Q  + t(A)%*%A/sigma_e^2, as.vector(t(A)%*%graph.obj$y[-i]/sigma_e^2))
       y_p[i] <- mu.p[graph.obj$PtV[i]]
     }
@@ -644,11 +648,10 @@ posterior.crossvalidation <- function(theta,
 likelihood.graph_laplacian <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  n.v <- dim(graph.obj$V)[1]
 
-  Q <- theta[2]*(theta[3]*Diagonal(n.v,1) + graph.obj$Laplacian)
+  Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
 
-  A <- Diagonal(n.v,rep(1,n.v))[graph.obj$PtV,]
+  A <- Diagonal(graph.obj$nV,rep(1,graph.obj$nV))[graph.obj$PtV,]
   Q.p <- Q  + t(A)%*%A/sigma_e^2
   mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
 

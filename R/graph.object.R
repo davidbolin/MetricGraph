@@ -39,6 +39,9 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field nE number of edges
   nE= 0,
 
+  #' @field nV number of vertices
+  nV = 0,
+
   #' @field Lines List of Lines object for building the graph
   Lines = NULL,
 
@@ -63,6 +66,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
     list_obj <- vertex.to.line(self$Lines)
     self$V   <- list_obj$V
+    self$nV <- dim(self$V)[1]
     self$EtV <- list_obj$EtV
     self$El  <- list_obj$El
   },
@@ -113,6 +117,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
         self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
       }
     }
+    self$nV <- dim(self$V)[1]
   },
 
   #' @description Compute shortest path distances
@@ -127,29 +132,27 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     if(is.null(self$geo.dist)){
       self$compute_geodist()
     }
-    n.v <- dim(self$V)[1]
-    L <- Matrix(0,n.v,n.v)
-    for(i in 1:length(self$El)){
+    L <- Matrix(0,self$nV,self$nV)
+    for(i in 1:self$nE){
       tmp <- -1/self$geo.dist[self$EtV[i,2], self$EtV[i,3]]
       L[self$EtV[i,3],self$EtV[i,2]] <- L[self$EtV[i,2],self$EtV[i,3]] <- tmp
     }
-    for(i in 1:n.v){
+    for(i in 1:self$nV){
       L[i,i] <- -sum(L[i,-i])
     }
     L[1,1] <- L[1,1] + 1
 
     Li <- solve(L)
-    self$res.dist <- -2*Li + t(diag(Li))%x%rep(1,n.v) + t(rep(1,n.v))%x%diag(Li)
+    self$res.dist <- -2*Li + t(diag(Li))%x%rep(1,self$nV) + t(rep(1,self$nV))%x%diag(Li)
   },
 
   #' @description Compute graph Laplacian
   compute_laplacian = function(){
-    n.v <- dim(self$V)[1]
-    Wmat <- Matrix(0,n.v,n.v)
-    for(i in 1:length(self$El)){
+    Wmat <- Matrix(0,self$nV,self$nV)
+    for(i in 1:self$nE){
       Wmat[self$EtV[i,2],self$EtV[i,3]] <- Wmat[self$EtV[i,3],self$EtV[i,2]] <- 1/self$El[i]
     }
-    self$Laplacian <- Diagonal(n.v,as.vector(Matrix::rowSums(Wmat))) - Wmat
+    self$Laplacian <- Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
   },
 
   #' @description Add observation locations as vertices in the graph
@@ -240,14 +243,13 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   buildA = function(alpha, edge_constraint=FALSE){
 
     if(alpha==2){
-      nE = dim(self$EtV)[1]
       i_  =  rep(0, 2*dim(self$EtV)[1])
       j_  =  rep(0, 2*dim(self$EtV)[1])
       x_  =  rep(0, 2*dim(self$EtV)[1])
 
       count_constraint = 0
       count            = 0
-      for(v in 1:dim(self$V)[1]){
+      for(v in 1:self$nV){
         lower.edges  = which(self$EtV[,2]%in%v)
         upper.edges  = which(self$EtV[,3]%in%v)
         n_e = length(lower.edges) + length(upper.edges)
@@ -285,7 +287,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
       A <- Matrix::sparseMatrix(i    = i_[1:count],
                                 j    = j_[1:count],
                                 x    = x_[1:count],
-                                dims = c(count_constraint, 4*nE))
+                                dims = c(count_constraint, 4*self$nE))
       self$A = A
 
       self$CBobj <- c_basis2(self$A)
