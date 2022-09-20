@@ -1,6 +1,6 @@
 library('sf')
 library(GPGraph)
-
+set.seed(1)
 # Load data
 Lines <- read_sf('data.pems/lines.shp')
 V <- read.csv('data.pems/V.csv',header=T, row.names = NULL)
@@ -19,7 +19,7 @@ graph$V <- as.matrix(V)
 graph$El <- as.matrix(EtV[,4])
 graph$EtV <- as.matrix(EtV[,1:3])
 graph$PtE <- as.matrix(PtE)
-graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
+graph$y <- colMeans(Y)
 graph$y <- graph$y - mean(graph$y ) #temporary
 graph$nV <- dim(graph$V)[1]
 graph$nE <- length(graph$El)
@@ -59,10 +59,10 @@ like.graph <- -res$value
 
 # Fit alpha=2 model
 graph$buildA(2, F)
-theta.alpha2 <- c(1.048223e+01, 4.787329e-04, 4.046737e-04)
-res <- optim(log(theta.alpha2), function(x) -likelihood.graph.covariance(exp(x),graph,model = "alpha2") )
-theta.alpha2 <- exp(res$par)
-like.alpha2 <- -res$value
+#theta.alpha2 <- c(1.048223e+01, 4.787329e-04, 4.046737e-04)
+#res <- optim(log(theta.alpha2), function(x) -likelihood.graph.covariance(exp(x),graph,model = "alpha2") )
+#theta.alpha2 <- exp(res$par)
+#like.alpha2 <- -res$value
 
 # Fit graph Laplace model 2
 graph$compute_laplacian()
@@ -79,7 +79,7 @@ ind <- rep(1:K,n.g+1)[1:n.y]
 ind <- ind[sample(1:n.y,n.y)]
 
 cv.res <- posterior.crossvalidation.covariance(theta.res, graph, model = "isoExp",ind = ind)
-cv.alpha1 <- posterior.crossvalidation.covariance(theta.exp,graph, model = "alpha1",ind = ind)
+cv.alpha1 <- posterior.crossvalidation.covariance(theta.alpha1,graph, model = "alpha1",ind = ind)
 cv.gl <- posterior.crossvalidation.covariance(theta.graph,graph, model ="GL",ind = ind)
 cv.gl2 <- posterior.crossvalidation.covariance(theta.graph2,graph, model ="GL2",ind = ind)
 cv.alpha2 <- posterior.crossvalidation.covariance(theta.alpha2,graph, model = "alpha2",ind = ind)

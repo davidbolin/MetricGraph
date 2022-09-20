@@ -40,6 +40,8 @@ Thus graphs can only be connected by end points
 
 \item{\code{nE}}{number of edges}
 
+\item{\code{nV}}{number of vertices}
+
 \item{\code{Lines}}{List of Lines object for building the graph}
 
 \item{\code{geo.dist}}{Geodesic distance matrix}
