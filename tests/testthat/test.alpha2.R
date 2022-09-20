@@ -127,5 +127,24 @@ test_that("test if computing covariance are equivalent",{
   lik2 <-likelihood.graph.covariance(theta, graph.temp, model="alpha2")
 
   expect_equal(as.matrix(lik),as.matrix(lik2), tolerance=1e-10)
+
+  pm <- posterior.mean.obs.matern2(theta,graph.temp)# posterior mean
+  n.o <- length(graph.temp$y)
+  n.v <- dim(graph.temp$V)[1]
+  n.c <- 1:length(graph.temp$CBobj$S)
+  Q <- Q.matern2(c(theta[2],theta[3]), graph.temp$V, graph.temp$EtV, graph.temp$El, BC = 1)
+  Qtilde <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
+  Qtilde <- Qtilde[-n.c,-n.c]
+  Sigma.overdetermined  = t(graph.temp$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.temp$CBobj$T[-n.c,])
+  index.obs <-  4*(graph.temp$PtE[,1]-1) + (1 * (abs(graph.temp$PtE[,2])<1e-14)) + (3 * (abs(graph.temp$PtE[,2])>1e-14))
+  Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+  Sigma.Y <- Sigma
+  diag(Sigma.Y) <- diag(Sigma.Y) + theta[1]^2
+  pm2 <- Sigma%*%solve(Sigma.Y,graph.temp$y)
+
+  expect_equal(as.matrix(pm),as.matrix(pm2), tolerance=1e-10)
+  pm_ <- posterior.mean.matern2(theta, graph.temp)
+  pm2_ <- Sigma.overdetermined[,index.obs]%*%solve(Sigma.Y,graph.temp$y)
+  expect_equal(as.matrix(pm_),as.matrix(pm2_), tolerance=1e-10)
 })
 

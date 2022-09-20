@@ -23,6 +23,15 @@ graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
 fig <- plot_obs(graph,graph$y, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
+
+
+
+graph$buildA(2, F)
+theta.alpha2 <- c(1.710348e+01, 1.084454e-04, 0.0001)
+res <- optim(log(theta.alpha2), function(x) -likelihood.matern2.graph(exp(x),graph) )
+theta.alpha2 <- exp(res$par)
+like.alpha2 <- -res$value
+
 graph$observation_to_vertex()
 
 # Fit isotropic model

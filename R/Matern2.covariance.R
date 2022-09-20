@@ -502,7 +502,7 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
     E.ind         <- c(1:4)
     Obs.ind       <- -E.ind
     Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind,drop=F])
-    Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+    Sigma_i       <- S[Obs.ind,Obs.ind,drop=F] - S[Obs.ind, E.ind,drop=F] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
     R <- chol(Sigma_i, pivot=T)
@@ -578,13 +578,6 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
       j_[count + 14] <- 4*(e-1) + 2
       x_[count + 14] <- BtSinvB[2, 3]
 
-      #lower edge  u', upper edge  u,
-      i_[count + 13] <- 4*(e-1) + 2
-      j_[count + 13] <- 4*(e-1) + 3
-      x_[count + 13] <- BtSinvB[2, 3]
-      i_[count + 14] <- 4*(e-1) + 3
-      j_[count + 14] <- 4*(e-1) + 2
-      x_[count + 14] <- BtSinvB[2, 3]
 
       #lower edge  u', upper edge  u',
       i_[count + 15] <- 4*(e-1) + 2
@@ -628,17 +621,17 @@ posterior.mean.obs.matern2 <- function(theta, graph.obj, leave.edge.out = F){
 
   Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
   if(leave.edge.out==F)
-    E.post <- posterior.mean.matern2(theta, graph)
+    E.post <- posterior.mean.matern2(theta, graph.obj)
 
 
-  y_hat <- rep(0, length(graph$y))
+  y_hat <- rep(0, length(graph.obj$y))
   Qpmu <- rep(0, nrow(graph.obj$V))
   obs.edges <- unique(graph.obj$PtE[,1])
 
   for(e in obs.edges){
 
     if(leave.edge.out==T)
-      E.post <- posterior.mean.matern2(theta, graph, rem.edge = e)
+      E.post <- posterior.mean.matern2(theta, graph.obj, rem.edge = e)
 
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
@@ -663,10 +656,10 @@ posterior.mean.obs.matern2 <- function(theta, graph.obj, leave.edge.out = F){
 
 
 
-    u_e <- E.post[4*(e-1) + c(2,4,1,2)]
+    u_e <- E.post[4*(e-1) + c(2,4,1,3)]
     y_hat[obs.id] <- t(Bt)%*%u_e
     if(leave.edge.out==F){
-      Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+      Sigma_i       <- S[Obs.ind,Obs.ind,drop=F] - S[Obs.ind, E.ind,drop=F] %*% Bt
       Sigma_noise  <- Sigma_i
       diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
 
