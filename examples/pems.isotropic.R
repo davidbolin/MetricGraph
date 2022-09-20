@@ -21,6 +21,8 @@ graph$EtV <- as.matrix(EtV[,1:3])
 graph$PtE <- as.matrix(PtE)
 graph$y <- Y[1,]#-colMeans(Y)#as.matrix(Y[,-1])[1,]
 graph$y <- graph$y - mean(graph$y ) #temporary
+graph$nV <- dim(graph$V)[1]
+graph$nE <- length(graph$El)
 fig <- plot_obs(graph,graph$y, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
 print(fig)
 graph$observation_to_vertex()
@@ -48,10 +50,17 @@ like.graph <- -res$value
 
 # Fit alpha=2 model
 graph$buildA(2, F)
-theta.alpha2 <- c(1.710348e+01, 1.084454e-04, 0.0001)
+theta.alpha2 <- c(1.048223e+01, 4.787329e-04, 4.046737e-04)
 res <- optim(log(theta.alpha2), function(x) -likelihood.graph.covariance(exp(x),graph,model = "alpha2") )
 theta.alpha2 <- exp(res$par)
 like.alpha2 <- -res$value
+
+# Fit graph Laplace model 2
+graph$compute_laplacian()
+theta.graph2 <- c(9.478923, 7.154005, 1.160011e-05)
+res <- optim(log(theta.graph2), function(x) -likelihood.graph.covariance(exp(x),graph, model = "GL2") )
+theta.graph2 <- exp(res$par)
+like.graph2 <- -res$value
 
 #cross validation
 K <- 5 #number of groups in cross validation
@@ -63,14 +72,15 @@ ind <- ind[sample(1:n.y,n.y)]
 cv.res <- posterior.crossvalidation.covariance(theta.res, graph, model = "isoExp",ind = ind)
 cv.alpha1 <- posterior.crossvalidation.covariance(theta.exp,graph, model = "alpha1",ind = ind)
 cv.gl <- posterior.crossvalidation.covariance(theta.graph,graph, model ="GL",ind = ind)
+cv.gl2 <- posterior.crossvalidation.covariance(theta.graph2,graph, model ="GL2",ind = ind)
 cv.alpha2 <- posterior.crossvalidation.covariance(theta.alpha2,graph, model = "alpha2",ind = ind)
-result <- data.frame(RMSE = c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse, cv.alpha2$rmse),
-                     MAE = c(cv.res$mae, cv.alpha1$mae, cv.gl$mae, cv.alpha2$mae),
-                     LS = -c(cv.res$logscore, cv.alpha1$logscore, cv.gl$logscore, cv.alpha2$logscore),
-                     CRPS = -c(cv.res$crps, cv.alpha1$crps, cv.gl$crps, cv.alpha2$crps),
-                     SCRPS = -c(cv.res$scrps, cv.alpha1$scrps, cv.gl$scrps, cv.alpha2$scrps),
-                     nlike = -c(like.res, like.alpha1, like.graph, like.alpha2),
-                    row.names = c("isoExp","alpha1","GL", "alpha2"))
+result <- data.frame(RMSE  = sqrt(c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse,cv.gl2$rmse, cv.alpha2$rmse)),
+                     MAE   = c(cv.res$mae, cv.alpha1$mae, cv.gl$mae, cv.gl2$mae, cv.alpha2$mae),
+                     LS    = -c(cv.res$logscore, cv.alpha1$logscore, cv.gl$logscore, cv.gl2$logscore, cv.alpha2$logscore),
+                     CRPS  = -c(cv.res$crps, cv.alpha1$crps, cv.gl$crps, cv.gl2$crps, cv.alpha2$crps),
+                     SCRPS = -c(cv.res$scrps, cv.alpha1$scrps, cv.gl$scrps, cv.gl2$scrps, cv.alpha2$scrps),
+                     nlike = -c(like.res, like.alpha1, like.graph, like.graph2, like.alpha2),
+                    row.names = c("isoExp","alpha1","GL", "GL2","alpha2"))
 print(result)
 
 
