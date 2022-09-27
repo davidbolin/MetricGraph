@@ -29,14 +29,14 @@ plot_curve <- function(data.to.plot, Line_edge, normalized=F ,gg = NULL,...){
   return(gg)
 }
 
-#'
+#' (depricated)
 #' @param graph          - graph.obj
-#' @param posterior.mean - (function) takes theta, and graph computees posterior mean
-#' @param sample.line    - (function) takes theta, and graph computees posterior mean
+#' @param posterior.mean - (function) takes theta, and graph computes posterior mean of the verteces
+#' @param sample.line    - (function) takes theta, and graph computes posterior mean
 #' @param theta          - params
 #' @param byVertex       - if byVertex V.i is by vertex ortherwise by edge
 #' @export
-plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, byVertex=T, ...){
+plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, byVertex=T, X.intercept=0, ...){
 
   V.post.mean <- posterior.mean(theta, graph)
   for(i in 1:dim(graph$EtV)[1]){
@@ -63,8 +63,10 @@ plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, byVer
                            sample=F)
 
     }
+    print(X.i)
+    X.i[,2] = X.i[,2] +X.intercept
     if(i ==1){
-      gg <- plot_curve(X.i, graph$Lines[i,], normalized=F,  ...)
+      gg <- plot_curve(X.i  , graph$Lines[i,], normalized=F,  ...)
     }else{
       gg <- plot_curve(X.i, graph$Lines[i,], normalized=F, gg = gg,  ...)
     }
@@ -79,7 +81,7 @@ plot_posterior_mean <- function(graph, posterior.mean, sample.line, theta, byVer
 #' @param graph (graph.obj)
 #' @param yhat - (n x 1) prediction of the obsveration
 #' @export
-plot_obs<- function(graph, y, y_loc){
+plot_obs<- function(graph, y, y_loc, size_path=0.1, size_obs=1){
   xyl <- c()
   ind <- 1:dim(graph$EtV)[1]
   for(i in ind){
@@ -88,8 +90,8 @@ plot_obs<- function(graph, y, y_loc){
   }
   obs <- y
   fig <- ggplot()+
-    geom_path(data= data.frame(x=xyl[,1], y=xyl[,2], group=xyl[,3]), mapping = aes(x=x, y=y, group=group), size = 0.1)+
-    geom_point(data=data.frame(x=y_loc[,2],y=y_loc[,3],obs=obs),mapping= aes(y, x, color = obs))
+    geom_path(data= data.frame(x=xyl[,1], y=xyl[,2], group=xyl[,3]), mapping = aes(x=x, y=y, group=group), size = size_path)+
+    geom_point(data=data.frame(x=y_loc[,2],y=y_loc[,3],obs=obs),mapping= aes(y, x, color = obs,), size=size_obs)
 
     return(fig)
 }

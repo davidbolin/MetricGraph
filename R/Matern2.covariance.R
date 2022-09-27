@@ -75,6 +75,9 @@ sample.line.matern2 <-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=N
     ind_remove_t <- which(t %in% c(t_end,py))
     if(length(ind_remove_t)>0)
       t <- t[-ind_remove_t]
+
+    if(length(py)==0)
+      py <- NULL
   }else{
     ind_remove_t <- which(t %in% t_end)
     if(length(ind_remove_t)>0)
@@ -669,5 +672,39 @@ posterior.mean.obs.matern2 <- function(theta, graph.obj, leave.edge.out = F){
   return(y_hat)
   #()
 }
+#' Generates samples of the entire graph
+#' @param graph   - graphical object
+#' @param theta  - (sigma_e, sigma, kappa)
+#' @export
+graph_posterior_mean_matern2 <- function(graph,  theta, sample=F){
 
+  X <- c()
+  V.post.mean <- posterior.mean.matern2(theta, graph)
+  for(i in 1:dim(graph$EtV)[1]){
+    V.i <-   V.post.mean[4*(i-1) + 1:4]
+
+    ind <- which(graph$PtE[,1] == i)
+    if(length(ind)==0){
+      X.i   <- sample.line.matern2(theta,
+                           V.i,
+                           graph$El[i],
+                           nt = 100,
+                           sample=sample)
+    }else{
+      X.i   <- sample.line.matern2(theta,
+                           V.i,
+                           graph$El[i],
+                           nt = 100,
+                           y = graph$y[ind],
+                           py =graph$PtE[ind,2],
+                           sample=sample)
+
+    }
+    X.i[,1] <- X.i[,1]/graph$El[i]
+    X <- rbind(X, cbind(X.i,i))
+
+  }
+  return(X)
+
+}
 

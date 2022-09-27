@@ -1,5 +1,8 @@
 library('sf')
 library(GPGraph)
+library(xtable)
+library(scales)
+save.fig=T
 set.seed(1)
 # Load data
 Lines <- read_sf('data.pems/lines.shp')
@@ -39,10 +42,10 @@ graph$observation_to_vertex()
 # Fit isotropic model
 graph$compute_resdist()
 
-theta <- c(1,1,1)
-res <- optim(log(theta), function(x) -likelihood.graph.covariance(exp(x),graph, model = "isoExp"))
-theta.res <- exp(res$par)
-like.res <- -res$value
+theta.exp <- c(9.4726902736, 0.0001559032, 0.3745814561)
+res.exp <- optim(log(theta.exp), function(x) -likelihood.graph.covariance(exp(x),graph, model = "isoExp"))
+theta.exp <- exp(res.exp$par)
+like.res <- -res.exp$value
 
 # Fit alpha=1 model
 theta.alpha1 <- c(9.4726902736, 0.0001559032, 0.3745814561)
@@ -78,7 +81,7 @@ n.g <- floor(n.y/K)
 ind <- rep(1:K,n.g+1)[1:n.y]
 ind <- ind[sample(1:n.y,n.y)]
 
-cv.res <- posterior.crossvalidation.covariance(theta.res, graph, model = "isoExp",ind = ind)
+cv.res <- posterior.crossvalidation.covariance(theta.exp, graph, model = "isoExp",ind = ind)
 cv.alpha1 <- posterior.crossvalidation.covariance(theta.alpha1,graph, model = "alpha1",ind = ind)
 cv.gl <- posterior.crossvalidation.covariance(theta.graph,graph, model ="GL",ind = ind)
 cv.gl2 <- posterior.crossvalidation.covariance(theta.graph2,graph, model ="GL2",ind = ind)
@@ -90,8 +93,40 @@ result <- data.frame(RMSE  = sqrt(c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse,cv.g
                      SCRPS = -c(cv.res$scrps, cv.alpha1$scrps, cv.gl$scrps, cv.gl2$scrps, cv.alpha2$scrps),
                      nlike = -c(like.res, like.alpha1, like.graph, like.graph2, like.alpha2),
                     row.names = c("isoExp","alpha1","GL", "GL2","alpha2"))
-print(result)
+print(xtable(result))
 
-
-fig <- plot_obs(graph,Y_L_graph, y_loc = Y_loc) + scale_colour_gradientn(colours = heat.colors(10))
+##
+# print observation
+##
+fig <- plot_obs(graph,colMeans(Y), y_loc = Y_loc, size_path=0.1, size_obs=3) + scale_colour_viridis_c(breaks =c(30,40,60))+
+       xlab("long") + ylab("lat") + theme_classic()+
+  labs(colour="mph")+theme(axis.text=element_text(size=20),
+                           axis.title=element_text(size=20,face="bold"),
+                           legend.text = element_text(size=20),
+                           legend.title = element_text(size=20,face="bold"))
 print(fig)
+if(save.fig)
+  ggsave("observation.pdf",fig)
+
+###
+# print posterior mean
+##
+X <- graph_posterior_mean_matern2(graph,  theta.alpha2)
+X[,2] <- X[,2] + mean(colMeans(Y))
+gg <- plot_curve(X[X[,3]==1,1:2]  , graph$Lines[i,], normalized=T)
+for(i in 1:dim(graph$EtV)[1]){
+  gg <- plot_curve(X[X[,3]==i,1:2] , graph$Lines[i,], normalized=T, gg = gg)
+}
+
+gg <- gg +  scale_colour_viridis_c(breaks =c(30,40,60))+
+  xlab("long") + ylab("lat") + theme_classic()+
+  labs(colour="mph")+theme(axis.text=element_text(size=20),
+                           axis.title=element_text(size=20,face="bold"),
+                           legend.text = element_text(size=20),
+                           legend.title = element_text(size=20,face="bold"))
+print(gg)
+if(save.fig)
+  ggsave("interpolation.pdf",gg)
+
+
+X.sample <- graph_posterior_mean_matern2(graph,  theta.alpha2,T)

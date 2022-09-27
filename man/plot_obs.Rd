@@ -4,7 +4,7 @@
 \alias{plot_obs}
 \title{plot the observation}
 \usage{
-plot_obs(graph, y, y_loc)
+plot_obs(graph, y, y_loc, size = 0.1)
 }
 \arguments{
 \item{graph}{(graph.obj)}

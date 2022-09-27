@@ -87,6 +87,24 @@ test_that("test agrement precision matrix and article method", {
 })
 
 
+T = kappa*l_e
+tau = 1/sigma
+Q11 = (2*kappa^3 * tau^2*(2*T+sinh (2*T)))/(-2 * T^2+cosh (2*T)-1)
+Q12 = Q21 = (4*kappa^2*tau^2*T^2)/(-2*T^2+cosh(2 *  T)-1)
+Q13 = Q31 = (4 *kappa^3 * tau^2*(sinh (T)+T *cosh (T)))/(2*T^2-cosh (2*T)+1)
+Q14 = Q41 = (4 *kappa^2 * tau ^2 * T *sinh (T))/(-2 * T^2+cosh (2*T)-1)
+Q22 = (2*kappa  *tau^2 *(sinh(2*T)-2 * T))/(-2 * T^2+cosh (2*T)-1)
+Q44 = Q22
+Q23 = Q32 = -(4*kappa^2 * tau^2 * T* sinh(T))/(-2 * T^2+cosh (2 * T)-1)
+Q24 = Q42 = (4 * kappa * tau^2*(sinh (T)-T*cosh (T)))/(2*T^2-cosh (2*T)+1)
+Q33 = (2 * kappa^3*tau^2*(2*T+sinh(2 * T)))/(-2 * T^2+cosh (2*T)-1)
+Q34 = Q43 = (4 * kappa^2*tau^2*T^2)/(2*T^2-cosh(2*T)+1)
+
+Q <- matrix(c(Q11,Q21,Q31,Q41,Q12,Q22,Q32,Q42,
+              Q13,Q23,Q33,Q43,Q14,Q24,Q34,Q44),4,4)
+
+Q <- Q[c(1,3,2,4),c(1,3,2,4)]
+
 
 test_that("test if computing covariance are equivalent",{
   set.seed(13)
