@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph.plot.R
 \name{plot_curve}
 \alias{plot_curve}
-\title{plot a continous curve}
+\title{plot a continuous curve}
 \usage{
 plot_curve(data.to.plot, Line_edge, normalized = F, gg = NULL, ...)
 }
@@ -17,5 +17,5 @@ plot_curve(data.to.plot, Line_edge, normalized = F, gg = NULL, ...)
 \item{Line}{(SpatialLinesDataFrame,SpatialLines)}
 }
 \description{
-plot a continous curve
+plot a continuous curve
 }

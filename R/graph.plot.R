@@ -1,7 +1,7 @@
 
 library(ggplot2)
 
-#' plot a continous curve
+#' plot a continuous curve
 #'
 #' @param data.to.plot (m x 2) [,1] position on curve (in length)
 #'                             [,2] value
@@ -26,6 +26,54 @@ plot_curve <- function(data.to.plot, Line_edge, normalized=F ,gg = NULL,...){
                                                     y = coords[,2],
                                                     val = data.to.plot.order[,2]),...)
   }
+  return(gg)
+}
+
+
+#' plot a straight curve curve
+#'
+#' @param data.to.plot (m x 2) [,1] position on curve (in length)
+#'                             [,2] value
+#' @param V            (2 x 2) the position of the two vertices in 2D
+#' @param gg           (ggplot pbj) add to gg obj if not null
+#' @export
+#'
+plot_straight_curve <- function(data.to.plot, V ,gg = NULL,...){
+
+  data.to.plot.order <- data.to.plot[order(data.to.plot[,1]),]
+  l <- sqrt(sum( (V[1,] - V[2,])^2) )
+  alpha <- data.to.plot.order[,1]/l
+  coords <- cbind((1-alpha) * V[1,1] + alpha * V[2,1],
+                  (1-alpha) * V[1,2] + alpha * V[2,2])
+  if(is.null(gg)){
+    gg <- ggplot2::ggplot(data.frame(x = coords[,1],
+                                     y = coords[,2],
+                                     val = data.to.plot.order[,2]),
+                          ggplot2::aes(x=x, y=y, colour=val ) ) +
+      ggplot2::geom_path(...)
+  }else{
+    gg <- gg + ggplot2::geom_path(data = data.frame(x = coords[,1],
+                                                    y = coords[,2],
+                                                    val = data.to.plot.order[,2]),...)
+  }
+  return(gg)
+}
+
+#' plot generic data object X on the graph
+#'
+#' @param X            (m x 3)  [, 1] edge number
+#'                              [, 2] position on curve (in length)
+#'                              [, 3] value
+#' @param graph        (graph.object)
+#' @param gg           (ggplot pbj) add to gg obj if not null
+#' @export
+plot_X_to_graph<- function(X, graph,Lines=NULL ,gg = NULL,...){
+
+  for(i in 1:dim(graph$EtV)[1]){
+    if(is.null(Lines) == TRUE)
+      gg <- plot_straight_curve(X[X[,1]==graph$EtV[i,1],2:3], graph$V[graph$EtV[i,2:3],],gg = gg, ...)
+  }
+
   return(gg)
 }
 

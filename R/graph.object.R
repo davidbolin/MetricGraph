@@ -1,3 +1,6 @@
+
+# TODO: remove index of edge and let it correspond to row number in EtV
+
 #' A general graph object
 #' @details Builds an object of sp::Lines object each Lines is assumes to be an edge.
 #' Thus graphs can only be connected by end points

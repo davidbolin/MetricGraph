@@ -2,7 +2,7 @@ library('sf')
 library(GPGraph)
 library(xtable)
 library(scales)
-save.fig=T
+save.fig=F
 set.seed(1)
 # Load data
 Lines <- read_sf('data.pems/lines.shp')
@@ -113,9 +113,9 @@ if(save.fig)
 ##
 X <- graph_posterior_mean_matern2(graph,  theta.alpha2)
 X[,2] <- X[,2] + mean(colMeans(Y))
-gg <- plot_curve(X[X[,3]==1,1:2]  , graph$Lines[i,], normalized=T)
+gg <- plot_curve(X[X[,3]==1,1:2]  , graph$Lines[1,], normalized=T,size=0.8)
 for(i in 1:dim(graph$EtV)[1]){
-  gg <- plot_curve(X[X[,3]==i,1:2] , graph$Lines[i,], normalized=T, gg = gg)
+  gg <- plot_curve(X[X[,3]==i,1:2] , graph$Lines[i,], normalized=T, gg = gg,size=0.8)
 }
 
 gg <- gg +  scale_colour_viridis_c(breaks =c(30,40,60))+
@@ -127,6 +127,7 @@ gg <- gg +  scale_colour_viridis_c(breaks =c(30,40,60))+
 print(gg)
 if(save.fig)
   ggsave("interpolation.pdf",gg)
+gg_zoom <- gg +  xlim(-121.9, -121.885) + ylim(37.32,37.3265)
 
-
+fig_zoom <- fig + xlim(-121.9, -121.885) + ylim(37.32,37.327)
 X.sample <- graph_posterior_mean_matern2(graph,  theta.alpha2,T)

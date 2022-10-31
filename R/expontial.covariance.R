@@ -744,4 +744,68 @@ likelihood.exp.graph <- function(theta, graph.obj){
   loglik <- loglik + 0.5  * t(v)%*%v - 0.5 * n.o*log(2*pi)
   return(loglik[1])
 }
+#'
+#' Compute covariance of a point to the entire graph (discretized)
+#'
+#' @param  EP    - (2 x 1) [1] -edge number, [2] -normalized location on the edge
+#' @param  theta - (3 x 1) (kappa,sigma)
+#' @param  graph  - (graph)
+#' @param  n.p    - (int) number of points to compute the covariance on on each edge
+#' @return C      - (n.p*numer of edges x 3) [1] edge number [2] lenth from lower edge [3] covarians
+#' @export
+covariance.point.to.graph <- function(EP, theta, graph, n.p = 50){
 
+  kappa <- theta[1]
+  sigma <- theta[2]
+  #compute covarains of the two edges of EP[1]
+  Q <- Q.exp(theta, graph$V, graph$EtV, graph$El)
+  R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
+  Vs <- graph$EtV[EP[1],2:3]
+  Z <- matrix(0, nrow=dim(graph$V)[1], ncol=2)
+  Z[Vs[1],1] = 1
+  Z[Vs[2],2] = 1
+  V  <- solve(R,solve(R,Z,system = 'P'), system='L')
+  CV <- solve(R,solve(R,V,system = 'Lt'), system='Pt')
+
+  # compute covarains between two edges and the point
+  t_norm <- EP[2]
+  l <- graph$El[EP[1]]
+  Q_line <- as.matrix(Q.exp.line(theta, c(0, l*t_norm,l)))
+  Q_AB <- Q_line[2,c(1,3),drop=F]
+  Q_AA <- Q_line[2,2]
+  B <- -Q_AB/Q_AA
+
+  # What is the covariance of a point to an edge
+  #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
+  CV_P <- CV%*%t(B)
+  C <- matrix(0, nrow = n.p * dim(graph$EtV)[1], ncol=3)
+  for(i in 1:length(graph$EtV[,1])){
+    l <- graph$El[i]
+    if(graph$EtV[i,1] == EP[1]){
+      t_s <- seq(0,1,length.out=n.p)
+      D_matrix <- as.matrix(dist(c(0,l,l*t_norm,l*t_s)))
+      S <- r_1(D_matrix, c(kappa,sigma))
+
+      #covariance update see Art p.17
+      E.ind         <- c(1:2)
+      Obs.ind       <- -E.ind
+      Bt            <- solve(S[E.ind, E.ind,drop=F],S[E.ind, Obs.ind,drop=F])
+      Sigma_i       <- S[Obs.ind,Obs.ind,drop=F] - S[Obs.ind, E.ind,drop=F] %*% Bt
+      C_P <- CV_P[graph$EtV[i,2:3]]%*%Bt[,-1] + Sigma_i[1,-1]
+    }else{
+
+      t_s <- seq(0,1,length.out=n.p)
+      D_matrix <- as.matrix(dist(c(0,l,l*t_s)))
+      S <- r_1(D_matrix,c(kappa,sigma))
+
+      #covariance update see Art p.17
+      E.ind         <- c(1:2)
+      Obs.ind       <- -E.ind
+      Bt            <- solve(S[E.ind, E.ind,drop=F],S[E.ind, Obs.ind,drop=F])
+      C_P <- CV_P[graph$EtV[i,2:3]]%*%Bt
+
+    }
+    C[ (i-1) * n.p + (1:n.p),] <- cbind(graph$EtV[i,1],l*t_s, c(C_P) )
+  }
+  return(C)
+}
