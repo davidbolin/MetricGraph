@@ -708,3 +708,101 @@ graph_posterior_mean_matern2 <- function(graph,  theta, sample=F){
 
 }
 
+#'
+#' Compute covariance of a point to the entire graph (discretized) for
+#' Alpha = 2
+#'
+#' @param  EP    - (2 x 1) [1] -edge number, [2] -normalized location on the edge
+#' @param  theta - (3 x 1) (kappa,sigma)
+#' @param  graph  - (graph)
+#' @param  n.p    - (int) number of points to compute the covariance on on each edge
+#' @return C      - (n.p*numer of edges x 3) [1] edge number [2] lenth from lower edge [3] covarians
+#' @export
+covariance.point.to.graph.alpha2 <- function(EP, theta, graph, n.p = 50){
+
+
+  kappa <- theta[1]
+  sigma <- theta[2]
+  #compute covarains of the two edges of EP[1]
+  Q <- Q.matern2(theta, graph$V, graph$EtV, graph$El)
+  if(is.null(graph$CBobj))
+    graph$buildA(2, F)
+
+  n_const <- length(graph$CBobj$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CBobj$T[-ind.const,]
+  Q_mod <- Tc%*%Q%*%t(Tc)
+  R <- Cholesky(Q_mod, LDL = FALSE, perm = TRUE)
+  Vs <- graph$EtV[EP[1],2:3]
+
+
+  #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
+  #the four Z is u(0),u'(0), u(T), u'(T) for each edge
+  Z <- matrix(0, nrow=4*dim(graph$EtV)[1], ncol=4)
+  Z[cbind(4*(EP[1]-1) + 1:4,1:4 )] = 1
+  TZ = Tc%*%Z
+  V  <- Matrix::solve(R,Matrix::solve(R,TZ,system = 'P'), system='L')
+  TCV <- Matrix::solve(R,Matrix::solve(R,V,system = 'Lt'), system='Pt')
+  CZ <- t(Tc)%*%TCV
+
+  #modfing  u(0),u'(0),u(T),u'(T)
+  CZ <- CZ[,c(2,4,1,3)]
+
+  # compute covarains between two u(0),u'(0),u(T),u'(T) and the point u(p)
+  t_norm <- EP[2]
+  l <- graph$El[EP[1]]
+  Sigma <- matrix(0, 5, 5)
+  t <- l*c(0,1,t_norm)
+  D <- outer (t, t, `-`)
+  d.index <- c(1,2)
+  Sigma[-d.index, -d.index] <- r_2(D,         theta)
+  Sigma[ d.index,  d.index] <- -r_2(as.matrix(dist(c(0,l))),   theta, 2)
+  Sigma[d.index,  -d.index] <- -r_2(D[3:4-2,],                 theta, 1)
+  Sigma[-d.index,  d.index] <- t(Sigma[d.index,  -d.index])
+
+  B <- Sigma[1:4,5]%*%solve(Sigma[1:4,1:4])#Sigma[-5,5,drop=F]/Sigma[5, 5]
+  CV_P <- CZ%*%t(B)
+  C <- matrix(0, nrow = n.p * dim(graph$EtV)[1], ncol=3)
+  for(i in 1:length(graph$EtV[,1])){
+    l <- graph$El[i]
+
+    t_s <- seq(0,1,length.out=n.p)
+    if(graph$EtV[i,1] == EP[1]){
+      Sigma <- matrix(0, length(t_s)+5, length(t_s)+5)
+      d.index <- c(1,2)
+      index_boundary <- c(d.index,3:4)
+      t <- l*c(0, 1, t_norm, t_s)
+      D <- outer (t, t, `-`)
+      Sigma[-d.index, -d.index] <- r_2(D,         theta)
+      Sigma[ d.index,  d.index] <- -r_2(as.matrix(dist(c(0,l))),   theta, 2)
+      Sigma[d.index,  -d.index] <- -r_2(D[3:4-2,],                 theta, 1)
+      Sigma[-d.index,  d.index] <- t(Sigma[d.index,  -d.index])
+
+      u_e <- CV_P[4*(i-1) + (1:4)]
+      u_e <- u_e[c(2,4,1,3)] # aragne in X',X
+      SinvS <- solve(Sigma[index_boundary,index_boundary],Sigma[index_boundary, -index_boundary] )
+      Sigma_X <- Sigma[-index_boundary,-index_boundary] - Sigma[-index_boundary, index_boundary]%*%SinvS
+      C_P <-  t(SinvS)[-1, ]%*%u_e + Sigma_X[1,-1]
+    }else{
+      Sigma <- matrix(0, length(t_s)+4, length(t_s)+4)
+      d.index <- c(1,2)
+      index_boundary <- c(d.index,3:4)
+      t <- l*c(0,1,t_s)
+      D <- outer (t, t, `-`)
+      Sigma[-d.index, -d.index] <- r_2(D,         theta)
+      Sigma[ d.index,  d.index] <- -r_2(as.matrix(dist(c(0,l))),   theta, 2)
+      Sigma[d.index,  -d.index] <- -r_2(D[3:4-2,],                 theta, 1)
+      Sigma[-d.index,  d.index] <- t(Sigma[d.index,  -d.index])
+
+      u_e <- CV_P[4*(i-1) + (1:4)]
+      u_e <- u_e[c(2,4,1,3)] # aragne in X',X
+      SinvS <- solve(Sigma[index_boundary,index_boundary],Sigma[index_boundary, -index_boundary] )
+      C_P <-  t(SinvS)%*%u_e
+
+    }
+    C[ (i-1) * n.p + (1:n.p),] <- cbind(graph$EtV[i,1],l*t_s, c(C_P) )
+  }
+
+
+  return(C)
+}

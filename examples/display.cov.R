@@ -2,7 +2,7 @@
 
 library(GPGraph)
 
-theta <- c(0.1, 1) #kappa, sigma
+theta <- c(2, 5) #kappa, sigma
 P <- rbind(c(0,0),
            c(1,0),
            c(2,0),
@@ -31,9 +31,12 @@ graph$El    <- sqrt((graph$V[ graph$EtV[,3], 1] - graph$V[ graph$EtV[, 2], 1])^2
 #if Line is null assume straight line
 #If we have a line keep
 #compute covarians for a given point
-P1 <- c(8,0.1) #edge 1, 0.5 length in
+P1 <- c(1,0.1) #edge 1, 0.5 length in
 
-C <- covariance.point.to.graph(P1, theta, graph, n.p = 50)
+C <- covariance.point.to.graph.exp(P1, theta, graph, n.p = 50)
 #g <- plot_straight_curve(C[C[,1]==1,2:3], graph$V[graph$EtV[1,2:3],],)
 gg <- plot_X_to_graph(C, graph)
 print(gg)
+C2 <- covariance.point.to.graph.alpha2(P1, theta, graph, n.p = 50)
+gg2 <- plot_X_to_graph(C2, graph)
+print(gg2)

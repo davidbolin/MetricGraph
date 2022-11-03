@@ -753,7 +753,7 @@ likelihood.exp.graph <- function(theta, graph.obj){
 #' @param  n.p    - (int) number of points to compute the covariance on on each edge
 #' @return C      - (n.p*numer of edges x 3) [1] edge number [2] lenth from lower edge [3] covarians
 #' @export
-covariance.point.to.graph <- function(EP, theta, graph, n.p = 50){
+covariance.point.to.graph.exp <- function(EP, theta, graph, n.p = 50){
 
   kappa <- theta[1]
   sigma <- theta[2]
@@ -781,8 +781,8 @@ covariance.point.to.graph <- function(EP, theta, graph, n.p = 50){
   C <- matrix(0, nrow = n.p * dim(graph$EtV)[1], ncol=3)
   for(i in 1:length(graph$EtV[,1])){
     l <- graph$El[i]
+    t_s <- seq(0,1,length.out=n.p)
     if(graph$EtV[i,1] == EP[1]){
-      t_s <- seq(0,1,length.out=n.p)
       D_matrix <- as.matrix(dist(c(0,l,l*t_norm,l*t_s)))
       S <- r_1(D_matrix, c(kappa,sigma))
 
@@ -794,7 +794,6 @@ covariance.point.to.graph <- function(EP, theta, graph, n.p = 50){
       C_P <- CV_P[graph$EtV[i,2:3]]%*%Bt[,-1] + Sigma_i[1,-1]
     }else{
 
-      t_s <- seq(0,1,length.out=n.p)
       D_matrix <- as.matrix(dist(c(0,l,l*t_s)))
       S <- r_1(D_matrix,c(kappa,sigma))
 

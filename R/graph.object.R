@@ -252,7 +252,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
 
       count_constraint = 0
       count            = 0
-      for(v in 1:self$nV){
+      for(v in 1:dim(self$V)[1]){
         lower.edges  = which(self$EtV[,2]%in%v)
         upper.edges  = which(self$EtV[,3]%in%v)
         n_e = length(lower.edges) + length(upper.edges)
@@ -290,7 +290,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
       A <- Matrix::sparseMatrix(i    = i_[1:count],
                                 j    = j_[1:count],
                                 x    = x_[1:count],
-                                dims = c(count_constraint, 4*self$nE))
+                                dims = c(count_constraint, 4*dim(self$EtV)[1]) )
       self$A = A
 
       self$CBobj <- c_basis2(self$A)
