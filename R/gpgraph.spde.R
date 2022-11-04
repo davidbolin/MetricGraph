@@ -1,0 +1,80 @@
+
+
+gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
+ start_kappa = 1, start_sigma = 1, debug = FALSE){
+
+  V <- graph_object$V
+  EtV <- graph_object$EtV 
+  El <- graph_object$El 
+
+  i_ <- j_ <- rep(0, dim(V)[1]*4)
+  nE <- dim(EtV)[1]
+  count <- 0
+  for(i in 1:nE){
+    l_e <- El[i]
+
+    if(EtV[i,2]!=EtV[i,3]){
+
+      i_[count + 1] <- EtV[i,2]
+      j_[count + 1] <- EtV[i,2]
+
+      i_[count + 2] <- EtV[i,3]
+      j_[count + 2] <- EtV[i,3]
+
+
+      i_[count + 3] <- EtV[i,2]
+      j_[count + 3] <- EtV[i,3]
+
+      i_[count + 4] <- EtV[i,3]
+      j_[count + 4] <- EtV[i,2]
+      count <- count + 4
+    }else{
+      i_[count + 1] <- EtV[i,2]
+      j_[count + 1] <- EtV[i,2]
+      count <- count + 1
+    }
+  }
+  n.v <- dim(V)[1]
+  
+  if(stationary_endpoints == "all"){
+    i.table <- table(i_[1:count])
+    index <- as.integer(names(which(i.table<3)))
+  } else if(stationary_endpoints == "none"){
+    index <- NULL
+  } else{
+    index <- stationary_endpoints
+  }
+    if(!is.null(index)){
+    #does this work for circle?
+        i_ <- c(i_[1:count], index)
+        j_ <- c(j_[1:count], index)
+        count <- count + length(index)
+    }
+
+    if(is.null(index)){
+        index <- 0
+    }
+
+    EtV2 <- EtV[,2]
+    EtV3 <- EtV[,3]
+    El <- as.vector(El)
+
+
+
+  gpgraph_lib <- system.file('shared', package='GPGraph')
+
+  model <- do.call(
+        'inla.cgeneric.define',
+        list(model="inla_cgeneric_gpgraph_alpha1_model",
+            shlib=paste0(gpgraph_lib, '/gpgraph_cgeneric_models.so'),
+            n=as.integer(n.v), debug=debug,
+            prec_graph_i = i_,
+            prec_graph_j = j_,
+            EtV2 = EtV2,
+            EtV3 = EtV3,
+            El = El,
+            stationary_endpoints = index,
+            start_kappa = start_kappa,
+            start_sigma = start_sigma))
+
+}
