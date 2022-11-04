@@ -1,19 +1,23 @@
 
 # TODO: remove index of edge and let it correspond to row number in EtV
 
-#' A general graph object
-#' @details Builds an object of sp::Lines object each Lines is assumes to be an edge.
-#' Thus graphs can only be connected by end points
+#' @title Graph objects for specification of Gaussian processes
+#' @description Class representing general metric graphs.
+#' @details A graph object created from vertex and edge matrices, or from an sp::Lines
+#' object where each line is representing and edge.
+#'
 #' @export
-graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
-  #' @field El length of edges
-  El = NULL,
+gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
+  #' @field edge_lengths length of edges
+  edge_lengths = NULL,
 
   #' @field EID ID of edges
   EID = NULL,
 
-  #' @field A constraint matrix, just to setup Kirchoff constraint
-  A = NULL,
+  #' @field C constraint matrix used to set Kirchhoff constraints
+  C = NULL,
+
+  #' @field A observation matrix specifying which vertices are observation locations
 
   #' @field CBobj svd stuct obj
   CBobj = NULL,
@@ -57,21 +61,43 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field Laplacian The weighted graph Laplacian
   Laplacian = NULL,
 
-  #' @description Create a new graph object
-  #' @param Lines.in sp object SpatialLinesDataFrame or SpatialLines
-  #' @return A new graph object
-  initialize = function(Lines.in = NULL) {
-    if(is.null(Lines.in))
-      return()
+  #' @description Create a new gpgraph_graph object
+  #' @param Lines sp object SpatialLines DataFrame or SpatialLines
+  #' @param P n x 2 matrix with Euclidean coordinates of the n vertices
+  #' @param E m x 2 matrix where each line represents an edge
+  #' @param edge_lengths m x 1 vector with edge lengths
+  #' @details A graph object can be initialized in two ways. The first method is
+  #' to specify P and E. In this case, if edge_lengths is not specified, all edges are
+  #' assumed to be straight lines. Otherwise the edge lengths set in edge_lengths are used.
+  #' The second option is to specify the graph based on Lines. In this case,
+  #' the vertices are set by the end points of the lines. Thus, if two lines are intersecting
+  #' somewhere else, this will not be viewed as a vertex.
+  #' @return A gpgraph_graph object
+  initialize = function(Lines = NULL, P = NULL, E = NULL, edge_lengths = NULL) {
+    #We have three different ways of initializing:
 
-    self$Lines=  Lines.in
-    self$nE = length(Lines.in)
-    self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
-    list_obj <- vertex.to.line(self$Lines)
-    self$V   <- list_obj$V
-    self$nV <- dim(self$V)[1]
-    self$EtV <- list_obj$EtV
-    self$El  <- list_obj$El
+    #option 1: initialization from lines
+    if(~is.null(Lines)){
+      if(~is.null(edge_lengths) || ~is.null(P) || ~is.null(E)){
+        warning("object initialized from lines, then E,P,edge_lengths are ignored")
+      }
+      self$nE = length(Lines)
+      self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
+      list_obj <- vertex.to.line(self$Lines)
+      self$V   <- rbind(1:dim(P)[1],P)
+      self$nV <- dim(self$V)[1]
+      self$EtV <- cbind(1:dim(E)[1],E)
+      self$edge_lengths  <- list_obj$edge_lengths
+    } else {
+      if(is.null(P) || is.null(E)){
+        stop("You must supply Lines or P and E")
+      }
+      self$nE <- dim(E)[1]
+      self$V <- V
+      self$edge_lengths <- sqrt((self$V[self$EtV[,3], 1] - self$V[self$EtV[, 2], 1])^2 +
+                            (self$V[self$EtV[,3], 2] - self$V[self$EtV[, 2], 2])^2)
+    }
+
   },
 
   #' @description Split line by point
@@ -106,9 +132,9 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     self$V <- rbind(self$V,c(newV, Point@coords))
 
 
-    l_e <- self$El[E]
-    self$El[E] <- t*l_e
-    self$El <- c(self$El, (1-t)*l_e)
+    l_e <- self$edge_lengths[E]
+    self$edge_lengths[E] <- t*l_e
+    self$edge_lengths <- c(self$edge_lengths, (1-t)*l_e)
     self$nE <- self$nE + 1
     self$EtV <- rbind(self$EtV,
                       c(max(self$EtV[,1])+1, newV,self$EtV[E, 3]))
@@ -116,21 +142,21 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     ind <- which(self$PtE[,1]%in%E)
     for(i in ind){
       if( self$PtE[i,2]>= t*l_e-1e-10){
-        self$PtE[i,1] <- length(self$El) #self$nE #
+        self$PtE[i,1] <- length(self$edge_lengths) #self$nE #
         self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
       }
     }
     self$nV <- dim(self$V)[1]
   },
 
-  #' @description Compute shortest path distances
+  #' @description Computes shortest path distances between the vertices in the graph
   compute_geodist = function(){
     g <- graph(edges = c(t(self$EtV[,2:3])), directed=FALSE)
-    E(g)$weight <- self$El
+    E(g)$weight <- self$edge_lengths
     self$geo.dist <- distances(g)
   },
 
-  #' @description Compute resistance metric
+  #' @description Computes the resistance metric between the vertices in the graph
   compute_resdist = function(){
     if(is.null(self$geo.dist)){
       self$compute_geodist()
@@ -149,11 +175,11 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     self$res.dist <- -2*Li + t(diag(Li))%x%rep(1,self$nV) + t(rep(1,self$nV))%x%diag(Li)
   },
 
-  #' @description Compute graph Laplacian
+  #' @description Compute graph Laplacian for the graph
   compute_laplacian = function(){
     Wmat <- Matrix(0,self$nV,self$nV)
     for(i in 1:self$nE){
-      Wmat[self$EtV[i,2],self$EtV[i,3]] <- Wmat[self$EtV[i,3],self$EtV[i,2]] <- 1/self$El[i]
+      Wmat[self$EtV[i,2],self$EtV[i,3]] <- Wmat[self$EtV[i,3],self$EtV[i,2]] <- 1/self$edge_lengths[i]
     }
     self$Laplacian <- Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
   },
@@ -166,7 +192,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     for(i in 1:l){
         e <- as.vector(self$PtE[i,1])
         t <- as.vector(self$PtE[i,2])
-        l_e <- self$El[e]
+        l_e <- self$edge_lengths[e]
         if(abs(t)<10^-10){
           self$PtE[i,2] <- 0
           self$PtV[i] <- self$EtV[e,2]
@@ -184,6 +210,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
     if(!is.null(self$res.dist)){
       self$compute_resdist()
     }
+    #TODO: Add observation matrix here.
   },
 
   #' @description Add observations to the object
@@ -243,7 +270,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
   #' @description build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
   #' @param alpha (int) which type of constraint (currently only 2 implemented)
   #' @param edge_constraint (bool) if true add constraint on vertices of degree 1.
-  buildA = function(alpha, edge_constraint=FALSE){
+  buildC = function(alpha, edge_constraint=FALSE){
 
     if(alpha==2){
       i_  =  rep(0, 2*dim(self$EtV)[1])
@@ -287,13 +314,13 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
           }
         }
       }
-      A <- Matrix::sparseMatrix(i    = i_[1:count],
+      C <- Matrix::sparseMatrix(i    = i_[1:count],
                                 j    = j_[1:count],
                                 x    = x_[1:count],
                                 dims = c(count_constraint, 4*dim(self$EtV)[1]) )
-      self$A = A
+      self$C = C
 
-      self$CBobj <- c_basis2(self$A)
+      self$CBobj <- c_basis2(self$C)
       self$CBobj$T <- t(self$CBobj$T)
     }else{
       error("only alpha=2 implimented")
@@ -304,7 +331,7 @@ graph.obj <-  R6::R6Class("GPGraph::graph", public = list(
 
 #' Assume that there is only one line each Lines
 #' @param Lines object
-#' @return A list with elements V, EtV, El
+#' @return A list with elements V, EtV, edge_lengths
 #' @export
 vertex.to.line <- function(Lines){
   lines <- c()
@@ -335,7 +362,7 @@ vertex.to.line <- function(Lines){
 
   return(list(V = vertex,
                EtV    = lvl[,1:3, drop=FALSE],
-               El     = lvl[,4]))
+               edge_lengths     = lvl[,4]))
 }
 
 
