@@ -77,8 +77,8 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
     #We have three different ways of initializing:
 
     #option 1: initialization from lines
-    if(~is.null(Lines)){
-      if(~is.null(edge_lengths) || ~is.null(P) || ~is.null(E)){
+    if(!is.null(Lines)){
+      if(!is.null(edge_lengths) || !is.null(P) || !is.null(E)){
         warning("object initialized from lines, then E,P,edge_lengths are ignored")
       }
       self$nE = length(Lines)
@@ -93,7 +93,9 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
         stop("You must supply Lines or P and E")
       }
       self$nE <- dim(E)[1]
-      self$V <- V
+      self$V   <- cbind(1:dim(P)[1],P)
+      self$EtV <- cbind(1:dim(E)[1],E)
+      self$nV <- dim(self$V)[1]
       self$edge_lengths <- sqrt((self$V[self$EtV[,3], 1] - self$V[self$EtV[, 2], 1])^2 +
                             (self$V[self$EtV[,3], 2] - self$V[self$EtV[, 2], 2])^2)
     }

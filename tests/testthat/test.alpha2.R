@@ -116,7 +116,7 @@ test_that("test if computing covariance are equivalent",{
   line.line2 <- Line(rbind(c(30,80),c(140,80)))
   line.line <- Line(rbind(c(30,00),c(30,80)))
 
-  graph.temp <-  graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
+  graph.temp <-  gpgraph_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                      Lines(list(line.line2),ID="2"))))
   Q <- Q.matern2(theta[2:3], graph.temp$V, graph.temp$EtV, graph.temp$El, BC = 1)
   graph.temp$buildA(2, F)

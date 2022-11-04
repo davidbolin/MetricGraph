@@ -28,7 +28,7 @@ test_that("Check agrement beteen covariance and precision matrix formulation", {
   line.line <- Line(rbind(c(30,80),c(120,80)))
   line.line2 <- Line(rbind(c(30,00),c(30,80)))
 
-  graph <-  graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
+  graph <-  gpgraph_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                 Lines(list(line.line2),ID="2"))))
   Q <- Q.exp(theta[2:3], graph$V, graph$EtV, graph$El)
   R <- Cholesky(Q,LDL = FALSE, perm = TRUE)

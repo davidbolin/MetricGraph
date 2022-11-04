@@ -5,7 +5,7 @@ test_that("test if the over determined covariances are correct",{
   line.line <- Line(rbind(c(120,80),c(30,80)))
   line.line2 <- Line(rbind(c(30,80),c(30,00)))
 
-  graph <-  graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
+  graph <-  gpgraph_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                 Lines(list(line.line2),ID="2"))))
   Q <- Q.matern2(c(kappa,sigma), graph$V, graph$EtV, graph$El, BC = 1)
   graph$buildA(2, F)

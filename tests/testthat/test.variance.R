@@ -2,6 +2,7 @@
 
 
 test_that("Check if Matern(2) has equal variance on the edges on a circle", {
+  theta <- c(1,2)
   P <- rbind(c(0,0),
              c(1,0),
              c(1,1),
@@ -13,11 +14,7 @@ test_that("Check if Matern(2) has equal variance on the edges on a circle", {
              c(1,4),
              c(3,4))
 
-  graph <-  graph.obj$new()
-  graph$EtV   <- cbind(1:dim(E)[1],E)
-  graph$V <- P
-  graph$El    <- sqrt((graph$V[ graph$EtV[,3], 1] - graph$V[ graph$EtV[, 2], 1])^2 +
-                        (graph$V[ graph$EtV[,3], 2] - graph$V[ graph$EtV[, 2], 2])^2)
+  graph <-  gpgraph_graph$new(P = P, E= E)
 
 
   #if Line is null assume straight line
@@ -29,9 +26,9 @@ test_that("Check if Matern(2) has equal variance on the edges on a circle", {
   kappa <- theta[1]
   sigma <- theta[2]
   #compute covarains of the two edges of EP[1]
-  Q <- Q.matern2(theta, graph$V, graph$EtV, graph$El)
+  Q <- Q.matern2(theta, graph$V, graph$EtV, graph$edge_lengths)
   if(is.null(graph$CBobj))
-    graph$buildA(2, F)
+    graph$buildC(2, F)
 
   n_const <- length(graph$CBobj$S)
   ind.const <- c(1:n_const)

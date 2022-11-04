@@ -13,11 +13,13 @@ object where each line is representing and edge.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{El}}{length of edges}
+\item{\code{edge_lengths}}{length of edges}
 
 \item{\code{EID}}{ID of edges}
 
-\item{\code{A}}{constraint matrix used to set Kirchhoff constraints}
+\item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
+
+\item{\code{A}}{observation matrix specifying which vertices are observation locations}
 
 \item{\code{CBobj}}{svd stuct obj}
 
@@ -50,6 +52,13 @@ object where each line is representing and edge.
 }
 \if{html}{\out{</div>}}
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{A}}{observation matrix specifying which vertices are observation locations}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -61,7 +70,7 @@ object where each line is representing and edge.
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{gpgraph_graph$observation_to_vertex()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{gpgraph_graph$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{gpgraph_graph$add_observations2()}}
-\item \href{#method-GPGraph::graph-buildA}{\code{gpgraph_graph$buildA()}}
+\item \href{#method-GPGraph::graph-buildC}{\code{gpgraph_graph$buildC()}}
 \item \href{#method-GPGraph::graph-clone}{\code{gpgraph_graph$clone()}}
 }
 }
@@ -69,9 +78,9 @@ object where each line is representing and edge.
 \if{html}{\out{<a id="method-GPGraph::graph-new"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new gpgraph.graph object
+Create a new gpgraph_graph object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{gpgraph_graph$new(Lines = NULL, P = NULL, E = NULL, El = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{gpgraph_graph$new(Lines = NULL, P = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -83,21 +92,21 @@ Create a new gpgraph.graph object
 
 \item{\code{E}}{m x 2 matrix where each line represents an edge}
 
-\item{\code{El}}{m x 1 vector with edge lengths}
+\item{\code{edge_lengths}}{m x 1 vector with edge lengths}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
 A graph object can be initialized in two ways. The first method is
-to specify P and E. In this case, if El is not specified, all edges are
-assumed to be straight lines. Otherwise the edge lengths set in El are used.
+to specify P and E. In this case, if edge_lengths is not specified, all edges are
+assumed to be straight lines. Otherwise the edge lengths set in edge_lengths are used.
 The second option is to specify the graph based on Lines. In this case,
 the vertices are set by the end points of the lines. Thus, if two lines are intersecting
 somewhere else, this will not be viewed as a vertex.
 }
 
 \subsection{Returns}{
-A gpgraph.graph object
+A gpgraph_graph object
 }
 }
 \if{html}{\out{<hr>}}
@@ -202,12 +211,12 @@ add observations to the object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-buildA"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-buildA}{}}}
-\subsection{Method \code{buildA()}}{
+\if{html}{\out{<a id="method-GPGraph::graph-buildC"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-buildC}{}}}
+\subsection{Method \code{buildC()}}{
 build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{gpgraph_graph$buildA(alpha, edge_constraint = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{gpgraph_graph$buildC(alpha, edge_constraint = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
