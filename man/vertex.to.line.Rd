@@ -10,7 +10,7 @@ vertex.to.line(Lines)
 \item{Lines}{object}
 }
 \value{
-A list with elements V, EtV, El
+A list with elements V, EtV, edge_lengths
 }
 \description{
 Assume that there is only one line each Lines
