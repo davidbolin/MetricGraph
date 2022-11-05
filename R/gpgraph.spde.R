@@ -5,7 +5,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
   V <- graph_object$V
   EtV <- graph_object$EtV 
-  El <- graph_object$El 
+  El <- graph_object$edge_lengths 
 
   i_ <- j_ <- rep(0, dim(V)[1]*4)
   nE <- dim(EtV)[1]
@@ -15,22 +15,22 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
     if(EtV[i,2]!=EtV[i,3]){
 
-      i_[count + 1] <- EtV[i,2]
-      j_[count + 1] <- EtV[i,2]
+      i_[count + 1] <- EtV[i,2] - 1
+      j_[count + 1] <- EtV[i,2] - 1
 
-      i_[count + 2] <- EtV[i,3]
-      j_[count + 2] <- EtV[i,3]
+      i_[count + 2] <- EtV[i,3] - 1
+      j_[count + 2] <- EtV[i,3] - 1
 
 
-      i_[count + 3] <- EtV[i,2]
-      j_[count + 3] <- EtV[i,3]
+      i_[count + 3] <- EtV[i,2] - 1
+      j_[count + 3] <- EtV[i,3] - 1
 
-      i_[count + 4] <- EtV[i,3]
-      j_[count + 4] <- EtV[i,2]
+      i_[count + 4] <- EtV[i,3] - 1
+      j_[count + 4] <- EtV[i,2] - 1
       count <- count + 4
     }else{
-      i_[count + 1] <- EtV[i,2]
-      j_[count + 1] <- EtV[i,2]
+      i_[count + 1] <- EtV[i,2] - 1
+      j_[count + 1] <- EtV[i,2] - 1
       count <- count + 1
     }
   }
@@ -42,7 +42,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   } else if(stationary_endpoints == "none"){
     index <- NULL
   } else{
-    index <- stationary_endpoints
+    index <- stationary_endpoints - 1
   }
     if(!is.null(index)){
     #does this work for circle?
@@ -52,14 +52,12 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     }
 
     if(is.null(index)){
-        index <- 0
+        index <- -1
     }
 
     EtV2 <- EtV[,2]
     EtV3 <- EtV[,3]
     El <- as.vector(El)
-
-
 
   gpgraph_lib <- system.file('shared', package='GPGraph')
 
@@ -68,12 +66,12 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
         list(model="inla_cgeneric_gpgraph_alpha1_model",
             shlib=paste0(gpgraph_lib, '/gpgraph_cgeneric_models.so'),
             n=as.integer(n.v), debug=debug,
-            prec_graph_i = i_,
-            prec_graph_j = j_,
+            prec_graph_i = as.integer(i_),
+            prec_graph_j = as.integer(j_),
             EtV2 = EtV2,
             EtV3 = EtV3,
             El = El,
-            stationary_endpoints = index,
+            stationary_endpoints = as.integer(index),
             start_kappa = start_kappa,
             start_sigma = start_sigma))
 

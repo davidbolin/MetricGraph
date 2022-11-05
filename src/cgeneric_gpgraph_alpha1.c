@@ -10,13 +10,13 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
   double c1, c2, c_1, c_2, one_m_c2, l_e;
 
-  int N, M, i, j, k;
+  int N, M, i, k;
   
   // the size of the model
   assert(data->n_ints == 5);
 
   // the number of doubles
-  assert(data->n_doubles == 8);
+  assert(data->n_doubles == 5);
 
   assert(!strcasecmp(data->ints[0]->name, "n"));       // this will always be the case
   N = data->ints[0]->ints[0];			       // this will always be the case
@@ -48,7 +48,7 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   assert(!strcasecmp(data->doubles[2]->name, "El"));
   inla_cgeneric_vec_tp *El = data->doubles[2];
 
-  assert(!strcasecmp(data->ints[4]->name, "prec_graph_i"));
+  assert(!strcasecmp(data->ints[4]->name, "stationary_endpoints"));
   inla_cgeneric_vec_tp *stationary_endpoints = data->ints[4];
 
   // prior parameters
@@ -87,22 +87,57 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
       ret[0] = N;        	       /* dimension */
       ret[1] = M;		   /* number of (i <= j) */
       for (i = 0; i < M; i++) {
-	      ret[k++] = graph_i->ints[i];
+	      ret[k+i] = graph_i->ints[i];
       }
       for (i = 0; i < M; i++) {
-	      ret[k++] = graph_j->ints[i];
+	      ret[k+M+i] = graph_j->ints[i];
       }
       break;
     }
     
   case INLA_CGENERIC_Q:
     {
+      assert(M==1);
       k = 2;
       ret = Calloc(k + M, double);
       ret[0] = -1;		/* REQUIRED */
       ret[1] = M;		/* REQUIRED */
 
-     
+      int count = 0;
+
+    for(i = 0; i < nE; i++){
+      l_e = El->doubles[i-1];
+      c1 = exp(-kappa*l_e);
+      c2 = SQR(c1);
+      one_m_c2 = 1-c2;
+      c_1 = 0.5 + c2/one_m_c2;
+      c_2 = -c1/one_m_c2;
+
+      if(EtV2->doubles[i-1]!=EtV3->doubles[i-1]){
+
+      ret[k + count] = c_1;
+      ret[k + count + 1] = c_1;
+
+      ret[k + count + 2] = c_2;
+      ret[k + count + 3] = c_2;
+      count += 4;
+    }else{
+      ret[count] = tanh(0.5 * kappa * l_e);
+      count += 1;
+    }
+  }
+
+  if(stationary_endpoints->ints[0]>=0){
+    int stat_endpt_len = stationary_endpoints->len;
+    for(i = 0; i < stat_endpt_len; i++){
+      ret[k+count+i] = 0.5;
+    }
+  }
+
+  double fact = 2*kappa / (pow(sigma,2));
+
+  int one=1;
+  dscal_(&M, &fact, &ret[k], &one);
 
       break;
     }

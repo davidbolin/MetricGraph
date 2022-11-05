@@ -11,3 +11,4 @@
 
 void dcopy_(int* N, double* DX, int* INCX, double* DY,int* INCY);
 
+void dscal_(int* N, double* DA, double* DX,int* INCX);
