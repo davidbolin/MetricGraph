@@ -34,7 +34,8 @@ object where each line is representing and edge.
 \item{\code{PtV}}{Points to Vertex observations to vertex
 [,1] - vertex index,}
 
-\item{\code{V}}{poisition in the space [,1] - id [,-1] - point}
+\item{\code{V}}{position in the space of the vertices
+V =  NULL,}
 
 \item{\code{EtV}}{[,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge}
 

@@ -5,7 +5,7 @@
 \title{Building the precision matrix for all the vertex in
 the expontial case}
 \usage{
-Q.exp(theta, V, EtV, El, BC = 1, build = T)
+Q.exp(theta, V, EtV, edge_lengths, BC = 1, build = T)
 }
 \arguments{
 \item{theta}{- kappa, sigma}
@@ -14,7 +14,7 @@ Q.exp(theta, V, EtV, El, BC = 1, build = T)
 
 \item{EtV}{[,2-3] index of upper and lower edge}
 
-\item{El}{length of each vertex}
+\item{edge_lengths}{length of each vertex}
 
 \item{BC}{boundary condition =0 neumann, 1 = correct boundary to stationary}
 

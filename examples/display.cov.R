@@ -21,12 +21,7 @@ E <- rbind(c(1,2),
            c(4,6),
            c(2,7))
 
-graph <-  graph.obj$new()
-graph$EtV   <- cbind(1:dim(E)[1],E)
-graph$V <- P
-graph$El    <- sqrt((graph$V[ graph$EtV[,3], 1] - graph$V[ graph$EtV[, 2], 1])^2 +
-                    (graph$V[ graph$EtV[,3], 2] - graph$V[ graph$EtV[, 2], 2])^2)
-
+graph <-  gpgraph_graph$new(P=P,E=E)
 
 #if Line is null assume straight line
 #If we have a line keep
@@ -37,6 +32,6 @@ C <- covariance.point.to.graph.exp(P1, theta, graph, n.p = 50)
 #g <- plot_straight_curve(C[C[,1]==1,2:3], graph$V[graph$EtV[1,2:3],],)
 gg <- plot_X_to_graph(C, graph)
 print(gg)
-C2 <- covariance.point.to.graph.alpha2(P1, theta, graph, n.p = 50)
-gg2 <- plot_X_to_graph(C2, graph)
-print(gg2)
+#C2 <- covariance.point.to.graph.alpha2(P1, theta, graph, n.p = 50)
+#gg2 <- plot_X_to_graph(C2, graph)
+#print(gg2)

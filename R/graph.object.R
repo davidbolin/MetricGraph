@@ -37,9 +37,9 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #'  [,1] - vertex index,
   PtV  = NULL,
 
-  #' @field V poisition in the space [,1] - id [,-1] - point
-  V =  NULL,
-
+  #' @field V position in the space of the vertices
+  #'   V =  NULL,
+  V = NULL,
   #' @field EtV [,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge
   EtV = NULL,
 
@@ -82,18 +82,19 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
         warning("object initialized from lines, then E,P,edge_lengths are ignored")
       }
       self$nE = length(Lines)
+      self$Lines = Lines
       self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
       list_obj <- vertex.to.line(self$Lines)
-      self$V   <- rbind(1:dim(P)[1],P)
+      self$V   <- list_obj$V
       self$nV <- dim(self$V)[1]
-      self$EtV <- cbind(1:dim(E)[1],E)
+      self$EtV <- list_obj$EtV
       self$edge_lengths  <- list_obj$edge_lengths
     } else {
       if(is.null(P) || is.null(E)){
         stop("You must supply Lines or P and E")
       }
       self$nE <- dim(E)[1]
-      self$V   <- cbind(1:dim(P)[1],P)
+      self$V   <- P
       self$EtV <- cbind(1:dim(E)[1],E)
       self$nV <- dim(self$V)[1]
       self$edge_lengths <- sqrt((self$V[self$EtV[,3], 1] - self$V[self$EtV[, 2], 1])^2 +

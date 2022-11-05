@@ -7,13 +7,13 @@ test_that("test if the over determined covariances are correct",{
 
   graph <-  gpgraph_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                 Lines(list(line.line2),ID="2"))))
-  Q <- Q.matern2(c(kappa,sigma), graph$V, graph$EtV, graph$El, BC = 1)
-  graph$buildA(2, F)
+  Q <- Q.matern2(c(kappa,sigma), graph$V, graph$EtV, graph$edge_lengths, BC = 1)
+  graph$buildC(2, F)
   Qtilde <- (graph$CBobj$T)%*%Q%*%t(graph$CBobj$T)
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
   Sigma.overdetermined  = t(graph$CBobj$T[-c(1:2),])%*%solve(Qtilde)%*%(graph$CBobj$T[-c(1:2),])
 
-  t <- c(0,graph$El[1],graph$El[1],graph$El[2]+ graph$El[1])
+  t <- c(0,graph$edge_lengths[1],graph$edge_lengths[1],graph$edge_lengths[2]+ graph$edge_lengths[1])
 
   D <-  rep(1,4)%*%t(t)-t(rep(1,4)%*%t(t))
   R00 <- r_2(D,c(kappa,sigma))

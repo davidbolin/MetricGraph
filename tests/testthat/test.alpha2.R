@@ -118,8 +118,8 @@ test_that("test if computing covariance are equivalent",{
 
   graph.temp <-  gpgraph_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                      Lines(list(line.line2),ID="2"))))
-  Q <- Q.matern2(theta[2:3], graph.temp$V, graph.temp$EtV, graph.temp$El, BC = 1)
-  graph.temp$buildA(2, F)
+  Q <- Q.matern2(theta[2:3], graph.temp$V, graph.temp$EtV, graph.temp$edge_lengths, BC = 1)
+  graph.temp$buildC(2, F)
   Qmod <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
   Qtilde <- Qmod
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
@@ -128,20 +128,20 @@ test_that("test if computing covariance are equivalent",{
                         , system = 'Pt'))
   u_e <- t(graph.temp$CBobj$T)%*%c(0,0,V0)
   X <- c()
-  for(i in 1:length(graph.temp$El)){
+  for(i in 1:length(graph.temp$edge_lengths)){
     X <- rbind(X,cbind(sample.line.matern2(theta,
                                            u_e[4*(i-1) +1:4],
                                            Line = graph.temp$Lines[i,],
-                                           graph.temp$El[i],
+                                           graph.temp$edge_lengths[i],
                                            nt = nt),i))
   }
   X[,2] <- X[,2] + sigma_e*rnorm(nt)
 
   graph.temp$add_observations2(y = X[,2], PtE = X[,c(3,1)])
-  graph.temp$buildA(2, F)
+  graph.temp$buildC(2, F)
   lik <- likelihood.matern2.graph(theta,graph.temp)
   graph.temp$observation_to_vertex()
-  graph.temp$buildA(2, F)
+  graph.temp$buildC(2, F)
   lik2 <-likelihood.graph.covariance(theta, graph.temp, model="alpha2")
 
   expect_equal(as.matrix(lik),as.matrix(lik2), tolerance=1e-10)
@@ -150,7 +150,7 @@ test_that("test if computing covariance are equivalent",{
   n.o <- length(graph.temp$y)
   n.v <- dim(graph.temp$V)[1]
   n.c <- 1:length(graph.temp$CBobj$S)
-  Q <- Q.matern2(c(theta[2],theta[3]), graph.temp$V, graph.temp$EtV, graph.temp$El, BC = 1)
+  Q <- Q.matern2(c(theta[2],theta[3]), graph.temp$V, graph.temp$EtV, graph.temp$edge_lengths, BC = 1)
   Qtilde <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
   Qtilde <- Qtilde[-n.c,-n.c]
   Sigma.overdetermined  = t(graph.temp$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.temp$CBobj$T[-n.c,])

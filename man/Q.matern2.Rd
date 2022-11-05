@@ -6,7 +6,7 @@
 The ordering is acording to EtV where for each edge there are four random variables
 processes and derivate for lower and upper edge end point}
 \usage{
-Q.matern2(theta, V, EtV, El, BC = 1, build = T)
+Q.matern2(theta, V, EtV, edge_lengths, BC = 1, build = T)
 }
 \arguments{
 \item{theta}{- kappa, sigma}
@@ -15,7 +15,7 @@ Q.matern2(theta, V, EtV, El, BC = 1, build = T)
 
 \item{EtV}{[,2-3] index of upper and lower edge}
 
-\item{El}{length of each vertex}
+\item{edge_lengths}{length of each vertex}
 
 \item{BC}{boundary condition =0 neumann, 1 = correct boundary to stationary}
 

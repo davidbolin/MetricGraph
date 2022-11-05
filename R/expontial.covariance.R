@@ -59,12 +59,12 @@ r_1_circle <- function(t,l_e, theta){
 #' @param theta - kappa, sigma
 #' @param V vertex position
 #' @param EtV [,2-3] index of upper and lower edge
-#' @param El length of each vertex
+#' @param edge_lengths length of each vertex
 #' @param BC boundary condition =0 neumann, 1 = correct boundary to stationary
 #' @param build (bool) if true return Q the precision matrix otherwise return list(i,j,x, nv)
 #' @return Q (precision matrix)
 #' @export
-Q.exp <- function(theta, V, EtV, El, BC = 1, build=T){
+Q.exp <- function(theta, V, EtV, edge_lengths, BC = 1, build=T){
 
   kappa <- theta[1]
   sigma <- theta[2]
@@ -72,7 +72,7 @@ Q.exp <- function(theta, V, EtV, El, BC = 1, build=T){
   nE <- dim(EtV)[1]
   count <- 0
   for(i in 1:nE){
-    l_e <- El[i]
+    l_e <- edge_lengths[i]
     c1 <- exp(-kappa*l_e)
     c2 <- c1^2
     one_m_c2 = 1-c2
@@ -284,7 +284,7 @@ sample.line.expontial<-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=
 posterior.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
   sigma_e <- theta[1]
   #build Q
-  Qp.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El, build=F)
+  Qp.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths, build=F)
   #build BSIGMAB
   Qpmu <- rep(0, nrow(graph.obj$V))
 
@@ -296,7 +296,7 @@ posterior.mean.exp <- function(theta, graph.obj, rem.edge=NULL){
   for(e in obs.edges){
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
-    l <- graph.obj$El[e]
+    l <- graph.obj$edge_lengths[e]
     D_matrix <- as.matrix(dist(c(0,l,graph.obj$PtE[obs.id,2])))
     S <- r_1(D_matrix,theta[2:3])
 
@@ -355,7 +355,7 @@ posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
 
   sigma_e = theta[1]
 
-  Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
   if(leave.edge.out==F)
     V.post <- posterior.mean.exp(theta, graph)
 
@@ -371,7 +371,7 @@ posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
 
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
-    l <- graph.obj$El[e]
+    l <- graph.obj$edge_lengths[e]
     D_matrix <- as.matrix(dist(c(0,l,graph.obj$PtE[obs.id,2])))
     S <- r_1(D_matrix,theta[2:3])
 
@@ -405,7 +405,7 @@ posterior.mean.obs.exp <- function(theta, graph.obj, leave.edge.out = F){
 posterior.mean.stupid <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
   Sigma <- as.matrix(solve(Q))
   SigmaO <- Sigma[graph.obj$PtV,graph.obj$PtV]
   diag(SigmaO) <- diag(SigmaO)  +  sigma_e^2
@@ -423,7 +423,7 @@ posterior.mean.stupid <- function(theta, graph.obj){
 posterior.leave.stupid <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
   Sigma <- as.matrix(solve(Q))
   SigmaO <- Sigma[graph.obj$PtV,graph.obj$PtV]
   diag(SigmaO) <- diag(SigmaO)  +  sigma_e^2
@@ -449,11 +449,11 @@ likelihood.graph.covariance <- function(theta, graph.obj,model = "alpha1"){
   n.v <- dim(graph.obj$V)[1]
   #build covariance matrix
   if(model == "alpha1"){
-    Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+    Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
     Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
   } else if (model == "alpha2"){
     n.c <- 1:length(graph.obj$CBobj$S)
-    Q <- Q.matern2(c(theta[2],theta[3]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Q <- Q.matern2(c(theta[2],theta[3]), graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths, BC = 1)
     Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
     Qtilde <- Qtilde[-n.c,-n.c]
     Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
@@ -501,11 +501,11 @@ posterior.crossvalidation.covariance <- function(theta,
   n.v <- dim(graph.obj$V)[1]
   #build covariance matrix
   if(model == "alpha1"){
-    Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+    Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
     Sigma <- as.matrix(solve(Q))[graph.obj$PtV,graph.obj$PtV]
   } else if (model == "alpha2"){
     n.c <- 1:length(graph.obj$CBobj$S)
-    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths, BC = 1)
     Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
     Qtilde <- Qtilde[-n.c,-n.c]
     Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
@@ -561,7 +561,7 @@ posterior.crossvalidation.covariance <- function(theta,
 likelihood.exp.graph.v2 <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
   A <- Diagonal(graph.obj$nV,rep(1,graph.obj$nV))[graph.obj$PtV,]
   Q.p <- Q  + t(A)%*%A/sigma_e^2
   mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
@@ -601,7 +601,7 @@ posterior.crossvalidation <- function(theta,
     diag(Sigma.o) <- diag(Sigma.o) + theta[1]^2
   } else if(model == "alpha2"){
     n.c <- 1:length(graph.obj$CBobj$S)
-    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$El, BC = 1)
+    Q <- Q.matern2(c(theta[3],theta[2]), graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths, BC = 1)
     Qtilde <- (graph.obj$CBobj$T)%*%Q%*%t(graph.obj$CBobj$T)
     Qtilde <- Qtilde[-n.c,-n.c]
     Sigma.overdetermined  = t(graph.obj$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.obj$CBobj$T[-n.c,])
@@ -611,7 +611,7 @@ posterior.crossvalidation <- function(theta,
     diag(Sigma.o) <- diag(Sigma.o) + theta[1]^2
   } else if(model == "alpha1" || model == "GL"){
     if(model == "alpha1"){
-      Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+      Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
     } else if(model == "GL"){
       Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
     }
@@ -674,9 +674,9 @@ likelihood.graph_laplacian <- function(theta, graph.obj){
 likelihood.exp.graph <- function(theta, graph.obj){
   sigma_e <- theta[1]
   #build Q
-  #Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  #Q <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
 
-  Q.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El, build=F)
+  Q.list <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths, build=F)
 
   Qp <- Matrix::sparseMatrix(i = Q.list$i,
                              j = Q.list$j,
@@ -694,7 +694,7 @@ likelihood.exp.graph <- function(theta, graph.obj){
   for(e in obs.edges){
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
-    l <- graph.obj$El[e]
+    l <- graph.obj$edge_lengths[e]
     D_matrix <- as.matrix(dist(c(0,l,graph.obj$PtE[obs.id,2])))
     S <- r_1(D_matrix,theta[2:3])
 
@@ -758,7 +758,7 @@ covariance.point.to.graph.exp <- function(EP, theta, graph, n.p = 50){
   kappa <- theta[1]
   sigma <- theta[2]
   #compute covarains of the two edges of EP[1]
-  Q <- Q.exp(theta, graph$V, graph$EtV, graph$El)
+  Q <- Q.exp(theta, graph$V, graph$EtV, graph$edge_lengths)
   R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
   Vs <- graph$EtV[EP[1],2:3]
   Z <- matrix(0, nrow=dim(graph$V)[1], ncol=2)
@@ -769,7 +769,7 @@ covariance.point.to.graph.exp <- function(EP, theta, graph, n.p = 50){
 
   # compute covarains between two edges and the point
   t_norm <- EP[2]
-  l <- graph$El[EP[1]]
+  l <- graph$edge_lengths[EP[1]]
   Q_line <- as.matrix(Q.exp.line(theta, c(0, l*t_norm,l)))
   Q_AB <- Q_line[2,c(1,3),drop=F]
   Q_AA <- Q_line[2,2]
@@ -780,7 +780,7 @@ covariance.point.to.graph.exp <- function(EP, theta, graph, n.p = 50){
   CV_P <- CV%*%t(B)
   C <- matrix(0, nrow = n.p * dim(graph$EtV)[1], ncol=3)
   for(i in 1:length(graph$EtV[,1])){
-    l <- graph$El[i]
+    l <- graph$edge_lengths[i]
     t_s <- seq(0,1,length.out=n.p)
     if(graph$EtV[i,1] == EP[1]){
       D_matrix <- as.matrix(dist(c(0,l,l*t_norm,l*t_s)))

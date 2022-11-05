@@ -146,12 +146,12 @@ sample.line.matern2 <-function(theta, u_e, l_e, t=NULL, Line=NULL, nt=100,  py=N
 #' @param theta - kappa, sigma
 #' @param V vertex position
 #' @param EtV [,2-3] index of upper and lower edge
-#' @param El length of each vertex
+#' @param edge_lengths length of each vertex
 #' @param BC boundary condition =0 neumann, 1 = correct boundary to stationary
 #' @param build (bool) if true return Q the precision matrix otherwise return list(i,j,x, nv)
 #' @return Q (precision matrix)
 #' @export
-Q.matern2 <- function(theta, V, EtV, El, BC = 1, build=T){
+Q.matern2 <- function(theta, V, EtV, edge_lengths, BC = 1, build=T){
 
   kappa <- theta[1]
   sigma <- theta[2]
@@ -168,7 +168,7 @@ Q.matern2 <- function(theta, V, EtV, El, BC = 1, build=T){
   Ajd <- -0.5 * solve(rbind(cbind(R_00, matrix(0,2,2)), cbind(matrix(0,2,2),R_00)))
   for(i in 1:nE){
 
-    l_e <- El[i]
+    l_e <- edge_lengths[i]
     #lots of redundant caculations
     d_ <- c(0,l_e)
     D <- outer(d_,d_,"-")
@@ -319,7 +319,7 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   n_const <- length(graph.obj$CBobj$S)
   ind.const <- c(1:n_const)
   Tc <- graph.obj$CBobj$T[-ind.const,]
-  Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
   R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc), LDL = FALSE, perm = TRUE)
   loglik <- Matrix::determinant(R)$modulus[1]
 
@@ -332,7 +332,7 @@ likelihood.matern2.graph <- function(theta, graph.obj){
   for(e in obs.edges){
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
-    l <- graph.obj$El[e]
+    l <- graph.obj$edge_lengths[e]
     t <- c(0,l,graph.obj$PtE[obs.id,2])
 
     D <- outer (t, t, `-`)
@@ -476,7 +476,7 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
   n_const <- length(graph.obj$CBobj$S)
   ind.const <- c(1:n_const)
   Tc <- graph.obj$CBobj$T[-ind.const,]
-  Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Q <- Q.matern2(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
 
   #build BSIGMAB
   Qpmu      <- rep(0, 4*nrow(graph.obj$EtV))
@@ -489,7 +489,7 @@ posterior.mean.matern2 <- function(theta, graph.obj, rem.edge=NULL){
   for(e in obs.edges){
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
-    l <- graph.obj$El[e]
+    l <- graph.obj$edge_lengths[e]
     t <- c(0,l,graph.obj$PtE[obs.id,2])
 
     D <- outer (t, t, `-`)
@@ -622,7 +622,7 @@ posterior.mean.obs.matern2 <- function(theta, graph.obj, leave.edge.out = F){
 
   sigma_e = theta[1]
 
-  Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$El)
+  Qp <- Q.exp(theta[2:3], graph.obj$V, graph.obj$EtV, graph.obj$edge_lengths)
   if(leave.edge.out==F)
     E.post <- posterior.mean.matern2(theta, graph.obj)
 
@@ -638,7 +638,7 @@ posterior.mean.obs.matern2 <- function(theta, graph.obj, leave.edge.out = F){
 
     obs.id <- graph.obj$PtE[,1] == e
     y_i <- graph.obj$y[obs.id]
-    l <- graph.obj$El[e]
+    l <- graph.obj$edge_lengths[e]
     t <- c(0,l,graph.obj$PtE[obs.id,2])
     D <- outer (t, t, `-`)
     S <- matrix(0, length(t)+2, length(t)+2 )
@@ -687,20 +687,20 @@ graph_posterior_mean_matern2 <- function(graph,  theta, sample=F){
     if(length(ind)==0){
       X.i   <- sample.line.matern2(theta,
                            V.i,
-                           graph$El[i],
+                           graph$edge_lengths[i],
                            nt = 100,
                            sample=sample)
     }else{
       X.i   <- sample.line.matern2(theta,
                            V.i,
-                           graph$El[i],
+                           graph$edge_lengths[i],
                            nt = 100,
                            y = graph$y[ind],
                            py =graph$PtE[ind,2],
                            sample=sample)
 
     }
-    X.i[,1] <- X.i[,1]/graph$El[i]
+    X.i[,1] <- X.i[,1]/graph$edge_lengths[i]
     X <- rbind(X, cbind(X.i,i))
 
   }
@@ -724,7 +724,7 @@ covariance.point.to.graph.alpha2 <- function(EP, theta, graph, n.p = 50){
   kappa <- theta[1]
   sigma <- theta[2]
   #compute covarains of the two edges of EP[1]
-  Q <- Q.matern2(theta, graph$V, graph$EtV, graph$El)
+  Q <- Q.matern2(theta, graph$V, graph$EtV, graph$edge_lengths)
   if(is.null(graph$CBobj))
     graph$buildA(2, F)
 
@@ -750,7 +750,7 @@ covariance.point.to.graph.alpha2 <- function(EP, theta, graph, n.p = 50){
 
   # compute covarains between two u(0),u'(0),u(T),u'(T) and the point u(p)
   t_norm <- EP[2]
-  l <- graph$El[EP[1]]
+  l <- graph$edge_lengths[EP[1]]
   Sigma <- matrix(0, 5, 5)
   t <- l*c(0,1,t_norm)
   D <- outer (t, t, `-`)
@@ -764,7 +764,7 @@ covariance.point.to.graph.alpha2 <- function(EP, theta, graph, n.p = 50){
   CV_P <- CZ%*%t(B)
   C <- matrix(0, nrow = n.p * dim(graph$EtV)[1], ncol=3)
   for(i in 1:length(graph$EtV[,1])){
-    l <- graph$El[i]
+    l <- graph$edge_lengths[i]
 
     t_s <- seq(0,1,length.out=n.p)
     if(graph$EtV[i,1] == EP[1]){
