@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph.object.R
 \name{vertex.to.line}
 \alias{vertex.to.line}
-\title{Assume that there is only one line each Lines}
+\title{Convert line object to graph information}
 \usage{
 vertex.to.line(Lines)
 }
@@ -13,5 +13,5 @@ vertex.to.line(Lines)
 A list with elements V, EtV, edge_lengths
 }
 \description{
-Assume that there is only one line each Lines
+Convert line object to graph information
 }

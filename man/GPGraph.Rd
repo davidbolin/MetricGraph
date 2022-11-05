@@ -15,7 +15,7 @@ and contains various utility functions for specifying graphs, computing likeliho
 prediction, simulating processes, and visualizing results and graphs.
 }
 \details{
-At the heart of the package is the `R6` class `[metric.graph()]`. This is used for specifying
+At the heart of the package is the `R6` class `[metric_graph()]`. This is used for specifying
 metric graphs, and contains various utility functions which are needed for specifying Gaussian
 processes on such spaces.
 

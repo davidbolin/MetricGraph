@@ -1,13 +1,10 @@
-
-# TODO: remove index of edge and let it correspond to row number in EtV
-
-#' @title Graph objects for specification of Gaussian processes
+#' @title Metric graph object for specification of Gaussian processes
 #' @description Class representing general metric graphs.
 #' @details A graph object created from vertex and edge matrices, or from an sp::Lines
 #' object where each line is representing and edge.
 #'
 #' @export
-gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
+metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field edge_lengths length of edges
   edge_lengths = NULL,
 
@@ -18,6 +15,7 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
   C = NULL,
 
   #' @field A observation matrix specifying which vertices are observation locations
+  A = NULL,
 
   #' @field CBobj svd stuct obj
   CBobj = NULL,
@@ -213,7 +211,6 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
     if(!is.null(self$res.dist)){
       self$compute_resdist()
     }
-    #TODO: Add observation matrix here.
   },
 
   #' @description Add observations to the object
@@ -332,7 +329,7 @@ gpgraph_graph <-  R6::R6Class("GPGraph::graph", public = list(
 
 ))
 
-#' Assume that there is only one line each Lines
+#' Convert line object to graph information
 #' @param Lines object
 #' @return A list with elements V, EtV, edge_lengths
 #' @export

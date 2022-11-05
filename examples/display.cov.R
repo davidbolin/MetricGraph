@@ -21,7 +21,7 @@ E <- rbind(c(1,2),
            c(4,6),
            c(2,7))
 
-graph <-  gpgraph_graph$new(P=P,E=E)
+graph <-  metric_graph$new(P=P,E=E)
 
 #if Line is null assume straight line
 #If we have a line keep
