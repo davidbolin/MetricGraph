@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+*.o
+*.so
