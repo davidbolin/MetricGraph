@@ -9,7 +9,7 @@ covariance.point.to.graph.exp(EP, theta, graph, n.p = 50)
 \arguments{
 \item{EP}{- (2 x 1) [1] -edge number, [2] -normalized location on the edge}
 
-\item{theta}{- (3 x 1) (kappa,sigma)}
+\item{theta}{- (2 x 1) (sigma,kappa)}
 
 \item{graph}{- (graph)}
 

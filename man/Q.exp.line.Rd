@@ -9,7 +9,7 @@ observation location t}
 Q.exp.line(theta, t, t_sorted = FALSE)
 }
 \arguments{
-\item{theta}{kappa, sigma}
+\item{theta}{sigma, kappa}
 
 \item{t}{(n x 1) relative position on the line start with 0 end with 1}
 

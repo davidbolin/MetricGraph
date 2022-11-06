@@ -9,7 +9,7 @@ r_1(D, theta)
 \arguments{
 \item{D}{vector or matrix with distances}
 
-\item{theta}{parameters kappa and sigma}
+\item{theta}{parameters sigma,kappa}
 }
 \description{
 The exponential covariance

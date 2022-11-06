@@ -12,7 +12,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field nV number of vertices
   nV = 0,
 
-  #' @field E Edges,  E[i,2] is the vertex at the start of the edge and  E[i,2] is
+  #' @field E Edges,  E[i,1] is the vertex at the start of the edge and  E[i,2] is
   #' the vertex at the end of the edge
   E = NULL,
 
@@ -116,7 +116,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
       ind <-  (val_line <= t)
       Point <- gInterpolate(Line, t, normalized=TRUE)
       Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
-      Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
+      Line2 <- list(Point, as(Line, "SpatialPoints")[ind==F, ])
 
       if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
         self$Lines <-rbind(self$Lines[1:Ei-1,],
@@ -221,7 +221,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @description Add observations to the object
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y        (n x 1) the value of the observations
-  #' @param y.index (string, int) position in Spoints where y is located
+  #' @param y.index (string, int) column in Spoints where y is located
   add_observations = function(Spoints, y=NULL, y.index=NULL){
 
     if(is.null(y)){

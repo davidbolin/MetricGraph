@@ -9,7 +9,7 @@ r_2(D, theta, deriv = 0)
 \arguments{
 \item{D}{vector or matrix with distances}
 
-\item{theta}{kappa, sigma}
+\item{theta}{(sigma, kappa)}
 
 \item{deriv}{(0,1,2) no derivative, first, or second order}
 }

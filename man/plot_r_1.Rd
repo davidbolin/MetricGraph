@@ -7,7 +7,7 @@
 plot_r_1(theta, t = NULL)
 }
 \arguments{
-\item{theta}{parameters sigma_e (nugget), kappa and sigma}
+\item{theta}{parameters sigma_e (nugget), sigma and kappa}
 }
 \description{
 plot the exponential covariance for parameter set

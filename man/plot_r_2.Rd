@@ -7,7 +7,7 @@
 plot_r_2(theta, t = NULL)
 }
 \arguments{
-\item{theta}{- sigma_e, kappa, sigma}
+\item{theta}{- sigma_e, sigma, kappa}
 }
 \description{
 plot the Matern alpha=2 covariance for parameter set

@@ -7,7 +7,7 @@
 Qalpha1(theta, graph, BC = 1, build = TRUE)
 }
 \arguments{
-\item{theta}{- kappa, sigma}
+\item{theta}{- sigma, kappa}
 
 \item{graph}{metric_graph object}
 

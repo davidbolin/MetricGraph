@@ -2,7 +2,7 @@
 #' That is the inverse of the exponential covariance at the
 #' observation location t
 #'
-#' @param theta kappa, sigma
+#' @param theta sigma, kappa
 #' @param t (n x 1) relative position on the line start with 0 end with 1
 #' @param l_e (double) length of the line
 #' @param t_sorted (bool)
@@ -12,8 +12,8 @@ Q.exp.line <- function(theta, t,  t_sorted = FALSE) {
   l_t <- length(t)
   i_ <- j_ <- x_ <- rep(0, 4*(l_t-1) + 2)
   count <- 0
-  kappa <- theta[1]
-  sigma <- theta[2]
+  kappa <- theta[2]
+  sigma <- theta[1]
   if (t_sorted == FALSE) {
     order_t  <- order(t)
     t        <- t[order_t]
@@ -150,15 +150,15 @@ sample.line.exponential <- function(theta, u_e, l_e, t = NULL,
 #' Compute covariance of a point to the entire graph (discretized)
 #'
 #' @param  EP    - (2 x 1) [1] -edge number, [2] -normalized location on the edge
-#' @param  theta - (3 x 1) (kappa,sigma)
+#' @param  theta - (2 x 1) (sigma,kappa)
 #' @param  graph  - (graph)
 #' @param  n.p    - (int) number of points to compute the covariance on on each edge
 #' @return C      - (n.p*numer of edges x 3) [,1] edge number [,2] length from lower edge [,3] covariance
 #' @export
 covariance.point.to.graph.exp <- function(EP, theta, graph, n.p = 50){
 
-  kappa <- theta[1]
-  sigma <- theta[2]
+  kappa <- theta[2]
+  sigma <- theta[1]
   #compute covarains of the two edges of EP[1]
   Q <- Q.exp(theta, graph$V, graph$E, graph$edge_lengths)
   R <- Cholesky(Q, LDL = FALSE, perm = TRUE)

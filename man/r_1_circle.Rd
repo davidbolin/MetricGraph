@@ -11,7 +11,7 @@ r_1_circle(t, l_e, theta)
 
 \item{l_e}{circle perimeter}
 
-\item{theta}{parameters kappa and sigma}
+\item{theta}{- (sigma, kappa)}
 }
 \description{
 the Whittle--Matern covariance with alpha=1 on a circle

@@ -17,7 +17,7 @@ object where each line is representing and edge.
 
 \item{\code{nV}}{number of vertices}
 
-\item{\code{E}}{Edges,  E[i,2] is the vertex at the start of the edge and  E[i,2] is
+\item{\code{E}}{Edges,  E[i,1] is the vertex at the start of the edge and  E[i,2] is
 the vertex at the end of the edge}
 
 \item{\code{nE}}{number of edges}
@@ -181,7 +181,7 @@ Add observations to the object
 
 \item{\code{y}}{(n x 1) the value of the observations}
 
-\item{\code{y.index}}{(string, int) position in Spoints where y is located}
+\item{\code{y.index}}{(string, int) column in Spoints where y is located}
 }
 \if{html}{\out{</div>}}
 }
