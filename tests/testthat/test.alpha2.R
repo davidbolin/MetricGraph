@@ -118,8 +118,8 @@ test_that("test if computing covariance are equivalent",{
 
   graph.temp <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                      Lines(list(line.line2),ID="2"))))
-  Q <- Q.matern2(theta[2:3], graph.temp$V, graph.temp$EtV, graph.temp$edge_lengths, BC = 1)
-  graph.temp$buildC(2, F)
+  Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph.temp, BC = 1)
+  graph.temp$buildC(2, FALSE)
   Qmod <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
   Qtilde <- Qmod
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
@@ -138,19 +138,19 @@ test_that("test if computing covariance are equivalent",{
   X[,2] <- X[,2] + sigma_e*rnorm(nt)
 
   graph.temp$add_observations2(y = X[,2], PtE = X[,c(3,1)])
-  graph.temp$buildC(2, F)
-  lik <- likelihood.matern2.graph(theta,graph.temp)
+  graph.temp$buildC(2, FALSE)
+  lik <- likelihood_graph_spde(theta = theta, graph = graph.temp, alpha = 2)
   graph.temp$observation_to_vertex()
-  graph.temp$buildC(2, F)
-  lik2 <-likelihood.graph.covariance(theta, graph.temp, model="alpha2")
+  graph.temp$buildC(2, FALSE)
+  lik2 <-likelihood_graph_covariance(theta = theta, graph = graph.temp, model = "alpha2")
 
   expect_equal(as.matrix(lik),as.matrix(lik2), tolerance=1e-10)
 
-  pm <- posterior.mean.obs.matern2(theta,graph.temp)# posterior mean
+  pm <- spde_posterior_mean(theta, alpha = 2, obs = TRUE, graph = graph.temp)# posterior mean
   n.o <- length(graph.temp$y)
   n.v <- dim(graph.temp$V)[1]
   n.c <- 1:length(graph.temp$CBobj$S)
-  Q <- Q.matern2(c(theta[2],theta[3]), graph.temp$V, graph.temp$EtV, graph.temp$edge_lengths, BC = 1)
+  Q <- spde_precision(kappa = kappa, sigma =sigma, alpha = 2, graph = graph.temp, BC = 1)
   Qtilde <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
   Qtilde <- Qtilde[-n.c,-n.c]
   Sigma.overdetermined  = t(graph.temp$CBobj$T[-n.c,])%*%solve(Qtilde)%*%(graph.temp$CBobj$T[-n.c,])
@@ -161,8 +161,7 @@ test_that("test if computing covariance are equivalent",{
   pm2 <- Sigma%*%solve(Sigma.Y,graph.temp$y)
 
   expect_equal(as.matrix(pm),as.matrix(pm2), tolerance=1e-10)
-  pm_ <- posterior.mean.matern2(theta, graph.temp)
+  pm_ <- spde_posterior_mean(theta, alpha = 2, graph = graph.temp, obs = FALSE)
   pm2_ <- Sigma.overdetermined[,index.obs]%*%solve(Sigma.Y,graph.temp$y)
   expect_equal(as.matrix(pm_),as.matrix(pm2_), tolerance=1e-10)
 })
-

@@ -2,17 +2,17 @@
 % Please edit documentation in R/Matern2.covariance.R
 \name{r_2}
 \alias{r_2}
-\title{The Matern alpha=2 covariance}
+\title{The Matern covariance with alpha=2}
 \usage{
 r_2(D, theta, deriv = 0)
 }
 \arguments{
-\item{D}{- vector, or matrix distance}
+\item{D}{vector or matrix with distances}
 
-\item{theta}{- kappa, sigma}
+\item{theta}{kappa, sigma}
 
-\item{deriv}{- (0,1,2) no derivative, first, or second}
+\item{deriv}{(0,1,2) no derivative, first, or second order}
 }
 \description{
-The Matern alpha=2 covariance
+The Matern covariance with alpha=2
 }

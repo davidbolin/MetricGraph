@@ -7,8 +7,8 @@
 Class representing general metric graphs.
 }
 \details{
-A graph object created from vertex and edge matrices, or from an sp::Lines
-object where each line is representing and edge.
+A graph object created from vertex and edge matrices, or from
+an sp::Lines object where each line is representing and edge.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -17,8 +17,8 @@ object where each line is representing and edge.
 
 \item{\code{nV}}{number of vertices}
 
-\item{\code{E}}{Edges,  E[i,2] is the vertex at the start of the edge and  E[i,2] is
-the vertex at the end of the edge}
+\item{\code{E}}{Edges,  E[i,2] is the vertex at the start of the edge and
+E[i,2] is the vertex at the end of the edge}
 
 \item{\code{nE}}{number of edges}
 
@@ -28,9 +28,10 @@ the vertex at the end of the edge}
 
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
-\item{\code{A}}{observation matrix specifying which vertices are observation locations}
+\item{\code{A}}{observation matrix specifying which vertices are
+observation locations}
 
-\item{\code{CBobj}}{svd stuct obj}
+\item{\code{CBobj}}{Change of basis structure object}
 
 \item{\code{Points}}{Observations in SpatialPointsDataFrame}
 
@@ -75,7 +76,7 @@ the vertex at the end of the edge}
 \if{html}{\out{<a id="method-GPGraph::graph-new"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new gpgraph_graph object
+Create a new metric_graph object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(Lines = NULL, P = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
 }
@@ -95,11 +96,12 @@ Create a new gpgraph_graph object
 }
 \subsection{Details}{
 A graph object can be initialized in two ways. The first method is
-to specify P and E. In this case, if edge_lengths is not specified, all edges are
-assumed to be straight lines. Otherwise the edge lengths set in edge_lengths are used.
-The second option is to specify the graph based on Lines. In this case,
-the vertices are set by the end points of the lines. Thus, if two lines are intersecting
-somewhere else, this will not be viewed as a vertex.
+to specify P and E. In this case, if edge_lengths is not specified, all
+edges are assumed to be straight lines. Otherwise the edge lengths set in
+edge_lengths are used. The second option is to specify the graph based on
+Lines. In this case, the vertices are set by the end points of the lines.
+Thus, if two lines are intersecting somewhere else, this will not be viewed
+as a vertex.
 }
 
 \subsection{Returns}{
