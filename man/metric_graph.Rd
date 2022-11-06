@@ -13,6 +13,15 @@ object where each line is representing and edge.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
+\item{\code{V}}{Position in Euclidean space of the vertices}
+
+\item{\code{nV}}{number of vertices}
+
+\item{\code{E}}{Edges,  E[i,2] is the vertex at the start of the edge and  E[i,2] is
+the vertex at the end of the edge}
+
+\item{\code{nE}}{number of edges}
+
 \item{\code{edge_lengths}}{length of edges}
 
 \item{\code{EID}}{ID of edges}
@@ -34,14 +43,7 @@ object where each line is representing and edge.
 \item{\code{PtV}}{Points to Vertex observations to vertex
 [,1] - vertex index,}
 
-\item{\code{V}}{position in the space of the vertices
-V =  NULL,}
-
-\item{\code{EtV}}{[,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge}
-
-\item{\code{nE}}{number of edges}
-
-\item{\code{nV}}{number of vertices}
+\item{\code{mesh}}{mesh object used for plotting}
 
 \item{\code{Lines}}{List of Lines object for building the graph}
 
@@ -65,6 +67,7 @@ V =  NULL,}
 \item \href{#method-GPGraph::graph-add_observations}{\code{metric_graph$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
+\item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -109,13 +112,13 @@ A gpgraph_graph object
 \subsection{Method \code{split_line()}}{
 Split line by point
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_line(E, t)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_line(Ei, t)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{E}}{Edge to be split}
+\item{\code{Ei}}{Index of edge to be split}
 
 \item{\code{t}}{Normalized distance to first edge}
 }
@@ -219,6 +222,25 @@ build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. s
 \item{\code{alpha}}{(int) which type of constraint (currently only 2 implemented)}
 
 \item{\code{edge_constraint}}{(bool) if true add constraint on vertices of degree 1.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-build_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-build_mesh}{}}}
+\subsection{Method \code{build_mesh()}}{
+build mesh object for plotting
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h, n = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{h}}{maximum distance between mesh nodes}
+
+\item{\code{n}}{maximum number of nodes per edge}
 }
 \if{html}{\out{</div>}}
 }

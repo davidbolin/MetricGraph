@@ -30,14 +30,14 @@ test_that("Check agrement beteen covariance and precision matrix formulation", {
 
   graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                 Lines(list(line.line2),ID="2"))))
-  Q <- Q.exp(theta[2:3], graph$V, graph$EtV, graph$edge_lengths)
+  Q <- Q.exp(theta[2:3], graph)
   R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
   V0 <- as.vector(solve(R, solve(R,rnorm(3), system = 'Lt')
                         , system = 'Pt'))
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
     X <- rbind(X,cbind(sample.line.expontial(theta,
-                                             V0[graph$EtV[i,2:3]],
+                                             V0[graph$E[i,]],
                                              Line = graph$Lines[i,],
                                              graph$edge_lengths[i],
                                              nt = nt),i))

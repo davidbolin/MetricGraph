@@ -5,16 +5,12 @@
 \title{Building the precision matrix for all the vertex in
 the expontial case}
 \usage{
-Q.exp(theta, V, EtV, edge_lengths, BC = 1, build = T)
+Q.exp(theta, graph, BC = 1, build = TRUE)
 }
 \arguments{
 \item{theta}{- kappa, sigma}
 
-\item{V}{vertex position}
-
-\item{EtV}{[,2-3] index of upper and lower edge}
-
-\item{edge_lengths}{length of each vertex}
+\item{graph}{metric_graph object}
 
 \item{BC}{boundary condition =0 neumann, 1 = correct boundary to stationary}
 

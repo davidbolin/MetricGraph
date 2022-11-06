@@ -5,6 +5,20 @@
 #'
 #' @export
 metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
+
+  #' @field V Position in Euclidean space of the vertices
+  V = NULL,
+
+  #' @field nV number of vertices
+  nV = 0,
+
+  #' @field E Edges,  E[i,2] is the vertex at the start of the edge and  E[i,2] is
+  #' the vertex at the end of the edge
+  E = NULL,
+
+  #' @field nE number of edges
+  nE= 0,
+
   #' @field edge_lengths length of edges
   edge_lengths = NULL,
 
@@ -35,17 +49,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #'  [,1] - vertex index,
   PtV  = NULL,
 
-  #' @field V position in the space of the vertices
-  #'   V =  NULL,
-  V = NULL,
-  #' @field EtV [,1]- index of Lines, [,2] - vertex lower edge, [,3] - vertex upper edge
-  EtV = NULL,
-
-  #' @field nE number of edges
-  nE= 0,
-
-  #' @field nV number of vertices
-  nV = 0,
+  #' @field mesh mesh object used for plotting
+  mesh = NULL,
 
   #' @field Lines List of Lines object for building the graph
   Lines = NULL,
@@ -85,7 +90,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
       list_obj <- vertex.to.line(self$Lines)
       self$V   <- list_obj$V
       self$nV <- dim(self$V)[1]
-      self$EtV <- list_obj$EtV
+      self$E <- list_obj$EtV
       self$edge_lengths  <- list_obj$edge_lengths
     } else {
       if(is.null(P) || is.null(E)){
@@ -93,37 +98,37 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
       }
       self$nE <- dim(E)[1]
       self$V   <- P
-      self$EtV <- cbind(1:dim(E)[1],E)
+      self$E <- E
       self$nV <- dim(self$V)[1]
-      self$edge_lengths <- sqrt((self$V[self$EtV[,3], 1] - self$V[self$EtV[, 2], 1])^2 +
-                            (self$V[self$EtV[,3], 2] - self$V[self$EtV[, 2], 2])^2)
+      self$edge_lengths <- sqrt((self$V[self$E[,2], 1] - self$V[self$E[, 1], 1])^2 +
+                            (self$V[self$E[,2], 2] - self$V[self$E[, 1], 2])^2)
     }
 
   },
 
   #' @description Split line by point
-  #' @param E Edge to be split
+  #' @param Ei Index of edge to be split
   #' @param t Normalized distance to first edge
-  split_line = function(E, t){
-      Line <- self$Lines[E,]
+  split_line = function(Ei, t){
+      Line <- self$Lines[Ei,]
 
-      val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=T)
+      val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
       ind <-  (val_line <= t)
       Point <- gInterpolate(Line, t, normalized=TRUE)
       Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
       Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
 
       if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
-        self$Lines <-rbind(self$Lines[1:E-1,],
+        self$Lines <-rbind(self$Lines[1:Ei-1,],
                             SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
                                                   data=Line@data,match.ID = FALSE),
-                            self$Lines[-(1:E),],
+                            self$Lines[-(1:Ei),],
                             SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
                                                   data=Line@data,match.ID = FALSE))
       }else{
-        self$Lines <-rbind(self$Lines[1:E-1,],
+        self$Lines <-rbind(self$Lines[1:Ei-1,],
                            as(do.call(rbind,  Line1), "SpatialLines"),
-                           self$Lines[-(1:E),],
+                           self$Lines[-(1:Ei),],
                            as(do.call(rbind,  Line2), "SpatialLines"))
 
       }
@@ -133,14 +138,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
     self$V <- rbind(self$V,c(newV, Point@coords))
 
 
-    l_e <- self$edge_lengths[E]
-    self$edge_lengths[E] <- t*l_e
+    l_e <- self$edge_lengths[Ei]
+    self$edge_lengths[Ei] <- t*l_e
     self$edge_lengths <- c(self$edge_lengths, (1-t)*l_e)
     self$nE <- self$nE + 1
-    self$EtV <- rbind(self$EtV,
-                      c(max(self$EtV[,1])+1, newV,self$EtV[E, 3]))
-    self$EtV[E, 3] <- newV
-    ind <- which(self$PtE[,1]%in%E)
+    self$E <- rbind(self$E,
+                    c(newV,self$E[Ei, 2]))
+    self$E[Ei, 2] <- newV
+    ind <- which(self$PtE[,1]%in%Ei)
     for(i in ind){
       if( self$PtE[i,2]>= t*l_e-1e-10){
         self$PtE[i,1] <- length(self$edge_lengths) #self$nE #
@@ -152,7 +157,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
 
   #' @description Computes shortest path distances between the vertices in the graph
   compute_geodist = function(){
-    g <- graph(edges = c(t(self$EtV[,2:3])), directed=FALSE)
+    g <- graph(edges = c(t(self$E)), directed=FALSE)
     E(g)$weight <- self$edge_lengths
     self$geo.dist <- distances(g)
   },
@@ -164,8 +169,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
     }
     L <- Matrix(0,self$nV,self$nV)
     for(i in 1:self$nE){
-      tmp <- -1/self$geo.dist[self$EtV[i,2], self$EtV[i,3]]
-      L[self$EtV[i,3],self$EtV[i,2]] <- L[self$EtV[i,2],self$EtV[i,3]] <- tmp
+      tmp <- -1/self$geo.dist[self$E[i,1], self$E[i,2]]
+      L[self$E[i,2],self$E[i,1]] <- L[self$E[i,1],self$E[i,2]] <- tmp
     }
     for(i in 1:self$nV){
       L[i,i] <- -sum(L[i,-i])
@@ -180,7 +185,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   compute_laplacian = function(){
     Wmat <- Matrix(0,self$nV,self$nV)
     for(i in 1:self$nE){
-      Wmat[self$EtV[i,2],self$EtV[i,3]] <- Wmat[self$EtV[i,3],self$EtV[i,2]] <- 1/self$edge_lengths[i]
+      Wmat[self$E[i,1],self$E[i,2]] <- Wmat[self$E[i,2],self$E[i,1]] <- 1/self$edge_lengths[i]
     }
     self$Laplacian <- Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
   },
@@ -196,10 +201,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
         l_e <- self$edge_lengths[e]
         if(abs(t)<10^-10){
           self$PtE[i,2] <- 0
-          self$PtV[i] <- self$EtV[e,2]
+          self$PtV[i] <- self$E[e,1]
         }else if(t>l_e-10^-10){
           self$PtE[i,2] <- l_e
-          self$PtV[i] <- self$EtV[e,3]
+          self$PtV[i] <- self$E[e,2]
         }else{
           self$split_line(e, t/l_e)
           self$PtV[i] <- dim(self$V)[1]
@@ -273,15 +278,15 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   buildC = function(alpha, edge_constraint=FALSE){
 
     if(alpha==2){
-      i_  =  rep(0, 2*dim(self$EtV)[1])
-      j_  =  rep(0, 2*dim(self$EtV)[1])
-      x_  =  rep(0, 2*dim(self$EtV)[1])
+      i_  =  rep(0, 2*self$nE)
+      j_  =  rep(0, 2*self$nE)
+      x_  =  rep(0, 2*self$nE)
 
       count_constraint = 0
       count            = 0
-      for(v in 1:dim(self$V)[1]){
-        lower.edges  = which(self$EtV[,2]%in%v)
-        upper.edges  = which(self$EtV[,3]%in%v)
+      for(v in 1:self$nV){
+        lower.edges  = which(self$E[,1]%in%v)
+        upper.edges  = which(self$E[,2]%in%v)
         n_e = length(lower.edges) + length(upper.edges)
         #derivative constraint
         if((edge_constraint & n_e ==1) | n_e > 1) {
@@ -317,13 +322,43 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
       C <- Matrix::sparseMatrix(i    = i_[1:count],
                                 j    = j_[1:count],
                                 x    = x_[1:count],
-                                dims = c(count_constraint, 4*dim(self$EtV)[1]) )
+                                dims = c(count_constraint, 4*self$nE) )
       self$C = C
 
       self$CBobj <- c_basis2(self$C)
       self$CBobj$T <- t(self$CBobj$T)
     }else{
       error("only alpha=2 implimented")
+    }
+  },
+
+  #' @description build mesh object for plotting
+  #' @param h maximum distance between mesh nodes
+  #' @param n maximum number of nodes per edge
+  build_mesh = function(h,n=NULL){
+
+    self$mesh <- list(V=NULL,
+                      E=NULL,
+                      n_e = NULL,
+                      ind = 1:dim(self$V)[1])
+
+    self$mesh$V <- self$V
+    for(i in 1:dim(self$E)[1]){
+      if(is.null(n)){
+        n.e[i] <- max(ceiling(self$edge_lengths[i]/h)+1,3)
+      } else {
+        n.e[i] = n
+      }
+      d.e <- seq(from=0,to=1,length.out=n.e[i])[2:(n.e[i]-1)]
+      hi[i] <- L[i]*d.e[1]
+      n.e[i] <- n.e[i]-2
+
+      self$mesh$V <- rbind(self$mesh$V,
+                      cbind(self$V[self$E[i,1],1]*(1-d.e) + d.e*self$V[self$E[i,2],1],
+                            self$V[self$E[i,1],2]*(1-d.e) + d.e*self$V[self$E[i,2],2]))
+      V.int <- (max(self$mesh$ind)+1):(max(self$mesh$ind)+n.e[i])
+      self$mesh$ind <- c(self$mesh$ind,V.int)
+      self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i,1],V.int), c(V.int,self$E[i,2])))
     }
   }
 

@@ -16,7 +16,7 @@ covariance.point.to.graph.exp(EP, theta, graph, n.p = 50)
 \item{n.p}{- (int) number of points to compute the covariance on on each edge}
 }
 \value{
-C      - (n.p*numer of edges x 3) [1] edge number [2] lenth from lower edge [3] covarians
+C      - (n.p*numer of edges x 3) [,1] edge number [,2] length from lower edge [,3] covariance
 }
 \description{
 Compute covariance of a point to the entire graph (discretized)

@@ -1,19 +1,4 @@
 
-#' Compute edge lengths in graph
-#'
-#' @param P Vertex matrix
-#' @param E Edge matrix
-#'
-#' @return Vector with lengths
-#' @export
-compute.lengths <- function(P,E){
-  L <- NULL
-  for(i in 1:dim(E)[1]){
-    L[i] <- sqrt( sum( (P[E[i,1],]-P[E[i,2],])^2))
-  }
-  return(L)
-}
-
 #' compute the mesh with a given mesh width h
 #'
 #' @param P Vertex matrix of graph

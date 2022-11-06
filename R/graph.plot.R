@@ -1,6 +1,3 @@
-
-library(ggplot2)
-
 #' plot a continuous curve
 #'
 #' @param data.to.plot (m x 2) [,1] position on curve (in length)
