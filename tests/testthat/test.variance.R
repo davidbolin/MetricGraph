@@ -14,21 +14,21 @@ test_that("Check if Matern(2) has equal variance on the edges on a circle", {
              c(1,4),
              c(3,4))
 
-  graph <-  metric_graph$new(P = P, E= E)
+  graph <-  metric_graph$new(P = P, E = E)
 
 
   #if Line is null assume straight line
   #If we have a line keep
   #compute covarians for a given point
-  P1 <- c(1,0.1) #edge 1, 0.5 length in
+  P1 <- c(1, 0.1) #edge 1, 0.5 length in
 
 
   kappa <- theta[1]
   sigma <- theta[2]
   #compute covarains of the two edges of EP[1]
-  Q <- Q.matern2(theta, graph$V, graph$EtV, graph$edge_lengths)
+  Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph)
   if(is.null(graph$CBobj))
-    graph$buildC(2, F)
+    graph$buildC(2, FALSE)
 
   n_const <- length(graph$CBobj$S)
   ind.const <- c(1:n_const)

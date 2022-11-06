@@ -7,7 +7,7 @@ test_that("test if the over determined covariances are correct",{
 
   graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                 Lines(list(line.line2),ID="2"))))
-  Q <- Q.matern2(c(kappa,sigma), graph$V, graph$E, graph$edge_lengths, BC = 1)
+  Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
   Qtilde <- (graph$CBobj$T)%*%Q%*%t(graph$CBobj$T)
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
