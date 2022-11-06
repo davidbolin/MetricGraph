@@ -7,9 +7,9 @@
 likelihood_alpha2(theta, graph)
 }
 \arguments{
-\item{theta}{- (sigma_e, sigma, kappa)}
+\item{theta}{parameters (sigma_e, sigma, kappa)}
 
-\item{graph.obj}{- graphical object}
+\item{graph}{metric_graph object}
 }
 \description{
 Computes the log likelihood function fo theta for the graph object

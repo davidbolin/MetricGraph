@@ -24,7 +24,7 @@ Precision matrix or list
 The precision matrix for all vertices in the alpha=2 case
 }
 \details{
-This is the unconstrained precision matrix of the process and its 
+This is the unconstrained precision matrix of the process and its
 derivatives. The ordering of the variables is acording to graph$E, where for
 each edge there are four random variables: processes and derivate for
 lower and upper edge end points

@@ -1,7 +1,7 @@
 #' @title Metric graph object for specification of Gaussian processes
 #' @description Class representing general metric graphs.
-#' @details A graph object created from vertex and edge matrices, or from
-#' an sp::Lines object where each line is representing and edge.
+#' @details A graph object created from vertex and edge matrices, or from an sp::Lines
+#' object where each line is representing and edge.
 #'
 #' @export
 metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
@@ -12,8 +12,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field nV number of vertices
   nV = 0,
 
-  #' @field E Edges,  E[i,2] is the vertex at the start of the edge and
-  #' E[i,2] is the vertex at the end of the edge
+  #' @field E Edges,  E[i,2] is the vertex at the start of the edge and  E[i,2] is
+  #' the vertex at the end of the edge
   E = NULL,
 
   #' @field nE number of edges
@@ -28,11 +28,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field C constraint matrix used to set Kirchhoff constraints
   C = NULL,
 
-  #' @field A observation matrix specifying which vertices are
-  #' observation locations
+  #' @field A observation matrix specifying which vertices are observation locations
   A = NULL,
 
-  #' @field CBobj Change of basis structure object
+  #' @field CBobj svd stuct obj
   CBobj = NULL,
 
   #' @field Points Observations in SpatialPointsDataFrame
@@ -65,31 +64,29 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @field Laplacian The weighted graph Laplacian
   Laplacian = NULL,
 
-  #' @description Create a new metric_graph object
+  #' @description Create a new gpgraph_graph object
   #' @param Lines sp object SpatialLines DataFrame or SpatialLines
   #' @param P n x 2 matrix with Euclidean coordinates of the n vertices
   #' @param E m x 2 matrix where each line represents an edge
   #' @param edge_lengths m x 1 vector with edge lengths
   #' @details A graph object can be initialized in two ways. The first method is
-  #' to specify P and E. In this case, if edge_lengths is not specified, all
-  #' edges are assumed to be straight lines. Otherwise the edge lengths set in
-  #' edge_lengths are used. The second option is to specify the graph based on
-  #' Lines. In this case, the vertices are set by the end points of the lines.
-  #' Thus, if two lines are intersecting somewhere else, this will not be viewed
-  #' as a vertex.
+  #' to specify P and E. In this case, if edge_lengths is not specified, all edges are
+  #' assumed to be straight lines. Otherwise the edge lengths set in edge_lengths are used.
+  #' The second option is to specify the graph based on Lines. In this case,
+  #' the vertices are set by the end points of the lines. Thus, if two lines are intersecting
+  #' somewhere else, this will not be viewed as a vertex.
   #' @return A gpgraph_graph object
   initialize = function(Lines = NULL, P = NULL, E = NULL, edge_lengths = NULL) {
     #We have three different ways of initializing:
 
     #option 1: initialization from lines
-    if (!is.null(Lines)) {
-      if (!is.null(edge_lengths) || !is.null(P) || !is.null(E)) {
-        warning("object initialized from lines, then E, P, and
-                edge_lengths are ignored")
+    if(!is.null(Lines)){
+      if(!is.null(edge_lengths) || !is.null(P) || !is.null(E)){
+        warning("object initialized from lines, then E,P,edge_lengths are ignored")
       }
-      self$nE <- length(Lines)
-      self$Lines <- Lines
-      self$EID <- sapply(slot(self$Lines, "lines"), function(x) slot(x, "ID"))
+      self$nE = length(Lines)
+      self$Lines = Lines
+      self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
       list_obj <- vertex.to.line(self$Lines)
       self$V   <- list_obj$V
       self$nV <- dim(self$V)[1]
@@ -103,7 +100,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
       self$V   <- P
       self$E <- E
       self$nV <- dim(self$V)[1]
-      self$edge_lengths <- sqrt((self$V[self$E[, 2], 1] - self$V[self$E[, 1], 1])^2 +
+      self$edge_lengths <- sqrt((self$V[self$E[,2], 1] - self$V[self$E[, 1], 1])^2 +
                             (self$V[self$E[,2], 2] - self$V[self$E[, 1], 2])^2)
     }
 
@@ -112,33 +109,33 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
   #' @description Split line by point
   #' @param Ei Index of edge to be split
   #' @param t Normalized distance to first edge
-  split_line = function(Ei, t) {
-      Line <- self$Lines[Ei, ]
+  split_line = function(Ei, t){
+      Line <- self$Lines[Ei,]
 
-      val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
+      val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
       ind <-  (val_line <= t)
-      Point <- gInterpolate(Line, t, normalized = TRUE)
+      Point <- gInterpolate(Line, t, normalized=TRUE)
       Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
-      Line2 <- list(as(Line, "SpatialPoints")[ind == FALSE, ], Point)
+      Line2 <- list(as(Line, "SpatialPoints")[ind==F, ],Point)
 
-      if (sum(is(self$Lines) %in% "SpatialLinesDataFrame") > 0) {
-        self$Lines <- rbind(self$Lines[1:Ei-1,],
+      if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
+        self$Lines <-rbind(self$Lines[1:Ei-1,],
                             SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
                                                   data=Line@data,match.ID = FALSE),
                             self$Lines[-(1:Ei),],
                             SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
                                                   data=Line@data,match.ID = FALSE))
       }else{
-        self$Lines <-rbind(self$Lines[1:Ei-1, ],
+        self$Lines <-rbind(self$Lines[1:Ei-1,],
                            as(do.call(rbind,  Line1), "SpatialLines"),
-                           self$Lines[-(1:Ei), ],
+                           self$Lines[-(1:Ei),],
                            as(do.call(rbind,  Line2), "SpatialLines"))
 
       }
 
 
-    newV <- max(self$V[,1])+1
-    self$V <- rbind(self$V,c(newV, Point@coords))
+    newV <- self$nV+1#max(self$V[,1])+1
+    self$V <- rbind(self$V,c(Point@coords))
 
 
     l_e <- self$edge_lengths[Ei]
@@ -328,7 +325,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
                                 dims = c(count_constraint, 4*self$nE) )
       self$C = C
 
-      self$CBobj <- CB::c_basis2(self$C)
+      self$CBobj <- c_basis2(self$C)
       self$CBobj$T <- t(self$CBobj$T)
     }else{
       error("only alpha=2 implimented")
@@ -376,23 +373,19 @@ vertex.to.line <- function(Lines){
   for(i in 1:length(Lines)){
     points <- Lines@lines[[i]]@Lines[[1]]@coords
     n <- dim(points)[1]
-    lines <- rbind(lines,c(i, points[1, ],
-                           sp::LineLength(Lines@lines[[i]]@Lines[[1]])),
-                         c(i, points[n,],
-                           sp::LineLength(Lines@lines[[i]]@Lines[[1]])))
+    lines <- rbind(lines,c(i, points[1,], sp::LineLength( Lines@lines[[i]]@Lines[[1]])),
+                         c(i, points[n,], sp::LineLength( Lines@lines[[i]]@Lines[[1]])))
   }
 
-  index.dub <- duplicated(lines[, 2:3])
-  vertex <- cbind( 1:sum(!index.dub), lines[!index.dub, 2:3, drop = FALSE])
-  colnames(vertex) <- c("vert", "x.coord", "y.coord")
-
+  index.dub <- duplicated(lines[,2:3])
+  vertex <- cbind( 1:sum(!index.dub), lines[!index.dub,2:3,drop=F])
 
   lvl <- matrix(0, nrow= max(lines[,1]), 4)
   for(i in 1:max(lines[,1])){
-    which.line <- sort(which(lines[,1] == i))
+    which.line <- sort(which(lines[,1]==i))
     line <- lines[which.line,]
-    ind1 <- (abs( vertex[,2] - line[1,2] ) < 1e-10) * (abs( vertex[,3] - line[1,3] )< 1e-10)==1
-    ind2 <-  (abs( vertex[,2] - line[2,2] ) < 1e-10) * (abs( vertex[,3] - line[2,3] )< 1e-10)==1
+    ind1 <- (abs( vertex[,2] - line[1,2] )< 1e-10)* (abs( vertex[,3] - line[1,3] )< 1e-10)==1
+    ind2 <-  (abs( vertex[,2] - line[2,2] )< 1e-10)* (abs( vertex[,3] - line[2,3] )< 1e-10)==1
 
     lvl[i,1] <- i
     lvl[i,2] <- which(ind1)
@@ -400,9 +393,9 @@ vertex.to.line <- function(Lines){
     lvl[i,4] <- line[1,4]
   }
 
-  return(list(V = vertex,
-              EtV = lvl[, 2:3, drop = FALSE],
-              edge_lengths = lvl[, 4]))
+  return(list(V = vertex[,2:3],
+               EtV    = lvl[,2:3, drop=FALSE],
+               edge_lengths     = lvl[,4]))
 }
 
 

@@ -5,7 +5,8 @@ test_that("Check agrement covariance function agrees", {
   sigma <- runif(1)+1
   c <- 1/(4*kappa^3)
   x <- seq(0,1,length.out=10)
-  expect_equal( GPGraph::r_2(x, c(kappa,sigma)), rSPDE::matern.covariance(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+  expect_equal(GPGraph:::r_2(x, c(kappa,sigma)),
+               rSPDE::matern.covariance(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
 })
 
 
@@ -15,7 +16,8 @@ test_that("Check agrement derivative covariance function agrees", {
   sigma <- runif(1)+1
   c <- 1/(4*kappa^3)
   x <- seq(-1,1,length.out=20)
-  expect_equal(r_2(x, c(kappa,sigma),1), matern.derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+  expect_equal(GPGraph:::r_2(x, c(kappa,sigma),1),
+               matern.derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
 })
 test_that("Check agrement derivative covariance function agrees", {
   set.seed(1)
@@ -23,7 +25,8 @@ test_that("Check agrement derivative covariance function agrees", {
   sigma <- runif(1)+1
   c <- 1/(4*kappa^3)
   x <- seq(-1,1,length.out=20)
-  expect_equal(r_2(x, c(kappa,sigma),2), matern.derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
+  expect_equal(GPGraph:::r_2(x, c(kappa,sigma),2),
+               matern.derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
 })
 
 test_that("Check agrement covariance matrix", {
@@ -38,9 +41,9 @@ test_that("Check agrement covariance matrix", {
   r1 <- -matern.derivative(D,  kappa=kappa, sigma=sigma, nu=3/2, deriv = 1)
   r2 <- -matern.derivative(D,  kappa=kappa, sigma=sigma, nu=3/2, deriv = 2)
   Sigma.0 <- rbind(cbind(r, r1), cbind(t(r1),r2))*c
-  r_00 <- r_2(D, c(kappa,sigma))
-  r_01 <- - r_2(D, c(kappa,sigma),1)
-  r_11 <- - r_2(D, c(kappa,sigma),2)
+  r_00 <- GPGraph:::r_2(D, c(kappa,sigma))
+  r_01 <- - GPGraph:::r_2(D, c(kappa,sigma),1)
+  r_11 <- - GPGraph:::r_2(D, c(kappa,sigma),2)
 
   Sigma_ <- rbind(cbind(r_00, r_01), cbind(t(r_01),r_11))
   testthat::expect_equal( c(Sigma.0), c(Sigma_), tol=1e-9)
@@ -56,9 +59,9 @@ test_that("test agrement precision matrix and article method", {
   l_e <- runif(1) + 0.5
   x_ <- c(0,l_e)
   D <- outer(x_,x_,"-")
-  r_00 <- GPGraph::r_2(D, c(kappa,sigma))
-  r_01 <- - GPGraph::r_2(D, c(kappa,sigma),1)
-  r_11 <- - GPGraph::r_2(D, c(kappa,sigma),2)
+  r_00 <- GPGraph:::r_2(D, c(kappa,sigma))
+  r_01 <- - GPGraph:::r_2(D, c(kappa,sigma),1)
+  r_11 <- - GPGraph:::r_2(D, c(kappa,sigma),2)
   # order by node not derivative
   R_00 <- matrix(c(r_00[1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
   R_01 <- matrix(c(r_00[2], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
@@ -116,7 +119,7 @@ test_that("test if computing covariance are equivalent",{
   line.line2 <- Line(rbind(c(30,80),c(140,80)))
   line.line <- Line(rbind(c(30,00),c(30,80)))
 
-  graph.temp <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
+  graph.temp <-  metric_graph$new(Lines = sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                      Lines(list(line.line2),ID="2"))))
   Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph.temp, BC = 1)
   graph.temp$buildC(2, FALSE)

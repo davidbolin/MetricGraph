@@ -1,4 +1,4 @@
-#' The precision matrix for all vertices for a Whittle-Matérn field 
+#' The precision matrix for all vertices for a Whittle-Matérn field
 #' @param kappa range parameter kappa
 #' @param sigma variance parameter
 #' @param alpha smoothness parameter (1 or 2)
@@ -104,7 +104,7 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 #' boundary conditions and BC=1 gives stationary boundary conditions
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
-#' @details This is the unconstrained precision matrix of the process and its 
+#' @details This is the unconstrained precision matrix of the process and its
 #' derivatives. The ordering of the variables is acording to graph$E, where for
 #' each edge there are four random variables: processes and derivate for
 #' lower and upper edge end points
@@ -117,8 +117,8 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
   count <- 0
 
   R_00 <- matrix(c( r_2(0, c(kappa, sigma), 0),
-                   -r_2(0, c(kappa, sigma), 1), 
-                   -r_2(0, c(kappa, sigma), 1), 
+                   -r_2(0, c(kappa, sigma), 1),
+                   -r_2(0, c(kappa, sigma), 1),
                    -r_2(0, c(kappa, sigma), 2)), 2, 2)
   R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
                   cbind(matrix(0, 2, 2), R_00))
@@ -135,7 +135,7 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
     # order by node not derivative
     R_01 <- matrix(c(r_0l, r_2(-l_e, c(kappa, sigma),1),
                      r_2(l_e, c(kappa, sigma), 1), r_11), 2, 2)
-    
+
     R_node[1:2, 3:4] <- R_01
     R_node[3:4, 1:2] <- t(R_01)
     Q_adj <- solve(R_node) + Ajd
@@ -232,7 +232,7 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
     lower.edges <- which(graph$E[, 1] %in% index)
     upper.edges <- which(graph$E[, 2] %in% index)
     for (le in lower.edges) {
-      ind <- c(4 * (le - 1) + 1, 4 * (le-1) + 2)
+      ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
 
       i_ <- c(i_, ind)
       j_ <- c(j_, ind)
@@ -266,14 +266,12 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
 #' The exponential covariance
 #' @param D vector or matrix with distances
 #' @param theta parameters kappa and sigma
-#' @export
 r_1 <- function(D, theta) {
   return((theta[2]^2 / (2 * theta[1])) * exp(-theta[1] * abs(D)))
 }
 
 #' plot the exponential covariance for parameter set
 #' @param theta parameters sigma_e (nugget), kappa and sigma
-#' @export
 plot_r_1 <- function(theta, t = NULL) {
   if (is.null(t)) {
     r_0 <- r_1(0, theta[2:3])
@@ -291,7 +289,6 @@ plot_r_1 <- function(theta, t = NULL) {
 #' @param t locations
 #' @param l_e circle perimeter
 #' @param theta parameters kappa and sigma
-#' @export
 r_1_circle <- function(t, l_e, theta) {
 
   kappa <- theta[1]
@@ -312,4 +309,43 @@ r_1_circle <- function(t, l_e, theta) {
   r <- r + t(r)
   diag(r) <- r_0
   return(c * r)
+}
+
+#' The Matern covariance with alpha=2
+#' @param D vector or matrix with distances
+#' @param theta kappa, sigma
+#' @param deriv (0,1,2) no derivative, first, or second order
+r_2 <- function(D, theta, deriv = 0){
+  kappa <- theta[1]
+  sigma <- theta[2]
+  aD <- abs(D)
+  c <- ( sigma^2/(4 * kappa^3))
+
+  R0 <-  exp( -kappa * aD)
+  if (deriv == 0)
+    return( c * (1 + kappa * aD) * R0)
+
+
+  d1 <- -kappa^2 * c * D * R0
+
+  if (deriv == 1)
+    return( d1)
+  if (deriv == 2)
+    return(kappa^2 * c * ( kappa* aD - 1) * R0)
+  stop("deriv must be either (0,1,2)")
+
+}
+
+#' plot the Matern alpha=2 covariance for parameter set
+#' @param theta - sigma_e, kappa, sigma
+plot_r_2 <-function(theta, t = NULL) {
+  if (is.null(t)) {
+    r_p <- 4.743859 / theta[2]
+    t <- seq(0, r_p, length.out = 100)
+  }
+  r_  <- r_2(t,theta[2:3])
+  if (t[1] == 0)
+    r_[1] = r_[1] + theta[1]^2
+  plot(t, r_, type = "l")
+
 }

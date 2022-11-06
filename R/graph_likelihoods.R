@@ -285,8 +285,6 @@ likelihood_alpha1 <- function(theta, graph) {
 #' @export
 likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
-  n.o <- length(graph$y)
-  n.v <- dim(graph$V)[1]
   #build covariance matrix
   if(model == "alpha1"){
 
@@ -320,8 +318,7 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
   diag(Sigma) <- diag(Sigma)  +  theta[1]^2
 
   R <- chol(Sigma)
-
-  return(as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) - n.o*log(2*pi)/2))
+  return(as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) - length(graph$y)*log(2*pi)/2))
 }
 
 
