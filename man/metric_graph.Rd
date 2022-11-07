@@ -10,6 +10,25 @@ Class representing general metric graphs.
 A graph object created from vertex and edge matrices, or from an sp::Lines
 object where each line is representing and edge.
 }
+\examples{
+
+## ------------------------------------------------
+## Method `metric_graph$plot`
+## ------------------------------------------------
+
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+graph <- metric_graph$new(Lines = Lines)
+graph$plot()
+plot function X on the graph
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -68,6 +87,8 @@ the vertex at the end of the edge}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
+\item \href{#method-GPGraph::graph-plot}{\code{metric_graph$plot()}}
+\item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -103,7 +124,7 @@ somewhere else, this will not be viewed as a vertex.
 }
 
 \subsection{Returns}{
-A gpgraph_graph object
+A metric_graph object
 }
 }
 \if{html}{\out{<hr>}}
@@ -241,6 +262,100 @@ build mesh object for plotting
 \item{\code{h}}{maximum distance between mesh nodes}
 
 \item{\code{n}}{maximum number of nodes per edge}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-plot}{}}}
+\subsection{Method \code{plot()}}{
+plot a metric graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
+  show = TRUE,
+  line_width = 1,
+  marker_size = 10,
+  vertex_color = "rgb(0,0,0)",
+  edge_color = "rgb(0,0,0)",
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{show}}{show the plot?}
+
+\item{\code{line_width}}{line width for edges}
+
+\item{\code{marker_size}}{size of markers for vertices}
+
+\item{\code{vertex_color}}{color of vertices}
+
+\item{\code{edge_color}}{color of edges}
+
+\item{\code{...}}{additional arguments for ggplot or plot_ly}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a plotly object
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+graph <- metric_graph$new(Lines = Lines)
+graph$plot()
+plot function X on the graph
+}
+\if{html}{\out{</div>}}
+
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-plot_function"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function}{}}}
+\subsection{Method \code{plot_function()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
+  X,
+  flat = TRUE,
+  show = TRUE,
+  graph_color = "rgb(0,0,0)",
+  graph_width = 1,
+  marker_size = 10,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{X}}{(m x 3) [, 1] edge number
+[, 2] position on curve (in length)
+[, 3] value}
+
+\item{\code{flat}}{plot in 2D or 3D?}
+
+\item{\code{show}}{show the plot?}
+
+\item{\code{graph_color}}{for 3D plot, the color of the graph.}
+
+\item{\code{graph_width}}{for 3D plot, the line width of the graph.}
+
+\item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
+
+\item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
 \if{html}{\out{</div>}}
 }
