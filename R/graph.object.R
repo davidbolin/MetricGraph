@@ -360,6 +360,28 @@ metric_graph <-  R6::R6Class("GPGraph::graph", public = list(
       self$mesh$ind <- c(self$mesh$ind,V.int)
       self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i,1],V.int), c(V.int,self$E[i,2])))
     }
+  },
+
+  #' @description plot a metric graph
+  #' @param show show the plot?
+  #' @return a plotly plot object
+  plot = function(show = TRUE, line_width = 1, marker_size = 10, color='rgb(0,0,0)', ...){
+    data <- data.frame(x = c(self$V[E[,1],1],self$V[E[,2],1]),
+                       y = c(self$V[E[,1],2],self$V[E[,2],2]),
+                       z = rep(0,2 * self$nE),
+                       i = c(1:self$nE, 1:self$nE))
+    p <- plot_ly(data=data, x = ~y, y=~x,z=~z)
+    p <- p %>% add_trace(data=data, x = ~y, y=~x, z=~z, mode="lines",type="scatter3d",
+                         line = list(width = line_width,color=color),
+                         split=~i, showlegend=FALSE)
+
+    data2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
+    p <- p %>% add_trace(data=data2,x=~y,y=~x,z=~z,type="scatter3d", mode = "markers",
+                         marker = list(width = marker_size,color=color))
+    if(show){
+      print(p)
+    }
+    return(p)
   }
 
 ))

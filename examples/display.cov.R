@@ -22,16 +22,17 @@ E <- rbind(c(1,2),
            c(2,7))
 
 graph <-  metric_graph$new(P=P,E=E)
-
+graph$plot()
 #if Line is null assume straight line
 #If we have a line keep
 #compute covarians for a given point
 P1 <- c(1,0.1) #edge 1, 0.5 length in
 
 C <- covariance.point.to.graph.exp(P1, theta, graph, n.p = 50)
-#g <- plot_straight_curve(C[C[,1]==1,2:3], graph$V[graph$EtV[1,2:3],],)
+
 gg <- plot_X_to_graph(C, graph)
 print(gg)
-#C2 <- covariance.point.to.graph.alpha2(P1, theta, graph, n.p = 50)
-#gg2 <- plot_X_to_graph(C2, graph)
-#print(gg2)
+
+gg <- plot_X_to_graph(C, graph, flat = FALSE, color='rgb(0,0,200)')
+print(gg)
+

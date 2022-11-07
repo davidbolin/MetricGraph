@@ -160,7 +160,7 @@ covariance.point.to.graph.exp <- function(EP, theta, graph, n.p = 50){
   kappa <- theta[2]
   sigma <- theta[1]
   #compute covarains of the two edges of EP[1]
-  Q <- Q.exp(theta, graph$V, graph$E, graph$edge_lengths)
+  Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 1, graph = graph)
   R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[EP[1],]
   Z <- matrix(0, nrow=dim(graph$V)[1], ncol=2)
