@@ -7,8 +7,8 @@
 #' it is computed at the vertices in the graph
 #' @param leave_edge_out if obs=TRUE, then leave_edge_out = TRUE means that the posterior mean
 #' is computed for each observation based on all observations which are not on that edge. If
-#' obs=FALSE, then leave_edge_out = e means that the posterior mean is computed based on all 
-#' observations except those on that particular edge. 
+#' obs=FALSE, then leave_edge_out = e means that the posterior mean is computed based on all
+#' observations except those on that particular edge.
 #' @export
 spde_posterior_mean <- function(theta, graph, alpha = 1, obs = TRUE, leave_edge_out = FALSE) {
     if (alpha == 1 && obs == TRUE) {
@@ -34,7 +34,9 @@ spde_posterior_mean <- function(theta, graph, alpha = 1, obs = TRUE, leave_edge_
 #' @param leave.edge.out - compute the expectation of the graph if the observatrions are not on the edge
 posterior.mean.obs.exp <- function(theta, graph, leave.edge.out = FALSE) {
 
-  sigma_e = theta[1]
+  sigma_e <- theta[1]
+  sigma <- theta[2]
+  kappa <- theta[3]
 
   Qp <- spde_precision(sigma= theta[2], kappa = theta[3], alpha = 1, graph = graph)
   if(leave.edge.out == FALSE)
@@ -53,7 +55,7 @@ posterior.mean.obs.exp <- function(theta, graph, leave.edge.out = FALSE) {
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
     D_matrix <- as.matrix(dist(c(0,l,graph$PtE[obs.id,2])))
-    S <- r_1(D_matrix,theta[2:3])
+    S <- r_1(D_matrix,kappa = kappa, sigma = sigma)
 
     #covariance update see Art p.17
     E.ind <- c(1:2)
@@ -81,7 +83,9 @@ posterior.mean.obs.exp <- function(theta, graph, leave.edge.out = FALSE) {
 #' observatrions are not on the edge
 posterior.mean.obs.matern2 <- function(theta, graph, leave.edge.out = FALSE) {
 
-  sigma_e = theta[1]
+  sigma_e <- theta[1]
+  sigma <- theta[2]
+  kappa <- theta[3]
 
   if(leave.edge.out == FALSE)
     E.post <- posterior.mean.matern2(theta, graph)
@@ -102,9 +106,12 @@ posterior.mean.obs.matern2 <- function(theta, graph, leave.edge.out = FALSE) {
     S <- matrix(0, length(t) + 2, length(t) + 2)
 
     d.index <- c(1,2)
-    S[-d.index, -d.index] <- r_2(D, theta[2:3])
-    S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))), theta[2:3], 2)
-    S[d.index, -d.index] <- -r_2(D[1:2,], theta[2:3], 1)
+    S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
+    S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
+                                kappa = kappa, sigma = sigma,
+                                deriv = 2)
+    S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+                                 sigma = sigma, deriv = 1)
     S[-d.index, d.index] <- t(S[d.index, -d.index])
 
     #covariance update see Art p.17
@@ -131,8 +138,11 @@ posterior.mean.obs.matern2 <- function(theta, graph, leave.edge.out = FALSE) {
 #' @param graph - metric_graph object
 #' @param rem.edge  - remove edge
 posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
+
   sigma_e <- theta[1]
-  #build Q
+  sigma <- theta[2]
+  kappa <- theta[3]
+
   Qp.list <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 1,
                             graph = graph, build = FALSE)
   #build BSIGMAB
@@ -147,7 +157,7 @@ posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
     y_i <- graph$y[e]
     l <- graph$edge_lengths[e]
     D_matrix <- as.matrix(dist(c(0, l, graph$PtE[e, 2])))
-    S <- r_1(D_matrix, theta[2:3])
+    S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
 
     #covariance update see Art p.17
     E.ind <- c(1:2)
@@ -197,8 +207,11 @@ posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
 posterior.mean.matern2 <- function(theta, graph, rem.edge = NULL) {
+
   sigma_e <- theta[1]
-  
+  sigma <- theta[2]
+  kappa <- theta[3]
+
   n_const <- length(graph$CBobj$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CBobj$T[-ind.const,]
@@ -222,21 +235,31 @@ posterior.mean.matern2 <- function(theta, graph, rem.edge = NULL) {
     S <- matrix(0, length(t) + 2, length(t) + 2)
 
     d.index <- c(1,2)
-    S[-d.index, -d.index] <- r_2(D, theta[2:3])
-    S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))), theta[2:3], 2)
-    S[d.index, -d.index] <- -r_2(D[1:2,], theta[2:3], 1)
+    S[-d.index, -d.index] <- r_2(D, kappa = kappa,
+                                 sigma = sigma, deriv = 0)
+    S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
+                                kappa = kappa, sigma = sigma,
+                                deriv = 2)
+    S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+                                 sigma = sigma, deriv = 1)
     S[-d.index, d.index] <- t(S[d.index, -d.index])
 
     #covariance update see Art p.17
     E.ind <- c(1:4)
     Obs.ind <- -E.ind
-    Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind,drop=F])
-    Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+    Bt <- solve(S[E.ind, E.ind],
+                S[E.ind, Obs.ind, drop = FALSE])
+    Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+      S[Obs.ind, E.ind, drop = FALSE] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
     R <- chol(Sigma_i, pivot=T)
     Sigma_iB <- t(Bt)
-    Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R, backsolve(R, t(Bt[,attr(R,"pivot")]), transpose = TRUE), upper.tri = TRUE)
+    Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R,
+                                               backsolve(R,
+                                                         t(Bt[,attr(R,"pivot")]),
+                                                         transpose = TRUE),
+                                               upper.tri = TRUE)
     BtSinvB <- Bt %*% Sigma_iB
 
     E <- graph$E[e,]
@@ -244,7 +267,8 @@ posterior.mean.matern2 <- function(theta, graph, rem.edge = NULL) {
       error("circle not implemented")
     } else {
       BtSinvB <- BtSinvB[c(3, 1, 4, 2), c(3, 1, 4, 2)]
-      Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4*(e-1)+1:4] + (t(Sigma_iB)%*%y_i)[c(3, 1, 4, 2)]
+      Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4*(e-1)+1:4] +
+        (t(Sigma_iB)%*%y_i)[c(3, 1, 4, 2)]
 
       #lower edge precision u
       i_[count + 1] <- 4 * (e - 1) + 1
@@ -328,8 +352,16 @@ posterior.mean.matern2 <- function(theta, graph, rem.edge = NULL) {
   Qp <- Tc%*%Qp%*%t(Tc)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
-  v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Tc%*%Qpmu,system = 'P'), system='L')))
-  Qpmu <- as.vector(Matrix::solve(R,Matrix::solve(R, v,system = 'Lt'), system='Pt'))
+  v <- c(as.matrix(Matrix::solve(R,
+                                 Matrix::solve(R,
+                                               Tc%*%Qpmu,
+                                               system = 'P'),
+                                 system='L')))
+  Qpmu <- as.vector(Matrix::solve(R,
+                                  Matrix::solve(R,
+                                                v,
+                                                system = 'Lt'),
+                                  system='Pt'))
 
   return(t(Tc)%*%Qpmu)
 }

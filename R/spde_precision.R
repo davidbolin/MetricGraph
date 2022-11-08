@@ -116,10 +116,10 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
   i_ <- j_ <- x_ <- rep(0, graph$nE * 16)
   count <- 0
 
-  R_00 <- matrix(c( r_2(0, theta, 0),
-                   -r_2(0, theta, 1),
-                   -r_2(0, theta, 1),
-                   -r_2(0, theta, 2)), 2, 2)
+  R_00 <- matrix(c( r_2(0, kappa = kappa, sigma = sigma, deriv = 0),
+                   -r_2(0, kappa = kappa, sigma = sigma, deriv = 1),
+                   -r_2(0, kappa = kappa, sigma = sigma, deriv = 1),
+                   -r_2(0, kappa = kappa, sigma = sigma, deriv = 2)), 2, 2)
   R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
                   cbind(matrix(0, 2, 2), R_00))
   Ajd <- -0.5 * solve(rbind(cbind(R_00, matrix(0, 2, 2)),
@@ -130,11 +130,11 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
     #lots of redundant caculations
     d_ <- c(0, l_e)
     D <- outer(d_, d_, "-")
-    r_0l <-   r_2(l_e, theta)
-    r_11 <- - r_2(l_e, theta,2)
+    r_0l <-   r_2(l_e, kappa = kappa, sigma = sigma, deriv = 0)
+    r_11 <- - r_2(l_e, kappa = kappa, sigma = sigma, deriv = 2)
     # order by node not derivative
-    R_01 <- matrix(c(r_0l, r_2(-l_e, theta,1),
-                     r_2(l_e, theta, 1), r_11), 2, 2)
+    R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, sigma = sigma, deriv = 1),
+                     r_2(l_e, kappa = kappa, sigma = sigma, deriv = 1), r_11), 2, 2)
 
     R_node[1:2, 3:4] <- R_01
     R_node[3:4, 1:2] <- t(R_01)
@@ -260,92 +260,4 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
                 x  = x_[1:count],
                 dims=c(4 * graph$nE, 4 * graph$nE)))
   }
-}
-
-
-#' The exponential covariance
-#' @param D vector or matrix with distances
-#' @param theta parameters sigma,kappa
-r_1 <- function(D, theta) {
-  return((theta[1]^2 / (2 * theta[2])) * exp(-theta[2] * abs(D)))
-}
-
-#' plot the exponential covariance for parameter set
-#' @param theta parameters sigma_e (nugget), sigma and kappa
-plot_r_1 <- function(theta, t = NULL) {
-  if (is.null(t)) {
-    r_0 <- r_1(0, theta[2:3])
-    r_p <- -log(0.05)/theta[3]
-    t <- seq(0, r_p, length.out = 100)
-  }
-  r_ <- r_1(t, theta[2:3])
-  if (t[1] == 0)
-    r_[1] = r_[1] + theta[1]^2
-  plot(t, r_, type = "l")
-
-}
-
-#' the Whittle--Matern covariance with alpha=1 on a circle
-#' @param t locations
-#' @param l_e circle perimeter
-#' @param theta - (sigma, kappa)
-r_1_circle <- function(t, l_e, theta) {
-
-  kappa <- theta[2]
-  c <- theta[1]^2 / (2 * kappa * sinh(kappa *l_e/2))
-  r <- matrix(0, length(t), length(t))
-  r_0 <- cosh(-kappa * l_e / 2)
-  if (length(t) == 1) {
-    r[1, 1] <- c * r_0
-    return(r)
-  }
-
-  for (i in 1:(length(t) - 1)) {
-
-    for (ii in (i + 1):length(t)){
-      r[i, ii] <- cosh(kappa * (abs(t[i] - t[ii]) - l_e / 2))
-    }
-  }
-  r <- r + t(r)
-  diag(r) <- r_0
-  return(c * r)
-}
-
-#' The Matern covariance with alpha=2
-#' @param D vector or matrix with distances
-#' @param theta (sigma, kappa)
-#' @param deriv (0,1,2) no derivative, first, or second order
-r_2 <- function(D, theta, deriv = 0){
-  kappa <- theta[2]
-  sigma <- theta[1]
-  aD <- abs(D)
-  c <- ( sigma^2/(4 * kappa^3))
-
-  R0 <-  exp( -kappa * aD)
-  if (deriv == 0)
-    return( c * (1 + kappa * aD) * R0)
-
-
-  d1 <- -kappa^2 * c * D * R0
-
-  if (deriv == 1)
-    return( d1)
-  if (deriv == 2)
-    return(kappa^2 * c * ( kappa* aD - 1) * R0)
-  stop("deriv must be either (0,1,2)")
-
-}
-
-#' plot the Matern alpha=2 covariance for parameter set
-#' @param theta - sigma_e, sigma, kappa
-plot_r_2 <-function(theta, t = NULL) {
-  if (is.null(t)) {
-    r_p <- 4.743859 / theta[3]
-    t <- seq(0, r_p, length.out = 100)
-  }
-  r_  <- r_2(t,theta[2:3])
-  if (t[1] == 0)
-    r_[1] = r_[1] + theta[1]^2
-  plot(t, r_, type = "l")
-
 }

@@ -12,12 +12,14 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line4),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 graph$plot()
-theta <- c(2, 5)
-P1 <-  #edge 1, 0.5 length in
-
-C <- covariance.point.to.graph.exp(EP = c(1,0.1), theta = c(2,5), graph = graph, n.p = 50)
+kappa <- 10
+sigma <- 2
+C <- covariance_alpha1(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph, n.p = 50)
 gg <- graph$plot_function(C, flat = FALSE)
 gg <- graph$plot_function(C)
+
+C <- covariance_alpha2(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph, n.p = 50)
+gg <- graph$plot_function(C, flat = FALSE)
 
 y <- c(1,2,3)
 PtE <- matrix(c(1, 2, 3, 0.5, 0.5, 0.7),3,2)

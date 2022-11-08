@@ -3,16 +3,18 @@
 
 #' test agreement between Q and R
 test_that("Check agrement beteen covariance and precision matrix formulation", {
-  theta <- c(1, 1)
+  kappa <- 1
+  sigma <- 1
   t <- 0:3
-  Q0  <- Q.exp.line(theta, t)
-  R0  <- r_1(as.matrix(dist(t)),theta)
+  Q0  <- precision_exp_line(kappa = kappa, sigma = sigma, t = t)
+  R0  <- r_1(as.matrix(dist(t)),kappa = kappa, sigma = sigma)
   R0_ <- solve(Q0)
   expect_equal(c(as.matrix(solve(R0))), c(as.matrix(Q0)), tolerance=1e-10)
-  theta <- c(1.5, 0.5)
+  kappa = 1.5
+  sigma = 0.5
   t <- 0:3
-  Q0  <- Q.exp.line(theta, t)
-  R0  <- r_1(as.matrix(dist(t)),theta)
+  Q0  <- precision_exp_line(kappa = kappa, sigma = sigma, t = t)
+  R0  <- r_1(as.matrix(dist(t)),kappa = kappa, sigma = sigma)
   R0_ <- solve(Q0)
   expect_equal(c(as.matrix(solve(R0))),c(as.matrix(Q0)), tolerance=1e-10)
 })
@@ -24,31 +26,30 @@ test_that("Check agrement beteen covariance and precision matrix formulation", {
   kappa <- 0.1
   sigma_e <- 0.1
   sigma   <- 2
-  theta <-  c(sigma_e, kappa, sigma)
-  line.line <- Line(rbind(c(30, 80), c(120, 80)))
-  line.line2 <- Line(rbind(c(30, 00), c(30, 80)))
+  line1 <- Line(rbind(c(30, 80), c(120, 80)))
+  line2 <- Line(rbind(c(30, 00), c(30, 80)))
 
-  graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
-                                                Lines(list(line.line2),ID="2"))))
+  graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                                                   Lines(list(line2),ID="2"))))
   Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 1, graph = graph)
   R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
   V0 <- as.vector(solve(R, solve(R,rnorm(3), system = 'Lt')
                         , system = 'Pt'))
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
-    X <- rbind(X,cbind(sample.line.exponential(theta,
-                                             V0[graph$E[i, ]],
-                                             Line = graph$Lines[i, ],
-                                             graph$edge_lengths[i],
-                                             nt = nt), i))
+    X <- rbind(X,cbind(sample_alpha1_line(kappa = kappa,
+                                       sigma = sigma,
+                                       u_e = V0[graph$E[i, ]],
+                                       l_e = graph$edge_lengths[i],
+                                       nt = nt), i))
   }
   X[,2] <- X[,2] + sigma_e*rnorm(nt)
   graph$add_observations2(y = X[,2], PtE = X[, c(3, 1)])
   graph$observation_to_vertex()
+
+  theta <-  c(sigma_e, kappa, sigma)
   lik <- likelihood_graph_spde(theta,graph, alpha = 1, version = 1)
-
   lik.v2 <- likelihood_graph_spde(theta, graph, alpha = 1, version = 2)
-
   lik.cov <- likelihood_graph_covariance(theta, graph, model = "alpha1")
 
   #version 1

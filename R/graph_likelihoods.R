@@ -21,13 +21,17 @@ likelihood_graph_spde <- function(theta, graph, alpha = 1, version = 1) {
 #' @param graph  metric_graph object
 likelihood_alpha2 <- function(theta, graph) {
   sigma_e <- theta[1]
+  sigma <- theta[2]
+  kappa <- theta[3]
   #build Q
 
   n_const <- length(graph$CBobj$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CBobj$T[-ind.const,]
-  Q <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 2, graph = graph)
-  R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc), LDL = FALSE, perm = TRUE)
+  Q <- spde_precision(kappa = kappa, sigma = sigma,
+                      alpha = 2, graph = graph)
+  R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc),
+                        LDL = FALSE, perm = TRUE)
   loglik <- Matrix::determinant(R)$modulus[1]
 
   #build BSIGMAB
@@ -46,16 +50,20 @@ likelihood_alpha2 <- function(theta, graph) {
     S <- matrix(0, length(t) + 2, length(t) + 2)
 
     d.index <- c(1,2)
-    S[-d.index, -d.index] <- r_2(D, theta[2:3])
-    S[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))), theta[2:3], 2)
-    S[d.index, -d.index] <- -r_2(D[1:2,], theta[2:3], 1)
+    S[-d.index, -d.index] <- r_2(D, kappa = kappa,
+                                 sigma = sigma, deriv = 0)
+    S[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
+                                 kappa = kappa, sigma = sigma,
+                                 deriv = 2)
+    S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+                                 sigma = sigma, deriv = 1)
     S[-d.index, d.index] <- t(S[d.index, -d.index])
 
     #covariance update see Art p.17
-    E.ind         <- c(1:4)
-    Obs.ind       <- -E.ind
-    Bt            <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind,drop = FALSE])
-    Sigma_i       <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+    E.ind <- c(1:4)
+    Obs.ind <- -E.ind
+    Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind, drop = FALSE])
+    Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
     R <- chol(Sigma_i, pivot = TRUE)
@@ -64,7 +72,7 @@ likelihood_alpha2 <- function(theta, graph) {
 
     Sigma_iB <- t(Bt)
     Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R,
-                                        backsolve(R, t(Bt[,attr(R,"pivot")]),
+                                        backsolve(R, t(Bt[, attr(R,"pivot")]),
                                         transpose = TRUE), upper.tri = TRUE)
     BtSinvB <- Bt %*% Sigma_iB
 
@@ -73,7 +81,8 @@ likelihood_alpha2 <- function(theta, graph) {
       error("circle not implemented")
     } else {
       BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
-      Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] + (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
+      Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
+        (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
 
       #lower edge precision u
       i_[count + 1] <- 4 * (e - 1) + 1
@@ -223,7 +232,7 @@ likelihood_alpha1 <- function(theta, graph) {
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
     D_matrix <- as.matrix(dist(c(0, l, graph$PtE[obs.id, 2])))
-    S <- r_1(D_matrix, theta[2:3])
+    S <- r_1(D_matrix, kappa = theta[3], sigma = theta[2])
 
     #covariance update see Art p.17
     E.ind <- c(1:2)

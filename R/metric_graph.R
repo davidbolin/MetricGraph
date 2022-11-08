@@ -153,7 +153,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
           self$PtE[i,2] <- l_e
           self$PtV[i] <- self$E[e,2]
         }else{
-          self$split_line(e, t/l_e)
+          private$split_line(e, t/l_e)
           self$PtV[i] <- dim(self$V)[1]
         }
     }
@@ -212,6 +212,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         points <- rgeos::gInterpolate(self$Lines[e,], self$PtE[e, 2], normalized = F)
         coords <- rbind(coords, points@coords)
       }
+      rownames(coords) <- 1:dim(coords)[1]
       Spoints <- sp::SpatialPoints(coords)
     }
     self$Points = Spoints
@@ -389,19 +390,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
     xr <- diff(range(self$V[,1])) + diff(range(self$V[,2]))
     if(fix_layout){
+      ax <- list(title = '',
+                 zeroline = FALSE,
+                 showgrid = FALSE,
+                 showticklabels=FALSE)
       p <- p %>% layout(title = '',
-                        scene = list(xaxis = list(title = '',
-                                                  zeroline = FALSE,
-                                                  showgrid = FALSE,
-                                                  showticklabels=FALSE),
-                                     yaxis = list(title = '',
-                                                  zeroline = FALSE,
-                                                  showgrid = FALSE,
-                                                  showticklabels=FALSE),
-                                     zaxis = list(title = '',
-                                                  zeroline = FALSE,
-                                                  showgrid = FALSE,
-                                                  showticklabels=FALSE),
+                        scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
                                      camera = list(eye = list(x = 0, y = 0, z = xr),
                                                    up = list(x=0,y=1,z=0)),
                                      aspectmode='data'))
@@ -422,6 +416,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param graph_width for 3D plot, the line width of the graph.
   #' @param marker_size for 3D plot, the marker size of the vertices
+  #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
   #' @export
   plot_function = function(X, flat = TRUE, show = TRUE,
@@ -512,9 +507,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       n <- dim(points)[1]
       lines <- rbind(lines,
                      c(i, points[1,],
-                       sp::LineLength( Lines@lines[[i]]@Lines[[1]])),
+                       sp::LineLength(self$Lines@lines[[i]]@Lines[[1]])),
                      c(i, points[n,],
-                       sp::LineLength( Lines@lines[[i]]@Lines[[1]])))
+                       sp::LineLength(self$Lines@lines[[i]]@Lines[[1]])))
     }
 
     vertex <- lines[1,, drop = FALSE]

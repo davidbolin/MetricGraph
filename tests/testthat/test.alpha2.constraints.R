@@ -16,11 +16,11 @@ test_that("test if the over determined covariances are correct",{
   t <- c(0,graph$edge_lengths[1],graph$edge_lengths[1],graph$edge_lengths[2]+ graph$edge_lengths[1])
 
   D <-  rep(1,4)%*%t(t)-t(rep(1,4)%*%t(t))
-  R00 <- r_2(D,c(sigma,kappa))
-  R01 <- -r_2(D,c(sigma,kappa),1)
-  R11 <- -r_2(D,c(sigma,kappa),2)
-  R <- cbind(rbind(R00,R01),rbind(t(R01),R11))
-  ind <- rep(0:3,each=2)+rep(c(1,5),times=4) #reoder
-  R <- R[ind,ind]
+  R00 <- r_2(D,sigma = sigma, kappa = kappa)
+  R01 <- -r_2(D,sigma = sigma, kappa = kappa, deriv = 1)
+  R11 <- -r_2(D,sigma = sigma, kappa = kappa, deriv = 2)
+  R <- cbind(rbind(R00, R01), rbind(t(R01), R11))
+  ind <- rep(0:3, each = 2) + rep(c(1, 5), times = 4) #reoder
+  R <- R[ind, ind]
   testthat::expect_equal( c(as.matrix(R)), c(as.matrix(Sigma.overdetermined)), tol=1e-9)
 })
