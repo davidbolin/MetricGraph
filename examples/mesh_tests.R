@@ -1,7 +1,6 @@
 library(GPGraph)
 library(sp)
 
-# Example 1: plot of graph, observations, and covariance for alpha = 1
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
 line3 <- Line(rbind(c(0,1),c(-1,1)))
@@ -14,9 +13,15 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
 graph <- metric_graph$new(Lines = Lines)
 graph$build_mesh(h = 0.01)
 graph$plot(mesh=TRUE)
-#C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
-#gg <- graph$plot_function(C, flat = FALSE)
+C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
+graph$plot_function(C, flat = FALSE)
 
 C <- covariance_alpha2_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
+graph$plot_function(C, flat = FALSE)
 
-gg <- graph$plot_function(C, flat = FALSE)
+u <- sample_spde_mesh(kappa = 10, sigma = 2, graph = graph)
+graph$plot_function(u, flat = FALSE)
+graph$plot_function(u)
+
+u <- sample_spde_mesh(kappa = 10, sigma = 2, alpha = 2, graph = graph)
+graph$plot_function(u, flat = FALSE)

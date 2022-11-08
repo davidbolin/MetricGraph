@@ -579,7 +579,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   plot_curve = function(data.to.plot,
                         Line_edge,
                         flat = TRUE,
-                        normalized = FALSE,
+                        normalized = TRUE,
                         color = 'rgb(0,0,200)',
                         p = NULL, ...){
 
