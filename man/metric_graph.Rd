@@ -258,7 +258,8 @@ plot a metric graph
   marker_size = 10,
   vertex_color = "rgb(0,0,0)",
   edge_color = "rgb(0,0,0)",
-  plot_data = FALSE,
+  data = FALSE,
+  mesh = FALSE,
   fix_layout = TRUE,
   ...
 )}\if{html}{\out{</div>}}
@@ -277,7 +278,9 @@ plot a metric graph
 
 \item{\code{edge_color}}{color of edges}
 
-\item{\code{plot_data}}{Plot the data?}
+\item{\code{data}}{Plot the data?}
+
+\item{\code{mesh}}{Plot the mesh locations?}
 
 \item{\code{fix_layout}}{fix 2D layout for plot}
 
@@ -328,9 +331,9 @@ plot function X on the graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X}}{(m x 3) [, 1] edge number
-[, 2] position on curve (in length)
-[, 3] value}
+\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
+curve (in length), value) or a vector with values for the function
+evaluated at a precomputed mesh.}
 
 \item{\code{flat}}{plot in 2D or 3D?}
 

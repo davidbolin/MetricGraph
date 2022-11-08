@@ -24,7 +24,7 @@ it is computed at the vertices in the graph}
 
 \item{leave_edge_out}{if obs=TRUE, then leave_edge_out = TRUE means that the posterior mean
 is computed for each observation based on all observations which are not on that edge. If
-obs=FALSE, then leave_edge_out = e means that the posterior mean is computed based on all 
+obs=FALSE, then leave_edge_out = e means that the posterior mean is computed based on all
 observations except those on that particular edge.}
 }
 \description{

@@ -288,28 +288,43 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param n maximum number of nodes per edge
   build_mesh = function(h,n=NULL){
 
-    self$mesh <- list(V=NULL,
-                      E=NULL,
-                      n_e = NULL,
-                      ind = 1:dim(self$V)[1])
+    self$mesh <- list(PtE = NULL,
+                      V = NULL,
+                      E = NULL,
+                      n_e = rep(0,self$nV),
+                      h_e = rep(0,self$nV),
+                      ind = 1:self$nV)
 
     self$mesh$V <- self$V
-    for(i in 1:dim(self$E)[1]){
-      if(is.null(n)){
-        n.e[i] <- max(ceiling(self$edge_lengths[i]/h)+1,3)
+    for (i in 1:dim(self$E)[1]) {
+      if (is.null(n)) {
+        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1
       } else {
-        n.e[i] = n
+        self$mesh$n_e[i] <- n
       }
-      d.e <- seq(from=0,to=1,length.out=n.e[i])[2:(n.e[i]-1)]
-      hi[i] <- L[i]*d.e[1]
-      n.e[i] <- n.e[i]-2
+      if (self$mesh$n_e[i] > 2) {
+        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i])#
 
-      self$mesh$V <- rbind(self$mesh$V,
-                      cbind(self$V[self$E[i,1],1]*(1-d.e) + d.e*self$V[self$E[i,2],1],
-                            self$V[self$E[i,1],2]*(1-d.e) + d.e*self$V[self$E[i,2],2]))
-      V.int <- (max(self$mesh$ind)+1):(max(self$mesh$ind)+n.e[i])
-      self$mesh$ind <- c(self$mesh$ind,V.int)
-      self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i,1],V.int), c(V.int,self$E[i,2])))
+        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]), d.e))
+        d.e <- d.e[2:(self$mesh$n_e[i]-1)]
+        self$mesh$n_e[i] <- self$mesh$n_e[i] - 2
+        self$mesh$h_e[i] <- self$edge_lengths[i]*d.e[1]
+        if(is.null(self$Lines)) {
+          self$mesh$V <- rbind(self$mesh$V,
+                               cbind(self$V[self$E[i,1], 1]*(1 - d.e) + d.e*self$V[self$E[i, 2],1],
+                                     self$V[self$E[i,1], 2]*(1 - d.e) + d.e*self$V[self$E[i, 2],2]))
+        } else {
+          Line <- self$Lines[i,]
+          val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
+          Points <- gInterpolate(Line, d.e, normalized=TRUE)
+          self$mesh$V <- rbind(self$mesh$V, Points@coords)
+        }
+        V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
+        self$mesh$ind <- c(self$mesh$ind, V.int)
+        self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i, 1], V.int),
+                                                c(V.int, self$E[i, 2])))
+      }
+
     }
   },
 
@@ -319,7 +334,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param marker_size size of markers for vertices
   #' @param vertex_color color of vertices
   #' @param edge_color color of edges
-  #' @param plot_data Plot the data?
+  #' @param data Plot the data?
+  #' @param mesh Plot the mesh locations?
   #' @param fix_layout fix 2D layout for plot
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return a plotly object
@@ -340,14 +356,15 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                   marker_size = 10,
                   vertex_color = 'rgb(0,0,0)',
                   edge_color = 'rgb(0,0,0)',
-                  plot_data = FALSE,
+                  data = FALSE,
+                  mesh = FALSE,
                   fix_layout = TRUE,
                   ...){
     if(is.null(self$Lines)){
-      data <- data.frame(x = c(self$V[E[,1],1],self$V[E[,2],1]),
-                         y = c(self$V[E[,1],2],self$V[E[,2],2]),
-                         z = rep(0,2 * self$nE),
-                         i = c(1:self$nE, 1:self$nE))
+      data.plot <- data.frame(x = c(self$V[E[,1],1],self$V[E[,2],1]),
+                              y = c(self$V[E[,1],2],self$V[E[,2],2]),
+                              z = rep(0,2 * self$nE),
+                              i = c(1:self$nE, 1:self$nE))
     } else {
       x <- y <- ei <- NULL
       for(i in 1:self$nE) {
@@ -358,20 +375,22 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         y <- c(y,yi)
         ei <- c(ei,ii)
       }
-      data <- data.frame(x = x, y = y, z = rep(0,length(x)), i = ei)
+      data.plot <- data.frame(x = x, y = y,
+                              z = rep(0,length(x)), i = ei)
     }
-    p <- plot_ly(data=data, x = ~y, y=~x,z=~z)
-    p <- p %>% add_trace(data=data, x = ~y, y=~x, z=~z, mode="lines",type="scatter3d",
+    p <- plot_ly(data=data.plot, x = ~y, y=~x,z=~z)
+    p <- p %>% add_trace(data=data.plot, x = ~y, y=~x, z=~z,
+                         mode="lines",type="scatter3d",
                          line = list(width = line_width,
                                      color = edge_color, ...),
                          split=~i, showlegend=FALSE)
 
-    data2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
-    p <- p %>% add_trace(data=data2, x = ~y,y = ~x, z = ~z,
+    data.plot2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
+    p <- p %>% add_trace(data=data.plot2, x = ~y,y = ~x, z = ~z,
                          type="scatter3d", mode = "markers",
-                         marker = list(width = marker_size,
+                         marker = list(size = marker_size,
                                        color = vertex_color, ...))
-    if(plot_data){
+    if(data){
       x <- y <- NULL
       for(i in 1:length(self$y)){
         Line <- self$Lines[PtE[i,1],]
@@ -380,15 +399,25 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         x <- c(x, Point@coords[1])
         y <- c(y, Point@coords[2])
       }
-      data <- data.frame(x = x, y = y,
-                         z = rep(0,length(x)),
-                         val = self$y)
-      p <- p %>% add_trace(data=data, x = ~y, y = ~x, z = ~z,
+      data.plot <- data.frame(x = x, y = y,
+                              z = rep(0,length(x)),
+                              val = self$y)
+      p <- p %>% add_trace(data=data.plot, x = ~y, y = ~x, z = ~z,
                            type="scatter3d", mode = "markers",
-                           marker = list(width = marker_size,
+                           marker = list(size = marker_size,
                                          color = ~val,
                                          colorbar=list(title=''),
                                          colorscale='Viridis'),
+                           showlegend=FALSE)
+    }
+    if (mesh) {
+      data.plot <- data.frame(x = self$mesh$V[,1],
+                              y = self$mesh$V[,2],
+                              z = rep(0,dim(self$mesh$V)[1]))
+      p <- p %>% add_trace(data=data.plot, x = ~y, y = ~x, z = ~z,
+                           type="scatter3d", mode = "markers",
+                           marker = list(size = marker_size/2,
+                                         color = 'rgb(100,100,100)'),
                            showlegend=FALSE)
     }
     xr <- diff(range(self$V[,1])) + diff(range(self$V[,2]))
@@ -411,9 +440,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
   #' plot function X on the graph
-  #' @param X (m x 3) [, 1] edge number
-  #'                  [, 2] position on curve (in length)
-  #'                  [, 3] value
+  #' @param X Either an m x 3 matrix with (edge number, position on
+  #' curve (in length), value) or a vector with values for the function
+  #' evaluated at a precomputed mesh.
   #' @param flat plot in 2D or 3D?
   #' @param show show the plot?
   #' @param graph_color for 3D plot, the color of the graph.
@@ -435,15 +464,22 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       p <- NULL
     }
     for(i in 1:self$nE){
+      if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1) {
+        ind <- self$mesh$PtE[,1] == i
+        vals <- cbind(self$mesh$PtE[ind,2],X[ind])
+      } else {
+        vals <- X[X[,1]==i,2:3]
+      }
       if(is.null(self$Lines) == TRUE) {
-        p <- private$plot_straight_curve(X[X[,1]==i,2:3],
+        p <- private$plot_straight_curve(vals,
                                          self$V[self$E[i,],],
                                          flat = flat,
                                          p = p,
                                          color = color,
                                          ...)
+
       } else {
-        p <- private$plot_curve(X[X[,1]==i,2:3],
+        p <- private$plot_curve(vals,
                                 SpatialLines(list(self$Lines@lines[[i]])),
                                 flat = flat,
                                 p = p,

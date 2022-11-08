@@ -25,7 +25,7 @@ gg <- graph$plot_function(C, flat = FALSE)
 y <- c(1,2,3)
 PtE <- matrix(c(1, 2, 3, 0.5, 0.5, 0.7),3,2)
 graph$add_observations2(y, PtE)
-p <- graph$plot(plot_data=TRUE)
+p <- graph$plot(data=TRUE)
 
 # Example 2: test with different graph
 line1 <- Line(rbind(c(0,0),c(10,0)))
@@ -40,7 +40,7 @@ p <- graph$plot()
 y <- c(1,2,3)
 PtE <- matrix(c(1, 2, 3, 0.5, 0.5, 0.7),3,2)
 graph$add_observations2(y, PtE)
-p <- graph$plot(plot_data=TRUE)
+p <- graph$plot(data=TRUE)
 
 
 # Example 3: test with alpha = 2

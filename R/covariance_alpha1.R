@@ -269,3 +269,69 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50){
   }
   return(C)
 }
+
+#' Compute covariance of a point to the mesh points of the graph for
+#' alpha=1 model
+#' @param P (2 x 1) point with edge number and normalized location on the edge
+#' @param kappa parameter kappa
+#' @param sigma parameter sigma
+#' @param  graph metric_graph object
+#' @return vector with covariance values
+#' @export
+covariance_alpha1_mesh <- function(P, kappa, sigma, graph) {
+
+  #compute covarains of the two edges of EP[1]
+  Q <- spde_precision(kappa = kappa, sigma = sigma,
+                      alpha = 1, graph = graph)
+  R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
+  Vs <- graph$E[P[1],]
+  Z <- matrix(0, nrow = dim(graph$V)[1], ncol = 2)
+  Z[Vs[1], 1] = 1
+  Z[Vs[2], 2] = 1
+  V  <- solve(R, solve(R,Z,system = 'P'), system='L')
+  CV <- solve(R, solve(R,V,system = 'Lt'), system='Pt')
+
+  # compute covariance between two edges and the point
+  t_norm <- P[2]
+  l <- graph$edge_lengths[P[1]]
+  Q_line <- as.matrix(precision_exp_line(kappa = kappa, sigma = sigma,
+                                         t = c(0, l * t_norm,l)))
+  Q_AB <- Q_line[2, c(1,3), drop = FALSE]
+  Q_AA <- Q_line[2, 2]
+  B <- -Q_AB / Q_AA
+
+  # covariance of a point to an edge
+  #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
+  CV_P <- CV %*% t(B)
+  C <- NULL
+  for (i in 1:graph$nE) {
+    l <- graph$edge_lengths[i]
+    t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+    if (i == P[1]) {
+      D_matrix <- as.matrix(dist(c(0, l, l * t_norm, l * t_s)))
+      S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+
+      #covariance update
+      E.ind <- c(1:2)
+      Obs.ind <- -E.ind
+      Bt <- solve(S[E.ind, E.ind, drop = FALSE],
+                  S[E.ind, Obs.ind,drop=FALSE])
+      Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+        S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+      C_P <- CV_P[graph$E[i, ]] %*% Bt[, -1] + Sigma_i[1, -1]
+    } else {
+      D_matrix <- as.matrix(dist(c(0, l, l * t_s)))
+      S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+
+      #covariance update
+      E.ind <- c(1:2)
+      Obs.ind <- -E.ind
+      Bt <- solve(S[E.ind, E.ind, drop = FALSE],
+                  S[E.ind, Obs.ind, drop = FALSE])
+      C_P <- CV_P[graph$E[i, ]] %*% Bt
+    }
+    C <- c(C, C_P)
+  }
+  return(C)
+}
+
