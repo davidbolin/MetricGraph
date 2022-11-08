@@ -163,6 +163,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(!is.null(self$res.dist)){
       self$compute_resdist()
     }
+    if(!is.null(self$CBobj)) {
+      self$buildC(2)
+    }
   },
 
   #' @description Add observations to the object

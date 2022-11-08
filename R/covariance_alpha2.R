@@ -238,7 +238,7 @@ covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
     l <- graph$edge_lengths[i]
 
     t_s <- seq(0, 1, length.out = n.p)
-    if(graph$E[i,1] == P[1]){
+    if(i == P[1]){
       Sigma <- matrix(0, length(t_s) + 5, length(t_s) + 5)
       d.index <- c(1, 2)
       index_boundary <- c(d.index, 3:4)
