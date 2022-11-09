@@ -298,7 +298,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$mesh$V <- self$V
     for (i in 1:dim(self$E)[1]) {
       if (is.null(n)) {
-        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1
+        self$mesh$n_e[i] <- max(ceiling(self$edge_lengths[i] / h) + 1,3)
       } else {
         self$mesh$n_e[i] <- n
       }
@@ -368,8 +368,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     } else {
       x <- y <- ei <- NULL
       for(i in 1:self$nE) {
-        xi <- Lines@lines[[i]]@Lines[[1]]@coords[,1]
-        yi <- Lines@lines[[i]]@Lines[[1]]@coords[,2]
+        xi <- self$Lines@lines[[i]]@Lines[[1]]@coords[,1]
+        yi <- self$Lines@lines[[i]]@Lines[[1]]@coords[,2]
         ii <- rep(i,length(xi))
         x <- c(x,xi)
         y <- c(y,yi)
@@ -479,12 +479,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                          ...)
 
       } else {
-        p <- private$plot_curve(vals,
-                                SpatialLines(list(self$Lines@lines[[i]])),
-                                flat = flat,
-                                p = p,
-                                color = color,
-                                ...)
+        if(!is.null(vals)){
+          p <- private$plot_curve(vals,
+                                  SpatialLines(list(self$Lines@lines[[i]])),
+                                  flat = flat,
+                                  p = p,
+                                  color = color,
+                                  ...)
+        }
       }
 
     }
@@ -558,17 +560,17 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         vertex <- rbind(vertex, lines[i, ])
       }
     }
-
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     for (i in 1:max(lines[, 1])) {
       which.line <- sort(which(lines[, 1] == i))
       line <- lines[which.line, ]
-      ind1 <- (abs( vertex[,2] - line[1,2] )< 1e-10) * (abs( vertex[,3] - line[1,3] )< 1e-10)==1
-      ind2 <-  (abs( vertex[,2] - line[2,2] )< 1e-10) * (abs( vertex[,3] - line[2,3] )< 1e-10)==1
-
+      #ind1 <- (abs( vertex[,2] - line[1,2] )< 1e-10) * (abs( vertex[,3] - line[1,3] )< 1e-10)==1
+      #ind2 <-  (abs( vertex[,2] - line[2,2] )< 1e-10) * (abs( vertex[,3] - line[2,3] )< 1e-10)==1
+      ind1 <- which.min((vertex[,2] - line[1,2])^2 + ( vertex[,3] - line[1,3] )^2)
+      ind2 <- which.min((vertex[,2] - line[2,2])^2 + ( vertex[,3] - line[2,3] )^2)
       lvl[i,1] <- i
-      lvl[i,2] <- which(ind1)
-      lvl[i,3] <- which(ind2)
+      lvl[i,2] <- ind1#which(ind1)
+      lvl[i,3] <- ind2#which(ind2)
       lvl[i,4] <- line[1,4]
     }
     self$V <- vertex[,2:3]

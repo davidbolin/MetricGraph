@@ -67,7 +67,7 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
     }else{
       i_[count + 1] <- graph$E[i, 1]
       j_[count + 1] <- graph$E[i, 1]
-      x_[count + 1] <- tanh(0.5 * theta * l_e)
+      x_[count + 1] <- tanh(0.5 * kappa * l_e)
       count <- count + 1
     }
   }
