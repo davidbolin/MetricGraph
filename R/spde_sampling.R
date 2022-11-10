@@ -18,12 +18,14 @@ sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
       R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
       V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV), system = 'Lt'), system = 'Pt'))
       u <- NULL
-      for(i in 1:graph$nE) {
-        t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2][-c(1,graph$mesh$n_e[1]+2)]
+
+      inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
+      for (i in inds_PtE) {
+        t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
         samp <- sample_alpha1_line(kappa = kappa, sigma = sigma,
                                    u_e = V0[graph$E[i, ]], t = t,
                                    l_e = graph$edge_lengths[i])
-        u <- c(u, V0[graph$E[i, 1]], samp[,2], V0[graph$E[i, 2]])
+        u <- c(u, samp[,2])
       }
     } else if (alpha == 2) {
       Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -39,14 +41,15 @@ sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                             , system = 'Pt'))
       u_e <- t(graph$CBobj$T) %*% c(rep(0, dim(graph$CBobj$U)[1]), V0)
       u <- NULL
-      for (i in 1:graph$nE) {
-        t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2][-c(1,graph$mesh$n_e[1]+2)]
+      inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
+      for (i in inds_PtE) {
+        t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
         samp <- sample_alpha2_line(kappa = kappa, sigma = sigma,
                                    sigma_e = sigma_e,
                                    u_e = u_e[4*(i-1) +1:4],
                                    t = t,
                                    l_e = graph$edge_lengths[i])
-        u <- c(u, u_e[4*(i-1) +1], samp[,2], u_e[4*(i-1) + 3])
+        u <- c(u, samp[,2])
       }
     } else {
       stop("only alpha = 1 and alpha = 2 implemented.")
@@ -110,7 +113,7 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
   Q <- precision_exp_line(kappa = kappa, sigma = sigma, t = t)
 
   index_E <- length(py) + 1:2
-  Q_X <- Q[-index_E,-index_E]
+  Q_X <- Q[-index_E,-index_E, drop=F]
   mu_X <- as.vector(Matrix::solve(Q_X, -Q[-index_E, index_E] %*% u_e))
   if (is.null(py) == FALSE) {
     Matrix::diag(Q_X)[1:length(py)] <- Matrix::diag(Q_X)[1:length(py)] + 1/sigma_e^2

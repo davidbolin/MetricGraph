@@ -190,7 +190,7 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50){
 #' @param kappa parameter kappa
 #' @param sigma parameter sigma
 #' @param  graph metric_graph object
-#' @return vector with covariance values
+#' @return vector with covariance values (order Vertex of Graph then mesh$PtE)
 #' @export
 covariance_alpha1_mesh <- function(P, kappa, sigma, graph) {
 
@@ -218,7 +218,8 @@ covariance_alpha1_mesh <- function(P, kappa, sigma, graph) {
   #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
   CV_P <- CV %*% t(B)
   C <- NULL
-  for (i in 1:graph$nE) {
+  inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
+  for (i in inds_PtE) {
     l <- graph$edge_lengths[i]
     t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
     if (i == P[1]) {

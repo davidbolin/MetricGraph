@@ -23,7 +23,7 @@ sample_alpha2_line(
 
 \item{sigma_e}{parameter sigma_e}
 
-\item{u_e}{(2 x 1) the two end points}
+\item{u_e}{(4 x 1) process and derivative at the two end points}
 
 \item{l_e}{(1 x 1) line length}
 

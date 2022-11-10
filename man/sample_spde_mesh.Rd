@@ -4,7 +4,14 @@
 \alias{sample_spde_mesh}
 \title{Sample Whittle-Matérn field on graph}
 \usage{
-sample_spde_mesh(kappa, sigma, sigma_e, alpha = 1, graph, posterior = FALSE)
+sample_spde_mesh(
+  kappa,
+  sigma,
+  sigma_e = 0,
+  alpha = 1,
+  graph,
+  posterior = FALSE
+)
 }
 \arguments{
 \item{kappa}{parameter kappa}

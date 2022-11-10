@@ -17,7 +17,7 @@ covariance_alpha1_mesh(P, kappa, sigma, graph)
 \item{graph}{metric_graph object}
 }
 \value{
-vector with covariance values
+vector with covariance values (order Vertex of Graph then mesh$PtE)
 }
 \description{
 Compute covariance of a point to the mesh points of the graph for

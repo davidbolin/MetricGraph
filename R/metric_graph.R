@@ -298,16 +298,15 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$mesh$V <- self$V
     for (i in 1:dim(self$E)[1]) {
       if (is.null(n)) {
-        self$mesh$n_e[i] <- max(ceiling(self$edge_lengths[i] / h) + 1,3)
+        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2 #remove boundary points
       } else {
         self$mesh$n_e[i] <- n
       }
-      if (self$mesh$n_e[i] > 2) {
-        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i])#
-
+      if (self$mesh$n_e[i] > 0) {
+        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)#
+        d.e <- d.e[2:(1+self$mesh$n_e[i])]
         self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]), d.e))
-        d.e <- d.e[2:(self$mesh$n_e[i]-1)]
-        self$mesh$n_e[i] <- self$mesh$n_e[i] - 2
+
         self$mesh$h_e[i] <- self$edge_lengths[i]*d.e[1]
         if(is.null(self$Lines)) {
           self$mesh$V <- rbind(self$mesh$V,
@@ -470,6 +469,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       } else {
         vals <- X[X[,1]==i,2:3]
       }
+      if(isempty(vals))
+        next
       if(is.null(self$Lines) == TRUE) {
         p <- private$plot_straight_curve(vals,
                                          self$V[self$E[i,],],
@@ -585,8 +586,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                         color = 'rgb(0,0,200)',
                         p = NULL, ...){
 
-    data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ]
-    p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1],
+    data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,drop=F]
+    p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,drop=F],
                               normalized = normalized)
     coords <-p2@coords
     data <- data.frame(x = coords[,1], y = coords[,2],
