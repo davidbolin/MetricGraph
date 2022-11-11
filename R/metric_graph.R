@@ -207,18 +207,20 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
     self$y   = y
     self$PtE = PtE
-    if(is.null(Spoints)){
-      Edges <- unique(self$PtE[,1])
-      coords <- c()
-      for(e in Edges){
-        ind <- self$PtE[,1] == e
-        points <- rgeos::gInterpolate(self$Lines[e,], self$PtE[e, 2], normalized = F)
-        coords <- rbind(coords, points@coords)
+    if(!is.null(self$Lines)){
+      if(is.null(Spoints)){
+        Edges <- unique(self$PtE[,1])
+        coords <- c()
+        for(e in Edges){
+          ind <- self$PtE[,1] == e
+          points <- rgeos::gInterpolate(self$Lines[e,], self$PtE[ind, 2], normalized = F)
+          coords <- rbind(coords, points@coords)
+        }
+        rownames(coords) <- 1:dim(coords)[1]
+        Spoints <- sp::SpatialPoints(coords)
       }
-      rownames(coords) <- 1:dim(coords)[1]
-      Spoints <- sp::SpatialPoints(coords)
+      self$Points = Spoints
     }
-    self$Points = Spoints
   },
 
 
@@ -498,49 +500,75 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   }),
   private = list(
     split_line = function(Ei, t){
-      Line <- self$Lines[Ei,]
+      if(!is.null(self$Lines)){
+        Line <- self$Lines[Ei,]
 
-      val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
-      ind <-  (val_line <= t)
-      Point <- gInterpolate(Line, t, normalized=TRUE)
-      Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
-      Line2 <- list(Point, as(Line, "SpatialPoints")[ind==F, ])
+        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
+        ind <-  (val_line <= t)
+        Point <- gInterpolate(Line, t, normalized=TRUE)
+        Line1 <- list(as(Line, "SpatialPoints")[ind, ],Point)
+        Line2 <- list(Point, as(Line, "SpatialPoints")[ind==F, ])
 
-      if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
-        self$Lines <-rbind(self$Lines[1:Ei-1,],
-                           SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
-                                                 data=Line@data,match.ID = FALSE),
-                           self$Lines[-(1:Ei),],
-                           SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
-                                                 data=Line@data,match.ID = FALSE))
-      }else{
-        self$Lines <-rbind(self$Lines[1:Ei-1,],
-                           as(do.call(rbind,  Line1), "SpatialLines"),
-                           self$Lines[-(1:Ei),],
-                           as(do.call(rbind,  Line2), "SpatialLines"))
+        if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
+          self$Lines <-rbind(self$Lines[1:Ei-1,],
+                             SpatialLinesDataFrame(as(do.call(rbind,  Line1), "SpatialLines"),
+                                                   data=Line@data,match.ID = FALSE),
+                             self$Lines[-(1:Ei),],
+                             SpatialLinesDataFrame(as(do.call(rbind,  Line2), "SpatialLines"),
+                                                   data=Line@data,match.ID = FALSE))
+        }else{
+          self$Lines <-rbind(self$Lines[1:Ei-1,],
+                             as(do.call(rbind,  Line1), "SpatialLines"),
+                             self$Lines[-(1:Ei),],
+                             as(do.call(rbind,  Line2), "SpatialLines"))
 
-      }
-
-
-      newV <- self$nV+1#max(self$V[,1])+1
-      self$V <- rbind(self$V,c(Point@coords))
-
-
-      l_e <- self$edge_lengths[Ei]
-      self$edge_lengths[Ei] <- t*l_e
-      self$edge_lengths <- c(self$edge_lengths, (1-t)*l_e)
-      self$nE <- self$nE + 1
-      self$E <- rbind(self$E,
-                      c(newV,self$E[Ei, 2]))
-      self$E[Ei, 2] <- newV
-      ind <- which(self$PtE[,1]%in%Ei)
-      for(i in ind){
-        if( self$PtE[i,2]>= t*l_e-1e-10){
-          self$PtE[i,1] <- length(self$edge_lengths) #self$nE #
-          self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
         }
+
+
+        newV <- self$nV+1#max(self$V[,1])+1
+        self$V <- rbind(self$V,c(Point@coords))
+
+
+        l_e <- self$edge_lengths[Ei]
+        self$edge_lengths[Ei] <- t*l_e
+        self$edge_lengths <- c(self$edge_lengths, (1-t)*l_e)
+        self$nE <- self$nE + 1
+        self$E <- rbind(self$E,
+                        c(newV,self$E[Ei, 2]))
+        self$E[Ei, 2] <- newV
+        ind <- which(self$PtE[,1]%in%Ei)
+        for(i in ind){
+          if( self$PtE[i,2]>= t*l_e-1e-10){
+            self$PtE[i,1] <- length(self$edge_lengths) #self$nE #
+            self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
+          }
+        }
+        self$nV <- dim(self$V)[1]
+      } else {
+        V1 <- self$V[self$E[Ei,1], ]
+        V2 <- self$V[self$E[Ei,2], ]
+        val_line <- (1-t)*V1 + t*V2
+
+        newV <- self$nV+1
+        self$V <- rbind(self$V,c(val_line))
+
+        l_e <- self$edge_lengths[Ei]
+        self$edge_lengths[Ei] <- t*l_e
+        self$edge_lengths <- c(self$edge_lengths, (1-t)*l_e)
+        self$nE <- self$nE + 1
+        self$E <- rbind(self$E,
+                        c(newV,self$E[Ei, 2]))
+        self$E[Ei, 2] <- newV
+        ind <- which(self$PtE[,1]%in%Ei)
+        for(i in ind){
+          if( self$PtE[i,2]>= t*l_e-1e-10){
+            self$PtE[i,1] <- length(self$edge_lengths) #self$nE #
+            self$PtE[i,2] <- abs(self$PtE[i,2]-t*l_e)
+          }
+        }
+        self$nV <- dim(self$V)[1]
       }
-      self$nV <- dim(self$V)[1]
+
     },
   line_to_vertex = function(){
     lines <- c()
