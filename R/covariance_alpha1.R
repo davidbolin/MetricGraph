@@ -124,7 +124,7 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 #' @param sigma parameter sigma
 #' @param  graph metric_graph object
 #' @param  n.p number of points to compute the covariance on each edge
-#' @return C (n.p*numer of edges x 3) [,1] edge number [,2] distance from
+#' @return C (n.p*number of edges x 3) [,1] edge number [,2] distance from
 #' lower edge [,3] covariance
 #' @export
 covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50){
@@ -217,7 +217,7 @@ covariance_alpha1_mesh <- function(P, kappa, sigma, graph) {
   # covariance of a point to an edge
   #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
   CV_P <- CV %*% t(B)
-  C <- NULL
+  C <- c(as.vector(CV_P))
   inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
   for (i in inds_PtE) {
     l <- graph$edge_lengths[i]

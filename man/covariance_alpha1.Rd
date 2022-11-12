@@ -19,7 +19,7 @@ covariance_alpha1(P, kappa, sigma, graph, n.p = 50)
 \item{n.p}{number of points to compute the covariance on each edge}
 }
 \value{
-C (n.p*numer of edges x 3) [,1] edge number [,2] distance from
+C (n.p*number of edges x 3) [,1] edge number [,2] distance from
 lower edge [,3] covariance
 }
 \description{

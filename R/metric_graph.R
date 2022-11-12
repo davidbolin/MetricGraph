@@ -168,6 +168,25 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
   },
 
+
+  #' @description Find one Edge correspond to each Vertex (warning very innfeciten implimentation)
+  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+  VtEfirst = function(){
+    n.V <- dim(self$V)[1]
+    VtE <- matrix(0,n.V, 2)
+
+    for(i in 1:n.V){
+      Ei <- which(self$E[,1]==i)[1]
+      pos <- 0
+      if(is.na(Ei)==1){
+        pos <- 1
+        Ei <- which(self$E[,2]==i)[1]
+      }
+      VtE[i,] <- c(Ei, pos)
+    }
+    return(VtE)
+  },
+
   #' @description Add observations to the object
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y        (n x 1) the value of the observations
@@ -440,7 +459,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
     return(p)
   },
-  #' plot function X on the graph
+
+  #' @description plot function X on the graph
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at a precomputed mesh.
@@ -497,8 +517,74 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       print(p)
     }
     return(p)
+  },
+  #' @description plot function mesh X on the graph
+  #' @param X (m x 1) a vector with values for the function
+  #' evaluated at a precomputed mesh (V,and PtE)
+  #' @param flat plot in 2D or 3D?
+  #' @param show show the plot?
+  #' @param graph_color for 3D plot, the color of the graph.
+  #' @param graph_width for 3D plot, the line width of the graph.
+  #' @param marker_size for 3D plot, the marker size of the vertices
+  #' @param color Color of curve
+  #' @param ... additional arguments for ggplot or plot_ly
+  #' @export
+  plot_function_mesh = function(X, flat = TRUE, show = TRUE,
+                                graph_color = 'rgb(0,0,0)',
+                                graph_width = 1,
+                                marker_size = 10,
+                                color = 'rgb(0,0,200)',
+                                ...){
+    if(flat == FALSE){
+      p <- self$plot(color = graph_color, line_width = graph_width,
+                     marker_size = marker_size, fix_layout = FALSE)
+    } else {
+      p <- NULL
+    }
+    n.v <- dim(self$V)[1]
+    XV <- X[1:n.v]
+    for(i in 1:self$nE){
+      ind <- self$mesh$PtE[,1] == i
+      if(sum(ind)==0){
+        vals <- rbind(c(0, XV[self$E[i,1]]),
+                      c(self$edge_lengths[i], XV[self$E[i,2]]))
+
+      }else{
+        vals <- rbind(c(0, XV[self$E[i,1]]),
+                      cbind(self$mesh$PtE[ind,2],X[n.v + which(ind)]),
+                      c(self$edge_lengths[i], XV[self$E[i,2]]))
+
+      }
+
+
+
+      if(is.null(self$Lines) == TRUE) {
+        p <- private$plot_straight_curve(vals,
+                                         self$V[self$E[i,],],
+                                         flat = flat,
+                                         p = p,
+                                         color = color,
+                                         ...)
+
+      } else {
+        if(!is.null(vals)){
+          p <- private$plot_curve(vals,
+                                  SpatialLines(list(self$Lines@lines[[i]])),
+                                  flat = flat,
+                                  p = p,
+                                  color = color,
+                                  ...)
+        }
+      }
+
+    }
+    if(show){
+      print(p)
+    }
+    return(p)
   }),
   private = list(
+
     split_line = function(Ei, t){
       if(!is.null(self$Lines)){
         Line <- self$Lines[Ei,]

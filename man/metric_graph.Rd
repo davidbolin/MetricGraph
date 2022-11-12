@@ -27,7 +27,6 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line4),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 graph$plot()
-plot function X on the graph
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -82,12 +81,14 @@ the vertex at the end of the edge}
 \item \href{#method-GPGraph::graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-GPGraph::graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
+\item \href{#method-GPGraph::graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{metric_graph$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-GPGraph::graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
+\item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -165,6 +166,19 @@ Add observation locations as vertices in the graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-VtEfirst"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-VtEfirst}{}}}
+\subsection{Method \code{VtEfirst()}}{
+Find one Edge correspond to each Vertex (warning very innfeciten implimentation)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$VtEfirst()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}
@@ -304,7 +318,6 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line4),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 graph$plot()
-plot function X on the graph
 }
 \if{html}{\out{</div>}}
 
@@ -315,6 +328,7 @@ plot function X on the graph
 \if{html}{\out{<a id="method-GPGraph::graph-plot_function"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function}{}}}
 \subsection{Method \code{plot_function()}}{
+plot function X on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
@@ -334,6 +348,47 @@ plot function X on the graph
 \item{\code{X}}{Either an m x 3 matrix with (edge number, position on
 curve (in length), value) or a vector with values for the function
 evaluated at a precomputed mesh.}
+
+\item{\code{flat}}{plot in 2D or 3D?}
+
+\item{\code{show}}{show the plot?}
+
+\item{\code{graph_color}}{for 3D plot, the color of the graph.}
+
+\item{\code{graph_width}}{for 3D plot, the line width of the graph.}
+
+\item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
+
+\item{\code{color}}{Color of curve}
+
+\item{\code{...}}{additional arguments for ggplot or plot_ly}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-plot_function_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function_mesh}{}}}
+\subsection{Method \code{plot_function_mesh()}}{
+plot function mesh X on the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function_mesh(
+  X,
+  flat = TRUE,
+  show = TRUE,
+  graph_color = "rgb(0,0,0)",
+  graph_width = 1,
+  marker_size = 10,
+  color = "rgb(0,0,200)",
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{X}}{(m x 1) a vector with values for the function
+evaluated at a precomputed mesh (V,and PtE)}
 
 \item{\code{flat}}{plot in 2D or 3D?}
 

@@ -237,7 +237,8 @@ covariance_alpha2_mesh <- function(P, kappa, sigma, graph){
 
   B <- Sigma[1:4, 5] %*% solve(Sigma[1:4, 1:4])
   CV_P <- CZ %*% t(B)
-  C <- NULL
+  VtE <- graph$VtEfirst()
+  C <- CV_P[ 4*(VtE[,1]-1)  + 1 + 2 * VtE[,2]]
   inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
   for (i in inds_PtE) {
     l <- graph$edge_lengths[i]

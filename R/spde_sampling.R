@@ -17,7 +17,7 @@ sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
       Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 1, graph = graph)
       R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
       V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV), system = 'Lt'), system = 'Pt'))
-      u <- NULL
+      u <- V0
 
       inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
       for (i in inds_PtE) {
@@ -40,7 +40,8 @@ sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                                      system = 'Lt')
                             , system = 'Pt'))
       u_e <- t(graph$CBobj$T) %*% c(rep(0, dim(graph$CBobj$U)[1]), V0)
-      u <- NULL
+      VtE <- graph$VtEfirst()
+      u <- u_e[ 4*(VtE[,1]-1)  + 1 + 2 * VtE[,2]]
       inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
       for (i in inds_PtE) {
         t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
