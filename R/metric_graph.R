@@ -304,7 +304,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
   },
 
-  #' @description build mesh object for plotting
+  #' @description build mesh object for graph
   #' @param h maximum distance between mesh nodes
   #' @param n maximum number of nodes per edge
   build_mesh = function(h,n=NULL){
@@ -313,7 +313,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                       V = NULL,
                       E = NULL,
                       n_e = rep(0,self$nV),
-                      h_e = rep(0,self$nV),
+                      h_e = NULL,
                       ind = 1:self$nV)
 
     self$mesh$V <- self$V
@@ -328,7 +328,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         d.e <- d.e[2:(1+self$mesh$n_e[i])]
         self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]), d.e))
 
-        self$mesh$h_e[i] <- self$edge_lengths[i]*d.e[1]
+        self$mesh$h_e <- c(self$mesh$h_e,
+                           rep(self$edge_lengths[i] * d.e[1], self$mesh$n_e[i] + 1))
         if(is.null(self$Lines)) {
           self$mesh$V <- rbind(self$mesh$V,
                                cbind(self$V[self$E[i,1], 1]*(1 - d.e) + d.e*self$V[self$E[i, 2],1],
@@ -343,10 +344,39 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$ind <- c(self$mesh$ind, V.int)
         self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i, 1], V.int),
                                                 c(V.int, self$E[i, 2])))
+      } else {
+        self$mesh$E <- rbind(self$mesh$E, self$E[i, ])
+        self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
 
     }
   },
+
+  #' @description build mass and stiffness matrices for given mesh object
+  compute_fem = function(){
+    if(is.null(self$mesh)){
+      stop("no mesh provided")
+    }
+
+    nV <- dim(self$mesh$V)[1]
+    self$mesh$G <- self$mesh$C <- Matrix(0,nrow=nV,ncol=nV)
+
+    for(e in 1:dim(self$mesh$E)[1]){
+      v1 <- self$mesh$E[e,1]
+      v2 <- self$mesh$E[e,2]
+
+      self$mesh$C[v1,v1] <- self$mesh$C[v1,v1] +  self$mesh$h_e[e]/3
+      self$mesh$C[v2,v2] <- self$mesh$C[v2,v2] +  self$mesh$h_e[e]/3
+      self$mesh$C[v1,v2] <- self$mesh$C[v1,v2] +  self$mesh$h_e[e]/6
+      self$mesh$C[v2,v1] <- self$mesh$C[v2,v1] +  self$mesh$h_e[e]/6
+
+      self$mesh$G[v1,v1] <- self$mesh$G[v1,v1] +  1/self$mesh$h_e[e]
+      self$mesh$G[v2,v2] <- self$mesh$G[v2,v2] +  1/self$mesh$h_e[e]
+      self$mesh$G[v1,v2] <- self$mesh$G[v1,v2] -  1/self$mesh$h_e[e]
+      self$mesh$G[v2,v1] <- self$mesh$G[v2,v1] -  1/self$mesh$h_e[e]
+    }
+  },
+
 
   #' @description plot a metric graph
   #' @param show show the plot?
