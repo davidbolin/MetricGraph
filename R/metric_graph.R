@@ -376,6 +376,21 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       self$mesh$G[v2,v1] <- self$mesh$G[v2,v1] -  1/self$mesh$h_e[e]
     }
   },
+  #' @description Computes observation matrix for mesh
+  #' @param PtE locations given as (edge number in graph, location on edge)
+  mesh_A = function(PtE){
+    if(is.null(self$mesh)){
+      stop("no mesh given")
+    }
+    x <- private$PtE_to_mesh(PtE)
+    n <- dim(x)[1]
+    A <- Matrix(0,nrow=n,ncol=dim(self$mesh$V)[1])
+    for(i in 1:n){
+      A[i, self$mesh$E[x[i,1],1]] = 1-x[i,2]
+      A[i,self$mesh$E[x[i,1],2]] = x[i,2]
+    }
+    return(A)
+  },
 
 
   #' @description plot a metric graph
@@ -795,7 +810,46 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }
     }
     return(p)
+  },
+  PtE_to_mesh = function(PtE){
+    VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
+    PtE_update <- matrix(0,dim(PtE)[1],2)
+    for(i in 1:dim(PtE)[1]) {
+      ei <- PtE[i,1]
+      ind <- which(VtE[,1]==ei)
+      if(PtE[i,2]<min(VtE[ind,2])){ #node in first edge on line
+        v1 <- self$E[ei,1]
+        ind2 <- which.min(VtE[ind,2])
+        v2 <- ind[ind2]
+        d1 <- 0
+        d2 <- VtE[v2,2]
+      } else if (PtE[i,2]>max(VtE[ind,2])) { #node in last edge on line
+        ind2 <- which.max(VtE[ind,2])
+        v1 <- ind[ind2]
+        v2 <- self$E[ei,2]
+        d1 <- VtE[v1,2]
+        d2 <- 1
+      } else {
+        ind2 <- sort(sort(abs(VtE[ind,2]-PtE[i,2]),index.return=TRUE)$ix[1:2])
+        v1 <- ind[ind2[1]]
+        v2 <- ind[ind2[2]]
+        d1 <- VtE[v1,2]
+        d2 <- VtE[v2,2]
+      }
+      #edge in mesh
+      e <- which(rowSums((self$mesh$E==v1) + (self$mesh$E==v2))==2)
+      #distance on edge
+      if(self$mesh$E[e,1]==v1){
+        d <- (PtE[i,2] - d1)/(d2-d1)
+      } else {
+        d <- 1- (PtE[i,2] - d1)/(d2-d1)
+      }
+
+      PtE_update[i,] <- c(e,d)
+    }
+    return(PtE_update)
   }
+
 
 ))
 
