@@ -11,7 +11,7 @@ likelihood_graph_spde <- function(theta, graph, alpha = 1, version = 1) {
     return(likelihood_alpha1(theta, graph))
   } else if (alpha == 1 && version == 2) {
     return(likelihood_alpha1_v2(theta, graph))
-  } else if (alpha == 2 && version == 1) {
+  } else if (alpha == 2) {
     return(likelihood_alpha2(theta, graph))
   }
 }
@@ -20,6 +20,9 @@ likelihood_graph_spde <- function(theta, graph, alpha = 1, version = 1) {
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph  metric_graph object
 likelihood_alpha2 <- function(theta, graph) {
+  if(is.null(graph$C)){
+    graph$buildC(2)
+  }
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
@@ -78,8 +81,8 @@ likelihood_alpha2 <- function(theta, graph) {
 
     E <- graph$E[e, ]
     if (E[1] == E[2]) {
-      error("circle not implemented")
-    } else {
+      cat("Warning: circle not implemented\n")
+    }
       BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
       Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
         (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
@@ -153,7 +156,7 @@ likelihood_alpha2 <- function(theta, graph) {
       x_[count + 16] <- BtSinvB[2, 4]
 
       count <- count + 16
-    }
+
     loglik <- loglik - 0.5  * t(y_i)%*%solve(Sigma_i, y_i)
     loglik <- loglik - sum(log(diag(R)))
   }

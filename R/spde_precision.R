@@ -140,7 +140,9 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
     R_node[3:4, 1:2] <- t(R_01)
     Q_adj <- solve(R_node) + Ajd
 
-    if (graph$E[i, 1] != graph$E[i, 2]) {
+    if (graph$E[i, 1] == graph$E[i, 2]) {
+      cat("Warning: circlular edges are not implemented\n")
+    }
 
       #lower edge precision u
       i_[count + 1] <- 4 * (i - 1) + 1
@@ -219,9 +221,7 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
       x_[count + 16] <- Q_adj[2, 4]
 
       count <- count + 16
-    } else {
-        error("circlular edges are not implemented")
-    }
+
   }
 
   if(BC == 1){
