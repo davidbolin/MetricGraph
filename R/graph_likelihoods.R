@@ -169,7 +169,7 @@ likelihood_alpha2 <- function(theta, graph) {
                                dims = dim(Q))
   Qp <- Q + BtSB
   Qp <- Tc %*% Qp %*% t(Tc)
-  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+  R <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
   loglik <- loglik - Matrix::determinant(R)$modulus[1]
 
   v <- c(as.matrix(Matrix::solve(R, Matrix::solve(R, Tc%*%Qpmu, system = 'P'), system='L')))

@@ -400,6 +400,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param vertex_color color of vertices
   #' @param edge_color color of edges
   #' @param data Plot the data?
+  #' @param data_size size of markers for data
   #' @param mesh Plot the mesh locations?
   #' @param fix_layout fix 2D layout for plot
   #' @param ... additional arguments for ggplot or plot_ly
@@ -418,12 +419,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' graph$plot()
   plot = function(show = TRUE,
                   line_width = 1,
-                  marker_size = 10,
+                  marker_size = 1,
                   vertex_color = 'rgb(0,0,0)',
                   edge_color = 'rgb(0,0,0)',
                   data = FALSE,
+                  data_size = 1,
                   mesh = FALSE,
                   fix_layout = TRUE,
+                  zoom = 1,
                   ...){
     if(is.null(self$Lines)){
       data.plot <- data.frame(x = c(self$V[E[,1],1],self$V[E[,2],1]),
@@ -450,11 +453,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                      color = edge_color, ...),
                          split=~i, showlegend=FALSE)
 
-    data.plot2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
-    p <- p %>% add_trace(data=data.plot2, x = ~y,y = ~x, z = ~z,
-                         type="scatter3d", mode = "markers",
-                         marker = list(size = marker_size,
-                                       color = vertex_color, ...))
+    if(marker_size > 0) {
+      data.plot2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
+      p <- p %>% add_trace(data=data.plot2, x = ~y,y = ~x, z = ~z,
+                           type="scatter3d", mode = "markers",
+                           marker = list(size = marker_size,
+                                         color = vertex_color, ...))
+    }
+
     if(data){
       x <- y <- NULL
       for(i in 1:length(self$y)){
@@ -471,7 +477,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            type="scatter3d", mode = "markers",
                            marker = list(size = marker_size,
                                          color = ~val,
-                                         colorbar=list(title=''),
+                                         colorbar=list(title='', len = 0.5),
                                          colorscale='Viridis'),
                            showlegend=FALSE)
     }
@@ -485,7 +491,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                          color = 'rgb(100,100,100)'),
                            showlegend=FALSE)
     }
-    xr <- diff(range(self$V[,1])) + diff(range(self$V[,2]))
+    xr <- (diff(range(self$V[,1])) + diff(range(self$V[,2])))/zoom
     if(fix_layout){
       ax <- list(title = '',
                  zeroline = FALSE,
@@ -493,8 +499,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                  showticklabels=FALSE)
       p <- p %>% layout(title = '',
                         scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
-                                     camera = list(eye = list(x = 0, y = 0, z = xr),
-                                                   up = list(x=0,y=1,z=0)),
+                                     camera = list(eye = list(x = 0, y = 0, z = -xr),
+                                                   up = list(x=1,y=0,z=0)),
                                      aspectmode='data'))
 
     }
