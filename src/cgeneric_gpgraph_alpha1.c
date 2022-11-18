@@ -144,8 +144,6 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   int one=1;
   dscal_(&M, &fact, &ret[k], &one);
 
-  printf("BLA!!!");
-
       break;
     }
     
