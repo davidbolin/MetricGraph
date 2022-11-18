@@ -21,15 +21,22 @@ u <- sample_spde_mesh(kappa = 10, sigma = 2, graph = graph)
 
 A <- diag(c(1,1,1,1))
 
+
+
 data_tmp <- data.frame(y = u)
 
 index <- list()
 
-index[["field"]] <- 1:4
+index[["field"]] <- 1:ncol(A)
 
-stk.dat <- inla.stack(data = data_tmp, A = A, effects = index)
+stk.dat <- inla.stack(data = list(y=u), 
+                        A = A, 
+                        effects = c(
+      index,
+      list(Intercept = 1)
+    ))
 
-f.s <- y ~ f(field, model = tmp)
+f.s <- y ~ -1 + Intercept + f(field, model = tmp)
 
 inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
 
