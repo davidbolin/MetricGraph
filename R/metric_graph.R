@@ -512,7 +512,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description plot function mesh X on the graph
   #' @param X (m x 1) a vector with values for the function
   #' evaluated at a precomputed mesh (V,and PtE)
-  #' @param flat plot in 2D or 3D?
+  #' @param plotly use plot_ly for 3D plot?
   #' @param show show the plot?
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param graph_width for 3D plot, the line width of the graph.
@@ -520,15 +520,21 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
   #' @export
-  plot_function_mesh = function(X, flat = TRUE, show = TRUE,
-                                graph_color = 'rgb(0,0,0)',
+  plot_function_mesh = function(X, plotly = FALSE, show = TRUE,
+                                graph_color = 'black',
                                 graph_width = 1,
                                 marker_size = 10,
                                 color = 'rgb(0,0,200)',
                                 ...){
-    if(flat == FALSE){
-      p <- self$plot(color = graph_color, line_width = graph_width,
-                     marker_size = marker_size, fix_layout = FALSE)
+    if(is.null(self$mesh)) {
+      stop("no mesh provided")
+    }
+    if(length(X) != dim(self$V)[1] + dim(self$mesh$PtE)[1]){
+      stop("X does not have the correct size")
+    }
+    if(plotly){
+      p <- self$plot(plotly = plotly, color = graph_color,
+                     line_width = graph_width, marker_size = marker_size)
     } else {
       p <- NULL
     }
@@ -552,19 +558,17 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       if(is.null(self$Lines) == TRUE) {
         p <- private$plot_straight_curve(vals,
                                          self$V[self$E[i,],],
-                                         flat = flat,
+                                         plotly = plotly,
                                          p = p,
-                                         color = color,
-                                         ...)
+                                         color = color, ...)
 
       } else {
         if(!is.null(vals)){
           p <- private$plot_curve(vals,
                                   SpatialLines(list(self$Lines@lines[[i]])),
-                                  flat = flat,
+                                  plotly = plotly,
                                   p = p,
-                                  color = color,
-                                  ...)
+                                  color = color, ...)
         }
       }
 
@@ -686,7 +690,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
   plot_curve = function(data.to.plot,
                         Line_edge,
-                        flat = TRUE,
+                        plotly = TRUE,
                         normalized = TRUE,
                         color = 'rgb(0,0,200)',
                         p = NULL, ...){
@@ -697,14 +701,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     coords <-p2@coords
     data <- data.frame(x = coords[,1], y = coords[,2],
                        z = data.to.plot.order[,2])
-    if(flat){
+    if(!plotly){
       if(is.null(p)){
         p <- ggplot2::ggplot(data = data,
                              ggplot2::aes(x = x, y = y,
                                           colour = z)) +
           ggplot2::geom_path(...)
       } else {
-        p <- p + ggplot2::geom_path(data = data,...)
+        p <- p + ggplot2::geom_path(data = data)
       }
     } else {
       if(is.null(p)){
@@ -723,7 +727,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
   plot_straight_curve = function(data.to.plot,
                                  V,
-                                 flat = FALSE,
+                                 plotly = FALSE,
                                  p = NULL,
                                  line_color,
                                  ...){
@@ -735,7 +739,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                     (1-alpha) * V[1, 2] + alpha * V[2, 2])
     data <- data.frame(x = coords[, 1], y = coords[, 2],
                        z = data.to.plot.order[, 2])
-    if (flat) {
+    if (!plotly) {
       if (is.null(p)) {
         p <- ggplot2::ggplot(data = data,
                              ggplot2::aes(x = x, y = y,
@@ -810,7 +814,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                    c(self$V[E[,1],2],self$V[E[,2],2]),
                    c(1:self$nE, 1:self$nE))
     } else {
-      xyl <- fortify(self$Lines)[,c(1,2,5)]
+      coords <- lapply(coordinates(self$Lines), function(x) x[[1]])
+      nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
+      xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
+      #xyl <- fortify(self$Lines)[,c(1,2,5)]
     }
 
     p <- ggplot()+ geom_path(data= data.frame(x=xyl[,1], y=xyl[,2], group=xyl[,3]),
@@ -841,7 +848,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                           mapping= aes(x, y), size= marker_size/2,
                           colour = "gray")
     }
-
+    p <- p + coord_fixed()
     if(show){
       print(p)
     }
@@ -927,8 +934,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                showticklabels=FALSE)
     p <- p %>% layout(title = '',
                       scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
-                                   camera = list(eye = list(x = 0, y = 0, z = -xr),
-                                                 up = list(x=1,y=0,z=0)),
                                    aspectmode='data'))
 
     if(show){

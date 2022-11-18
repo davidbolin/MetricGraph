@@ -43,10 +43,25 @@ if(save.fig){
   ggsave("data.png",pp, device = "png")
 }
 
+graph$build_mesh(h=4e-05)
+# Fit alpha=1 model
+theta.alpha1 <- c(0.1624661, 10.5330059,  0.2525539)
+res <- optim(log(theta.alpha1), function(x) -likelihood_graph_spde(exp(x),graph,
+                                                                   alpha = 1))
+theta.alpha1 <- exp(res$par)
+like.alpha1 <- -res$value
+
+mu_alpha1 <- spde_posterior_mean(theta.alpha1, graph, alpha = 1, type = "mesh")
+
+#center data to assume zero mean
+graph$y <- y - mean(y)
+
 #fit alpha = 2 model
 graph$buildC(2)
 theta.alpha2 <- c(1.710348e+01, 1.084454e-04, 0.0001)
-res <- optim(log(theta.alpha2), function(x) -likelihood_graph_spde(exp(x), graph, alpha = 2))
+res <- optim(log(theta.alpha2), function(x) -likelihood_graph_spde(exp(x),
+                                                                   graph,
+                                                                   alpha = 2))
 theta.alpha2 <- exp(res$par)
 like.alpha2 <- -res$value
 
@@ -56,15 +71,13 @@ graph$observation_to_vertex()
 graph$compute_resdist()
 
 theta.exp <- c(9.4726902736, 0.0001559032, 0.3745814561)
-res.exp <- optim(log(theta.exp), function(x) -likelihood.graph.covariance(exp(x),graph, model = "isoExp"))
+res.exp <- optim(log(theta.exp), function(x) -likelihood.graph.covariance(exp(x),
+                                                                          graph,
+                                                                          model = "isoExp"))
 theta.exp <- exp(res.exp$par)
 like.res <- -res.exp$value
 
-# Fit alpha=1 model
-theta.alpha1 <- c(9.4726902736, 0.0001559032, 0.3745814561)
-res <- optim(log(theta.alpha1), function(x) -likelihood.graph.covariance(exp(x),graph, model = "alpha1") )
-theta.alpha1 <- exp(res$par)
-like.alpha1 <- -res$value
+
 
 # Fit graph Laplace model
 graph$compute_laplacian()
@@ -108,23 +121,13 @@ result <- data.frame(RMSE  = sqrt(c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse,cv.g
                      row.names = c("isoExp","alpha1","GL", "GL2","alpha2"))
 print(xtable(result))
 
-##
-# print observation
-##
-fig <- plot_obs(graph,colMeans(Y), y_loc = Y_loc, size_path=0.1, size_obs=3) + scale_colour_viridis_c(breaks =c(30,40,60))+
-  xlab("long") + ylab("lat") + theme_classic()+
-  labs(colour="mph")+theme(axis.text=element_text(size=20),
-                           axis.title=element_text(size=20,face="bold"),
-                           legend.text = element_text(size=20),
-                           legend.title = element_text(size=20,face="bold"))
-print(fig)
-if(save.fig)
-  ggsave("observation.pdf",fig)
 
 ###
 # print posterior mean
 ##
-X <- graph_posterior_mean_matern2(graph,  theta.alpha2)
+theta.alpha2 <- c(0.0001, 1.084454e-04, 1.710348e+01)
+X <- spde_posterior_mean(theta.alpha2, graph, alpha = 1, type = "mesh")
+
 X[,2] <- X[,2] + mean(colMeans(Y))
 gg <- plot_curve(X[X[,3]==1,1:2]  , graph$Lines[1,], normalized=T,size=0.8)
 for(i in 1:dim(graph$EtV)[1]){

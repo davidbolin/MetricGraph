@@ -44,7 +44,7 @@ graph_posterior_mean_matern2 <- function(graph,  theta, sample=F){
 
   X <- c()
   V.post.mean <- posterior.mean.matern2(theta, graph)
-  for(i in 1:dim(graph$EtV)[1]){
+  for(i in 1:dim(graph$E)[1]){
     V.i <-   V.post.mean[4*(i-1) + 1:4]
 
     ind <- which(graph$PtE[,1] == i)
