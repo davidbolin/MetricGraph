@@ -33,7 +33,6 @@ Vobs <- cbind(x,y)
 
 y <- rnorm(dim(obs.loc)[1])
 graph$add_observations2(y,obs.loc)
-
 alpha = 2
 #check alpha = 1
 if(alpha==1){
@@ -53,16 +52,18 @@ if(alpha==1){
 } else {
   #check alpha = 2
   theta = c(1,1,1)
+  graph$buildC(2)
   mu_alpha2 <- spde_posterior_mean(theta, graph, alpha = 2, type = "mesh")
-  p <- graph$plot_function_mesh(mu_alpha2, marker_size = 0)
+  p <- graph$plot_function_mesh(mu_alpha2, marker_size = 0, plotly = TRUE)
 
   mu_alpha2_obs <- spde_posterior_mean(theta, graph, alpha = 2, type = "obs")
+  p <- graph$plot_function_mesh(mu_alpha2, marker_size = 0)
   p <- p + geom_point(data=data.frame(x=Vobs[,1],y=Vobs[,2],
                                       val = mu_alpha2_obs),
                       mapping= aes(x, y, color = val), size = 2) + coord_fixed()
-  p
+  print(p)
 
-  graph$plot_function_mesh(mu_alpha1,plotly = TRUE, marker_size = 0)
+
 
 }
 

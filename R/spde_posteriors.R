@@ -22,6 +22,9 @@ spde_posterior_mean <- function(theta,
   if( type == "mesh" && is.null(graph$mesh)) {
     stop("mesh must be provided")
   }
+  if(is.null(graph$y)){
+    stop("The graph contains no data.")
+  }
   if (alpha == 1) {
     return(posterior_mean_obs_alpha1(theta = theta, graph = graph,
                                      type = type,
@@ -134,6 +137,9 @@ posterior_mean_obs_alpha2 <- function(theta,
                                       type = "obs",
                                       leave.edge.out = FALSE) {
 
+  if(type == "obs" && leave.edge.out) {
+    stop("leave.edge.out only possible for type = 'obs'.")
+  }
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
@@ -227,7 +233,8 @@ posterior_mean_obs_alpha2 <- function(theta,
   if(type == "obs"){
     return(y_hat)
   } else {
-    return(c(E.post[seq(from=1, by = 2, to = dim(E.post)[1])],y_hat))
+    E.p <- E.post[seq(from=1, by = 2, to = dim(E.post)[1])]
+    return(c(E.p[which(!duplicated(c(t(graph$E))))],y_hat))
   }
 }
 
