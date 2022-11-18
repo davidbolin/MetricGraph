@@ -25,6 +25,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @field EID ID of edges
   EID = NULL,
 
+
+  #' @field EtL [,i] - edge i position on lines
+  EtL = NULL,
+
   #' @field C constraint matrix used to set Kirchhoff constraints
   C = NULL,
 

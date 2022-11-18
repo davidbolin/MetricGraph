@@ -44,6 +44,8 @@ the vertex at the end of the edge}
 
 \item{\code{EID}}{ID of edges}
 
+\item{\code{EtL}}{[,i] - edge i position on lines}
+
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
 \item{\code{A}}{observation matrix specifying which vertices are observation locations}
@@ -86,6 +88,8 @@ the vertex at the end of the edge}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
+\item \href{#method-GPGraph::graph-compute_fem}{\code{metric_graph$compute_fem()}}
+\item \href{#method-GPGraph::graph-mesh_A}{\code{metric_graph$mesh_A()}}
 \item \href{#method-GPGraph::graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
@@ -245,7 +249,7 @@ build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. s
 \if{html}{\out{<a id="method-GPGraph::graph-build_mesh"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-build_mesh}{}}}
 \subsection{Method \code{build_mesh()}}{
-build mesh object for plotting
+build mesh object for graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h, n = NULL)}\if{html}{\out{</div>}}
 }
@@ -261,6 +265,33 @@ build mesh object for plotting
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-compute_fem"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_fem}{}}}
+\subsection{Method \code{compute_fem()}}{
+build mass and stiffness matrices for given mesh object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-mesh_A"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-mesh_A}{}}}
+\subsection{Method \code{mesh_A()}}{
+Computes observation matrix for mesh
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mesh_A(PtE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{locations given as (edge number in graph, location on edge)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-plot"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot}{}}}
 \subsection{Method \code{plot()}}{
@@ -269,12 +300,14 @@ plot a metric graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   show = TRUE,
   line_width = 1,
-  marker_size = 10,
+  marker_size = 1,
   vertex_color = "rgb(0,0,0)",
   edge_color = "rgb(0,0,0)",
   data = FALSE,
+  data_size = 1,
   mesh = FALSE,
   fix_layout = TRUE,
+  zoom = 1,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -293,6 +326,8 @@ plot a metric graph
 \item{\code{edge_color}}{color of edges}
 
 \item{\code{data}}{Plot the data?}
+
+\item{\code{data_size}}{size of markers for data}
 
 \item{\code{mesh}}{Plot the mesh locations?}
 
