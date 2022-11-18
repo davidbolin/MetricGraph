@@ -227,7 +227,7 @@ posterior_mean_obs_alpha2 <- function(theta,
   if(type == "obs"){
     return(y_hat)
   } else {
-    return(c(V.post,y_hat))
+    return(c(E.post[seq(from=1, by = 2, to = dim(E.post)[1])],y_hat))
   }
 }
 

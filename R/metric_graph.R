@@ -141,6 +141,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   observation_to_vertex = function(){
 
     l <- length(self$PtE[,1])
+    nV_old <- self$nV
     self$PtV <- rep(0,l)
     for(i in 1:l){
         e <- as.vector(self$PtE[i,1])
@@ -166,6 +167,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(!is.null(self$CBobj)) {
       self$buildC(2)
     }
+    self$A <- Diagonal(self$nV)
+    self$A <- self$A[-(1:nV_old),]
   },
 
   #' @description Add observations to the object
@@ -577,7 +580,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   }),
   private = list(
 
-    split_line = function(Ei, t){
+  split_line = function(Ei, t){
       if(!is.null(self$Lines)){
         Line <- self$Lines[Ei,]
 
