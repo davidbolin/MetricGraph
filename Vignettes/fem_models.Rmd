@@ -1,6 +1,6 @@
 ---
 title: "Whittle--Matérn fields with general smoothness"
-author: "David Bolin, Alexandre B. Simas, Jonas Wallin"
+author: "David Bolin, Alexandre B. Simas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -72,14 +72,14 @@ As an example, we consider the following metric graph
                                 Lines(list(line3),ID="3"),
                                 Lines(list(line4),ID="4")))
   graph <- metric_graph$new(Lines = Lines)
-  graph$plot()
+  graph$plot(line_width = 0.3, show = FALSE)
 ```
 
 To construct a FEM approximation of a Whittle--Matérn field with general smoothness, 
 we must first construct a mesh on the graph. 
 ```{r}
   graph$build_mesh(h = 0.5)
-  graph$plot(mesh=TRUE)
+  graph$plot(mesh=TRUE, show = FALSE)
 ```
 
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in
@@ -116,7 +116,7 @@ The object `op_cov` contains the matrices needed for evaluating the distribution
 Let us simulate the field $u$ at the mesh locations and plot the result:
 ```{r} 
 u <- simulate(op)
-graph$plot_function_mesh(u, flat = FALSE)
+graph$plot_function_mesh(u, plotly = TRUE)
 ```
 
 If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to multiply the weights with the FEM basis functions $\varphi_i(s)$ evaluated at the locations. For this, we can construct the observation matrix $\boldsymbol{\mathrm{A}}$, with elements $A_{ij} = \varphi_j(s_i)$, which links the FEM basis functions to the locations. This can be done
@@ -154,7 +154,7 @@ Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the ration
   A_bar <- kronecker(matrix(1, ncol = rspde.order + 1), 
                      Diagonal(dim(graph$mesh$V)[1]))
   c_cov <- (A_bar) %*% solve(Q, v_bar)
-  graph$plot_function_mesh(c_cov, flat = FALSE)
+  graph$plot_function_mesh(c_cov, plotly = TRUE)
 ```
 
 
@@ -193,7 +193,7 @@ model using `optim`.
                    nu = c(nu, exp(theta$par[3])),
                    sigma.e = c(sigma.e, exp(theta$par[4])),
                    row.names = c("Truth", "Estimates")))
-    ```
+```
 
 ### Kriging
 Given that we have estimated the parameters, let us compute the kriging predictor 
@@ -222,7 +222,7 @@ Since we predicted at the mesh nodes, `Aprd` was chosen as the identity matrix w
 The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function_mesh(as.vector(u.krig[[1]]), flat = FALSE)  
+  graph$plot_function_mesh(as.vector(u.krig[[1]]), plotly = TRUE)  
 ```
 
 ## Fitting a model with replicates
@@ -230,7 +230,7 @@ The estimate is shown in the following figure
 Let us now illustrate how to simulate a data set with replicates and then fit a model to such data. To simulate a latent model with replicates, all we do is set the `nsim` argument to the number of replicates.
 
 ```{r}
-  n.rep <- 20
+  n.rep <- 30
   u.rep <- simulate(op, nsim = n.rep)
 ```
 
@@ -261,6 +261,400 @@ from the fact that $Y$ is a matrix with more than one column.
                      nu = c(nu, exp(theta$par[3])),
                      sigma.e = c(sigma.e, exp(theta$par[4])),
                      row.names = c("Truth", "Estimates")))
-    ```
+```
 
-    ## References
+## Using the R-INLA implementation
+
+We also have an `R-INLA` implementation of the rational SPDE approach
+for metric graphs. 
+
+We begin by defining the model by using the `rspde.metric_graph()` function.
+This function contains the same arguments as the function
+`rspde.matern()`. We refer the reader to the  [R-INLA implementation of the rational SPDE approach](https://davidbolin.github.io/rSPDE/articles/rspde_inla.html) vignette for further details.
+
+Let us create the model object:
+```{r}
+  rspde_model <- rspde.metric_graph(graph)
+```
+
+By default, the order of the rational approximation is 2.
+
+We can now create the `A` matrix and the index object by using
+the same functions as for the rational SPDE approach, namely,
+`rspde.make.A()` and `rspde.make.index()`, supplying the 
+graph object as the mesh argument. Here we create the `A` matrix:
+```{r}
+  Abar <- rspde.make.A(graph, loc=obs.loc)
+```
+
+Now, let us create the index object:
+```{r}
+  rspde.index <- rspde.make.index(name="field", mesh=graph)
+```
+
+The remaining is standard: we create the formula object, the 
+stack object, and then fit the model by using the `inla()` function.
+So, first we create the formula object:
+```{r}
+  f.s <- y ~ -1 + Intercept + f(field, model = rspde_model)
+```
+Now we create the `inla.stack` object:
+```{r}
+  stk.dat <- inla.stack(
+    data = list(y = Y), A = Abar, tag = "est",
+    effects =
+      c(
+        rspde.index,
+        list(Intercept = 1)
+      )
+    )
+```
+
+Finally, we can fit the model:
+```{r, warning=FALSE}
+  rspde_fit <- inla(f.s, data = inla.stack.data(stk.dat),
+    control.inla = list(int.strategy = "eb"),
+    control.predictor = list(A = inla.stack.A(stk.dat), compute = TRUE),
+              inla.mode = "experimental"
+  )
+```
+
+We can use the same functions as the `rspde` fitted models in `inla`.
+For instance, we can see the results in the original scale by creating
+the `result` object:
+```{r}
+  result_fit <- rspde.result(rspde_fit, "field", rspde_model)
+  summary(result_fit)
+```
+Let us compare with the true values:
+```{r}
+  result_df <- data.frame(
+    parameter = c("std.dev", "range", "nu"),
+    true = c(sigma, r, nu),
+    mean = c(
+      result_fit$summary.std.dev$mean,
+      result_fit$summary.range$mean,
+      result_fit$summary.nu$mean
+    ),
+    mode = c(
+      result_fit$summary.std.dev$mode,
+      result_fit$summary.range$mode,
+      result_fit$summary.nu$mode
+    )
+  )
+  print(result_df)
+```
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+  posterior_df_fit <- gg_df(result_fit)
+
+  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+### Kriging with the `R-INLA` implementation
+
+We will do kriging on the mesh locations:
+
+```{r}
+  pred_loc <- graph$mesh$VtE
+```
+
+Let us compute the `A` matrix at the prediction locations:
+
+```{r}
+  Abar_prd <- rspde.make.A(graph, loc=pred_loc)
+```
+
+Let us build the prediction stack and gather it with the estimation
+stack:
+```{r}
+  ef.prd <- 
+    c(rspde.index, list(Intercept = 1))
+  stk.prd <- inla.stack(
+    data = list(y = NA),
+    A = Abar_prd, tag = "prd",
+    effects = ef.prd
+  )
+  stk.all <- inla.stack(stk.dat, stk.prd)
+```
+
+Let us obtain the predictions:
+```{r}
+rspde_fitprd <- inla(f.s,
+  data = inla.stack.data(stk.all),
+  control.predictor = list(
+    A = inla.stack.A(stk.all),
+    compute = TRUE, link = 1
+  ),
+  control.compute = list(
+    return.marginals = FALSE,
+    return.marginals.predictor = FALSE
+  ),
+  control.inla = list(int.strategy = "eb")
+)
+```
+
+Let us now extract the indices of the predicted nodes and store the means:
+```{r}
+id.prd <- inla.stack.index(stk.all, "prd")$data
+m.prd <- rspde_fitprd$summary.fitted.values$mean[id.prd]
+```
+
+Finally, let us plot the predicted values. To this end 
+we will use the `plot_function_mesh()` graph method. 
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+  graph$plot_function_mesh(m.prd, plotly = TRUE)  
+```
+
+## Using `R-INLA` implementation to fit models with replicates
+
+To fit the model with replicates we need to create the corresponding `A` matrix and
+`index` object:
+```{r}
+Abar.rep <- rspde.make.A(
+  mesh = graph, loc = obs.loc, index = rep(1:200, times = n.rep),
+  repl = rep(1:n.rep, each = 200)
+)
+
+mesh.index.rep <- rspde.make.index(
+  name = "field", mesh = graph,
+  n.repl = n.rep
+)
+```
+
+Let us now create the corresponding `inla.stack` object:
+```{r}
+st.dat.rep <- inla.stack(
+  data = list(y = as.vector(Y.rep), loc=obs.loc),
+  A = Abar.rep,
+  effects = mesh.index.rep
+)
+```
+Observe that we need the response variable `y` to be a vector.
+We can now create the `formula` object, remembering that since we
+gave the name argument `field`, when creating the index, we need to pass
+`field.repl` to the `formula`:
+```{r}
+f.rep <-
+  y ~ -1 + f(field,
+    model = rspde_model,
+    replicate = field.repl
+  )
+```
+We can, finally, fit the model:
+```{r}
+rspde_fit_rep <-
+  inla(f.rep,
+    data = inla.stack.data(st.dat.rep),
+    family = "gaussian",
+    control.predictor =
+      list(A = inla.stack.A(st.dat.rep)),
+            inla.mode = "experimental"
+  )
+```
+
+We can obtain the estimates in the original scale with the `rspde.result()` function:
+```{r}
+  result_fit_rep <- rspde.result(rspde_fit_rep, "field", rspde_model)
+  summary(result_fit_rep)
+```
+Let us compare with the true values of the parameters:
+```{r}
+  result_rep_df <- data.frame(
+    parameter = c("std.dev", "range", "nu"),
+    true = c(sigma, r, nu),
+    mean = c(
+      result_fit_rep$summary.std.dev$mean,
+      result_fit_rep$summary.range$mean,
+      result_fit_rep$summary.nu$mean
+    ),
+    mode = c(
+      result_fit_rep$summary.std.dev$mode,
+      result_fit_rep$summary.range$mode,
+      result_fit_rep$summary.nu$mode
+    )
+  )
+  print(result_rep_df)
+```
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+  posterior_df_fit_rep <- gg_df(result_fit_rep)
+
+  ggplot(posterior_df_fit_rep) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+
+
+## Using `inlabru` implementation
+
+The `inlabru` package allows us to fit models and do kriging in a 
+straighforward manner, without having to handle `A` matrices,
+indices nor `inla.stack` objects. Therefore, we suggest
+the reader to use this implementation when using our
+implementation to fit real data.
+
+We first load the `inlabru` package, and create the `data`
+object containing the response variable `y` and the observation
+locations:
+```{r, message=FALSE}
+    library(inlabru)
+    data_list <- list(y=Y, loc = obs.loc)
+```
+Now we create the component (which is `inlabru`'s formula-like object).
+Observe that we are using the `rspde_model` object created
+with the `rspde.metric_graph()` function.
+```{r}
+    cmp <-
+    y ~ -1 + Intercept(1) + field(loc, model = rspde_model)
+```
+Now, we can directly fit the model:
+```{r}
+  rspde_bru_fit <-
+    bru(cmp,
+        data=data_list,
+      options=list(
+      family = "gaussian",
+      inla.mode = "experimental")
+    )
+```
+Let us now obtain the estimates of the parameters in the
+original scale by using the `rspde.result()` function:
+```{r}
+  result_bru_fit <- rspde.result(rspde_bru_fit, "field", rspde_model)
+  summary(result_bru_fit)
+```
+Let us compare with the true values of the parameters:
+```{r}
+  result_bru_df <- data.frame(
+    parameter = c("std.dev", "range", "nu"),
+    true = c(sigma, r, nu),
+    mean = c(
+      result_bru_fit$summary.std.dev$mean,
+      result_bru_fit$summary.range$mean,
+      result_bru_fit$summary.nu$mean
+    ),
+    mode = c(
+      result_bru_fit$summary.std.dev$mode,
+      result_bru_fit$summary.range$mode,
+      result_bru_fit$summary.nu$mode
+    )
+  )
+  print(result_bru_df)
+```
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+  posterior_df_bru_fit <- gg_df(result_bru_fit)
+
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+### Kriging with the `inlabru` implementation
+
+It is very easy to do kriging with the `inlabru` implementation.
+We simply need to provide the prediction locations to the
+`predict()` method.
+
+In this example we will use the mesh locations:
+```{r}
+  pred_loc <- graph$mesh$VtE
+  data_prd_list <- list(loc = pred_loc)
+```
+Now, we can simply provide these locations to the `predict` method
+along with the fitted object `rspde_bru_fit`:
+```{r}
+  field_pred <- predict(rspde_bru_fit, data=data_prd_list, ~field)
+```
+
+Finally, let us plot the predicted values. To this end 
+we will use the `plot_function()` graph method: 
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+  graph$plot_function_mesh(field_pred$mean, plotly = TRUE)  
+```
+
+## Using inlabru to fit models with replicates
+
+We can also use our `inlabru` implementation to fit models with replicates. We will
+consider the same data that was generated above, where the number of replicates is 30.
+
+We begin by creating the data list containing the responses and the locations:
+```{r}
+   n.rep <- 30
+   obs.loc.rep <- obs.loc
+   for(i in 2:n.rep){
+    obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
+   }
+
+   data_list_rep <- list(y = as.vector(Y.rep),
+                            loc = obs.loc.rep)
+```
+Observe that the response, `y`, needs to be a vector.
+
+Let us now create the vector indexing the replicates:
+```{r}  
+  repl <- rep(1:n.rep, each=200)
+```
+We can now create the component, passing the vector with the indices of the replicates
+as the `replicate` argument:
+```{r}
+  cmp_rep <-
+    y ~ -1 + Intercept(1) + field(obs.loc.rep, model = rspde_model,
+                                    replicate = repl)
+```
+Now, we are ready to fit the model:
+```{r}
+  rspde_bru_fit_rep <-
+    bru(cmp_rep,
+        data=data_list_rep,
+      options=list(
+      family = "gaussian",
+      inla.mode = "experimental")
+    )
+```
+
+We can obtain the estimates in the original scale with the `rspde.result()` function:
+```{r}
+  result_bru_fit_rep <- rspde.result(rspde_bru_fit_rep, "field", rspde_model)
+  summary(result_bru_fit_rep)
+```
+Let us compare with the true values of the parameters:
+```{r}
+  result_bru_rep_df <- data.frame(
+    parameter = c("std.dev", "range", "nu"),
+    true = c(sigma, r, nu),
+    mean = c(
+      result_bru_fit_rep$summary.std.dev$mean,
+      result_bru_fit_rep$summary.range$mean,
+      result_bru_fit_rep$summary.nu$mean
+    ),
+    mode = c(
+      result_bru_fit_rep$summary.std.dev$mode,
+      result_bru_fit_rep$summary.range$mode,
+      result_bru_fit_rep$summary.nu$mode
+    )
+  )
+  print(result_bru_rep_df)
+```
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+  posterior_df_bru_fit_rep <- gg_df(result_bru_fit_rep)
+
+  ggplot(posterior_df_bru_fit_rep) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+
+
+
+
+## References

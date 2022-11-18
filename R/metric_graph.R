@@ -145,6 +145,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   observation_to_vertex = function(){
 
     l <- length(self$PtE[,1])
+    nV_old <- self$nV
     self$PtV <- rep(0,l)
     for(i in 1:l){
         e <- as.vector(self$PtE[i,1])
@@ -170,25 +171,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(!is.null(self$CBobj)) {
       self$buildC(2)
     }
-  },
-
-
-  #' @description Find one Edge correspond to each Vertex (warning very innfeciten implimentation)
-  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
-  VtEfirst = function(){
-    n.V <- dim(self$V)[1]
-    VtE <- matrix(0,n.V, 2)
-
-    for(i in 1:n.V){
-      Ei <- which(self$E[,1]==i)[1]
-      pos <- 0
-      if(is.na(Ei)==1){
-        pos <- 1
-        Ei <- which(self$E[,2]==i)[1]
-      }
-      VtE[i,] <- c(Ei, pos)
-    }
-    return(VtE)
+    self$A <- Diagonal(self$nV)
+    self$A <- self$A[-(1:nV_old),]
   },
 
   #' @description Add observations to the object
@@ -248,9 +232,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
 
 
-  #' @description build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
+  #' @description build Kirchoff constraint matrix from edges, NOT implemented
+  #' for circles (i.e. self closed edges)
   #' @param alpha (int) which type of constraint (currently only 2 implemented)
-  #' @param edge_constraint (bool) if true add constraint on vertices of degree 1.
+  #' @param edge_constraint (bool) if true add constraint on vertices of
+  #' degree 1.
   buildC = function(alpha, edge_constraint=FALSE){
 
     if(alpha==2){
@@ -311,6 +297,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description build mesh object for graph
   #' @param h maximum distance between mesh nodes
   #' @param n maximum number of nodes per edge
+  #' @details The mesh is a list with the objects
+  #' - PtE which contains the mesh locations excluding the original vertices
+  #' - V the verties of the mesh
+  #' - E the edges of the mesh
+  #' - n_e the number of vertices in the mesh per original edge in the graph
+  #' - h_e the mesh width per edge in the graph
+  #' - ind the indices of the vertices in the mesh
+  #' - VtE all mesh locations including the original vertices
   build_mesh = function(h,n=NULL){
 
     self$mesh <- list(PtE = NULL,
@@ -318,26 +312,32 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                       E = NULL,
                       n_e = rep(0,self$nV),
                       h_e = NULL,
-                      ind = 1:self$nV)
+                      ind = 1:self$nV,
+                      VtE = NULL)
 
     self$mesh$V <- self$V
     for (i in 1:dim(self$E)[1]) {
       if (is.null(n)) {
-        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2 #remove boundary points
+        #remove boundary points
+        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2
       } else {
         self$mesh$n_e[i] <- n
       }
       if (self$mesh$n_e[i] > 0) {
-        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)#
+        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
         d.e <- d.e[2:(1+self$mesh$n_e[i])]
-        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]), d.e))
+        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
+                                                    d.e))
 
         self$mesh$h_e <- c(self$mesh$h_e,
-                           rep(self$edge_lengths[i] * d.e[1], self$mesh$n_e[i] + 1))
+                           rep(self$edge_lengths[i] * d.e[1],
+                               self$mesh$n_e[i] + 1))
         if(is.null(self$Lines)) {
           self$mesh$V <- rbind(self$mesh$V,
-                               cbind(self$V[self$E[i,1], 1]*(1 - d.e) + d.e*self$V[self$E[i, 2],1],
-                                     self$V[self$E[i,1], 2]*(1 - d.e) + d.e*self$V[self$E[i, 2],2]))
+                               cbind(self$V[self$E[i,1], 1]*(1 - d.e) +
+                                       d.e*self$V[self$E[i, 2],1],
+                                     self$V[self$E[i,1], 2]*(1 - d.e) +
+                                       d.e*self$V[self$E[i, 2],2]))
         } else {
           Line <- self$Lines[i,]
           val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
@@ -352,8 +352,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$E <- rbind(self$mesh$E, self$E[i, ])
         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
-
     }
+    self$mesh$VtE <- rbind(private$VtEfirst(),self$mesh$PtE)
   },
 
   #' @description build mass and stiffness matrices for given mesh object
@@ -398,6 +398,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
 
   #' @description plot a metric graph
+  #' @param plotly use plot_ly for 3D plot (default FALSE)
   #' @param show show the plot?
   #' @param line_width line width for edges
   #' @param marker_size size of markers for vertices
@@ -406,9 +407,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param data Plot the data?
   #' @param data_size size of markers for data
   #' @param mesh Plot the mesh locations?
-  #' @param fix_layout fix 2D layout for plot
   #' @param ... additional arguments for ggplot or plot_ly
-  #' @return a plotly object
+  #' @return a plot_ly or or ggplot object
   #' @examples
   #' line1 <- Line(rbind(c(0,0),c(1,0)))
   #' line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -421,96 +421,36 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #'                               Lines(list(line4),ID="4")))
   #' graph <- metric_graph$new(Lines = Lines)
   #' graph$plot()
-  plot = function(show = TRUE,
-                  line_width = 1,
-                  marker_size = 1,
-                  vertex_color = 'rgb(0,0,0)',
-                  edge_color = 'rgb(0,0,0)',
+  plot = function(plotly = FALSE,
+                  show = TRUE,
+                  line_width = 0.3,
+                  marker_size = 3,
+                  vertex_color = 'black',
+                  edge_color = 'black',
                   data = FALSE,
                   data_size = 1,
                   mesh = FALSE,
-                  fix_layout = TRUE,
-                  zoom = 1,
                   ...){
-    if(is.null(self$Lines)){
-      data.plot <- data.frame(x = c(self$V[E[,1],1],self$V[E[,2],1]),
-                              y = c(self$V[E[,1],2],self$V[E[,2],2]),
-                              z = rep(0,2 * self$nE),
-                              i = c(1:self$nE, 1:self$nE))
+    if(!plotly){
+      p <- private$plot_2d(show = show,
+                           line_width = line_width,
+                           marker_size = marker_size,
+                           vertex_color = vertex_color,
+                           edge_color = edge_color,
+                           data = data,
+                           data_size = data_size,
+                           mesh = mesh,
+                           ...)
     } else {
-      x <- y <- ei <- NULL
-      for(i in 1:self$nE) {
-        xi <- self$Lines@lines[[i]]@Lines[[1]]@coords[,1]
-        yi <- self$Lines@lines[[i]]@Lines[[1]]@coords[,2]
-        ii <- rep(i,length(xi))
-        x <- c(x,xi)
-        y <- c(y,yi)
-        ei <- c(ei,ii)
-      }
-      data.plot <- data.frame(x = x, y = y,
-                              z = rep(0,length(x)), i = ei)
-    }
-    p <- plot_ly(data=data.plot, x = ~y, y=~x,z=~z)
-    p <- p %>% add_trace(data=data.plot, x = ~y, y=~x, z=~z,
-                         mode="lines",type="scatter3d",
-                         line = list(width = line_width,
-                                     color = edge_color, ...),
-                         split=~i, showlegend=FALSE)
-
-    if(marker_size > 0) {
-      data.plot2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
-      p <- p %>% add_trace(data=data.plot2, x = ~y,y = ~x, z = ~z,
-                           type="scatter3d", mode = "markers",
-                           marker = list(size = marker_size,
-                                         color = vertex_color, ...))
-    }
-
-    if(data){
-      x <- y <- NULL
-      for(i in 1:length(self$y)){
-        Line <- self$Lines[PtE[i,1],]
-        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
-        Point <- gInterpolate(Line, PtE[i,2], normalized=TRUE)
-        x <- c(x, Point@coords[1])
-        y <- c(y, Point@coords[2])
-      }
-      data.plot <- data.frame(x = x, y = y,
-                              z = rep(0,length(x)),
-                              val = self$y)
-      p <- p %>% add_trace(data=data.plot, x = ~y, y = ~x, z = ~z,
-                           type="scatter3d", mode = "markers",
-                           marker = list(size = marker_size,
-                                         color = ~val,
-                                         colorbar=list(title='', len = 0.5),
-                                         colorscale='Viridis'),
-                           showlegend=FALSE)
-    }
-    if (mesh) {
-      data.plot <- data.frame(x = self$mesh$V[,1],
-                              y = self$mesh$V[,2],
-                              z = rep(0,dim(self$mesh$V)[1]))
-      p <- p %>% add_trace(data=data.plot, x = ~y, y = ~x, z = ~z,
-                           type="scatter3d", mode = "markers",
-                           marker = list(size = marker_size/2,
-                                         color = 'rgb(100,100,100)'),
-                           showlegend=FALSE)
-    }
-    xr <- (diff(range(self$V[,1])) + diff(range(self$V[,2])))/zoom
-    if(fix_layout){
-      ax <- list(title = '',
-                 zeroline = FALSE,
-                 showgrid = FALSE,
-                 showticklabels=FALSE)
-      p <- p %>% layout(title = '',
-                        scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
-                                     camera = list(eye = list(x = 0, y = 0, z = -xr),
-                                                   up = list(x=1,y=0,z=0)),
-                                     aspectmode='data'))
-
-    }
-
-    if(show){
-      print(p)
+      p <- private$plot_3d(show = show,
+                           line_width = line_width,
+                           marker_size = marker_size,
+                           vertex_color = vertex_color,
+                           edge_color = edge_color,
+                           data = data,
+                           data_size = data_size,
+                           mesh = mesh,
+                           ...)
     }
     return(p)
   },
@@ -576,7 +516,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description plot function mesh X on the graph
   #' @param X (m x 1) a vector with values for the function
   #' evaluated at a precomputed mesh (V,and PtE)
-  #' @param flat plot in 2D or 3D?
+  #' @param plotly use plot_ly for 3D plot?
   #' @param show show the plot?
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param graph_width for 3D plot, the line width of the graph.
@@ -584,15 +524,21 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
   #' @export
-  plot_function_mesh = function(X, flat = TRUE, show = TRUE,
-                                graph_color = 'rgb(0,0,0)',
+  plot_function_mesh = function(X, plotly = FALSE, show = TRUE,
+                                graph_color = 'black',
                                 graph_width = 1,
                                 marker_size = 10,
                                 color = 'rgb(0,0,200)',
                                 ...){
-    if(flat == FALSE){
-      p <- self$plot(color = graph_color, line_width = graph_width,
-                     marker_size = marker_size, fix_layout = FALSE)
+    if(is.null(self$mesh)) {
+      stop("no mesh provided")
+    }
+    if(length(X) != dim(self$V)[1] + dim(self$mesh$PtE)[1]){
+      stop("X does not have the correct size")
+    }
+    if(plotly){
+      p <- self$plot(plotly = plotly, color = graph_color,
+                     line_width = graph_width, marker_size = marker_size)
     } else {
       p <- NULL
     }
@@ -616,19 +562,17 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       if(is.null(self$Lines) == TRUE) {
         p <- private$plot_straight_curve(vals,
                                          self$V[self$E[i,],],
-                                         flat = flat,
+                                         plotly = plotly,
                                          p = p,
-                                         color = color,
-                                         ...)
+                                         color = color, ...)
 
       } else {
         if(!is.null(vals)){
           p <- private$plot_curve(vals,
                                   SpatialLines(list(self$Lines@lines[[i]])),
-                                  flat = flat,
+                                  plotly = plotly,
                                   p = p,
-                                  color = color,
-                                  ...)
+                                  color = color, ...)
         }
       }
 
@@ -640,7 +584,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   }),
   private = list(
 
-    split_line = function(Ei, t){
+  split_line = function(Ei, t){
       if(!is.null(self$Lines)){
         Line <- self$Lines[Ei,]
 
@@ -750,7 +694,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
   plot_curve = function(data.to.plot,
                         Line_edge,
-                        flat = TRUE,
+                        plotly = TRUE,
                         normalized = TRUE,
                         color = 'rgb(0,0,200)',
                         p = NULL, ...){
@@ -761,14 +705,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     coords <-p2@coords
     data <- data.frame(x = coords[,1], y = coords[,2],
                        z = data.to.plot.order[,2])
-    if(flat){
+    if(!plotly){
       if(is.null(p)){
         p <- ggplot2::ggplot(data = data,
                              ggplot2::aes(x = x, y = y,
                                           colour = z)) +
           ggplot2::geom_path(...)
       } else {
-        p <- p + ggplot2::geom_path(data = data,...)
+        p <- p + ggplot2::geom_path(data = data)
       }
     } else {
       if(is.null(p)){
@@ -787,7 +731,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
   plot_straight_curve = function(data.to.plot,
                                  V,
-                                 flat = FALSE,
+                                 plotly = FALSE,
                                  p = NULL,
                                  line_color,
                                  ...){
@@ -799,7 +743,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                     (1-alpha) * V[1, 2] + alpha * V[2, 2])
     data <- data.frame(x = coords[, 1], y = coords[, 2],
                        z = data.to.plot.order[, 2])
-    if (flat) {
+    if (!plotly) {
       if (is.null(p)) {
         p <- ggplot2::ggplot(data = data,
                              ggplot2::aes(x = x, y = y,
@@ -822,7 +766,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
   PtE_to_mesh = function(PtE){
-    VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
+    VtE <- rbind(private$VtEfirst(),self$mesh$PtE)
     PtE_update <- matrix(0,dim(PtE)[1],2)
     for(i in 1:dim(PtE)[1]) {
       ei <- PtE[i,1]
@@ -858,9 +802,167 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       PtE_update[i,] <- c(e,d)
     }
     return(PtE_update)
+  },
+
+  plot_2d = function(show = TRUE,
+                     line_width = 0.1,
+                     marker_size = 1,
+                     vertex_color = 'black',
+                     data = FALSE,
+                     data_size = 1,
+                     mesh = FALSE,
+                     ...){
+    xyl <- c()
+    if(is.null(self$Lines)){
+      xyl <- cbind(c(self$V[E[,1],1],self$V[E[,2],1]),
+                   c(self$V[E[,1],2],self$V[E[,2],2]),
+                   c(1:self$nE, 1:self$nE))
+    } else {
+      coords <- lapply(coordinates(self$Lines), function(x) x[[1]])
+      nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
+      xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
+      #xyl <- fortify(self$Lines)[,c(1,2,5)]
+    }
+
+    p <- ggplot()+ geom_path(data= data.frame(x=xyl[,1], y=xyl[,2], group=xyl[,3]),
+                             mapping = aes(x=x, y=y, group=group),
+                             linewidth = line_width)
+
+    if(marker_size > 0) {
+      p <- p + geom_point(data=data.frame(x=self$V[,1],y=self$V[,2]),mapping= aes(x, y), colour = vertex_color, size= marker_size)
+    }
+
+    if(data){
+      x <- y <- NULL
+      for(i in 1:length(self$y)){
+        Line <- self$Lines[PtE[i,1],]
+        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
+        Point <- gInterpolate(Line, PtE[i,2], normalized=TRUE)
+        x <- c(x, Point@coords[1])
+        y <- c(y, Point@coords[2])
+      }
+      p <- p + geom_point(data=data.frame(x=x,y=y,val=self$y),
+                          mapping= aes(x, y, color = val),
+                          size= data_size) +
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+
+    }
+    if (mesh) {
+      p <- p + geom_point(data=data.frame(x=self$mesh$V[,1],y=self$mesh$V[,2]),
+                          mapping= aes(x, y), size= marker_size*0.5, pch=21,
+                          colour = "black", fill = "gray")
+    }
+    p <- p + coord_fixed()
+    if(show){
+      print(p)
+    }
+    return(p)
+  },
+  plot_3d = function(show = TRUE,
+                     line_width = 1,
+                     marker_size = 1,
+                     vertex_color = 'rgb(0,0,0)',
+                     edge_color = 'rgb(0,0,0)',
+                     data = FALSE,
+                     data_size = 1,
+                     mesh = FALSE,
+                     ...){
+    if(is.null(self$Lines)){
+      data.plot <- data.frame(x = c(self$V[E[,1],1],self$V[E[,2],1]),
+                              y = c(self$V[E[,1],2],self$V[E[,2],2]),
+                              z = rep(0,2 * self$nE),
+                              i = c(1:self$nE, 1:self$nE))
+    } else {
+      x <- y <- ei <- NULL
+      for(i in 1:self$nE) {
+        xi <- self$Lines@lines[[i]]@Lines[[1]]@coords[,1]
+        yi <- self$Lines@lines[[i]]@Lines[[1]]@coords[,2]
+        ii <- rep(i,length(xi))
+        x <- c(x,xi)
+        y <- c(y,yi)
+        ei <- c(ei,ii)
+      }
+      data.plot <- data.frame(x = x, y = y,
+                              z = rep(0,length(x)), i = ei)
+    }
+    p <- plot_ly(data=data.plot, x = ~y, y=~x,z=~z)
+    p <- p %>% add_trace(data=data.plot, x = ~y, y=~x, z=~z,
+                         mode="lines",type="scatter3d",
+                         line = list(width = line_width,
+                                     color = edge_color, ...),
+                         split=~i, showlegend=FALSE)
+
+    if(marker_size > 0) {
+      data.plot2 <- data.frame(x=self$V[,1],y=self$V[,2],z=rep(0,self$nV))
+      p <- p %>% add_trace(data=data.plot2, x = ~y,y = ~x, z = ~z,
+                           type="scatter3d", mode = "markers",
+                           marker = list(size = marker_size,
+                                         color = vertex_color, ...))
+    }
+
+    if(data){
+      x <- y <- NULL
+      for(i in 1:length(self$y)){
+        Line <- self$Lines[PtE[i,1],]
+        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
+        Point <- gInterpolate(Line, PtE[i,2], normalized=TRUE)
+        x <- c(x, Point@coords[1])
+        y <- c(y, Point@coords[2])
+      }
+      data.plot <- data.frame(x = x, y = y,
+                              z = rep(0,length(x)),
+                              val = self$y)
+      p <- p %>% add_trace(data=data.plot, x = ~y, y = ~x, z = ~z,
+                           type="scatter3d", mode = "markers",
+                           marker = list(size = marker_size,
+                                         color = ~val,
+                                         colorbar=list(title='', len = 0.5),
+                                         colorscale='Viridis'),
+                           showlegend=FALSE)
+    }
+    if (mesh) {
+      data.plot <- data.frame(x = self$mesh$V[,1],
+                              y = self$mesh$V[,2],
+                              z = rep(0,dim(self$mesh$V)[1]))
+      p <- p %>% add_trace(data=data.plot, x = ~y, y = ~x, z = ~z,
+                           type="scatter3d", mode = "markers",
+                           marker = list(size = marker_size/2,
+                                         color = 'rgb(100,100,100)'),
+                           showlegend=FALSE)
+    }
+    xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
+
+    ax <- list(title = '',
+               zeroline = FALSE,
+               showgrid = FALSE,
+               showticklabels=FALSE)
+    p <- p %>% layout(title = '',
+                      scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
+                                   aspectmode='data'))
+
+    if(show){
+      print(p)
+    }
+    return(p)
+  },
+  #' @description Find one Edge correspond to each Vertex (warning very
+  #' inefficient implementation)
+  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+  VtEfirst = function(){
+    n.V <- dim(self$V)[1]
+    VtE <- matrix(0,n.V, 2)
+
+    for(i in 1:n.V){
+      Ei <- which(self$E[,1]==i)[1]
+      pos <- 0
+      if(is.na(Ei)==1){
+        pos <- 1
+        Ei <- which(self$E[,2]==i)[1]
+      }
+      VtE[i,] <- c(Ei, pos)
+    }
+    return(VtE)
   }
-
-
 ))
 
 

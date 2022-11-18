@@ -3,133 +3,232 @@
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph  metric_graph object
 #' @param alpha alpha parameter (1 or 2)
-#' @param obs if TRUE, then the posterior mean is calculated at the observation locations, otherwise
-#' it is computed at the vertices in the graph
-#' @param leave_edge_out if obs=TRUE, then leave_edge_out = TRUE means that the posterior mean
-#' is computed for each observation based on all observations which are not on that edge. If
-#' obs=FALSE, then leave_edge_out = e means that the posterior mean is computed based on all
-#' observations except those on that particular edge.
+#' @param obs if TRUE, then the posterior mean is calculated at the observation
+#' locations, otherwise it is computed at the vertices in the graph
+#' @param leave_edge_out if obs=TRUE, then leave_edge_out = TRUE means that the
+#' posterior mean is computed for each observation based on all observations
+#' which are not on that edge. If obs=FALSE, then leave_edge_out = e means that
+#' the posterior mean is computed based on all observations except those on that
+#' particular edge.
 #' @export
-spde_posterior_mean <- function(theta, graph, alpha = 1, obs = TRUE, leave_edge_out = FALSE) {
-    if (alpha == 1 && obs == TRUE) {
-        return(posterior.mean.obs.exp(theta = theta, graph = graph,
-                                      leave.edge.out = leave_edge_out))
-    } else if (alpha == 2 && obs == TRUE) {
-        return(posterior.mean.obs.matern2(theta = theta, graph = graph,
-                                          leave.edge.out = leave_edge_out))
-    } else if(alpha == 1 && obs == FALSE) {
-        return(posterior.mean.exp(theta = theta, graph = graph,
-                                  rem.edge = leave_edge_out))
-    } else if (alpha == 2 && obs == FALSE) {
-        return(posterior.mean.matern2(theta = theta, graph = graph,
-                                      rem.edge = leave_edge_out))
-    } else {
-        stop("alpha should be 1 or 2")
+spde_posterior_mean <- function(theta,
+                                graph,
+                                alpha = 1,
+                                type = "mesh",
+                                leave_edge_out = FALSE) {
+  if (!(type %in% c("mesh", "obs"))) {
+    stop("Type must be 'mesh' or 'obs'.")
+  }
+  if( type == "mesh" && is.null(graph$mesh)) {
+    stop("mesh must be provided")
+  }
+  if (alpha == 1) {
+    return(posterior_mean_obs_alpha1(theta = theta, graph = graph,
+                                     type = type,
+                                     leave.edge.out = leave_edge_out))
+  } else if (alpha == 2) {
+    if(is.null(graph$CBobj)){
+      graph$buildC(2)
     }
+    return(posterior_mean_obs_alpha2(theta = theta, graph = graph,
+                                     type = type,
+                                     leave.edge.out = leave_edge_out))
+  } else {
+    stop("alpha should be 1 or 2")
+  }
 }
 
-#' Computes the posterior expectation for each observation in the graph
-#' @param theta          - (sigma_e, sigma, kappa)
-#' @param graph      - metric_graph object
-#' @param leave.edge.out - compute the expectation of the graph if the observatrions are not on the edge
-posterior.mean.obs.exp <- function(theta, graph, leave.edge.out = FALSE) {
+#' Computes the posterior mean for the alpha=1 model
+#' @param theta parameters (sigma_e, sigma, kappa)
+#' @param graph metric_graph object
+#' @param type decides where to predict, 'obs' or 'mesh'.
+#' @param leave.edge.out compute the mean of the graph if the observations
+#' are not on the edge
+posterior_mean_obs_alpha1 <- function(theta,
+                                      graph,
+                                      type = "obs",
+                                      leave.edge.out = FALSE) {
 
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
 
-  Qp <- spde_precision(sigma= theta[2], kappa = theta[3], alpha = 1, graph = graph)
+  Qp <- spde_precision(sigma= theta[2], kappa = theta[3],
+                       alpha = 1, graph = graph)
   if(leave.edge.out == FALSE)
-    V.post <- posterior.mean.exp(theta, graph)
+    V.post <- posterior_mean_alpha1(theta, graph)
 
-  y_hat <- rep(0, length(graph$y))
+
   Qpmu <- rep(0, nrow(graph$V))
-  obs.edges <- unique(graph$PtE[,1])
+  if(type == "obs") {
+    y_hat <- rep(0, length(graph$y))
+    obs.edges <- unique(graph$PtE[,1])
+  }  else {
+    y_hat <- rep(0, dim(graph$mesh$PtE)[1])
+    obs.edges <- unique(graph$mesh$PtE[,1])
+  }
+
 
   for (e in obs.edges) {
-
     if(leave.edge.out == TRUE)
-      V.post <- posterior.mean.exp(theta, graph, rem.edge = e)
+      V.post <- posterior_mean_alpha1(theta, graph, rem.edge = e)
 
-    obs.id <- graph$PtE[,1] == e
+    obs.id <- which(graph$PtE[,1] == e)
+    obs.loc <- graph$PtE[obs.id,2]
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    D_matrix <- as.matrix(dist(c(0,l,graph$PtE[obs.id,2])))
-    S <- r_1(D_matrix,kappa = kappa, sigma = sigma)
+    if (type == "obs") {
+      D <- as.matrix(dist(c(0,l, l*obs.loc)))
+      S <- r_1(D,kappa = kappa, sigma = sigma)
 
-    #covariance update see Art p.17
-    E.ind <- c(1:2)
-    Obs.ind <- -E.ind
-    Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
+      E.ind <- c(1:2)
+      Obs.ind <- -E.ind
+      Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
 
-    E <- graph$E[e,]
-    y_hat[obs.id] <- t(Bt)%*%V.post[E]
-    if(leave.edge.out == FALSE){
-      Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
-      Sigma_noise <- Sigma_i
-      diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+      y_hat[obs.id] <- t(Bt) %*% V.post[graph$E[e, ]]
+      if(leave.edge.out == FALSE){
+        Sigma_i <- S[Obs.ind, Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+        Sigma_noise <- Sigma_i
+        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
 
-      y_hat[obs.id] <- y_hat[obs.id] +  Sigma_i%*%solve(Sigma_noise,y_i-y_hat[obs.id] )
+        y_hat[obs.id] <- y_hat[obs.id] + Sigma_i %*% solve(Sigma_noise,
+                                                           y_i-y_hat[obs.id])
+      }
+    } else {
+      pred.id <- graph$mesh$PtE[, 1] == e
+      pred.loc <- graph$mesh$PtE[pred.id,2]
+      D <- as.matrix(dist(c(0,l, l*obs.loc, l*pred.loc)))
+      S <- r_1(D,kappa = kappa, sigma = sigma)
+      E.ind <- c(1:2)
+      Obs.ind <- 2 + seq_len(length(obs.loc))
+      Pred.ind <- 2 + length(obs.loc) + seq_len(length(pred.loc))
+      Bt_p <- solve(S[E.ind, E.ind], S[E.ind, Pred.ind])
+
+      y_hat[pred.id] <- t(Bt_p) %*% V.post[graph$E[e, ]]
+      if(leave.edge.out == FALSE && length(obs.loc)>0){
+        Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
+        Sigma_noise <- S[Obs.ind, Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
+        y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
+                                                           y_i-y_hat[obs.id])
+      }
     }
+
   }
-  return(y_hat)
+  if(type == "obs"){
+    return(y_hat)
+  } else {
+    return(c(V.post,y_hat))
+  }
 }
 
-#' Computes the posterior mean for each observation in the graph based
-#' on the alpha=2 model
+#' Computes the posterior mean for the alpha=2 model
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
 #' @param leave.edge.out compute the expectation of the graph if the
-#' observatrions are not on the edge
-posterior.mean.obs.matern2 <- function(theta, graph, leave.edge.out = FALSE) {
+#' @param type Set to 'obs' for computation at observation locations, or to
+#' 'mesh' for computation at mesh locations.
+posterior_mean_obs_alpha2 <- function(theta,
+                                      graph,
+                                      type = "obs",
+                                      leave.edge.out = FALSE) {
 
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
 
   if(leave.edge.out == FALSE)
-    E.post <- posterior.mean.matern2(theta, graph)
+    E.post <- posterior_mean_alpha2(theta, graph)
 
   y_hat <- rep(0, length(graph$y))
-  obs.edges <- unique(graph$PtE[,1])
+  if(type == "obs") {
+    y_hat <- rep(0, length(graph$y))
+    obs.edges <- unique(graph$PtE[,1])
+  }  else {
+    y_hat <- rep(0, dim(graph$mesh$PtE)[1])
+    obs.edges <- unique(graph$mesh$PtE[,1])
+  }
 
   for(e in obs.edges){
 
     if(leave.edge.out == TRUE)
-      E.post <- posterior.mean.matern2(theta, graph, rem.edge = e)
+      E.post <- posterior_mean_alpha2(theta, graph, rem.edge = e)
 
-    obs.id <- graph$PtE[,1] == e
+    obs.id <- which(graph$PtE[,1] == e)
+    obs.loc <- graph$PtE[obs.id,2]
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    t <- c(0,l,graph$PtE[obs.id,2])
-    D <- outer (t, t, `-`)
-    S <- matrix(0, length(t) + 2, length(t) + 2)
 
-    d.index <- c(1,2)
-    S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
-    S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                kappa = kappa, sigma = sigma,
-                                deriv = 2)
-    S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
-                                 sigma = sigma, deriv = 1)
-    S[-d.index, d.index] <- t(S[d.index, -d.index])
+    if(type == "obs") {
+      t <- c(0,l,l*obs.loc)
+      D <- outer (t, t, `-`)
+      S <- matrix(0, length(t) + 2, length(t) + 2)
 
-    #covariance update see Art p.17
-    E.ind <- c(1:4)
-    Obs.ind <- -E.ind
-    Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
+      d.index <- c(1,2)
+      S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
+      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
+                                  kappa = kappa, sigma = sigma,
+                                  deriv = 2)
+      S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+                                   sigma = sigma, deriv = 1)
+      S[-d.index, d.index] <- t(S[d.index, -d.index])
 
-    u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
-    y_hat[obs.id] <- t(Bt) %*% u_e
-    if (leave.edge.out == FALSE) {
-      Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
-      Sigma_noise  <- Sigma_i
-      diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+      #covariance update see Art p.17
+      E.ind <- c(1:4)
+      Obs.ind <- -E.ind
+      Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
 
-      y_hat[obs.id] <- y_hat[obs.id] + Sigma_i%*%solve(Sigma_noise, y_i - y_hat[obs.id])
+      u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
+      y_hat[obs.id] <- t(Bt) %*% u_e
+      if (leave.edge.out == FALSE) {
+        Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+        Sigma_noise  <- Sigma_i
+        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+
+        y_hat[obs.id] <- y_hat[obs.id] + Sigma_i%*%solve(Sigma_noise, y_i - y_hat[obs.id])
+      }
+    } else {
+      pred.id <- graph$mesh$PtE[, 1] == e
+      pred.loc <- graph$mesh$PtE[pred.id, 2]
+
+      t <- c(0,l,l*obs.loc, l*pred.loc)
+      D <- outer (t, t, `-`)
+      S <- matrix(0, length(t) + 2, length(t) + 2)
+
+      d.index <- c(1,2)
+      S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
+      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
+                                  kappa = kappa, sigma = sigma,
+                                  deriv = 2)
+      S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+                                   sigma = sigma, deriv = 1)
+      S[-d.index, d.index] <- t(S[d.index, -d.index])
+
+      #covariance update see Art p.17
+      E.ind <- c(1:4)
+      Obs.ind <- 4 + seq_len(length(obs.loc))
+      Pred.ind <- 4 + length(obs.loc) + seq_len(length(pred.loc))
+      Bt_p <- solve(S[E.ind, E.ind],S[E.ind, Pred.ind])
+
+      u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
+      y_hat[pred.id] <- t(Bt_p) %*% u_e
+
+      if (leave.edge.out == FALSE && length(obs.loc)>0) {
+        Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
+        Sigma_noise <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
+        y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
+                                                                 y_i-y_hat[obs.id])
+      }
     }
   }
-  return(y_hat)
+  if(type == "obs"){
+    return(y_hat)
+  } else {
+    return(c(E.post[seq(from=1, by = 2, to = dim(E.post)[1])],y_hat))
+  }
 }
 
 
@@ -137,7 +236,7 @@ posterior.mean.obs.matern2 <- function(theta, graph, leave.edge.out = FALSE) {
 #' @param theta     - (sigma_e, sigma, kappa)
 #' @param graph - metric_graph object
 #' @param rem.edge  - remove edge
-posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
+posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
 
   sigma_e <- theta[1]
   sigma <- theta[2]
@@ -148,7 +247,7 @@ posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
   #build BSIGMAB
   Qpmu <- rep(0, graph$nV)
 
-  obs.edges <- graph$nE
+  obs.edges <- unique(graph$PtE[,1])
   if(is.logical(rem.edge) == FALSE)
     obs.edges <- setdiff(obs.edges, rem.edge)
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
@@ -156,7 +255,7 @@ posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
   for (e in obs.edges) {
     y_i <- graph$y[e]
     l <- graph$edge_lengths[e]
-    D_matrix <- as.matrix(dist(c(0, l, graph$PtE[e, 2])))
+    D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[e, 2])))
     S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
 
     #covariance update see Art p.17
@@ -196,8 +295,10 @@ posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
 
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
-  v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Qpmu,system = 'P'), system='L')))
-  Qpmu <- as.vector(Matrix::solve(R,Matrix::solve(R, v,system = 'Lt'), system='Pt'))
+  v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Qpmu,system = 'P'),
+                                 system='L')))
+  Qpmu <- as.vector(Matrix::solve(R,Matrix::solve(R, v,system = 'Lt'),
+                                  system='Pt'))
 
   return(Qpmu)
 
@@ -206,7 +307,7 @@ posterior.mean.exp <- function(theta, graph, rem.edge = FALSE) {
 #' Computes the posterior mean for alpha = 2
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
-posterior.mean.matern2 <- function(theta, graph, rem.edge = NULL) {
+posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
 
   sigma_e <- theta[1]
   sigma <- theta[2]
@@ -365,3 +466,4 @@ posterior.mean.matern2 <- function(theta, graph, rem.edge = NULL) {
 
   return(t(Tc)%*%Qpmu)
 }
+
