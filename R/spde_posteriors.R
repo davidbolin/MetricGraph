@@ -260,9 +260,10 @@ posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
   count <- 0
   for (e in obs.edges) {
-    y_i <- graph$y[e]
+    obs.id <- graph$PtE[,1] == e
+    y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[e, 2])))
+    D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
     S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
 
     #covariance update see Art p.17
