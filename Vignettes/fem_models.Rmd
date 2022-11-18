@@ -79,7 +79,7 @@ To construct a FEM approximation of a Whittle--Matérn field with general smooth
 we must first construct a mesh on the graph. 
 ```{r}
   graph$build_mesh(h = 0.5)
-  graph$plot(mesh=TRUE,line_width = 0.5, marker_size = 3, show = FALSE)
+  graph$plot(mesh=TRUE, show = FALSE)
 ```
 
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in
