@@ -168,25 +168,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
   },
 
-
-  #' @description Find one Edge correspond to each Vertex (warning very innfeciten implimentation)
-  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
-  VtEfirst = function(){
-    n.V <- dim(self$V)[1]
-    VtE <- matrix(0,n.V, 2)
-
-    for(i in 1:n.V){
-      Ei <- which(self$E[,1]==i)[1]
-      pos <- 0
-      if(is.na(Ei)==1){
-        pos <- 1
-        Ei <- which(self$E[,2]==i)[1]
-      }
-      VtE[i,] <- c(Ei, pos)
-    }
-    return(VtE)
-  },
-
   #' @description Add observations to the object
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y        (n x 1) the value of the observations
@@ -244,9 +225,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
 
 
-  #' @description build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
+  #' @description build Kirchoff constraint matrix from edges, NOT implemented
+  #' for circles (i.e. self closed edges)
   #' @param alpha (int) which type of constraint (currently only 2 implemented)
-  #' @param edge_constraint (bool) if true add constraint on vertices of degree 1.
+  #' @param edge_constraint (bool) if true add constraint on vertices of
+  #' degree 1.
   buildC = function(alpha, edge_constraint=FALSE){
 
     if(alpha==2){
@@ -307,6 +290,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description build mesh object for graph
   #' @param h maximum distance between mesh nodes
   #' @param n maximum number of nodes per edge
+  #' @details The mesh is a list with the objects
+  #' - PtE which contains the mesh locations excluding the original vertices
+  #' - V the verties of the mesh
+  #' - E the edges of the mesh
+  #' - n_e the number of vertices in the mesh per original edge in the graph
+  #' - h_e the mesh width per edge in the graph
+  #' - ind the indices of the vertices in the mesh
+  #' - VtE all mesh locations including the original vertices
   build_mesh = function(h,n=NULL){
 
     self$mesh <- list(PtE = NULL,
@@ -314,26 +305,32 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                       E = NULL,
                       n_e = rep(0,self$nV),
                       h_e = NULL,
-                      ind = 1:self$nV)
+                      ind = 1:self$nV,
+                      VtE = NULL)
 
     self$mesh$V <- self$V
     for (i in 1:dim(self$E)[1]) {
       if (is.null(n)) {
-        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2 #remove boundary points
+        #remove boundary points
+        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2
       } else {
         self$mesh$n_e[i] <- n
       }
       if (self$mesh$n_e[i] > 0) {
-        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)#
+        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
         d.e <- d.e[2:(1+self$mesh$n_e[i])]
-        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]), d.e))
+        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
+                                                    d.e))
 
         self$mesh$h_e <- c(self$mesh$h_e,
-                           rep(self$edge_lengths[i] * d.e[1], self$mesh$n_e[i] + 1))
+                           rep(self$edge_lengths[i] * d.e[1],
+                               self$mesh$n_e[i] + 1))
         if(is.null(self$Lines)) {
           self$mesh$V <- rbind(self$mesh$V,
-                               cbind(self$V[self$E[i,1], 1]*(1 - d.e) + d.e*self$V[self$E[i, 2],1],
-                                     self$V[self$E[i,1], 2]*(1 - d.e) + d.e*self$V[self$E[i, 2],2]))
+                               cbind(self$V[self$E[i,1], 1]*(1 - d.e) +
+                                       d.e*self$V[self$E[i, 2],1],
+                                     self$V[self$E[i,1], 2]*(1 - d.e) +
+                                       d.e*self$V[self$E[i, 2],2]))
         } else {
           Line <- self$Lines[i,]
           val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
@@ -348,8 +345,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$E <- rbind(self$mesh$E, self$E[i, ])
         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
-
     }
+    self$mesh$VtE <- rbind(private$VtEfirst(),self$mesh$PtE)
   },
 
   #' @description build mass and stiffness matrices for given mesh object
@@ -419,8 +416,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' graph$plot()
   plot = function(plotly = FALSE,
                   show = TRUE,
-                  line_width = 1,
-                  marker_size = 1,
+                  line_width = 0.3,
+                  marker_size = 3,
                   vertex_color = 'black',
                   edge_color = 'black',
                   data = FALSE,
@@ -762,7 +759,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
   PtE_to_mesh = function(PtE){
-    VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
+    VtE <- rbind(private$VtEfirst(),self$mesh$PtE)
     PtE_update <- matrix(0,dim(PtE)[1],2)
     for(i in 1:dim(PtE)[1]) {
       ei <- PtE[i,1]
@@ -839,14 +836,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }
       p <- p + geom_point(data=data.frame(x=x,y=y,val=self$y),
                           mapping= aes(x, y, color = val),
-                          size= data_size) + scale_colour_gradientn(colours = viridis(100),
-                                                                    guide_legend(title = ""))
+                          size= data_size) +
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
     if (mesh) {
       p <- p + geom_point(data=data.frame(x=self$mesh$V[,1],y=self$mesh$V[,2]),
-                          mapping= aes(x, y), size= marker_size/2,
-                          colour = "gray")
+                          mapping= aes(x, y), size= marker_size*0.5, pch=21,
+                          colour = "black", fill = "gray")
     }
     p <- p + coord_fixed()
     if(show){
@@ -940,6 +937,24 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       print(p)
     }
     return(p)
+  },
+  #' @description Find one Edge correspond to each Vertex (warning very
+  #' inefficient implementation)
+  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+  VtEfirst = function(){
+    n.V <- dim(self$V)[1]
+    VtE <- matrix(0,n.V, 2)
+
+    for(i in 1:n.V){
+      Ei <- which(self$E[,1]==i)[1]
+      pos <- 0
+      if(is.na(Ei)==1){
+        pos <- 1
+        Ei <- which(self$E[,2]==i)[1]
+      }
+      VtE[i,] <- c(Ei, pos)
+    }
+    return(VtE)
   }
 ))
 
