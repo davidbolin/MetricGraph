@@ -72,6 +72,26 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   j_ <- j_[idx_sub]
   i_ <- i_[idx_sub]
 
+  graph_matrix_1 <- cbind(i_, j_)
+  graph_matrix <- unique(graph_matrix_1)
+
+  count_idx <- numeric(nrow(graph_matrix))
+
+  row_tmp <- 1
+  for(i in 1:nrow(graph_matrix)){
+    count_tmp <- 0
+    j <- row_tmp
+    while(j <= nrow(graph_matrix_1) && all(graph_matrix[i,]==graph_matrix_1[j,])){
+      count_tmp <- count_tmp + 1
+      j <- j + 1
+    }
+    row_tmp <- j
+    count_idx[i] <- count_tmp
+  }
+
+  i_ <- graph_matrix[,1]
+  j_ <- graph_matrix[,2]
+
   idx_ij <- idx_ij[idx_sub]
   idx_ij <- sort(idx_ij, index.return=TRUE)
   idx_ij <- idx_ij$ix
@@ -118,6 +138,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
             prec_graph_i = as.integer(i_),
             prec_graph_j = as.integer(j_),
             index_graph = as.integer(idx_ij),
+            count_idx = as.integer(count_idx),
             EtV2 = EtV2,
             EtV3 = EtV3,
             El = El,
@@ -133,6 +154,18 @@ class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
 }
 
+
+graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
+   
+    n.spde <- dim(graph$V)[1]
+    name.group <- paste(name, ".group", sep = "")
+    name.repl <- paste(name, ".repl", sep = "")
+    out <- list()
+    out[[name]] <- rep(rep(1:n.spde, times = n.group), times = n.repl)
+    out[[name.group]] <- rep(rep(1:n.group, each = n.spde), times = n.repl)
+    out[[name.repl]] <- rep(1:n.repl, each = n.spde * n.group)
+    return(out)
+}
 
 
 #'

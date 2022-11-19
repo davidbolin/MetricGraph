@@ -10,10 +10,10 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
   double c1, c2, c_1, c_2, one_m_c2, l_e;
 
-  int N, M, i, k;
+  int N, M, i, j, k;
   
   // the size of the model
-  assert(data->n_ints == 6);
+  assert(data->n_ints == 7);
 
   // the number of doubles
   assert(data->n_doubles == 9);
@@ -39,10 +39,14 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
   assert(!strcasecmp(data->ints[4]->name, "index_graph"));
   inla_cgeneric_vec_tp *idx_ij = data->ints[4];
-  assert(M == idx_ij->len);
+  int M_full = idx_ij->len;
 
-  assert(!strcasecmp(data->ints[5]->name, "stationary_endpoints"));
-  inla_cgeneric_vec_tp *stationary_endpoints = data->ints[5];
+  assert(!strcasecmp(data->ints[5]->name, "count_idx"));
+  inla_cgeneric_vec_tp *count_idx = data->ints[5];
+  assert(M == count_idx->len);
+
+  assert(!strcasecmp(data->ints[6]->name, "stationary_endpoints"));
+  inla_cgeneric_vec_tp *stationary_endpoints = data->ints[6];
 
   assert(!strcasecmp(data->doubles[0]->name, "EtV2"));
   inla_cgeneric_vec_tp *EtV2 = data->doubles[0];
@@ -78,8 +82,8 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
   if (theta) {
     // interpretable parameters 
-    lkappa = theta[0];
-    lsigma = theta[1];
+    lsigma = theta[0];
+    lkappa = theta[1];
     kappa = exp(lkappa);
     sigma = exp(lsigma);
   }
@@ -117,41 +121,88 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
       ret[0] = -1;		/* REQUIRED */
       ret[1] = M;		/* REQUIRED */
 
-    int count=0;
-    for(i = 0; i < nE; i++){
-      l_e = El->doubles[i];
-      c1 = exp(-kappa*l_e);
-      c2 = SQR(c1);
-      one_m_c2 = 1-c2;
-      c_1 = 0.5 + c2/one_m_c2;
-      c_2 = -c1/one_m_c2;
+      double *raw_entries;
+      raw_entries = Calloc(M_full, double);
 
-      if(EtV2->doubles[i] != EtV3->doubles[i]){
+      // int count=0;
+      //     for(i = 0; i < nE; i++){
+      //       l_e = El->doubles[i];
+      //       c1 = exp(-kappa*l_e);
+      //       c2 = SQR(c1);
+      //       one_m_c2 = 1-c2;
+      //       c_1 = 0.5 + c2/one_m_c2;
+      //       c_2 = -c1/one_m_c2;
 
-      ret[k + idx_ij->ints[count]] = c_1;
-      ret[k + idx_ij->ints[count + 1]] = c_1;
-      ret[k + idx_ij->ints[count + 2]] = c_2;
-      count += 3;
-    }else{
-      ret[k + idx_ij->ints[count]] = tanh(0.5 * kappa * l_e);
-      count++;
-    }
-  }
+      //       if(EtV2->doubles[i] != EtV3->doubles[i]){
+            
+      //       ret[k + idx_ij->ints[count]] = c_1;
+      //       ret[k + idx_ij->ints[count + 1]] = c_1;
+      //       ret[k + idx_ij->ints[count + 2]] = c_2;
+      //       count += 3;
+      //     }else{
+      //       ret[k + idx_ij->ints[count]] = tanh(0.5 * kappa * l_e);
+      //       count++;
+      //     }
+      //   }
 
-  if(stationary_endpoints->ints[0]>=0){
-    int stat_endpt_len = stationary_endpoints->len;
-    for(i = 0; i < stat_endpt_len; i++){
-      ret[k+idx_ij->ints[count+i]] = 0.5;
-    }
-    count += stat_endpt_len;
-  }
+      //   if(stationary_endpoints->ints[0]>=0){
+      //     int stat_endpt_len = stationary_endpoints->len;
+      //     for(i = 0; i < stat_endpt_len; i++){
+      //       ret[k+idx_ij->ints[count+i]] = 0.5;
+      //     }
+      //     count += stat_endpt_len;
+      //   }
 
-  assert(count == M);
+      //   assert(count == M);
 
-  double fact = 2*kappa / (pow(sigma,2));
+      //   double fact = 2*kappa / (pow(sigma,2));
 
-  int one=1;
-  dscal_(&M, &fact, &ret[k], &one);
+      //   int one=1;
+      //   dscal_(&M, &fact, &ret[k], &one);
+    
+       int count=0;
+          for(i = 0; i < nE; i++){
+            l_e = El->doubles[i];
+            c1 = exp(-kappa*l_e);
+            c2 = SQR(c1);
+            one_m_c2 = 1-c2;
+            c_1 = 0.5 + c2/one_m_c2;
+            c_2 = -c1/one_m_c2;
+
+            if(EtV2->doubles[i] != EtV3->doubles[i]){
+            
+            raw_entries[idx_ij->ints[count]] = c_1;
+            raw_entries[idx_ij->ints[count + 1]] = c_1;
+            raw_entries[idx_ij->ints[count + 2]] = c_2;
+            count += 3;
+          }else{
+            raw_entries[idx_ij->ints[count]] = tanh(0.5 * kappa * l_e);
+            count++;
+          }
+        }
+
+        if(stationary_endpoints->ints[0]>=0){
+          int stat_endpt_len = stationary_endpoints->len;
+          for(i = 0; i < stat_endpt_len; i++){
+            raw_entries[idx_ij->ints[count+i]] = 0.5;
+          }
+          count += stat_endpt_len;
+        }
+
+        assert(count == M_full);
+
+        double fact = 2*kappa / (pow(sigma,2));
+
+        int one=1;
+        dscal_(&M, &fact, &raw_entries[0], &one);
+
+        count = 0;
+        for(i = 0; i < M; i++){
+          for(j = 0; j < count_idx->ints[i]; j++){
+            ret[k + i] += raw_entries[count];
+            count++;
+          }
+        }
 
       break;
     }
@@ -169,8 +220,8 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
       // where P is the number of hyperparameters     
       ret = Calloc(3, double);
       ret[0] = 2;
-      ret[1] = start_lkappa;
-      ret[2] = start_lsigma;
+      ret[1] = start_lsigma;
+      ret[2] = start_lkappa;
       break;
     }
     

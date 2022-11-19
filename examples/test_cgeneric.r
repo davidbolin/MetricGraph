@@ -89,7 +89,7 @@ spde_bru_fit <-
 
 
 
-spde.index <- inla.spde.make.index(name="field", n.spde = nrow(Q))
+spde.index <- graph_spde_make_index(name="field", graph=graph)
 
 stk.dat <- inla.stack(data = list(y=as.vector(y)), 
                         A = A, 
@@ -102,3 +102,19 @@ f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
 inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
 
+
+
+
+i_ = spde_model$f$cgeneric$data$ints$prec_graph_i+1
+j_ = spde_model$f$cgeneric$data$ints$prec_graph_j +1
+
+tmp_graph <- sparseMatrix(i = spde_model$f$cgeneric$data$ints$prec_graph_i+1,
+j = spde_model$f$cgeneric$data$ints$prec_graph_j +1)
+tmp_graph <- inla.as.sparse(tmp_graph)
+ii <- tmp_graph@i
+tmp_graph@i <- tmp_graph@j
+tmp_graph@j <- ii
+idx <- which(tmp_graph@i <= tmp_graph@j)
+tmp_graph@i <- tmp_graph@i[idx]
+tmp_graph@j <- tmp_graph@j[idx]
+A@x <- A@x[idx]
