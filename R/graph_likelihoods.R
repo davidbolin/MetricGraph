@@ -30,7 +30,7 @@ likelihood_alpha2 <- function(theta, graph) {
 
   n_const <- length(graph$CBobj$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const,]
+  Tc <- graph$CBobj$T[-ind.const, ]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph)
   R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc),
@@ -47,7 +47,7 @@ likelihood_alpha2 <- function(theta, graph) {
     obs.id <- graph$PtE[,1] == e
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    t <- c(0,l,graph$PtE[obs.id,2])
+    t <- c(0, l, l*graph$PtE[obs.id,2])
 
     D <- outer (t, t, `-`)
     S <- matrix(0, length(t) + 2, length(t) + 2)
@@ -172,7 +172,8 @@ likelihood_alpha2 <- function(theta, graph) {
   R <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
   loglik <- loglik - Matrix::determinant(R)$modulus[1]
 
-  v <- c(as.matrix(Matrix::solve(R, Matrix::solve(R, Tc%*%Qpmu, system = 'P'), system='L')))
+  v <- c(as.matrix(Matrix::solve(R, Matrix::solve(R, Tc%*%Qpmu, system = 'P'),
+                                 system='L')))
 
   n.o <- length(graph$y)
   loglik <- loglik + 0.5  * t(v) %*% v  - 0.5 * n.o * log(2 * pi)
@@ -192,7 +193,8 @@ likelihood_alpha2 <- function(theta, graph) {
 likelihood_alpha1_v2 <- function(theta, graph) {
   sigma_e <- theta[1]
   #build Q
-  Q <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 1, graph = graph)
+  Q <- spde_precision(kappa = theta[3], sigma = theta[2],
+                      alpha = 1, graph = graph)
   A <- Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
   Q.p <- Q  + t(A) %*% A / sigma_e^2
   mu.p <- solve(Q.p, as.vector(t(A) %*% graph$y/sigma_e^2))
@@ -203,7 +205,8 @@ likelihood_alpha1_v2 <- function(theta, graph) {
   n.o <- length(graph$y)
   l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o * log(sigma_e)
   v <- graph$y  - A %*% mu.p
-  l <- l - 0.5*(t(mu.p) %*% Q %*% mu.p + t(v) %*% v / sigma_e^2) - 0.5 * n.o * log(2*pi)
+  l <- l - 0.5*(t(mu.p) %*% Q %*% mu.p + t(v) %*% v / sigma_e^2) -
+    0.5 * n.o * log(2*pi)
   return(as.double(l))
 }
 
@@ -220,9 +223,10 @@ likelihood_alpha1 <- function(theta, graph) {
   Qp <- Matrix::sparseMatrix(i = Q.list$i,
                              j = Q.list$j,
                              x = Q.list$x,
-                             dims=Q.list$dims)
+                             dims = Q.list$dims)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
   loglik <- Matrix::determinant(R)$modulus[1]
+
   #build BSIGMAB
   Qpmu <- rep(0, nrow(graph$V))
   obs.edges <- unique(graph$PtE[, 1])
@@ -234,14 +238,15 @@ likelihood_alpha1 <- function(theta, graph) {
     obs.id <- graph$PtE[,1] == e
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    D_matrix <- as.matrix(dist(c(0, l, graph$PtE[obs.id, 2])))
+    D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
     S <- r_1(D_matrix, kappa = theta[3], sigma = theta[2])
 
     #covariance update see Art p.17
     E.ind <- c(1:2)
     Obs.ind <- -E.ind
     Bt <- solve(S[E.ind, E.ind, drop = FALSE], S[E.ind, Obs.ind, drop = FALSE])
-    Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+    Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+      S[Obs.ind, E.ind, drop = FALSE] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
     R <- chol(Sigma_i)
     Sigma_iB <- solve(Sigma_i, t(Bt))
@@ -262,7 +267,7 @@ likelihood_alpha1 <- function(theta, graph) {
       count <- count + 4
     }
 
-    loglik <- loglik - 0.5  * t(y_i) %*% solve(Sigma_i, y_i)
+    loglik <- loglik - 0.5 * t(y_i) %*% solve(Sigma_i, y_i)
     loglik <- loglik - sum(log(diag(R)))
   }
 
@@ -298,20 +303,22 @@ likelihood_alpha1 <- function(theta, graph) {
 likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
   #build covariance matrix
-  if(model == "alpha1"){
+  if (model == "alpha1") {
 
-    Q <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 1, graph = graph)
+    Q <- spde_precision(kappa = theta[3], sigma = theta[2],
+                        alpha = 1, graph = graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
-  } else if (model == "alpha2"){
-
+  } else if (model == "alpha2") {
     n.c <- 1:length(graph$CBobj$S)
     Q <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 2,
                         graph = graph, BC = 1)
     Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
     Qtilde <- Qtilde[-n.c,-n.c]
-    Sigma.overdetermined  = t(graph$CBobj$T[-n.c,]) %*% solve(Qtilde) %*% (graph$CBobj$T[-n.c,])
-    index.obs <- 4 * (graph$PtE[,1] - 1) + 1.0 * (abs(graph$PtE[, 2]) < 1e-14) + 3.0 * (abs(graph$PtE[, 2]) > 1e-14)
+    Sigma.overdetermined  = t(graph$CBobj$T[-n.c,]) %*% solve(Qtilde) %*%
+      (graph$CBobj$T[-n.c,])
+    index.obs <- 4 * (graph$PtE[,1] - 1) + 1.0 * (abs(graph$PtE[, 2]) < 1e-14) +
+      3.0 * (abs(graph$PtE[, 2]) > 1e-14)
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
   } else if (model == "GL"){
@@ -322,7 +329,8 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
     Q <- Q %*% Q
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
-    Sigma <- as.matrix(theta[2]^2 * exp(-theta[3] * graph$res.dist[graph$PtV, graph$PtV]))
+    Sigma <- as.matrix(theta[2]^2 * exp(-theta[3] * graph$res.dist[graph$PtV,
+                                                                   graph$PtV]))
   } else {
     stop("wrong model choice.")
   }
@@ -330,7 +338,8 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
   diag(Sigma) <- diag(Sigma)  +  theta[1]^2
 
   R <- chol(Sigma)
-  return(as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) - length(graph$y)*log(2*pi)/2))
+  return(as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) -
+                     length(graph$y)*log(2*pi)/2))
 }
 
 

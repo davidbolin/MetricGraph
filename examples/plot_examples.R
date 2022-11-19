@@ -16,11 +16,11 @@ graph$plot()
 kappa <- 10
 sigma <- 2
 C <- covariance_alpha1(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph, n.p = 50)
-gg <- graph$plot_function(C, flat = FALSE)
+gg <- graph$plot_function(C, plotly = FALSE)
 gg <- graph$plot_function(C)
 
 C <- covariance_alpha2(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph, n.p = 50)
-gg <- graph$plot_function(C, flat = FALSE)
+gg <- graph$plot_function(C, plotly = FALSE)
 
 y <- c(1,2,3)
 PtE <- matrix(c(1, 2, 3, 0.5, 0.5, 0.7),3,2)
@@ -58,4 +58,7 @@ graph$plot()
 kappa <- 10
 sigma <- 2
 C <- covariance_alpha2(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph, n.p = 50)
-gg <- graph$plot_function(C, flat = FALSE)
+gg <- graph$plot_function(C, plotly = FALSE)
+
+library(Matrix)
+#fix plot function

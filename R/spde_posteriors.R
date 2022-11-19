@@ -148,7 +148,7 @@ posterior_mean_obs_alpha2 <- function(theta,
     E.post <- posterior_mean_alpha2(theta, graph)
 
   y_hat <- rep(0, length(graph$y))
-  if(type == "obs") {
+  if (type == "obs") {
     y_hat <- rep(0, length(graph$y))
     obs.edges <- unique(graph$PtE[,1])
   }  else {
@@ -161,38 +161,40 @@ posterior_mean_obs_alpha2 <- function(theta,
     if(leave.edge.out == TRUE)
       E.post <- posterior_mean_alpha2(theta, graph, rem.edge = e)
 
-    obs.id <- which(graph$PtE[,1] == e)
-    obs.loc <- graph$PtE[obs.id,2]
+    obs.id <- which(graph$PtE[, 1] == e)
+    obs.loc <- graph$PtE[obs.id, 2]
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
 
     if(type == "obs") {
-      t <- c(0,l,l*obs.loc)
+      t <- c(0, l, l * obs.loc)
       D <- outer (t, t, `-`)
       S <- matrix(0, length(t) + 2, length(t) + 2)
 
-      d.index <- c(1,2)
+      d.index <- c(1, 2)
       S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
-      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
+      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0, l))),
                                   kappa = kappa, sigma = sigma,
                                   deriv = 2)
-      S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+      S[d.index, -d.index] <- -r_2(D[1:2, ], kappa = kappa,
                                    sigma = sigma, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 
       #covariance update see Art p.17
       E.ind <- c(1:4)
       Obs.ind <- -E.ind
-      Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
+      Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
 
       u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
       y_hat[obs.id] <- t(Bt) %*% u_e
       if (leave.edge.out == FALSE) {
-        Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+        Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+          S[Obs.ind, E.ind, drop = FALSE] %*% Bt
         Sigma_noise  <- Sigma_i
         diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
 
-        y_hat[obs.id] <- y_hat[obs.id] + Sigma_i%*%solve(Sigma_noise, y_i - y_hat[obs.id])
+        y_hat[obs.id] <- y_hat[obs.id] + Sigma_i%*%solve(Sigma_noise,
+                                                         y_i - y_hat[obs.id])
       }
     } else {
       pred.id <- graph$mesh$PtE[, 1] == e
@@ -222,11 +224,12 @@ posterior_mean_obs_alpha2 <- function(theta,
 
       if (leave.edge.out == FALSE && length(obs.loc)>0) {
         Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
-        Sigma_noise <- S[Obs.ind, Obs.ind, drop = FALSE] - S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+        Sigma_noise <- S[Obs.ind, Obs.ind, drop = FALSE] -
+          S[Obs.ind, E.ind, drop = FALSE] %*% Bt
         diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
         Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
         y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
-                                                                 y_i-y_hat[obs.id])
+                                                                 y_i - y_hat[obs.id])
       }
     }
   }
@@ -324,26 +327,27 @@ posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
   n_const <- length(graph$CBobj$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CBobj$T[-ind.const,]
-  Q <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 2, graph = graph)
+  Q <- spde_precision(kappa = theta[3], sigma = theta[2],
+                      alpha = 2, graph = graph)
 
   #build BSIGMAB
-  Qpmu <- rep(0, 4*graph$nE)
-  obs.edges <- unique(graph$PtE[,1])
+  Qpmu <- rep(0, 4 * graph$nE)
+  obs.edges <- unique(graph$PtE[, 1])
   if(is.logical(rem.edge) == FALSE)
     obs.edges <- setdiff(obs.edges, rem.edge)
 
-  i_ <- j_ <- x_ <- rep(0,16*length(obs.edges))
+  i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
   count <- 0
-  for(e in obs.edges){
-    obs.id <- graph$PtE[,1] == e
+  for (e in obs.edges) {
+    obs.id <- graph$PtE[, 1] == e
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    t <- c(0,l,graph$PtE[obs.id,2])
+    t <- c(0, l, l * graph$PtE[obs.id, 2])
 
     D <- outer (t, t, `-`)
     S <- matrix(0, length(t) + 2, length(t) + 2)
 
-    d.index <- c(1,2)
+    d.index <- c(1, 2)
     S[-d.index, -d.index] <- r_2(D, kappa = kappa,
                                  sigma = sigma, deriv = 0)
     S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
