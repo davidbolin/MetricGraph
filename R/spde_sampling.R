@@ -4,30 +4,73 @@
 #' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 #' in the graph,  where \eqn{e_i} are independent standard Gaussian variables.
 #' @param kappa parameter kappa
-#' @param theta parameter theta
+#' @param sigma parameter sigma
 #' @param sigma_e parameter sigma_e
+#' @param graph metric_graph object
+#' @param PtE matrix with locations (edge, normalized distance on edge) to
+#' sample from
+#' @param type If manual is set, then sampling is done at the locations
+#' specified in PtE. Set to "mesh" for simulation at mesh nodes, and to "obs"
+#' for simulation at observation locations.
 #' @param posterior sample conditionally on the observations?
-#' @param u sample evaluated at the mesh nodes in the graph
+#' @return sample evaluated at the mesh nodes in the graph
 #' @export
-sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
-                             posterior = FALSE) {
+sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
+                        PtE = NULL,
+                        type = "manual", posterior = FALSE) {
+
+  if (!(type %in% c("manual","obs", "mesh"))) {
+    stop("Type must be 'manual', 'obs' or 'mesh'.")
+  }
+  if(type == "mesh" && is.null(graph$mesh)) {
+    stop("No mesh provided in the graph object.")
+  }
+  if (type == "obs" && is.null(graph$PtE)) {
+    stop("no observation locations in mesh object.")
+  }
+  if(is.null(PtE) && type == "manual") {
+    stop("must provide PtE for manual mode.")
+  }
+  if(!is.null(PtE) && !(type == "manual")) {
+    warning("PtE provided but mode is not manual.")
+  }
 
   if (!posterior) {
     if (alpha == 1) {
-      Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 1, graph = graph)
+      Q <- spde_precision(kappa = kappa, sigma = sigma,
+                          alpha = 1, graph = graph)
       R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
-      V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV), system = 'Lt'), system = 'Pt'))
-      u <- V0
+      V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV),
+                                     system = 'Lt'), system = 'Pt'))
 
-      inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
+
+      if(type == "mesh") {
+        u <- V0
+        inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
+      } else if (type == "obs") {
+        u <- NULL
+        inds_PtE <- sort(unique(graph$PtE[,1]))
+      } else {
+        u <- NULL
+        inds_PtE <- sort(unique(PtE[,1]))
+      }
+
       for (i in inds_PtE) {
-        t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+        if(type == "mesh") {
+          t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
+        } else if (type == "obs") {
+          t <- graph$PtE[graph$PtE[,1] == i, 2]
+        } else {
+          t <- PtE[PtE[,1] == i, 2]
+        }
+
         samp <- sample_alpha1_line(kappa = kappa, sigma = sigma,
                                    u_e = V0[graph$E[i, ]], t = t,
                                    l_e = graph$edge_lengths[i])
         u <- c(u, samp[,2])
       }
     } else if (alpha == 2) {
+
       Q <- spde_precision(kappa = kappa, sigma = sigma,
                           alpha = 2, graph = graph, BC = 1)
       if(is.null(graph$C))
@@ -37,14 +80,30 @@ sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
       Qtilde <- Qmod[-c(1:dim(graph$CBobj$U)[1]),-c(1:dim(graph$CBobj$U)[1])]
       R <- Cholesky(forceSymmetric(Qtilde),LDL = FALSE, perm = TRUE)
       V0 <- as.vector(solve(R, solve(R,rnorm(4*graph$nV - dim(graph$CBobj$U)[1]),
-                                     system = 'Lt')
-                            , system = 'Pt'))
+                                     system = 'Lt'), system = 'Pt'))
       u_e <- t(graph$CBobj$T) %*% c(rep(0, dim(graph$CBobj$U)[1]), V0)
       VtE <- graph$VtEfirst()
-      u <- u_e[ 4*(VtE[,1]-1)  + 1 + 2 * VtE[,2]]
-      inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
+
+
+      if(type == "mesh") {
+        u <- V0
+        inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
+      } else if (type == "obs") {
+        u <- NULL
+        inds_PtE <- sort(unique(graph$PtE[,1]))
+      } else {
+        u <- NULL
+        inds_PtE <- sort(unique(PtE[,1]))
+      }
+
       for (i in inds_PtE) {
-        t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+        if(type == "mesh") {
+          t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
+        } else if (type == "obs") {
+          t <- graph$PtE[graph$PtE[,1] == i, 2]
+        } else {
+          t <- PtE[PtE[,1] == i, 2]
+        }
         samp <- sample_alpha2_line(kappa = kappa, sigma = sigma,
                                    sigma_e = sigma_e,
                                    u_e = u_e[4*(i-1) +1:4],
@@ -77,7 +136,6 @@ sample_spde_mesh <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 #' @param  py  (n x 1) observation locations
 #' @param  y (n x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
-#' @export
 sample_alpha1_line <- function(kappa, sigma, sigma_e,
                                u_e, l_e, t = NULL,
                                nt = 100,  py = NULL,
@@ -164,7 +222,6 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
 #' @param  py  (n x 1) observation locations
 #' @param  y (n x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
-#' @export
 sample_alpha2_line <-function(kappa, sigma, sigma_e,
                               u_e, l_e, t=NULL, Line=NULL,
                               nt=100,  py=NULL, y=NULL, sample=TRUE) {
