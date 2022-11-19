@@ -531,7 +531,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                        marker_size = 10,
                        color = 'rgb(0,0,200)',
                        ...){
-    if(flat == FALSE){
+    if(plotly){
       p <- self$plot(color = graph_color, line_width = graph_width,
                       marker_size = marker_size)
     } else {
