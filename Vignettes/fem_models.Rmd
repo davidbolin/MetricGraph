@@ -606,7 +606,7 @@ We can now create the component, passing the vector with the indices of the repl
 as the `replicate` argument:
 ```{r}
   cmp_rep <-
-    y ~ -1 + Intercept(1) + field(obs.loc.rep, model = rspde_model,
+    y ~ -1 + Intercept(1) + field(loc, model = rspde_model,
                                     replicate = repl)
 ```
 Now, we are ready to fit the model:

@@ -200,6 +200,13 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
     return(out)
 }
 
+graph_spde_make_A <- function (graph, n.repl = 1) {
+   if(is.null(graph$A)){
+    graph$observation_to_vertex()
+   }
+   return(kronecker(Matrix::Diagonal(n.repl), graph$A))
+}
+
 
 #' @name spde_metric_graph_result
 #' @title metric graph SPDE result extraction from INLA estimation results
@@ -531,7 +538,9 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   if(is.null(model$graph_obj$A)){
     model$graph_obj$observation_to_vertex()
   }
-  model$graph_obj$A
+  n.rep <- nrow(input)/nrow(model$graph_obj$A)
+  return(kronecker(matrix(rep(1,n.rep),nrow=n.rep),
+  model$graph_obj$A))
 }
 
 #' @rdname bru_mapper.inla_metric_graph_spde

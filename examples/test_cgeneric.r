@@ -47,7 +47,7 @@ Q <- Qalpha1(theta, graph)
 
 sizeQ <- nrow(Q)
 
-nsim <- 1
+nsim <- 30
 
 Z <- rnorm(sizeQ * nsim)
 dim(Z) <- c(sizeQ, nsim)
@@ -62,9 +62,9 @@ u <- solve(LQ, Z)
 
 y <- A%*%u + sigma.e * eps
 
-graph$y <- y
+graph$y <- as.vector(y)
 
-graph$plot(line_width = 0.3)
+# graph$plot(line_width = 0.3, data=TRUE)
 
 spde_model <- gpgraph_spde(graph)
 
@@ -78,12 +78,22 @@ sum((Q_chk@i - Q@i)^2)
 sum((Q_chk@p - Q@p)^2)
 sum((Q_chk@x-Q@x)^2)
 
-data_list <- list(y = as.vector(y), obs.loc = obs.loc)
+obs.loc.rep <- obs.loc
+for(i in 2:nsim){
+    obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
+}
+data_list <- list(y = as.vector(y),
+                            loc = obs.loc.rep)
+
+# data_list <- list(y = as.vector(y), obs.loc = obs.loc)
 
 library(inlabru)
 
+repl <- rep(1:nsim, each=200)
+
 cmp <-
-    y ~ -1 + Intercept(1) + field(obs.loc, model = spde_model)
+    y ~ -1 + Intercept(1) + field(loc, model = spde_model,
+    replicate = repl)
 
 spde_bru_fit <-
     bru(cmp,
@@ -100,7 +110,8 @@ summary(spde_bru_result)
 
 
 
-spde.index <- graph_spde_make_index(name="field", graph=graph)
+spde.index <- graph_spde_make_index(name="field", graph=graph, n.repl = nsim)
+A <- graph_spde_make_A(graph, n.repl = nsim)
 
 stk.dat <- inla.stack(data = list(y=as.vector(y)), 
                         A = A, 
@@ -109,10 +120,12 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
       list(Intercept = 1)
     ))
 
-f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
+f.s <- y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl)
 
 spde_fit <- inla(f.s, data = inla.stack.data(stk.dat))
 
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
 summary(spde_result)
+
+

@@ -6,11 +6,11 @@
 \alias{bru_get_mapper.inla_metric_graph_spde}
 \title{metric graph inlabru mapper}
 \usage{
-bru_mapper.inla_metric_graph_spde(model, ...)
+\method{bru_mapper}{inla_metric_graph_spde}(model, ...)
 
-ibm_n.bru_mapper_inla_metric_graph_spde(mapper, ...)
+\method{ibm_n}{bru_mapper_inla_metric_graph_spde}(mapper, ...)
 
-bru_get_mapper.inla_metric_graph_spde(model, ...)
+\method{bru_get_mapper}{inla_metric_graph_spde}(model, ...)
 }
 \arguments{
 \item{model}{An `inla_metric_graph_spde` for which to construct or extract a mapper}
