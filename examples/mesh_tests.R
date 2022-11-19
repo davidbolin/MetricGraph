@@ -15,17 +15,17 @@ graph <- metric_graph$new(Lines = Lines)
 graph$build_mesh(h = 1)
 graph$plot(mesh=TRUE)
 C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
-graph$plot_function_mesh(C, flat = FALSE)
+graph$plot_function_mesh(C, plotly = FALSE)
 
 C <- covariance_alpha2_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
-graph$plot_function_mesh(C, flat = FALSE)
+graph$plot_function_mesh(C, plotly = FALSE)
 
 u <- sample_spde_mesh(kappa = 10, sigma = 2, graph = graph)
-graph$plot_function_mesh(u, flat = FALSE)
+graph$plot_function_mesh(u, plotly = FALSE)
 graph$plot_function_mesh(u)
 
 u <- sample_spde_mesh(kappa = 10, sigma = 2, alpha = 2, graph = graph)
-graph$plot_function_mesh(u, flat = FALSE)
+graph$plot_function_mesh(u, plotly = FALSE)
 
 #Test FEM
 line1 <- Line(rbind(c(0,0),c(0,1)))
@@ -65,4 +65,4 @@ PtE <- rbind(c(1,0.99),c(4,0.7))
 
 A <- graph$mesh_A(PtE)
 
-graph$plot_function_mesh(A[1,],flat=FALSE)
+graph$plot_function_mesh(A[1,],plotly=FALSE)

@@ -44,7 +44,7 @@ the vertex at the end of the edge}
 
 \item{\code{EID}}{ID of edges}
 
-\item{\code{EtL}}{[,i] - edge i position on lines}
+\item{\code{EtL}}{[i,] - edge i position on lines}
 
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
@@ -75,6 +75,13 @@ the vertex at the end of the edge}
 }
 \if{html}{\out{</div>}}
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{EtL}}{[i,] - edge i position on lines}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -83,13 +90,13 @@ the vertex at the end of the edge}
 \item \href{#method-GPGraph::graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-GPGraph::graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
-\item \href{#method-GPGraph::graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{metric_graph$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-GPGraph::graph-compute_fem}{\code{metric_graph$compute_fem()}}
 \item \href{#method-GPGraph::graph-mesh_A}{\code{metric_graph$mesh_A()}}
+\item \href{#method-GPGraph::graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-GPGraph::graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
@@ -172,19 +179,6 @@ Add observation locations as vertices in the graph
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-VtEfirst"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-VtEfirst}{}}}
-\subsection{Method \code{VtEfirst()}}{
-Find one Edge correspond to each Vertex (warning very innfeciten implimentation)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$VtEfirst()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations}{}}}
 \subsection{Method \code{add_observations()}}{
@@ -230,7 +224,8 @@ add observations to the object
 \if{html}{\out{<a id="method-GPGraph::graph-buildC"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-buildC}{}}}
 \subsection{Method \code{buildC()}}{
-build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. self closed edges)
+build Kirchoff constraint matrix from edges, NOT implemented
+for circles (i.e. self closed edges)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$buildC(alpha, edge_constraint = FALSE)}\if{html}{\out{</div>}}
 }
@@ -240,7 +235,8 @@ build Kirchoff constraint matrix from edges, NOT implemented for circles (i.e. s
 \describe{
 \item{\code{alpha}}{(int) which type of constraint (currently only 2 implemented)}
 
-\item{\code{edge_constraint}}{(bool) if true add constraint on vertices of degree 1.}
+\item{\code{edge_constraint}}{(bool) if true add constraint on vertices of
+degree 1.}
 }
 \if{html}{\out{</div>}}
 }
@@ -263,6 +259,17 @@ build mesh object for graph
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+The mesh is a list with the objects
+- PtE which contains the mesh locations excluding the original vertices
+- V the verties of the mesh
+- E the edges of the mesh
+- n_e the number of vertices in the mesh per original edge in the graph
+- h_e the mesh width per edge in the graph
+- ind the indices of the vertices in the mesh
+- VtE all mesh locations including the original vertices
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-compute_fem"></a>}}
@@ -292,22 +299,35 @@ Computes observation matrix for mesh
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-VtEfirst"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-VtEfirst}{}}}
+\subsection{Method \code{VtEfirst()}}{
+Find one Edge correspond to each Vertex (warning very
+inefficient implementation)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$VtEfirst()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-plot"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot}{}}}
 \subsection{Method \code{plot()}}{
 plot a metric graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
+  plotly = FALSE,
   show = TRUE,
-  line_width = 1,
-  marker_size = 1,
-  vertex_color = "rgb(0,0,0)",
-  edge_color = "rgb(0,0,0)",
+  line_width = 0.3,
+  marker_size = 3,
+  vertex_color = "black",
+  edge_color = "black",
   data = FALSE,
   data_size = 1,
   mesh = FALSE,
-  fix_layout = TRUE,
-  zoom = 1,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -315,6 +335,8 @@ plot a metric graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{plotly}}{use plot_ly for 3D plot (default FALSE)}
+
 \item{\code{show}}{show the plot?}
 
 \item{\code{line_width}}{line width for edges}
@@ -331,14 +353,12 @@ plot a metric graph
 
 \item{\code{mesh}}{Plot the mesh locations?}
 
-\item{\code{fix_layout}}{fix 2D layout for plot}
-
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-a plotly object
+a plot_ly or or ggplot object
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
@@ -409,9 +429,9 @@ plot function mesh X on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function_mesh(
   X,
-  flat = TRUE,
+  plotly = FALSE,
   show = TRUE,
-  graph_color = "rgb(0,0,0)",
+  graph_color = "black",
   graph_width = 1,
   marker_size = 10,
   color = "rgb(0,0,200)",
@@ -425,7 +445,7 @@ plot function mesh X on the graph
 \item{\code{X}}{(m x 1) a vector with values for the function
 evaluated at a precomputed mesh (V,and PtE)}
 
-\item{\code{flat}}{plot in 2D or 3D?}
+\item{\code{plotly}}{use plot_ly for 3D plot?}
 
 \item{\code{show}}{show the plot?}
 

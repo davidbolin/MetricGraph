@@ -26,8 +26,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   EID = NULL,
 
 
-  #' @field EtL [,i] - edge i position on lines
-  EtL = NULL,
+  #' @field EtL [i,] - edge i position on lines
+  LtE = NULL,
 
   #' @field C constraint matrix used to set Kirchhoff constraints
   C = NULL,
@@ -90,6 +90,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }
       self$nE = length(Lines)
       self$Lines = Lines
+
       self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
       private$line_to_vertex()
     } else {
@@ -353,7 +354,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
     }
-    self$mesh$VtE <- rbind(private$VtEfirst(),self$mesh$PtE)
+    self$mesh$VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
   },
 
   #' @description build mass and stiffness matrices for given mesh object
@@ -394,6 +395,25 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       A[i,self$mesh$E[x[i,1],2]] = x[i,2]
     }
     return(A)
+  },
+
+  #' @description Find one Edge correspond to each Vertex (warning very
+  #' inefficient implementation)
+  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+  VtEfirst = function(){
+    n.V <- dim(self$V)[1]
+    VtE <- matrix(0,n.V, 2)
+
+    for(i in 1:n.V){
+      Ei <- which(self$E[,1]==i)[1]
+      pos <- 0
+      if(is.na(Ei)==1){
+        pos <- 1
+        Ei <- which(self$E[,2]==i)[1]
+      }
+      VtE[i,] <- c(Ei, pos)
+    }
+    return(VtE)
   },
 
 
@@ -498,15 +518,30 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
       } else {
         if(!is.null(vals)){
-          p <- private$plot_curve(vals,
-                                  SpatialLines(list(self$Lines@lines[[i]])),
-                                  flat = flat,
-                                  p = p,
-                                  color = color,
-                                  ...)
-        }
+          index <- (self$LtE@p[i]+1):(self$LtE@p[i+1])
+          LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
+          LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
+          for(j in 1:length(index)){
+            index_j <- vals[,1] <= LinesPos[j,2]
+
+            if(sum(index_j) > 0){
+              if(j == 1){
+                vals[index_j,1] <- vals[index_j,1]/LinesPos[j,2]
+              }else{
+                vals[index_j,1] <- (vals[index_j,1]-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+              }
+              p <- private$plot_curve(vals[index_j,],
+                                      SpatialLines(list(self$Lines@lines[[LinesPos[j,1]]])),
+                                      flat = flat,
+                                      p = p,
+                                      color = color,
+                                      ...)
+              vals <- vals[index_j==F,drop=F]
+            }
+          }
       }
 
+      }
     }
     if(show){
       print(p)
@@ -548,12 +583,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       ind <- self$mesh$PtE[,1] == i
       if(sum(ind)==0){
         vals <- rbind(c(0, XV[self$E[i,1]]),
-                      c(self$edge_lengths[i], XV[self$E[i,2]]))
+                      c(1, XV[self$E[i,2]]))
 
       }else{
         vals <- rbind(c(0, XV[self$E[i,1]]),
                       cbind(self$mesh$PtE[ind,2],X[n.v + which(ind)]),
-                      c(self$edge_lengths[i], XV[self$E[i,2]]))
+                      c(1, XV[self$E[i,2]]))
 
       }
 
@@ -568,11 +603,26 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
       } else {
         if(!is.null(vals)){
-          p <- private$plot_curve(vals,
-                                  SpatialLines(list(self$Lines@lines[[i]])),
-                                  plotly = plotly,
-                                  p = p,
-                                  color = color, ...)
+          index <- (self$LtE@p[i]+1):(self$LtE@p[i+1])
+          LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
+          LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
+          for(j in 1:length(index)){
+            index_j <- vals[,1] <= LinesPos[j,2]
+            if(sum(index_j) > 0){
+              if(j == 1){
+                vals[index_j,1] <- vals[index_j,1]/LinesPos[j,2]
+              }else{
+                vals[index_j,1] <- (vals[index_j,1]-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+              }
+              p <- private$plot_curve(vals[index_j,],
+                                      SpatialLines(list(self$Lines@lines[[LinesPos[j,1]]])),
+                                      plotly = plotly,
+                                      p = p,
+                                      color = color,
+                                      ...)
+              vals <- vals[index_j==F,drop=F]
+            }
+          }
         }
       }
 
@@ -655,6 +705,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }
 
     },
+  #'
+  #'@description function for creating Vertex and Edges from self$lines
+  #'
+  #'
   line_to_vertex = function(){
     lines <- c()
     for(i in 1:length(self$Lines)){
@@ -691,6 +745,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$E <- lvl[,2:3, drop=FALSE]
     self$edge_lengths <- lvl[,4]
     self$nV <- dim(self$V)[1]
+
+    self$LtE <-Matrix::sparseMatrix(j    = 1:dim(self$E)[1],
+                                    i    = c(1:length(self$Lines)),
+                                    x    = rep(1,dim(self$E)[1]),
+                                    dims = c(dim(self$E)[1], length(self$Lines)) )
   },
   plot_curve = function(data.to.plot,
                         Line_edge,
@@ -766,7 +825,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
   PtE_to_mesh = function(PtE){
-    VtE <- rbind(private$VtEfirst(),self$mesh$PtE)
+    VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
     PtE_update <- matrix(0,dim(PtE)[1],2)
     for(i in 1:dim(PtE)[1]) {
       ei <- PtE[i,1]
@@ -944,24 +1003,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       print(p)
     }
     return(p)
-  },
-  #' @description Find one Edge correspond to each Vertex (warning very
-  #' inefficient implementation)
-  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
-  VtEfirst = function(){
-    n.V <- dim(self$V)[1]
-    VtE <- matrix(0,n.V, 2)
-
-    for(i in 1:n.V){
-      Ei <- which(self$E[,1]==i)[1]
-      pos <- 0
-      if(is.na(Ei)==1){
-        pos <- 1
-        Ei <- which(self$E[,2]==i)[1]
-      }
-      VtE[i,] <- c(Ei, pos)
-    }
-    return(VtE)
   }
 ))
 
