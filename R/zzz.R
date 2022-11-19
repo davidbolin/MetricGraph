@@ -27,6 +27,8 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' @importFrom utils installed.packages
 #' @importFrom utils packageVersion
 register_all_s3_methods = function() {
+  register_s3_method("base", "summary", "metric_graph_spde_result")
+  
   inlabru_installed <- "inlabru" %in% rownames(installed.packages())
   if(inlabru_installed){
     ## Delayed registration of these are handled
