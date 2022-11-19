@@ -100,10 +100,14 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   }
 
   if (is.null(start_kappa)) {
-    start_kappa <- exp(prior_kappa$meanlog)
+    start_lkappa <- prior_kappa$meanlog
+  } else{
+    start_lkappa <- log(start_kappa)
   }
   if (is.null(start_sigma)) {
-    start_sigma <- exp(prior_sigma$meanlog)
+    start_lsigma <- prior_sigma$meanlog
+  } else{
+    start_lsigma <- log(start_sigma)
   }
 
   model <- do.call(
@@ -118,8 +122,8 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
             EtV3 = EtV3,
             El = El,
             stationary_endpoints = as.integer(index),
-            start_kappa = start_kappa,
-            start_sigma = start_sigma,
+            start_lkappa = start_lkappa,
+            start_lsigma = start_lsigma,
             prior_kappa_meanlog = prior_kappa$meanlog,
             prior_kappa_sdlog = prior_kappa$sdlog,
             prior_sigma_meanlog = prior_sigma$meanlog,

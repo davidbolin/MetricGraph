@@ -87,12 +87,14 @@ spde_bru_fit <-
       family = "gaussian",
       inla.mode = "experimental"))
 
-index <- inla.spde.make.index(name="field", n.spde = nrow(Q))
+
+
+spde.index <- inla.spde.make.index(name="field", n.spde = nrow(Q))
 
 stk.dat <- inla.stack(data = list(y=as.vector(y)), 
                         A = A, 
                         effects = c(
-      index,
+      spde.index,
       list(Intercept = 1)
     ))
 

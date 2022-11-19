@@ -58,11 +58,11 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   inla_cgeneric_vec_tp *El = data->doubles[2];
 
   // prior parameters
-  assert(!strcasecmp(data->doubles[3]->name, "start_kappa"));
-  double start_kappa = data->doubles[3]->doubles[0];
+  assert(!strcasecmp(data->doubles[3]->name, "start_lkappa"));
+  double start_lkappa = data->doubles[3]->doubles[0];
 
-  assert(!strcasecmp(data->doubles[4]->name, "start_sigma"));
-  double start_sigma = data->doubles[4]->doubles[0];
+  assert(!strcasecmp(data->doubles[4]->name, "start_lsigma"));
+  double start_lsigma = data->doubles[4]->doubles[0];
 
   assert(!strcasecmp(data->doubles[5]->name, "prior_kappa_meanlog"));
   double prior_kappa_meanlog = data->doubles[5]->doubles[0];
@@ -75,9 +75,6 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
   assert(!strcasecmp(data->doubles[8]->name, "prior_sigma_sdlog"));
   double prior_sigma_sdlog = data->doubles[8]->doubles[0];
-
-  double start_lkappa = log(start_kappa);
-  double start_lsigma = log(start_sigma);
 
   if (theta) {
     // interpretable parameters 
@@ -188,10 +185,10 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
       ret[0] = 0.0;
 
-      ret[0] += -0.5 * SQR(theta[0] - prior_kappa_meanlog)/(SQR(prior_kappa_sdlog)) - 
+      ret[0] += -0.5 * SQR(lkappa - prior_kappa_meanlog)/(SQR(prior_kappa_sdlog)) - 
       log(prior_kappa_sdlog) - 0.5 * log(2.0 * M_PI); 
 
-      ret[0] += -0.5 * SQR(theta[1] - prior_sigma_meanlog)/(SQR(prior_sigma_sdlog)) - 
+      ret[0] += -0.5 * SQR(lsigma - prior_sigma_meanlog)/(SQR(prior_sigma_sdlog)) - 
       log(prior_sigma_sdlog) - 0.5 * log(2.0 * M_PI);
 	    break;
     }
