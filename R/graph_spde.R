@@ -378,14 +378,22 @@ gg_df <- function(spde_result,
                           parameter = spde_result$params,
                           transform = TRUE,
                           restrict_x_axis = parameter,
-                          restrict_quantiles = list(std.dev = c(0,1),
+                          restrict_quantiles = list(sigma = c(0,1),
                           range = c(0,1),
-                          nu = c(0,1),
                           kappa = c(0,1),
-                          tau = c(0,1))) {
+                          sigma = c(0,1)),...) {
       if(!inherits(spde_result, "metric_graph_spde_result")){
+        if(inherits(spde_result, "rspde.result")){
+        return(rSPDE::gg_df(spde_result, 
+                          parameter = parameter,
+                          transform = transform,
+                          restrict_x_axis =  restrict_x_axis,
+                          restrict_quantiles = restrict_quantiles,
+                          ...))
+      } else{
         stop("The argument rspde_result should be of class metric_graph_spde_result!")
       }
+      } 
       parameter <- intersect(parameter, c("kappa", "range", "sigma"))
       if(length(parameter) == 0){
         stop("You should choose at least one of the parameters 'kappa', 'range' or 'sigma'!")

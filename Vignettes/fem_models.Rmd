@@ -347,7 +347,7 @@ Let us compare with the true values:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
   posterior_df_fit <- gg_df(result_fit)
 
   ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
@@ -482,7 +482,7 @@ Let us compare with the true values of the parameters:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
   posterior_df_fit_rep <- gg_df(result_fit_rep)
 
   ggplot(posterior_df_fit_rep) + geom_line(aes(x = x, y = y)) + 
@@ -550,7 +550,7 @@ Let us compare with the true values of the parameters:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
   posterior_df_bru_fit <- gg_df(result_bru_fit)
 
   ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
@@ -646,7 +646,7 @@ Let us compare with the true values of the parameters:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
   posterior_df_bru_fit_rep <- gg_df(result_bru_fit_rep)
 
   ggplot(posterior_df_bru_fit_rep) + geom_line(aes(x = x, y = y)) + 

@@ -1,6 +1,6 @@
-library(GPGraph)
 library(sp)
 library(INLA)
+library(GPGraph)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -13,7 +13,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 4
+obs.per.edge <- 50
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -62,6 +62,10 @@ u <- solve(LQ, Z)
 
 y <- A%*%u + sigma.e * eps
 
+graph$y <- y
+
+graph$plot(line_width = 0.3)
+
 spde_model <- gpgraph_spde(graph)
 
 spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
@@ -90,6 +94,12 @@ spde_bru_fit <-
 
 
 
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model)
+
+summary(spde_bru_result)
+
+
+
 spde.index <- graph_spde_make_index(name="field", graph=graph)
 
 stk.dat <- inla.stack(data = list(y=as.vector(y)), 
@@ -101,7 +111,7 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
-spde_fit <- inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
+spde_fit <- inla(f.s, data = inla.stack.data(stk.dat))
 
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
