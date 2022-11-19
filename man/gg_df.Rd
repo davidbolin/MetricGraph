@@ -9,8 +9,9 @@ gg_df(
   parameter = spde_result$params,
   transform = TRUE,
   restrict_x_axis = parameter,
-  restrict_quantiles = list(std.dev = c(0, 1), range = c(0, 1), nu = c(0, 1), kappa =
-    c(0, 1), tau = c(0, 1))
+  restrict_quantiles = list(sigma = c(0, 1), range = c(0, 1), kappa = c(0, 1), sigma =
+    c(0, 1)),
+  ...
 )
 }
 \arguments{

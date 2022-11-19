@@ -10,7 +10,7 @@ all : $(sources:.c=.o) so
 
 so : $(sources:.c=.o)
 	@echo generate .so
-	gcc -shared *.o -o ../inst/shared/gpgraph_cgeneric_models.so -lblas -llapack
+	gcc -shared *.o -o ../inst/shared/gpgraph_cgeneric_models.so -lblas
 
 
 clean :
