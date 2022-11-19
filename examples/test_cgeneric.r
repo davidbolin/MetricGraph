@@ -13,40 +13,90 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-tmp <- gpgraph_spde(graph)
+obs.per.edge <- 50
+obs.loc <- NULL
+for(i in 1:(graph$nE)) {
+  obs.loc <- rbind(obs.loc,
+                   cbind(rep(i,obs.per.edge), runif(obs.per.edge) * 
+                          graph$edge_lengths[i]))
+}
 
-inla.cgeneric.q(tmp)
+y <- rep(NA, obs.per.edge * graph$nE)
 
-u <- sample_spde_mesh(kappa = 10, sigma = 2, graph = graph)
+graph$add_observations2(y,obs.loc)
 
-A <- diag(c(1,1,1,1))
+graph$observation_to_vertex()
 
+graph$plot(line_width = 0.3)
 
+A <- graph$A
 
-data_tmp <- data.frame(y = u)
+sigma <- 1
 
-index <- list()
+sigma.e <- 0.1
 
-index[["field"]] <- 1:ncol(A)
+nu <- 0.5
 
-stk.dat <- inla.stack(data = list(y=u), 
+r <- 0.2
+
+kappa <- sqrt(8 * nu) / r
+
+theta <- c(sigma, kappa)
+
+Q <- Qalpha1(theta, graph)
+
+sizeQ <- nrow(Q)
+
+nsim <- 1
+
+Z <- rnorm(sizeQ * nsim)
+dim(Z) <- c(sizeQ, nsim)
+
+sizeA <- nrow(A)
+
+eps <- rnorm(sizeA * nsim)
+dim(eps) <- c(sizeA, nsim)
+
+LQ <- chol(Q)
+u <- solve(LQ, Z)
+
+y <- A%*%u + sigma.e * eps
+
+spde_model <- gpgraph_spde(graph)
+
+spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
+                                    start_sigma = sigma)
+
+Q_chk <- inla.cgeneric.q(spde_model_check)$Q
+
+sum((Q_chk@i - Q@i)^2)
+sum((Q_chk@p - Q@p)^2)
+sum((Q_chk@x-Q@x)^2)
+
+data_list <- list(y = as.vector(y), obs.loc = obs.loc)
+
+library(inlabru)
+
+cmp <-
+    y ~ -1 + Intercept(1) + field(obs.loc, model = spde_model)
+
+spde_bru_fit <-
+    bru(cmp,
+        data=data_list,
+      options=list(
+      family = "gaussian",
+      inla.mode = "experimental"))
+
+index <- inla.spde.make.index(name="field", n.spde = nrow(Q))
+
+stk.dat <- inla.stack(data = list(y=as.vector(y)), 
                         A = A, 
                         effects = c(
       index,
       list(Intercept = 1)
     ))
 
-f.s <- y ~ -1 + Intercept + f(field, model = tmp)
+f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
 inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
-
-
-
-line1 <- Line(rbind(c(0,0),c(0,1)))
-line2 <- Line(rbind(c(0,1),c(0,2.5)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2")))
-graph <- metric_graph$new(Lines = Lines)
-
-
 

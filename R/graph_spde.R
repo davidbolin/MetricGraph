@@ -1,8 +1,10 @@
 
 
 gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
- start_kappa = 1, start_sigma = 1, debug = FALSE){
+ start_kappa = NULL, start_sigma = NULL, prior_kappa = NULL,
+ prior_sigma = NULL, debug = FALSE){
 
+  nu <- alpha - 0.5
   V <- graph_object$V
   EtV <- graph_object$E
   El <- graph_object$edge_lengths 
@@ -76,6 +78,34 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
   idx_ij <- idx_ij - 1
 
+  if(is.null(prior_kappa$meanlog)){
+      if(is.null(graph_object$geo.dist)){
+        graph_object$compute_geodist()
+      }
+      prior.range.nominal <- max(graph_object$geo.dist) * 0.2
+      prior_kappa$meanlog <- log(sqrt(8 *
+      exp(nu) / prior.range.nominal))
+    }
+  
+  if (is.null(prior_kappa$sdlog)) {
+    prior_kappa$sdlog <- sqrt(10)
+  }
+
+  if(is.null(prior_sigma$meanlog)){
+    prior_sigma$meanlog <- 0
+  }
+
+  if(is.null(prior_sigma$sdlog)){
+    prior_sigma$sdlog <- sqrt(10)
+  }
+
+  if (is.null(start_kappa)) {
+    start_kappa <- exp(prior_kappa$meanlog)
+  }
+  if (is.null(start_sigma)) {
+    start_sigma <- exp(prior_sigma$meanlog)
+  }
+
   model <- do.call(
         'inla.cgeneric.define',
         list(model="inla_cgeneric_gpgraph_alpha1_model",
@@ -89,6 +119,67 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
             El = El,
             stationary_endpoints = as.integer(index),
             start_kappa = start_kappa,
-            start_sigma = start_sigma))
+            start_sigma = start_sigma,
+            prior_kappa_meanlog = prior_kappa$meanlog,
+            prior_kappa_sdlog = prior_kappa$sdlog,
+            prior_sigma_meanlog = prior_sigma$meanlog,
+            prior_sigma_sdlog = prior_sigma$sdlog))
+model$graph_obj <- graph_object
+class(model) <- c("inla_metric_graph_spde", class(model))
+return(model)
+}
 
+
+
+#'
+#' @title metric graph inlabru mapper
+#' @name bru_mapper.inla_metric_graph_spde
+#' @param model An `inla_metric_graph_spde` for which to construct or extract a mapper
+#' @param \dots Arguments passed on to other methods
+#' @rdname bru_mapper.inla_metric_graph_spde
+#' @rawNamespace if (getRversion() >= "3.6.0") {
+#'   S3method(inlabru::bru_mapper, inla_metric_graph_spde)
+#'   # S3method(inlabru::bru_get_mapper, inla_metric_graph_spde)
+#'   S3method(inlabru::ibm_n, bru_mapper_inla_metric_graph_spde)
+#'   S3method(inlabru::ibm_values, bru_mapper_inla_metric_graph_spde)
+#'   S3method(inlabru::ibm_jacobian, bru_mapper_inla_metric_graph_spde)
+#' }
+#' 
+bru_mapper.inla_metric_graph_spde <- function(model,...) {
+  mapper <- list(model = model)
+  # Note 1: From inlabru > 2.5.3, use bru_mapper_define instead.
+  # Note 2: bru_mapper.default is not exported from inlabru, so
+  # must call the generic bru_mapper()
+  inlabru::bru_mapper(mapper, new_class = "bru_mapper_inla_metric_graph_spde")
+}
+
+#' @param mapper A `bru_mapper.inla_metric_graph_spde` object
+#' @rdname bru_mapper.inla_metric_graph_spde
+ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
+  model <- mapper[["model"]]
+  model$f$n
+}
+#' @rdname bru_mapper.inla_rspde
+ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
+  seq_len(inlabru::ibm_n(mapper))
+}
+#' @param input The values for which to produce a mapping matrix
+#' @rdname bru_mapper.inla_rspde
+ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
+  if (is.null(input)) {
+    return(Matrix::Matrix(0, 0, inlabru::ibm_n(mapper)))
+  }
+  if (!is.matrix(input) && !inherits(input, "Spatial")) {
+    input <- as.matrix(input)
+  }
+  model <- mapper[["model"]]
+  if(is.null(model$graph_obj$A)){
+    model$graph_obj$observation_to_vertex()
+  }
+  model$graph_obj$A
+}
+
+#' @rdname bru_mapper.inla_metric_graph_spde
+bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
+ inlabru::bru_mapper(model)
 }

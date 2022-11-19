@@ -16,7 +16,7 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   assert(data->n_ints == 6);
 
   // the number of doubles
-  assert(data->n_doubles == 5);
+  assert(data->n_doubles == 9);
 
   assert(!strcasecmp(data->ints[0]->name, "n"));       // this will always be the case
   N = data->ints[0]->ints[0];			       // this will always be the case
@@ -63,6 +63,18 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
   assert(!strcasecmp(data->doubles[4]->name, "start_sigma"));
   double start_sigma = data->doubles[4]->doubles[0];
+
+  assert(!strcasecmp(data->doubles[5]->name, "prior_kappa_meanlog"));
+  double prior_kappa_meanlog = data->doubles[5]->doubles[0];
+
+  assert(!strcasecmp(data->doubles[6]->name, "prior_kappa_sdlog"));
+  double prior_kappa_sdlog = data->doubles[6]->doubles[0];
+
+  assert(!strcasecmp(data->doubles[7]->name, "prior_sigma_meanlog"));
+  double prior_sigma_meanlog = data->doubles[7]->doubles[0];
+
+  assert(!strcasecmp(data->doubles[8]->name, "prior_sigma_sdlog"));
+  double prior_sigma_sdlog = data->doubles[8]->doubles[0];
 
   double start_lkappa = log(start_kappa);
   double start_lsigma = log(start_sigma);
@@ -176,11 +188,11 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
       ret[0] = 0.0;
 
-      ret[0] += -0.5 * SQR(theta[0] - start_lkappa)/(10.0) - 
-      0.5*log(10) - 0.5 * log(2.0 * M_PI); 
+      ret[0] += -0.5 * SQR(theta[0] - prior_kappa_meanlog)/(SQR(prior_kappa_sdlog)) - 
+      log(prior_kappa_sdlog) - 0.5 * log(2.0 * M_PI); 
 
-      ret[0] += -0.5 * SQR(theta[1] - start_lsigma)/(10) - 
-      0.5*log(10) - 0.5 * log(2.0 * M_PI);
+      ret[0] += -0.5 * SQR(theta[1] - prior_sigma_meanlog)/(SQR(prior_sigma_sdlog)) - 
+      log(prior_sigma_sdlog) - 0.5 * log(2.0 * M_PI);
 	    break;
     }
     
