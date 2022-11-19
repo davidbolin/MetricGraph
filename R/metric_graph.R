@@ -659,12 +659,19 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }else{
         t_mod <- (t_mod-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
       }
-      if(j== dim(LinesPos)[1] )
-        t_mod = self$ELend[Ei]*t_mod
+      mult_ <- 1
+      if(j== dim(LinesPos)[1] ){
+        mult_ <- self$ELend[Ei]
+      }
       if(j==1)
-        t_mod = t_mod + self$ELstart[Ei]
+        mult_ = mult_ - self$ELstart[Ei]
+      t_mod = mult_ * t_mod
 
-      Line <- self$Lines[j, ]
+      if(j==1){
+        t_mod = t_mod + self$ELstart[Ei]
+      }
+
+      Line <- self$Lines[LinesPos[j,1], ]
       val_line <- gInterpolate(Line, t_mod, normalized = TRUE)@coords
 
       #change LtE
