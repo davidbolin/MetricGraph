@@ -100,7 +100,7 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
-inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
+spde_fit <- inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
 
 
 

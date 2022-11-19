@@ -194,15 +194,17 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
         double fact = 2*kappa / (pow(sigma,2));
 
         int one=1;
-        dscal_(&M, &fact, &raw_entries[0], &one);
+        dscal_(&M_full, &fact, &raw_entries[0], &one);
 
         count = 0;
         for(i = 0; i < M; i++){
           for(j = 0; j < count_idx->ints[i]; j++){
+            // ret[k + i] += raw_entries[count];
             ret[k + i] += raw_entries[count];
             count++;
           }
         }
+        assert(M_full == count);
 
       break;
     }
