@@ -414,7 +414,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(A)
   },
 
-<<<<<<< HEAD
   #' @description Find one Edge correspond to each Vertex (warning very
   #' inefficient implementation)
   #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
@@ -434,9 +433,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(VtE)
   },
 
-
-=======
->>>>>>> 6e9134cbdb380f23a47b33b382360d3343a2f95a
   #' @description plot a metric graph
   #' @param plotly use plot_ly for 3D plot (default FALSE)
   #' @param show show the plot?
@@ -847,7 +843,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
   PtE_to_mesh = function(PtE){
-<<<<<<< HEAD
     VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
     PtE_update <- matrix(0,dim(PtE)[1],2)
     for(i in 1:dim(PtE)[1]) {
@@ -856,16 +851,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       if(PtE[i,2]<min(VtE[ind,2])){ #node in first edge on line
         v1 <- self$E[ei,1]
         ind2 <- which.min(VtE[ind,2])
-=======
-    VtE <- rbind(private$VtEfirst(), self$mesh$PtE)
-    PtE_update <- matrix(0, dim(PtE)[1], 2)
-    for (i in 1:dim(PtE)[1]) {
-      ei <- PtE[i, 1]
-      ind <- which(VtE[, 1] == ei)
-      if (PtE[i,2] < min(VtE[ind, 2])){ #node in first edge on line
-        v1 <- self$E[ei, 1]
-        ind2 <- which.min(VtE[ind, 2])
->>>>>>> 6e9134cbdb380f23a47b33b382360d3343a2f95a
         v2 <- ind[ind2]
         d1 <- 0
         d2 <- VtE[v2, 2]
@@ -1045,27 +1030,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       print(p)
     }
     return(p)
-<<<<<<< HEAD
-=======
-  },
-  # Find one Edge correspond to each Vertex (warning very  inefficient implementation)
-  # returns VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
-  VtEfirst = function(){
-    n.V <- dim(self$V)[1]
-    VtE <- matrix(0, n.V, 2)
-
-    for (i in 1:n.V) {
-      Ei <- which(self$E[, 1] == i)[1]
-      pos <- 0
-      if (is.na(Ei) == 1) {
-        pos <- 1
-        Ei <- which(self$E[, 2] == i)[1]
-      }
-      VtE[i,] <- c(Ei, pos)
-    }
-    return(VtE)
->>>>>>> 6e9134cbdb380f23a47b33b382360d3343a2f95a
   }
+
 ))
 
 
