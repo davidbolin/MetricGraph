@@ -39,8 +39,8 @@ test_that("Check agrement covariance matrix", {
   x_ <- c(0,l_e)
   D <- outer(x_, x_, "-")
   r <- rSPDE::matern.covariance(D, kappa = kappa, nu = 3/2, sigma = sigma)
-  r1 <- -matern.derivative(D,  kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
-  r2 <- -matern.derivative(D,  kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
+  r1 <- -matern.derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
+  r2 <- -matern.derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
   Sigma.0 <- rbind(cbind(r, r1), cbind(t(r1), r2))*c
   r_00 <- GPGraph:::r_2(D, sigma = sigma, kappa = kappa)
   r_01 <- - GPGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 1)
@@ -95,7 +95,7 @@ test_that("test agrement precision matrix and article method", {
   testthat::expect_equal(c(Sigma.2), c(R_adj), tol = 1e-9)
 })
 
-test_that("test if computing covariance are equivalent",{
+test_that("test likelihood",{
   set.seed(13)
   nt <- 40
   kappa <- 0.3
@@ -104,63 +104,101 @@ test_that("test if computing covariance are equivalent",{
   theta <-  c(sigma_e,sigma,kappa)
   line2 <- Line(rbind(c(30, 80), c(140, 80)))
   line1 <- Line(rbind(c(30, 00), c(30, 80)))
-
-  graph.temp <-  metric_graph$new(Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                                                     Lines(list(line2),ID="2"))))
+  Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                                 Lines(list(line2),ID="2")))
+  graph <- metric_graph$new(Lines = Lines)
   Q <- spde_precision(kappa = kappa, sigma = sigma,
-                      alpha = 2, graph = graph.temp, BC = 1)
-  graph.temp$buildC(2, FALSE)
-  Qmod <- (graph.temp$CBobj$T) %*% Q %*% t(graph.temp$CBobj$T)
+                      alpha = 2, graph = graph, BC = 1)
+  graph$buildC(2, FALSE)
+  Qmod <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
   Qtilde <- Qmod
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
   R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
   V0 <- as.vector(solve(R, solve(R,rnorm(6), system = 'Lt')
                         , system = 'Pt'))
-  u_e <- t(graph.temp$CBobj$T) %*% c(0, 0, V0)
+  u_e <- t(graph$CBobj$T) %*% c(0, 0, V0)
   X <- c()
-  for(i in 1:length(graph.temp$edge_lengths)){
+  for(i in 1:length(graph$edge_lengths)){
     X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
                                           sigma = sigma,
                                           sigma_e = sigma_e,
                                           u_e = u_e[4*(i-1) +1:4],
-                                          l_e = graph.temp$edge_lengths[i],
+                                          l_e = graph$edge_lengths[i],
                                           nt = nt),i))
   }
   X[,2] <- X[,2] + sigma_e*rnorm(nt)
 
-  graph.temp$add_observations2(y = X[,2], PtE = X[,c(3, 1)])
-  graph.temp$buildC(2, FALSE)
-  lik <- likelihood_graph_spde(theta = theta, graph = graph.temp, alpha = 2)
-  graph.temp2 <- graph.temp
-  graph.temp2$observation_to_vertex()
-  graph.temp2$buildC(2, FALSE)
+  graph$add_observations2(y = X[,2], PtE = X[,c(3, 1)])
+  graph$buildC(2, FALSE)
+  lik <- likelihood_graph_spde(theta = theta, graph = graph, alpha = 2)
+  graph2 <- graph
+  graph2$observation_to_vertex()
+  graph2$buildC(2, FALSE)
   lik2 <-likelihood_graph_covariance(theta = theta,
-                                     graph = graph.temp2,
+                                     graph = graph2,
                                      model = "alpha2")
 
-  expect_equal(as.matrix(lik),as.matrix(lik2), tolerance=1e-10)
+  expect_equal(as.matrix(lik), as.matrix(lik2), tolerance = 1e-10)
+})
 
-  pm <- spde_posterior_mean(theta, alpha = 2, obs = TRUE, graph = graph.temp)
-  n.o <- length(graph.temp$y)
-  n.v <- dim(graph.temp$V)[1]
-  n.c <- 1:length(graph.temp$CBobj$S)
-  Q <- spde_precision(kappa = kappa, sigma =sigma,
-                      alpha = 2, graph = graph.temp, BC = 1)
-  Qtilde <- (graph.temp$CBobj$T)%*%Q%*%t(graph.temp$CBobj$T)
+test_that("test posterior mean",{
+  set.seed(13)
+  nt <- 40
+  kappa <- 0.3
+  sigma_e <- 0.1
+  sigma   <- 1
+  theta <-  c(sigma_e,sigma,kappa)
+  line2 <- Line(rbind(c(30, 80), c(140, 80)))
+  line1 <- Line(rbind(c(30, 00), c(30, 80)))
+  Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                                 Lines(list(line2),ID="2")))
+  graph <- metric_graph$new(Lines = Lines)
+  Q <- spde_precision(kappa = kappa, sigma = sigma,
+                      alpha = 2, graph = graph, BC = 1)
+  graph$buildC(2, FALSE)
+  Qmod <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+  Qtilde <- Qmod
+  Qtilde <- Qtilde[-c(1:2),-c(1:2)]
+  R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
+  V0 <- as.vector(solve(R, solve(R,rnorm(6), system = 'Lt')
+                        , system = 'Pt'))
+  u_e <- t(graph$CBobj$T) %*% c(0, 0, V0)
+  X <- c()
+  for(i in 1:length(graph$edge_lengths)){
+    X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
+                                          sigma = sigma,
+                                          sigma_e = sigma_e,
+                                          u_e = u_e[4*(i-1) +1:4],
+                                          l_e = graph$edge_lengths[i],
+                                          nt = nt),i))
+  }
+  X[,2] <- X[,2] + sigma_e*rnorm(nt)
+
+  graph$add_observations2(y = X[,2], PtE = X[,c(3, 1)])
+  graph$buildC(2, FALSE)
+
+  #test posterior at observation locations
+  pm <- spde_posterior_mean(theta, alpha = 2, type = "obs", graph = graph)
+
+  graph2 <- graph
+  graph2$observation_to_vertex()
+  graph2$buildC(2, FALSE)
+  n.o <- length(graph2$y)
+  n.v <- dim(graph2$V)[1]
+  n.c <- 1:length(graph2$CBobj$S)
+  Q <- spde_precision(kappa = kappa, sigma = sigma,
+                      alpha = 2, graph = graph2, BC = 1)
+  Qtilde <- (graph2$CBobj$T) %*% Q %*% t(graph2$CBobj$T)
   Qtilde <- Qtilde[-n.c,-n.c]
-  Sigma.overdetermined  = t(graph.temp$CBobj$T[-n.c,]) %*%
-    solve(Qtilde) %*% (graph.temp$CBobj$T[-n.c, ])
-  index.obs <- 4*(graph.temp$PtE[, 1] - 1) + (1 * (abs(graph.temp$PtE[, 2]) < 1e-14)) +
-    (3 * (abs(graph.temp$PtE[, 2]) > 1e-14))
+  Sigma.overdetermined  = t(graph2$CBobj$T[-n.c, ]) %*%
+    solve(Qtilde) %*% (graph2$CBobj$T[-n.c, ])
+  index.obs <- 4*(graph2$PtE[, 1] - 1) +
+    (1 * (abs(graph2$PtE[, 2]) < 1e-14)) +
+    (3 * (abs(graph2$PtE[, 2]) > 1e-14))
   Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   Sigma.Y <- Sigma
   diag(Sigma.Y) <- diag(Sigma.Y) + theta[1]^2
-  pm2 <- Sigma%*%solve(Sigma.Y,graph.temp$y)
+  pm2 <- Sigma %*% solve(Sigma.Y, graph$y)
 
-  expect_equal(as.matrix(pm), as.matrix(pm2),
-               tolerance = 1e-10)
-  pm_ <- spde_posterior_mean(theta, alpha = 2,
-                             graph = graph.temp, obs = FALSE)
-  pm2_ <- Sigma.overdetermined[, index.obs] %*% solve(Sigma.Y, graph.temp$y)
-  expect_equal(as.matrix(pm_), as.matrix(pm2_), tolerance = 1e-10)
+  expect_equal(as.matrix(pm), as.matrix(pm2), tolerance = 1e-10)
 })

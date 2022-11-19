@@ -18,10 +18,18 @@ Y <- as.matrix(Y[,-1])
 TE <- table(c(EtV$V1,EtV$V2))
 
 # Create graph object
-graph <-  metric_graph$new(Lines = as_Spatial(Lines))
-y <- colMeans(Y)
-#y <- y - mean(y) #temporary
-graph$add_observations2(y,PtE)
+if(0){
+  graph <-  metric_graph$new(Lines = as_Spatial(Lines))
+  y <- colMeans(Y)
+  graph$add_observations2(y,PtE)
+} else {
+  graph <-  metric_graph$new(P = as.matrix(V),
+                             E = as.matrix(EtV[,2:3]),
+                             edge_lengths = as.matrix(EtV[,4]))
+  graph$add_observations2(colMeans(Y),as.matrix(PtE))
+  graph$Lines <- as_Spatial(Lines)
+}
+
 
 p <- graph$plot(marker_size = 0, line_width = 0.1, data = TRUE, data_size = 1)
 p <- p + xlab(NULL) + ylab(NULL)
@@ -43,27 +51,49 @@ if(save.fig){
   ggsave("data.png",pp, device = "png")
 }
 
-graph$build_mesh(h=4e-05)
+#center data to assume zero mean
+graph$y <- y - mean(y)
+
 # Fit alpha=1 model
 theta.alpha1 <- c(0.1624661, 10.5330059,  0.2525539)
-res <- optim(log(theta.alpha1), function(x) -likelihood_graph_spde(exp(x),graph,
+res <- optim(log(theta.alpha1), function(x) -likelihood_graph_spde(exp(x),
+                                                                   graph,
                                                                    alpha = 1))
 theta.alpha1 <- exp(res$par)
 like.alpha1 <- -res$value
 
-mu_alpha1 <- spde_posterior_mean(theta.alpha1, graph, alpha = 1, type = "mesh")
 
-#center data to assume zero mean
-graph$y <- y - mean(y)
+graph$build_mesh(h=1e-05)
+p1 <- graph$plot_function_mesh(mu_alpha1)
+p1 <- p1 + coord_cartesian(xlim =c(-121.91,-121.88), ylim = c(37.313, 37.328))
+p1 <- p1 + xlab(NULL) + ylab(NULL)
+p1 <- p1 + scale_colour_continuous(type = "viridis", limits = c(47,51.5))
+p1
+p2 <- graph$plot_function_mesh(mu_alpha1)
+p2 <- p2 + coord_cartesian(xlim =c(-121.94,-121.88), ylim = c(37.35, 37.375))
+p2 <- p2 + xlab(NULL) + ylab(NULL)
+p2 <- p2 + scale_colour_continuous(type = "viridis", limits = c(44,53))
+p2
+
+pp <- grid.arrange(p1, p2, ncol=2,
+                   bottom = "Longitude", left = "Latitude")
+
+pp
+if(save.fig){
+  ggsave("data_krig.png",pp, device = "png")
+}
 
 #fit alpha = 2 model
 graph$buildC(2)
-theta.alpha2 <- c(1.710348e+01, 1.084454e-04, 0.0001)
+theta.alpha2 <- c(0.3747406, 6.7792918, 0.3729290)
 res <- optim(log(theta.alpha2), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 2))
 theta.alpha2 <- exp(res$par)
 like.alpha2 <- -res$value
+
+mu_alpha2 <- mean(y) + spde_posterior_mean(theta.alpha2, graph, alpha = 2, type = "mesh")
+
 
 graph$observation_to_vertex()
 
