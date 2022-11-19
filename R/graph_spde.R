@@ -1,9 +1,13 @@
 
 
 gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
- start_kappa = NULL, start_sigma = NULL, prior_kappa = NULL,
+ parameterization = c("matern", "spde"),
+ start_range = NULL, prior_range = NULL,
+ start_kappa = NULL, start_sigma = NULL, 
+ prior_kappa = NULL,
  prior_sigma = NULL, debug = FALSE){
 
+  parameterization <- parameterization[[1]]
   nu <- alpha - 0.5
   V <- graph_object$V
   EtV <- graph_object$E
@@ -98,17 +102,31 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
   idx_ij <- idx_ij - 1
 
-  if(is.null(prior_kappa$meanlog)){
+    if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       if(is.null(graph_object$geo.dist)){
         graph_object$compute_geodist()
       }
       prior.range.nominal <- max(graph_object$geo.dist) * 0.2
       prior_kappa$meanlog <- log(sqrt(8 *
-      exp(nu) / prior.range.nominal))
+      exp(0.5) / prior.range.nominal))
+      prior_range$meanlog <- log(prior.range.nominal)
+    } else if(is.null(prior_range$meanlog)){
+      if(is.null(graph_object$geo.dist)){
+        graph_object$compute_geodist()
+      }
+      prior.range.nominal <- max(graph_object$geo.dist) * 0.2
+      prior_range$meanlog <- log(prior.range.nominal)
+    } else{
+      prior_kappa$meanlog <- log(sqrt(8 *
+      exp(0.5))) - prior_range$meanlog
     }
   
   if (is.null(prior_kappa$sdlog)) {
     prior_kappa$sdlog <- sqrt(10)
+  }
+
+  if(is.null(prior_range$sdlog)){
+    prior_range$sdlog <- sqrt(10)
   }
 
   if(is.null(prior_sigma$meanlog)){
@@ -129,6 +147,19 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   } else{
     start_lsigma <- log(start_sigma)
   }
+  if(is.null(start_range)){
+    start_lrange <- prior_range$meanlog
+  } else{
+    start_lrange <- log(start_range)
+  }
+
+  if(parameterization == "matern"){
+    start_theta <- start_lrange
+    prior_theta <- prior_range
+  } else{
+    start_theta <- start_lkappa
+    prior_theta <- prior_kappa
+  }
 
   model <- do.call(
         'inla.cgeneric.define',
@@ -143,13 +174,15 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
             EtV3 = EtV3,
             El = El,
             stationary_endpoints = as.integer(index),
-            start_lkappa = start_lkappa,
+            start_theta = start_theta,
             start_lsigma = start_lsigma,
-            prior_kappa_meanlog = prior_kappa$meanlog,
-            prior_kappa_sdlog = prior_kappa$sdlog,
+            prior_theta_meanlog = prior_theta$meanlog,
+            prior_theta_sdlog = prior_theta$sdlog,
             prior_sigma_meanlog = prior_sigma$meanlog,
-            prior_sigma_sdlog = prior_sigma$sdlog))
+            prior_sigma_sdlog = prior_sigma$sdlog,
+            parameterization = parameterization))
 model$graph_obj <- graph_object
+model$parameterization <- parameterization
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
 }
@@ -165,6 +198,282 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
     out[[name.group]] <- rep(rep(1:n.group, each = n.spde), times = n.repl)
     out[[name.repl]] <- rep(1:n.repl, each = n.spde * n.group)
     return(out)
+}
+
+
+#' @name spde_metric_graph_result
+#' @title metric graph SPDE result extraction from INLA estimation results
+#' @description Extract field and parameter values and distributions
+#' for a metric graph spde effect from an inla result object.
+#' @param inla An `inla` object obtained from a call to
+#' `inla()`.
+#' @param name A character string with the name of the rSPDE effect
+#' in the inla formula.
+#' @param metric_graph_spde The `inla_metric_graph_spde` object used for the effect in
+#' the inla formula.
+#' @param compute.summary Should the summary be computed?
+#' @return If the model was fitted with `matern` parameterization (the default), it returns a list containing:
+#' \item{marginals.range}{Marginal densities for the range parameter}
+#' \item{marginals.log.range}{Marginal densities for log(range)}
+#' \item{marginals.sigma}{Marginal densities for std. deviation}
+#' \item{marginals.log.sigma}{Marginal densities for log(std. deviation)}
+#' \item{marginals.values}{Marginal densities for the field values}
+#' \item{summary.log.range}{Summary statistics for log(range)}
+#' \item{summary.log.sigma}{Summary statistics for log(std. deviation)}
+#' \item{summary.values}{Summary statistics for the field values}
+#' If `compute.summary` is `TRUE`, then the list will also contain
+#' \item{summary.kappa}{Summary statistics for kappa}
+#' \item{summary.tau}{Summary statistics for tau}
+#' If the model was fitted with the `spde` parameterization, it returns a list containing:
+#' \item{marginals.kappa}{Marginal densities for kappa}
+#' \item{marginals.log.kappa}{Marginal densities for log(kappa)}
+#' \item{marginals.log.tau}{Marginal densities for log(tau)}
+#' \item{marginals.tau}{Marginal densities for tau}
+#' \item{marginals.values}{Marginal densities for the field values}
+#' \item{summary.log.kappa}{Summary statistics for log(kappa)}
+#' \item{summary.log.tau}{Summary statistics for log(tau)}
+#' \item{summary.values}{Summary statistics for the field values}
+#' If `compute.summary` is `TRUE`, then the list will also contain
+#' \item{summary.kappa}{Summary statistics for kappa}
+#' \item{summary.tau}{Summary statistics for tau}
+#' @export
+
+spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE) {
+  if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
+    stop("You should provide an inla_metric_graph_spde object!")
+  }
+
+  result <- list()
+
+  parameterization <- metric_graph_spde$parameterization
+
+    if(parameterization == "spde"){
+      row_names <- c("sigma", "kappa")
+    } else{
+      row_names <- c("sigma", "range")
+    }
+
+  result$summary.values <- inla$summary.random[[name]]
+
+  if (!is.null(inla$marginals.random[[name]])) {
+    result$marginals.values <- inla$marginals.random[[name]]
+  }
+
+  if(parameterization == "spde"){
+    name_theta1 <- "sigma"
+    name_theta2 <- "kappa"
+  } else{
+    name_theta1 <- "sigma"
+    name_theta2 <- "range"
+  }
+
+
+  result[[paste0("summary.log.",name_theta1)]] <- INLA::inla.extract.el(
+    inla$summary.hyperpar,
+    paste("Theta1 for ", name, "$", sep = "")
+  )
+  rownames(  result[[paste0("summary.log.",name_theta1)]]) <- paste0("log(",name_theta1,")")
+  
+  result[[paste0("summary.log.",name_theta2)]] <- INLA::inla.extract.el(
+    inla$summary.hyperpar,
+    paste("Theta2 for ", name, "$", sep = "")
+  )
+  rownames(result[[paste0("summary.log.",name_theta2)]]) <- paste0("log(", name_theta2,")")
+
+  if (!is.null(inla$marginals.hyperpar[[paste0("Theta1 for ", name)]])) {
+    result[[paste0("marginals.log.",name_theta1)]] <- INLA::inla.extract.el(
+      inla$marginals.hyperpar,
+      paste("Theta1 for ", name, "$", sep = "")
+    )
+    names(result[[paste0("marginals.log.",name_theta1)]]) <- name_theta1
+    result[[paste0("marginals.log.",name_theta2)]] <- INLA::inla.extract.el(
+      inla$marginals.hyperpar,
+      paste("Theta2 for ", name, "$", sep = "")
+    )
+    names(result[[paste0("marginals.log.",name_theta2)]]) <- name_theta2
+
+    result[[paste0("marginals.",name_theta1)]] <- lapply(
+      result[[paste0("marginals.log.",name_theta1)]],
+      function(x) {
+        INLA::inla.tmarginal(
+          function(y) exp(y),
+          x
+        )
+      }
+    )
+    result[[paste0("marginals.",name_theta2)]] <- lapply(
+      result[[paste0("marginals.log.",name_theta2)]],
+      function(x) {
+        INLA::inla.tmarginal(
+          function(y) exp(y),
+          x
+        )
+      }
+    )
+  }
+
+  if (compute.summary) {
+    norm_const <- function(density_df) {
+      min_x <- min(density_df[, "x"])
+      max_x <- max(density_df[, "x"])
+      denstemp <- function(x) {
+        dens <- sapply(x, function(z) {
+          if (z < min_x) {
+            return(0)
+          } else if (z > max_x) {
+            return(0)
+          } else {
+            return(approx(x = density_df[, "x"],
+            y = density_df[, "y"], xout = z)$y)
+          }
+        })
+        return(dens)
+      }
+      norm_const <- stats::integrate(
+        f = function(z) {
+          denstemp(z)
+        }, lower = min_x, upper = max_x,
+        subdivisions = nrow(density_df)
+      )$value
+      return(norm_const)
+    }
+
+    norm_const_theta1 <- norm_const(result[[paste0("marginals.",name_theta1)]][[name_theta1]])
+    result[[paste0("marginals.",name_theta1)]][[name_theta1]][, "y"] <-
+    result[[paste0("marginals.",name_theta1)]][[name_theta1]][, "y"] / norm_const_theta1
+
+    norm_const_theta2 <- norm_const(result[[paste0("marginals.",name_theta2)]][[name_theta2]])
+    result[[paste0("marginals.",name_theta2)]][[name_theta2]][, "y"] <-
+    result[[paste0("marginals.",name_theta2)]][[name_theta2]][, "y"] / norm_const_theta2
+
+
+
+
+    result[[paste0("summary.",name_theta1)]] <- create_summary_from_density(result[[paste0("marginals.",name_theta1)]][[name_theta1]],
+    name = name_theta1)
+    result[[paste0("summary.",name_theta2)]] <-
+    create_summary_from_density(result[[paste0("marginals.",name_theta2)]][[name_theta2]], name = name_theta2)
+  }
+
+  class(result) <- "metric_graph_spde_result"
+  result$params <- c(name_theta1,name_theta2)
+  return(result)
+}
+
+
+#' Data frame for rspde.result objects to be used in ggplot2
+#'
+#' Returns a ggplot-friendly data-frame with the marginal posterior densities.
+#'
+#' @param spde_result An metric_graph_spde_result object.
+#' @param parameter Vector. Which parameters to get the posterior density in the data.frame? The options are `sigma`, `range` or `kappa`.
+#' @param transform Should the posterior density be given in the original scale?
+#' @param restrict_x_axis Variables to restrict the range of x axis based on quantiles.
+#' @param restrict_quantiles List of quantiles to restrict x axis.
+#'
+#' @return A data frame containing the posterior densities.
+
+#' @export
+gg_df <- function(spde_result, 
+                          parameter = spde_result$params,
+                          transform = TRUE,
+                          restrict_x_axis = parameter,
+                          restrict_quantiles = list(std.dev = c(0,1),
+                          range = c(0,1),
+                          nu = c(0,1),
+                          kappa = c(0,1),
+                          tau = c(0,1))) {
+      if(!inherits(spde_result, "metric_graph_spde_result")){
+        stop("The argument rspde_result should be of class metric_graph_spde_result!")
+      }
+      parameter <- intersect(parameter, c("kappa", "range", "sigma"))
+      if(length(parameter) == 0){
+        stop("You should choose at least one of the parameters 'kappa', 'range' or 'sigma'!")
+      }
+  
+  param <- parameter[[1]]
+  if(transform){
+    param <- paste0("marginals.", param)
+  } else{
+      param <- paste0("marginals.log.", param)
+  }
+  ret_df <- data.frame(x = spde_result[[param]][[parameter[1]]][,1], 
+  y = spde_result[[param]][[parameter[1]]][,2], 
+  parameter = parameter[[1]])
+
+  if(parameter[[1]] %in% restrict_x_axis){
+    if(is.null( restrict_quantiles[[parameter[[1]]]])){
+      warning("If you want to restrict x axis you should provide a quantile for the parameter!")
+       restrict_quantiles[[parameter[[1]]]] <- c(0,1)
+    }
+    d_t <- c(0,diff(ret_df$x))
+    emp_cdf <- cumsum(d_t*ret_df$y)
+    lower_quant <- restrict_quantiles[[parameter[[1]]]][1]
+    upper_quant <- restrict_quantiles[[parameter[[1]]]][2]
+    filter_coord <- (emp_cdf >= lower_quant) * (emp_cdf <= upper_quant)
+    filter_coord <- as.logical(filter_coord)
+    ret_df <- ret_df[filter_coord, ]
+  }
+
+  if(length(parameter) > 1){
+  for(i in 2:length(parameter)){
+  param <- parameter[[i]]
+  if(transform){
+    param <- paste0("marginals.", param)
+  } else{
+      param <- paste0("marginals.log.", param)
+  }
+    tmp <- data.frame(x = spde_result[[param]][[parameter[i]]][,1], 
+      y = spde_result[[param]][[parameter[i]]][,2], 
+      parameter = parameter[[i]])
+
+    if(parameter[[i]] %in% restrict_x_axis){
+    if(is.null( restrict_quantiles[[parameter[[i]]]])){
+      warning(paste("No quantile for", parameter[[i]]))
+      warning("If you want to restrict x axis you should provide a quantile for the parameter!")
+       restrict_quantiles[[parameter[[i]]]] <- c(0,1)
+    }
+    d_t <- c(0,diff(tmp$x))
+    emp_cdf <- cumsum(d_t*tmp$y)
+    lower_quant <- restrict_quantiles[[parameter[[i]]]][1]
+    upper_quant <- restrict_quantiles[[parameter[[i]]]][2]
+    filter_coord <- (emp_cdf >= lower_quant) * (emp_cdf <= upper_quant)
+    filter_coord <- as.logical(filter_coord)
+    tmp <- tmp[filter_coord, ]
+  }
+    
+    ret_df <- rbind(ret_df, tmp)
+  }
+  }
+  return(ret_df)
+}
+
+
+#' @name summary.metric_graph_spde_result
+#' @title Summary for posteriors of field parameters for an `inla_rspde`
+#' model from a `rspde.result` object
+#' @description Summary for posteriors of rSPDE field parameters in
+#' their original scales.
+#' @param object A `rspde.result` object.
+#' @param digits integer, used for number formatting with signif()
+#' @param ... Currently not used.
+#' @return Returns a `data.frame`
+#' containing the summary.
+#' @export
+#' @method summary metric_graph_spde_result
+
+summary.metric_graph_spde_result <- function(object,
+                                 digits = 6,
+                                 ...) {
+
+  if (is.null(object[[paste0("summary.",object$params[1])]])) {
+    warning("The summary was not computed, rerun spde_metric_graph_result with
+    compute.summary set to TRUE.")
+  } else {
+    out <- object[[paste0("summary.",object$params[1])]]
+    out <- rbind(out, object[[paste0("summary.",object$params[2])]])
+    return(signif(out, digits = digits))
+  }
 }
 
 
@@ -210,6 +519,7 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
     input <- as.matrix(input)
   }
   model <- mapper[["model"]]
+
   if(is.null(model$graph_obj$A)){
     model$graph_obj$observation_to_vertex()
   }
@@ -220,3 +530,85 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
 bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
  inlabru::bru_mapper(model)
 }
+
+
+
+#' @name create_summary_from_density
+#' @title Creates a summary from a density data frame
+#' @description Auxiliar function to create summaries from density data drames
+#' @param density_df A density data frame
+#' @param name Name of the parameter
+#' @return A data frame containing a basic summary
+#' @noRd
+
+create_summary_from_density <- function(density_df, name) {
+  min_x <- min(density_df[, "x"])
+  max_x <- max(density_df[, "x"])
+  denstemp <- function(x) {
+    dens <- sapply(x, function(z) {
+      if (z < min_x) {
+        return(0)
+      } else if (z > max_x) {
+        return(0)
+      } else {
+        return(approx(x = density_df[, "x"], y = density_df[, "y"], xout = z)$y)
+      }
+    })
+    return(dens)
+  }
+
+  ptemp <- function(q) {
+    prob_temp <- sapply(q, function(v) {
+      if (v <= min_x) {
+        return(0)
+      } else if (v >= max_x) {
+        return(1)
+      } else {
+        stats::integrate(
+          f = denstemp, lower = min_x, upper = v,
+          subdivisions = min(nrow(density_df), 500)
+        )$value
+      }
+    })
+    return(prob_temp)
+  }
+
+  mean_temp <- stats::integrate(
+    f = function(z) {
+      denstemp(z) * z
+    }, lower = min_x, upper = max_x,
+    subdivisions = nrow(density_df)
+  )$value
+
+  sd_temp <- sqrt(stats::integrate(
+    f = function(z) {
+      denstemp(z) * (z - mean_temp)^2
+    }, lower = min_x, upper = max_x,
+    subdivisions = nrow(density_df)
+  )$value)
+
+  mode_temp <- density_df[which.max(density_df[, "y"]), "x"]
+
+  qtemp <- function(p) {
+    quant_temp <- sapply(p, function(x) {
+      if (x < 0 | x > 1) {
+        return(NaN)
+      } else {
+        return(stats::uniroot(function(y) {
+          ptemp(y) - x
+        }, lower = min_x, upper = max_x)$root)
+      }
+    })
+    return(quant_temp)
+  }
+
+  out <- data.frame(
+    mean = mean_temp, sd = sd_temp, `0.025quant` = qtemp(0.025),
+    `0.5quant` = qtemp(0.5), `0.975quant` = qtemp(0.975), mode = mode_temp
+  )
+  rownames(out) <- name
+  colnames(out) <- c("mean", "sd", "0.025quant",
+  "0.5quant", "0.975quant", "mode")
+  return(out)
+}
+

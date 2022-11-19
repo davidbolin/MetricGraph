@@ -65,7 +65,8 @@ y <- A%*%u + sigma.e * eps
 spde_model <- gpgraph_spde(graph)
 
 spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
-                                    start_sigma = sigma)
+                                    start_sigma = sigma,
+                                    parameterization = "spde")
 
 Q_chk <- inla.cgeneric.q(spde_model_check)$Q
 
@@ -102,19 +103,6 @@ f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
 spde_fit <- inla(f.s, data = inla.stack.data(stk.dat), verbose = TRUE)
 
+spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
-
-
-i_ = spde_model$f$cgeneric$data$ints$prec_graph_i+1
-j_ = spde_model$f$cgeneric$data$ints$prec_graph_j +1
-
-tmp_graph <- sparseMatrix(i = spde_model$f$cgeneric$data$ints$prec_graph_i+1,
-j = spde_model$f$cgeneric$data$ints$prec_graph_j +1)
-tmp_graph <- inla.as.sparse(tmp_graph)
-ii <- tmp_graph@i
-tmp_graph@i <- tmp_graph@j
-tmp_graph@j <- ii
-idx <- which(tmp_graph@i <= tmp_graph@j)
-tmp_graph@i <- tmp_graph@i[idx]
-tmp_graph@j <- tmp_graph@j[idx]
-A@x <- A@x[idx]
+summary(spde_result)

@@ -11,6 +11,8 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   double c1, c2, c_1, c_2, one_m_c2, l_e;
 
   int N, M, i, j, k;
+
+  char *parameterization;
   
   // the size of the model
   assert(data->n_ints == 7);
@@ -62,17 +64,17 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   inla_cgeneric_vec_tp *El = data->doubles[2];
 
   // prior parameters
-  assert(!strcasecmp(data->doubles[3]->name, "start_lkappa"));
-  double start_lkappa = data->doubles[3]->doubles[0];
+  assert(!strcasecmp(data->doubles[3]->name, "start_theta"));
+  double start_theta = data->doubles[3]->doubles[0];
 
   assert(!strcasecmp(data->doubles[4]->name, "start_lsigma"));
   double start_lsigma = data->doubles[4]->doubles[0];
 
-  assert(!strcasecmp(data->doubles[5]->name, "prior_kappa_meanlog"));
-  double prior_kappa_meanlog = data->doubles[5]->doubles[0];
+  assert(!strcasecmp(data->doubles[5]->name, "prior_theta_meanlog"));
+  double prior_theta_meanlog = data->doubles[5]->doubles[0];
 
-  assert(!strcasecmp(data->doubles[6]->name, "prior_kappa_sdlog"));
-  double prior_kappa_sdlog = data->doubles[6]->doubles[0];
+  assert(!strcasecmp(data->doubles[6]->name, "prior_theta_sdlog"));
+  double prior_theta_sdlog = data->doubles[6]->doubles[0];
 
   assert(!strcasecmp(data->doubles[7]->name, "prior_sigma_meanlog"));
   double prior_sigma_meanlog = data->doubles[7]->doubles[0];
@@ -80,10 +82,18 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   assert(!strcasecmp(data->doubles[8]->name, "prior_sigma_sdlog"));
   double prior_sigma_sdlog = data->doubles[8]->doubles[0];
 
+  assert(!strcasecmp(data->chars[2]->name, "parameterization"));
+  parameterization = &data->chars[2]->chars[0];
+
   if (theta) {
     // interpretable parameters 
+
+    if(!strcasecmp(parameterization, "matern")){
+      lkappa = log(2.0) - theta[1];
+    } else {
+      lkappa = theta[1];
+    }
     lsigma = theta[0];
-    lkappa = theta[1];
     kappa = exp(lkappa);
     sigma = exp(lsigma);
   }
@@ -223,7 +233,7 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
       ret = Calloc(3, double);
       ret[0] = 2;
       ret[1] = start_lsigma;
-      ret[2] = start_lkappa;
+      ret[2] = start_theta;
       break;
     }
     
@@ -238,8 +248,8 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
 
       ret[0] = 0.0;
 
-      ret[0] += -0.5 * SQR(lkappa - prior_kappa_meanlog)/(SQR(prior_kappa_sdlog)) - 
-      log(prior_kappa_sdlog) - 0.5 * log(2.0 * M_PI); 
+      ret[0] += -0.5 * SQR(theta[1] - prior_theta_meanlog)/(SQR(prior_theta_sdlog)) - 
+      log(prior_theta_sdlog) - 0.5 * log(2.0 * M_PI); 
 
       ret[0] += -0.5 * SQR(lsigma - prior_sigma_meanlog)/(SQR(prior_sigma_sdlog)) - 
       log(prior_sigma_sdlog) - 0.5 * log(2.0 * M_PI);
