@@ -257,7 +257,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         coords <- c()
         for(i in 1:dim(PtE)[1]){
 
-          LT = private$edge_pos_to_line_pos(self$PtE[i, 2] , self$PtE[i, 1])
+          LT = private$edge_pos_to_line_pos(self$PtE[i, 1] , self$PtE[i, 2])
           points <- rgeos::gInterpolate(self$Lines[LT[1,1],],
                                         LT[1,2],
                                         normalized = TRUE)
@@ -736,9 +736,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
   private = list(
     #' @description computes which line and which position t_E on Ei belongs to
-    #' @param t_e (n x 1) number of positions on Ei
     #' @param Ei  (int)   edge index
-    edge_pos_to_line_pos = function(t_E,Ei){
+    #' @param t_e (n x 1) number of positions on Ei
+    edge_pos_to_line_pos = function(Ei, t_E){
 
       LT <- matrix(0, nrow= length(t_E),2)
 
@@ -755,7 +755,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         if(sum(index_j) == 0)
           next
 
-        LT[index_j,1] = j
+        LT[index_j,1] = LinesPos[j,1]
         rel.pos = t_E[index_j]
         if(j == 1){
           rel.pos <- rel.pos/LinesPos[j,2]
@@ -1014,13 +1014,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if (data) {
       x <- y <- NULL
       for (i in 1:length(self$y)) {
-        Line <- self$Lines[self$PtE[i, 1], ]
+        LT <- private$edge_pos_to_line_pos(self$PtE[i, 1],self$PtE[i, 2])
+        Line <- self$Lines[LT[1, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
-        Point <- gInterpolate(Line, self$PtE[i, 2], normalized = TRUE)
+        Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
         x <- c(x, Point@coords[1])
         y <- c(y, Point@coords[2])
       }
-      p <- p + geom_point(data = data.frame(x = x, y = y, val = self$y),
+      p <- p + geom_point(data = data.frame(x = x, y = y, val = as.vector(self$y)),
                           mapping = aes(x, y, color = val),
                           size = data_size) +
         scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
