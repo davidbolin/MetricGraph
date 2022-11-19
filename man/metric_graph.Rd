@@ -46,6 +46,10 @@ is the vertex at the end of the edge}
 
 \item{\code{EtL}}{[i,] - edge i position on lines}
 
+\item{\code{ELend}}{normalized end point of edge on line (normalized on the line)}
+
+\item{\code{Estart}}{normalized start point of edge on line (normalized on the line)}
+
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
 \item{\code{A}}{Matrix specifying which vertices are observation locations}
@@ -79,6 +83,8 @@ locations}
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
 \item{\code{EtL}}{[i,] - edge i position on lines}
+
+\item{\code{Estart}}{normalized start point of edge on line (normalized on the line)}
 }
 \if{html}{\out{</div>}}
 }
@@ -100,6 +106,7 @@ locations}
 \item \href{#method-GPGraph::graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
+\item \href{#method-GPGraph::graph-split_edge}{\code{metric_graph$split_edge()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -393,7 +400,7 @@ plot function X on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
-  flat = TRUE,
+  plotly = TRUE,
   show = TRUE,
   graph_color = "rgb(0,0,0)",
   graph_width = 1,
@@ -410,7 +417,7 @@ plot function X on the graph
 curve (in length), value) or a vector with values for the function
 evaluated at a precomputed mesh.}
 
-\item{\code{flat}}{plot in 2D or 3D?}
+\item{\code{plotly}}{plot in 2D or 3D?}
 
 \item{\code{show}}{show the plot?}
 
@@ -464,6 +471,25 @@ evaluated at a precomputed mesh (V,and PtE)}
 \item{\code{color}}{Color of curve}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-split_edge"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-split_edge}{}}}
+\subsection{Method \code{split_edge()}}{
+split_edge Function for splitting lines
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_edge(Ei, t)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Ei}}{index of line to split}
+
+\item{\code{t}}{position on line to split (normalized)}
 }
 \if{html}{\out{</div>}}
 }

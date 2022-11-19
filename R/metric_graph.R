@@ -29,6 +29,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @field EtL [i,] - edge i position on lines
   LtE = NULL,
 
+  #' @field ELend normalized end point of edge on line (normalized on the line)
+  ELend = NULL,
+  #' @field Estart normalized start point of edge on line (normalized on the line)
+  ELstart = NULL,
+
   #' @field C constraint matrix used to set Kirchhoff constraints
   C = NULL,
 
@@ -153,6 +158,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
 
   #' @description Add observation locations as vertices in the graph
+  #' @export
   observation_to_vertex = function(){
 
     l <- length(self$PtE[, 1])
@@ -168,7 +174,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
           self$PtE[i, 2] <- 1
           self$PtV[i] <- self$E[e, 2]
         }else{
-          private$split_line(e, t)
+          self$split_edge(e, t)
           self$PtV[i] <- dim(self$V)[1]
         }
     }
@@ -195,24 +201,39 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
     self$y   = y
 
-    SP <- snapPointsToLines(Spoints, self$Lines)
+    SP <- maptools::snapPointsToLines(Spoints, self$Lines)
     coords.old <- Spoints@coords
     colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
     Spoints@coords = SP@coords
     Spoints@bbox   = SP@bbox
-    PtE = cbind(match(SP@data[,1], self$EID),0)
+    LtE = cbind(match(SP@data[,1], self$EID),0)
     if("SpatialPointsDataFrame"%in%is(Spoints)){
       Spoints@data <- cbind(Spoints@data,coords.old)
     }else{
       Spoints <- SpatialPointsDataFrame(Spoints, data = coords.old)
     }
-    for(ind in unique(PtE[,1])){
-        index.p = PtE[,1]==ind
-        PtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,])
+    for(ind in unique(LtE[,1])){
+        index.p = LtE[,1]==ind
+        LtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,])
     }
+    PtE = LtE
+    for(ind in unique(LtE[,1])){
+      Es_ind <- which(self$LtE[ind,]>0)
+      index.p = which(LtE[,1]==ind)
+      for(j in index.p){
+        E_ind <- which.min(replace(self$ELend[Es_ind], self$ELend[Es_ind] < LtE[j,2], NA))
+        PtE[j,1] <- Es_ind[E_ind]
+        PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
 
-    self$Points = Spoints
-    self$PtE = PtE
+      }
+    }
+    if(is.null(self$Points)){
+      self$Points = Spoints
+      self$PtE = PtE
+    }else{
+      self$Points = rbind(self$Points,Spoints)
+      self$PtE = rbind(self$PtE,PtE)
+    }
   },
 
   #' @description add observations to the object
@@ -231,13 +252,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
 
     if(!is.null(self$Lines)){
+
       if(is.null(Spoints)){
-        Edges <- unique(self$PtE[, 1])
         coords <- c()
-        for(e in Edges){
-          ind <- self$PtE[, 1] == e
-          points <- rgeos::gInterpolate(self$Lines[e, ],
-                                        self$PtE[ind, 2],
+        for(i in 1:dim(PtE)[1]){
+
+          LT = private$edge_pos_to_line_pos(self$PtE[i, 2] , self$PtE[i, 1])
+          points <- rgeos::gInterpolate(self$Lines[LT[1,1],],
+                                        LT[1,2],
                                         normalized = TRUE)
           coords <- rbind(coords, points@coords)
         }
@@ -495,7 +517,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at a precomputed mesh.
-  #' @param flat plot in 2D or 3D?
+  #' @param plotly plot in 2D or 3D?
   #' @param show show the plot?
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param graph_width for 3D plot, the line width of the graph.
@@ -503,7 +525,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
   #' @export
-  plot_function = function(X, flat = TRUE, show = TRUE,
+  plot_function = function(X, plotly = TRUE, show = TRUE,
                        graph_color = 'rgb(0,0,0)',
                        graph_width = 1,
                        marker_size = 10,
@@ -527,34 +549,19 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       if(is.null(self$Lines) == TRUE) {
         p <- private$plot_straight_curve(vals,
                                          self$V[self$E[i,],],
-                                         flat = flat,
+                                         plotly = plotly,
                                          p = p,
                                          color = color,
                                          ...)
 
       } else {
         if(!is.null(vals)){
-          index <- (self$LtE@p[i]+1):(self$LtE@p[i+1])
-          LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
-          LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
-          for(j in 1:length(index)){
-            index_j <- vals[,1] <= LinesPos[j,2]
-
-            if(sum(index_j) > 0){
-              if(j == 1){
-                vals[index_j,1] <- vals[index_j,1]/LinesPos[j,2]
-              }else{
-                vals[index_j,1] <- (vals[index_j,1]-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
-              }
-              p <- private$plot_curve(vals[index_j,],
-                                      SpatialLines(list(self$Lines@lines[[LinesPos[j,1]]])),
-                                      flat = flat,
-                                      p = p,
-                                      color = color,
-                                      ...)
-              vals <- vals[index_j==F,drop=F]
-            }
-          }
+          p<-private$plot_edge_line(vals,
+                                 Eindex = i,
+                                 p = p,
+                                 ploty = ploty,
+                                 color = color,
+                                 ... )
       }
 
       }
@@ -619,26 +626,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
       } else {
         if(!is.null(vals)){
-          index <- (self$LtE@p[i]+1):(self$LtE@p[i+1])
-          LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
-          LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
-          for(j in 1:length(index)){
-            index_j <- vals[,1] <= LinesPos[j,2]
-            if(sum(index_j) > 0){
-              if(j == 1){
-                vals[index_j,1] <- vals[index_j,1]/LinesPos[j,2]
-              }else{
-                vals[index_j,1] <- (vals[index_j,1]-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
-              }
-              p <- private$plot_curve(vals[index_j,],
-                                      SpatialLines(list(self$Lines@lines[[LinesPos[j,1]]])),
-                                      plotly = plotly,
-                                      p = p,
-                                      color = color,
-                                      ...)
-              vals <- vals[index_j==F,drop=F]
-            }
-          }
+          p <- private$plot_edge_line(vals,
+                                 Eindex = i,
+                                 p = p,
+                                 plotly = plotly,
+                                 color = color,
+                                 ... )
         }
       }
 
@@ -647,80 +640,173 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       print(p)
     }
     return(p)
-  }),
-  private = list(
+  },
 
-  split_line = function(Ei, t){
-      if (!is.null(self$Lines)) {
-        Line <- self$Lines[Ei, ]
+  #' @description split_edge Function for splitting lines
+  #' @param Ei index of line to split
+  #' @param t  position on line to split (normalized)
+  #' @export
+  split_edge = function(Ei, t){
+    if (!is.null(self$Lines)) {
 
-        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
-        ind <-  (val_line <= t)
-        Point <- gInterpolate(Line, t, normalized = TRUE)
-        Line1 <- list(as(Line, "SpatialPoints")[ind, ], Point)
-        Line2 <- list(Point, as(Line, "SpatialPoints")[ind == FALSE, ])
-
-        if(sum(is(self$Lines)%in%"SpatialLinesDataFrame") > 0){
-          self$Lines <-rbind(self$Lines[1:Ei - 1, ],
-                             SpatialLinesDataFrame(as(do.call(rbind, Line1),
-                                                      "SpatialLines"),
-                                                   data=Line@data,
-                                                   match.ID = FALSE),
-                             self$Lines[-(1:Ei), ],
-                             SpatialLinesDataFrame(as(do.call(rbind, Line2),
-                                                      "SpatialLines"),
-                                                   data=Line@data,
-                                                   match.ID = FALSE))
-        }else{
-          self$Lines <-rbind(self$Lines[1:Ei-1, ],
-                             as(do.call(rbind, Line1), "SpatialLines"),
-                             self$Lines[-(1:Ei), ],
-                             as(do.call(rbind, Line2), "SpatialLines"))
-
-        }
-
-        newV <- self$nV+1
-        self$V <- rbind(self$V, c(Point@coords))
-
-        l_e <- self$edge_lengths[Ei]
-        self$edge_lengths[Ei] <- t * l_e
-        self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
-        self$nE <- self$nE + 1
-        self$E <- rbind(self$E,
-                        c(newV, self$E[Ei, 2]))
-        self$E[Ei, 2] <- newV
-        ind <- which(self$PtE[, 1] %in% Ei)
-        for(i in ind){
-          if (self$PtE[i, 2] >= t - 1e-10) {
-            self$PtE[i, 1] <- self$nE
-            self$PtE[i, 2] <- abs(self$PtE[i, 2] - t)/(1 - t)
-          }
-        }
-        self$nV <- dim(self$V)[1]
-      } else {
-        V1 <- self$V[self$E[Ei, 1], ]
-        V2 <- self$V[self$E[Ei, 2], ]
-        val_line <- (1-t)*V1 + t*V2
-
-        newV <- self$nV + 1
-        self$V <- rbind(self$V, c(val_line))
-
-        l_e <- self$edge_lengths[Ei]
-        self$edge_lengths[Ei] <- t * l_e
-        self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
-        self$nE <- self$nE + 1
-        self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
-        self$E[Ei, 2] <- newV
-        ind <- which(self$PtE[, 1] %in% Ei)
-        for(i in ind){
-          if (self$PtE[i, 2] >= t - 1e-10) {
-            self$PtE[i, 1] <- self$nE
-            self$PtE[i, 2] <- abs(self$PtE[i, 2] - t)/(1 - t)
-          }
-        }
-        self$nV <- dim(self$V)[1]
+      index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
+      LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
+      LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
+      j <-  min(which(t  <= LinesPos[,2]))
+      t_mod <- t
+      if(j == 1){
+        t_mod <- t_mod/LinesPos[j,2]
+      }else{
+        t_mod <- (t_mod-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
       }
+      if(j== dim(LinesPos)[1] )
+        t_mod = self$ELend[Ei]*t_mod
+      if(j==1)
+        t_mod = t_mod + self$ELstart[Ei]
 
+      Line <- self$Lines[j, ]
+      val_line <- gInterpolate(Line, t_mod, normalized = TRUE)@coords
+
+      #change LtE
+      self$ELend <- c(self$ELend, self$ELend[Ei])
+      self$ELend[Ei] <- t_mod
+      self$ELstart <- c(self$ELstart, t_mod)
+      LtE.i <- self$LtE@i
+      LtE.p <- self$LtE@p
+      LtE.x <- self$LtE@x
+      LtE.dim <- self$LtE@Dim
+      LtE.dim[2] <- LtE.dim[2] + 1
+      # add the new column
+      LtE.i_new <- LinesPos[j,1] - 1
+      LtE.x_new <- LinesPos[j,2]
+      large <- LtE.x[index] > t
+
+      n.p <- length(self$LtE@p)
+      if(sum(large)>1){
+        index.rem = index[large]
+        index.rem <- index.rem[-length(index.rem)]
+        LtE.i_new = c(LtE.i_new,LtE.i[index.rem])
+        LtE.x_new = c(LtE.x_new,LtE.x[index.rem])
+        LtE.i <- LtE.i[-index.rem]
+        LtE.x <- LtE.x[-index.rem]
+        self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
+      }
+      LtE.p_new <- self$LtE@p[n.p] + sum(large)
+
+      self$LtE <-Matrix::sparseMatrix(i    = c(LtE.i, LtE.i_new)+1,
+                                      p    = c(LtE.p, LtE.p_new),
+                                      x    = c(LtE.x, LtE.x_new),
+                                      dims = LtE.dim )
+
+
+    }else{
+      V1 <- self$V[self$E[Ei, 1], ]
+      V2 <- self$V[self$E[Ei, 2], ]
+      val_line <- (1-t)*V1 + t*V2
+    }
+
+    newV <- self$nV + 1
+    self$V <- rbind(self$V, c(val_line))
+    l_e <- self$edge_lengths[Ei]
+    self$edge_lengths[Ei] <- t * l_e
+    self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
+    self$nE <- self$nE + 1
+    self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
+    self$E[Ei, 2] <- newV
+    ind <- which(self$PtE[, 1] %in% Ei)
+    for(i in ind){
+      if (self$PtE[i, 2] >= t - 1e-10) {
+        self$PtE[i, 1] <- self$nE
+        self$PtE[i, 2] <- abs(self$PtE[i, 2] - t)/(1 - t)
+      }
+    }
+    self$nV <- dim(self$V)[1]
+
+
+  }
+
+  ),
+
+  private = list(
+    #' @description computes which line and which position t_E on Ei belongs to
+    #' @param t_e (n x 1) number of positions on Ei
+    #' @param Ei  (int)   edge index
+    edge_pos_to_line_pos = function(t_E,Ei){
+
+      LT <- matrix(0, nrow= length(t_E),2)
+
+      L_index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
+      #LinPos line number and end relative end of the line on the edge
+      LinesPos <- cbind(self$LtE@i[L_index] + 1, self$LtE@x[L_index])
+      LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
+      for(j in 1:length(L_index)){
+        if(j==1){
+          index_j <-  t_E <= LinesPos[j,2]
+        }else{
+          index_j <- (t_E <= LinesPos[j,2]) &  (t_E > LinesPos[j-1,2])
+        }
+        if(sum(index_j) == 0)
+          next
+
+        LT[index_j,1] = j
+        rel.pos = t_E[index_j]
+        if(j == 1){
+          rel.pos <- rel.pos/LinesPos[j,2]
+        }else{
+          rel.pos <- (rel.pos-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+        }
+
+        if(j== dim(LinesPos)[1] )
+          rel.pos = self$ELend[Ei]*rel.pos
+        if(j==1)
+          rel.pos = rel.pos + self$ELstart[Ei]
+
+        LT[index_j,2] = rel.pos
+
+      }
+      return(LT)
+    },
+
+    #' @description plotting edges when there exists lines
+    #' @param vals    (m x 2) position on edge, value
+    #' @param Eindex  (int)   which edge
+    #' @param p       (ggplot) previous plot object
+    #' @param plotly   (?)
+    #' @param color   (?)
+    #'
+    plot_edge_line = function(vals, Eindex, p, plotly, color,  ... ){
+      index <- (self$LtE@p[Eindex]+1):(self$LtE@p[Eindex+1])
+      LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
+      LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
+      for(j in 1:length(index)){
+        if(j==1){
+          index_j <- vals[,1] <= LinesPos[j,2]
+        }else{
+          index_j <- (vals[,1] <= LinesPos[j,2]) &  (vals[,1] > LinesPos[j-1,2])
+        }
+        if(sum(index_j) > 0)
+          next
+        rel.pos = vals[index_j,1]
+        if(j == 1){
+          rel.pos <- rel.pos/LinesPos[j,2]
+        }else{
+          rel.pos <- (rel.pos-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+        }
+
+        if(j== dim(LinesPos)[1] )
+          rel.pos = self$ELend[Eindex]*rel.pos
+        if(j==1)
+          rel.pos = rel.pos + self$ELstart[Eindex]
+
+        p <- private$plot_curve(cbind(rel.pos,vals[index_j,2]),
+                                SpatialLines(list(self$Lines@lines[[LinesPos[j,1]]])),
+                                plotly = plotly,
+                                p = p,
+                                color = color,
+                                ...)
+
+      }
+      return(p)
     },
   #'
   #'@description function for creating Vertex and Edges from self$lines
@@ -768,6 +854,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                     i    = c(1:length(self$Lines)),
                                     x    = rep(1,dim(self$E)[1]),
                                     dims = c(dim(self$E)[1], length(self$Lines)) )
+    self$ELend = rep(1,dim(self$E)[1])
+    self$ELstart = rep(0,dim(self$E)[1])
+
   },
   plot_curve = function(data.to.plot,
                         Line_edge,
