@@ -101,7 +101,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
-graph$plot(line_width = 0.3, show = FALSE)
+graph$plot(line_width = 0.3)
 ```
 
 For further details on the construction of metric graphs, see
@@ -132,7 +132,7 @@ alpha <- 1
 kappa <- 5
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph, PtE = PtE)
-graph$plot(X = u, X_loc = PtE, show = FALSE)
+graph$plot(X = u, X_loc = PtE)
 ```
 
 In many cases, one wants to sample the field at evenly spaced locations over
@@ -140,7 +140,7 @@ the graph. To avoid having to specify such locations manually, we can first
 create a mesh on the graph
 ```{r}
 graph$build_mesh(h = 0.1)
-graph$plot(mesh=TRUE, show = FALSE)
+graph$plot(mesh=TRUE)
 ```
 
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. We can now sample the field on this mesh and plot the 
@@ -148,7 +148,7 @@ result as a function as follows:
 ```{r}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function_mesh(u, show = FALSE)
+graph$plot_function_mesh(u)
 ```
 
 Let us construct a finer mesh, simulate the field, and visualize the simulation
@@ -157,7 +157,7 @@ in 3D by specifying the `plotly` argument in the plot function:
 graph$build_mesh(h = 0.01)
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function_mesh(u, plotly = TRUE, show = FALSE)
+graph$plot_function_mesh(u, plotly = TRUE)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -166,7 +166,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r}
 C <- covariance_alpha1_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
                             graph = graph)
-graph$plot_function_mesh(C, plotly = TRUE, show = FALSE)
+graph$plot_function_mesh(C, plotly = TRUE)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
@@ -174,14 +174,14 @@ The corresponding covariance function then looks as follows:
 ```{r}
 C <- covariance_alpha2_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
                             graph = graph)
-graph$plot_function_mesh(C, plotly = TRUE, show = FALSE)
+graph$plot_function_mesh(C, plotly = TRUE)
 ```
 
 Let us simulate a process with $\alpha=2$ as well:
 ```{r}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
                  graph = graph, type = "mesh")
-graph$plot_function_mesh(u, plotly = TRUE, show = FALSE)
+graph$plot_function_mesh(u, plotly = TRUE)
 ```
 
 ## Inference
@@ -225,7 +225,7 @@ u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
 graph$add_observations2(y,PtE, normalized = TRUE)
-graph$plot(data = TRUE, show = FALSE)
+graph$plot(data = TRUE)
 ```
 
 We can now use the `likelihood_graph_spde` function to evaluate the 
@@ -258,7 +258,7 @@ on the regular mesh that we previously constructed.
 u_est <- spde_posterior_mean(c(sigma_e_est, sigma_est, kappa_est),
                              graph, alpha = 1, type = "mesh")
 
-graph$plot_function_mesh(u_est, plotly = TRUE, show = FALSE)
+graph$plot_function_mesh(u_est, plotly = TRUE)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -313,7 +313,7 @@ between the field at the first mesh location and the rest as follows:
 ```{r}
 graph$compute_resdist_mesh()
 C <- theta.exp[2]^2*exp(-theta.exp[3]*graph$mesh$res.dist[1,])
-graph$plot_function_mesh(C, plotly = TRUE, show = FALSE)
+graph$plot_function_mesh(C, plotly = TRUE)
 ```
 # Models based on the Graph Laplacian
 

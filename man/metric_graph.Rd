@@ -368,7 +368,6 @@ plot a metric graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   plotly = FALSE,
-  show = TRUE,
   line_width = 0.3,
   marker_size = 3,
   vertex_color = "black",
@@ -386,8 +385,6 @@ plot a metric graph
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{plotly}}{use plot_ly for 3D plot (default FALSE)}
-
-\item{\code{show}}{show the plot?}
 
 \item{\code{line_width}}{line width for edges}
 
@@ -443,7 +440,6 @@ plot function X on the graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
   plotly = TRUE,
-  show = TRUE,
   graph_color = "rgb(0,0,0)",
   graph_width = 1,
   marker_size = 10,
@@ -460,8 +456,6 @@ curve (in length), value) or a vector with values for the function
 evaluated at a precomputed mesh.}
 
 \item{\code{plotly}}{plot in 2D or 3D?}
-
-\item{\code{show}}{show the plot?}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
@@ -485,7 +479,6 @@ plot function mesh X on the graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function_mesh(
   X,
   plotly = FALSE,
-  show = TRUE,
   graph_color = "black",
   graph_width = 1,
   marker_size = 10,
@@ -501,8 +494,6 @@ plot function mesh X on the graph
 evaluated at a precomputed mesh (V,and PtE)}
 
 \item{\code{plotly}}{use plot_ly for 3D plot?}
-
-\item{\code{show}}{show the plot?}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 

@@ -81,14 +81,14 @@ As an example, we consider the following metric graph
                                 Lines(list(line3),ID="3"),
                                 Lines(list(line4),ID="4")))
   graph <- metric_graph$new(Lines = Lines)
-  graph$plot(line_width = 0.3, show = FALSE)
+  graph$plot(line_width = 0.3)
 ```
 
 To construct a FEM approximation of a Whittle--Matérn field with general smoothness, 
 we must first construct a mesh on the graph. 
 ```{r}
   graph$build_mesh(h = 0.5)
-  graph$plot(mesh=TRUE, show = FALSE)
+  graph$plot(mesh=TRUE)
 ```
 
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in

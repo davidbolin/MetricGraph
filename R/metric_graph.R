@@ -568,7 +568,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
   #' @description plot a metric graph
   #' @param plotly use plot_ly for 3D plot (default FALSE)
-  #' @param show show the plot?
   #' @param line_width line width for edges
   #' @param marker_size size of markers for vertices
   #' @param vertex_color color of vertices
@@ -594,7 +593,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' graph <- metric_graph$new(Lines = Lines)
   #' graph$plot()
   plot = function(plotly = FALSE,
-                  show = TRUE,
                   line_width = 0.3,
                   marker_size = 3,
                   vertex_color = 'black',
@@ -606,8 +604,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                   X_loc = NULL,
                   ...){
     if(!plotly){
-      p <- private$plot_2d(show = show,
-                           line_width = line_width,
+      p <- private$plot_2d(line_width = line_width,
                            marker_size = marker_size,
                            vertex_color = vertex_color,
                            edge_color = edge_color,
@@ -618,8 +615,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            X_loc = X_loc,
                            ...)
     } else {
-      p <- private$plot_3d(show = show,
-                           line_width = line_width,
+      p <- private$plot_3d(line_width = line_width,
                            marker_size = marker_size,
                            vertex_color = vertex_color,
                            edge_color = edge_color,
@@ -638,13 +634,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at a precomputed mesh.
   #' @param plotly plot in 2D or 3D?
-  #' @param show show the plot?
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param graph_width for 3D plot, the line width of the graph.
   #' @param marker_size for 3D plot, the marker size of the vertices
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
-  plot_function = function(X, plotly = TRUE, show = TRUE,
+  plot_function = function(X, plotly = TRUE,
                        graph_color = 'rgb(0,0,0)',
                        graph_width = 1,
                        marker_size = 10,
@@ -685,9 +680,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
       }
     }
-    if(show){
-      print(p)
-    }
     return(p)
   },
 
@@ -695,13 +687,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param X (m x 1) a vector with values for the function
   #' evaluated at a precomputed mesh (V,and PtE)
   #' @param plotly use plot_ly for 3D plot?
-  #' @param show show the plot?
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param graph_width for 3D plot, the line width of the graph.
   #' @param marker_size for 3D plot, the marker size of the vertices
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
-  plot_function_mesh = function(X, plotly = FALSE, show = TRUE,
+  plot_function_mesh = function(X, plotly = FALSE,
                                 graph_color = 'black',
                                 graph_width = 1,
                                 marker_size = 10,
@@ -754,9 +745,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         }
       }
 
-    }
-    if(show){
-      print(p)
     }
     return(p)
   },
@@ -1127,8 +1115,7 @@ add_responses = function(y){
     return(PtE_update)
   },
 
-  plot_2d = function(show = TRUE,
-                     line_width = 0.1,
+  plot_2d = function(line_width = 0.1,
                      marker_size = 1,
                      vertex_color = 'black',
                      data = FALSE,
@@ -1207,13 +1194,10 @@ add_responses = function(y){
     }
 
     p <- p + coord_fixed()
-    if(show){
-      print(p)
-    }
+
     return(p)
   },
-  plot_3d = function(show = TRUE,
-                     line_width = 1,
+  plot_3d = function(line_width = 1,
                      marker_size = 1,
                      vertex_color = 'rgb(0,0,0)',
                      edge_color = 'rgb(0,0,0)',
@@ -1294,9 +1278,6 @@ add_responses = function(y){
     #                  scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
     #                               aspectmode='data'))
 
-    if(show){
-      print(p)
-    }
     return(p)
   },
 

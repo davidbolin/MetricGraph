@@ -49,7 +49,7 @@ We can now create the graph based on the `Lines` object as follows
 
 ```{r}
 graph <- metric_graph$new(Lines = Lines)
-graph$plot(show = FALSE)
+graph$plot()
 ```
 
 The `metric_graph` class then automatically constructs the list of edges, 
@@ -63,7 +63,7 @@ edge_lengths <- graph$edge_lengths
 An alternative method is to specify these in the construction:
 ```{r}
 graph2 <- metric_graph$new(P = V, E = E, edge_lengths = edge_lengths)
-graph2$plot(show = FALSE)
+graph2$plot()
 ```
 
 This graph has the same properties as the first, but since we have not provided
@@ -72,7 +72,7 @@ that the graph only has straight lines, we may exclude the edge length
 information in the construction: 
 ```{r}
 graph3 <- metric_graph$new(P = V, E = E)
-graph3$plot(show = FALSE)
+graph3$plot()
 ```
 
 We now have three graphs with the same edges and vertices. The first two are 
@@ -98,7 +98,7 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway",
 data <- osmdata_sp(call)
 
 graph4 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
-graph4$plot(show = FALSE, marker_size = 0)
+graph4$plot(marker_size = 0)
 ```
 
 # Adding data to the graph 
@@ -110,7 +110,7 @@ observations at a distance 0.5 from the start of each edge. One way of specifyin
 obs.loc <- cbind(1:4, rep(0.5, 4))
 obs <- c(1,2,3,4)
 graph$add_observations2(obs, PtE = obs.loc)
-graph$plot(data = TRUE, show = FALSE)
+graph$plot(data = TRUE)
 ```
 
 Thus, each row in `PtE` specifies the edge of the observation and the distance
@@ -124,7 +124,7 @@ of the fourth edge:
 obs.loc <- matrix(c(4, 0.5),1,2)
 obs <- c(5)
 graph$add_observations2(obs, PtE = obs.loc, normalized = TRUE)
-graph$plot(data = TRUE, show = FALSE)
+graph$plot(data = TRUE)
 ```
 
 An alternative method is to specify the observations as spatial points objects,
@@ -135,7 +135,7 @@ obs <- c(6,7)
 points <- SpatialPointsDataFrame(coords = obs.loc,
                                  data = data.frame(y = obs))
 graph$add_observations(points)
-graph$plot(data = TRUE, show = FALSE)
+graph$plot(data = TRUE)
 ```
 
 If we want to replace the data in the object, we can use `clear_observations()`
@@ -143,12 +143,12 @@ to remove all current data, and then add the new data:
 ```{r}
 graph$clear_observations()
 graph$add_observations(points)
-graph$plot(data = TRUE, show = FALSE)
+graph$plot(data = TRUE)
 ```
 
 In some cases, we might want to add the observation locations as vertices 
 in the graph. This can be done as follows: 
 ```{r}
 graph$observation_to_vertex()
-graph$plot(data = TRUE, show = FALSE)
+graph$plot(data = TRUE)
 ```
