@@ -122,7 +122,9 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl)
 
-spde_fit <- inla(f.s, data = inla.stack.data(stk.dat))
+data_stk <- graph_stack(stk.dat, "field", spde.index)
+
+spde_fit <- inla(f.s, data = data_stk)
 
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
@@ -304,7 +306,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 2
+obs.per.edge <- 50
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -315,6 +317,8 @@ for(i in 1:(graph$nE)) {
 #                    cbind(rep(i,obs.per.edge), 1:obs.per.edge/(obs.per.edge+1) * 
 #                           graph$edge_lengths[i]))
 }
+
+n.obs <- obs.per.edge * graph$nE
 
 y <- rep(NA, obs.per.edge * graph$nE)
 
@@ -342,7 +346,7 @@ Q <- Qalpha1(theta, graph)
 
 sizeQ <- nrow(Q)
 
-nsim <- 1
+nsim <- 30
 
 Z <- rnorm(sizeQ * nsim)
 dim(Z) <- c(sizeQ, nsim)
@@ -386,7 +390,7 @@ data_list <- list(y = as.vector(y),
 
 library(inlabru)
 
-repl <- rep(1:nsim, each=200)
+repl <- rep(1:nsim, each=n.obs)
 
 cmp <-
     y ~ -1 + Intercept(1) + field(loc, model = spde_model,
@@ -419,7 +423,9 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl)
 
-spde_fit <- inla(f.s, data = inla.stack.data(stk.dat))
+data_stk <- graph_stack(stk.dat, "field", spde.index)
+
+spde_fit <- inla(f.s, data = data_stk)
 
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 

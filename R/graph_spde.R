@@ -629,3 +629,18 @@ create_summary_from_density <- function(density_df, name) {
   return(out)
 }
 
+
+#' @name graph_stack
+#' @title Creates an inla.stack for metric graph objects
+#' @description Auxiliar function to create inla.stacks for metric graph objects
+#' @param stack_obj A density data frame
+#' @param name Name of the field
+#' @param index index object
+#' @return A data object to be passed to inla
+#' @export
+graph_stack <- function(stack_obj, name, index){
+  A <- stack_obj$A
+  data_tmp <- INLA::inla.stack.data(stack_obj)
+  data_tmp[[name]] <- as.vector(A%*%spde.index[[name]])
+  return(data_tmp)
+}
