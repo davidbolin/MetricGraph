@@ -17,6 +17,8 @@ posterior.crossvalidation.covariance <- function(theta,
                                                  model = "alpha1",
                                                  ind = NULL)
 {
+  check <- gpgraph_check_graph(graph)
+
   n.o <- length(graph.obj$y)
   n.v <- dim(graph.obj$V)[1]
   #build covariance matrix
@@ -130,6 +132,8 @@ posterior.crossvalidation <- function(theta,
                                       model = "alpha1",
                                       ind = NULL)
 {
+  check <- gpgraph_check_graph(graph)
+
   #setup matrices for prediction
   sigma_e <- theta[1]
   if(model == "isoExp"){

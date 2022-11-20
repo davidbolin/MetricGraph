@@ -19,13 +19,26 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                         PtE = NULL,
                         type = "manual", posterior = FALSE) {
 
+  check <- gpgraph_check_graph(graph)
+
+  if (!(type %in% c("mesh", "obs"))) {
+    stop("Type must be 'mesh' or 'obs'.")
+  }
+  if( type == "mesh" && !check$has.mesh) {
+    stop("mesh must be provided")
+  }
+
+  if(posterior && !check$has.data){
+    stop("The graph contains no data.")
+  }
+
   if (!(type %in% c("manual","obs", "mesh"))) {
     stop("Type must be 'manual', 'obs' or 'mesh'.")
   }
-  if(type == "mesh" && is.null(graph$mesh)) {
+  if(type == "mesh" && !check$has.mesh) {
     stop("No mesh provided in the graph object.")
   }
-  if (type == "obs" && is.null(graph$PtE)) {
+  if (type == "obs" && !check$has.data) {
     stop("no observation locations in mesh object.")
   }
   if(is.null(PtE) && type == "manual") {

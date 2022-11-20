@@ -1,0 +1,155 @@
+---
+title: "Working with metric graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Metric graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: xiong22
+  title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
+  author:
+  - family: Xiong
+    given: Zhen
+  - family: Simas
+    given: Alexandre B.
+  - family: Bolin
+    given: David
+  container-title: arXiv:2209.04670
+  type: preprint
+  issued:
+  year: 2022
+- id: graph_fem
+  title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Kovács
+    given: Mihály
+  - family: Kumar
+    given: Vivek
+  - family: Simas
+    given: Alexandre B.
+  container-title: arXiv:??
+  type: preprint
+  issued:
+  year: 2022
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(GPGraph)
+set.seed(1)
+```
+
+## Introduction
+
+In this vignette we will introduce the `metric_graph` class
+
+## Constructing metric graphs
+A metric graph can be constructed in two ways. The first is to specify all edges
+in the graph as a `SpatialLines` object using the `sp` package. To illustrate
+this, we first load the `sp` package
+```{r}
+library(sp)
+```
+and construct the following lines
+```{r}
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+```
+We can now create the graph based on the `Lines` object as follows
+
+```{r}
+graph <- metric_graph$new(Lines = Lines)
+graph$plot(show = FALSE)
+```
+
+The `metric_graph` class then automatically constructs the list of edges, 
+vertices, and edge lengths. These are available as public elements in the 
+object: 
+```{r}
+V <- graph$V
+E <- graph$E
+edge_lengths <- graph$edge_lengths
+```
+An alternative method is to specify these in the construction:
+```{r}
+graph2 <- metric_graph$new(P = V, E = E, edge_lengths = edge_lengths)
+graph2$plot(show = FALSE)
+```
+
+This graph has the same properties as the first, but since we have not provided
+the lines for each edge, it is visualized as having straight lines. If we know
+that the graph only has straight lines, we may exclude the edge length
+information in the construction: 
+```{r}
+graph3 <- metric_graph$new(P = V, E = E)
+graph3$plot(show = FALSE)
+```
+
+We now have three graphs with the same edges and vertices. The first two are 
+identical from a modelling point of view, since they also have the same 
+edge lengths. The third, is different since it assumes straight edges and 
+therefore has a different edge length for one of the edges. 
+```{r}
+print(cbind(graph$edge_lengths, graph2$edge_lengths, graph3$edge_lengths))
+```
+Thus, from a modelling perspective, it is enough to specify the vertices,
+edges, and edge lengths, but to obtain correct visualizations, the spatial
+lines for the edges need to be specified. 
+
+This format of constructing graphs is compatible with data from OpenStreatmaps,
+and to illustrate this we use the `osmdata` to construct a metric graph 
+consting of highways in Copenhagen:
+```{r}
+library(osmdata)
+set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
+call <- opq(bbox = c(12.4,55.5,12.8,55.9))
+call <- add_osm_feature(call, key = "highway",value=c("motorway",
+                                                        "primary","secondary"))
+data <- osmdata_sp(call)
+
+graph4 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
+graph4$plot(show = FALSE, marker_size = 0)
+```
+
+# Adding data to the graph 
+
+Given that we have constructed the metric graph, we can now add data to it. 
+As an example, let us consider the first graph again and suppose that we have 
+observations at a distance 0.5 from the start of each edge. One way of specifying this is as follows 
+```{r}
+obs.loc <- cbind(1:4, rep(0.5, 4))
+obs <- c(1,2,3,4)
+graph$add_observations2(obs, PtE = obs.loc)
+graph$plot(data = TRUE, show = FALSE)
+```
+
+Thus, each row in `PtE` specifies the edge of the observation and the distance
+along that edge where the observation location is. In certain situations, 
+it might be easier to specify the relative distances on the edges, so that 
+0 represents the start and 1 the end of the edge (instead of the edge length). 
+To do so, we can simply specify `normalized = TRUE` when adding the 
+observations. For example, let us add one more observation at the midpoint 
+of the fourth edge:
+```{r}
+obs.loc <- matrix(c(4, 0.5),1,2)
+obs <- c(5)
+graph$add_observations2(obs, PtE = obs.loc, normalized = TRUE)
+graph$plot(data = TRUE, show = FALSE)
+```
+
+An alternative method is to specify the observations as spatial points objects. 
+
+
+## References
