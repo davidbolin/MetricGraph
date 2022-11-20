@@ -48,10 +48,6 @@ In this vignette we will introduce how to work with Gaussian Whittle--Matérn
 fields on metric graphs. The theory for this approach is provided in
 [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??).
 
-These random fields can also be used in combination with the `INLA` and
-`inlabru` packages. See [INLA and inlabru interfaces](inla_interface.html)
-for details.
-
 # Sampling Whittle--Mat\'ern fields
 As an example, we consider the following metric graph
 ```{r}
@@ -140,4 +136,84 @@ u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
 graph$plot_function_mesh(u, plotly = TRUE, show = FALSE)
 ```
 
+# Inference
+
+Mostly for illustration purposes, the `GPGraph` package contains implementations
+of likelihoods for Whittle--Matérn fields observed under Gaussian measurement 
+noise. In this section we will illustrate these methods. For the use of the 
+Whittle--Matérn fields in more complicated hierarchical models, we recommend
+using the interfaces to the `INLA` and `inlabru` packages. See [INLA and inlabru interfaces](inla_interface.html) for further details on these.
+
+Suppose that we want to estimate the model parameters of a Whittle--Matérn field
+$u(s)$ observed under Gaussian measurement noise. That is, we assume that we
+are given observations
+$$
+y_i = u(s_i) + \varepsilon_i, \quad i=1,\ldots,n
+$$
+where $s_i\in \Gamma$ are observation locations and $\varepsilon_i$ are
+independent centered Gaussian variables $N(0,\sigma_e^2)$ representing 
+measurement noise. 
+
+Let us start by generating some data like this and adding it to the 
+metric graph:
+
+```{r}
+kappa <- 10
+sigma <- 2
+sigma_e <- 0.1
+alpha <- 1
+theta <-  c(sigma_e, kappa, sigma)
+
+n.obs.per.edge <- 10
+PtE <- NULL
+for(i in 1:graph$nE){
+  #add locations sampled at random to each edge
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+}
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+                 graph = graph, PtE = PtE)
+
+y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+
+graph$add_observations2(y,PtE, normalized = TRUE)
+graph$plot(data = TRUE, show = FALSE)
+```
+
+We can now use the `likelihood_graph_spde` function to evaluate the 
+log-likelihood function for this data based on a Whittle--Matérn field 
+model for $u$. Assuming that $\alpha=1$, we optimize this likelihood using 
+`optim` as follows:
+
+```{r}
+sigma_e_start <- 0.2
+sigma_start <- 2
+kappa_start <- 10
+
+theta0 <- c(sigma_e_start, sigma_start, kappa_start) 
+res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x),
+                                                                   graph,
+                                                                   alpha = 1))
+sigma_e_est <- exp(res$par[1])
+sigma_est <- exp(res$par[2])
+kappa_est <- exp(res$par[3])
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+Given these estimated parameters, we can now do kriging to estimate the 
+field at locations in the graph. As an example, we now estimate the field 
+on the regular mesh that we previously constructed. 
+```{r}
+u_est <- spde_posterior_mean(c(sigma_e_est, sigma_est, kappa_est),
+                             graph, alpha = 1, type = "mesh")
+
+graph$plot_function_mesh(u_est, plotly = TRUE, show = FALSE)
+```
+
+The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
+from data as described in the vignette 
+[Whittle--Matérn fields with general smoothness](fem_models.html).
 # References
