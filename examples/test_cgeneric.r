@@ -146,7 +146,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 50
+obs.per.edge <- 4
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -216,7 +216,11 @@ y <- y[1:n.obs]
 
 y <- c(y, rep(NA, n.obs))
 
-graph$y <- y
+# idx <- as.vector(graph$A %*% 1:(2*n.obs+4))
+
+# graph$y[idx-4] <- y
+
+graph$add_responses(y)
 
 graph$plot(line_width = 0.3, data=TRUE)
 

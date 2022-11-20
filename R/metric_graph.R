@@ -774,7 +774,24 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$nV <- dim(self$V)[1]
 
 
+  },
+
+#' @description Auxiliar function for adding simulated response variables in the correct order.
+#' @param y A vector of response variables
+#' @export
+add_responses = function(y){
+  if(!is.null(self$A)){
+    A <- self$A
+  } else{
+    self$observation_to_vertex()
+    A <- self$A
   }
+
+  idx <- as.vector(A %*% 1:ncol(A))
+  offset_idx <- min(idx)-1
+  stopifnot(length(y) == length(self$y))
+  self$y[idx-offset_idx] <- y
+}
 
   ),
 

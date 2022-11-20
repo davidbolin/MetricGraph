@@ -644,3 +644,6 @@ graph_stack <- function(stack_obj, name, index){
   data_tmp[[name]] <- as.vector(A%*%spde.index[[name]])
   return(data_tmp)
 }
+
+
+
