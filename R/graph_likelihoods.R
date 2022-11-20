@@ -336,6 +336,9 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
     Q <- Q %*% Q
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
+    if(is.null(graph$res.dist)){
+      stop("You must first compute the resistance metric for the observations")
+    }
     Sigma <- as.matrix(theta[2]^2 * exp(-theta[3] * graph$res.dist[graph$PtV,
                                                                    graph$PtV]))
   } else {

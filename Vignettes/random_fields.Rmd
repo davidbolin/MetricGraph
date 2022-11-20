@@ -1,10 +1,10 @@
 ---
-title: "Whittle--Matérn fields on metric graphs"
+title: "Gaussian random fields on metric graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Whittle--Matérn fields on metric graphs}
+  %\VignetteIndexEntry{Random fields on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
@@ -34,8 +34,43 @@ references:
   type: preprint
   issued:
   year: 2022
+- id: Anderes2020
+  title: "Isotropic covariance functions on graphs and their edges"
+  author:
+  - family: Anderes
+    given: Ethan
+  - family: Møller
+    given: Jesper
+  - family: Rasmussen
+    given: Jakob G
+  container-title: Annals of Statistics
+  type: article
+  issued: 48
+  pages: 2478--2503
+  year: 2020
+- id: Borovitskiy2021
+  title: "Matérn Gaussian processes on graphs"
+  author:
+  - family: Borovitskiy
+    given: Viacheslav
+  - family: Azangulov
+    given: Iskander
+  - family: Terenin
+    given: Alexander 
+  - family: Mostowsky
+    given: Peter
+  - family: Deisenroth
+    given: Marc
+  - family: Durrande
+    given: Nicolas
+  container-title: International Conference on Artificial Intelligence and Statistics
+  type: article
+  issued: 
+  pages: 2593--2601
+  year: 2021
 ---
 
+	
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 set.seed(1)
@@ -44,12 +79,16 @@ library(GPGraph)
 
 # Introduction
 
-In this vignette we will introduce how to work with Gaussian Whittle--Matérn
-fields on metric graphs. The theory for this approach is provided in
-[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??).
+In this vignette we will introduce how to work with Gaussian random fields on
+metric graphs. The main models are the Whittle--Matérn fields introduced in 
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
 
-# Sampling Whittle--Mat\'ern fields
-As an example, we consider the following metric graph
+The package also has support for isotropic Gaussian processes, and in particular
+Gaussian processes with isotropic exponential covariance functions as introduced
+by [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full). Finally, Gaussian processes based on the graph Laplacian, as introduced
+by [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf) are also supported. 
+
+As an example throughout the vignette, we consider the following metric graph:
 ```{r}
 library(sp)
 line1 <- Line(rbind(c(0,0),c(1,0)))
@@ -64,16 +103,25 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
 graph <- metric_graph$new(Lines = Lines)
 graph$plot(line_width = 0.3, show = FALSE)
 ```
+
 For further details on the construction of metric graphs, see
 [Working with metric graphs](metric_graphs.html)
 
-We are now ready to specify the model
+# Whittle--Matérn fields 
+The Whittle--Matérn fields are specified as solutions to the stochastic
+differential equation 
 $$
   (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
 $$
-  for the Whittle--Matérn field $u$. We can work with these models without
-and approximations if $\alpha$ is an integer. As an example, let us simulate
-the field on the graph using $\alpha = 1$. To do so, we first need to specify
+on the metric graph $\Gamma$. We can work with these models without
+and approximations if the smoothness parameter $\alpha$ is an integer, and this 
+is what we focus on in this vignette. For details on the case of a general 
+smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_models.html). 
+
+## Sampling 
+
+As an example, let us simulate the field $u$ on the graph using $\alpha = 1$. 
+To do so, we first need to specify
 where to sample it. As a first example, let us specify some locations manually:
 ```{r}
 PtE <- cbind(rep(1:4, each = 4),
@@ -136,7 +184,7 @@ u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
 graph$plot_function_mesh(u, plotly = TRUE, show = FALSE)
 ```
 
-# Inference
+## Inference
 
 Mostly for illustration purposes, the `GPGraph` package contains implementations
 of likelihoods for Whittle--Matérn fields observed under Gaussian measurement 
@@ -216,4 +264,58 @@ graph$plot_function_mesh(u_est, plotly = TRUE, show = FALSE)
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
 from data as described in the vignette 
 [Whittle--Matérn fields with general smoothness](fem_models.html).
+
+# Isotropic Gaussian processes
+
+Let us now see how we can fit a model with an isotropic exponential covariance
+function 
+$$
+r(d(s,t)) = \sigma^2\exp(-\kappa d(s,t))
+$$
+to the data we generated above. For this we must first add the 
+observation locations to the graph. Let us first copy the graph to a new 
+graph object and then add the observation locations to it
+
+```{r}
+graph2 <- graph$clone()
+graph2$observation_to_vertex()
+```
+
+The model is based on using the so-called resistance metric as the distance 
+$d(s,t)$ between the observations when calculating the covariance function. 
+This can be done as follows:
+```{r}
+graph2$compute_resdist()
+```
+We can now fit the model to the data by using `optim` in combination with the 
+function `likelihood_graph_covariance()` which implements, among other models,
+Gaussian processes with isotropic exponential covariance functions.
+```{r}
+res.exp <- optim(log(theta0), 
+                 function(x) -likelihood_graph_covariance(exp(x), graph2,
+                                                          model = "isoExp"))
+theta.exp <- exp(res.exp$par)
+
+```
+
+Let us now compute the posterior mean for the field at the observation 
+locations:
+
+```{r}
+u_est_exp <- posterior_mean_covariance(theta.exp, graph2, model = "isoExp")
+graph2$plot(X = u_est_exp, X_loc = graph$PtE)
+```
+
+Let us plot the estimated covariance function at the mesh nodes in the 
+original mesh. For this, we first compute the resistance metric between 
+the vertices in the mesh. We can then construct and plot the covariance 
+between the field at the first mesh location and the rest as follows:
+```{r}
+graph$compute_resdist_mesh()
+C <- theta.exp[2]^2*exp(-theta.exp[3]*graph$mesh$res.dist[1,])
+graph$plot_function_mesh(C, plotly = TRUE, show = FALSE)
+```
+# Models based on the Graph Laplacian
+
+
 # References

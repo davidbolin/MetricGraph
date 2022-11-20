@@ -84,7 +84,9 @@ locations}
 \itemize{
 \item \href{#method-GPGraph::graph-new}{\code{metric_graph$new()}}
 \item \href{#method-GPGraph::graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
+\item \href{#method-GPGraph::graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
 \item \href{#method-GPGraph::graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
+\item \href{#method-GPGraph::graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-GPGraph::graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
 \item \href{#method-GPGraph::graph-clear_observations}{\code{metric_graph$clear_observations()}}
@@ -151,6 +153,17 @@ graph
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-compute_geodist_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_geodist_mesh}{}}}
+\subsection{Method \code{compute_geodist_mesh()}}{
+Computes shortest path distances between the vertices in the
+mesh
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist_mesh()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-compute_resdist"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist}{}}}
 \subsection{Method \code{compute_resdist()}}{
@@ -158,6 +171,17 @@ Computes the resistance metric between the vertices in the
 graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-compute_resdist_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist_mesh}{}}}
+\subsection{Method \code{compute_resdist_mesh()}}{
+Computes the resistance metric between the vertices in the
+mesh
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_mesh()}\if{html}{\out{</div>}}
 }
 
 }

@@ -123,9 +123,17 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description Computes shortest path distances between the vertices in the
   #' graph
   compute_geodist = function(){
-    g <- graph(edges = c(t(self$E)), directed=FALSE)
+    g <- graph(edges = c(t(self$E)), directed = FALSE)
     E(g)$weight <- self$edge_lengths
     self$geo.dist <- distances(g)
+  },
+
+  #' @description Computes shortest path distances between the vertices in the
+  #' mesh
+  compute_geodist_mesh = function(){
+    g <- graph(edges = c(t(self$mesh$E)), directed = FALSE)
+    E(g)$weight <- self$mesh$h_e
+    self$mesh$geo.dist <- distances(g)
   },
 
   #' @description Computes the resistance metric between the vertices in the
@@ -134,18 +142,45 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(is.null(self$geo.dist)){
       self$compute_geodist()
     }
-    L <- Matrix(0,self$nV,self$nV)
-    for(i in 1:self$nE){
-      tmp <- -1/self$geo.dist[self$E[i,1], self$E[i,2]]
-      L[self$E[i,2],self$E[i,1]] <- L[self$E[i,1],self$E[i,2]] <- tmp
+    L <- Matrix(0, self$nV, self$nV)
+
+    for (i in 1:self$nE) {
+      tmp <- -1 / self$geo.dist[self$E[i, 1], self$E[i, 2]]
+      L[self$E[i, 2], self$E[i, 1]] <- L[self$E[i, 1], self$E[i, 2]] <- tmp
     }
     for(i in 1:self$nV){
-      L[i,i] <- -sum(L[i,-i])
+      L[i, i] <- -sum(L[i, -i])
     }
-    L[1,1] <- L[1,1] + 1
+    L[1, 1] <- L[1, 1] + 1
 
     Li <- solve(L)
-    self$res.dist <- -2*Li + t(diag(Li))%x%rep(1,self$nV) + t(rep(1,self$nV))%x%diag(Li)
+    self$res.dist <- -2*Li + t(diag(Li)) %x% rep(1, self$nV) +
+      t(rep(1, self$nV)) %x% diag(Li)
+  },
+
+  #' @description Computes the resistance metric between the vertices in the
+  #' mesh
+  compute_resdist_mesh = function(){
+    if (is.null(self$mesh)) {
+      stop("no mesh provided")
+    }
+    if(is.null(self$mesh$geo.dist)){
+      self$compute_geodist_mesh()
+    }
+    L <- Matrix(0, dim(self$mesh$V)[1], dim(self$mesh$V)[1])
+    for (i in 1:dim(self$mesh$E)[1]) {
+      tmp <- -1 / self$mesh$geo.dist[self$mesh$E[i, 1], self$mesh$E[i, 2]]
+      L[self$mesh$E[i, 2], self$mesh$E[i, 1]] <- tmp
+      L[self$mesh$E[i, 1], self$mesh$E[i, 2]] <- tmp
+    }
+    for (i in 1:dim(self$mesh$V)[1]) {
+      L[i, i] <- -sum(L[i, -i])
+    }
+    L[1, 1] <- L[1, 1] + 1
+
+    Li <- solve(L)
+    self$mesh$res.dist <- -2*Li + t(diag(Li)) %x% rep(1,dim(self$mesh$V)[1]) +
+      t(rep(1,dim(self$mesh$V)[1])) %x% diag(Li)
   },
 
   #' @description Compute graph Laplacian for the graph
@@ -162,7 +197,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   observation_to_vertex = function(){
     # Reordering
     order_idx <- order(self$PtE[,1], self$PtE[,2])
-    
+
     private$reorder_idx <- c(private$reorder_idx, list(order_idx))
 
     self$PtE <- self$PtE[order_idx,]
@@ -829,7 +864,7 @@ add_responses = function(y){
   # stopifnot(length(y) == length(self$y))
   stopifnot(length(y) == nrow(A))
   self$y <- y
-  
+
   idx <- private$reorder_idx[[1]]
   y_tmp <- self$y[1:length(idx)]
   self$y[idx] <- y_tmp

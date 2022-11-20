@@ -1,4 +1,67 @@
 
+#' Posterior mean for models assuming observations at vertices
+#'
+#' @param theta estimated model parameters (sigma_e, sigma, kappa)
+#' @param graph metric graph  object
+#' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
+#' graph Laplacian, and "isoExp" gives isotropic exponential
+#' @param type if 'obs' the posterior mean is computed at the observation
+#' locations, if 'vertices' it is computed at all vertices.
+#' @details This function does not use sparsity for any model.
+#'
+#' @return Vector with the posterior mean evaluated at the vertices
+#' @export
+posterior_mean_covariance <- function(theta, graph, model = "alpha1",
+                                      type = "obs")
+{
+  check <- gpgraph_check_graph(graph)
+
+  n.o <- length(graph$y)
+  n.v <- dim(graph$V)[1]
+  sigma_e <- theta[1]
+  sigma <- theta[2]
+  kappa <- theta[3]
+  #build covariance matrix
+  if (model == "alpha1") {
+    Q <- Qalpha1(c(sigma, kappa), graph)
+    Sigma <- as.matrix(solve(Q))
+  } else if (model == "alpha2") {
+    warning("Not fully checked.")
+    n.c <- 1:length(graph$CBobj$S)
+    Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
+    Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+    Qtilde <- Qtilde[-n.c, -n.c]
+    Sigma.overdetermined = t(graph$CBobj$T[-n.c, ]) %*%
+      solve(Qtilde) %*% (graph$CBobj$T[-n.c, ])
+    index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
+      (3 * (graph$PtE[, 2] != 0))
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+  } else if (model == "GL"){
+    Q <- sigma^2 * (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian)
+    Sigma <- as.matrix(solve(Q))
+  } else if (model == "GL2"){
+    Q <- sigma^2*(kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian)
+    Q <- Q %*% Q
+    Sigma <- as.matrix(solve(Q))
+  } else if (model == "isoExp"){
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res.dist))
+  } else {
+    stop("wrong model choice")
+  }
+  Sigma.oo <- Sigma[graph$PtV, graph$PtV]
+  if(type == "obs"){
+    Sigma.po <- Sigma.oo
+  } else if (type == "vertices") {
+    Sigma.po <- Sigma[, graph$PtV]
+  } else {
+    stop("wrong type")
+  }
+
+  diag(Sigma.oo) <- diag(Sigma.oo) + sigma_e^2
+
+  return(as.vector(Sigma.po %*% solve(Sigma.oo, graph$y)))
+}
+
 #' Prediction for models assuming observations at vertices
 #'
 #' @param theta Estimated model parameters (sigma_e, sigma, kappa)
