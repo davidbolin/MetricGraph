@@ -835,7 +835,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         }else{
           index_j <- (vals[,1] <= LinesPos[j,2]) &  (vals[,1] > LinesPos[j-1,2])
         }
-        if(sum(index_j) > 0)
+        if(sum(index_j) == 0)
           next
         rel.pos = vals[index_j,1]
         if(j == 1){
