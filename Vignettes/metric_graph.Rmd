@@ -7,35 +7,6 @@ vignette: >
   %\VignetteIndexEntry{Metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: xiong22
-  title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
-  author:
-  - family: Xiong
-    given: Zhen
-  - family: Simas
-    given: Alexandre B.
-  - family: Bolin
-    given: David
-  container-title: arXiv:2209.04670
-  type: preprint
-  issued:
-  year: 2022
-- id: graph_fem
-  title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Kovács
-    given: Mihály
-  - family: Kumar
-    given: Vivek
-  - family: Simas
-    given: Alexandre B.
-  container-title: arXiv:??
-  type: preprint
-  issued:
-  year: 2022
 ---
 
 ```{r setup, include=FALSE}
@@ -44,11 +15,18 @@ library(GPGraph)
 set.seed(1)
 ```
 
-## Introduction
+# Introduction
 
-In this vignette we will introduce the `metric_graph` class
+In this vignette we will introduce the `metric_graph` class. We will first show
+how to construct metric graphs and then how to add data to them. For details 
+about how to work with Gaussian processes on metric graphs, we refer to the
+Vignettes 
 
-## Constructing metric graphs
+* [Whittle--Matérn fields on metric graphs](random_fields.html)
+* [INLA and inlabru interfaces](inla_interface.html)
+* [Whittle--Matérn fields with general smoothness](fem_models.html)
+
+# Constructing metric graphs
 A metric graph can be constructed in two ways. The first is to specify all edges
 in the graph as a `SpatialLines` object using the `sp` package. To illustrate
 this, we first load the `sp` package
@@ -149,7 +127,28 @@ graph$add_observations2(obs, PtE = obs.loc, normalized = TRUE)
 graph$plot(data = TRUE, show = FALSE)
 ```
 
-An alternative method is to specify the observations as spatial points objects. 
+An alternative method is to specify the observations as spatial points objects,
+where the locations are given in Euclidean coordinates: 
+```{r}
+obs.loc <- rbind(c(0.7, 0), c(0, 0.2))
+obs <- c(6,7)
+points <- SpatialPointsDataFrame(coords = obs.loc,
+                                 data = data.frame(y = obs))
+graph$add_observations(points)
+graph$plot(data = TRUE, show = FALSE)
+```
 
+If we want to replace the data in the object, we can use `clear_observations()`
+to remove all current data, and then add the new data:
+```{r}
+graph$clear_observations()
+graph$add_observations(points)
+graph$plot(data = TRUE, show = FALSE)
+```
 
-## References
+In some cases, we might want to add the observation locations as vertices 
+in the graph. This can be done as follows: 
+```{r}
+graph$observation_to_vertex()
+graph$plot(data = TRUE, show = FALSE)
+```

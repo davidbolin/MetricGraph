@@ -158,7 +158,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
 
   #' @description Add observation locations as vertices in the graph
-  #' @export
   observation_to_vertex = function(){
     # Reordering
     order_idx <- order(self$PtE[,1], self$PtE[,2])
@@ -195,18 +194,41 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$A[order_idx,] <- self$A
     self$y[order_idx] <- self$y
   },
+  #' @description Clear all observations from the object
+  clear_observations = function(){
+   self$y <- NULL
+   self$PtE <- NULL
+   self$Points <- NULL
+  },
 
   #' @description Add observations to the object
-  #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
-  #' @param y        (n x 1) the value of the observations
-  #' @param y.index (string, int) column in Spoints where y is located
+  #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations,
+  #' which may include the coordinates only, or the coordinates as well as the
+  #' observations
+  #' @param y the observations. These are used if provided, and otherwise the
+  #' observations are assumed to be in Spoints
+  #' @param y.index If `y` is not provided, `y.index` gives the column number
+  #' for the data to use in `Spoints@data`. If it is not provided, it is assumed
+  #' that the data is in the first column
   #' @importFrom  maptools snapPointsToLines
-  add_observations = function(Spoints, y=NULL, y.index=NULL){
+  add_observations = function(Spoints, y = NULL, y.index = NULL){
+
+    if (!is.null(y) && is.null(y)) {
+      stop("if y is provided, then y.index must be provded as well.")
+    }
 
     if(is.null(y)){
-        y = Spoints@data[,y.index]
+        if(is.null(y.index)) {
+          if (dim(Spoints@data)[2] > 1){
+            stop("The data field contains multiple columns,
+                 please specify which column to use via y.index")
+          } else {
+            y.index <- 1
+          }
+        }
+        y <- Spoints@data[,y.index]
     }
-    self$y   = y
+    self$y <- c(self$y, y)
 
     SP <- maptools::snapPointsToLines(Spoints, self$Lines)
     coords.old <- Spoints@coords

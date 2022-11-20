@@ -51,6 +51,15 @@ The theory for this approach is provided in [@graph_fem](??) and
 [@xiong22](https://arxiv.org/abs/2209.04670).
 For the implementation, make use of the `rSPDE` package for the rational approximations.
 
+These models are thus implemented using finite element approximations. Such
+approximations are not needed in for integer smoothness parameters, and for 
+the details about the exact models we refer to the vignettes
+
+* [Whittle--Matérn fields on metric graphs](random_fields.html)
+* [INLA and inlabru interfaces](inla_interface.html)
+
+For further details on the construction of metric graphs, see 
+[Working with metric graphs](metric_graphs.html)
 
 ## Constructing the graph and the mesh
 We begin by loading the `rSPDE` and `GPGraph` packages:
