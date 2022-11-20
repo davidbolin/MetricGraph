@@ -160,7 +160,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description Add observation locations as vertices in the graph
   #' @export
   observation_to_vertex = function(){
-
+    # Reordering
+    order_idx <- order(self$PtE[,1], self$PtE[,2])
+    self$PtE <- self$PtE[order_idx,]
     l <- length(self$PtE[, 1])
     self$PtV <- rep(0, l)
     for(i in 1:l){
@@ -178,6 +180,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
           self$PtV[i] <- dim(self$V)[1]
         }
     }
+
     if(!is.null(self$geo.dist)){
       self$compute_geodist()
     }
@@ -188,6 +191,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       self$buildC(2)
     }
     self$A <- Diagonal(self$nV)[self$PtV, ]
+    # Ordering back
+    self$A[order_idx,] <- self$A
+    self$y[order_idx] <- self$y
   },
 
   #' @description Add observations to the object

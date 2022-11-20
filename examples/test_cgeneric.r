@@ -154,6 +154,8 @@ for(i in 1:(graph$nE)) {
 
 y <- rep(NA, obs.per.edge * graph$nE)
 
+n.obs <- obs.per.edge * graph$nE
+
 # We will also add equally spaced nodes where we will do predictions:A
 
 obs.loc2 <- NULL
@@ -208,9 +210,9 @@ y <- A%*%u + sigma.e * eps
 
 y <- as.vector(y)
 
-y <- y[1:200]
+y <- y[1:n.obs]
 
-y <- c(y, rep(NA, 200))
+y <- c(y, rep(NA, n.obs))
 
 graph$y <- y
 
@@ -228,35 +230,34 @@ sum((Q_chk@i - Q@i)^2)
 sum((Q_chk@p - Q@p)^2)
 sum((Q_chk@x-Q@x)^2)
 
-# obs.loc.rep <- obs.loc
-# for(i in 2:nsim){
-#     obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
-# }
-# data_list <- list(y = as.vector(y),
-#                             loc = obs.loc.rep)
+obs.loc.rep <- obs.loc
+for(i in 2:nsim){
+    obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
+}
+data_list <- list(y = as.vector(y),
+                            loc = obs.loc)
 
-# # data_list <- list(y = as.vector(y), obs.loc = obs.loc)
+# data_list <- list(y = as.vector(y), obs.loc = obs.loc)
 
-# library(inlabru)
+library(inlabru)
 
-# repl <- rep(1:nsim, each=200)
+repl <- rep(1:nsim, each=200)
 
-# cmp <-
-#     y ~ -1 + Intercept(1) + field(loc, model = spde_model,
-#     replicate = repl)
+cmp <-
+    y ~ -1 + Intercept(1) + field(loc, model = spde_model)
 
-# spde_bru_fit <-
-#     bru(cmp,
-#         data=data_list,
-#       options=list(
-#       family = "gaussian",
-#       inla.mode = "experimental"))
-
+spde_bru_fit <-
+    bru(cmp,
+        data=data_list,
+      options=list(
+      family = "gaussian",
+      inla.mode = "experimental"))
 
 
-# spde_bru_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model)
 
-# summary(spde_bru_result)
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model)
+
+summary(spde_bru_result)
 
 
 
@@ -270,7 +271,7 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
       list(Intercept = 1)
     ))
 
-f.s <- y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl)
+f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
 spde_fit <- inla(f.s, data = inla.stack.data(stk.dat))
 
@@ -278,7 +279,7 @@ spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
 summary(spde_result)
 
-m.prd <- spde_fit$summary.fitted.values$mean[201:400]
+m.prd <- spde_fit$summary.fitted.values$mean[(n.obs+1):(2*n.obs)]
 
 m.prd.matrix <- cbind(obs.loc2, m.prd)
 
@@ -303,12 +304,16 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 50
+obs.per.edge <- 2
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
-                   cbind(rep(i,obs.per.edge), runif(obs.per.edge) * 
+                   cbind(rep(i,obs.per.edge), obs.per.edge:1/(obs.per.edge+1) * 
                           graph$edge_lengths[i]))
+
+#   obs.loc <- rbind(obs.loc,
+#                    cbind(rep(i,obs.per.edge), 1:obs.per.edge/(obs.per.edge+1) * 
+#                           graph$edge_lengths[i]))
 }
 
 y <- rep(NA, obs.per.edge * graph$nE)
