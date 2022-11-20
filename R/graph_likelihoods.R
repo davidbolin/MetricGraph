@@ -7,12 +7,17 @@
 #' @return The log-likelihood
 #' @export
 likelihood_graph_spde <- function(theta, graph, alpha = 1, version = 1) {
+
+  check <- gpgraph_check_graph(graph)
+
   if (alpha == 1 && version == 1) {
     return(likelihood_alpha1(theta, graph))
   } else if (alpha == 1 && version == 2) {
     return(likelihood_alpha1_v2(theta, graph))
   } else if (alpha == 2) {
     return(likelihood_alpha2(theta, graph))
+  } else {
+    stop("Only alpha = 1 and alpha = 2 implemented")
   }
 }
 
@@ -302,6 +307,8 @@ likelihood_alpha1 <- function(theta, graph) {
 #' @export
 likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
+  check <- gpgraph_check_graph(graph)
+
   #build covariance matrix
   if (model == "alpha1") {
 
@@ -351,6 +358,9 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 #' @return The log-likelihood
 #' @export
 likelihood.graph_laplacian <- function(theta, graph.obj){
+
+  check <- gpgraph_check_graph(graph)
+
   sigma_e <- theta[1]
   #build Q
 

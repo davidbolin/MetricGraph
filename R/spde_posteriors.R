@@ -16,13 +16,16 @@ spde_posterior_mean <- function(theta,
                                 alpha = 1,
                                 type = "mesh",
                                 leave_edge_out = FALSE) {
+
+  check <- gpgraph_check_graph(graph)
+
   if (!(type %in% c("mesh", "obs"))) {
     stop("Type must be 'mesh' or 'obs'.")
   }
-  if( type == "mesh" && is.null(graph$mesh)) {
+  if( type == "mesh" && !check$has.mesh) {
     stop("mesh must be provided")
   }
-  if(is.null(graph$y)){
+  if(!check$has.data){
     stop("The graph contains no data.")
   }
   if (alpha == 1) {

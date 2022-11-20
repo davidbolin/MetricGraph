@@ -40,7 +40,9 @@ plot_r_2 <-function(kappa, sigma, sigma_e, t = NULL) {
 #' @param graph   - graphical object
 #' @param theta  - (sigma_e, sigma, kappa)
 #' @export
-graph_posterior_mean_matern2 <- function(graph,  theta, sample=F){
+graph_posterior_mean_matern2 <- function(graph,  theta, sample=FALSE) {
+
+  check <- gpgraph_check_graph(graph)
 
   X <- c()
   V.post.mean <- posterior.mean.matern2(theta, graph)
@@ -83,6 +85,8 @@ graph_posterior_mean_matern2 <- function(graph,  theta, sample=F){
 #' lower edge [,3] covariance
 #' @export
 covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
+
+  check <- gpgraph_check_graph(graph)
 
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -190,6 +194,12 @@ covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 #' @return a vector with covariance values
 #' @export
 covariance_alpha2_mesh <- function(P, kappa, sigma, graph){
+
+  check <- gpgraph_check_graph(graph)
+
+  if(!check$has.mesh) {
+    stop("No mesh provided.")
+  }
 
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,

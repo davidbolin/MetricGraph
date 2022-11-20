@@ -10,17 +10,20 @@
 #' @return Precision matrix or list
 #' @export
 spde_precision <- function(kappa, sigma, alpha, graph, BC = 1, build = TRUE) {
-    if (alpha == 1) {
-        return(Qalpha1(theta = c(sigma, kappa),
-                       graph = graph,
-                       BC = BC,
-                       build = build))
-    } else if (alpha == 2) {
-        return(Qalpha2(theta = c(sigma, kappa),
-                       graph = graph,
-                       BC = BC,
-                       build = build))
-    }
+
+  check <- gpgraph_check_graph(graph)
+
+  if (alpha == 1) {
+    return(Qalpha1(theta = c(sigma, kappa),
+                   graph = graph,
+                   BC = BC,
+                   build = build))
+  } else if (alpha == 2) {
+      return(Qalpha2(theta = c(sigma, kappa),
+                     graph = graph,
+                     BC = BC,
+                     build = build))
+  }
 }
 
 #' The precision matrix for all vertices in the alpha=1 case

@@ -200,6 +200,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y        (n x 1) the value of the observations
   #' @param y.index (string, int) column in Spoints where y is located
+  #' @importFrom  maptools snapPointsToLines
   add_observations = function(Spoints, y=NULL, y.index=NULL){
 
     if(is.null(y)){
@@ -243,18 +244,29 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   },
 
   #' @description add observations to the object
-  #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations
   #' @param y (n x 1) the value of the observations
   #' @param PtE (n x 2) edge index, distance on index
   #' @param normalized if TRUE, then the distances in PtE are assumed to be
   #' normalized to (0,1), default FALSE.
+  #' @param Spoints Optional argument of class SpatialPoints or
+  #' SpatialPointsDataFrame specifying the Euclidean coordinates of the
+  #' observation locations. If this is not provided, the coordinates are
+  #' calculated internally.
   add_observations2 = function(y, PtE, Spoints=NULL, normalized = FALSE){
 
-    self$y   = y
+    self$y   = c(self$y, y)
+    if(min(PtE[,2]) < 0){
+      stop("PtE[,2] has negative values")
+    }
     if(normalized){
-      self$PtE = PtE
+      if(max(PtE[,2] > 1)){
+        stop("For normalized distances, the values in PtE[,2] should not be
+             larger than 1")
+      }
+      self$PtE = rbind(self$PtE, PtE)
     } else {
-      self$PtE = cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
+      PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
+      self$PtE = rbind(self$PtE, PtE)
     }
 
     if(!is.null(self$Lines)){
@@ -263,7 +275,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         coords <- c()
         for(i in 1:dim(PtE)[1]){
 
-          LT = private$edge_pos_to_line_pos(self$PtE[i, 1] , self$PtE[i, 2])
+          LT = private$edge_pos_to_line_pos(PtE[i, 1] , PtE[i, 2])
           points <- rgeos::gInterpolate(self$Lines[LT[1,1],],
                                         LT[1,2],
                                         normalized = TRUE)
@@ -272,7 +284,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         rownames(coords) <- 1:dim(coords)[1]
         Spoints <- sp::SpatialPoints(coords)
       }
-      self$Points = Spoints
+      if(is.null(self$Points)){
+        self$Points <- Spoints
+      } else {
+        self$Points = rbind(self$Points, Spoints)
+      }
     }
   },
 
