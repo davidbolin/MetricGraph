@@ -122,7 +122,7 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl)
 
-data_stk <- graph_stack(stk.dat, "field", spde.index)
+data_stk <- graph_stack(stk.dat, "field")
 
 spde_fit <- inla(f.s, data = data_stk)
 
@@ -146,7 +146,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 4
+obs.per.edge <- 50
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -237,8 +237,10 @@ sum((Q_chk@p - Q@p)^2)
 sum((Q_chk@x-Q@x)^2)
 
 obs.loc.rep <- obs.loc
-for(i in 2:nsim){
-    obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
+if(nsim>1){
+    for(i in 2:nsim){
+        obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
+    }
 }
 data_list <- list(y = as.vector(y),
                             loc = obs.loc)
@@ -246,8 +248,6 @@ data_list <- list(y = as.vector(y),
 # data_list <- list(y = as.vector(y), obs.loc = obs.loc)
 
 library(inlabru)
-
-repl <- rep(1:nsim, each=200)
 
 cmp <-
     y ~ -1 + Intercept(1) + field(loc, model = spde_model)
@@ -279,7 +279,9 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
-spde_fit <- inla(f.s, data = inla.stack.data(stk.dat))
+data_stk <- graph_stack(stk.dat, "field")
+
+spde_fit <- inla(f.s, data = data_stk)
 
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
@@ -289,7 +291,7 @@ m.prd <- spde_fit$summary.fitted.values$mean[(n.obs+1):(2*n.obs)]
 
 m.prd.matrix <- cbind(obs.loc2, m.prd)
 
-graph$plot_function(m.prd.matrix, plotly=TRUE, marker_size = 3)
+graph$plot_function(X = m.prd.matrix, marker_size = 3)
 
 
 

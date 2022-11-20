@@ -99,6 +99,7 @@ locations}
 \item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
 \item \href{#method-GPGraph::graph-split_edge}{\code{metric_graph$split_edge()}}
+\item \href{#method-GPGraph::graph-add_responses}{\code{metric_graph$add_responses()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -507,6 +508,23 @@ split_edge Function for splitting lines
 \item{\code{Ei}}{index of line to split}
 
 \item{\code{t}}{position on line to split (normalized)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-add_responses"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_responses}{}}}
+\subsection{Method \code{add_responses()}}{
+Auxiliar function for adding simulated response variables in the correct order.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_responses(y)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{A vector of response variables}
 }
 \if{html}{\out{</div>}}
 }

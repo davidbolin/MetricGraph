@@ -612,7 +612,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
           p<-private$plot_edge_line(vals,
                                  Eindex = i,
                                  p = p,
-                                 ploty = ploty,
+                                 plotly = plotly,
                                  color = color,
                                  ... )
       }
