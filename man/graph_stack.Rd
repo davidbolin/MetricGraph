@@ -4,14 +4,12 @@
 \alias{graph_stack}
 \title{Creates an inla.stack for metric graph objects}
 \usage{
-graph_stack(stack_obj, name, index)
+graph_stack(stack_obj, name)
 }
 \arguments{
 \item{stack_obj}{A density data frame}
 
 \item{name}{Name of the field}
-
-\item{index}{index object}
 }
 \value{
 A data object to be passed to inla

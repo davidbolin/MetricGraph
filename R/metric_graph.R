@@ -162,6 +162,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   observation_to_vertex = function(){
     # Reordering
     order_idx <- order(self$PtE[,1], self$PtE[,2])
+    
+    private$reorder_idx <- c(private$reorder_idx, list(order_idx))
+
     self$PtE <- self$PtE[order_idx,]
     l <- length(self$PtE[, 1])
     self$PtV <- rep(0, l)
@@ -795,10 +798,18 @@ add_responses = function(y){
     A <- self$A
   }
 
-  idx <- as.vector(A %*% 1:ncol(A))
-  offset_idx <- min(idx)-1
   stopifnot(length(y) == length(self$y))
-  self$y[idx-offset_idx] <- y
+
+  for(i in 1:length(private$reorder_idx)){
+    idx <- private$reorder_idx[[i]]
+    y_tmp <- y[1:length(idx)]
+    self$y <- y_tmp[idx]
+  }
+
+  # idx <- as.vector(A %*% 1:ncol(A))
+  # offset_idx <- min(idx)-1
+  # stopifnot(length(y) == length(self$y))
+  # self$y[idx-offset_idx] <- y
 }
 
   ),
@@ -1216,8 +1227,11 @@ add_responses = function(y){
       print(p)
     }
     return(p)
-  }
+  },
 
+  # Ordering indexes
+
+  reorder_idx = list()
 ))
 
 
