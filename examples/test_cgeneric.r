@@ -13,13 +13,15 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 50
+obs.per.edge <- 100
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
                    cbind(rep(i,obs.per.edge), runif(obs.per.edge) * 
                           graph$edge_lengths[i]))
 }
+
+n.obs <- nrow(obs.loc)
 
 y <- rep(NA, obs.per.edge * graph$nE)
 
@@ -31,13 +33,13 @@ graph$plot(line_width = 0.3)
 
 A <- graph$A
 
-sigma <- 1
+sigma <- 1.3
 
 sigma.e <- 0.1
 
 nu <- 0.5
 
-r <- 0.2
+r <- 0.3
 
 kappa <- sqrt(8 * nu) / r
 
@@ -89,7 +91,7 @@ data_list <- list(y = as.vector(y),
 
 library(inlabru)
 
-repl <- rep(1:nsim, each=200)
+repl <- rep(1:nsim, each=n.obs)
 
 cmp <-
     y ~ -1 + Intercept(1) + field(loc, model = spde_model,
@@ -465,7 +467,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 3
+obs.per.edge <- 50
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
 obs.loc <- rbind(obs.loc,
@@ -494,7 +496,7 @@ obs.loc2 <- NULL
 obs.per.edge.prd <-
 graph_prd$edge_lengths/min(graph_prd$edge_lengths)
 
-max_subdiv <- 1
+max_subdiv <- 5
 
 obs.per.edge.prd <- sapply(obs.per.edge.prd, 
         function(x){min(max_subdiv,round(x))})
@@ -517,7 +519,7 @@ graph_prd$observation_to_vertex()
 
 graph_prd$plot(line_width = 0.3)
 
-A <- graph_prd$A
+A <- graph$A
 
 sigma <- 1
 
@@ -531,7 +533,7 @@ kappa <- sqrt(8 * nu) / r
 
 theta <- c(sigma, kappa)
 
-Q <- Qalpha1(theta, graph_prd)
+Q <- Qalpha1(theta, graph)
 
 sizeQ <- nrow(Q)
 
@@ -572,7 +574,7 @@ graph_prd$plot(line_width = 0.3, data=TRUE)
 
 graph$plot(line_width = 0.3, data=TRUE)
 
-spde_model <- gpgraph_spde(graph)
+spde_model <- gpgraph_spde(graph_prd)
 
 spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
                                     start_sigma = sigma,
@@ -590,6 +592,8 @@ if(nsim>1){
         obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
     }
 }
+
+obs.loc <- rbind(obs.loc, obs.loc2)
 data_list <- list(y = as.vector(y),
                             loc = obs.loc)
 
@@ -615,8 +619,8 @@ summary(spde_bru_result)
 
 
 
-spde.index <- graph_spde_make_index(name="field", graph=graph, n.repl = nsim)
-A <- graph_spde_make_A(graph, n.repl = nsim)
+spde.index <- graph_spde_make_index(name="field", graph=graph_prd, n.repl = nsim)
+A <- graph_spde_make_A(graph_prd, n.repl = nsim)
 
 stk.dat <- inla.stack(data = list(y=as.vector(y)), 
                         A = A, 
@@ -635,17 +639,17 @@ spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
 summary(spde_result)
 
-m.prd <- spde_fit$summary.fitted.values$mean[(n.obs+1):(2*n.obs)]
+m.prd <- spde_fit$summary.fitted.values$mean[(n.obs+1):length(y)]
 
 prd.y <- c(y[1:n.obs], m.prd)
 
-graph$add_responses(prd.y)
+graph_prd$add_responses(prd.y)
 
-graph$plot(data=TRUE)
+graph_prd$plot(data=TRUE)
 
 m.prd.matrix <- cbind(obs.loc2, m.prd)
 
-graph$plot(X = as.vector(m.prd), X_loc = as.matrix(obs.loc2), show=FALSE)
+graph$plot(data=TRUE, X = as.vector(m.prd), X_loc = as.matrix(obs.loc2), marker_size = 3, show=FALSE)
 
 graph$plot_function(X = m.prd.matrix, marker_size = 3, plotly=TRUE)
 

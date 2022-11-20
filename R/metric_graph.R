@@ -194,9 +194,37 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       self$buildC(2)
     }
     self$A <- Diagonal(self$nV)[self$PtV, ]
+
+    # self$A <- Diagonal(self$nV)[min(self$PtV):max(self$PtV), ]
+
     # Ordering back
-    self$A[order_idx,] <- self$A
-    self$y[order_idx] <- self$y
+    # self$A[order_idx,] <- self$A
+    #   idx <- private$reorder_idx[[1]]
+    #   A_tmp <- self$A[1:length(idx),]
+    #   self$A[idx,] <- A_tmp
+    #   if(length(private$reorder_idx)>1){
+    #      for(i in 2:length(private$reorder_idx)){
+    #       idx <- private$reorder_idx[[i]]
+    #       A_tmp <- self$A[idx,]
+    #       self$A[1:length(idx),] <- A_tmp
+    #     }
+    #   }
+
+         for(i in length(private$reorder_idx):1){
+          idx <- private$reorder_idx[[i]]
+          A_tmp <- self$A[1:length(idx),]
+          self$A[idx,] <- A_tmp
+        }
+
+      # for(i in 1:length(private$reorder_idx)){
+      #   idx <- private$reorder_idx[[i]]
+      #   A_tmp <- self$A[1:length(idx),]
+      #   self$A[idx,] <- A_tmp
+      # }
+
+    # self$y[order_idx] <- self$y
+    # self$A <- Diagonal(self$nV)[self$PtV, ]
+    self$add_responses(self$y)
   },
   #' @description Clear all observations from the object
   clear_observations = function(){
@@ -280,7 +308,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' calculated internally.
   add_observations2 = function(y, PtE, Spoints=NULL, normalized = FALSE){
 
-    self$y   = c(self$y, y)
+    self$y <- c(self$y, y)
     if(min(PtE[,2]) < 0){
       stop("PtE[,2] has negative values")
     }
@@ -798,7 +826,8 @@ add_responses = function(y){
     A <- self$A
   }
 
-  stopifnot(length(y) == length(self$y))
+  # stopifnot(length(y) == length(self$y))
+  stopifnot(length(y) == nrow(A))
   self$y <- y
   
   idx <- private$reorder_idx[[1]]
