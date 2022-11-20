@@ -799,12 +799,19 @@ add_responses = function(y){
   }
 
   stopifnot(length(y) == length(self$y))
-
-  for(i in 1:length(private$reorder_idx)){
-    idx <- private$reorder_idx[[i]]
-    y_tmp <- y[1:length(idx)]
-    self$y <- y_tmp[idx]
+  self$y <- y
+  
+  idx <- private$reorder_idx[[1]]
+  y_tmp <- self$y[1:length(idx)]
+  self$y[idx] <- y_tmp
+  if(length(private$reorder_idx)>1){
+    for(i in 2:length(private$reorder_idx)){
+      idx <- private$reorder_idx[[i]]
+      y_tmp <- self$y[1:length(idx)]
+      self$y <- y_tmp[idx]
+    }
   }
+
 
   # idx <- as.vector(A %*% 1:ncol(A))
   # offset_idx <- min(idx)-1

@@ -465,7 +465,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 2
+obs.per.edge <- 3
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
 obs.loc <- rbind(obs.loc,
