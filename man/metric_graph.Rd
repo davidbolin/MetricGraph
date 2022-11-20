@@ -44,11 +44,11 @@ is the vertex at the end of the edge}
 
 \item{\code{EID}}{ID of edges}
 
-\item{\code{EtL}}{[i,] - edge i position on lines}
+\item{\code{LtE}}{Edge positions on lines}
 
 \item{\code{ELend}}{normalized end point of edge on line (normalized on the line)}
 
-\item{\code{Estart}}{normalized start point of edge on line (normalized on the line)}
+\item{\code{ELstart}}{normalized start point of edge on line (normalized on the line)}
 
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
@@ -79,15 +79,6 @@ locations}
 }
 \if{html}{\out{</div>}}
 }
-\section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{EtL}}{[i,] - edge i position on lines}
-
-\item{\code{Estart}}{normalized start point of edge on line (normalized on the line)}
-}
-\if{html}{\out{</div>}}
-}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -96,6 +87,7 @@ locations}
 \item \href{#method-GPGraph::graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-GPGraph::graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
+\item \href{#method-GPGraph::graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{metric_graph$add_observations()}}
 \item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
@@ -189,6 +181,16 @@ Add observation locations as vertices in the graph
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-clear_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-clear_observations}{}}}
+\subsection{Method \code{clear_observations()}}{
+Clear all observations from the object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$clear_observations()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations}{}}}
 \subsection{Method \code{add_observations()}}{
@@ -200,11 +202,16 @@ Add observations to the object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations}
+\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations,
+which may include the coordinates only, or the coordinates as well as the
+observations}
 
-\item{\code{y}}{(n x 1) the value of the observations}
+\item{\code{y}}{the observations. These are used if provided, and otherwise the
+observations are assumed to be in Spoints}
 
-\item{\code{y.index}}{(string, int) column in Spoints where y is located}
+\item{\code{y.index}}{If `y` is not provided, `y.index` gives the column number
+for the data to use in `Spoints@data`. If it is not provided, it is assumed
+that the data is in the first column}
 }
 \if{html}{\out{</div>}}
 }
@@ -225,7 +232,10 @@ add observations to the object
 
 \item{\code{PtE}}{(n x 2) edge index, distance on index}
 
-\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations}
+\item{\code{Spoints}}{Optional argument of class SpatialPoints or
+SpatialPointsDataFrame specifying the Euclidean coordinates of the
+observation locations. If this is not provided, the coordinates are
+calculated internally.}
 
 \item{\code{normalized}}{if TRUE, then the distances in PtE are assumed to be
 normalized to (0,1), default FALSE.}
@@ -341,6 +351,8 @@ plot a metric graph
   data = FALSE,
   data_size = 1,
   mesh = FALSE,
+  X = NULL,
+  X_loc = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -365,6 +377,11 @@ plot a metric graph
 \item{\code{data_size}}{size of markers for data}
 
 \item{\code{mesh}}{Plot the mesh locations?}
+
+\item{\code{X}}{Additional values to plot}
+
+\item{\code{X_loc}}{locations of the additional values in the format
+(edge, normalized distance on edge)}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }

@@ -4,7 +4,7 @@
 \alias{graph_posterior_mean_matern2}
 \title{Generates samples of the entire graph}
 \usage{
-graph_posterior_mean_matern2(graph, theta, sample = F)
+graph_posterior_mean_matern2(graph, theta, sample = FALSE)
 }
 \arguments{
 \item{graph}{- graphical object}

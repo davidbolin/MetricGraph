@@ -21,8 +21,8 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 
   check <- gpgraph_check_graph(graph)
 
-  if (!(type %in% c("mesh", "obs"))) {
-    stop("Type must be 'mesh' or 'obs'.")
+  if (!(type %in% c("manual","mesh", "obs"))) {
+    stop("Type must be 'manual', 'mesh' or 'obs'.")
   }
   if( type == "mesh" && !check$has.mesh) {
     stop("mesh must be provided")
@@ -99,7 +99,8 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 
 
       if(type == "mesh") {
-        u <- V0
+        u_s <- u_e[seq(from=1, by = 2, to = length(u_e))]
+        u <- u_s[which(!duplicated(c(t(graph$E))))]
         inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
       } else if (type == "obs") {
         u <- NULL

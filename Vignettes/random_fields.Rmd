@@ -1,0 +1,143 @@
+---
+title: "Whittle--Matérn fields on metric graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Whittle--Matérn fields on metric graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matéern fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2205.06163
+  type: preprint
+  issued:
+  year: 2022
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:??
+  type: preprint
+  issued:
+  year: 2022
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+library(GPGraph)
+```
+
+# Introduction
+
+In this vignette we will introduce how to work with Gaussian Whittle--Matérn
+fields on metric graphs. The theory for this approach is provided in
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??).
+
+These random fields can also be used in combination with the `INLA` and
+`inlabru` packages. See [INLA and inlabru interfaces](inla_interface.html)
+for details.
+
+# Sampling Whittle--Mat\'ern fields
+As an example, we consider the following metric graph
+```{r}
+library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+graph <- metric_graph$new(Lines = Lines)
+graph$plot(line_width = 0.3, show = FALSE)
+```
+For further details on the construction of metric graphs, see
+[Working with metric graphs](metric_graphs.html)
+
+We are now ready to specify the model
+$$
+  (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
+$$
+  for the Whittle--Matérn field $u$. We can work with these models without
+and approximations if $\alpha$ is an integer. As an example, let us simulate
+the field on the graph using $\alpha = 1$. To do so, we first need to specify
+where to sample it. As a first example, let us specify some locations manually:
+```{r}
+PtE <- cbind(rep(1:4, each = 4),
+             rep(c(0.2, 0.4, 0.6, 0.8), times = 4))
+
+sigma <- 2
+alpha <- 1
+kappa <- 5
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+                 graph = graph, PtE = PtE)
+graph$plot(X = u, X_loc = PtE, show = FALSE)
+```
+
+In many cases, one wants to sample the field at evenly spaced locations over
+the graph. To avoid having to specify such locations manually, we can first
+create a mesh on the graph
+```{r}
+graph$build_mesh(h = 0.1)
+graph$plot(mesh=TRUE, show = FALSE)
+```
+
+In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. We can now sample the field on this mesh and plot the 
+result as a function as follows:
+```{r}
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+                 graph = graph, type = "mesh")
+graph$plot_function_mesh(u, show = FALSE)
+```
+
+Let us construct a finer mesh, simulate the field, and visualize the simulation
+in 3D by specifying the `plotly` argument in the plot function:
+```{r}
+graph$build_mesh(h = 0.01)
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+                 graph = graph, type = "mesh")
+graph$plot_function_mesh(u, plotly = TRUE, show = FALSE)
+```
+
+Since $\alpha=1$, these sample paths are continuous but not differentiable. 
+To visualize the correlation structure of the field, we can compute and plot
+the covariances between some point and all other points in the graph as follows:
+```{r}
+C <- covariance_alpha1_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
+                            graph = graph)
+graph$plot_function_mesh(C, plotly = TRUE, show = FALSE)
+```
+
+To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
+The corresponding covariance function then looks as follows: 
+```{r}
+C <- covariance_alpha2_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
+                            graph = graph)
+graph$plot_function_mesh(C, plotly = TRUE, show = FALSE)
+```
+
+Let us simulate a process with $\alpha=2$ as well:
+```{r}
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+                 graph = graph, type = "mesh")
+graph$plot_function_mesh(u, plotly = TRUE, show = FALSE)
+```
+
+# References

@@ -26,12 +26,13 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   EID = NULL,
 
 
-  #' @field EtL [i,] - edge i position on lines
+  #' @field LtE Edge positions on lines
   LtE = NULL,
 
   #' @field ELend normalized end point of edge on line (normalized on the line)
   ELend = NULL,
-  #' @field Estart normalized start point of edge on line (normalized on the line)
+
+  #' @field ELstart normalized start point of edge on line (normalized on the line)
   ELstart = NULL,
 
   #' @field C constraint matrix used to set Kirchhoff constraints
@@ -509,6 +510,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param data Plot the data?
   #' @param data_size size of markers for data
   #' @param mesh Plot the mesh locations?
+  #' @param X Additional values to plot
+  #' @param X_loc locations of the additional values in the format
+  #' (edge, normalized distance on edge)
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return a plot_ly or or ggplot object
   #' @examples
@@ -532,6 +536,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                   data = FALSE,
                   data_size = 1,
                   mesh = FALSE,
+                  X = NULL,
+                  X_loc = NULL,
                   ...){
     if(!plotly){
       p <- private$plot_2d(show = show,
@@ -542,6 +548,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            data = data,
                            data_size = data_size,
                            mesh = mesh,
+                           X = X,
+                           X_loc = X_loc,
                            ...)
     } else {
       p <- private$plot_3d(show = show,
@@ -552,6 +560,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            data = data,
                            data_size = data_size,
                            mesh = mesh,
+                           X = X,
+                           X_loc = X_loc,
                            ...)
     }
     return(p)
@@ -568,7 +578,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param marker_size for 3D plot, the marker size of the vertices
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
-  #' @export
   plot_function = function(X, plotly = TRUE, show = TRUE,
                        graph_color = 'rgb(0,0,0)',
                        graph_width = 1,
@@ -615,6 +624,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
     return(p)
   },
+
   #' @description plot function mesh X on the graph
   #' @param X (m x 1) a vector with values for the function
   #' evaluated at a precomputed mesh (V,and PtE)
@@ -625,7 +635,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param marker_size for 3D plot, the marker size of the vertices
   #' @param color Color of curve
   #' @param ... additional arguments for ggplot or plot_ly
-  #' @export
   plot_function_mesh = function(X, plotly = FALSE, show = TRUE,
                                 graph_color = 'black',
                                 graph_width = 1,
@@ -689,7 +698,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @description split_edge Function for splitting lines
   #' @param Ei index of line to split
   #' @param t  position on line to split (normalized)
-  #' @export
   split_edge = function(Ei, t){
     if (!is.null(self$Lines)) {
 
@@ -796,9 +804,9 @@ add_responses = function(y){
   ),
 
   private = list(
-    #' @description computes which line and which position t_E on Ei belongs to
-    #' @param Ei  (int)   edge index
-    #' @param t_e (n x 1) number of positions on Ei
+    #computes which line and which position t_E on Ei belongs to
+    # Ei  (int)   edge index
+    # t_e (n x 1) number of positions on Ei
     edge_pos_to_line_pos = function(Ei, t_E){
 
       LT <- matrix(0, nrow= length(t_E),2)
@@ -835,12 +843,12 @@ add_responses = function(y){
       return(LT)
     },
 
-    #' @description plotting edges when there exists lines
-    #' @param vals    (m x 2) position on edge, value
-    #' @param Eindex  (int)   which edge
-    #' @param p       (ggplot) previous plot object
-    #' @param plotly   (?)
-    #' @param color   (?)
+    # plotting edges when there exists lines
+    # vals    (m x 2) position on edge, value
+    # Eindex  (int)   which edge
+    # p       (ggplot) previous plot object
+    # plotly   (?)
+    # color   (?)
     #'
     plot_edge_line = function(vals, Eindex, p, plotly, color,  ... ){
       index <- (self$LtE@p[Eindex]+1):(self$LtE@p[Eindex+1])
@@ -876,10 +884,8 @@ add_responses = function(y){
       }
       return(p)
     },
-  #'
-  #'@description function for creating Vertex and Edges from self$lines
-  #'
-  #'
+
+  #function for creating Vertex and Edges from self$lines
   line_to_vertex = function(){
     lines <- c()
     for(i in 1:length(self$Lines)){
@@ -1046,6 +1052,8 @@ add_responses = function(y){
                      data = FALSE,
                      data_size = 1,
                      mesh = FALSE,
+                     X = NULL,
+                     X_loc = NULL,
                      ...){
     xyl <- c()
     if(is.null(self$Lines)){
@@ -1096,6 +1104,26 @@ add_responses = function(y){
                           colour = "black",
                           fill = "gray")
     }
+    if(!is.null(X)){
+      if(is.null(X_loc)){
+        stop("X supplied but not X_loc")
+      }
+      x <- y <- NULL
+      for (i in 1:length(as.vector(X))) {
+        LT <- private$edge_pos_to_line_pos(X_loc[i, 1], X_loc[i, 2])
+        Line <- self$Lines[LT[1, 1], ]
+        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
+        Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
+        x <- c(x, Point@coords[1])
+        y <- c(y, Point@coords[2])
+      }
+      p <- p + geom_point(data = data.frame(x = x, y = y,
+                                            val = as.vector(X)),
+                          mapping = aes(x, y, color = val),
+                          size = data_size) +
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+    }
+
     p <- p + coord_fixed()
     if(show){
       print(p)
@@ -1176,13 +1204,13 @@ add_responses = function(y){
     }
     xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
 
-    ax <- list(title = '',
-               zeroline = FALSE,
-               showgrid = FALSE,
-               showticklabels=FALSE)
-    p <- p %>% layout(title = '',
-                      scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
-                                   aspectmode='data'))
+    #ax <- list(title = '',
+    #           zeroline = FALSE,
+    #           showgrid = FALSE,
+    #           showticklabels=FALSE)
+    #p <- p %>% layout(title = '',
+    #                  scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
+    #                               aspectmode='data'))
 
     if(show){
       print(p)
