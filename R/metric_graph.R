@@ -872,7 +872,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 add_responses = function(y){
   # stopifnot(length(y) == length(self$y))
   stopifnot(length(y) == nrow(self$PtE))
-  self$y <- private$raw_y
+  
+  # self$y <- private$raw_y
+  self$y <- y
+
 
   # idx <- private$reorder_idx[[1]]
   # y_tmp <- self$y[1:length(idx)]
