@@ -542,12 +542,12 @@ ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   model <- mapper[["model"]]
   model$f$n
 }
-#' @rdname bru_mapper.inla_rspde
+#' @rdname bru_mapper.inla_metric_graph_spde
 ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   seq_len(inlabru::ibm_n(mapper))
 }
 #' @param input The values for which to produce a mapping matrix
-#' @rdname bru_mapper.inla_rspde
+#' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   if (is.null(input)) {
     return(Matrix::Matrix(0, 0, inlabru::ibm_n(mapper)))

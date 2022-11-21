@@ -3,12 +3,18 @@
 \name{bru_mapper.inla_metric_graph_spde}
 \alias{bru_mapper.inla_metric_graph_spde}
 \alias{ibm_n.bru_mapper_inla_metric_graph_spde}
+\alias{ibm_values.bru_mapper_inla_metric_graph_spde}
+\alias{ibm_jacobian.bru_mapper_inla_metric_graph_spde}
 \alias{bru_get_mapper.inla_metric_graph_spde}
 \title{metric graph inlabru mapper}
 \usage{
 bru_mapper.inla_metric_graph_spde(model, ...)
 
 ibm_n.bru_mapper_inla_metric_graph_spde(mapper, ...)
+
+ibm_values.bru_mapper_inla_metric_graph_spde(mapper, ...)
+
+ibm_jacobian.bru_mapper_inla_metric_graph_spde(mapper, input, ...)
 
 bru_get_mapper.inla_metric_graph_spde(model, ...)
 }
@@ -18,6 +24,8 @@ bru_get_mapper.inla_metric_graph_spde(model, ...)
 \item{\dots}{Arguments passed on to other methods}
 
 \item{mapper}{A `bru_mapper.inla_metric_graph_spde` object}
+
+\item{input}{The values for which to produce a mapping matrix}
 }
 \description{
 metric graph inlabru mapper
