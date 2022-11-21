@@ -13,11 +13,13 @@
 #' specified in PtE. Set to "mesh" for simulation at mesh nodes, and to "obs"
 #' for simulation at observation locations.
 #' @param posterior sample conditionally on the observations?
+#' @param nsim number of samples to be generated.
 #' @return sample evaluated at the mesh nodes in the graph
 #' @export
 sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                         PtE = NULL,
-                        type = "manual", posterior = FALSE) {
+                        type = "manual", posterior = FALSE,
+                        nsim = 1) {
 
   check <- gpgraph_check_graph(graph)
 
@@ -47,7 +49,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
   if(!is.null(PtE) && !(type == "manual")) {
     warning("PtE provided but mode is not manual.")
   }
-
+  if(nsim == 1){
   if (!posterior) {
     if (alpha == 1) {
       Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -132,6 +134,19 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
     stop("TODO: implement posterior sampling")
   }
   return(u)
+  } else if ((nsim%%1 == 0) && nsim>1){
+    u_rep <- unlist(lapply(1:nsim, function(i){
+      sample_spde(kappa=kappa, sigma=sigma, sigma_e = sigma_e, 
+      alpha = alpha, graph = graph,
+                        PtE = PtE,
+                        type = type, 
+                        posterior = posterior,
+                        nsim = 1)
+    }))
+    return(matrix(u_rep, ncol = nsim))
+  } else{
+    stop("The number of simulations must be an integer greater than zero!")
+  }
 }
 #' Sample Gaussian process with exponential covariance on a line given end points
 #' @details Samples a Gaussian process \eqn{u(t)} with an exponential covariance function

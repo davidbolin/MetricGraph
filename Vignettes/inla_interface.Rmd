@@ -154,11 +154,13 @@ graph$observation_to_vertex()
 graph$plot(data=TRUE)
 ```
 
-Now, we create the `inla` model object with the
+Now, we load the `R-INLA` package and
+create the `inla` model object with the
 `gpgraph_spde` function. By default we have
 `alpha=1`. 
 
 ```{r}
+library(INLA)
 spde_model <- gpgraph_spde(graph)
 ```
 
@@ -205,7 +207,9 @@ Finally, we fit the model:
 spde_fit <- inla(f.s, data = data_stk)
 ```
 
-Let us now obtain the estimates in the original scale:
+Let us now obtain the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
 
 ```{r}
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
@@ -381,7 +385,7 @@ m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
 
 To improve visualization, we will plot the posterior means
 on `graph_bkp`:
-```{r}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph_bkp$plot(X = m_prd, X_loc = obs_loc_prd)
 ```
 
@@ -498,7 +502,7 @@ m_prd2 <- spde_fit_prd2$summary.fitted.values$mean[idx_prd]
 
 To improve visualization, we will plot the posterior means
 on `graph_bkp`:
-```{r}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph_bkp$plot(X = m_prd2, X_loc = obs_loc_prd)
 ```
 
@@ -522,4 +526,130 @@ graph_prd$plot(data=TRUE)
 ```
 
 ## Fitting `R-INLA` models with replicates
+
+We will now illustrate how to use our implementation to 
+fit models with replicates.
+
+To simplify exposition, we will use the same base graph.
+So, we begin by creating a copy:
+```{r}
+graph_rep <- graph_bkp$clone()
+```
+
+We will use the same observation locations as for the
+previous cases. Let us sample 30 replicates:
+```{r}
+sigma_rep <- 1.5
+alpha_rep <- 1
+nu_rep <- alpha_rep - 0.5
+r_rep <- 0.2 # r stands for range
+kappa_rep <- sqrt(8 * nu_rep) / r_rep
+
+n_repl <- 30
+
+u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
+                 alpha = alpha_rep,
+                 graph = graph_rep, PtE = obs_loc,
+                 nsim = n_repl)
+```
+
+Let us now generate the observed responses, which we will
+call `y_rep`.
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+n_obs_rep <- nrow(u_rep)
+sigma_e <- 0.1
+
+y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
+                                    ncol=n_repl)
+```
+
+Since we are considering a model with replicates, we will
+add only the first replicate to the graph object:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph_rep$add_observations2(y_rep[,1], 
+                    PtE = obs_loc, normalized=TRUE)
+graph_rep$observation_to_vertex()
+graph_rep$plot(data=TRUE)
+```
+
+Let us now create the model object:
+
+```{r}
+spde_model_rep <- gpgraph_spde(graph_rep)
+```
+
+We now create the index object by using the
+`graph_spde_make_index()` function with the
+argument `n.repl` set to the number of replicates:
+```{r}
+spde_index_rep <- graph_spde_make_index(name="field", 
+                    graph=graph_rep, n.repl = n_repl)
+```
+
+Similarly, we create the observation (`A`) matrix with the
+function `graph_spde_make_A()` setting the `n.repl` argument
+to the number of replicates:
+```{r}
+A_rep <- graph_spde_make_A(graph_rep, n.repl = n_repl)
+```
+
+Next, we create the stack object, remembering that
+we need to input the response variable `y` as a vector
+and the `sample_spde()` function returns a matrix.
+```{r}
+stk_dat_rep <- inla.stack(data = list(y=as.vector(y_rep)), 
+                        A = A_rep, 
+                        effects = c(
+      spde_index_rep,
+      list(Intercept = 1)
+    ))
+```
+
+We now create the formula object, adding the
+name of the field (in our case `field`)
+attached with `.repl` a the `replicate` argument
+inside the `f()` function.
+```{r}
+f_s_rep <- y ~ -1 + Intercept + 
+    f(field, model = spde_model_rep, 
+        replicate = field.repl)
+```
+Then, we create the stack object with The
+`graph_stack()` function:
+```{r}
+data_stk_rep <- graph_stack(stk_dat_rep, "field")
+```
+Now, we fit the model:
+```{r}
+spde_fit_rep <- inla(f_s_rep, data = data_stk_rep)
+```
+
+Let us see the estimated values in the original scale:
+```{r}
+spde_result_rep <- spde_metric_graph_result(spde_fit_rep, 
+                        "field", spde_model_rep)
+
+summary(spde_result_rep)
+```
+
+Let us compare with the true values:
+
+```{r}
+  result_df_rep <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_result_rep$summary.sigma$mean,
+      spde_result_rep$summary.range$mean
+    ),
+    mode = c(
+      spde_result_rep$summary.sigma$mode,
+      spde_result_rep$summary.range$mode
+    )
+  )
+  print(result_df_rep)
+```
+
+# `inlabru` implementation
 

@@ -873,7 +873,7 @@ add_responses = function(y){
   # stopifnot(length(y) == length(self$y))
   stopifnot(length(y) == nrow(self$PtE))
   
-  # self$y <- private$raw_y
+  private$raw_y <- y
   self$y <- y
 
 
