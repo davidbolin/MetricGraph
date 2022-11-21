@@ -312,7 +312,7 @@ the vertices in the mesh. We can then construct and plot the covariance
 between the field at the first mesh location and the rest as follows:
 ```{r}
 graph$compute_resdist_mesh()
-C <- theta.exp[2]^2*exp(-theta.exp[3]*graph$mesh$res.dist[1,])
+C <- theta.exp[2]^2*exp(-theta.exp[3]*graph$mesh$res.dist[14,])
 graph$plot_function_mesh(C, plotly = TRUE)
 ```
 # Models based on the Graph Laplacian

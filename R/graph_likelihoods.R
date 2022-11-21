@@ -309,16 +309,21 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
   check <- gpgraph_check_graph(graph)
 
+  sigma_e <- theta[1]
+  sigma <- theta[2]
+  kappa <- theta[3]
+
   #build covariance matrix
   if (model == "alpha1") {
 
-    Q <- spde_precision(kappa = theta[3], sigma = theta[2],
+    Q <- spde_precision(kappa = kappa, sigma = sigma,
                         alpha = 1, graph = graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
   } else if (model == "alpha2") {
+
     n.c <- 1:length(graph$CBobj$S)
-    Q <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 2,
+    Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
                         graph = graph, BC = 1)
     Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
     Qtilde <- Qtilde[-n.c,-n.c]
@@ -329,23 +334,27 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
   } else if (model == "GL"){
-    Q <- theta[2] * (theta[3] * Diagonal(graph$nV, 1) + graph$Laplacian)
+
+    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
+
   } else if (model == "GL2"){
-    Q <- theta[2] * (theta[3] * Diagonal(graph$nV, 1) + graph$Laplacian)
+
+    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
     Q <- Q %*% Q
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
+
   } else if (model == "isoExp"){
+
     if(is.null(graph$res.dist)){
       stop("You must first compute the resistance metric for the observations")
     }
-    Sigma <- as.matrix(theta[2]^2 * exp(-theta[3] * graph$res.dist[graph$PtV,
-                                                                   graph$PtV]))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa * graph$res.dist))
   } else {
     stop("wrong model choice.")
   }
 
-  diag(Sigma) <- diag(Sigma)  +  theta[1]^2
+  diag(Sigma) <- diag(Sigma) + sigma_e^2
 
   R <- chol(Sigma)
   return(as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) -

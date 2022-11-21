@@ -136,26 +136,46 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$mesh$geo.dist <- distances(g)
   },
 
-  #' @description Computes the resistance metric between the vertices in the
-  #' graph
-  compute_resdist = function(){
-    if(is.null(self$geo.dist)){
-      self$compute_geodist()
-    }
-    L <- Matrix(0, self$nV, self$nV)
+  #' @description Computes the resistance metric of observations
+  #' @param PtE points to compute the metric for, if not provided, the metric
+  #' is computed and stored for the observations in the graph
+  #' @param normalized are the locations in PtE in normalized distance?
+  compute_resdist = function(PtE = NULL, normalized = FALSE){
+    if (is.null(PtE)) {
+      graph.temp <- self$clone()
+      reo <- order(graph.temp$PtE[,1],graph.temp$PtE[,2])
+      if(is.null(graph.temp$PtV)) {
+        graph.temp$observation_to_vertex()
+      }
+      if(is.null(graph.temp$geo.dist)){
+        graph.temp$compute_geodist()
+      }
+      L <- Matrix(0, graph.temp$nV, graph.temp$nV)
+      for (i in 1:graph.temp$nE) {
+        tmp <- -1 / graph.temp$geo.dist[graph.temp$E[i, 1], graph.temp$E[i, 2]]
+        L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
+        L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
+      }
+      for(i in 1:graph.temp$nV){
+        L[i, i] <- -sum(L[i, -i])
+      }
+      L[1, 1] <- L[1, 1] + 1
 
-    for (i in 1:self$nE) {
-      tmp <- -1 / self$geo.dist[self$E[i, 1], self$E[i, 2]]
-      L[self$E[i, 2], self$E[i, 1]] <- L[self$E[i, 1], self$E[i, 2]] <- tmp
-    }
-    for(i in 1:self$nV){
-      L[i, i] <- -sum(L[i, -i])
-    }
-    L[1, 1] <- L[1, 1] + 1
+      Li <- solve(L)
+      R <- -2*Li + t(diag(Li)) %x% rep(1, graph.temp$nV) +
+        t(rep(1, graph.temp$nV)) %x% diag(Li)
 
-    Li <- solve(L)
-    self$res.dist <- -2*Li + t(diag(Li)) %x% rep(1, self$nV) +
-      t(rep(1, self$nV)) %x% diag(Li)
+      self$res.dist <- R[graph.temp$PtV, graph.temp$PtV]
+      reo <- order(self$PtE[,1],self$PtE[,2])
+      self$res.dist <- as.matrix(self$res.dist[reo,reo])
+    } else {
+      reo <- order(PtE[,1],PtE[,2])
+      graph.temp <- self$clone()
+      graph.temp$add_observations2(y = rep(0, dim(PtE)[1]), PtE,
+                                   normalized = normalized)
+      graph.temp$compute_resdist()
+      return(graph.temp$res.dist)
+    }
   },
 
   #' @description Computes the resistance metric between the vertices in the
@@ -693,12 +713,15 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param graph_width for 3D plot, the line width of the graph.
   #' @param marker_size for 3D plot, the marker size of the vertices
   #' @param color Color of curve
+  #' @param p plot object to add the curve to
   #' @param ... additional arguments for ggplot or plot_ly
-  plot_function_mesh = function(X, plotly = FALSE,
+  plot_function_mesh = function(X,
+                                plotly = FALSE,
                                 graph_color = 'black',
                                 graph_width = 1,
                                 marker_size = 10,
                                 color = 'rgb(0,0,200)',
+                                p = NULL,
                                 ...){
     if(is.null(self$mesh)) {
       stop("no mesh provided")
@@ -706,11 +729,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(length(X) != dim(self$V)[1] + dim(self$mesh$PtE)[1]){
       stop("X does not have the correct size")
     }
-    if(plotly){
+    if(plotly && is.null(p)){
       p <- self$plot(plotly = plotly, color = graph_color,
                      line_width = graph_width, marker_size = marker_size)
-    } else {
-      p <- NULL
     }
     n.v <- dim(self$V)[1]
     XV <- X[1:n.v]
@@ -1008,6 +1029,7 @@ add_responses = function(y){
     self$ELstart = rep(0,dim(self$E)[1])
 
   },
+
   plot_curve = function(data.to.plot,
                         Line_edge,
                         plotly = TRUE,
@@ -1045,6 +1067,7 @@ add_responses = function(y){
     }
     return(p)
   },
+
   plot_straight_curve = function(data.to.plot,
                                  V,
                                  plotly = FALSE,
@@ -1081,6 +1104,8 @@ add_responses = function(y){
     }
     return(p)
   },
+
+  #Compute PtE for mesh given PtE for graph
   PtE_to_mesh = function(PtE){
     VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
     PtE_update <- matrix(0,dim(PtE)[1],2)
@@ -1203,6 +1228,7 @@ add_responses = function(y){
 
     return(p)
   },
+
   plot_3d = function(line_width = 1,
                      marker_size = 1,
                      vertex_color = 'rgb(0,0,0)',
