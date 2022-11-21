@@ -210,6 +210,20 @@ return(model)
 }
 
 
+
+#'  Model index vector generation for metric graph models
+#'
+#' Generates a list of named index vectors for 
+#' `INLA`-based metric graph models.
+#'
+#' @param name A character string with the base name of the effect.
+#' @param graph A `metric_graph` object.
+#' @param n.group Number of groups.
+#' @param n.repl Number of replicates.
+#' @param ... Currently not being used.
+#'
+#' @return A list of indexes.
+#' @export 
 graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
    
     n.spde <- dim(graph$V)[1]
@@ -221,6 +235,18 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
     out[[name.repl]] <- rep(1:n.repl, each = n.spde * n.group)
     return(out)
 }
+
+
+#' Observation/prediction matrices for rSPDE models.
+#'
+#' Constructs observation/prediction weight matrices
+#' for metric graph models.
+#' 
+#' @param graph An object of class `metric_graph`
+#' @param n.repl Number of replicates
+#'
+#' @return The observation matrix
+#' @export
 
 graph_spde_make_A <- function (graph, n.repl = 1) {
    if(is.null(graph$A)){
