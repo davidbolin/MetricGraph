@@ -94,7 +94,7 @@ Let us add 50 random locations in each edge where we will
 have observations:
 
 ```{r}
-obs.per.edge <- 5
+obs.per.edge <- 50
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -105,11 +105,11 @@ for(i in 1:(graph$nE)) {
 We will now sample in these observation locations
 and plot the latent field:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-sigma <- 1.3
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+sigma <- 2
 alpha <- 1
 nu <- alpha - 0.5
-r <- 0.3 # r stands for range
+r <- 0.15 # r stands for range
 kappa <- sqrt(8 * nu) / r
 
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
@@ -121,35 +121,200 @@ Let us now generate the observed responses, which we will
 call `y`. We will also plot the observed responses on the
 metric graph.
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 n.obs <- length(u)
 sigma.e <- 0.1
 
 y <- u + sigma.e * rnorm(n.obs)
-y.matrix <- cbind(obs.loc, y)
-order_idx <- order(obs.loc[,1], obs.loc[,2])
-y.matrix <- y.matrix[order_idx,]
-graph$plot(X = as.vector(y.matrix[,3]), X_loc = y.matrix[,c(1,2)])
-```
-
-```{r}
 graph$plot(X = y, X_loc = obs.loc)
 ```
 
-We are now in a position to fit the model. To this end,
+# `R-INLA` implementation
+
+We are now in a position to fit the model with our
+`R-INLA` implementation. To this end,
 we need to add the observations to the graph, which we 
 will do with the `add_observations2()` method. Then,
 we need to turn the observations into vertices of the 
 graph with the `observation_to_vertex()` method. 
 
-```{r}
+Before adding the observations we will grab a copy of
+the graph with the `clone()` for two reasons: i. to make it better to 
+visualization; ii. we will need to provide another
+approach of kriging as we will see in the *Kriging
+with `R-INLA` implementation* section.
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+# Cloning the graph
+graph_bkp <- graph$clone()
+# Adding observations and turning them to vertices
 graph$add_observations2(y, PtE = obs.loc, normalized=TRUE)
 graph$observation_to_vertex()
 graph$plot(data=TRUE)
 ```
 
-## Adding locations to predict
+Now, we create the `inla` model object with the
+`gpgraph_spde` function. By default we have
+`alpha=1`. 
+
+```{r}
+spde_model <- gpgraph_spde(graph)
+```
+
+Now, we need to create the index object with 
+the `graph_spde_make_index()` function:
+
+```{r}
+spde.index <- graph_spde_make_index(name="field", graph=graph)
+```
+
+Observe that, as in `R-INLA`, we need to name the field.
+
+The next step is to create the observation matrix, to which
+we use the `graph_spde_make_A()` function:
+
+```{r}
+A <- graph_spde_make_A(graph)
+```
+
+The remaining is standard in `R-INLA`. We create the
+formula object and the
+`inla.stack` object with the `inla.stack()` function:
+
+```{r}
+f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
+
+stk.dat <- inla.stack(data = list(y=as.vector(y)), 
+                        A = A, 
+                        effects = c(
+      spde.index,
+      list(Intercept = 1)
+    ))
+```
+
+Now, we use the `graph_stack()` function that behaves in 
+an analogous manner to the `inla.stack.data()` function:
+```{r}
+data_stk <- graph_stack(stk.dat, "field")
+```
+
+Finally, we fit the model:
+
+```{r}
+spde_fit <- inla(f.s, data = data_stk)
+```
+
+Let us now obtain the estimates in the original scale:
+
+```{r}
+spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
+
+summary(spde_result)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_df <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, r),
+    mean = c(
+      spde_result$summary.sigma$mean,
+      spde_result$summary.range$mean
+    ),
+    mode = c(
+      spde_result$summary.sigma$mode,
+      spde_result$summary.range$mode
+    )
+  )
+  print(result_df)
+```
 
 
-# `R-INLA` implementation
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+  posterior_df_fit <- gg_df(spde_result)
+
+  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+## Kriging with the `R-INLA` implementation
+
+We can have two approaches to do kriging with our `R-INLA`
+implementation of Whittle-Matérn fields on metric graphs.
+
+* In the first we add a second set of `NA` add_observations
+at the locations in which we want to do kriging to the 
+graph in which we fitted the model. Then, fit a new model,
+and obtain the posterior mean at the desired locations.
+Observe that on this method, if we use the
+`add_observations2()` method, we will need to provide the locations
+in which we want to predict in terms of the positions of
+the new graph, which contains the observed set of 
+observations as vertices.
+
+* In the second method we add the locations in which we
+want to predict together with the observations and 
+observed locations. In this method we provide the locations we
+want to predict in terms of the same base graph, as the
+observations are not vertices of the base graph.
+
+We will now do kriging at an evenly spaced mesh across
+the metric graph.
+
+## Kriging by adding new observation locations to the fitted graph
+
+Since the fitted graph contains the observed locations as vertices,
+we will use our backup graph `graph_bkp` to obtain the spatial 
+locations of the points in which we want to do kriging.
+We will create a copy of `graph_bkp` as we will still need
+`graph_bkp` for the second approach of kriging.
+
+```{r}
+graph_tmp <- graph_bkp$clone()
+```
+
+Let us obtain an evenly spaced mesh with respect to the base
+graph:
+
+```{r}
+obs_per_edge_prd <- 50
+obs_loc_prd <- NULL
+loc_tmp <- 0:(obs_per_edge_prd+1)/(obs_per_edge_prd+1)
+loc_tmp <- loc_tmp[2:(obs_per_edge_prd+1)]
+for(i in 1:(graph_tmp$nE)) {
+    obs_loc_prd <- rbind(obs_loc_prd,
+                 cbind(rep(i,obs_per_edge_prd), 
+                 loc_tmp))
+}
+```
+Let us add the locations as vertices and plot the resulting graph:
+```{r}
+n_obs_prd <- obs_per_edge_prd * graph_tmp$nE
+y_prd <- rep(NA, n_obs_prd)
+graph_tmp$add_observations2(y_prd, obs_loc_prd,
+                            normalized = TRUE)
+graph_tmp$observation_to_vertex()
+graph_tmp$plot()
+```
+We will now extract the spatial locations and use
+these to add these new locations to the graph
+we used to fit the `R-INLA` model:
+
+```{r}
+spatial_loc_prd <- graph_tmp$Points
+# spatial_loc_prd <- as(spatial_loc_prd,
+#                 "SpatialPointsDataFrame")
+# spatial_loc_prd@data <- data.frame(y = y_prd)
+```
+
+We will now add them to the graph we fitted the
+`R-INLA` model:
+
+```{r}
+graph$add_observations(Spoints = spatial_loc_prd)
+```
 

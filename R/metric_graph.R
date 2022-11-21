@@ -301,9 +301,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   add_observations = function(Spoints, y = NULL, y.index = NULL){
 
     if (!is.null(y) && is.null(y)) {
-      stop("if y is provided, then y.index must be provded as well.")
+      stop("if y is provided, then y.index must be provided as well.")
     }
 
+    if("SpatialPointsDataFrame"%in%is(Spoints)){
     if(is.null(y)){
         if(is.null(y.index)) {
           if (dim(Spoints@data)[2] > 1){
@@ -315,11 +316,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         }
         y <- Spoints@data[,y.index]
     }
+    }
     self$y <- c(self$y, y)
     private$raw_y <- c(private$raw_y, y)
 
     SP <- maptools::snapPointsToLines(Spoints, self$Lines)
-    coords.old <- Spoints@coords
+    coords.old <- as.data.frame(Spoints@coords)
     colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
     Spoints@coords = SP@coords
     Spoints@bbox   = SP@bbox
@@ -339,9 +341,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       index.p = which(LtE[,1]==ind)
       for(j in index.p){
         E_ind <- which.min(replace(self$ELend[Es_ind], self$ELend[Es_ind] < LtE[j,2], NA))
-        PtE[j,1] <- Es_ind[E_ind]
-        PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
-
+        if(length(E_ind) > 0){
+          PtE[j,1] <- Es_ind[E_ind]
+          PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
+        }
       }
     }
     if(is.null(self$Points)){
