@@ -23,7 +23,8 @@ about how to work with Gaussian processes on metric graphs, we refer to the
 Vignettes 
 
 * [Gaussian random fields on metric graphs](random_fields.html)
-* [INLA and inlabru interfaces](inla_interface.html)
+* [INLA interface of Whittle--Matérn fields](inla_interface.html)
+* [inlabru interface of Whittle--Matérn fields](inlabru_interface.html)
 * [Whittle--Matérn fields with general smoothness](fem_models.html)
 
 # Constructing metric graphs

@@ -1,0 +1,601 @@
+---
+title: "INLA interface of Whittle--Matérn fields"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{INLA interface of Whittle--Matérn fields}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matéern fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2205.06163
+  type: preprint
+  issued:
+  year: 2022
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:??
+  type: preprint
+  issued:
+  year: 2022
+---
+
+# Introduction
+
+In this vignette we will present our `inlabru`
+interface to Whittle--Matérn fields. The underlying theory
+for this approach is provided in 
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
+
+For an introduction to the `metric_graph` class, please see 
+the [Working with metric graphs](metric_graph.html) vignette.
+
+For our `R-INLA` interface, see
+the [INLA interface of Whittle--Matérn fields](inla_interface.html) vignette.
+
+In the [Gaussian random fields on metric graphs](random_fields.html) vignette,
+we introduce all the models in metric graphs contained in this package,
+as well as, how to perform statistical tasks on these models, but without
+the `R-INLA` or `inlabru` interfaces.
+
+We will present our `inlabru` interface to 
+the Whittle-Matérn fields by providing a step-by-step illustration.
+
+The Whittle--Matérn fields are specified as solutions to the stochastic
+differential equation 
+$$
+  (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
+$$
+on the metric graph $\Gamma$. We can work with these models without
+any approximations if the smoothness parameter $\alpha$ is an integer, and this 
+is what we focus on in this vignette. For details on the case of a general 
+smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_models.html). 
+
+# A toy dataset 
+
+Let us begin by loading the `GPGraph` package
+and creating a metric graph:
+
+```{r}
+library(GPGraph)
+
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line4),ID="3"),
+                              Lines(list(line3),ID="4")))
+graph_bru <- metric_graph$new(Lines = Lines)
+```
+
+Let us add 50 random locations in each edge where we will 
+have observations:
+
+```{r}
+obs_per_edge <- 50
+obs_loc <- NULL
+for(i in 1:(graph_bru$nE)) {
+  obs_loc <- rbind(obs_loc,
+                   cbind(rep(i,obs_per_edge), 
+                   runif(obs_per_edge)))
+}
+```
+
+We will now sample in these observation locations
+and plot the latent field:
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+sigma <- 2
+alpha <- 1
+nu <- alpha - 0.5
+r <- 0.15 # r stands for range
+kappa <- sqrt(8 * nu) / r
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+                 graph = graph_bru, PtE = obs_loc)
+graph_bru$plot(X = u, X_loc = obs_loc)
+```
+
+Let us now generate the observed responses, which we will
+call `y`. We will also plot the observed responses on the
+metric graph.
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+n_obs <- length(u)
+sigma.e <- 0.1
+
+y <- u + sigma.e * rnorm(n_obs)
+graph_bru$plot(X = y, X_loc = obs_loc)
+```
+
+
+# `inlabru` implementation
+
+We will now present our `inlabru` implementation
+of the Whittle-Matérn fields for metric graphs.
+It has the advantage, over our `R-INLA`
+implementation, of not requiring the user
+to provide observation matrices, indices nor 
+stack objects.
+
+We are now in a position to fit the model with our
+`inlabru` implementation. To this end,
+we need to add the observations to the graph, which we 
+will do with the `add_observations2()` method. Then,
+we need to turn the observations into vertices of the 
+graph with the `observation_to_vertex()` method. 
+
+Before adding the observations we will grab a copy of
+the graph with the `clone()` method for two reasons: i. to make it better to 
+visualization; ii. we will need to provide another
+approach of kriging as we will see in the *Kriging
+with `inlabru` implementation* section.
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+# Cloning the graph
+graph_bkp <- graph_bru$clone()
+# Adding observations and turning them to vertices
+graph_bru$add_observations2(y, PtE = obs_loc, normalized=TRUE)
+graph_bru$observation_to_vertex()
+graph_bru$plot(data=TRUE)
+```
+
+Now, we load `INLA` and `inlabru` packages. We will also
+need to create the `inla` model object with the
+`gpgraph_spde` function. By default we have
+`alpha=1`. 
+
+```{r, message=FALSE}
+library(INLA)
+library(inlabru)
+spde_model_bru <- gpgraph_spde(graph_bru)
+```
+The next step is to create the data list containing
+the reponse variables and the observation locations:
+```{r}
+data_list <- list(y = y, loc = obs_loc)
+```
+
+Now, we create `inlabru`'s component, which is a 
+formula-like object:
+```{r}
+cmp <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru)
+```
+
+Now, we directly fit the model:
+
+```{r}
+spde_bru_fit <-
+    bru(cmp, data=data_list)
+```
+
+Let us now obtain the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+
+```{r}
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+                    "field", spde_model_bru)
+
+summary(spde_bru_result)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_df_bru <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, r),
+    mean = c(
+      spde_bru_result$summary.sigma$mean,
+      spde_bru_result$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result$summary.sigma$mode,
+      spde_bru_result$summary.range$mode
+    )
+  )
+  print(result_df_bru)
+```
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+  posterior_df_bru_fit <- gg_df(spde_bru_result)
+
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+## Kriging with the `inlabru` implementation
+
+Unfortunately, our `inlabru` implementation is not 
+compatible with `inlabru`'s `predict()` method. This has
+to do with the nature of the metric graph's object.
+
+Therefore, the approach to do kriging is very similar 
+to `R-INLA`'s implementation. However, it is much simpler 
+since it does not require the user to handle 
+observation matrices, indices nor on stack objects.
+
+Therefore, in the same manner as in `R-INLA`'s
+implementation, we have two approaches to do 
+kriging with our `inlabru`
+implementation of Whittle-Matérn fields on metric graphs.
+
+* In the first we add a second set of `NA` add_observations
+at the locations in which we want to do kriging to the 
+graph in which we fitted the model. Then, fit a new model,
+and obtain the posterior mean at the desired locations.
+Observe that on this method, if we use the
+`add_observations2()` method, we will need to provide the locations
+in which we want to predict in terms of the positions of
+the new graph, which contains the observed set of 
+observations as vertices.
+
+* In the second method we add the locations in which we
+want to predict together with the observations and 
+observed locations. In this method we provide the locations we
+want to predict in terms of the same base graph, as the
+observations are not vertices of the base graph.
+
+As in `R-INLA`'s illustration, we will do kriging at an evenly spaced mesh across
+the metric graph.
+
+## Kriging by adding new observation locations to the fitted graph
+
+Since the fitted graph contains the observed locations as vertices,
+we will use our backup graph `graph_bkp` to obtain the spatial 
+locations of the points in which we want to do kriging.
+We will create a copy of `graph_bkp` as we will still need
+`graph_bkp` for the second approach of kriging.
+
+```{r}
+graph_tmp <- graph_bkp$clone()
+```
+
+Let us obtain an evenly spaced mesh with respect to the base
+graph:
+
+```{r}
+obs_per_edge_prd <- 50
+obs_loc_prd <- NULL
+loc_tmp <- 0:(obs_per_edge_prd+1)/(obs_per_edge_prd+1)
+loc_tmp <- loc_tmp[2:(obs_per_edge_prd+1)]
+for(i in 1:(graph_tmp$nE)) {
+    obs_loc_prd <- rbind(obs_loc_prd,
+                 cbind(rep(i,obs_per_edge_prd), 
+                 loc_tmp))
+}
+```
+Let us add the locations as vertices and plot the resulting graph:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+n_obs_prd <- obs_per_edge_prd * graph_tmp$nE
+y_prd <- rep(NA, n_obs_prd)
+graph_tmp$add_observations2(y_prd, obs_loc_prd,
+                            normalized = TRUE)
+graph_tmp$observation_to_vertex()
+graph_tmp$plot()
+```
+We will now extract the spatial locations and use
+these to add these new locations to the graph
+we used to fit the `inlabru` model:
+
+```{r}
+spatial_loc_prd <- graph_tmp$Points
+```
+
+We will now add them to the graph we fitted the
+`inlabru` model:
+
+```{r}
+graph_bru$add_observations(Spoints = spatial_loc_prd)
+graph_bru$observation_to_vertex()
+```
+
+Let us plot the resulting graph (the gray dots indicate
+the new locations):
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bru$plot(data=TRUE)
+```
+
+We will now fit a new model with `inlabru` with this new
+graph that contains the prediction locations. To this end,
+we create a new model object with the `gpgraph_spde()` function:
+
+```{r}
+spde_model_bru_prd <- gpgraph_spde(graph_bru)
+```
+
+We will create a new vector of response variables,
+concatenating `y` to `y_prd`. We will also
+concatenate the observation and prediction
+locations vertically. Then, create 
+a new data list
+```{r}
+y_cmp <- c(y, y_prd)
+obs_loc_cmp <- rbind(obs_loc, obs_loc_prd)
+
+data_list_prd <- list(y = y_cmp, loc = obs_loc_cmp)
+```
+
+Now, let us create a new
+`inlabru` component:
+
+```{r}
+cmp_prd <- y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru_prd)
+```
+
+Now, we fit the model:
+```{r}
+spde_bru_fit_prd <-
+    bru(cmp_prd, data=data_list_prd)
+```
+
+Let us now obtain the estimates in the original scale:
+
+```{r}
+spde_result_bru_prd <- spde_metric_graph_result(spde_bru_fit_prd, 
+            "field", spde_model_bru_prd)
+
+summary(spde_result_bru_prd)
+```
+
+We will now extract the means at the prediction locations:
+```{r}
+idx_prd <- which(is.na(y_cmp))
+
+m_prd_bru <- spde_bru_fit_prd$summary.fitted.values$mean[idx_prd]
+```
+
+To improve visualization, we will plot the posterior means
+on `graph_bkp`:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bkp$plot(X = m_prd_bru, X_loc = obs_loc_prd)
+```
+
+We will now plot the predictions together with
+the data. To this end we need to create a new 
+vector `y` which is a concatenation of `y`
+and `m_prd`, then use it as the vector of 
+responses of `graph`, which is done by using the
+`add_responses()` method. Then, we plot.
+
+Let us begin by concatenating the vectors and adding
+the responses to `graph`:
+```{r}
+y_new_bru <- c(y, m_prd_bru)
+graph_bru$add_responses(y_new_bru)
+```
+
+Now, we plot:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bru$plot(data=TRUE)
+```
+
+## Kriging by adding the prediction locations from the very beginning
+
+As for the `R-INLA` implementation, 
+this method is much simpler than the previous one. 
+In this method
+we concatenate the observation locations with the 
+prediction locations,
+assign `NA` as the response values at 
+the prediction locations,
+then proceed as in the first part of this vignette.
+
+We start by getting a new copy of `graph_bkp` to be 
+used in this second
+prediction approach.
+
+```{r}
+graph_bru_prd <- graph_bkp$clone()
+```
+
+We will use `obs_loc` as the observation locations and 
+`obs_loc_prd` as the prediction locations. To this end,
+we create a new matrix of locations called `obs_loc_prd2`
+by vertically concatenating these two location matrices:
+```{r}
+obs_loc_prd2 <- rbind(obs_loc, obs_loc_prd)
+```
+
+Recall that the response variable is the concatenation
+of `y` and a vector of `NA`. We already have this vector,
+which we called `y_cmp` in the first prediction part.
+
+We will now add these observations and turn them to
+vertices:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bru_prd$add_observations2(y_cmp, PtE = obs_loc_prd2, 
+                            normalized=TRUE)
+graph_bru_prd$observation_to_vertex()
+graph_bru_prd$plot(data=TRUE)
+```
+
+Now, we proceed as in the first part. We first create
+the model:
+```{r}
+spde_model_bru_prd2 <- gpgraph_spde(graph_bru_prd)
+```
+Next, we create the new data list:
+```{r}
+data_list_prd2 <- list(y = y_cmp, 
+                            loc = obs_loc_prd2)
+```
+
+Now we create the component object:
+```{r}
+cmp_prd2 <- y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru_prd2)
+```
+Finally, we fit the model:
+
+```{r}
+spde_bru_fit_prd2 <-
+    bru(cmp_prd2, data=data_list_prd2)
+```
+
+Let us now obtain the estimates in the original scale:
+
+```{r}
+spde_result_bru_prd2 <- spde_metric_graph_result(spde_bru_fit_prd2, 
+                                    "field", spde_model_bru_prd2)
+
+summary(spde_result_bru_prd2)
+```
+
+
+We will now extract the means at the prediction locations:
+```{r}
+idx_prd <- which(is.na(y_cmp))
+
+m_prd2_bru <- spde_bru_fit_prd2$summary.fitted.values$mean[idx_prd]
+```
+
+To improve visualization, we will plot the posterior means
+on `graph_bkp`:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bkp$plot(X = m_prd2_bru, X_loc = obs_loc_prd)
+```
+
+We will now plot the predictions together with
+the data. To this end we need to create a new 
+vector `y` which is a concatenation of `y`
+and `m_prd`, then use it as the vector of 
+responses of `graph`, which is done by using the
+`add_responses()` method. Then, we plot.
+
+Let us begin by concatenating the vectors and adding
+the responses to `graph`:
+```{r}
+y_new2 <- c(y, m_prd2)
+graph_bru_prd$add_responses(y_new2)
+```
+
+Now, we plot:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bru_prd$plot(data=TRUE)
+```
+
+## Fitting `inlabru` models with replicates
+
+We will now illustrate how to use our `inlabru` implementation to 
+fit models with replicates.
+
+To simplify exposition, we will use the same base graph.
+So, we begin by creating a copy:
+```{r}
+graph_bru_rep <- graph_bkp$clone()
+```
+
+We will use the same observation locations and simulated
+data from our illustration in `R-INLA`'s
+implementation. Recall that we have 30 replicates, which
+is given in the variable `n_repl`.
+
+Recall that the response variables are given in `y_rep`,
+which is a matrix with 30 columns, one per replicate.
+
+Since we are considering a model with replicates, we will
+add only the first replicate to the graph object:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph_bru_rep$add_observations2(y_rep[,1], 
+                    PtE = obs_loc, normalized=TRUE)
+graph_bru_rep$observation_to_vertex()
+graph_bru_rep$plot(data=TRUE)
+```
+
+Let us now create the model object:
+
+```{r}
+spde_model_bru_rep <- gpgraph_spde(graph_bru_rep)
+```
+
+Let us now create a new data list, where we provide
+the response variables (as a vector) and the 
+observation locations (for our current implementation,
+the observation locations must be same throughout
+the replicates):
+```{r}
+obs_loc_rep <- obs_loc
+for(i in 2:n_repl){
+    obs_loc_rep <- rbind(obs_loc_rep, obs_loc)
+}   
+data_list_rep <- list(y = as.vector(y_rep),
+                            loc = obs_loc_rep)
+```
+
+To create the component, we need to create a vector
+of replicate indexes. Recall that the number of 
+observations is stored in the variable `n_obs_rep`:
+```{r}
+repl <- rep(1:n_repl, each=n_obs_rep)
+```
+
+Now, we can create the component, setting the argument
+`replicate`, of the component `field`, to our vector `repl`:
+```{r}
+cmp_rep <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                        model = spde_model_bru_rep,
+                        replicate = repl)
+```
+
+Now, we fit the model:
+```{r}
+spde_bru_fit_rep <-
+    bru(cmp_rep,
+        data=data_list_rep)
+```
+
+Let us see the estimated values in the original scale:
+```{r}
+spde_result_bru_rep <- spde_metric_graph_result(spde_bru_fit_rep, 
+                        "field", spde_model_bru_rep)
+
+summary(spde_result_bru_rep)
+```
+
+Let us compare with the true values:
+
+```{r}
+  result_df_bru_rep <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_result_bru_rep$summary.sigma$mean,
+      spde_result_bru_rep$summary.range$mean
+    ),
+    mode = c(
+      spde_result_bru_rep$summary.sigma$mode,
+      spde_result_bru_rep$summary.range$mode
+    )
+  )
+  print(result_df_bru_rep)
+```

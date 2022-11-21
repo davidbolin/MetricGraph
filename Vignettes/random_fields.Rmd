@@ -191,7 +191,8 @@ Mostly for illustration purposes, the `GPGraph` package contains implementations
 of likelihoods for Whittle--Matérn fields observed under Gaussian measurement 
 noise. In this section we will illustrate these methods. For the use of the 
 Whittle--Matérn fields in more complicated hierarchical models, we recommend
-using the interfaces to the `INLA` and `inlabru` packages. See [INLA and inlabru interfaces](inla_interface.html) for further details on these.
+using the interfaces to the `INLA` and `inlabru` packages. See [INLA interface of Whittle--Matérn fields](inla_interface.html)
+and [inlabru interface of Whittle--Matérn fields](inlabru_interface.html) for further details on these.
 
 Suppose that we want to estimate the model parameters of a Whittle--Matérn field
 $u(s)$ observed under Gaussian measurement noise. That is, we assume that we
