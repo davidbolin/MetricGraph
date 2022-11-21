@@ -44,4 +44,112 @@ library(GPGraph)
 
 # Introduction
 
+In this vignette we will present our `R-INLA` and `inlabru` 
+interfaces to Whittle--Matérn fields. The underlying theory
+for this approach is provided in 
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
+
+For an introduction to the `metric_graph` class, please see 
+the [Working with metric graphs](metric_graph.html) vignette.
+
+In the [Gaussian random fields on metric graphs](random_fields.html) vignette,
+we introduce all the models in metric graphs contained in this package,
+as well as, how to perform statistical tasks on these models, but without
+the `R-INLA` or `inlabru` interfaces.
+
+We will present our `R-INLA` and `inlabru` interfaces to 
+the Whittle-Matérn fields by providing a step-by-step illustration.
+
+The Whittle--Matérn fields are specified as solutions to the stochastic
+differential equation 
+$$
+  (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
+$$
+on the metric graph $\Gamma$. We can work with these models without
+any approximations if the smoothness parameter $\alpha$ is an integer, and this 
+is what we focus on in this vignette. For details on the case of a general 
+smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_models.html). 
+
+# A toy dataset 
+
+Let us begin by loading the `GPGraph` package
+and creating a metric graph:
+
+```{r}
+library(GPGraph)
+
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line4),ID="3"),
+                              Lines(list(line3),ID="4")))
+graph <- metric_graph$new(Lines = Lines)
+```
+
+Let us add 50 random locations in each edge where we will 
+have observations:
+
+```{r}
+obs.per.edge <- 5
+obs.loc <- NULL
+for(i in 1:(graph$nE)) {
+  obs.loc <- rbind(obs.loc,
+                   cbind(rep(i,obs.per.edge), runif(obs.per.edge)))
+}
+```
+
+We will now sample in these observation locations
+and plot the latent field:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+sigma <- 1.3
+alpha <- 1
+nu <- alpha - 0.5
+r <- 0.3 # r stands for range
+kappa <- sqrt(8 * nu) / r
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+                 graph = graph, PtE = obs.loc)
+graph$plot(X = u, X_loc = obs.loc)
+```
+
+Let us now generate the observed responses, which we will
+call `y`. We will also plot the observed responses on the
+metric graph.
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+n.obs <- length(u)
+sigma.e <- 0.1
+
+y <- u + sigma.e * rnorm(n.obs)
+y.matrix <- cbind(obs.loc, y)
+order_idx <- order(obs.loc[,1], obs.loc[,2])
+y.matrix <- y.matrix[order_idx,]
+graph$plot(X = as.vector(y.matrix[,3]), X_loc = y.matrix[,c(1,2)])
+```
+
+```{r}
+graph$plot(X = y, X_loc = obs.loc)
+```
+
+We are now in a position to fit the model. To this end,
+we need to add the observations to the graph, which we 
+will do with the `add_observations2()` method. Then,
+we need to turn the observations into vertices of the 
+graph with the `observation_to_vertex()` method. 
+
+```{r}
+graph$add_observations2(y, PtE = obs.loc, normalized=TRUE)
+graph$observation_to_vertex()
+graph$plot(data=TRUE)
+```
+
+## Adding locations to predict
+
+
+# `R-INLA` implementation
 

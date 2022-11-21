@@ -259,7 +259,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
     # self$y[order_idx] <- self$y
     # self$A <- Diagonal(self$nV)[self$PtV, ]
-    self$add_responses(self$y)
+    self$add_responses(private$raw_y)
   },
   #' @description Clear all observations from the object
   clear_observations = function(){
@@ -296,6 +296,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         y <- Spoints@data[,y.index]
     }
     self$y <- c(self$y, y)
+    private$raw_y <- c(private$raw_y, y)
 
     SP <- maptools::snapPointsToLines(Spoints, self$Lines)
     coords.old <- Spoints@coords
@@ -344,6 +345,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   add_observations2 = function(y, PtE, Spoints=NULL, normalized = FALSE){
 
     self$y <- c(self$y, y)
+    private$raw_y <- c(private$raw_y, y)
     if(min(PtE[,2]) < 0){
       stop("PtE[,2] has negative values")
     }
@@ -842,20 +844,24 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 #' @param y A vector of response variables
 #' @export
 add_responses = function(y){
-  if(!is.null(self$A)){
-    A <- self$A
-  } else{
-    self$observation_to_vertex()
-    A <- self$A
-  }
-
   # stopifnot(length(y) == length(self$y))
-  stopifnot(length(y) == nrow(A))
-  self$y <- y
+  stopifnot(length(y) == nrow(self$PtE))
+  self$y <- private$raw_y
 
+  # idx <- private$reorder_idx[[1]]
+  # y_tmp <- self$y[1:length(idx)]
+  # self$y[idx] <- y_tmp
+  # if(length(private$reorder_idx)>1){
+  #   for(i in 2:length(private$reorder_idx)){
+  #     idx <- private$reorder_idx[[i]]
+  #     y_tmp <- self$y[1:length(idx)]
+  #     self$y <- y_tmp[idx]
+  #   }
+  # }
+  
   idx <- private$reorder_idx[[1]]
-  y_tmp <- self$y[1:length(idx)]
-  self$y[idx] <- y_tmp
+  y_tmp <- self$y[idx]
+  self$y[1:length(idx)] <- y_tmp
   if(length(private$reorder_idx)>1){
     for(i in 2:length(private$reorder_idx)){
       idx <- private$reorder_idx[[i]]
@@ -1283,7 +1289,11 @@ add_responses = function(y){
 
   # Ordering indexes
 
-  reorder_idx = list()
+  reorder_idx = list(),
+
+  # unordered y
+
+  raw_y = c()
 ))
 
 

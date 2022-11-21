@@ -13,7 +13,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
 
-obs.per.edge <- 100
+obs.per.edge <- 250
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -346,13 +346,13 @@ graph$plot(line_width = 0.3)
 
 A <- graph$A
 
-sigma <- 1
+sigma <- 1.2
 
 sigma.e <- 0.1
 
 nu <- 0.5
 
-r <- 0.2
+r <- 0.15
 
 kappa <- sqrt(8 * nu) / r
 
@@ -439,7 +439,7 @@ stk.dat <- inla.stack(data = list(y=as.vector(y)),
 
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl)
 
-data_stk <- graph_stack(stk.dat, "field", spde.index)
+data_stk <- graph_stack(stk.dat, "field")
 
 spde_fit <- inla(f.s, data = data_stk)
 
