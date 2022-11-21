@@ -365,29 +365,39 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 #' Log-likelihood calculation for graph Laplacian model with alpha=1
 #'
 #' @param theta (sigma_e, sigma, kappa)
-#' @param graph.obj graph object
-#'
+#' @param graph metric graph object
+#' @param alpha integer values supported
 #' @return The log-likelihood
 #' @export
-likelihood.graph_laplacian <- function(theta, graph.obj){
+likelihood_graph_laplacian <- function(theta, graph, alpha) {
 
   check <- gpgraph_check_graph(graph)
 
+  if(alpha%%1 != 0){
+    stop("only integer values of alpha supported")
+  }
+
   sigma_e <- theta[1]
-  #build Q
+  sigma <- theta[2]
+  kappa <- theta[3]
 
-  Q <- theta[2]*(theta[3]*Diagonal(graph.obj$nV,1) + graph.obj$Laplacian)
+  K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+  Q <- K / sigma^2
+  if (alpha>1) {
+    for (k in 2:alpha) {
+      Q <- Q %*% K
+    }
+  }
 
-  A <- Diagonal(graph.obj$nV,rep(1,graph.obj$nV))[graph.obj$PtV,]
-  Q.p <- Q  + t(A)%*%A/sigma_e^2
-  mu.p <- solve(Q.p,as.vector(t(A)%*%graph.obj$y/sigma_e^2))
+  Q.p <- Q  + t(graph$A) %*% graph$A/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(graph$A) %*% graph$y / sigma_e^2))
 
   R <- chol(Q)
   R.p <- chol(Q.p)
 
-  n.o <- length(graph.obj$y)
+  n.o <- length(graph$y)
   l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
-  v <- graph$y - A%*%mu.p
+  v <- graph$y - graph$A%*%mu.p
   l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
   return(as.double(l))
 }

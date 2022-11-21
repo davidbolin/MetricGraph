@@ -5,7 +5,7 @@
 \title{Compute covariance of a point to the entire graph (discretized) for
 alpha=1 model}
 \usage{
-covariance_alpha1(P, kappa, sigma, graph, n.p = 50)
+covariance_alpha1(P, kappa, sigma, graph, n.p = 50, scale = FALSE)
 }
 \arguments{
 \item{P}{(2 x 1) point with edge number and normalized location on the edge}
@@ -17,6 +17,9 @@ covariance_alpha1(P, kappa, sigma, graph, n.p = 50)
 \item{graph}{metric_graph object}
 
 \item{n.p}{number of points to compute the covariance on each edge}
+
+\item{scale}{scale the covariance by 2*kappa so that sigma corresponds to
+the marginal standard deviation (default FALSE)}
 }
 \value{
 C (n.p*number of edges x 3) [,1] edge number [,2] distance from
