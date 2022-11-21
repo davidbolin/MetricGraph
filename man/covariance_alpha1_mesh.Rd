@@ -5,7 +5,7 @@
 \title{Compute covariance of a point to the mesh points of the graph for
 alpha=1 model}
 \usage{
-covariance_alpha1_mesh(P, kappa, sigma, graph)
+covariance_alpha1_mesh(P, kappa, sigma, graph, scale = FALSE)
 }
 \arguments{
 \item{P}{(2 x 1) point with edge number and normalized location on the edge}
@@ -15,6 +15,9 @@ covariance_alpha1_mesh(P, kappa, sigma, graph)
 \item{sigma}{parameter sigma}
 
 \item{graph}{metric_graph object}
+
+\item{scale}{scale the covariance by 2*kappa so that sigma corresponds to
+the marginal standard deviation (default FALSE)}
 }
 \value{
 vector with covariance values (order Vertex of Graph then mesh$PtE)

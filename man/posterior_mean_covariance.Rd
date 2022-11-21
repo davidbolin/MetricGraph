@@ -4,7 +4,7 @@
 \alias{posterior_mean_covariance}
 \title{Posterior mean for models assuming observations at vertices}
 \usage{
-posterior_mean_covariance(theta, graph, model = "alpha1", type = "obs")
+posterior_mean_covariance(theta, graph, model = "alpha1")
 }
 \arguments{
 \item{theta}{estimated model parameters (sigma_e, sigma, kappa)}
@@ -18,7 +18,7 @@ graph Laplacian, and "isoExp" gives isotropic exponential}
 locations, if 'vertices' it is computed at all vertices.}
 }
 \value{
-Vector with the posterior mean evaluated at the vertices
+Vector with the posterior mean evaluated at the observation locations
 }
 \description{
 Posterior mean for models assuming observations at vertices

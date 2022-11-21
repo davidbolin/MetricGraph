@@ -167,12 +167,21 @@ mesh
 \if{html}{\out{<a id="method-GPGraph::graph-compute_resdist"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist}{}}}
 \subsection{Method \code{compute_resdist()}}{
-Computes the resistance metric between the vertices in the
-graph
+Computes the resistance metric of observations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(PtE = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{points to compute the metric for, if not provided, the metric
+is computed and stored for the observations in the graph}
+
+\item{\code{normalized}}{are the locations in PtE in normalized distance?}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-compute_resdist_mesh"></a>}}
@@ -483,6 +492,7 @@ plot function mesh X on the graph
   graph_width = 1,
   marker_size = 10,
   color = "rgb(0,0,200)",
+  p = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -502,6 +512,8 @@ evaluated at a precomputed mesh (V,and PtE)}
 \item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
 
 \item{\code{color}}{Color of curve}
+
+\item{\code{p}}{plot object to add the curve to}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }

@@ -126,8 +126,11 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 #' @param  n.p number of points to compute the covariance on each edge
 #' @return C (n.p*number of edges x 3) [,1] edge number [,2] distance from
 #' lower edge [,3] covariance
+#' @param scale scale the covariance by 2*kappa so that sigma corresponds to
+#' the marginal standard deviation (default FALSE)
 #' @export
-covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50){
+covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
+                              scale = FALSE){
 
   check_graph(graph)
 
@@ -183,7 +186,11 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50){
     }
     C[ (i-1) * n.p + (1:n.p), ] <- cbind(i, l * t_s, c(C_P))
   }
-  return(C)
+  if(scale){
+    return(2*kappa*C)
+  } else {
+    return(C)
+  }
 }
 
 #' Compute covariance of a point to the mesh points of the graph for
@@ -192,9 +199,11 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50){
 #' @param kappa parameter kappa
 #' @param sigma parameter sigma
 #' @param  graph metric_graph object
+#' @param scale scale the covariance by 2*kappa so that sigma corresponds to
+#' the marginal standard deviation (default FALSE)
 #' @return vector with covariance values (order Vertex of Graph then mesh$PtE)
 #' @export
-covariance_alpha1_mesh <- function(P, kappa, sigma, graph) {
+covariance_alpha1_mesh <- function(P, kappa, sigma, graph, scale = FALSE) {
 
   check <- gpgraph_check_graph(graph)
 
@@ -255,6 +264,10 @@ covariance_alpha1_mesh <- function(P, kappa, sigma, graph) {
     }
     C <- c(C, C_P)
   }
-  return(C)
+  if(scale){
+    return(2*kappa*C)
+  } else {
+    return(C)
+  }
 }
 
