@@ -94,12 +94,12 @@ Let us add 50 random locations in each edge where we will
 have observations:
 
 ```{r}
-obs.per.edge <- 50
-obs.loc <- NULL
+obs_per_edge <- 50
+obs_loc <- NULL
 for(i in 1:(graph$nE)) {
-  obs.loc <- rbind(obs.loc,
-                   cbind(rep(i,obs.per.edge), 
-                   runif(obs.per.edge)))
+  obs_loc <- rbind(obs_loc,
+                   cbind(rep(i,obs_per_edge), 
+                   runif(obs_per_edge)))
 }
 ```
 
@@ -114,8 +114,8 @@ r <- 0.15 # r stands for range
 kappa <- sqrt(8 * nu) / r
 
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
-                 graph = graph, PtE = obs.loc)
-graph$plot(X = u, X_loc = obs.loc)
+                 graph = graph, PtE = obs_loc)
+graph$plot(X = u, X_loc = obs_loc)
 ```
 
 Let us now generate the observed responses, which we will
@@ -127,7 +127,7 @@ n.obs <- length(u)
 sigma.e <- 0.1
 
 y <- u + sigma.e * rnorm(n.obs)
-graph$plot(X = y, X_loc = obs.loc)
+graph$plot(X = y, X_loc = obs_loc)
 ```
 
 # `R-INLA` implementation
@@ -149,7 +149,7 @@ with `R-INLA` implementation* section.
 # Cloning the graph
 graph_bkp <- graph$clone()
 # Adding observations and turning them to vertices
-graph$add_observations2(y, PtE = obs.loc, normalized=TRUE)
+graph$add_observations2(y, PtE = obs_loc, normalized=TRUE)
 graph$observation_to_vertex()
 graph$plot(data=TRUE)
 ```
@@ -293,7 +293,7 @@ for(i in 1:(graph_tmp$nE)) {
 }
 ```
 Let us add the locations as vertices and plot the resulting graph:
-```{r, fig.width=7,}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 n_obs_prd <- obs_per_edge_prd * graph_tmp$nE
 y_prd <- rep(NA, n_obs_prd)
 graph_tmp$add_observations2(y_prd, obs_loc_prd,
@@ -320,7 +320,7 @@ graph$observation_to_vertex()
 Let us plot the resulting graph (the gray dots indicate
 the new locations):
 
-```{r, fig.width=7,}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$plot(data=TRUE)
 ```
 
@@ -400,6 +400,126 @@ graph$add_responses(y_new)
 ```
 
 Now, we plot:
-```{r}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$plot(data=TRUE)
 ```
+
+## Kriging by adding the prediction locations from the very beginning
+
+This method is much simpler than the previous one. In this method
+we concatenate the observation locations with the prediction locations,
+assign `NA` as the response values at the prediction locations,
+then proceed as in the first part of this vignette.
+
+We start by getting a new copy of `graph_bkp` to be 
+used in this second
+prediction approach.
+
+```{r}
+graph_prd <- graph_bkp$clone()
+```
+
+We will use `obs_loc` as the observation locations and 
+`obs_loc_prd` as the prediction locations. To this end,
+we create a new matrix of locations called `obs_loc_prd2`
+by vertically concatenating these two location matrices:
+```{r}
+obs_loc_prd2 <- rbind(obs_loc, obs_loc_prd)
+```
+
+Recall that the response variable is the concatenation
+of `y` and a vector of `NA`. We already have this vector,
+which we called `y_cmp` in the first prediction part.
+
+We will now add these observations and turn them to
+vertices:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_prd$add_observations2(y_cmp, PtE = obs_loc_prd2, 
+                            normalized=TRUE)
+graph_prd$observation_to_vertex()
+graph_prd$plot(data=TRUE)
+```
+
+Now, we proceed as in the first part. We first create
+the model:
+```{r}
+spde_model_prd2 <- gpgraph_spde(graph_prd)
+```
+
+We now create the observation (`A`) matrix, the index object
+and the stack object:
+
+```{r}
+A_prd2 <- graph_spde_make_A(graph_prd)
+
+spde_index_prd2 <- graph_spde_make_index(name="field", 
+                                        graph=graph_prd)
+
+stk_dat_prd2 <- inla.stack(data = list(y=y_cmp), 
+                        A = A_prd2, 
+                        effects = c(
+      spde_index_prd2,
+      list(Intercept = 1)
+    ))
+```
+
+Now we create the formula object:
+```{r}
+f_s_prd2 <- y ~ -1 + Intercept + f(field, model = spde_model_prd2)
+```
+Now, we use the `graph_stack()` function:
+```{r}
+data_stk_prd2 <- graph_stack(stk_dat_prd2, "field")
+```
+
+Finally, we fit the model:
+
+```{r}
+spde_fit_prd2 <- inla(f_s_prd2, data = data_stk_prd2)
+```
+
+Let us now obtain the estimates in the original scale:
+
+```{r}
+spde_result_prd2 <- spde_metric_graph_result(spde_fit_prd2, 
+                                    "field", spde_model_prd2)
+
+summary(spde_result_prd2)
+```
+
+
+We will now extract the means at the prediction locations:
+```{r}
+idx_prd <- which(is.na(y_cmp))
+
+m_prd2 <- spde_fit_prd2$summary.fitted.values$mean[idx_prd]
+```
+
+To improve visualization, we will plot the posterior means
+on `graph_bkp`:
+```{r}
+graph_bkp$plot(X = m_prd2, X_loc = obs_loc_prd)
+```
+
+We will now plot the predictions together with
+the data. To this end we need to create a new 
+vector `y` which is a concatenation of `y`
+and `m_prd`, then use it as the vector of 
+responses of `graph`, which is done by using the
+`add_responses()` method. Then, we plot.
+
+Let us begin by concatenating the vectors and adding
+the responses to `graph`:
+```{r}
+y_new2 <- c(y, m_prd2)
+graph_prd$add_responses(y_new2)
+```
+
+Now, we plot:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_prd$plot(data=TRUE)
+```
+
+## Fitting `R-INLA` models with replicates
+
