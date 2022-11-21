@@ -286,6 +286,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
    self$y <- NULL
    self$PtE <- NULL
    self$Points <- NULL
+   private$raw_y <- c()
   },
 
   #' @description Add observations to the object

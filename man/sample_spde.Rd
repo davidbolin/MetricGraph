@@ -12,7 +12,8 @@ sample_spde(
   graph,
   PtE = NULL,
   type = "manual",
-  posterior = FALSE
+  posterior = FALSE,
+  nsim = 1
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ specified in PtE. Set to "mesh" for simulation at mesh nodes, and to "obs"
 for simulation at observation locations.}
 
 \item{posterior}{sample conditionally on the observations?}
+
+\item{nsim}{number of samples to be generated.}
 }
 \value{
 sample evaluated at the mesh nodes in the graph
