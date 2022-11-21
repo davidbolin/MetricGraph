@@ -36,6 +36,12 @@ references:
   year: 2022
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+library(GPGraph)
+```
+
 # Introduction
 
 In this vignette we will present our `inlabru`
@@ -170,9 +176,9 @@ library(inlabru)
 spde_model_bru <- gpgraph_spde(graph_bru)
 ```
 The next step is to create the data list containing
-the reponse variables and the observation locations:
+the reponse variables and the `PtE` attribute:
 ```{r}
-data_list <- list(y = y, loc = obs_loc)
+data_list <- list(y = y, loc = graph_bru$PtE)
 ```
 
 Now, we create `inlabru`'s component, which is a 
@@ -261,57 +267,36 @@ observed locations. In this method we provide the locations we
 want to predict in terms of the same base graph, as the
 observations are not vertices of the base graph.
 
-As in `R-INLA`'s illustration, we will do kriging at an evenly spaced mesh across
+We will do kriging at an evenly spaced mesh across
 the metric graph.
 
 ## Kriging by adding new observation locations to the fitted graph
 
-Since the fitted graph contains the observed locations as vertices,
-we will use our backup graph `graph_bkp` to obtain the spatial 
-locations of the points in which we want to do kriging.
-We will create a copy of `graph_bkp` as we will still need
-`graph_bkp` for the second approach of kriging.
-
-```{r}
-graph_tmp <- graph_bkp$clone()
-```
-
-Let us obtain an evenly spaced mesh with respect to the base
+Let us begin by obtaining an evenly spaced mesh with respect to the base
 graph:
 
 ```{r}
 obs_per_edge_prd <- 50
-obs_loc_prd <- NULL
-loc_tmp <- 0:(obs_per_edge_prd+1)/(obs_per_edge_prd+1)
-loc_tmp <- loc_tmp[2:(obs_per_edge_prd+1)]
-for(i in 1:(graph_tmp$nE)) {
-    obs_loc_prd <- rbind(obs_loc_prd,
-                 cbind(rep(i,obs_per_edge_prd), 
-                 loc_tmp))
-}
+graph_bru$build_mesh(n = obs_per_edge_prd)
 ```
-Let us add the locations as vertices and plot the resulting graph:
+
+Let us plot the resulting graph:
+
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-n_obs_prd <- obs_per_edge_prd * graph_tmp$nE
-y_prd <- rep(NA, n_obs_prd)
-graph_tmp$add_observations2(y_prd, obs_loc_prd,
-                            normalized = TRUE)
-graph_tmp$observation_to_vertex()
-graph_tmp$plot()
-```
-We will now extract the spatial locations and use
-these to add these new locations to the graph
-we used to fit the `inlabru` model:
-
-```{r}
-spatial_loc_prd <- graph_tmp$Points
+graph_bru$plot(mesh=TRUE)
 ```
 
-We will now add them to the graph we fitted the
-`inlabru` model:
+We will now add the observations on the mesh
+locations to the graph we fitted the
+`R-INLA` model. To this end we will use the
+`add_mesh_observations()` method. We will enter the response variables
+as `NA`. We can get the number of mesh nodes by counting 
+the number of rows of the `mesh$PtE` attribute.
 
 ```{r}
-graph_bru$add_observations(Spoints = spatial_loc_prd)
+n_obs_mesh <- nrow(graph_bru$mesh$PtE)
+y_prd <- rep(NA, n_obs_mesh)
+graph_bru$add_mesh_observations(y = y_prd)
 graph_bru$observation_to_vertex()
 ```
 
@@ -337,9 +322,8 @@ locations vertically. Then, create
 a new data list
 ```{r}
 y_cmp <- c(y, y_prd)
-obs_loc_cmp <- rbind(obs_loc, obs_loc_prd)
 
-data_list_prd <- list(y = y_cmp, loc = obs_loc_cmp)
+data_list_prd <- list(y = y_cmp, loc = graph_bru$PtE)
 ```
 
 Now, let us create a new
@@ -373,20 +357,21 @@ m_prd_bru <- spde_bru_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
-on `graph_bkp`:
+using the `plot_function_mesh()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bkp$plot(X = m_prd_bru, X_loc = obs_loc_prd)
+graph_bru$plot_function_mesh(X = m_prd_bru) + 
+    scale_color_gradientn(colours = viridis(100))
 ```
 
 We will now plot the predictions together with
 the data. To this end we need to create a new 
 vector `y` which is a concatenation of `y`
-and `m_prd`, then use it as the vector of 
-responses of `graph`, which is done by using the
+and `m_prd_bru`, then use it as the vector of 
+responses of `graph_bru`, which is done by using the
 `add_responses()` method. Then, we plot.
 
 Let us begin by concatenating the vectors and adding
-the responses to `graph`:
+the responses to `graph_bru`:
 ```{r}
 y_new_bru <- c(y, m_prd_bru)
 graph_bru$add_responses(y_new_bru)
@@ -399,8 +384,7 @@ graph_bru$plot(data=TRUE)
 
 ## Kriging by adding the prediction locations from the very beginning
 
-As for the `R-INLA` implementation, 
-this method is much simpler than the previous one. 
+This method is much simpler than the previous one. 
 In this method
 we concatenate the observation locations with the 
 prediction locations,
@@ -416,24 +400,31 @@ prediction approach.
 graph_bru_prd <- graph_bkp$clone()
 ```
 
-We will use `obs_loc` as the observation locations and 
-`obs_loc_prd` as the prediction locations. To this end,
-we create a new matrix of locations called `obs_loc_prd2`
-by vertically concatenating these two location matrices:
-```{r}
-obs_loc_prd2 <- rbind(obs_loc, obs_loc_prd)
-```
-
-Recall that the response variable is the concatenation
-of `y` and a vector of `NA`. We already have this vector,
-which we called `y_cmp` in the first prediction part.
-
-We will now add these observations and turn them to
-vertices:
+We will first add the observations at the locations
+`obs_loc`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru_prd$add_observations2(y_cmp, PtE = obs_loc_prd2, 
+graph_bru_prd$add_observations2(y, PtE = obs_loc, 
                             normalized=TRUE)
+```
+
+Now, we will obtain the locations from an evenly spaced mesh
+using the `build_mesh()` method:
+```{r}
+obs_per_edge_prd <- 50
+graph_bru_prd$build_mesh(n = obs_per_edge_prd)
+```
+
+Now, we will add `NA` observations at the mesh locations:
+
+```{r}
+n_obs_mesh <- nrow(graph_bru_prd$mesh$PtE)
+y_prd <- rep(NA, n_obs_mesh)
+graph_bru_prd$add_mesh_observations(y = y_prd)
+```
+
+Finally, we turn these observations to vertices:
+```{r fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph_bru_prd$observation_to_vertex()
 graph_bru_prd$plot(data=TRUE)
 ```
@@ -446,7 +437,7 @@ spde_model_bru_prd2 <- gpgraph_spde(graph_bru_prd)
 Next, we create the new data list:
 ```{r}
 data_list_prd2 <- list(y = y_cmp, 
-                            loc = obs_loc_prd2)
+                            loc = graph_bru_prd$PtE)
 ```
 
 Now we create the component object:
@@ -479,9 +470,10 @@ m_prd2_bru <- spde_bru_fit_prd2$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
-on `graph_bkp`:
+using the `plot_function_mesh()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bkp$plot(X = m_prd2_bru, X_loc = obs_loc_prd)
+graph_bru_prd$plot_function_mesh(X = m_prd2_bru) + 
+    scale_color_gradientn(colours = viridis(100))
 ```
 
 We will now plot the predictions together with
@@ -494,7 +486,7 @@ responses of `graph`, which is done by using the
 Let us begin by concatenating the vectors and adding
 the responses to `graph`:
 ```{r}
-y_new2 <- c(y, m_prd2)
+y_new2 <- c(y, m_prd2_bru)
 graph_bru_prd$add_responses(y_new2)
 ```
 
@@ -514,13 +506,34 @@ So, we begin by creating a copy:
 graph_bru_rep <- graph_bkp$clone()
 ```
 
-We will use the same observation locations and simulated
-data from our illustration in `R-INLA`'s
-implementation. Recall that we have 30 replicates, which
-is given in the variable `n_repl`.
+We will use the same observation locations as for the
+previous cases. Let us sample 30 replicates:
+```{r}
+sigma_rep <- 1.5
+alpha_rep <- 1
+nu_rep <- alpha_rep - 0.5
+r_rep <- 0.2 # r stands for range
+kappa_rep <- sqrt(8 * nu_rep) / r_rep
 
-Recall that the response variables are given in `y_rep`,
-which is a matrix with 30 columns, one per replicate.
+n_repl <- 30
+
+u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
+                 alpha = alpha_rep,
+                 graph = graph_bru_rep, PtE = obs_loc,
+                 nsim = n_repl)
+```
+
+Let us now generate the observed responses, which we will
+call `y_rep`.
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+n_obs_rep <- nrow(u_rep)
+sigma_e <- 0.1
+
+y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
+                                    ncol=n_repl)
+```
+
 
 Since we are considering a model with replicates, we will
 add only the first replicate to the graph object:

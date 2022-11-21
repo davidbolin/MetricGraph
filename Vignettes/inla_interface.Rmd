@@ -424,7 +424,7 @@ graph_prd$build_mesh(n = obs_per_edge_prd)
 Now, we will add `NA` observations at the mesh locations:
 
 ```{r}
-n_obs_mesh <- nrow(graph$mesh$PtE)
+n_obs_mesh <- nrow(graph_prd$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
 graph_prd$add_mesh_observations(y = y_prd)
 ```

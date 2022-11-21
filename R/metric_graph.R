@@ -539,35 +539,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
     }
-    
-    # ## Temporary "fix" (should be replaced by a proper solution)
-    # nrow_tmp <- nrow(self$VtEfirst())
-    # Spoints <- self$mesh$V[(nrow_tmp+1):nrow(self$mesh$V),]
-    # rownames(Spoints) <- 1:nrow(Spoints)
-    # Spoints <- SpatialPoints(coords = Spoints)
-    #     SP <- maptools::snapPointsToLines(Spoints, self$Lines)
-    # coords.old <- as.data.frame(Spoints@coords)
-    # colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
-    # Spoints@coords = SP@coords
-    # Spoints@bbox   = SP@bbox
-    # LtE = cbind(match(SP@data[,1], self$EID),0)
-    # for(ind in unique(LtE[,1])){
-    #     index.p = LtE[,1]==ind
-    #     LtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,],
-    #     normalized=TRUE)
-    # }
-    # PtE = LtE
-    # for(ind in unique(LtE[,1])){
-    #   Es_ind <- which(self$LtE[ind,]>0)
-    #   index.p = which(LtE[,1]==ind)
-    #   for(j in index.p){
-    #     E_ind <- which.min(replace(self$ELend[Es_ind], self$ELend[Es_ind] < LtE[j,2], NA))
-    #     PtE[j,1] <- Es_ind[E_ind]
-    #     PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
-    #   }
-    # }
-    # self$mesh$PtE <- PtE
-    # ################## 
 
     self$mesh$VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
   },
