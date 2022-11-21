@@ -317,6 +317,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         y <- Spoints@data[,y.index]
     }
     }
+    if(is.null(y)){
+      y <- rep(NA, nrow(Spoints@coords))
+    }
     self$y <- c(self$y, y)
     private$raw_y <- c(private$raw_y, y)
 
@@ -333,7 +336,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
     for(ind in unique(LtE[,1])){
         index.p = LtE[,1]==ind
-        LtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,])
+        LtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,],
+        normalized=TRUE)
     }
     PtE = LtE
     for(ind in unique(LtE[,1])){
@@ -341,10 +345,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       index.p = which(LtE[,1]==ind)
       for(j in index.p){
         E_ind <- which.min(replace(self$ELend[Es_ind], self$ELend[Es_ind] < LtE[j,2], NA))
-        if(length(E_ind) > 0){
-          PtE[j,1] <- Es_ind[E_ind]
-          PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
-        }
+        PtE[j,1] <- Es_ind[E_ind]
+        PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
       }
     }
     if(is.null(self$Points)){

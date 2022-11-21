@@ -98,7 +98,8 @@ obs.per.edge <- 50
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
-                   cbind(rep(i,obs.per.edge), runif(obs.per.edge)))
+                   cbind(rep(i,obs.per.edge), 
+                   runif(obs.per.edge)))
 }
 ```
 
@@ -292,7 +293,7 @@ for(i in 1:(graph_tmp$nE)) {
 }
 ```
 Let us add the locations as vertices and plot the resulting graph:
-```{r}
+```{r, fig.width=7,}
 n_obs_prd <- obs_per_edge_prd * graph_tmp$nE
 y_prd <- rep(NA, n_obs_prd)
 graph_tmp$add_observations2(y_prd, obs_loc_prd,
@@ -306,9 +307,6 @@ we used to fit the `R-INLA` model:
 
 ```{r}
 spatial_loc_prd <- graph_tmp$Points
-# spatial_loc_prd <- as(spatial_loc_prd,
-#                 "SpatialPointsDataFrame")
-# spatial_loc_prd@data <- data.frame(y = y_prd)
 ```
 
 We will now add them to the graph we fitted the
@@ -316,5 +314,58 @@ We will now add them to the graph we fitted the
 
 ```{r}
 graph$add_observations(Spoints = spatial_loc_prd)
+graph$observation_to_vertex()
 ```
 
+Let us plot the resulting graph (the gray dots indicate
+the new locations):
+
+```{r, fig.width=7,}
+graph$plot(data=TRUE, marker_size=3)
+```
+
+We will now fit a new model with `R-INLA` with this new
+graph that contains the prediction locations. To this end,
+we create a new model object with the `gpgraph_spde()` function:
+
+```{r}
+spde_model_prd <- gpgraph_spde(graph)
+```
+
+Now, let us create a new index object and a new observation (`A`):
+```{r}
+spde_index_prd <- graph_spde_make_index(name="field", graph=graph)
+
+A_prd <- graph_spde_make_A(graph)
+```
+
+We now create a new
+formula object and the
+`inla.stack` object:
+
+```{r}
+f_s_prd <- y ~ -1 + Intercept + f(field, model = spde_model_prd)
+
+stk_dat_prd <- inla.stack(data = list(y=c(as.vector(y),
+                                        y_prd)), 
+                        A = A_prd, 
+                        effects = c(
+      spde_index_prd,
+      list(Intercept = 1)
+    ))
+```
+
+Now, we use the `graph_stack()` function and fit the model:
+```{r}
+data_stk_prd <- graph_stack(stk_dat_prd, "field")
+
+spde_fit_prd <- inla(f_s_prd, data = data_stk_prd)
+```
+
+Let us now obtain the estimates in the original scale:
+
+```{r}
+spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
+
+summary(spde_result)
+```
