@@ -117,7 +117,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       } else {
         self$edge_lengths = edge_lengths
       }
-      private$line_to_vertex()
+      # private$line_to_vertex()
     }
     # private$initial_V <- self$V
     # private$initial_E <- self$E
@@ -229,6 +229,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     private$reorder_idx <- c(private$reorder_idx, list(order_idx))
 
     self$PtE <- self$PtE[order_idx,]
+
+    if(length(order_idx)==1){
+      self$PtE <- matrix(self$PtE, ncol=2)
+    }
+
     l <- length(self$PtE[, 1])
     self$PtV <- rep(0, l)
     for(i in 1:l){
@@ -258,6 +263,10 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }
     self$A <- Diagonal(self$nV)[self$PtV, ]
 
+    if(length(self$PtV)==1){
+      self$A <- matrix(self$A, ncol=2)
+    }
+
     # self$A <- Diagonal(self$nV)[min(self$PtV):max(self$PtV), ]
 
     # Ordering back
@@ -276,6 +285,9 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
          for(i in length(private$reorder_idx):1){
           idx <- private$reorder_idx[[i]]
           A_tmp <- self$A[1:length(idx),]
+          if(length(idx)==1){
+            A_tmp <- matrix(A_tmp, ncol=2)
+          }
           self$A[idx,] <- A_tmp
         }
 
