@@ -65,13 +65,13 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 
               if(type == "mesh") {
                 u <- V0
-                inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
+                inds_PtE <- unique(graph$mesh$PtE[,1])
               } else if (type == "obs") {
                 u <- NULL
-                inds_PtE <- sort(unique(graph$PtE[,1]))
+                inds_PtE <- unique(graph$PtE[,1])
               } else {
                 u <- NULL
-                inds_PtE <- sort(unique(PtE[,1]))
+                inds_PtE <- unique(PtE[,1])
               }
 
               for (i in inds_PtE) {
@@ -140,13 +140,13 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
       if(type == "mesh") {
         u_s <- u_e[seq(from=1, by = 2, to = length(u_e))]
         u <- u_s[which(!duplicated(c(t(graph$E))))]
-        inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
+        inds_PtE <- unique(graph$mesh$PtE[,1])
       } else if (type == "obs") {
         u <- NULL
-        inds_PtE <- sort(unique(graph$PtE[,1]))
+        inds_PtE <- unique(graph$PtE[,1])
       } else {
         u <- NULL
-        inds_PtE <- sort(unique(PtE[,1]))
+        inds_PtE <- unique(PtE[,1])
       }
 
       for (i in inds_PtE) {
@@ -209,8 +209,9 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
 
   if (is.null(t)) {
     t  <- seq(0, 1, length.out = nt)
-    t <- t * l_e
   }
+  t <- t * l_e
+  
   t_end <- c(0, l_e)
   t <- unique(t)
   t0 <- t

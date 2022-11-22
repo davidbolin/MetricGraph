@@ -52,7 +52,7 @@ p
 
 graph$build_mesh(h = 0.001)
 
-# PtE_tmp <- rbind(graph$VtEfirst(),graph$mesh$PtE)
+PtE_tmp <- rbind(graph$VtEfirst(),graph$mesh$PtE)
 
 type = "alpha1"
 if(type == "isoExp") { #isotropic exponential
@@ -61,7 +61,7 @@ if(type == "isoExp") { #isotropic exponential
   u <- as.vector(t(chol(forceSymmetric(Sigma)))%*%rnorm(dim(Sigma)[1]))
 } else if (type == "alpha1") { #alpha =1 model looks strange
   u <- sample_spde(kappa = 50, sigma = 1, alpha = 1,
-                   graph = graph, type="mesh", method="Q")
+                   graph = graph, type="mesh")
 } else if (type == "alpha2") { #not working
   u <- sample_spde(kappa = 50, sigma = 1, alpha = 2,
                    graph = graph, 
@@ -69,6 +69,8 @@ if(type == "isoExp") { #isotropic exponential
 }
 
 graph$plot_function_mesh(X = u)
+
+graph$plot(X=u, X_loc = PtE_tmp)
 
 n_obs <- length(as.vector(u))
 sigma.e <- 0.1
@@ -96,4 +98,8 @@ spde_bru_result <- spde_metric_graph_result(spde_bru_fit,
                     "field", spde_model_bru)
 
 summary(spde_bru_result)
+
+# m_prd <- spde_bru_fit$summary.fitted.values$mean
+
+# graph$plot_function_mesh(m_prd[1:n_obs_mesh])
 
