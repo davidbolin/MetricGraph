@@ -117,13 +117,15 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       } else {
         self$edge_lengths = edge_lengths
       }
+      private$line_to_vertex()
     }
-    private$initial_V <- self$V
-    private$initial_E <- self$E
-    private$initial_Lines <- self$Lines
-    private$initial_LtE <- self$LtE
-    private$initial_ELstart <- self$ELstart
-    private$initial_ELend <- self$ELend
+    # private$initial_V <- self$V
+    # private$initial_E <- self$E
+    # private$initial_Lines <- self$Lines
+    # private$initial_LtE <- self$LtE
+    # private$initial_ELstart <- self$ELstart
+    # private$initial_ELend <- self$ELend
+    private$initial_graph <- self$clone()
   },
 
   #' @description Computes shortest path distances between the vertices in the
@@ -746,7 +748,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(length(X) == dim(self$mesh$PtE)[1]){
       X <- c(rep(NA, dim(self$LtE)[1]), X)
     }
-    if(length(X) != dim(private$initial_V)[1] + dim(self$mesh$PtE)[1]){
+    if(length(X) != dim(private$initial_graph$V)[1] + dim(self$mesh$PtE)[1]){
       stop("X does not have the correct size")
     }
 
@@ -770,52 +772,66 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
     #   }
 
-    n.v <- nrow(private$initial_V)
-    XV <- X[1:n.v]
-    n.E <- nrow(private$initial_E)
-    for(i in 1:n.E){
-      ind <- self$mesh$PtE[,1] == i
-      if(sum(ind)==0){
-        vals <- rbind(c(0, XV[private$initial_E[i,1]]),
-                      c(1, XV[private$initial_E[i,2]]))
+    # n.v <- nrow(private$initial_V)
+    # XV <- X[1:n.v]
+    # n.E <- nrow(private$initial_E)
+    # for(i in 1:n.E){
+    #   ind <- self$mesh$PtE[,1] == i
+    #   if(sum(ind)==0){
+    #     vals <- rbind(c(0, XV[private$initial_E[i,1]]),
+    #                   c(1, XV[private$initial_E[i,2]]))
 
-      }else{
-        vals <- rbind(c(0, XV[private$initial_E[i,1]]),
-                      cbind(self$mesh$PtE[ind,2],X[n.v + which(ind)]),
-                      c(1, XV[private$initial_E[i,2]]))
+    #   }else{
+    #     vals <- rbind(c(0, XV[private$initial_E[i,1]]),
+    #                   cbind(self$mesh$PtE[ind,2],X[n.v + which(ind)]),
+    #                   c(1, XV[private$initial_E[i,2]]))
 
+    #   }
+
+    #   if(is.null(self$Lines) == TRUE) {
+    #     # p <- private$plot_straight_curve(vals,
+    #     #                                  self$V[self$E[i,],],
+    #     #                                  plotly = plotly,
+    #     #                                  p = p,
+    #     #                                  color = color, ...)
+
+    #     p <- private$plot_straight_curve(vals,
+    #                                      private$initial_V[private$initial_E[i,],],
+    #                                      plotly = plotly,
+    #                                      p = p,
+    #                                      color = color,
+    #                              ...)
+
+    #   } else {
+    #     if(!is.null(vals)){
+    #       p <- private$plot_edge_line(vals,
+    #                              Eindex = i,
+    #                              p = p,
+    #                              plotly = plotly,
+    #                              color = color,
+    #                              opt_Lines = private$initial_Lines,
+    #                              opt_LtE = private$initial_LtE,
+    #                              opt_ELstart = private$initial_ELstart,
+    #                              opt_ELend = private$initial_ELend,
+    #                              ...)
+    #     }
+    #   }
+
+    # }
+    if(!plotly){
+      if(is.null(p)){
+        p <- private$plot_function_mesh_2d(X = X, 
+                  graph = private$initial_graph,
+                  graph_mesh = self,...)
+      } else{
+        p <- p + private$plot_function_mesh_2d(X = X, 
+                  graph = private$initial_graph,
+                  graph_mesh = self,...)
       }
-
-      if(is.null(self$Lines) == TRUE) {
-        # p <- private$plot_straight_curve(vals,
-        #                                  self$V[self$E[i,],],
-        #                                  plotly = plotly,
-        #                                  p = p,
-        #                                  color = color, ...)
-
-        p <- private$plot_straight_curve(vals,
-                                         private$initial_V[private$initial_E[i,],],
-                                         plotly = plotly,
-                                         p = p,
-                                         color = color,
-                                 ...)
-
-      } else {
-        if(!is.null(vals)){
-          p <- private$plot_edge_line(vals,
-                                 Eindex = i,
-                                 p = p,
-                                 plotly = plotly,
-                                 color = color,
-                                 opt_Lines = private$initial_Lines,
-                                 opt_LtE = private$initial_LtE,
-                                 opt_ELstart = private$initial_ELstart,
-                                 opt_ELend = private$initial_ELend,
-                                 ...)
-        }
-      }
-
     }
+
+
+
     return(p)
   },
 
@@ -1411,6 +1427,98 @@ add_responses = function(y){
     return(p)
   },
 
+
+  # Plot mesh functions with many edges 
+  
+  plot_function_mesh_2d = function(X, graph, graph_mesh = NULL,...){
+  
+  if(is.null(graph_mesh)){
+    graph_mesh <- graph
+  }
+  if(is.null(graph_mesh$mesh)) {
+    stop("no mesh provided")
+  }
+  if(length(X) != dim(graph$V)[1] + dim(graph_mesh$mesh$PtE)[1]){
+    stop("X does not have the correct size")
+  }
+
+  n.v <- dim(graph$V)[1]
+  XV <- X[1:n.v]
+  x.loc <- y.loc <- z.loc <- i.loc <- NULL
+  kk = 1
+  for(i in 1:graph$nE){
+    ind <- graph_mesh$mesh$PtE[,1] == i
+    if(sum(ind)==0){
+      vals <- rbind(c(0, XV[graph$E[i,1]]),
+                    c(1, XV[graph$E[i,2]]))
+
+    }else{
+      vals <- rbind(c(0, XV[graph$E[i,1]]),
+                    cbind(graph_mesh$mesh$PtE[ind,2],X[n.v + which(ind)]),
+                    c(1, XV[graph$E[i,2]]))
+
+    }
+    if(is.null(graph$Lines) == TRUE) {
+      data.to.plot.order <- vals[order(vals[, 1]), ]
+      V <- graph$V[graph$E[i,],]
+      l <- 1#sqrt(sum((V[1,] - V[2,])^2))
+      if(l > 0){
+        alpha <- data.to.plot.order[,1]/l
+        coords <- cbind((1 - alpha) * V[1, 1] + alpha * V[2, 1],
+                        (1 - alpha) * V[1, 2] + alpha * V[2, 2])
+
+        x.loc = c(x.loc, coords[, 1])
+        y.loc = c(y.loc, coords[, 2])
+        z.loc = c(z.loc, data.to.plot.order[, 2])
+        i.loc = c(i.loc, rep(kk, length(coords[, 1])))
+        kk = kk+1
+      }
+    } else {
+      index <- (graph$LtE@p[i]+1):(graph$LtE@p[i+1])
+      LinesPos <- cbind(graph$LtE@i[index] + 1, graph$LtE@x[index])
+      LinesPos <- LinesPos[order(LinesPos[,2]),,drop = FALSE]
+      for(j in 1:length(index)){
+        if(j==1){
+          index_j <- vals[,1] <= LinesPos[j,2]
+        }else{
+          index_j <- (vals[,1] <= LinesPos[j,2]) &  (vals[,1] > LinesPos[j-1,2])
+        }
+        if(sum(index_j) == 0)
+          next
+        rel.pos = vals[index_j,1]
+        if(j == 1){
+          rel.pos <- rel.pos/LinesPos[j,2]
+        }else{
+          rel.pos <- (rel.pos-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+        }
+
+        if(j== dim(LinesPos)[1] )
+          rel.pos = graph$ELend[i]*rel.pos
+        if(j==1)
+          rel.pos = rel.pos + graph$ELstart[i]
+
+        data.to.plot <- cbind(rel.pos,vals[index_j,2])
+        Line_edge <- SpatialLines(list(graph$Lines@lines[[LinesPos[j,1]]]))
+
+        data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), , drop = FALSE]
+        p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1, drop = FALSE],
+                                  normalized = TRUE)
+        coords <-p2@coords
+        x.loc <- c(x.loc, coords[,1])
+        y.loc <- c(y.loc, coords[,2])
+        z.loc <- c(z.loc, data.to.plot.order[,2])
+        i.loc <- c(i.loc, rep(kk, length(coords[,1])))
+        kk = kk+1
+      }
+    }
+  }
+  data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
+
+  p <- ggplot(data = data, aes(x = x, y = y, group = i, colour = z)) + geom_path() + scale_color_viridis()
+
+  return(p)
+}, 
+
   # Ordering indexes
 
   reorder_idx = list(),
@@ -1419,29 +1527,33 @@ add_responses = function(y){
 
   raw_y = c(),
 
-  # Initial number of vertices
+  # Initial graph
 
-  initial_V = NULL,
+  initial_graph = NULL
 
-  # Initial edges
+  # # Initial number of vertices
 
-  initial_E = NULL,
+  # initial_V = NULL,
 
-  # Initial Lines
+  # # Initial edges
 
-  initial_Lines = NULL,
+  # initial_E = NULL,
 
-  # Initial LtE 
+  # # Initial Lines
 
-  initial_LtE = NULL,
+  # initial_Lines = NULL,
 
-  # Initial ELstart
+  # # Initial LtE 
 
-  initial_ELstart = NULL,
+  # initial_LtE = NULL,
 
-  # Initial ELend
+  # # Initial ELstart
 
-  initial_ELend = NULL
+  # initial_ELstart = NULL,
+
+  # # Initial ELend
+
+  # initial_ELend = NULL
 
 ))
 

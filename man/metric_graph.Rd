@@ -102,6 +102,7 @@ locations}
 \item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
 \item \href{#method-GPGraph::graph-split_edge}{\code{metric_graph$split_edge()}}
 \item \href{#method-GPGraph::graph-add_responses}{\code{metric_graph$add_responses()}}
+\item \href{#method-GPGraph::graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -552,6 +553,24 @@ Auxiliar function for adding simulated response variables in the correct order.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{y}}{A vector of response variables}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-add_mesh_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_mesh_observations}{}}}
+\subsection{Method \code{add_mesh_observations()}}{
+Add observations on mesh to the object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(y)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{the observations. These are used if provided, and otherwise the
+observations are assumed to be in Spoints}
 }
 \if{html}{\out{</div>}}
 }
