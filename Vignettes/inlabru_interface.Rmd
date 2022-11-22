@@ -1,10 +1,10 @@
 ---
-title: "INLA interface of Whittle--Matérn fields"
+title: "inlabru interface of Whittle--Matérn fields"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{INLA interface of Whittle--Matérn fields}
+  %\VignetteIndexEntry{inlabru interface of Whittle--Matérn fields}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:

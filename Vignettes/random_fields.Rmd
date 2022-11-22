@@ -334,7 +334,7 @@ D <- graph$compute_resdist(PtE, normalized = TRUE)
 Sigma <- sigma^2*exp(-kappa*D)
 u <- t(chol(Sigma))%*%rnorm(n.obs.per.edge * graph$nE)
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
-graph$add_observations2(y, PtE)
+graph$add_observations2(y, PtE, normalized=TRUE)
 graph$plot(data = TRUE)
 ```
 
@@ -421,7 +421,7 @@ some data from the model and then redo the fit:
 ```{r}
 Q <- (kappa^2*Diagonal(graph$nV) + graph$Laplacian)/sigma^2
 u <- solve(chol(Q), rnorm(graph$nV))
-y <- u[graph$PtV] + sigma_e*rnorm(length(graph$PtV))
+y <- graph$A%*%u + sigma_e*rnorm(length(graph$PtV))
 graph$y <- y
 
 res.exp <- optim(log(theta0), 
