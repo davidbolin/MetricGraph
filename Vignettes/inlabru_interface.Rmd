@@ -1,10 +1,10 @@
 ---
-title: "INLA interface of Whittle--Matérn fields"
+title: "inlabru interface of Whittle--Matérn fields"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{INLA interface of Whittle--Matérn fields}
+  %\VignetteIndexEntry{inlabru interface of Whittle--Matérn fields}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
@@ -44,7 +44,7 @@ library(GPGraph)
 
 # Introduction
 
-In this vignette we will present our `R-INLA`
+In this vignette we will present our `inlabru`
 interface to Whittle--Matérn fields. The underlying theory
 for this approach is provided in 
 [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
@@ -52,15 +52,15 @@ for this approach is provided in
 For an introduction to the `metric_graph` class, please see 
 the [Working with metric graphs](metric_graph.html) vignette.
 
-For a simplification of the `R-INLA` interface, see
-the [inlabru interface of Whittle--Matérn fields](inlabru_interface.html) vignette.
+For our `R-INLA` interface, see
+the [INLA interface of Whittle--Matérn fields](inla_interface.html) vignette.
 
 In the [Gaussian random fields on metric graphs](random_fields.html) vignette,
 we introduce all the models in metric graphs contained in this package,
 as well as, how to perform statistical tasks on these models, but without
 the `R-INLA` or `inlabru` interfaces.
 
-We will present our `R-INLA` interface to 
+We will present our `inlabru` interface to 
 the Whittle-Matérn fields by providing a step-by-step illustration.
 
 The Whittle--Matérn fields are specified as solutions to the stochastic
@@ -90,7 +90,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line4),ID="3"),
                               Lines(list(line3),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph_bru <- metric_graph$new(Lines = Lines)
 ```
 
 Let us add 50 random locations in each edge where we will 
@@ -99,7 +99,7 @@ have observations:
 ```{r}
 obs_per_edge <- 50
 obs_loc <- NULL
-for(i in 1:(graph$nE)) {
+for(i in 1:(graph_bru$nE)) {
   obs_loc <- rbind(obs_loc,
                    cbind(rep(i,obs_per_edge), 
                    runif(obs_per_edge)))
@@ -117,8 +117,8 @@ r <- 0.15 # r stands for range
 kappa <- sqrt(8 * nu) / r
 
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
-                 graph = graph, PtE = obs_loc)
-graph$plot(X = u, X_loc = obs_loc)
+                 graph = graph_bru, PtE = obs_loc)
+graph_bru$plot(X = u, X_loc = obs_loc)
 ```
 
 Let us now generate the observed responses, which we will
@@ -130,13 +130,21 @@ n_obs <- length(u)
 sigma.e <- 0.1
 
 y <- u + sigma.e * rnorm(n_obs)
-graph$plot(X = y, X_loc = obs_loc)
+graph_bru$plot(X = y, X_loc = obs_loc)
 ```
 
-# `R-INLA` implementation
+
+# `inlabru` implementation
+
+We will now present our `inlabru` implementation
+of the Whittle-Matérn fields for metric graphs.
+It has the advantage, over our `R-INLA`
+implementation, of not requiring the user
+to provide observation matrices, indices nor 
+stack objects.
 
 We are now in a position to fit the model with our
-`R-INLA` implementation. To this end,
+`inlabru` implementation. To this end,
 we need to add the observations to the graph, which we 
 will do with the `add_observations2()` method. Then,
 we need to turn the observations into vertices of the 
@@ -146,68 +154,46 @@ Before adding the observations we will grab a copy of
 the graph with the `clone()` method for two reasons: i. to make it better to 
 visualization; ii. we will need to provide another
 approach of kriging as we will see in the *Kriging
-with `R-INLA` implementation* section.
+with `inlabru` implementation* section.
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 # Cloning the graph
-graph_bkp <- graph$clone()
+graph_bkp <- graph_bru$clone()
 # Adding observations and turning them to vertices
-graph$add_observations2(y, PtE = obs_loc, normalized=TRUE)
-graph$observation_to_vertex()
-graph$plot(data=TRUE)
+graph_bru$add_observations2(y, PtE = obs_loc, normalized=TRUE)
+graph_bru$observation_to_vertex()
+graph_bru$plot(data=TRUE)
 ```
 
-Now, we load the `R-INLA` package and
-create the `inla` model object with the
+Now, we load `INLA` and `inlabru` packages. We will also
+need to create the `inla` model object with the
 `gpgraph_spde` function. By default we have
 `alpha=1`. 
 
-```{r}
+```{r, message=FALSE}
 library(INLA)
-spde_model <- gpgraph_spde(graph)
+library(inlabru)
+spde_model_bru <- gpgraph_spde(graph_bru)
+```
+The next step is to create the data list containing
+the reponse variables and the `PtE` attribute:
+```{r}
+data_list <- list(y = y, loc = graph_bru$PtE)
 ```
 
-Now, we need to create the index object with 
-the `graph_spde_make_index()` function:
-
+Now, we create `inlabru`'s component, which is a 
+formula-like object:
 ```{r}
-spde_index <- graph_spde_make_index(name="field", graph=graph)
+cmp <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru)
 ```
 
-Observe that, as in `R-INLA`, we need to name the field.
-
-The next step is to create the observation matrix, to which
-we use the `graph_spde_make_A()` function:
+Now, we directly fit the model:
 
 ```{r}
-A <- graph_spde_make_A(graph)
-```
-
-The remaining is standard in `R-INLA`. We create the
-formula object and the
-`inla.stack` object with the `inla.stack()` function:
-
-```{r}
-f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
-
-stk.dat <- inla.stack(data = list(y=as.vector(y)), 
-                        A = A, 
-                        effects = c(
-      spde_index,
-      list(Intercept = 1)
-    ))
-```
-
-Now, we use the `graph_stack()` function that behaves in 
-an analogous manner to the `inla.stack.data()` function:
-```{r}
-data_stk <- graph_stack(stk.dat, "field")
-```
-
-Finally, we fit the model:
-
-```{r}
-spde_fit <- inla(f.s, data = data_stk)
+spde_bru_fit <-
+    bru(cmp, data=data_list)
 ```
 
 Let us now obtain the estimates in the original scale
@@ -215,43 +201,54 @@ by using the `spde_metric_graph_result()` function, then
 taking a `summary()`:
 
 ```{r}
-spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+                    "field", spde_model_bru)
 
-summary(spde_result)
+summary(spde_bru_result)
 ```
 
 We will now compare the means of the estimated values with
 the true values:
 
 ```{r}
-  result_df <- data.frame(
+  result_df_bru <- data.frame(
     parameter = c("std.dev", "range"),
     true = c(sigma, r),
     mean = c(
-      spde_result$summary.sigma$mean,
-      spde_result$summary.range$mean
+      spde_bru_result$summary.sigma$mean,
+      spde_bru_result$summary.range$mean
     ),
     mode = c(
-      spde_result$summary.sigma$mode,
-      spde_result$summary.range$mode
+      spde_bru_result$summary.sigma$mode,
+      spde_bru_result$summary.range$mode
     )
   )
-  print(result_df)
+  print(result_df_bru)
 ```
-
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-  posterior_df_fit <- gg_df(spde_result)
+  posterior_df_bru_fit <- gg_df(spde_bru_result)
 
-  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
   facet_wrap(~parameter, scales = "free") + labs(y = "Density")
 ```
 
-## Kriging with the `R-INLA` implementation
+## Kriging with the `inlabru` implementation
 
-We can have two approaches to do kriging with our `R-INLA`
+Unfortunately, our `inlabru` implementation is not 
+compatible with `inlabru`'s `predict()` method. This has
+to do with the nature of the metric graph's object.
+
+Therefore, the approach to do kriging is very similar 
+to `R-INLA`'s implementation. However, it is much simpler 
+since it does not require the user to handle 
+observation matrices, indices nor on stack objects.
+
+Therefore, in the same manner as in `R-INLA`'s
+implementation, we have two approaches to do 
+kriging with our `inlabru`
 implementation of Whittle-Matérn fields on metric graphs.
 
 * In the first we add a second set of `NA` add_observations
@@ -270,7 +267,7 @@ observed locations. In this method we provide the locations we
 want to predict in terms of the same base graph, as the
 observations are not vertices of the base graph.
 
-We will now do kriging at an evenly spaced mesh across
+We will do kriging at an evenly spaced mesh across
 the metric graph.
 
 ## Kriging by adding new observation locations to the fitted graph
@@ -280,13 +277,13 @@ graph:
 
 ```{r}
 obs_per_edge_prd <- 50
-graph$build_mesh(n = obs_per_edge_prd)
+graph_bru$build_mesh(n = obs_per_edge_prd)
 ```
 
 Let us plot the resulting graph:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot(mesh=TRUE)
+graph_bru$plot(mesh=TRUE)
 ```
 
 We will now add the observations on the mesh
@@ -297,105 +294,102 @@ as `NA`. We can get the number of mesh nodes by counting
 the number of rows of the `mesh$PtE` attribute.
 
 ```{r}
-n_obs_mesh <- nrow(graph$mesh$PtE)
+n_obs_mesh <- nrow(graph_bru$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
-graph$add_mesh_observations(y = y_prd)
-graph$observation_to_vertex()
+graph_bru$add_mesh_observations(y = y_prd)
+graph_bru$observation_to_vertex()
 ```
 
 Let us plot the resulting graph (the gray dots indicate
 the new locations):
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot(data=TRUE)
+graph_bru$plot(data=TRUE)
 ```
 
-We will now fit a new model with `R-INLA` with this new
+We will now fit a new model with `inlabru` with this new
 graph that contains the prediction locations. To this end,
 we create a new model object with the `gpgraph_spde()` function:
 
 ```{r}
-spde_model_prd <- gpgraph_spde(graph)
-```
-
-Now, let us create a new index object and a new observation (`A`):
-```{r}
-spde_index_prd <- graph_spde_make_index(name="field", graph=graph)
-
-A_prd <- graph_spde_make_A(graph)
+spde_model_bru_prd <- gpgraph_spde(graph_bru)
 ```
 
 We will create a new vector of response variables,
-concatenating `y` to `y_prd`, then create a new
-formula object and the
-`inla.stack` object:
-
+concatenating `y` to `y_prd`. We will also
+concatenate the observation and prediction
+locations vertically. Then, create 
+a new data list
 ```{r}
 y_cmp <- c(y, y_prd)
 
-f_s_prd <- y ~ -1 + Intercept + f(field, model = spde_model_prd)
-
-stk_dat_prd <- inla.stack(data = list(y=y_cmp), 
-                        A = A_prd, 
-                        effects = c(
-      spde_index_prd,
-      list(Intercept = 1)
-    ))
+data_list_prd <- list(y = y_cmp, loc = graph_bru$PtE)
 ```
 
-Now, we use the `graph_stack()` function and fit the model:
-```{r}
-data_stk_prd <- graph_stack(stk_dat_prd, "field")
+Now, let us create a new
+`inlabru` component:
 
-spde_fit_prd <- inla(f_s_prd, data = data_stk_prd)
+```{r}
+cmp_prd <- y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru_prd)
+```
+
+Now, we fit the model:
+```{r}
+spde_bru_fit_prd <-
+    bru(cmp_prd, data=data_list_prd)
 ```
 
 Let us now obtain the estimates in the original scale:
 
 ```{r}
-spde_result_prd <- spde_metric_graph_result(spde_fit_prd, "field", spde_model_prd)
+spde_result_bru_prd <- spde_metric_graph_result(spde_bru_fit_prd, 
+            "field", spde_model_bru_prd)
 
-summary(spde_result_prd)
+summary(spde_result_bru_prd)
 ```
 
 We will now extract the means at the prediction locations:
 ```{r}
 idx_prd <- which(is.na(y_cmp))
 
-m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
+m_prd_bru <- spde_bru_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
 using the `plot_function_mesh()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot_function_mesh(X = m_prd) + 
+graph_bru$plot_function_mesh(X = m_prd_bru) + 
     scale_color_gradientn(colours = viridis(100))
 ```
 
 We will now plot the predictions together with
 the data. To this end we need to create a new 
 vector `y` which is a concatenation of `y`
-and `m_prd`, then use it as the vector of 
-responses of `graph`, which is done by using the
+and `m_prd_bru`, then use it as the vector of 
+responses of `graph_bru`, which is done by using the
 `add_responses()` method. Then, we plot.
 
 Let us begin by concatenating the vectors and adding
-the responses to `graph`:
+the responses to `graph_bru`:
 ```{r}
-y_new <- c(y, m_prd)
-graph$add_responses(y_new)
+y_new_bru <- c(y, m_prd_bru)
+graph_bru$add_responses(y_new_bru)
 ```
 
 Now, we plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot(data=TRUE)
+graph_bru$plot(data=TRUE)
 ```
 
 ## Kriging by adding the prediction locations from the very beginning
 
-This method is much simpler than the previous one. In this method
-we concatenate the observation locations with the prediction locations,
-assign `NA` as the response values at the prediction locations,
+This method is much simpler than the previous one. 
+In this method
+we concatenate the observation locations with the 
+prediction locations,
+assign `NA` as the response values at 
+the prediction locations,
 then proceed as in the first part of this vignette.
 
 We start by getting a new copy of `graph_bkp` to be 
@@ -403,14 +397,14 @@ used in this second
 prediction approach.
 
 ```{r}
-graph_prd <- graph_bkp$clone()
+graph_bru_prd <- graph_bkp$clone()
 ```
 
 We will first add the observations at the locations
 `obs_loc`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$add_observations2(y, PtE = obs_loc, 
+graph_bru_prd$add_observations2(y, PtE = obs_loc, 
                             normalized=TRUE)
 ```
 
@@ -418,71 +412,53 @@ Now, we will obtain the locations from an evenly spaced mesh
 using the `build_mesh()` method:
 ```{r}
 obs_per_edge_prd <- 50
-graph_prd$build_mesh(n = obs_per_edge_prd)
+graph_bru_prd$build_mesh(n = obs_per_edge_prd)
 ```
 
 Now, we will add `NA` observations at the mesh locations:
 
 ```{r}
-n_obs_mesh <- nrow(graph_prd$mesh$PtE)
+n_obs_mesh <- nrow(graph_bru_prd$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
-graph_prd$add_mesh_observations(y = y_prd)
+graph_bru_prd$add_mesh_observations(y = y_prd)
 ```
 
 Finally, we turn these observations to vertices:
 ```{r fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$observation_to_vertex()
-graph_prd$plot(data=TRUE)
+graph_bru_prd$observation_to_vertex()
+graph_bru_prd$plot(data=TRUE)
 ```
 
 Now, we proceed as in the first part. We first create
 the model:
 ```{r}
-spde_model_prd2 <- gpgraph_spde(graph_prd)
+spde_model_bru_prd2 <- gpgraph_spde(graph_bru_prd)
 ```
-
-We now create the observation (`A`) matrix, the index object
-and the stack object. To this end we need to concatenate
-`y` with `y_prd` to create a vector of responses `y_cmp`.
-
+Next, we create the new data list:
 ```{r}
-y_cmp <- c(y, y_prd)
-
-A_prd2 <- graph_spde_make_A(graph_prd)
-
-spde_index_prd2 <- graph_spde_make_index(name="field", 
-                                        graph=graph_prd)
-
-stk_dat_prd2 <- inla.stack(data = list(y=y_cmp), 
-                        A = A_prd2, 
-                        effects = c(
-      spde_index_prd2,
-      list(Intercept = 1)
-    ))
+data_list_prd2 <- list(y = y_cmp, 
+                            loc = graph_bru_prd$PtE)
 ```
 
-Now we create the formula object:
+Now we create the component object:
 ```{r}
-f_s_prd2 <- y ~ -1 + Intercept + f(field, model = spde_model_prd2)
+cmp_prd2 <- y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru_prd2)
 ```
-Now, we use the `graph_stack()` function:
-```{r}
-data_stk_prd2 <- graph_stack(stk_dat_prd2, "field")
-```
-
 Finally, we fit the model:
 
 ```{r}
-spde_fit_prd2 <- inla(f_s_prd2, data = data_stk_prd2)
+spde_bru_fit_prd2 <-
+    bru(cmp_prd2, data=data_list_prd2)
 ```
 
 Let us now obtain the estimates in the original scale:
 
 ```{r}
-spde_result_prd2 <- spde_metric_graph_result(spde_fit_prd2, 
-                                    "field", spde_model_prd2)
+spde_result_bru_prd2 <- spde_metric_graph_result(spde_bru_fit_prd2, 
+                                    "field", spde_model_bru_prd2)
 
-summary(spde_result_prd2)
+summary(spde_result_bru_prd2)
 ```
 
 
@@ -490,13 +466,13 @@ We will now extract the means at the prediction locations:
 ```{r}
 idx_prd <- which(is.na(y_cmp))
 
-m_prd2 <- spde_fit_prd2$summary.fitted.values$mean[idx_prd]
+m_prd2_bru <- spde_bru_fit_prd2$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
 using the `plot_function_mesh()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$plot_function_mesh(X = m_prd2) + 
+graph_bru_prd$plot_function_mesh(X = m_prd2_bru) + 
     scale_color_gradientn(colours = viridis(100))
 ```
 
@@ -510,24 +486,24 @@ responses of `graph`, which is done by using the
 Let us begin by concatenating the vectors and adding
 the responses to `graph`:
 ```{r}
-y_new2 <- c(y, m_prd2)
-graph_prd$add_responses(y_new2)
+y_new2 <- c(y, m_prd2_bru)
+graph_bru_prd$add_responses(y_new2)
 ```
 
 Now, we plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$plot(data=TRUE)
+graph_bru_prd$plot(data=TRUE)
 ```
 
-## Fitting `R-INLA` models with replicates
+## Fitting `inlabru` models with replicates
 
-We will now illustrate how to use our `R-INLA` implementation to 
+We will now illustrate how to use our `inlabru` implementation to 
 fit models with replicates.
 
 To simplify exposition, we will use the same base graph.
 So, we begin by creating a copy:
 ```{r}
-graph_rep <- graph_bkp$clone()
+graph_bru_rep <- graph_bkp$clone()
 ```
 
 We will use the same observation locations as for the
@@ -543,7 +519,7 @@ n_repl <- 30
 
 u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
                  alpha = alpha_rep,
-                 graph = graph_rep, PtE = obs_loc,
+                 graph = graph_bru_rep, PtE = obs_loc,
                  nsim = n_repl)
 ```
 
@@ -558,90 +534,81 @@ y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
                                     ncol=n_repl)
 ```
 
+
 Since we are considering a model with replicates, we will
 add only the first replicate to the graph object:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph_rep$add_observations2(y_rep[,1], 
+graph_bru_rep$add_observations2(y_rep[,1], 
                     PtE = obs_loc, normalized=TRUE)
-graph_rep$observation_to_vertex()
-graph_rep$plot(data=TRUE)
+graph_bru_rep$observation_to_vertex()
+graph_bru_rep$plot(data=TRUE)
 ```
 
 Let us now create the model object:
 
 ```{r}
-spde_model_rep <- gpgraph_spde(graph_rep)
+spde_model_bru_rep <- gpgraph_spde(graph_bru_rep)
 ```
 
-We now create the index object by using the
-`graph_spde_make_index()` function with the
-argument `n.repl` set to the number of replicates:
+Let us now create a new data list, where we provide
+the response variables (as a vector) and the 
+observation locations (for our current implementation,
+the observation locations must be same throughout
+the replicates):
 ```{r}
-spde_index_rep <- graph_spde_make_index(name="field", 
-                    graph=graph_rep, n.repl = n_repl)
+obs_loc_rep <- obs_loc
+for(i in 2:n_repl){
+    obs_loc_rep <- rbind(obs_loc_rep, obs_loc)
+}   
+data_list_rep <- list(y = as.vector(y_rep),
+                            loc = obs_loc_rep)
 ```
 
-Similarly, we create the observation (`A`) matrix with the
-function `graph_spde_make_A()` setting the `n.repl` argument
-to the number of replicates:
+To create the component, we need to create a vector
+of replicate indexes. Recall that the number of 
+observations is stored in the variable `n_obs_rep`:
 ```{r}
-A_rep <- graph_spde_make_A(graph_rep, n.repl = n_repl)
+repl <- rep(1:n_repl, each=n_obs_rep)
 ```
 
-Next, we create the stack object, remembering that
-we need to input the response variable `y` as a vector
-and the `sample_spde()` function returns a matrix.
+Now, we can create the component, setting the argument
+`replicate`, of the component `field`, to our vector `repl`:
 ```{r}
-stk_dat_rep <- inla.stack(data = list(y=as.vector(y_rep)), 
-                        A = A_rep, 
-                        effects = c(
-      spde_index_rep,
-      list(Intercept = 1)
-    ))
+cmp_rep <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                        model = spde_model_bru_rep,
+                        replicate = repl)
 ```
 
-We now create the formula object, adding the
-name of the field (in our case `field`)
-attached with `.repl` a the `replicate` argument
-inside the `f()` function.
-```{r}
-f_s_rep <- y ~ -1 + Intercept + 
-    f(field, model = spde_model_rep, 
-        replicate = field.repl)
-```
-Then, we create the stack object with The
-`graph_stack()` function:
-```{r}
-data_stk_rep <- graph_stack(stk_dat_rep, "field")
-```
 Now, we fit the model:
 ```{r}
-spde_fit_rep <- inla(f_s_rep, data = data_stk_rep)
+spde_bru_fit_rep <-
+    bru(cmp_rep,
+        data=data_list_rep)
 ```
 
 Let us see the estimated values in the original scale:
 ```{r}
-spde_result_rep <- spde_metric_graph_result(spde_fit_rep, 
-                        "field", spde_model_rep)
+spde_result_bru_rep <- spde_metric_graph_result(spde_bru_fit_rep, 
+                        "field", spde_model_bru_rep)
 
-summary(spde_result_rep)
+summary(spde_result_bru_rep)
 ```
 
 Let us compare with the true values:
 
 ```{r}
-  result_df_rep <- data.frame(
+  result_df_bru_rep <- data.frame(
     parameter = c("std.dev", "range"),
     true = c(sigma_rep, r_rep),
     mean = c(
-      spde_result_rep$summary.sigma$mean,
-      spde_result_rep$summary.range$mean
+      spde_result_bru_rep$summary.sigma$mean,
+      spde_result_bru_rep$summary.range$mean
     ),
     mode = c(
-      spde_result_rep$summary.sigma$mode,
-      spde_result_rep$summary.range$mode
+      spde_result_bru_rep$summary.sigma$mode,
+      spde_result_bru_rep$summary.range$mode
     )
   )
-  print(result_df_rep)
+  print(result_df_bru_rep)
 ```
-

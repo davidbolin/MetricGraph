@@ -41,5 +41,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# C objects
 *.o
 *.so
+
+# Pkgdown folder
+docs/
