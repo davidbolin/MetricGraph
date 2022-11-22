@@ -1256,15 +1256,14 @@ add_responses = function(y){
                      ...){
     xyl <- c()
     if(is.null(self$Lines)){
-      xyl <- cbind(c(self$V[E[, 1], 1], self$V[E[, 2], 1]),
-                   c(self$V[E[, 1], 2], self$V[E[, 2], 2]),
+      xyl <- cbind(c(self$V[self$E[, 1], 1], self$V[self$E[, 2], 1]),
+                   c(self$V[self$E[, 1], 2], self$V[self$E[, 2], 2]),
                    c(1:self$nE, 1:self$nE))
     } else {
       coords <- lapply(coordinates(self$Lines), function(x) x[[1]])
       nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
       xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
     }
-
     p <- ggplot()+ geom_path(data = data.frame(x = xyl[, 1],
                                               y = xyl[,2],
                                               group = xyl[,3]),
