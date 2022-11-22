@@ -52,17 +52,48 @@ p
 
 graph$build_mesh(h = 0.001)
 
-type = "isoExp"
+# PtE_tmp <- rbind(graph$VtEfirst(),graph$mesh$PtE)
+
+type = "alpha1"
 if(type == "isoExp") { #isotropic exponential
   graph$compute_resdist_mesh()
   Sigma <- exp(-50*graph$mesh$res.dist)
   u <- as.vector(t(chol(forceSymmetric(Sigma)))%*%rnorm(dim(Sigma)[1]))
 } else if (type == "alpha1") { #alpha =1 model looks strange
   u <- sample_spde(kappa = 50, sigma = 1, alpha = 1,
-                   graph = graph, type = "mesh")
+                   graph = graph, type="mesh", method="Q")
 } else if (type == "alpha2") { #not working
   u <- sample_spde(kappa = 50, sigma = 1, alpha = 2,
-                   graph = graph, type = "mesh")
+                   graph = graph, 
+                   type = "mesh")
 }
 
-graph$plot_function_mesh(X = as.vector(u))
+graph$plot_function_mesh(X = u)
+
+n_obs <- length(as.vector(u))
+sigma.e <- 0.1
+y <- u + sigma.e * rnorm(n_obs)
+
+y_mesh <- y[(graph$nV+1):(graph$nV+nrow(graph$mesh$PtE))] 
+
+graph$add_mesh_observations(y_mesh)
+
+graph$observation_to_vertex()
+
+spde_model_bru <- gpgraph_spde(graph, parameterization = "spde")
+
+data_list <- list(y = as.vector(y_mesh), loc = graph$PtE)
+
+cmp <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                            model = spde_model_bru)
+library(inlabru)
+
+spde_bru_fit <-
+    bru(cmp, data=data_list)
+
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+                    "field", spde_model_bru)
+
+summary(spde_bru_result)
+

@@ -758,7 +758,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     #   stop("X does not have the correct size")
     # }
     if(length(X) == dim(self$mesh$PtE)[1]){
-      X <- c(rep(NA, dim(self$LtE)[1]), X)
+      X <- c(rep(NA, dim(private$initial_graph$V)[1]), X)
     }
     if(length(X) != dim(private$initial_graph$V)[1] + dim(self$mesh$PtE)[1]){
       stop("X does not have the correct size")
@@ -987,6 +987,12 @@ add_responses = function(y){
     rownames(Spoints) <- 1:nrow(Spoints)
     Spoints <- SpatialPoints(coords = Spoints)
     self$add_observations(Spoints = Spoints, y = y)
+  },
+
+  #' @description Get a copy of the initial graph
+
+  get_initial_graph = function(){
+    return(private$initial_graph$clone())
   }
 
 

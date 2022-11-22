@@ -13,7 +13,8 @@ sample_spde(
   PtE = NULL,
   type = "manual",
   posterior = FALSE,
-  nsim = 1
+  nsim = 1,
+  method = c("conditional", "Q")
 )
 }
 \arguments{

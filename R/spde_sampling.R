@@ -14,14 +14,17 @@
 #' for simulation at observation locations.
 #' @param posterior sample conditionally on the observations?
 #' @param nsim number of samples to be generated.
+#' @param method Which method to sample? The options are "conditional" and "Q". "Q" is more stable but takes longer.
 #' @return sample evaluated at the mesh nodes in the graph
 #' @export
 sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                         PtE = NULL,
                         type = "manual", posterior = FALSE,
-                        nsim = 1) {
+                        nsim = 1,
+                        method = c("conditional", "Q")) {
 
   check <- gpgraph_check_graph(graph)
+  method <- method[[1]]
 
   if (!(type %in% c("manual","mesh", "obs"))) {
     stop("Type must be 'manual', 'mesh' or 'obs'.")
@@ -52,38 +55,72 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
   if(nsim == 1){
   if (!posterior) {
     if (alpha == 1) {
-      Q <- spde_precision(kappa = kappa, sigma = sigma,
-                          alpha = 1, graph = graph)
-      R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
-      V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV),
-                                     system = 'Lt'), system = 'Pt'))
+        if(method == "conditional"){
+              Q <- spde_precision(kappa = kappa, sigma = sigma,
+                                  alpha = 1, graph = graph)
+              R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
+              V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV),
+                                             system = 'Lt'), system = 'Pt'))
 
 
-      if(type == "mesh") {
-        u <- V0
-        inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
-      } else if (type == "obs") {
-        u <- NULL
-        inds_PtE <- sort(unique(graph$PtE[,1]))
-      } else {
-        u <- NULL
-        inds_PtE <- sort(unique(PtE[,1]))
-      }
+              if(type == "mesh") {
+                u <- V0
+                inds_PtE <- sort(unique(graph$mesh$PtE[,1]))
+              } else if (type == "obs") {
+                u <- NULL
+                inds_PtE <- sort(unique(graph$PtE[,1]))
+              } else {
+                u <- NULL
+                inds_PtE <- sort(unique(PtE[,1]))
+              }
 
-      for (i in inds_PtE) {
-        if(type == "mesh") {
-          t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
-        } else if (type == "obs") {
-          t <- graph$PtE[graph$PtE[,1] == i, 2]
-        } else {
-          t <- PtE[PtE[,1] == i, 2]
+              for (i in inds_PtE) {
+                if(type == "mesh") {
+                  t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
+                } else if (type == "obs") {
+                  t <- graph$PtE[graph$PtE[,1] == i, 2]
+                } else {
+                  t <- PtE[PtE[,1] == i, 2]
+                }
+
+                samp <- sample_alpha1_line(kappa = kappa, sigma = sigma,
+                                           u_e = V0[graph$E[i, ]], t = t,
+                                           l_e = graph$edge_lengths[i])
+                u <- c(u, samp[,2])
+              }
+    } else if(method == "Q"){
+        if(type == "manual"){
+          graph_tmp <- graph$get_initial_graph()
+          n_obs_add <- nrow(PtE)
+          y_tmp <- rep(NA, n_obs_add)
+          if(max(PtE[,2])>1){
+            stop("You should provide normalized locations!")
+          }
+          graph_tmp$add_observations2(y_tmp, PtE = PtE, normalized=TRUE)
+          graph_tmp$observation_to_vertex()
+          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
+        } else if(type == "obs"){
+          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
+        } else if(type == "mesh"){
+          graph_tmp <- graph$get_initial_graph()
+          n_obs_mesh <- nrow(graph$mesh$PtE)
+          y_tmp <- rep(NA, n_obs_mesh)
+          graph_tmp$add_observations2(y=y_tmp, PtE = graph$mesh$PtE, normalized=TRUE)
+          graph_tmp$observation_to_vertex()
+          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
         }
 
-        samp <- sample_alpha1_line(kappa = kappa, sigma = sigma,
-                                   u_e = V0[graph$E[i, ]], t = t,
-                                   l_e = graph$edge_lengths[i])
-        u <- c(u, samp[,2])
-      }
+          sizeQ <- nrow(Q_tmp)
+          Z <- rnorm(sizeQ * nsim)
+          dim(Z) <- c(sizeQ, nsim)
+          LQ <- chol(forceSymmetric(Q_tmp))
+          u <- solve(LQ, Z)
+          u <- as.vector(u)
+
+    } else{
+      stop("Method should be either 'conditional' or 'Q'!")
+    }
+    
     } else if (alpha == 2) {
 
       Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -134,7 +171,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
     stop("TODO: implement posterior sampling")
   }
   return(u)
-  } else if ((nsim%%1 == 0) && nsim>1){
+  } else if ((nsim%%1 == 0) && nsim>1 && method != "Q"){
     u_rep <- unlist(lapply(1:nsim, function(i){
       sample_spde(kappa=kappa, sigma=sigma, sigma_e = sigma_e, 
       alpha = alpha, graph = graph,

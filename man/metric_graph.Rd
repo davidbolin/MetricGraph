@@ -103,6 +103,7 @@ locations}
 \item \href{#method-GPGraph::graph-split_edge}{\code{metric_graph$split_edge()}}
 \item \href{#method-GPGraph::graph-add_responses}{\code{metric_graph$add_responses()}}
 \item \href{#method-GPGraph::graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
+\item \href{#method-GPGraph::graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -574,6 +575,16 @@ observations are assumed to be in Spoints}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GPGraph::graph-get_initial_graph"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-get_initial_graph}{}}}
+\subsection{Method \code{get_initial_graph()}}{
+Get a copy of the initial graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_initial_graph()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-GPGraph::graph-clone"></a>}}
