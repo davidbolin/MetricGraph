@@ -14,7 +14,7 @@ test_that("Check if Matern(2) has equal variance on the edges on a circle", {
              c(1,4),
              c(3,4))
 
-  graph <-  metric_graph$new(P = P, E = E)
+  graph <-  metric_graph$new(V = P, E = E)
 
 
   #if Line is null assume straight line

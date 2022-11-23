@@ -48,7 +48,7 @@ for(j in 1:length(n.obs)){
     if(graph.type == 1 || graph.type == 2){
       graph <-  metric_graph$new(Lines)
     } else {
-      graph <-  metric_graph$new(P = V, E = E)
+      graph <-  metric_graph$new(V = V, E = E)
     }
 
     if(graph.type == 2){

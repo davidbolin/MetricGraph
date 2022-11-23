@@ -23,6 +23,7 @@ list of \code{metric_graph} objects for all connected components
 Create metric graphs for connected components of a SpatialLines object
 }
 \examples{
+library(sp)
 line1 <- Line(rbind(c(0, 0), c(1, 0)))
 line2 <- Line(rbind(c(1, 0), c(2, 0)))
 line3 <- Line(rbind(c(1, 1), c(2, 1)))
@@ -30,6 +31,6 @@ Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
                            Lines(list(line2), ID = "2"),
                            Lines(list(line3), ID = "3")))
 graphs <- graph_components(Lines, only_largest = FALSE)
-graphs[[1]]$plot()
-graphs$plot()
+p <- graphs[[1]]$plot(edge_color = "red")
+graphs[[2]]$plot(p = p, edge_color = "blue")
 }

@@ -4,7 +4,7 @@ test_that("Check agrement beteen covariance and precision cross validation", {
   E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),
              c(5, 6), c(6, 1), c(4, 1), c(1, 7))
 
-  graph <- metric_graph$new(P = V, E = E)
+  graph <- metric_graph$new(V = V, E = E)
 
   kappa <- 10
   sigma <- 20

@@ -114,7 +114,7 @@ locations}
 \subsection{Method \code{new()}}{
 Create a new gpgraph_graph object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(Lines = NULL, P = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(Lines = NULL, V = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -122,7 +122,7 @@ Create a new gpgraph_graph object
 \describe{
 \item{\code{Lines}}{sp object SpatialLines DataFrame or SpatialLines}
 
-\item{\code{P}}{n x 2 matrix with Euclidean coordinates of the n vertices}
+\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices}
 
 \item{\code{E}}{m x 2 matrix where each line represents an edge}
 
@@ -132,7 +132,7 @@ Create a new gpgraph_graph object
 }
 \subsection{Details}{
 A graph object can be initialized in two ways. The first method
-is to specify P and E. In this case, if edge_lengths is not specified, all
+is to specify V and E. In this case, if edge_lengths is not specified, all
 edges are assumed to be straight lines. Otherwise the edge lengths set in
 edge_lengths are used. The second option is to specify the graph based on
 Lines. In this case, the vertices are set by the end points of the lines.

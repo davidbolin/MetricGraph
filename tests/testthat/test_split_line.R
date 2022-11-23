@@ -26,6 +26,8 @@ xc = c(-0.5,-0.5, 0.75,0.45)
 yc = c(1, 0.25,0,0)
 Spoints = SpatialPoints(cbind(xc, yc))
 Spoints = SpatialPointsDataFrame(Spoints,  data.frame(a=1:4))
+
+Spoints2 = Spoints = SpatialPoints(cbind(xc+1, yc+1))
 graph$add_observations(Spoints, c(1,2,3,4))
 expect_equal(42,42)
 })

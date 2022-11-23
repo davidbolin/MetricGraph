@@ -76,24 +76,24 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
   #' @description Create a new gpgraph_graph object
   #' @param Lines sp object SpatialLines DataFrame or SpatialLines
-  #' @param P n x 2 matrix with Euclidean coordinates of the n vertices
+  #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
   #' @param E m x 2 matrix where each line represents an edge
   #' @param edge_lengths m x 1 vector with edge lengths
   #' @details A graph object can be initialized in two ways. The first method
-  #' is to specify P and E. In this case, if edge_lengths is not specified, all
+  #' is to specify V and E. In this case, if edge_lengths is not specified, all
   #' edges are assumed to be straight lines. Otherwise the edge lengths set in
   #' edge_lengths are used. The second option is to specify the graph based on
   #' Lines. In this case, the vertices are set by the end points of the lines.
   #' Thus, if two lines are intersecting somewhere else, this will not be
   #' viewed as a vertex.
   #' @return A metric_graph object
-  initialize = function(Lines = NULL, P = NULL, E = NULL, edge_lengths = NULL) {
+  initialize = function(Lines = NULL, V = NULL, E = NULL, edge_lengths = NULL) {
     #We have three different ways of initializing:
 
     #option 1: initialization from lines
     if(!is.null(Lines)){
-      if(!is.null(edge_lengths) || !is.null(P) || !is.null(E)){
-        warning("object initialized from lines, then E,P,edge_lengths are
+      if(!is.null(edge_lengths) || !is.null(V) || !is.null(E)){
+        warning("object initialized from lines, then E,V,edge_lengths are
                 ignored")
       }
       self$nE = length(Lines)
@@ -102,11 +102,11 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
       private$line_to_vertex()
     } else {
-      if(is.null(P) || is.null(E)){
-        stop("You must supply Lines or P and E")
+      if(is.null(V) || is.null(E)){
+        stop("You must supply Lines or V and E")
       }
       self$nE <- dim(E)[1]
-      self$V   <- P
+      self$V   <- V
       self$E <- E
       self$nV <- dim(self$V)[1]
       if(is.null(edge_lengths)){
@@ -375,6 +375,13 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       self$Points = Spoints
       self$PtE = PtE
     }else{
+        df1 <- self$Points@data
+        df2 <- Spoints@data
+        df1[setdiff(names(df2), names(df1))] <- NA
+        df2[setdiff(names(df1), names(df2))] <- NA  
+        self$Points@data <- df1
+        Spoints@data <- df2
+        self$Points = rbind(self$Points, Spoints)
       self$Points = rbind(self$Points,Spoints)
       self$PtE = rbind(self$PtE,PtE)
     }
@@ -409,7 +416,13 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
     if(!is.null(self$Lines)){
 
-      if(is.null(Spoints)){
+      if(!is.null(Spoints)){
+              if("SpatialPointsDataFrame"%in%is(Spoints)){
+        Spoints@data <- cbind(Spoints@data,as.data.frame(PtE))
+      }else{
+        Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
+      }
+      } else {
         coords <- c()
         for(i in 1:dim(PtE)[1]){
 
@@ -421,25 +434,20 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         }
         rownames(coords) <- 1:dim(coords)[1]
         Spoints <- sp::SpatialPoints(coords)
+        Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
       }
       if(is.null(self$Points)){
         self$Points <- Spoints
-    }
-
-    if("SpatialPointsDataFrame"%in%is(Spoints)){
-      Spoints@data <- cbind(Spoints@data,as.data.frame(PtE))
-    }else{
-      Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
-    }
-
       } else {
-      if("SpatialPointsDataFrame"%in%is(Spoints)){
-        Spoints@data <- cbind(Spoints@data,as.data.frame(PtE))
-      }else{
-        Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
-      }
+        df1 <- self$Points@data
+        df2 <- Spoints@data
+        df1[setdiff(names(df2), names(df1))] <- NA
+        df2[setdiff(names(df1), names(df2))] <- NA  
+        self$Points@data <- df1
+        Spoints@data <- df2
         self$Points = rbind(self$Points, Spoints)
       }
+    }
   },
 
 
@@ -884,7 +892,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            split = ~i, showlegend = FALSE)
     } else {
       p <- ggplot(data = data, aes(x = x, y = y, group = i, colour = z)) +
-        geom_path() + viridis::scale_color_viridis() + labs(colour = "")
+        geom_path() + scale_color_viridis() + labs(colour = "")
     }
 
     return(p)
@@ -1268,7 +1276,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                             val = as.vector(self$y)),
                           mapping = aes(x, y, color = val),
                           size = data_size) +
-        scale_colour_gradientn(colours = viridis::viridis(100), guide_legend(title = ""))
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
     if (mesh) {
@@ -1296,7 +1304,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                             val = as.vector(X)),
                           mapping = aes(x, y, color = val),
                           size = data_size) +
-        viridis::scale_color_viridis() + labs(colour = "")
+        scale_color_viridis() + labs(colour = "")
     }
 
     p <- p + coord_fixed()

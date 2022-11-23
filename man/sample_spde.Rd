@@ -14,7 +14,8 @@ sample_spde(
   type = "manual",
   posterior = FALSE,
   nsim = 1,
-  method = c("conditional", "Q")
+  method = c("conditional", "Q"),
+  BC = 1
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ for simulation at observation locations.}
 \item{nsim}{number of samples to be generated.}
 
 \item{method}{Which method to sample? The options are "conditional" and "Q". "Q" is more stable but takes longer.}
+
+\item{BC}{boundary conditions for degree=1 vertices. BC =0 gives Neumann
+boundary conditions and BC=1 gives stationary boundary conditions}
 }
 \value{
 sample evaluated at the mesh nodes in the graph

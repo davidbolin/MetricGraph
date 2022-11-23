@@ -65,7 +65,7 @@ edge_lengths <- graph$edge_lengths
 ```
 An alternative method is to specify these in the construction:
 ```{r}
-graph2 <- metric_graph$new(P = V, E = E, edge_lengths = edge_lengths)
+graph2 <- metric_graph$new(V = V, E = E, edge_lengths = edge_lengths)
 graph2$plot()
 ```
 
@@ -74,7 +74,7 @@ the lines for each edge, it is visualized as having straight lines. If we know
 that the graph only has straight lines, we may exclude the edge length
 information in the construction: 
 ```{r}
-graph3 <- metric_graph$new(P = V, E = E)
+graph3 <- metric_graph$new(V = V, E = E)
 graph3$plot()
 ```
 

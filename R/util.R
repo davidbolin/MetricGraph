@@ -28,6 +28,7 @@ gpgraph_check_graph <- function(graph)
 #' @export
 #'
 #' @examples
+#' library(sp)
 #' line1 <- Line(rbind(c(0, 0), c(1, 0)))
 #' line2 <- Line(rbind(c(1, 0), c(2, 0)))
 #' line3 <- Line(rbind(c(1, 1), c(2, 1)))

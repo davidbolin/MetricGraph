@@ -23,7 +23,7 @@ if(0){
   y <- colMeans(Y)
   graph$add_PtE_observations(y,PtE)
 } else {
-  graph <-  metric_graph$new(P = as.matrix(V),
+  graph <-  metric_graph$new(V = as.matrix(V),
                              E = as.matrix(EtV[,2:3]),
                              edge_lengths = as.matrix(EtV[,4]))
   graph$add_PtE_observations(colMeans(Y),as.matrix(PtE))

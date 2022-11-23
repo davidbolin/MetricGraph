@@ -1,3 +1,14 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 examples
+^README\.md
+^\.Rhistory
+^\.gitignore$
+^\.hgflow$
+^\.hgignore$
+^docs$
+^\.github$
+^pkgdown$
+^pkgdown/_pkgdown\.yml$
+^index\.md$
+^.vscode$

@@ -35,4 +35,5 @@
 #' @importFrom igraph E E<- 
 #' @importFrom plotly plot_ly add_trace
 #' @importFrom magrittr %>% 
+#' @importFrom viridis scale_color_viridis viridis
 NULL

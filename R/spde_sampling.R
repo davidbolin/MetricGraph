@@ -15,13 +15,16 @@
 #' @param posterior sample conditionally on the observations?
 #' @param nsim number of samples to be generated.
 #' @param method Which method to sample? The options are "conditional" and "Q". "Q" is more stable but takes longer.
+#' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
+#' boundary conditions and BC=1 gives stationary boundary conditions
 #' @return sample evaluated at the mesh nodes in the graph
 #' @export
 sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                         PtE = NULL,
                         type = "manual", posterior = FALSE,
                         nsim = 1,
-                        method = c("conditional", "Q")) {
+                        method = c("conditional", "Q"),
+                        BC = 1) {
 
   check <- gpgraph_check_graph(graph)
   method <- method[[1]]
@@ -57,7 +60,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
     if (alpha == 1) {
         if(method == "conditional"){
               Q <- spde_precision(kappa = kappa, sigma = sigma,
-                                  alpha = 1, graph = graph)
+                                  alpha = 1, graph = graph, BC=BC)
               R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
               V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV),
                                              system = 'Lt'), system = 'Pt'))
@@ -98,16 +101,16 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           }
           graph_tmp$add_PtE_observations(y_tmp, PtE = PtE, normalized=TRUE)
           graph_tmp$observation_to_vertex()
-          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
+          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
         } else if(type == "obs"){
-          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
+          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
         } else if(type == "mesh"){
           graph_tmp <- graph$get_initial_graph()
           n_obs_mesh <- nrow(graph$mesh$PtE)
           y_tmp <- rep(NA, n_obs_mesh)
           graph_tmp$add_PtE_observations(y=y_tmp, PtE = graph$mesh$PtE, normalized=TRUE)
           graph_tmp$observation_to_vertex()
-          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
+          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
         }
 
           sizeQ <- nrow(Q_tmp)
@@ -124,7 +127,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
     } else if (alpha == 2) {
 
       Q <- spde_precision(kappa = kappa, sigma = sigma,
-                          alpha = 2, graph = graph, BC = 1)
+                          alpha = 2, graph = graph, BC = BC)
       if(is.null(graph$C))
         graph$buildC(2)
 
