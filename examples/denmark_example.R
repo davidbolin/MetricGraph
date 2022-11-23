@@ -23,7 +23,7 @@ graph <- metric_graph$new(Lines = Lines)
 if(0){
   circ.ind <- which(graph$E[,1]==graph$E[,2])
   PtE <- cbind(circ.ind, rep(0.5,length(circ.ind)))
-  graph$add_observations2(y = rep(0, length(circ.ind)), PtE, normalized = TRUE)
+  graph$add_PtE_observations(y = rep(0, length(circ.ind)), PtE, normalized = TRUE)
   graph$observation_to_vertex()
   graph$clear_observations()
 }

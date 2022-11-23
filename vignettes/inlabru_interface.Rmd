@@ -147,7 +147,7 @@ stack objects.
 We are now in a position to fit the model with our
 `inlabru` implementation. To this end,
 we need to add the observations to the graph, which we 
-will do with the `add_observations2()` method. Then,
+will do with the `add_PtE_observations()` method. Then,
 we need to turn the observations into vertices of the 
 graph with the `observation_to_vertex()` method. 
 
@@ -161,7 +161,7 @@ with `inlabru` implementation* section.
 # Cloning the graph
 graph_bkp <- graph_bru$clone()
 # Adding observations and turning them to vertices
-graph_bru$add_observations2(y, PtE = obs_loc, normalized=TRUE)
+graph_bru$add_PtE_observations(y, PtE = obs_loc, normalized=TRUE)
 graph_bru$observation_to_vertex()
 graph_bru$plot(data=TRUE)
 ```
@@ -259,7 +259,7 @@ at the locations in which we want to do kriging to the
 graph in which we fitted the model. Then, fit a new model,
 and obtain the posterior mean at the desired locations.
 Observe that on this method, if we use the
-`add_observations2()` method, we will need to provide the locations
+`add_PtE_observations()` method, we will need to provide the locations
 in which we want to predict in terms of the positions of
 the new graph, which contains the observed set of 
 observations as vertices.
@@ -406,7 +406,7 @@ We will first add the observations at the locations
 `obs_loc`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru_prd$add_observations2(y, PtE = obs_loc, 
+graph_bru_prd$add_PtE_observations(y, PtE = obs_loc, 
                             normalized=TRUE)
 ```
 
@@ -539,7 +539,7 @@ y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
 Since we are considering a model with replicates, we will
 add only the first replicate to the graph object:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph_bru_rep$add_observations2(y_rep[,1], 
+graph_bru_rep$add_PtE_observations(y_rep[,1], 
                     PtE = obs_loc, normalized=TRUE)
 graph_bru_rep$observation_to_vertex()
 graph_bru_rep$plot(data=TRUE)

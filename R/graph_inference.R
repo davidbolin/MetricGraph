@@ -15,7 +15,7 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 {
   check <- gpgraph_check_graph(graph)
 
-  if(is.null(graph$PtV)){
+  if(is.null(graph$PtV) && (model != "isoExp")){
     stop("You must run graph$observation_to_vertex() first.")
   }
 

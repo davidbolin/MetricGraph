@@ -74,7 +74,7 @@ for(j in 1:length(n.obs)){
     }
 
 
-    graph$add_observations2(y = y, PtE = PtE)
+    graph$add_PtE_observations(y = y, PtE = PtE)
     graph$buildC(2)
     lik[i] <- system.time(likelihood_graph_spde(theta,graph, alpha = alpha, version = 1))[["elapsed"]]
     graph$observation_to_vertex()

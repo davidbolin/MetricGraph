@@ -22,7 +22,7 @@ test_that("Check agrement beteen covariance and precision cross validation", {
 
   y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
-  graph$add_observations2(y,PtE, normalized = TRUE)
+  graph$add_PtE_observations(y,PtE, normalized = TRUE)
 
   graph$observation_to_vertex()
   cv.alpha1.v1 <- posterior.crossvalidation(theta, graph, model = "alpha1")

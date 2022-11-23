@@ -31,7 +31,7 @@ for(i in 1:length(graph$El)){
 X[,2] <- X[,2] #+ sigma_e*rnorm(nt)
 
 
-graph$add_observations2(y = X[,2], PtE = X[,c(3,1)])
+graph$add_PtE_observations(y = X[,2], PtE = X[,c(3,1)])
 graph$observation_to_vertex()
 graph$buildA(2, F)
 n.c <- 1:length(graph$CBobj$S)

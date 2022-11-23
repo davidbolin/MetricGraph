@@ -38,7 +38,7 @@ R <- chol(Sigma)
 u <- as.vector(t(R)%*%rnorm(dim(R)[1]))
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
-graph$add_observations2(y,PtE, normalized = TRUE)
+graph$add_PtE_observations(y,PtE, normalized = TRUE)
 graph$plot(data = TRUE)
 graph$compute_resdist()
 sigma_e_start <- sigma_e

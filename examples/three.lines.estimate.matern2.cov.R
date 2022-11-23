@@ -56,7 +56,7 @@ lines((nt):(2*nt-1),X2[,2],col='blue')
 
 print(X1[(nt-1):nt,])
 print(X2[1:2,])
-graph$add_observations2(y = X[,2], PtE = X[,c(3,1)])
+graph$add_PtE_observations(y = X[,2], PtE = X[,c(3,1)])
 graph$buildA(2, F)
 lik <- likelihood.matern2.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.matern2.graph(exp(x),graph) )

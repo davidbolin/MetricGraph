@@ -179,7 +179,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     } else {
       reo <- order(PtE[,1],PtE[,2])
       graph.temp <- self$clone()
-      graph.temp$add_observations2(y = rep(0, dim(PtE)[1]), PtE,
+      graph.temp$add_PtE_observations(y = rep(0, dim(PtE)[1]), PtE,
                                    normalized = normalized)
       graph.temp$compute_resdist()
       return(graph.temp$res.dist)
@@ -389,7 +389,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' SpatialPointsDataFrame specifying the Euclidean coordinates of the
   #' observation locations. If this is not provided, the coordinates are
   #' calculated internally.
-  add_observations2 = function(y, PtE, Spoints=NULL, normalized = FALSE){
+  add_PtE_observations = function(y, PtE, Spoints=NULL, normalized = FALSE){
 
     self$y <- c(self$y, y)
     private$raw_y <- c(private$raw_y, y)
@@ -424,10 +424,22 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }
       if(is.null(self$Points)){
         self$Points <- Spoints
+    }
+
+    if("SpatialPointsDataFrame"%in%is(Spoints)){
+      Spoints@data <- cbind(Spoints@data,as.data.frame(PtE))
+    }else{
+      Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
+    }
+
       } else {
+      if("SpatialPointsDataFrame"%in%is(Spoints)){
+        Spoints@data <- cbind(Spoints@data,as.data.frame(PtE))
+      }else{
+        Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
+      }
         self$Points = rbind(self$Points, Spoints)
       }
-    }
   },
 
 
