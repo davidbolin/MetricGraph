@@ -120,7 +120,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
     } else{
       stop("Method should be either 'conditional' or 'Q'!")
     }
-    
+
     } else if (alpha == 2) {
 
       Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -131,7 +131,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
       Qmod <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
       Qtilde <- Qmod[-c(1:dim(graph$CBobj$U)[1]),-c(1:dim(graph$CBobj$U)[1])]
       R <- Cholesky(forceSymmetric(Qtilde),LDL = FALSE, perm = TRUE)
-      V0 <- as.vector(solve(R, solve(R,rnorm(4*graph$nV - dim(graph$CBobj$U)[1]),
+      V0 <- as.vector(solve(R, solve(R,rnorm(4*graph$nE - dim(graph$CBobj$U)[1]),
                                      system = 'Lt'), system = 'Pt'))
       u_e <- t(graph$CBobj$T) %*% c(rep(0, dim(graph$CBobj$U)[1]), V0)
       VtE <- graph$VtEfirst()
@@ -173,10 +173,10 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
   return(u)
   } else if ((nsim%%1 == 0) && nsim>1 && method != "Q"){
     u_rep <- unlist(lapply(1:nsim, function(i){
-      sample_spde(kappa=kappa, sigma=sigma, sigma_e = sigma_e, 
+      sample_spde(kappa=kappa, sigma=sigma, sigma_e = sigma_e,
       alpha = alpha, graph = graph,
                         PtE = PtE,
-                        type = type, 
+                        type = type,
                         posterior = posterior,
                         nsim = 1)
     }))
@@ -211,7 +211,7 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
     t  <- seq(0, 1, length.out = nt)
   }
   t <- t * l_e
-  
+
   t_end <- c(0, l_e)
   t <- unique(t)
   t0 <- t

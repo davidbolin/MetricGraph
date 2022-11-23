@@ -380,7 +380,7 @@ plot a metric graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   plotly = FALSE,
   line_width = 0.3,
-  marker_size = 3,
+  vertex_size = 3,
   vertex_color = "black",
   edge_color = "black",
   data = FALSE,
@@ -399,7 +399,7 @@ plot a metric graph
 
 \item{\code{line_width}}{line width for edges}
 
-\item{\code{marker_size}}{size of markers for vertices}
+\item{\code{vertex_size}}{size of the vertices}
 
 \item{\code{vertex_color}}{color of vertices}
 
@@ -446,15 +446,16 @@ graph$plot()
 \if{html}{\out{<a id="method-GPGraph::graph-plot_function"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function}{}}}
 \subsection{Method \code{plot_function()}}{
-plot function X on the graph
+plot continuous function X on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
-  plotly = TRUE,
-  graph_color = "rgb(0,0,0)",
-  graph_width = 1,
-  marker_size = 10,
+  plotly = FALSE,
+  graph_color = "black",
+  line_width = 1,
+  vertex_size = 10,
   color = "rgb(0,0,200)",
+  p = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -470,11 +471,13 @@ evaluated at a precomputed mesh.}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{graph_width}}{for 3D plot, the line width of the graph.}
+\item{\code{line_width}}{for 3D plot, the line width of the curves.}
 
-\item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
+\item{\code{vertex_size}}{for 3D plot, the size of the vertices}
 
-\item{\code{color}}{Color of curve}
+\item{\code{color}}{Color of the curves}
+
+\item{\code{p}}{previous ggplot or plot_ly object to add the plot to}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
@@ -485,14 +488,14 @@ evaluated at a precomputed mesh.}
 \if{html}{\out{<a id="method-GPGraph::graph-plot_function_mesh"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function_mesh}{}}}
 \subsection{Method \code{plot_function_mesh()}}{
-plot function mesh X on the graph
+plot continuous function on the mesh of a graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function_mesh(
   X,
   plotly = FALSE,
   graph_color = "black",
-  graph_width = 1,
-  marker_size = 10,
+  line_width = 1,
+  vertex_size = 10,
   color = "rgb(0,0,200)",
   p = NULL,
   ...
@@ -502,20 +505,21 @@ plot function mesh X on the graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X}}{(m x 1) a vector with values for the function
-evaluated at a precomputed mesh (V,and PtE)}
+\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
+curve (in length), value) or a vector with values for the function
+evaluated at a precomputed mesh.}
 
-\item{\code{plotly}}{use plot_ly for 3D plot?}
+\item{\code{plotly}}{plot in 2D or 3D?}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{graph_width}}{for 3D plot, the line width of the graph.}
+\item{\code{line_width}}{for 3D plot, the line width of the curves.}
 
-\item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
+\item{\code{vertex_size}}{for 3D plot, the size of the vertices}
 
-\item{\code{color}}{Color of curve}
+\item{\code{color}}{Color of the curves}
 
-\item{\code{p}}{plot object to add the curve to}
+\item{\code{p}}{previous ggplot or plot_ly object to add the plot to}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }

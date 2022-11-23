@@ -36,6 +36,8 @@ for simulation at observation locations.}
 \item{posterior}{sample conditionally on the observations?}
 
 \item{nsim}{number of samples to be generated.}
+
+\item{method}{Which method to sample? The options are "conditional" and "Q". "Q" is more stable but takes longer.}
 }
 \value{
 sample evaluated at the mesh nodes in the graph

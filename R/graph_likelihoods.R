@@ -38,7 +38,7 @@ likelihood_alpha2 <- function(theta, graph) {
   Tc <- graph$CBobj$T[-ind.const, ]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph)
-  R <- Matrix::Cholesky(Tc%*%Q%*%t(Tc),
+  R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
                         LDL = FALSE, perm = TRUE)
   loglik <- Matrix::determinant(R)$modulus[1]
 
@@ -300,10 +300,10 @@ likelihood_alpha1 <- function(theta, graph) {
 #'
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
-#' @param model Model for Gaussian process, supported options are alpha1 (SPDE with alpha=1),
-#' alpha2 (SPDE with alpha=2), GL (graph Laplacian model with alpha=1), GL2 (graph Laplacian
-#' model with alpha=2) and isoExp (model with isotropic exponential covariance)
-#' @return The log-likelihood
+#' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
+#' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
+#' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
+#' model with isotropic exponential covariance#' @return The log-likelihood
 #' @export
 likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
@@ -333,15 +333,15 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
       3.0 * (abs(graph$PtE[, 2]) > 1e-14)
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
-  } else if (model == "GL"){
+  } else if (model == "GL1"){
 
     Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
   } else if (model == "GL2"){
 
-    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
-    Q <- Q %*% Q
+    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian)
+    Q <- Q %*% Q / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
   } else if (model == "isoExp"){

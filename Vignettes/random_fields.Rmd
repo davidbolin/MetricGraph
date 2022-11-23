@@ -402,10 +402,9 @@ graph$compute_laplacian()
 
 We can then fit the model to data similarly to how we fit the previous models:
 ```{r}
-res.exp <- optim(log(theta0), 
-                 function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                         alpha = 1))
-theta.exp <- exp(res.exp$par)
+res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
+                                                                  alpha = 1))
+theta.exp <- exp(res$par)
 sigma_e_est <- theta.exp[1]
 sigma_est <- theta.exp[2]
 kappa_est <- theta.exp[3]
@@ -437,5 +436,121 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
 
+```
+
+# A comparison using cross-validation 
+
+Let us finally compare the different models in terms of predictive ability. 
+We start by simulating some data frome a Whittle--Matérn field with $\alpha = 2$,
+fit all different models that we have discussed, and then compare their 
+predictive ability through leave-one-out crossvalidation. To change things
+up a bit, let us consider a different graph: 
+
+```{r} 
+V <- rbind(c(0, 0),
+           c(1, 0),
+           c(1, 1),
+           c(0, 1),
+           c(-1, 1),
+           c(-1, 0),
+           c(0, -1))
+E <- rbind(c(1, 2),
+           c(2, 3),
+           c(3, 4),
+           c(4, 5),
+           c(5, 6),
+           c(6, 1),
+           c(4, 1),
+           c(1, 7))
+graph <- metric_graph$new(P = V, E = E)
+graph$plot()
+``` 
+
+Let us now generate some observation locations and sample the process: 
+
+```{r}
+kappa <- 10
+sigma <- 2
+sigma_e <- 0.1
+theta <-  c(sigma_e, kappa, sigma)
+
+n.obs.per.edge <- 10
+PtE <- NULL
+for(i in 1:graph$nE){
+  #add locations sampled at random to each edge
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+}
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+                 graph = graph, PtE = PtE)
+
+y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+
+graph$add_observations2(y,PtE, normalized = TRUE)
+graph$plot(data = TRUE)
+```
+
+Now let us fit the different models to this data: 
+```{r}
+theta0 <- theta
+
+#alpha = 1 model
+res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
+                                                             alpha = 1),
+             method = "BFGS")
+theta.alpha1 <- exp(res$par)
+
+#alpha = 2 model
+graph$buildC(2)
+res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
+                                                             alpha = 2),
+             method = "BFGS")
+theta.alpha2 <- exp(res$par)
+
+#Isotropic exponential
+graph$compute_resdist()
+res <- optim(log(theta0), 
+             function(x) -likelihood_graph_covariance(exp(x), graph,
+                                                      model = "isoExp"),
+             method = "BFGS")
+theta.exp <- exp(res$par)
+
+#Graph Laplacian 
+graph$observation_to_vertex()
+graph$compute_laplacian()
+res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
+                                                                  alpha = 1),
+             method = "BFGS")
+theta.GL1 <- exp(res$par)
+
+res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
+                                                                  alpha = 2),
+             method = "BFGS")
+theta.GL2 <- exp(res$par)
+```
+
+Finally, we use the function `posterior.crossvalidation` to perform 
+leave-one-out cross validation based on the estimated parameters and compare
+the results:
+```{r}
+cv.alpha1 <- posterior.crossvalidation(theta.alpha1, graph, model = "alpha1")
+cv.alpha2 <- posterior.crossvalidation(theta.alpha2, graph, model = "alpha2")
+cv.exp <- posterior.crossvalidation(theta.exp, graph, model = "isoExp")
+cv.GL1 <- posterior.crossvalidation(theta.GL1, graph, model = "GL1")
+cv.GL2 <- posterior.crossvalidation(theta.GL2, graph, model = "GL2")
+results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
+                               cv.GL1$rmse, cv.GL2$rmse),
+                      mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,
+                               cv.GL1$mae, cv.GL2$mae),
+                      crps = c(cv.alpha1$crps, cv.alpha2$crps, cv.exp$crps,
+                               cv.GL1$crps, cv.GL2$crps),
+                      scrps = c(cv.alpha1$scrps, cv.alpha2$scrps, cv.exp$scrps,
+                               cv.GL1$scrps, cv.GL2$scrps),
+                      logscore = c(cv.alpha1$logscore, cv.alpha2$logscore,
+                                   cv.exp$logscore, cv.GL1$logscore, 
+                                   cv.GL2$logscore),
+                      row.names = c("alpha=1", "alpha=2", "isoExp",
+                                    "GL1", "GL2"))
+print(results)
 ```
 # References

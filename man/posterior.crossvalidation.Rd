@@ -9,14 +9,14 @@ posterior.crossvalidation(theta, graph.obj, model = "alpha1", ind = NULL)
 \arguments{
 \item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
 
-\item{graph.obj}{Graph object}
-
 \item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
 graph Laplacian, and "isoExp" gives isotropic exponential}
 
 \item{ind}{Indices for cross validation. It should be a vector of the same length as the
 data, with integer values representing each group in the cross-validation.
 If NULL, leave-one-out cross validation is performed.}
+
+\item{graph}{metric graph object}
 }
 \value{
 Vector with all predictions
