@@ -32,7 +32,7 @@ for(i in 1:dim(obs.loc)[1]){
 Vobs <- cbind(x,y)
 
 y <- rnorm(dim(obs.loc)[1])
-graph$add_observations2(y,obs.loc)
+graph$add_PtE_observations(y,obs.loc)
 alpha = 2
 #check alpha = 1
 if(alpha==1){

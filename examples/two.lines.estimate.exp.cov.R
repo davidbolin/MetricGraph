@@ -34,7 +34,7 @@ for(i in 1:length(graph$El)){
 X[,2] <- X[,2] + sigma_e*rnorm(nt)
 
 
-graph$add_observations2(y = X[,2], PtE = X[,c(3,1)])
+graph$add_PtE_observations(y = X[,2], PtE = X[,c(3,1)])
 
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )

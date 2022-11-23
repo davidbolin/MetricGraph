@@ -29,7 +29,7 @@ X <- sample.line.expontial(theta,
 
 X[,2] <- X[,2] + sigma_e*rnorm(nt)
 points <- rgeos::gInterpolate(graph$Lines[1,], X[,1], normalized = T)
-graph$add_observations2(y = X[,2], PtE = cbind(1,X[,1]), Spoints = points)
+graph$add_PtE_observations(y = X[,2], PtE = cbind(1,X[,1]), Spoints = points)
 graph$observation_to_vertex()
 lik <- likelihood.exp.graph(theta,graph)
 res <- optim(log(theta), function(x) -likelihood.exp.graph(exp(x),graph) )

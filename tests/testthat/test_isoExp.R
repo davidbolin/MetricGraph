@@ -21,7 +21,7 @@ test_that("Test resistance metric", {
   dimnames(distances) <- NULL
   expect_equal(as.vector(D), as.vector(distances), tolerance = 1e-10)
 
-  graph$add_observations2(y,PtE, normalized = TRUE)
+  graph$add_PtE_observations(y,PtE, normalized = TRUE)
   graph$compute_resdist()
 
   expect_equal(as.vector(graph$res.dist), as.vector(distances), tolerance = 1e-10)
@@ -32,7 +32,7 @@ test_that("Test resistance metric", {
   PtE.order <- PtE[reo, ]
   y.order <- y[reo]
   graph <- metric_graph$new(Lines = Lines)
-  graph$add_observations2(y.order,PtE.order, normalized = TRUE)
+  graph$add_PtE_observations(y.order,PtE.order, normalized = TRUE)
   graph$compute_resdist()
   lik2 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
 

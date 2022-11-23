@@ -128,7 +128,7 @@ test_that("test likelihood",{
   }
   X[,2] <- X[,2] + sigma_e*rnorm(nt)
 
-  graph$add_observations2(y = X[,2], PtE = X[,c(3, 1)])
+  graph$add_PtE_observations(y = X[,2], PtE = X[,c(3, 1)])
   graph$buildC(2, FALSE)
   lik <- likelihood_graph_spde(theta = theta, graph = graph, alpha = 2)
   graph2 <- graph
@@ -174,7 +174,7 @@ test_that("test posterior mean",{
   }
   X[,2] <- X[,2] + sigma_e*rnorm(nt)
 
-  graph$add_observations2(y = X[,2], PtE = X[,c(3, 1)])
+  graph$add_PtE_observations(y = X[,2], PtE = X[,c(3, 1)])
   graph$buildC(2, FALSE)
 
   #test posterior at observation locations

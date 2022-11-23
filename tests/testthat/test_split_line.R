@@ -18,7 +18,7 @@ graph$split_edge(1,0.5)
 #graph$LtE
 graph$plot()
 PtE <- cbind(c(1,2),c(0.2,0.8))
-graph$add_observations2(c(1,2), PtE)
+graph$add_PtE_observations(c(1,2), PtE)
 graph$split_edge(1,0.5)
 graph$plot()
 

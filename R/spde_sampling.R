@@ -52,7 +52,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
   if(!is.null(PtE) && !(type == "manual")) {
     warning("PtE provided but mode is not manual.")
   }
-  if(nsim == 1){
+  if((nsim == 1) || (method == "Q")){
   if (!posterior) {
     if (alpha == 1) {
         if(method == "conditional"){
@@ -96,7 +96,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           if(max(PtE[,2])>1){
             stop("You should provide normalized locations!")
           }
-          graph_tmp$add_observations2(y_tmp, PtE = PtE, normalized=TRUE)
+          graph_tmp$add_PtE_observations(y_tmp, PtE = PtE, normalized=TRUE)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
         } else if(type == "obs"){
@@ -105,7 +105,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           graph_tmp <- graph$get_initial_graph()
           n_obs_mesh <- nrow(graph$mesh$PtE)
           y_tmp <- rep(NA, n_obs_mesh)
-          graph_tmp$add_observations2(y=y_tmp, PtE = graph$mesh$PtE, normalized=TRUE)
+          graph_tmp$add_PtE_observations(y=y_tmp, PtE = graph$mesh$PtE, normalized=TRUE)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp)
         }
@@ -295,8 +295,8 @@ sample_alpha2_line <-function(kappa, sigma, sigma_e,
 
   if(is.null(t)){
     t  = seq(0, 1, length.out = nt)
-    t <- t * l_e
   }
+    t <- t * l_e
   t_end <- c(0, l_e)
   t <- unique(t)
   t0 <- t
@@ -337,11 +337,17 @@ sample_alpha2_line <-function(kappa, sigma, sigma_e,
 
   index_boundary <- c(d.index,index_E)
   u_e <- u_e[c(2, 4, 1, 3)]
-  SinvS <- solve(Sigma[index_boundary, index_boundary],
-                 Sigma[index_boundary, -index_boundary])
-  Sigma_X <- Sigma[-index_boundary, -index_boundary] -
-    Sigma[-index_boundary, index_boundary] %*% SinvS
-  mu_X <- - t(SinvS) %*% (0-u_e)
+  if(length(Sigma[index_boundary, -index_boundary])>0){
+    SinvS <- solve(Sigma[index_boundary, index_boundary],
+                   Sigma[index_boundary, -index_boundary])
+    Sigma_X <- Sigma[-index_boundary, -index_boundary] -
+      Sigma[-index_boundary, index_boundary] %*% SinvS
+    mu_X <- - t(SinvS) %*% (0-u_e)
+  } else{
+    Sigma_X <- Sigma
+    mu_X <- 0
+  }
+
 
   if(is.null(py) == FALSE){
     index_y <- 1:length(py)

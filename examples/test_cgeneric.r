@@ -25,7 +25,7 @@ n.obs <- nrow(obs.loc)
 
 y <- rep(NA, obs.per.edge * graph$nE)
 
-graph$add_observations2(y,obs.loc)
+graph$add_PtE_observations(y,obs.loc)
 
 graph$observation_to_vertex()
 
@@ -173,7 +173,7 @@ obs.loc <- rbind(obs.loc, obs.loc2)
 
 y <- c(y, rep(NA, obs.per.edge * graph$nE))
 
-graph$add_observations2(y,obs.loc)
+graph$add_PtE_observations(y,obs.loc)
 
 graph$observation_to_vertex()
 
@@ -338,7 +338,7 @@ n.obs <- obs.per.edge * graph$nE
 
 y <- rep(NA, obs.per.edge * graph$nE)
 
-graph$add_observations2(y,obs.loc)
+graph$add_PtE_observations(y,obs.loc)
 
 graph$observation_to_vertex()
 
@@ -477,7 +477,7 @@ obs.loc <- rbind(obs.loc,
 
 y <- rep(NA, obs.per.edge * graph$nE)
 
-graph$add_observations2(y,obs.loc)
+graph$add_PtE_observations(y,obs.loc)
 
 graph$observation_to_vertex()
 
@@ -513,7 +513,7 @@ for(i in 1:(graph_prd$nE)) {
 
 y <- rep(NA, nrow(obs.loc2))
 
-graph_prd$add_observations2(y,obs.loc2)
+graph_prd$add_PtE_observations(y,obs.loc2)
 
 graph_prd$observation_to_vertex()
 

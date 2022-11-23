@@ -92,7 +92,7 @@ locations}
 \item \href{#method-GPGraph::graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
 \item \href{#method-GPGraph::graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-GPGraph::graph-add_observations}{\code{metric_graph$add_observations()}}
-\item \href{#method-GPGraph::graph-add_observations2}{\code{metric_graph$add_observations2()}}
+\item \href{#method-GPGraph::graph-add_PtE_observations}{\code{metric_graph$add_PtE_observations()}}
 \item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-GPGraph::graph-compute_fem}{\code{metric_graph$compute_fem()}}
@@ -254,12 +254,12 @@ that the data is in the first column}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-add_observations2"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations2}{}}}
-\subsection{Method \code{add_observations2()}}{
+\if{html}{\out{<a id="method-GPGraph::graph-add_PtE_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_PtE_observations}{}}}
+\subsection{Method \code{add_PtE_observations()}}{
 add observations to the object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations2(y, PtE, Spoints = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_PtE_observations(y, PtE, Spoints = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

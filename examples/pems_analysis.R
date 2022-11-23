@@ -21,12 +21,12 @@ TE <- table(c(EtV$V1,EtV$V2))
 if(0){
   graph <-  metric_graph$new(Lines = as_Spatial(Lines))
   y <- colMeans(Y)
-  graph$add_observations2(y,PtE)
+  graph$add_PtE_observations(y,PtE)
 } else {
   graph <-  metric_graph$new(P = as.matrix(V),
                              E = as.matrix(EtV[,2:3]),
                              edge_lengths = as.matrix(EtV[,4]))
-  graph$add_observations2(colMeans(Y),as.matrix(PtE))
+  graph$add_PtE_observations(colMeans(Y),as.matrix(PtE))
   graph$Lines <- as_Spatial(Lines)
 }
 

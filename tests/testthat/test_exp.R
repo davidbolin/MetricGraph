@@ -41,7 +41,7 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
                    alpha = 1, graph = graph, PtE = PtE)
 
   y <- u + sigma_e*rnorm(nt)
-  graph$add_observations2(y = y, PtE = PtE)
+  graph$add_PtE_observations(y = y, PtE = PtE)
   theta <-  c(sigma_e, kappa, sigma)
   lik <- likelihood_graph_spde(theta,graph, alpha = 1, version = 1)
 
@@ -78,7 +78,7 @@ test_that("Test posterior mean", {
 
 
   y <- u + sigma_e*rnorm(nt)
-  graph$add_observations2(y = y, PtE = PtE)
+  graph$add_PtE_observations(y = y, PtE = PtE)
   theta <-  c(sigma_e, sigma, kappa)
   pm <- spde_posterior_mean(theta, alpha = 1, type = "obs", graph = graph)
 

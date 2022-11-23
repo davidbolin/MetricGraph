@@ -16,7 +16,7 @@ graph$plot()
 
 y <- c(1,2,3)
 PtE <- matrix(c(1, 2, 3, 0.5, 0.5, 0.7),3,2)
-graph$add_observations2(y, PtE)
+graph$add_PtE_observations(y, PtE)
 p <- graph$plot(data=TRUE)
 
 kappa <- 10
@@ -48,7 +48,7 @@ p <- graph$plot()
 
 y <- c(1,2,3)
 PtE <- matrix(c(1, 2, 3, 0.5, 0.5, 0.7),3,2)
-graph$add_observations2(y, PtE)
+graph$add_PtE_observations(y, PtE)
 p <- graph$plot(data=TRUE)
 
 

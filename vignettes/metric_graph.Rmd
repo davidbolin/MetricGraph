@@ -110,7 +110,7 @@ observations at a distance 0.5 from the start of each edge. One way of specifyin
 ```{r}
 obs.loc <- cbind(1:4, rep(0.5, 4))
 obs <- c(1,2,3,4)
-graph$add_observations2(obs, PtE = obs.loc)
+graph$add_PtE_observations(obs, PtE = obs.loc)
 graph$plot(data = TRUE)
 ```
 
@@ -124,7 +124,7 @@ of the fourth edge:
 ```{r}
 obs.loc <- matrix(c(4, 0.5),1,2)
 obs <- c(5)
-graph$add_observations2(obs, PtE = obs.loc, normalized = TRUE)
+graph$add_PtE_observations(obs, PtE = obs.loc, normalized = TRUE)
 graph$plot(data = TRUE)
 ```
 
