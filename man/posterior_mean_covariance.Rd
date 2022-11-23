@@ -11,11 +11,10 @@ posterior_mean_covariance(theta, graph, model = "alpha1")
 
 \item{graph}{metric graph  object}
 
-\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
-graph Laplacian, and "isoExp" gives isotropic exponential}
-
-\item{type}{if 'obs' the posterior mean is computed at the observation
-locations, if 'vertices' it is computed at all vertices.}
+\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
+the model based on the graph Laplacian with smoothness 1, "GL2" gives the
+model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
+model with isotropic exponential covariance}
 }
 \value{
 Vector with the posterior mean evaluated at the observation locations

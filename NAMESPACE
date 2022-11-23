@@ -2,6 +2,7 @@
 
 S3method(gg_df,metric_graph_spde_result)
 S3method(summary,metric_graph_spde_result)
+export(Cholesky)
 export(Diagonal)
 export(Q.alpha2.base)
 export(Q.alpha2.line)
@@ -35,6 +36,7 @@ export(spCircle)
 export(spde_metric_graph_result)
 export(spde_posterior_mean)
 export(spde_precision)
+export(t)
 if (getRversion() >= "3.6.0") {
   S3method(inlabru::bru_mapper, inla_metric_graph_spde)
   S3method(inlabru::bru_get_mapper, inla_metric_graph_spde)

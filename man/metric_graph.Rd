@@ -475,13 +475,13 @@ evaluated at a precomputed mesh.}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{line_width}}{for 3D plot, the line width of the curves.}
+\item{\code{line_width}}{for 3D plot, the line width of the graph.}
 
-\item{\code{vertex_size}}{for 3D plot, the size of the vertices}
+\item{\code{vertex_size}}{for 3D plot, the vertex size of the vertices}
 
-\item{\code{color}}{Color of the curves}
+\item{\code{color}}{Color of curve}
 
-\item{\code{p}}{previous ggplot or plot_ly object to add the plot to}
+\item{\code{p}}{previous plot in which the new plot should be added.}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }

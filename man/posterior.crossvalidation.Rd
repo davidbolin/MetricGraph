@@ -4,22 +4,27 @@
 \alias{posterior.crossvalidation}
 \title{Prediction for models assuming observations at vertices}
 \usage{
-posterior.crossvalidation(theta, graph.obj, model = "alpha1", ind = NULL)
+posterior.crossvalidation(theta, graph, model = "alpha1", ind = NULL)
 }
 \arguments{
 \item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
 
-\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
-graph Laplacian, and "isoExp" gives isotropic exponential}
-
-\item{ind}{Indices for cross validation. It should be a vector of the same length as the
-data, with integer values representing each group in the cross-validation.
-If NULL, leave-one-out cross validation is performed.}
-
 \item{graph}{metric graph object}
+
+\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
+the model based on the graph Laplacian with smoothness 1, "GL2" gives the
+model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
+model with isotropic exponential covariance}
+
+\item{ind}{Indices for cross validation. It should be a vector of the same
+length as the data, with integer values representing each group in the
+cross-validation. If NULL, leave-one-out cross validation is performed.}
 }
 \value{
-Vector with all predictions
+Vector with the posterior expectations and variances as well as
+mean absolute error (MAE), root mean squared errors (RMSE), and three
+negatively oriented proper scoring rules: log-score, CRPS, and scaled
+CRPS.
 }
 \description{
 Prediction for models assuming observations at vertices

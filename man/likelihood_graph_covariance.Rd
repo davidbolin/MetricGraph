@@ -11,12 +11,10 @@ likelihood_graph_covariance(theta, graph, model = "alpha1")
 
 \item{graph}{metric_graph object}
 
-\item{model}{Model for Gaussian process, supported options are alpha1 (SPDE with alpha=1),
-alpha2 (SPDE with alpha=2), GL (graph Laplacian model with alpha=1), GL2 (graph Laplacian
-model with alpha=2) and isoExp (model with isotropic exponential covariance)}
-}
-\value{
-The log-likelihood
+\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
+the model based on the graph Laplacian with smoothness 1, "GL2" gives the
+model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
+model with isotropic exponential covariance#' @return The log-likelihood}
 }
 \description{
 Likelihood evaluation not using sparsity

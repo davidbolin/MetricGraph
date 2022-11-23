@@ -14,14 +14,16 @@ posterior.crossvalidation.covariance(
 \arguments{
 \item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
 
-\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
-graph Laplacian, and "isoExp" gives isotropic exponential}
+\item{graph}{metric graph object}
+
+\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
+the model based on the graph Laplacian with smoothness 1, "GL2" gives the
+model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
+model with isotropic exponential covariance}
 
 \item{ind}{Indices for cross validation. It should be a vector of the same
 length as the data, with integer values representing each group in the
 cross-validation. If NULL, leave-one-out cross validation is performed.}
-
-\item{graph.obj}{metric graph object}
 }
 \value{
 Vector with all predictions

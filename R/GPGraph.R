@@ -23,7 +23,7 @@
 #' @docType package
 #' @name GPGraph
 #' @import Matrix
-#' @export Diagonal
+#' @export Diagonal Cholesky t
 #' @importFrom igraph graph distances
 #' @importFrom rSPDE matern.covariance gg_df
 #' @export gg_df
