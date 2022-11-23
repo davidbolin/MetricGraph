@@ -416,44 +416,33 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
 }
 
 
-#' Data frame for rspde.result objects to be used in ggplot2
+#' Data frame for metric_graph_spde_result objects to be used in ggplot2
 #'
 #' Returns a ggplot-friendly data-frame with the marginal posterior densities.
 #'
-#' @param spde_result An metric_graph_spde_result object.
+#' @param result An metric_graph_spde_result object.
 #' @param parameter Vector. Which parameters to get the posterior density in the data.frame? The options are `sigma`, `range` or `kappa`.
 #' @param transform Should the posterior density be given in the original scale?
 #' @param restrict_x_axis Variables to restrict the range of x axis based on quantiles.
 #' @param restrict_quantiles List of quantiles to restrict x axis.
+#' @param ... Not being used.
 #'
 #' @return A data frame containing the posterior densities.
-
 #' @export
-gg_df <- function(spde_result, 
-                          parameter = spde_result$params,
+gg_df.metric_graph_spde_result <- function(result, 
+                          parameter = result$params,
                           transform = TRUE,
                           restrict_x_axis = parameter,
                           restrict_quantiles = list(sigma = c(0,1),
                           range = c(0,1),
                           kappa = c(0,1),
                           sigma = c(0,1)),...) {
-      if(!inherits(spde_result, "metric_graph_spde_result")){
-        if(inherits(spde_result, "rspde.result")){
-        return(rSPDE::gg_df(spde_result, 
-                          parameter = parameter,
-                          transform = transform,
-                          restrict_x_axis =  restrict_x_axis,
-                          restrict_quantiles = restrict_quantiles,
-                          ...))
-      } else{
-        stop("The argument rspde_result should be of class metric_graph_spde_result!")
-      }
-      } 
       parameter <- intersect(parameter, c("kappa", "range", "sigma"))
       if(length(parameter) == 0){
         stop("You should choose at least one of the parameters 'kappa', 'range' or 'sigma'!")
       }
   
+  spde_result <- result
   param <- parameter[[1]]
   if(transform){
     param <- paste0("marginals.", param)
@@ -512,14 +501,16 @@ gg_df <- function(spde_result,
 }
 
 
-#' @name summary.metric_graph_spde_result
-#' @title Summary for posteriors of field parameters for an `inla_rspde`
+#' Summary for posteriors of field parameters for an `inla_rspde`
 #' model from a `rspde.result` object
-#' @description Summary for posteriors of rSPDE field parameters in
+#' 
+#' Summary for posteriors of rSPDE field parameters in
 #' their original scales.
+#' 
 #' @param object A `rspde.result` object.
 #' @param digits integer, used for number formatting with signif()
 #' @param ... Currently not used.
+#' 
 #' @return Returns a `data.frame`
 #' containing the summary.
 #' @export
@@ -548,7 +539,7 @@ summary.metric_graph_spde_result <- function(object,
 #' @rdname bru_mapper.inla_metric_graph_spde
 #' @rawNamespace if (getRversion() >= "3.6.0") {
 #'   S3method(inlabru::bru_mapper, inla_metric_graph_spde)
-#'   # S3method(inlabru::bru_get_mapper, inla_metric_graph_spde)
+#'   S3method(inlabru::bru_get_mapper, inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_n, bru_mapper_inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_values, bru_mapper_inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_jacobian, bru_mapper_inla_metric_graph_spde)

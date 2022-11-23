@@ -7,9 +7,13 @@
 posterior.leave.stupid(theta, graph)
 }
 \arguments{
-\item{theta}{- (sigma_e, sigma, kappa)}
+\item{theta}{\itemize{
+\item (sigma_e, sigma, kappa)
+}}
 
-\item{graph}{- metric_graph object}
+\item{graph}{\itemize{
+\item metric_graph object
+}}
 }
 \value{
 Leave-one-out predictions

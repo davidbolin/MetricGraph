@@ -23,6 +23,16 @@
 #' @docType package
 #' @name GPGraph
 #' @import Matrix
+#' @export Diagonal
 #' @importFrom igraph graph distances
-#' @importFrom rSPDE matern.covariance
+#' @importFrom rSPDE matern.covariance gg_df
+#' @export gg_df
+#' @importFrom stats approx dist dnorm pnorm rnorm
+#' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates
+#' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend
+#' @importFrom CB c_basis2
+#' @importFrom rgeos gInterpolate gProject
+#' @importFrom igraph E E<- 
+#' @importFrom plotly plot_ly add_trace
+#' @importFrom magrittr %>% 
 NULL

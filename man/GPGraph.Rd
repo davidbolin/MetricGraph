@@ -5,7 +5,7 @@
 \alias{GPGraph}
 \title{Gaussian processes on metric graphs}
 \description{
-`GPGraph` is used for specifying Gaussian random fields on metric graphs.
+\code{GPGraph} is used for specifying Gaussian random fields on metric graphs.
 The main models are the Whittle-Matérn fields, which are specified through the
 fractional elliptic SPDE
 \deqn{(\kappa^2 - \Delta)^{\alpha/2} (\tau u(s)) = W,}
@@ -15,14 +15,13 @@ and contains various utility functions for specifying graphs, computing likeliho
 prediction, simulating processes, and visualizing results and graphs.
 }
 \details{
-At the heart of the package is the `R6` class `[metric_graph()]`. This is used for specifying
+At the heart of the package is the \code{R6} class \verb{[metric_graph()]}. This is used for specifying
 metric graphs, and contains various utility functions which are needed for specifying Gaussian
 processes on such spaces.
 
 Basic statistical operations such as likelihood evaluations (see
-`[likelihood.graph.covariance], [likelihood.graph]`) and
+\verb{[likelihood.graph.covariance], [likelihood.graph]}) and
 predictions (see ...) are also implemented...
-
 
 For a more detailed introduction to the package, see the GPGraph Vignettes.
 }

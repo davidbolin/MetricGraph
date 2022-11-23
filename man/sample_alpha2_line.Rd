@@ -45,7 +45,7 @@ Sample Gaussian process with alpha = 2 on a line given end points
 \details{
 Samples a Gaussian process \eqn{u(t)} with alpha = 2 on an
 interval \eqn{(0,l_e)} conditionally on \eqn{u(0), u(l_e)}.
-If `y` and `py` are supplied, the sampling is done conditionally on observations
+If \code{y} and \code{py} are supplied, the sampling is done conditionally on observations
 \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 where \eqn{e_i} are independent standard Gaussian variables.
 }

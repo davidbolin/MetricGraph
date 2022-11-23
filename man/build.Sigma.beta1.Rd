@@ -19,12 +19,12 @@ build.Sigma.beta1(P, E, kappa, sigma, n)
 }
 \value{
 a list with elements:
-    Sigma : Covariance matrix of 'free' processes and derivatives on the edges
-    A : Matrix that implements the Kirchoff constraints
-    rep.ind : the indices of the repeated nodes
-    p.ind : the indices in Sigma corresponding to the process
-    d.ind : the indices in Sigma corresponding to the derivative
-    P : matrix with the locations of the nodes where Sigma is evaluated
+Sigma : Covariance matrix of 'free' processes and derivatives on the edges
+A : Matrix that implements the Kirchoff constraints
+rep.ind : the indices of the repeated nodes
+p.ind : the indices in Sigma corresponding to the process
+d.ind : the indices in Sigma corresponding to the derivative
+P : matrix with the locations of the nodes where Sigma is evaluated
 }
 \description{
 computes matrices needed for graph for beta=1

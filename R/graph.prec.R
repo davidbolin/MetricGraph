@@ -130,10 +130,10 @@ build.Sigma.beta1 <- function(P,E,kappa,sigma,n){
 #' @export
 Q.alpha2.base <- function(l,kappa,tau){
   if(1){
-    C <- GPGraph:::build.C.beta1(0.5, kappa=kappa, sigma=1, nu=3/2)
-    S1 <- GPGraph:::matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l)
-    S2 <- GPGraph:::matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(0,1))
-    S3 <- GPGraph:::matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(1,1))
+    C <- build.C.beta1(0.5, kappa=kappa, sigma=1, nu=3/2)
+    S1 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l)
+    S2 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(0,1))
+    S3 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(1,1))
     Sigma  <- rbind(cbind(S1, S2), cbind(t(S2),S3))
     Q <- solve(Sigma)[c(1,3,2,4),c(1,3,2,4)]
   } else{

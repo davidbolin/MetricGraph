@@ -19,7 +19,7 @@ gpgraph_spde(
 )
 }
 \arguments{
-\item{graph_object}{A `metric_graph` object.}
+\item{graph_object}{A \code{metric_graph} object.}
 
 \item{alpha}{The order of the SPDE.}
 
@@ -35,20 +35,20 @@ gpgraph_spde(
 
 \item{debug}{Should debug be displayed?}
 
-\item{prior.range}{a `list` containing the elements `meanlog` and
-`sdlog`, that is, the mean and standard deviation on the log scale. Will not be used if prior.kappa is non-null.}
+\item{prior.range}{a \code{list} containing the elements \code{meanlog} and
+\code{sdlog}, that is, the mean and standard deviation on the log scale. Will not be used if prior.kappa is non-null.}
 
-\item{prior.kappa}{a `list` containing the elements `meanlog` and
-`sdlog`, that is, the mean and standard deviation on the log scale.}
+\item{prior.kappa}{a \code{list} containing the elements \code{meanlog} and
+\code{sdlog}, that is, the mean and standard deviation on the log scale.}
 
-\item{prior.sigma}{a `list` containing the elements `meanlog` and
-`sdlog`, that is, the mean and standard deviation on the log scale.}
+\item{prior.sigma}{a \code{list} containing the elements \code{meanlog} and
+\code{sdlog}, that is, the mean and standard deviation on the log scale.}
 }
 \value{
 An inla object.
 }
 \description{
 This function creates an inla object that can be used
-in `INLA` or `inlabru` to fit Whittle-Matérn fields 
+in \code{INLA} or \code{inlabru} to fit Whittle-Matérn fields
 on metric graphs.
 }

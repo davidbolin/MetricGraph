@@ -16,6 +16,7 @@ sp::Lines object where each line is representing and edge.
 ## Method `metric_graph$plot`
 ## ------------------------------------------------
 
+library(sp)
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
 line3 <- Line(rbind(c(0,1),c(-1,1)))
@@ -35,7 +36,7 @@ graph$plot()
 
 \item{\code{nV}}{number of vertices}
 
-\item{\code{E}}{Edges,  E[i,1] is the vertex at the start of the edge and  E[i,2]
+\item{\code{E}}{Edges,  E\link{i,1} is the vertex at the start of the edge and  E\link{i,2}
 is the vertex at the end of the edge}
 
 \item{\code{nE}}{number of edges}
@@ -61,8 +62,8 @@ is the vertex at the end of the edge}
 \item{\code{y}}{the data connected to P}
 
 \item{\code{PtE}}{Points to Line (connected to Points)
-[,1] edge index
-[,2] normalized distance along the line (i.e. distance to initial point)}
+\link{,1} edge index
+\link{,2} normalized distance along the line (i.e. distance to initial point)}
 
 \item{\code{PtV}}{Vector with the indices of the vertices which are observation
 locations}
@@ -245,8 +246,8 @@ observations}
 \item{\code{y}}{the observations. These are used if provided, and otherwise the
 observations are assumed to be in Spoints}
 
-\item{\code{y.index}}{If `y` is not provided, `y.index` gives the column number
-for the data to use in `Spoints@data`. If it is not provided, it is assumed
+\item{\code{y.index}}{If \code{y} is not provided, \code{y.index} gives the column number
+for the data to use in \code{Spoints@data}. If it is not provided, it is assumed
 that the data is in the first column}
 }
 \if{html}{\out{</div>}}
@@ -320,13 +321,15 @@ build mesh object for graph
 }
 \subsection{Details}{
 The mesh is a list with the objects
-- PtE which contains the mesh locations excluding the original vertices
-- V the verties of the mesh
-- E the edges of the mesh
-- n_e the number of vertices in the mesh per original edge in the graph
-- h_e the mesh width per edge in the graph
-- ind the indices of the vertices in the mesh
-- VtE all mesh locations including the original vertices
+\itemize{
+\item PtE which contains the mesh locations excluding the original vertices
+\item V the verties of the mesh
+\item E the edges of the mesh
+\item n_e the number of vertices in the mesh per original edge in the graph
+\item h_e the mesh width per edge in the graph
+\item ind the indices of the vertices in the mesh
+\item VtE all mesh locations including the original vertices
+}
 }
 
 }
@@ -368,7 +371,7 @@ inefficient implementation)
 }
 
 \subsection{Returns}{
-VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+VtE (n.v x 2) \link{1} edge number, \link{2} 0=  lower edge, 1=  upper edge
 }
 }
 \if{html}{\out{<hr>}}
@@ -380,7 +383,7 @@ plot a metric graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   plotly = FALSE,
   line_width = 0.3,
-  marker_size = 3,
+  vertex_size = 3,
   vertex_color = "black",
   edge_color = "black",
   data = FALSE,
@@ -399,7 +402,7 @@ plot a metric graph
 
 \item{\code{line_width}}{line width for edges}
 
-\item{\code{marker_size}}{size of markers for vertices}
+\item{\code{vertex_size}}{size of the vertices}
 
 \item{\code{vertex_color}}{color of vertices}
 
@@ -425,7 +428,8 @@ a plot_ly or or ggplot object
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{line1 <- Line(rbind(c(0,0),c(1,0)))
+\preformatted{library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
 line3 <- Line(rbind(c(0,1),c(-1,1)))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)
@@ -446,15 +450,16 @@ graph$plot()
 \if{html}{\out{<a id="method-GPGraph::graph-plot_function"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function}{}}}
 \subsection{Method \code{plot_function()}}{
-plot function X on the graph
+plot continuous function X on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
-  plotly = TRUE,
-  graph_color = "rgb(0,0,0)",
-  graph_width = 1,
-  marker_size = 10,
+  plotly = FALSE,
+  graph_color = "black",
+  line_width = 1,
+  vertex_size = 10,
   color = "rgb(0,0,200)",
+  p = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -470,11 +475,13 @@ evaluated at a precomputed mesh.}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{graph_width}}{for 3D plot, the line width of the graph.}
+\item{\code{line_width}}{for 3D plot, the line width of the graph.}
 
-\item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
+\item{\code{vertex_size}}{for 3D plot, the vertex size of the vertices}
 
 \item{\code{color}}{Color of curve}
+
+\item{\code{p}}{previous plot in which the new plot should be added.}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
@@ -491,8 +498,8 @@ plot function mesh X on the graph
   X,
   plotly = FALSE,
   graph_color = "black",
-  graph_width = 1,
-  marker_size = 10,
+  line_width = 1,
+  vertex_size = 10,
   color = "rgb(0,0,200)",
   p = NULL,
   ...
@@ -509,9 +516,9 @@ evaluated at a precomputed mesh (V,and PtE)}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{graph_width}}{for 3D plot, the line width of the graph.}
+\item{\code{line_width}}{for 3D plot, the line width of the graph.}
 
-\item{\code{marker_size}}{for 3D plot, the marker size of the vertices}
+\item{\code{vertex_size}}{for 3D plot, the size of the vertices}
 
 \item{\code{color}}{Color of curve}
 

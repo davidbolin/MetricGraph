@@ -7,11 +7,17 @@
 posterior_mean_alpha1(theta, graph, rem.edge = FALSE)
 }
 \arguments{
-\item{theta}{- (sigma_e, sigma, kappa)}
+\item{theta}{\itemize{
+\item (sigma_e, sigma, kappa)
+}}
 
-\item{graph}{- metric_graph object}
+\item{graph}{\itemize{
+\item metric_graph object
+}}
 
-\item{rem.edge}{- remove edge}
+\item{rem.edge}{\itemize{
+\item remove edge
+}}
 }
 \description{
 Computes the posterior expectation for each node in the graph

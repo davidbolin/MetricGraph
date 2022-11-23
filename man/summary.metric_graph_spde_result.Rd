@@ -2,20 +2,20 @@
 % Please edit documentation in R/graph_spde.R
 \name{summary.metric_graph_spde_result}
 \alias{summary.metric_graph_spde_result}
-\title{Summary for posteriors of field parameters for an `inla_rspde`
-model from a `rspde.result` object}
+\title{Summary for posteriors of field parameters for an \code{inla_rspde}
+model from a \code{rspde.result} object}
 \usage{
 \method{summary}{metric_graph_spde_result}(object, digits = 6, ...)
 }
 \arguments{
-\item{object}{A `rspde.result` object.}
+\item{object}{A \code{rspde.result} object.}
 
 \item{digits}{integer, used for number formatting with signif()}
 
 \item{...}{Currently not used.}
 }
 \value{
-Returns a `data.frame`
+Returns a \code{data.frame}
 containing the summary.
 }
 \description{

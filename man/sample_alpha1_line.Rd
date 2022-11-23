@@ -45,7 +45,7 @@ Sample Gaussian process with exponential covariance on a line given end points
 Samples a Gaussian process \eqn{u(t)} with an exponential covariance function
 \deqn{r(h) = \sigma^2\exp(-\kappa h)/(2\kappa)}{r(h) = sigma^2*(exp(-kappa*h)/(2*kappa)}
 on an interval \eqn{(0,l_e)} conditionally on \eqn{u(0), u(l_e)}.
-If `y` and `py` are supplied, the sampling is done conditionally on observations
+If \code{y} and \code{py} are supplied, the sampling is done conditionally on observations
 \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 where \eqn{e_i} are independent standard Gaussian variables.
 }

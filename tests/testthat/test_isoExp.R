@@ -19,12 +19,12 @@ test_that("Test resistance metric", {
   D <- graph$compute_resdist(PtE)
   distances <- as.matrix(dist(v))
   dimnames(distances) <- NULL
-  expect_equal(D, distances, tolerance = 1e-10)
+  expect_equal(as.vector(D), as.vector(distances), tolerance = 1e-10)
 
   graph$add_observations2(y,PtE, normalized = TRUE)
   graph$compute_resdist()
 
-  expect_equal(graph$res.dist, distances, tolerance = 1e-10)
+  expect_equal(as.vector(graph$res.dist), as.vector(distances), tolerance = 1e-10)
   theta <- c(1, 2, 3)
   lik1 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
 

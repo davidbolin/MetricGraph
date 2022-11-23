@@ -90,5 +90,5 @@ test_that("Test posterior mean", {
   diag(Sigma.obs) <- diag(Sigma.obs) + sigma_e^2
   pm2 <- Sigma %*% solve(Sigma.obs, graph$y)
 
-  expect_equal(as.matrix(pm),as.matrix(pm2), tolerance=1e-10)
+  expect_equal(as.vector(pm),as.vector(pm2), tolerance=1e-10)
 })

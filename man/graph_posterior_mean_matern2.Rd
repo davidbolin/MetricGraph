@@ -7,9 +7,13 @@
 graph_posterior_mean_matern2(graph, theta, sample = FALSE)
 }
 \arguments{
-\item{graph}{- graphical object}
+\item{graph}{\itemize{
+\item graphical object
+}}
 
-\item{theta}{- (sigma_e, sigma, kappa)}
+\item{theta}{\itemize{
+\item (sigma_e, sigma, kappa)
+}}
 }
 \description{
 Generates samples of the entire graph
