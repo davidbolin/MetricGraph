@@ -104,6 +104,7 @@ data <- osmdata_sp(call)
 graph4 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
 graph4$plot(vertex_size = 0)
 ```
+
 For complex networks like this, one might be interested in looking only at
 removing lines that are not connected to the main network. This can be 
 done by using the function `largest_component` on the lines object as follows:

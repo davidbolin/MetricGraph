@@ -120,7 +120,7 @@ phi.to.phid <- function(kappa, sigma, nu=3/2 , L=1)
 #' @param sigma  matern param
 #' @param nu     shape param
 #' @param L      interval length
-corrector.invrese.e <- function(kappa, sigma, nu=3/2, L = 1){
+corrector.inverse.e <- function(kappa, sigma, nu=3/2, L = 1){
     B.element <- list()
     if(nu ==1/2){
         D <- matrix(c(0,L,L,0),2,2)
@@ -153,7 +153,7 @@ corrector.invrese.e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @return The corrector matrix
 corrector <- function(kappa, sigma, nu=3/2, L = 1){
 
-    B <- corrector.invrese.e(kappa, sigma, nu, L)
+    B <- corrector.inverse.e(kappa, sigma, nu, L)
     if(nu==1/2){
         B <- B$B11
     }else if(nu==3/2){
@@ -245,7 +245,7 @@ matern.neumann.free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv =
     phi2_s <- phi_s[3:4,]
     phi1_t <- phi_t[1:2,]
     phi1_s <- phi_s[1:2,]
-    Ainv.e <- corrector.invrese.e(kappa, sigma, nu, L)
+    Ainv.e <- corrector.inverse.e(kappa, sigma, nu, L)
     B11.inv.B12 <- solve(Ainv.e$B11,t(Ainv.e$B12))
     Sigma_X1_tilde <- Ainv.e$B22 - t(Ainv.e$B12)%*%solve(Ainv.e$B11,Ainv.e$B12)
     Sigma_Xt_X1_tilde <- -t(phi2_t) + t(phi1_t)%*%B11.inv.B12

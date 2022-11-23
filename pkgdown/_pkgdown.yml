@@ -1,0 +1,123 @@
+url: https://davidbolin.github.io/GPGraph/
+
+destination: docs
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  theme: arrow-light
+  bslib:
+    heading_font: {google: "Roboto Slab"}
+
+navbar:
+  bg: primary
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github, twitter]
+  components:
+    reference:
+      text: Functions
+      href: reference/index.html
+    articles:
+      text: Vignettes
+      menu:
+      - text: Working with metric graphs
+        href: articles/metric_graph.html
+      - text: Gaussian random fields on metric graphs
+        href: articles/random_fields.html
+      - text: inlabru interface of Whittle--Matérn fields
+        href: articles/inlabru_interface.html
+      - text: INLA interface of Whittle--Matérn fields
+        href: articles/inla_interface.html
+      - text: Whittle--Matérn fields with general smoothness
+        href: articles/fem_models.html
+    twitter:
+      icon: fa-twitter
+      href: https://twitter.com/jdavidbolin
+      aria-label: Twitter
+
+home:
+  links:
+  - text: Our research group
+    href: http://stochproc.kaust.edu.sa/
+   
+    
+reference:
+  - title: GPGraph package
+    contents: 
+    - GPGraph
+  - title: Metric graph constructor
+    contents:
+    - metric_graph
+    - graph_components
+  - title: INLA and SPDE approach on metric graphs
+    contents:
+    - gpgraph_spde
+    - spde_metric_graph_result
+    - summary.metric_graph_spde_result
+    - gg_df.metric_graph_spde_result
+    - graph_spde_make_A
+    - graph_spde_make_index
+    - graph_stack
+  - title: inlabru and SPDE approach on metric graphs
+    contents:
+    - bru_mapper.inla_metric_graph_spde
+  - title: Sampling SPDE on metric graphs
+    contents:
+    - sample_spde
+    - sample_alpha1_line
+    - sample_alpha2_line
+  - title: Posterior tools
+    contents:
+    - spde_posterior_mean
+    - posterior.crossvalidation
+    - posterior.crossvalidation.covariance
+    - posterior_mean_alpha1
+    - posterior_mean_alpha2
+    - posterior_mean_covariance
+    - posterior_mean_obs_alpha1
+    - posterior_mean_obs_alpha2
+    - graph_posterior_mean_matern2
+  - title: Likelihood functions
+    contents:
+    - likelihood_graph_spde
+    - likelihood_alpha1
+    - likelihood_alpha1_v2
+    - likelihood_alpha2
+    - likelihood_graph_covariance
+    - likelihood_graph_laplacian
+  - title: Precision matrices
+    contents:
+    - spde_precision
+    - precision_exp_line
+    - Q.alpha2.base
+    - Q.alpha2.line
+    - Q.vertex.exp
+    - Qalpha1
+    - Qalpha2
+  - title: Covariance (and related) functions
+    contents:
+    - covariance_alpha1
+    - covariance_alpha1_mesh
+    - covariance_alpha2
+    - covariance_alpha2_mesh
+    - matern.derivative
+    - matern.neumann.c
+    - matern.neumann.free
+    - matern.neumann.free2
+    - r_1
+    - r_1_circle
+    - r_2
+  - title: Auxiliary functions
+    contents:
+    - phi
+    - phi.to.phid
+    - phi1
+    - phi2
+    - plot_r_1
+    - plot_r_2
+    - build.C.beta1
+    - build.Sigma.beta1
+    - corrector
+    - corrector.inverse.e
+    - corrector.neumann.free
