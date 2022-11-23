@@ -874,15 +874,16 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
 
-  #' @description plot function mesh X on the graph
-  #' @param X (m x 1) a vector with values for the function
-  #' evaluated at a precomputed mesh (V,and PtE)
-  #' @param plotly use plot_ly for 3D plot?
+  #' @description plot continuous function on the mesh of a graph
+  #' @param X Either an m x 3 matrix with (edge number, position on
+  #' curve (in length), value) or a vector with values for the function
+  #' evaluated at a precomputed mesh.
+  #' @param plotly plot in 2D or 3D?
   #' @param graph_color for 3D plot, the color of the graph.
-  #' @param line_width for 3D plot, the line width of the graph.
+  #' @param line_width for 3D plot, the line width of the curves.
   #' @param vertex_size for 3D plot, the size of the vertices
-  #' @param color Color of curve
-  #' @param p plot object to add the curve to
+  #' @param color Color of the curves
+  #' @param p previous ggplot or plot_ly object to add the plot to
   #' @param ... additional arguments for ggplot or plot_ly
   plot_function_mesh = function(X,
                                 plotly = FALSE,
@@ -1213,12 +1214,26 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if (data) {
       x <- y <- NULL
       for (i in 1:length(self$y)) {
-        LT <- private$edge_pos_to_line_pos(self$PtE[i, 1],self$PtE[i, 2])
-        Line <- self$Lines[LT[1, 1], ]
-        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
-        Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
-        x <- c(x, Point@coords[1])
-        y <- c(y, Point@coords[2])
+        if(is.null(self$Lines)){
+          Ei <- self$PtE[i, 1]
+          V <- private$initial_graph$V[private$initial_graph$E[Ei, ], ]
+
+          alpha <- PtE[i, 2]
+          coords <- cbind((1 - alpha) * V[1, 1] + alpha * V[2, 1],
+                          (1 - alpha) * V[1, 2] + alpha * V[2, 2])
+
+          x = c(x, coords[, 1])
+          y = c(y, coords[, 2])
+        } else {
+          LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
+          Line <- self$Lines[LT[1, 1], ]
+          val_line <- gProject(Line, as(Line, "SpatialPoints"),
+                               normalized = TRUE)
+          Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
+          x <- c(x, Point@coords[1])
+          y <- c(y, Point@coords[2])
+        }
+
       }
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(self$y)),

@@ -475,13 +475,13 @@ evaluated at a precomputed mesh.}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{line_width}}{for 3D plot, the line width of the graph.}
+\item{\code{line_width}}{for 3D plot, the line width of the curves.}
 
-\item{\code{vertex_size}}{for 3D plot, the vertex size of the vertices}
+\item{\code{vertex_size}}{for 3D plot, the size of the vertices}
 
-\item{\code{color}}{Color of curve}
+\item{\code{color}}{Color of the curves}
 
-\item{\code{p}}{previous plot in which the new plot should be added.}
+\item{\code{p}}{previous ggplot or plot_ly object to add the plot to}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
@@ -492,7 +492,7 @@ evaluated at a precomputed mesh.}
 \if{html}{\out{<a id="method-GPGraph::graph-plot_function_mesh"></a>}}
 \if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function_mesh}{}}}
 \subsection{Method \code{plot_function_mesh()}}{
-plot function mesh X on the graph
+plot continuous function on the mesh of a graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function_mesh(
   X,
@@ -509,20 +509,21 @@ plot function mesh X on the graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X}}{(m x 1) a vector with values for the function
-evaluated at a precomputed mesh (V,and PtE)}
+\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
+curve (in length), value) or a vector with values for the function
+evaluated at a precomputed mesh.}
 
-\item{\code{plotly}}{use plot_ly for 3D plot?}
+\item{\code{plotly}}{plot in 2D or 3D?}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
-\item{\code{line_width}}{for 3D plot, the line width of the graph.}
+\item{\code{line_width}}{for 3D plot, the line width of the curves.}
 
 \item{\code{vertex_size}}{for 3D plot, the size of the vertices}
 
-\item{\code{color}}{Color of curve}
+\item{\code{color}}{Color of the curves}
 
-\item{\code{p}}{plot object to add the curve to}
+\item{\code{p}}{previous ggplot or plot_ly object to add the plot to}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }

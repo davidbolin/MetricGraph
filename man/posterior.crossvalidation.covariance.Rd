@@ -6,7 +6,7 @@
 \usage{
 posterior.crossvalidation.covariance(
   theta,
-  graph.obj,
+  graph,
   model = "alpha1",
   ind = NULL
 )
@@ -14,14 +14,14 @@ posterior.crossvalidation.covariance(
 \arguments{
 \item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
 
-\item{graph.obj}{Graph object}
-
 \item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL" gives
 graph Laplacian, and "isoExp" gives isotropic exponential}
 
-\item{ind}{Indices for cross validation. It should be a vector of the same length as the
-data, with integer values representing each group in the cross-validation.
-If NULL, leave-one-out cross validation is performed.}
+\item{ind}{Indices for cross validation. It should be a vector of the same
+length as the data, with integer values representing each group in the
+cross-validation. If NULL, leave-one-out cross validation is performed.}
+
+\item{graph.obj}{metric graph object}
 }
 \value{
 Vector with all predictions
