@@ -19,8 +19,8 @@ covariance_alpha2(P, kappa, sigma, graph, n.p = 50)
 \item{n.p}{number of points to compute the covariance on each edge}
 }
 \value{
-C (n.p*numer of edges x 3) [,1] edge number [,2] distance from
-lower edge [,3] covariance
+C (n.p*numer of edges x 3) \link{,1} edge number \link{,2} distance from
+lower edge \link{,3} covariance
 }
 \description{
 Compute covariance of a point to the entire graph (discretized) for

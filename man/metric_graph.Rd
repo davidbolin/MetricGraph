@@ -16,6 +16,7 @@ sp::Lines object where each line is representing and edge.
 ## Method `metric_graph$plot`
 ## ------------------------------------------------
 
+library(sp)
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
 line3 <- Line(rbind(c(0,1),c(-1,1)))
@@ -35,7 +36,7 @@ graph$plot()
 
 \item{\code{nV}}{number of vertices}
 
-\item{\code{E}}{Edges,  E[i,1] is the vertex at the start of the edge and  E[i,2]
+\item{\code{E}}{Edges,  E\link{i,1} is the vertex at the start of the edge and  E\link{i,2}
 is the vertex at the end of the edge}
 
 \item{\code{nE}}{number of edges}
@@ -61,8 +62,8 @@ is the vertex at the end of the edge}
 \item{\code{y}}{the data connected to P}
 
 \item{\code{PtE}}{Points to Line (connected to Points)
-[,1] edge index
-[,2] normalized distance along the line (i.e. distance to initial point)}
+\link{,1} edge index
+\link{,2} normalized distance along the line (i.e. distance to initial point)}
 
 \item{\code{PtV}}{Vector with the indices of the vertices which are observation
 locations}
@@ -245,8 +246,8 @@ observations}
 \item{\code{y}}{the observations. These are used if provided, and otherwise the
 observations are assumed to be in Spoints}
 
-\item{\code{y.index}}{If `y` is not provided, `y.index` gives the column number
-for the data to use in `Spoints@data`. If it is not provided, it is assumed
+\item{\code{y.index}}{If \code{y} is not provided, \code{y.index} gives the column number
+for the data to use in \code{Spoints@data}. If it is not provided, it is assumed
 that the data is in the first column}
 }
 \if{html}{\out{</div>}}
@@ -320,13 +321,15 @@ build mesh object for graph
 }
 \subsection{Details}{
 The mesh is a list with the objects
-- PtE which contains the mesh locations excluding the original vertices
-- V the verties of the mesh
-- E the edges of the mesh
-- n_e the number of vertices in the mesh per original edge in the graph
-- h_e the mesh width per edge in the graph
-- ind the indices of the vertices in the mesh
-- VtE all mesh locations including the original vertices
+\itemize{
+\item PtE which contains the mesh locations excluding the original vertices
+\item V the verties of the mesh
+\item E the edges of the mesh
+\item n_e the number of vertices in the mesh per original edge in the graph
+\item h_e the mesh width per edge in the graph
+\item ind the indices of the vertices in the mesh
+\item VtE all mesh locations including the original vertices
+}
 }
 
 }
@@ -368,7 +371,7 @@ inefficient implementation)
 }
 
 \subsection{Returns}{
-VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
+VtE (n.v x 2) \link{1} edge number, \link{2} 0=  lower edge, 1=  upper edge
 }
 }
 \if{html}{\out{<hr>}}
@@ -425,7 +428,8 @@ a plot_ly or or ggplot object
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{line1 <- Line(rbind(c(0,0),c(1,0)))
+\preformatted{library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
 line3 <- Line(rbind(c(0,1),c(-1,1)))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)

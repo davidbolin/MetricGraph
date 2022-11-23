@@ -8,22 +8,22 @@
 \alias{bru_get_mapper.inla_metric_graph_spde}
 \title{metric graph inlabru mapper}
 \usage{
-bru_mapper.inla_metric_graph_spde(model, ...)
+\method{bru_mapper}{inla_metric_graph_spde}(model, ...)
 
-ibm_n.bru_mapper_inla_metric_graph_spde(mapper, ...)
+\method{ibm_n}{bru_mapper_inla_metric_graph_spde}(mapper, ...)
 
-ibm_values.bru_mapper_inla_metric_graph_spde(mapper, ...)
+\method{ibm_values}{bru_mapper_inla_metric_graph_spde}(mapper, ...)
 
-ibm_jacobian.bru_mapper_inla_metric_graph_spde(mapper, input, ...)
+\method{ibm_jacobian}{bru_mapper_inla_metric_graph_spde}(mapper, input, ...)
 
-bru_get_mapper.inla_metric_graph_spde(model, ...)
+\method{bru_get_mapper}{inla_metric_graph_spde}(model, ...)
 }
 \arguments{
-\item{model}{An `inla_metric_graph_spde` for which to construct or extract a mapper}
+\item{model}{An \code{inla_metric_graph_spde} for which to construct or extract a mapper}
 
 \item{\dots}{Arguments passed on to other methods}
 
-\item{mapper}{A `bru_mapper.inla_metric_graph_spde` object}
+\item{mapper}{A \code{bru_mapper.inla_metric_graph_spde} object}
 
 \item{input}{The values for which to produce a mapping matrix}
 }

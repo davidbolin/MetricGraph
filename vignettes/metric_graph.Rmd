@@ -99,7 +99,7 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway",
 data <- osmdata_sp(call)
 
 graph4 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
-graph4$plot(marker_size = 0)
+graph4$plot(vertex_size = 0)
 ```
 
 # Adding data to the graph 

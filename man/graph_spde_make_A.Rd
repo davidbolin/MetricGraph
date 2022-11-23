@@ -7,7 +7,7 @@
 graph_spde_make_A(graph, n.repl = 1)
 }
 \arguments{
-\item{graph}{An object of class `metric_graph`}
+\item{graph}{An object of class \code{metric_graph}}
 
 \item{n.repl}{Number of replicates}
 }

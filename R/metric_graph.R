@@ -631,6 +631,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return a plot_ly or or ggplot object
   #' @examples
+  #' library(sp)
   #' line1 <- Line(rbind(c(0,0),c(1,0)))
   #' line2 <- Line(rbind(c(0,0),c(0,1)))
   #' line3 <- Line(rbind(c(0,1),c(-1,1)))
@@ -684,11 +685,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at a precomputed mesh.
   #' @param plotly plot in 2D or 3D?
+  #' 
   #' @param graph_color for 3D plot, the color of the graph.
-  #' @param line_width for 3D plot, the line width of the curves.
-  #' @param vertex_size for 3D plot, the size of the vertices
-  #' @param color Color of the curves
-  #' @param p previous ggplot or plot_ly object to add the plot to
+  #' @param line_width for 3D plot, the line width of the graph.
+  #' @param vertex_size for 3D plot, the vertex size of the vertices
+  #' @param color Color of curve
+  #' @param p previous plot in which the new plot should be added.
   #' @param ... additional arguments for ggplot or plot_ly
   plot_function = function(X,
                            plotly = FALSE,
@@ -866,7 +868,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            split = ~i, showlegend = FALSE)
     } else {
       p <- ggplot(data = data, aes(x = x, y = y, group = i, colour = z)) +
-        geom_path() + scale_color_viridis() + labs(colour = "")
+        geom_path() + viridis::scale_color_viridis() + labs(colour = "")
     }
 
     return(p)
@@ -1237,7 +1239,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                             val = as.vector(self$y)),
                           mapping = aes(x, y, color = val),
                           size = data_size) +
-        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+        scale_colour_gradientn(colours = viridis::viridis(100), guide_legend(title = ""))
 
     }
     if (mesh) {
@@ -1265,7 +1267,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                                             val = as.vector(X)),
                           mapping = aes(x, y, color = val),
                           size = data_size) +
-        scale_color_viridis() + labs(colour = "")
+        viridis::scale_color_viridis() + labs(colour = "")
     }
 
     p <- p + coord_fixed()

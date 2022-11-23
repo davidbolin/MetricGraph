@@ -22,8 +22,8 @@ covariance_alpha1(P, kappa, sigma, graph, n.p = 50, scale = FALSE)
 the marginal standard deviation (default FALSE)}
 }
 \value{
-C (n.p*number of edges x 3) [,1] edge number [,2] distance from
-lower edge [,3] covariance
+C (n.p*number of edges x 3) \link{,1} edge number \link{,2} distance from
+lower edge \link{,3} covariance
 }
 \description{
 Compute covariance of a point to the entire graph (discretized) for

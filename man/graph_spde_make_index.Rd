@@ -9,7 +9,7 @@ graph_spde_make_index(name, graph, n.group = 1, n.repl = 1, ...)
 \arguments{
 \item{name}{A character string with the base name of the effect.}
 
-\item{graph}{A `metric_graph` object.}
+\item{graph}{A \code{metric_graph} object.}
 
 \item{n.group}{Number of groups.}
 
@@ -21,6 +21,6 @@ graph_spde_make_index(name, graph, n.group = 1, n.repl = 1, ...)
 A list of indexes.
 }
 \description{
-Generates a list of named index vectors for 
-`INLA`-based metric graph models.
+Generates a list of named index vectors for
+\code{INLA}-based metric graph models.
 }

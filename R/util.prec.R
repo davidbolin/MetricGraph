@@ -234,7 +234,7 @@ matern.neumann.free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv =
     phi_s <- phi(s, kappa, sigma, nu, L, deriv = deriv[1])
     A <- corrector(kappa, sigma, nu, L)
     if(sum(deriv)==0){
-        r0 <- matern.covariance(D,kappa=kappa,nu=nu,sigma=sigma)
+        r0 <- rSPDE::matern.covariance(D,kappa=kappa,nu=nu,sigma=sigma)
     }else{
         r0 <- (-1)^(deriv[2]+2)*matern.derivative(D,kappa=kappa,nu=nu,sigma=sigma, deriv = sum(deriv))
     }
@@ -313,10 +313,10 @@ build.C.beta1 <- function(L, kappa, sigma){
 matern.derivative <- function(h, kappa, nu, sigma,deriv=1)
 {
   if(deriv==1){
-    C = h*matern.covariance(h,kappa=kappa,nu=nu-1,sigma=sigma)
+    C = h*rSPDE::matern.covariance(h,kappa=kappa,nu=nu-1,sigma=sigma)
     C[h==0] = 0
   } else if (deriv == 2){
-    C = matern.covariance(h,kappa=kappa,nu=nu-1,sigma=sigma)+
+    C = rSPDE::matern.covariance(h,kappa=kappa,nu=nu-1,sigma=sigma)+
       h*matern.derivative(h,kappa=kappa,nu=nu-1,sigma=sigma,deriv=1)
 
   } else {
