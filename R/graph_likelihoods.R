@@ -43,8 +43,8 @@ likelihood_alpha2 <- function(theta, graph) {
   loglik <- Matrix::determinant(R)$modulus[1]
 
   #build BSIGMAB
-  Qpmu      <- rep(0, 4*nrow(graph$E))
-  obs.edges <- unique(graph$PtE[,1])
+  Qpmu      <- rep(0, 4 * nrow(graph$E))
+  obs.edges <- unique(graph$PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
   count <- 0
@@ -52,7 +52,7 @@ likelihood_alpha2 <- function(theta, graph) {
     obs.id <- graph$PtE[,1] == e
     y_i <- graph$y[obs.id]
     l <- graph$edge_lengths[e]
-    t <- c(0, l, l*graph$PtE[obs.id,2])
+    t <- c(0, l, l*graph$PtE[obs.id, 2])
 
     D <- outer (t, t, `-`)
     S <- matrix(0, length(t) + 2, length(t) + 2)
