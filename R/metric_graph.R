@@ -628,6 +628,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param X Additional values to plot
   #' @param X_loc locations of the additional values in the format
   #' (edge, normalized distance on edge)
+  #' @param p existing ggplot or plot_ly object to add the graph to
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return a plot_ly or or ggplot object
   #' @examples
@@ -653,6 +654,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                   mesh = FALSE,
                   X = NULL,
                   X_loc = NULL,
+                  p = NULL,
                   ...){
     if(!plotly){
       p <- private$plot_2d(line_width = line_width,
@@ -664,6 +666,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
+                           p = p,
                            ...)
     } else {
       p <- private$plot_3d(line_width = line_width,
@@ -675,6 +678,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
+                           p = p,
                            ...)
     }
     return(p)
@@ -685,7 +689,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at a precomputed mesh.
   #' @param plotly plot in 2D or 3D?
-  #' 
+  #'
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param line_width for 3D plot, the line width of the graph.
   #' @param vertex_size for 3D plot, the vertex size of the vertices
@@ -1181,11 +1185,13 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   plot_2d = function(line_width = 0.1,
                      marker_size = 1,
                      vertex_color = 'black',
+                     edge_color = 'black',
                      data = FALSE,
                      data_size = 1,
                      mesh = FALSE,
                      X = NULL,
                      X_loc = NULL,
+                     p = NULL,
                      ...){
     xyl <- c()
     if(is.null(self$Lines)){
@@ -1197,11 +1203,22 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
       xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
     }
-    p <- ggplot()+ geom_path(data = data.frame(x = xyl[, 1],
-                                              y = xyl[,2],
-                                              group = xyl[,3]),
-                             mapping = aes(x = x, y = y, group = group),
-                             linewidth = line_width)
+    if(is.null(p)){
+      p <- ggplot()+ geom_path(data = data.frame(x = xyl[, 1],
+                                                 y = xyl[,2],
+                                                 group = xyl[,3]),
+                               mapping = aes(x = x, y = y, group = group),
+                               linewidth = line_width,
+                               colour = edge_color)
+    } else {
+      p <- p + geom_path(data = data.frame(x = xyl[, 1],
+                                                 y = xyl[,2],
+                                                 group = xyl[,3]),
+                         mapping = aes(x = x, y = y, group = group),
+                         linewidth = line_width,
+                         colour = edge_color)
+    }
+
 
     if (marker_size > 0) {
       p <- p + geom_point(data = data.frame(x = self$V[, 1],
@@ -1282,6 +1299,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                      data = FALSE,
                      data_size = 1,
                      mesh = FALSE,
+                     p = NULL,
                      ...){
     if (is.null(self$Lines)) {
       data.plot <- data.frame(x = c(self$V[E[, 1], 1], self$V[E[, 2], 1]),
@@ -1300,12 +1318,21 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       }
       data.plot <- data.frame(x = x, y = y, z = rep(0,length(x)), i = ei)
     }
-    p <- plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z)
-    p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
-                         mode = "lines", type = "scatter3d",
-                         line = list(width = line_width,
-                                     color = edge_color, ...),
-                         split = ~i, showlegend = FALSE)
+    if(is.null(p)) {
+      p <- plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z)
+      p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
+                           mode = "lines", type = "scatter3d",
+                           line = list(width = line_width,
+                                       color = edge_color, ...),
+                           split = ~i, showlegend = FALSE)
+    } else {
+      p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
+                           mode = "lines", type = "scatter3d",
+                           line = list(width = line_width,
+                                       color = edge_color, ...),
+                           split = ~i, showlegend = FALSE)
+    }
+
 
     if(marker_size > 0) {
       data.plot2 <- data.frame(x = self$V[, 1], y = self$V[, 2],

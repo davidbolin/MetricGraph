@@ -1,20 +1,3 @@
-
-largest_component <- function(Lines) {
-  graph <- metric_graph$new(Lines = Lines)
-  g <- graph(edges = c(t(graph$E)), directed = FALSE)
-  components <- igraph::clusters(g, mode="weak")
-  biggest_cluster_id <- which.max(components$csize)
-
-  vert_ids <- V(g)[components$membership == biggest_cluster_id]
-  edge_rem <- NULL
-  for(i in 1:graph$nE){
-    if(!(graph$E[i,1] %in% vert_ids) && !(graph$E[i,2] %in% vert_ids))
-      edge_rem <- c(edge_rem, i)
-  }
-  edge_keep <- setdiff(1:graph$nE, edge_rem)
-  return(Lines[edge_keep])
-}
-
 library(GPGraph)
 library(ggplot2)
 library(maptools)
@@ -64,7 +47,7 @@ if(type == "isoExp") { #isotropic exponential
                    graph = graph, type="mesh")
 } else if (type == "alpha2") { #not working
   u <- sample_spde(kappa = 50, sigma = 1, alpha = 2,
-                   graph = graph, 
+                   graph = graph,
                    type = "mesh")
 }
 
@@ -76,7 +59,7 @@ n_obs <- length(as.vector(u))
 sigma.e <- 0.1
 y <- u + sigma.e * rnorm(n_obs)
 
-y_mesh <- y[(graph$nV+1):(graph$nV+nrow(graph$mesh$PtE))] 
+y_mesh <- y[(graph$nV+1):(graph$nV+nrow(graph$mesh$PtE))]
 
 graph$add_mesh_observations(y_mesh)
 
@@ -87,14 +70,14 @@ spde_model_bru <- gpgraph_spde(graph, parameterization = "spde")
 data_list <- list(y = as.vector(y_mesh), loc = graph$PtE)
 
 cmp <-
-    y ~ -1 + Intercept(1) + field(loc, 
+    y ~ -1 + Intercept(1) + field(loc,
                             model = spde_model_bru)
 library(inlabru)
 
 spde_bru_fit <-
     bru(cmp, data=data_list)
 
-spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit,
                     "field", spde_model_bru)
 
 summary(spde_bru_result)

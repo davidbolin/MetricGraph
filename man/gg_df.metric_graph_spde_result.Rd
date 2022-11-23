@@ -4,7 +4,7 @@
 \alias{gg_df.metric_graph_spde_result}
 \title{Data frame for metric_graph_spde_result objects to be used in ggplot2}
 \usage{
-\method{gg_df}{metric_graph_spde_result}(
+gg_df.metric_graph_spde_result(
   result,
   parameter = result$params,
   transform = TRUE,

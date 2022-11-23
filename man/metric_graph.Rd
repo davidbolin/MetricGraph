@@ -391,6 +391,7 @@ plot a metric graph
   mesh = FALSE,
   X = NULL,
   X_loc = NULL,
+  p = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -418,6 +419,8 @@ plot a metric graph
 
 \item{\code{X_loc}}{locations of the additional values in the format
 (edge, normalized distance on edge)}
+
+\item{\code{p}}{existing ggplot or plot_ly object to add the graph to}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
