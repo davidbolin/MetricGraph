@@ -12,20 +12,20 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line4),ID="3"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(Lines = Lines)
-graph$build_mesh(h = 1.2)
+graph$build_mesh(h = 0.01)
 graph$plot(mesh=TRUE)
 C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
-graph$plot_function_mesh(C, plotly = FALSE)
+X <- cbind(graph$mesh$VtE, C)
+graph$plot_function(X, plotly = TRUE, vertex_size = 5)
 
 C <- covariance_alpha2_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
 graph$plot_function_mesh(C, plotly = FALSE)
 
-u_Q <- matrix(unlist(lapply(1:10000, function(i){sample_spde(kappa = 2/5, sigma = 2, graph = graph, type="mesh", alpha=1, method="Q")})), ncol=10000)
-u <- sample_spde(kappa = 2/5, sigma = 2, graph = graph, type="mesh", alpha=1, nsim=10000)
-graph$plot_function_mesh(u, plotly = FALSE)
+u <- sample_spde(kappa = 2/5, sigma = 2, graph = graph, type="mesh", alpha=1)
+graph$plot_function_mesh(u, plotly = TRUE)
 graph$plot_function_mesh(u)
 
-u <- sample_spde(kappa = 10, sigma = 2, alpha = 2, graph = graph)
+u <- sample_spde(kappa = 10, sigma = 2, alpha = 2, graph = graph, type = "mesh")
 graph$plot_function_mesh(u, plotly = FALSE)
 
 #Test FEM
