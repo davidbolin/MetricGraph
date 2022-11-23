@@ -15,6 +15,10 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 {
   check <- gpgraph_check_graph(graph)
 
+  if(is.null(graph$PtV)){
+    stop("You must run graph$observation_to_vertex() first.")
+  }
+
   n.o <- length(graph$y)
   n.v <- dim(graph$V)[1]
 
@@ -77,6 +81,10 @@ posterior.crossvalidation.covariance <- function(theta,
                                                  ind = NULL)
 {
   check <- gpgraph_check_graph(graph)
+
+  if(is.null(graph$PtV)){
+    stop("You must run graph$observation_to_vertex() first.")
+  }
 
   sigma_e <- theta[1]
   sigma <- theta[2]
@@ -161,7 +169,9 @@ posterior.crossvalidation <- function(theta,
                                       ind = NULL)
 {
   check <- gpgraph_check_graph(graph)
-
+  if(is.null(graph$PtV)){
+    stop("You must run graph$observation_to_vertex() first.")
+  }
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
@@ -219,7 +229,7 @@ posterior.crossvalidation <- function(theta,
                        as.vector(t(A) %*% graph$y[-i] / sigma_e^2))[graph$PtV[i]]
       v <- rep(0,dim(Q.p)[1])
       v[graph$PtV[i]] <- 1
-      var.p[i] <- solve(Q.p, v)[graph$PtV[i]]
+      var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
     }
     logscore[i] <- LS(graph$y[i], mu.p[i], sqrt(var.p[i]))
     crps[i] <- CRPS(graph$y[i], mu.p[i], sqrt(var.p[i]))

@@ -466,7 +466,8 @@ graph <- metric_graph$new(P = V, E = E)
 graph$plot()
 ``` 
 
-Let us now generate some observation locations and sample the process: 
+Let us now generate some observation locations at random locations on each edge
+and sample the process: 
 
 ```{r}
 kappa <- 10
@@ -474,14 +475,11 @@ sigma <- 20
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
 
-n.obs.per.edge <- 20
+n.obs.per.edge <- 30
 PtE <- NULL
 for(i in 1:graph$nE){
   #add locations sampled at random to each edge
-  #PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
-  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge),
-                          seq(from=0, to = 1,
-                              length.out = n.obs.per.edge+2)[2:(n.obs.per.edge + 1)]))
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
@@ -493,13 +491,12 @@ graph$add_observations2(y,PtE, normalized = TRUE)
 graph$plot(data = TRUE)
 ```
 
-Now let us fit the different models to this data: 
+We now fit the different models to this data: 
 ```{r}
 theta0 <- theta
 #alpha = 1 model
 res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
-                                                             alpha = 1,
-                                                             version = 1))
+                                                             alpha = 1))
 theta.alpha1 <- exp(res$par)
 
 #alpha = 2 model
@@ -519,6 +516,8 @@ theta.exp <- exp(res$par)
 graph$observation_to_vertex()
 graph$compute_laplacian()
 res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
+                                                                  alpha = 1))
+res <- optim(res$par, function(x) -likelihood_graph_laplacian(exp(x), graph, 
                                                                   alpha = 1))
 theta.GL1 <- exp(res$par)
 
@@ -549,6 +548,27 @@ results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                                    cv.GL2$logscore),
                       row.names = c("alpha=1", "alpha=2", "isoExp",
                                     "GL1", "GL2"))
-print(results)
+round(1000*results)
+
+cv.alpha1 <- posterior.crossvalidation.covariance(theta.alpha1, graph, model = "alpha1")
+cv.alpha2 <- posterior.crossvalidation.covariance(theta.alpha2, graph, model = "alpha2")
+cv.exp <- posterior.crossvalidation.covariance(theta.exp, graph, model = "isoExp")
+cv.GL1 <- posterior.crossvalidation.covariance(theta.GL1, graph, model = "GL1")
+cv.GL2 <- posterior.crossvalidation.covariance(theta.GL2, graph, model = "GL2")
+results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
+                               cv.GL1$rmse, cv.GL2$rmse),
+                      mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,
+                               cv.GL1$mae, cv.GL2$mae),
+                      crps = c(cv.alpha1$crps, cv.alpha2$crps, cv.exp$crps,
+                               cv.GL1$crps, cv.GL2$crps),
+                      scrps = c(cv.alpha1$scrps, cv.alpha2$scrps, cv.exp$scrps,
+                               cv.GL1$scrps, cv.GL2$scrps),
+                      logscore = c(cv.alpha1$logscore, cv.alpha2$logscore,
+                                   cv.exp$logscore, cv.GL1$logscore, 
+                                   cv.GL2$logscore),
+                      row.names = c("alpha=1", "alpha=2", "isoExp",
+                                    "GL1", "GL2"))
+round(1000*results)
+
 ```
 # References
