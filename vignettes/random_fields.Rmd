@@ -499,36 +499,31 @@ theta0 <- theta
 #alpha = 1 model
 res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
                                                              alpha = 1,
-                                                             version = 1),
-             method = "BFGS")
+                                                             version = 1))
 theta.alpha1 <- exp(res$par)
 
 #alpha = 2 model
 graph$buildC(2)
 res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
-                                                             alpha = 2),
-             method = "BFGS")
+                                                             alpha = 2))
 theta.alpha2 <- exp(res$par)
 
 #Isotropic exponential
 graph$compute_resdist()
 res <- optim(log(theta0), 
              function(x) -likelihood_graph_covariance(exp(x), graph,
-                                                      model = "isoExp"),
-             method = "BFGS")
+                                                      model = "isoExp"))
 theta.exp <- exp(res$par)
 
 #Graph Laplacian 
 graph$observation_to_vertex()
 graph$compute_laplacian()
 res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                                  alpha = 1),
-             method = "BFGS")
+                                                                  alpha = 1))
 theta.GL1 <- exp(res$par)
 
 res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                                  alpha = 2),
-             method = "BFGS")
+                                                                  alpha = 2))
 theta.GL2 <- exp(res$par)
 ```
 
