@@ -106,7 +106,7 @@ test_that("test likelihood",{
   line1 <- Line(rbind(c(30, 00), c(30, 80)))
   Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                  Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(Lines = Lines)
+  graph <- metric_graph$new(lines = Lines)
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
@@ -152,7 +152,7 @@ test_that("test posterior mean",{
   line1 <- Line(rbind(c(30, 00), c(30, 80)))
   Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                  Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(Lines = Lines)
+  graph <- metric_graph$new(lines = Lines)
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)

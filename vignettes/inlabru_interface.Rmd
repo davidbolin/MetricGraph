@@ -91,7 +91,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line4),ID="3"),
                               Lines(list(line3),ID="4")))
-graph_bru <- metric_graph$new(Lines = Lines)
+graph_bru <- metric_graph$new(lines = Lines)
 ```
 
 Let us add 50 random locations in each edge where we will 

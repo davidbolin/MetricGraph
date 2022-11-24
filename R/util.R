@@ -17,7 +17,7 @@ gpgraph_check_graph <- function(graph)
 
 #' Create metric graphs for connected components of a SpatialLines object
 #'
-#' @param Lines Object of class `SpatialLines`
+#' @param lines Object of class `SpatialLines`
 #' @param by_length Sort the components by total edge length? If FALSE,
 #' the components are sorted by the number of vertices.
 #' @param only_largest if TRUE, only return the largest component.
@@ -39,9 +39,9 @@ gpgraph_check_graph <- function(graph)
 #' graphs <- graph_components(Lines, only_largest = FALSE)
 #' p <- graphs[[1]]$plot(edge_color = "red")
 #' graphs[[2]]$plot(p = p, edge_color = "blue")
-graph_components <- function(Lines, by_length = TRUE, only_largest = TRUE) {
+graph_components <- function(lines, by_length = TRUE, only_largest = TRUE) {
 
-  graph <- metric_graph$new(Lines = Lines)
+  graph <- metric_graph$new(lines = lines)
   g <- graph(edges = c(t(graph$E)), directed = FALSE)
   igraph::E(g)$weight <- graph$edge_lengths
   components <- igraph::clusters(g, mode="weak")
@@ -55,7 +55,7 @@ graph_components <- function(Lines, by_length = TRUE, only_largest = TRUE) {
         edge_rem <- c(edge_rem, i)
     }
     edge_keep <- setdiff(1:graph$nE, edge_rem)
-    Graphs[[k]] = metric_graph$new(Lines[edge_keep])
+    Graphs[[k]] = metric_graph$new(lines = Lines[edge_keep])
   }
   sizes <- components$csize
   lengths <- unlist(lapply(1:nc, function(x) sum(Graphs[[x]]$edge_lengths)))

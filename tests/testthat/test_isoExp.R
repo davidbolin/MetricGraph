@@ -6,7 +6,7 @@ test_that("Test resistance metric", {
   line2 <- Line(rbind(c(1,0),c(2,0)))
   Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                 Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(Lines = Lines)
+  graph <- metric_graph$new(lines = Lines)
 
 
   PtE <- cbind(c(1,1,
@@ -31,7 +31,7 @@ test_that("Test resistance metric", {
   reo <- order(PtE[, 1],PtE[, 2])
   PtE.order <- PtE[reo, ]
   y.order <- y[reo]
-  graph <- metric_graph$new(Lines = Lines)
+  graph <- metric_graph$new(lines = Lines)
   graph$add_PtE_observations(y.order,PtE.order, normalized = TRUE)
   graph$compute_resdist()
   lik2 <- likelihood_graph_covariance(theta, graph, model = "isoExp")

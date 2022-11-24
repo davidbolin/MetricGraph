@@ -51,7 +51,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
 We can now create the graph based on the `Lines` object as follows
 
 ```{r}
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 ```
 
