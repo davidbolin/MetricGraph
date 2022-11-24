@@ -117,6 +117,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(is.null(V) || is.null(E)){
         stop("You must supply lines or V and E")
       }
+      if(ncol(V)!=2 || ncol(E)!=2){
+        stop("V and E must have two columns!")
+      }
       lines <- list()
       for(i in 1:dim(E)[1]) {
         id <- sprintf("%d", i)
@@ -393,6 +396,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' calculated internally.
   add_PtE_observations = function(y, PtE, Spoints=NULL, normalized = FALSE) {
 
+    if(ncol(PtE)!= 2){
+      stop("PtE must have two columns!")
+    }
+
     if (min(PtE[,2]) < 0) {
       stop("PtE[, 2] has negative values")
     }
@@ -502,7 +509,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$CoB <- c_basis2(self$C)
       self$CoB$T <- t(self$CoB$T)
     }else{
-      error("only alpha=2 implimented")
+      error("only alpha=2 implemented")
     }
   },
 
@@ -518,6 +525,31 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' - ind the indices of the vertices in the mesh
   #' - VtE all mesh locations including the original vertices
   build_mesh = function(h,n=NULL) {
+
+    if(length(h)>1 || (!is.numeric(h))){
+      stop("h should be a single number")
+    }
+
+    if(h<=0){
+      stop("h must be positive!")
+    }
+
+    if(!is.null(n)){
+      if(length(n)>1 || (!is.numeric(n))){
+        stop("n should be a single number")
+      }
+
+      if(n<=0){
+        stop("n must be positive!")
+       }
+
+     if(n%%1!=0){
+      warning("A noninteger n was given, we are rounding it to an integer.")
+      n <- round(n)
+    }
+    }
+
+
 
     self$mesh <- list(PtE = NULL,
                       V = NULL,
@@ -586,11 +618,23 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
   #' @description Computes observation matrix for mesh
-  #' @param PtE locations given as (edge number in graph, location on edge)
+  #' @param PtE locations given as (edge number in graph, normalized location on edge)
   mesh_A = function(PtE) {
+    if(ncol(PtE)!= 2){
+      stop("PtE must have two columns!")
+    }
+
+    if (min(PtE[,2]) < 0) {
+      stop("PtE[, 2] has negative values")
+    }
+    if ((max(PtE[,2]) > 1)) {
+      stop("For normalized distances, the values in PtE[, 2] should not be
+             larger than 1")
+    }
     if (is.null(self$mesh)) {
       stop("no mesh given")
     }
+
     x <- private$PtE_to_mesh(PtE)
     n <- dim(x)[1]
     A <- Matrix(0, nrow = n, ncol = dim(self$mesh$V)[1])

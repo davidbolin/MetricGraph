@@ -141,7 +141,6 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
       finite_geodist <- is.finite(graph_object$geo_dist)
       finite_geodist <- graph_object$geo_dist[finite_geodist]
       prior.range.nominal <- max(finite_geodist) * 0.2
-      prior.range.nominal <- max(graph_object$geo_dist) * 0.2
       prior_range$meanlog <- log(prior.range.nominal)
     } else{
       prior_kappa$meanlog <- log(sqrt(8 *
