@@ -38,7 +38,7 @@ if (getRversion() >= "3.6.0") {
 }
 
 import(Matrix)
-importFrom(CB,c_basis2)
+importFrom(Rcpp,evalCpp)
 importFrom(ggplot2,aes)
 importFrom(ggplot2,coord_fixed)
 importFrom(ggplot2,geom_path)
@@ -77,3 +77,4 @@ importFrom(stats,pnorm)
 importFrom(stats,rnorm)
 importFrom(viridis,scale_color_viridis)
 importFrom(viridis,viridis)
+useDynLib(GPGraph, .registration = TRUE)
