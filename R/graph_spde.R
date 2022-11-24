@@ -2,7 +2,7 @@
 #' INLA implementation of Whittle-Matérn fields for metric graphs.
 #'
 #' This function creates an inla object that can be used
-#' in `INLA` or `inlabru` to fit Whittle-Matérn fields 
+#' in `INLA` or `inlabru` to fit Whittle-Matérn fields
 #' on metric graphs.
 #'
 #' @param graph_object A `metric_graph` object.
@@ -21,11 +21,11 @@
 #' @param debug Should debug be displayed?
 #'
 #' @return An inla object.
-#' @export 
+#' @export
 gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
  parameterization = c("matern", "spde"),
  start_range = NULL, prior_range = NULL,
- start_kappa = NULL, start_sigma = NULL, 
+ start_kappa = NULL, start_sigma = NULL,
  prior_kappa = NULL,
  prior_sigma = NULL, debug = FALSE){
 
@@ -33,7 +33,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   nu <- alpha - 0.5
   V <- graph_object$V
   EtV <- graph_object$E
-  El <- graph_object$edge_lengths 
+  El <- graph_object$edge_lengths
 
   i_ <- j_ <- rep(0, dim(V)[1]*4)
   nE <- dim(EtV)[1]
@@ -63,7 +63,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     }
   }
   n.v <- dim(V)[1]
-  
+
   if(stationary_endpoints == "all"){
     i.table <- table(i_[1:count])
     index <- as.integer(names(which(i.table<3)))
@@ -142,7 +142,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
       prior_kappa$meanlog <- log(sqrt(8 *
       exp(0.5))) - prior_range$meanlog
     }
-  
+
   if (is.null(prior_kappa$sdlog)) {
     prior_kappa$sdlog <- sqrt(10)
   }
@@ -213,7 +213,7 @@ return(model)
 
 #'  Model index vector generation for metric graph models
 #'
-#' Generates a list of named index vectors for 
+#' Generates a list of named index vectors for
 #' `INLA`-based metric graph models.
 #'
 #' @param name A character string with the base name of the effect.
@@ -223,9 +223,9 @@ return(model)
 #' @param ... Currently not being used.
 #'
 #' @return A list of indexes.
-#' @export 
+#' @export
 graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
-   
+
     n.spde <- dim(graph$V)[1]
     name.group <- paste(name, ".group", sep = "")
     name.repl <- paste(name, ".repl", sep = "")
@@ -241,7 +241,7 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
 #'
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
-#' 
+#'
 #' @param graph An object of class `metric_graph`
 #' @param n.repl Number of replicates
 #'
@@ -328,7 +328,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
     paste("Theta1 for ", name, "$", sep = "")
   )
   rownames(  result[[paste0("summary.log.",name_theta1)]]) <- paste0("log(",name_theta1,")")
-  
+
   result[[paste0("summary.log.",name_theta2)]] <- INLA::inla.extract.el(
     inla$summary.hyperpar,
     paste("Theta2 for ", name, "$", sep = "")
@@ -429,7 +429,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
 #'
 #' @return A data frame containing the posterior densities.
 #' @export
-gg_df.metric_graph_spde_result <- function(result, 
+gg_df.metric_graph_spde_result <- function(result,
                           parameter = result$params,
                           transform = TRUE,
                           restrict_x_axis = parameter,
@@ -441,7 +441,7 @@ gg_df.metric_graph_spde_result <- function(result,
       if(length(parameter) == 0){
         stop("You should choose at least one of the parameters 'kappa', 'range' or 'sigma'!")
       }
-  
+
   spde_result <- result
   param <- parameter[[1]]
   if(transform){
@@ -449,8 +449,8 @@ gg_df.metric_graph_spde_result <- function(result,
   } else{
       param <- paste0("marginals.log.", param)
   }
-  ret_df <- data.frame(x = spde_result[[param]][[parameter[1]]][,1], 
-  y = spde_result[[param]][[parameter[1]]][,2], 
+  ret_df <- data.frame(x = spde_result[[param]][[parameter[1]]][,1],
+  y = spde_result[[param]][[parameter[1]]][,2],
   parameter = parameter[[1]])
 
   if(parameter[[1]] %in% restrict_x_axis){
@@ -475,8 +475,8 @@ gg_df.metric_graph_spde_result <- function(result,
   } else{
       param <- paste0("marginals.log.", param)
   }
-    tmp <- data.frame(x = spde_result[[param]][[parameter[i]]][,1], 
-      y = spde_result[[param]][[parameter[i]]][,2], 
+    tmp <- data.frame(x = spde_result[[param]][[parameter[i]]][,1],
+      y = spde_result[[param]][[parameter[i]]][,2],
       parameter = parameter[[i]])
 
     if(parameter[[i]] %in% restrict_x_axis){
@@ -493,7 +493,7 @@ gg_df.metric_graph_spde_result <- function(result,
     filter_coord <- as.logical(filter_coord)
     tmp <- tmp[filter_coord, ]
   }
-    
+
     ret_df <- rbind(ret_df, tmp)
   }
   }
@@ -503,14 +503,14 @@ gg_df.metric_graph_spde_result <- function(result,
 
 #' Summary for posteriors of field parameters for an `inla_rspde`
 #' model from a `rspde.result` object
-#' 
+#'
 #' Summary for posteriors of rSPDE field parameters in
 #' their original scales.
-#' 
+#'
 #' @param object A `rspde.result` object.
 #' @param digits integer, used for number formatting with signif()
 #' @param ... Currently not used.
-#' 
+#'
 #' @return Returns a `data.frame`
 #' containing the summary.
 #' @export
@@ -544,7 +544,7 @@ summary.metric_graph_spde_result <- function(object,
 #'   S3method(inlabru::ibm_values, bru_mapper_inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_jacobian, bru_mapper_inla_metric_graph_spde)
 #' }
-#' 
+#'
 bru_mapper.inla_metric_graph_spde <- function(model,...) {
   mapper <- list(model = model)
   # Note 1: From inlabru > 2.5.3, use bru_mapper_define instead.
