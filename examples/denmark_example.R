@@ -40,7 +40,7 @@ PtE_tmp <- rbind(graph$VtEfirst(),graph$mesh$PtE)
 type = "alpha1"
 if(type == "isoExp") { #isotropic exponential
   graph$compute_resdist_mesh()
-  Sigma <- exp(-50*graph$mesh$res.dist)
+  Sigma <- exp(-50*graph$mesh$res_dist)
   u <- as.vector(t(chol(forceSymmetric(Sigma)))%*%rnorm(dim(Sigma)[1]))
 } else if (type == "alpha1") { #alpha =1 model looks strange
   u <- sample_spde(kappa = 50, sigma = 1, alpha = 1,

@@ -346,10 +346,10 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
   } else if (model == "isoExp"){
 
-    if(is.null(graph$res.dist)){
+    if(is.null(graph$res_dist)){
       stop("You must first compute the resistance metric for the observations")
     }
-    Sigma <- as.matrix(sigma^2 * exp(-kappa * graph$res.dist))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa * graph$res_dist))
   } else {
     stop("wrong model choice.")
   }

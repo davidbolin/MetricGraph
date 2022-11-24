@@ -24,7 +24,7 @@ test_that("Test resistance metric", {
   graph$add_PtE_observations(y,PtE, normalized = TRUE)
   graph$compute_resdist()
 
-  expect_equal(as.vector(graph$res.dist), as.vector(distances), tolerance = 1e-10)
+  expect_equal(as.vector(graph$res_dist), as.vector(distances), tolerance = 1e-10)
   theta <- c(1, 2, 3)
   lik1 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
 

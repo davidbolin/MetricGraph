@@ -48,7 +48,7 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
     Q <- K %*% K / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res.dist))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist))
   } else {
     stop("wrong model choice")
   }
@@ -112,7 +112,7 @@ posterior.crossvalidation.covariance <- function(theta,
     Q <- K %*% K / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res.dist))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist))
   } else {
     stop("wrong model choice")
   }
@@ -178,7 +178,7 @@ posterior.crossvalidation <- function(theta,
 
   #setup matrices for prediction
   if(model == "isoExp"){
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res.dist))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist))
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){

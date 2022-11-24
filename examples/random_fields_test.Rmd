@@ -294,7 +294,7 @@ We can now construct the covariance matrix for the process:
 ```{r}
 sigma <- 1
 kappa <- 5
-Sigma <- sigma^2*exp(-kappa*graph$mesh$res.dist)
+Sigma <- sigma^2*exp(-kappa*graph$mesh$res_dist)
 graph$plot_function_mesh(Sigma[20,], plotly = TRUE)
 ```
 

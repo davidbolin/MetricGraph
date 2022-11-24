@@ -125,18 +125,18 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   idx_ij <- idx_ij - 1
 
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
-      if(is.null(graph_object$geo.dist)){
+      if(is.null(graph_object$geo_dist)){
         graph_object$compute_geodist()
       }
-      prior.range.nominal <- max(graph_object$geo.dist) * 0.2
+      prior.range.nominal <- max(graph_object$geo_dist) * 0.2
       prior_kappa$meanlog <- log(sqrt(8 *
       exp(0.5) / prior.range.nominal))
       prior_range$meanlog <- log(prior.range.nominal)
     } else if(is.null(prior_range$meanlog)){
-      if(is.null(graph_object$geo.dist)){
+      if(is.null(graph_object$geo_dist)){
         graph_object$compute_geodist()
       }
-      prior.range.nominal <- max(graph_object$geo.dist) * 0.2
+      prior.range.nominal <- max(graph_object$geo_dist) * 0.2
       prior_range$meanlog <- log(prior.range.nominal)
     } else{
       prior_kappa$meanlog <- log(sqrt(8 *

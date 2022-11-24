@@ -60,8 +60,8 @@ graph$plot(X = u_est_exp, X_loc = graph$PtE)
 
 graph$compute_resdist_mesh()
 
-C.exp <- theta.exp[2]^2*exp(-theta.exp[3]*graph$mesh$res.dist[18,])
-C.true <- sigma^2*exp(-kappa*graph$mesh$res.dist[18,])
+C.exp <- theta.exp[2]^2*exp(-theta.exp[3]*graph$mesh$res_dist[18,])
+C.true <- sigma^2*exp(-kappa*graph$mesh$res_dist[18,])
 
 p <- graph$plot_function_mesh(C.true, plotly = TRUE)
 graph$plot_function_mesh(C.exp, plotly = TRUE, p = p, color = 'rgb(100,0,0)')
