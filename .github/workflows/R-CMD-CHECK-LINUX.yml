@@ -21,7 +21,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-20.04, r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-20.04, r: 'release'}
 
     env:
