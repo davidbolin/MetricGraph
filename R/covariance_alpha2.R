@@ -92,12 +92,12 @@ covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph)
-  if (is.null(graph$CBobj))
+  if (is.null(graph$CoB))
     graph$buildC(2, FALSE)
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const, ]
+  Tc <- graph$CoB$T[-ind.const, ]
   Q_mod <- Tc %*% Q %*% t(Tc)
   R <- Cholesky(Q_mod, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[P[1], ]
@@ -205,12 +205,12 @@ covariance_alpha2_mesh <- function(P, kappa, sigma, graph){
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph)
-  if (is.null(graph$CBobj))
+  if (is.null(graph$CoB))
     graph$buildC(2, FALSE)
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const, ]
+  Tc <- graph$CoB$T[-ind.const, ]
   Q_mod <- Tc %*% Q %*% t(Tc)
   R <- Cholesky(Q_mod, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[P[1], ]

@@ -27,12 +27,12 @@ test_that("Check if Matern(2) has equal variance on the edges on a circle", {
   sigma <- theta[2]
   #compute covarains of the two edges of EP[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph)
-  if(is.null(graph$CBobj))
+  if(is.null(graph$CoB))
     graph$buildC(2, FALSE)
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const,]
+  Tc <- graph$CoB$T[-ind.const,]
   Q_mod <- Tc%*%Q%*%t(Tc)
   R <- Cholesky(Q_mod, LDL = FALSE, perm = TRUE)
   Sigma_const <- t(Tc)%*%solve(Q_mod)%*%Tc

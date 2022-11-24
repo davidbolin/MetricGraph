@@ -110,13 +110,13 @@ test_that("test likelihood",{
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
-  Qmod <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+  Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
   Qtilde <- Qmod
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
   R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
   V0 <- as.vector(solve(R, solve(R,rnorm(6), system = 'Lt')
                         , system = 'Pt'))
-  u_e <- t(graph$CBobj$T) %*% c(0, 0, V0)
+  u_e <- t(graph$CoB$T) %*% c(0, 0, V0)
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
     X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
@@ -156,13 +156,13 @@ test_that("test posterior mean",{
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
-  Qmod <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+  Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
   Qtilde <- Qmod
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
   R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
   V0 <- as.vector(solve(R, solve(R,rnorm(6), system = 'Lt')
                         , system = 'Pt'))
-  u_e <- t(graph$CBobj$T) %*% c(0, 0, V0)
+  u_e <- t(graph$CoB$T) %*% c(0, 0, V0)
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
     X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
@@ -185,13 +185,13 @@ test_that("test posterior mean",{
   graph2$buildC(2, FALSE)
   n.o <- length(graph2$y)
   n.v <- dim(graph2$V)[1]
-  n.c <- 1:length(graph2$CBobj$S)
+  n.c <- 1:length(graph2$CoB$S)
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph2, BC = 1)
-  Qtilde <- (graph2$CBobj$T) %*% Q %*% t(graph2$CBobj$T)
+  Qtilde <- (graph2$CoB$T) %*% Q %*% t(graph2$CoB$T)
   Qtilde <- Qtilde[-n.c,-n.c]
-  Sigma.overdetermined  = t(graph2$CBobj$T[-n.c, ]) %*%
-    solve(Qtilde) %*% (graph2$CBobj$T[-n.c, ])
+  Sigma.overdetermined  = t(graph2$CoB$T[-n.c, ]) %*%
+    solve(Qtilde) %*% (graph2$CoB$T[-n.c, ])
   index.obs <- 4*(graph2$PtE[, 1] - 1) +
     (1 * (abs(graph2$PtE[, 2]) < 1e-14)) +
     (3 * (abs(graph2$PtE[, 2]) > 1e-14))

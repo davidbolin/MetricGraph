@@ -9,9 +9,9 @@ test_that("test if the over determined covariances are correct",{
                                                 Lines(list(line.line2),ID="2"))))
   Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
-  Qtilde <- (graph$CBobj$T)%*%Q%*%t(graph$CBobj$T)
+  Qtilde <- (graph$CoB$T)%*%Q%*%t(graph$CoB$T)
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
-  Sigma.overdetermined  = t(graph$CBobj$T[-c(1:2),])%*%solve(Qtilde)%*%(graph$CBobj$T[-c(1:2),])
+  Sigma.overdetermined  = t(graph$CoB$T[-c(1:2),])%*%solve(Qtilde)%*%(graph$CoB$T[-c(1:2),])
 
   t <- c(0,graph$edge_lengths[1],graph$edge_lengths[1],graph$edge_lengths[2]+ graph$edge_lengths[1])
 

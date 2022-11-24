@@ -131,12 +131,12 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
       if(is.null(graph$C))
         graph$buildC(2)
 
-      Qmod <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
-      Qtilde <- Qmod[-c(1:dim(graph$CBobj$U)[1]),-c(1:dim(graph$CBobj$U)[1])]
+      Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
+      Qtilde <- Qmod[-c(1:dim(graph$CoB$U)[1]),-c(1:dim(graph$CoB$U)[1])]
       R <- Cholesky(forceSymmetric(Qtilde),LDL = FALSE, perm = TRUE)
-      V0 <- as.vector(solve(R, solve(R,rnorm(4*graph$nE - dim(graph$CBobj$U)[1]),
+      V0 <- as.vector(solve(R, solve(R,rnorm(4*graph$nE - dim(graph$CoB$U)[1]),
                                      system = 'Lt'), system = 'Pt'))
-      u_e <- t(graph$CBobj$T) %*% c(rep(0, dim(graph$CBobj$U)[1]), V0)
+      u_e <- t(graph$CoB$T) %*% c(rep(0, dim(graph$CoB$U)[1]), V0)
       VtE <- graph$VtEfirst()
 
 

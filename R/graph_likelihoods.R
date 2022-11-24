@@ -33,9 +33,9 @@ likelihood_alpha2 <- function(theta, graph) {
   kappa <- theta[3]
   #build Q
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const, ]
+  Tc <- graph$CoB$T[-ind.const, ]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
                       alpha = 2, graph = graph)
   R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
@@ -322,13 +322,13 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
   } else if (model == "alpha2") {
 
-    n.c <- 1:length(graph$CBobj$S)
+    n.c <- 1:length(graph$CoB$S)
     Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
                         graph = graph, BC = 1)
-    Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c,-n.c]
-    Sigma.overdetermined  = t(graph$CBobj$T[-n.c,]) %*% solve(Qtilde) %*%
-      (graph$CBobj$T[-n.c,])
+    Sigma.overdetermined  = t(graph$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+      (graph$CoB$T[-n.c,])
     index.obs <- 4 * (graph$PtE[,1] - 1) + 1.0 * (abs(graph$PtE[, 2]) < 1e-14) +
       3.0 * (abs(graph$PtE[, 2]) > 1e-14)
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])

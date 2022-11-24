@@ -33,7 +33,7 @@ spde_posterior_mean <- function(theta,
                                      type = type,
                                      leave.edge.out = leave_edge_out))
   } else if (alpha == 2) {
-    if(is.null(graph$CBobj)){
+    if(is.null(graph$CoB)){
       graph$buildC(2)
     }
     return(posterior_mean_obs_alpha2(theta = theta, graph = graph,
@@ -327,9 +327,9 @@ posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
   sigma <- theta[2]
   kappa <- theta[3]
 
-  n_const <- length(graph$CBobj$S)
+  n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CBobj$T[-ind.const,]
+  Tc <- graph$CoB$T[-ind.const,]
   Q <- spde_precision(kappa = theta[3], sigma = theta[2],
                       alpha = 2, graph = graph)
 

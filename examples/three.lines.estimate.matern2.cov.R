@@ -22,15 +22,15 @@ graph <-  graph.obj$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                               Lines(list(line.line3),ID="3"))))
 Q <- Q.matern2(theta[2:3], graph$V, graph$EtV, graph$El, BC = 1)
 graph$buildA(2, F)
-n.c <- length(graph$CBobj$S)
-Qmod <- (graph$CBobj$T)%*%Q%*%t(graph$CBobj$T)
+n.c <- length(graph$CoB$S)
+Qmod <- (graph$CoB$T)%*%Q%*%t(graph$CoB$T)
 Qtilde <- Qmod
 Qtilde <- Qtilde[-c(1:n.c),-c(1:n.c)]
 R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
 V0 <- as.vector(solve(R, solve(R,rnorm(dim(Q)[1]-n.c), system = 'Lt')
                       , system = 'Pt'))
-print(round(t(graph$CBobj$T[-c(1:n.c),])%*%solve(Qtilde)%*%(graph$CBobj$T[-c(1:n.c),]),2))
-u_e <- t(graph$CBobj$T)%*%c(rep(0,n.c),V0)
+print(round(t(graph$CoB$T[-c(1:n.c),])%*%solve(Qtilde)%*%(graph$CoB$T[-c(1:n.c),]),2))
+u_e <- t(graph$CoB$T)%*%c(rep(0,n.c),V0)
 X <- c()
 for(i in 1:length(graph$El)){
   X <- rbind(X,cbind(sample.line.matern2(theta,

@@ -31,12 +31,12 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
     Q <- Qalpha1(c(sigma, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
-    n.c <- 1:length(graph$CBobj$S)
+    n.c <- 1:length(graph$CoB$S)
     Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
-    Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CBobj$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CBobj$T[-n.c, ])
+    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
+      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
     index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
@@ -95,12 +95,12 @@ posterior.crossvalidation.covariance <- function(theta,
     Q <- Qalpha1(c(sigma, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
-    n.c <- 1:length(graph$CBobj$S)
+    n.c <- 1:length(graph$CoB$S)
     Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
-    Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CBobj$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CBobj$T[-n.c, ])
+    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
+      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
     index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
@@ -182,12 +182,12 @@ posterior.crossvalidation <- function(theta,
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
-    n.c <- 1:length(graph$CBobj$S)
+    n.c <- 1:length(graph$CoB$S)
     Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
-    Qtilde <- (graph$CBobj$T) %*% Q %*% t(graph$CBobj$T)
+    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CBobj$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CBobj$T[-n.c, ])
+    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
+      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
     index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
