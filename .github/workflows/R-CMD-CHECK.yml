@@ -14,6 +14,8 @@ name: R-CMD-check
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
