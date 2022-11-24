@@ -137,11 +137,11 @@ n.g <- floor(n.y/K)
 ind <- rep(1:K,n.g+1)[1:n.y]
 ind <- ind[sample(1:n.y,n.y)]
 
-cv.res <- posterior.crossvalidation.covariance(theta.exp, graph, model = "isoExp",ind = ind)
-cv.alpha1 <- posterior.crossvalidation.covariance(theta.alpha1,graph, model = "alpha1",ind = ind)
-cv.gl <- posterior.crossvalidation.covariance(theta.graph,graph, model ="GL",ind = ind)
-cv.gl2 <- posterior.crossvalidation.covariance(theta.graph2,graph, model ="GL2",ind = ind)
-cv.alpha2 <- posterior.crossvalidation.covariance(theta.alpha2,graph, model = "alpha2",ind = ind)
+cv.res <- posterior_crossvalidation_covariance(theta.exp, graph, model = "isoExp",ind = ind)
+cv.alpha1 <- posterior_crossvalidation_covariance(theta.alpha1,graph, model = "alpha1",ind = ind)
+cv.gl <- posterior_crossvalidation_covariance(theta.graph,graph, model ="GL",ind = ind)
+cv.gl2 <- posterior_crossvalidation_covariance(theta.graph2,graph, model ="GL2",ind = ind)
+cv.alpha2 <- posterior_crossvalidation_covariance(theta.alpha2,graph, model = "alpha2",ind = ind)
 result <- data.frame(RMSE  = sqrt(c(cv.res$rmse, cv.alpha1$rmse, cv.gl$rmse,cv.gl2$rmse, cv.alpha2$rmse)),
                      MAE   = c(cv.res$mae, cv.alpha1$mae, cv.gl$mae, cv.gl2$mae, cv.alpha2$mae),
                      LS    = -c(cv.res$logscore, cv.alpha1$logscore, cv.gl$logscore, cv.gl2$logscore, cv.alpha2$logscore),

@@ -70,8 +70,8 @@ reference:
   - title: Posterior tools
     contents:
     - spde_posterior_mean
-    - posterior.crossvalidation
-    - posterior.crossvalidation.covariance
+    - posterior_crossvalidation
+    - posterior_crossvalidation_covariance
     - posterior_mean_alpha1
     - posterior_mean_alpha2
     - posterior_mean_covariance
@@ -89,10 +89,6 @@ reference:
   - title: Precision matrices
     contents:
     - spde_precision
-    - precision_exp_line
-    - Q.alpha2.base
-    - Q.alpha2.line
-    - Q.vertex.exp
     - Qalpha1
     - Qalpha2
   - title: Covariance (and related) functions
@@ -101,23 +97,19 @@ reference:
     - covariance_alpha1_mesh
     - covariance_alpha2
     - covariance_alpha2_mesh
-    - matern.derivative
-    - matern.neumann.c
-    - matern.neumann.free
-    - matern.neumann.free2
+    - matern_derivative
+    - matern_neumann_free
+    - matern_neumann_free2
     - r_1
     - r_1_circle
     - r_2
   - title: Auxiliary functions
     contents:
     - phi
-    - phi.to.phid
     - phi1
     - phi2
     - plot_r_1
     - plot_r_2
-    - build.C.beta1
-    - build.Sigma.beta1
     - corrector
-    - corrector.inverse.e
-    - corrector.neumann.free
+    - corrector_inverse_e
+    - corrector_neumann_free

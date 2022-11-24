@@ -572,15 +572,15 @@ print("GL2")
 print(theta.GL2)
 ```
 
-Finally, we use the function `posterior.crossvalidation` to perform 
+Finally, we use the function `posterior_crossvalidation` to perform 
 leave-one-out cross validation based on the estimated parameters and compare
 the results:
 ```{r}
-cv.alpha1 <- posterior.crossvalidation(theta.alpha1, graph, model = "alpha1")
-cv.alpha2 <- posterior.crossvalidation(theta.alpha2, graph, model = "alpha2")
-cv.exp <- posterior.crossvalidation(theta.exp, graph, model = "isoExp")
-cv.GL1 <- posterior.crossvalidation(theta.GL1, graph, model = "GL1")
-cv.GL2 <- posterior.crossvalidation(theta.GL2, graph, model = "GL2")
+cv.alpha1 <- posterior_crossvalidation(theta.alpha1, graph, model = "alpha1")
+cv.alpha2 <- posterior_crossvalidation(theta.alpha2, graph, model = "alpha2")
+cv.exp <- posterior_crossvalidation(theta.exp, graph, model = "isoExp")
+cv.GL1 <- posterior_crossvalidation(theta.GL1, graph, model = "GL1")
+cv.GL2 <- posterior_crossvalidation(theta.GL2, graph, model = "GL2")
 results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                                cv.GL1$rmse, cv.GL2$rmse),
                       mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,

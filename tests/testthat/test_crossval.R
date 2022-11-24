@@ -25,26 +25,26 @@ test_that("Check agrement beteen covariance and precision cross validation", {
   graph$add_PtE_observations(y,PtE, normalized = TRUE)
 
   graph$observation_to_vertex()
-  cv.alpha1.v1 <- posterior.crossvalidation(theta, graph, model = "alpha1")
-  cv.alpha1.v2 <- posterior.crossvalidation.covariance(theta, graph,
+  cv.alpha1.v1 <- posterior_crossvalidation(theta, graph, model = "alpha1")
+  cv.alpha1.v2 <- posterior_crossvalidation_covariance(theta, graph,
                                                        model = "alpha1")
   expect_equal(cv.alpha1.v1$mu, cv.alpha1.v2$mu, tolerance = 1e-10)
   expect_equal(cv.alpha1.v1$var, cv.alpha1.v2$var, tolerance = 1e-10)
 
-  cv.alpha2.v1 <- posterior.crossvalidation(theta, graph, model = "alpha2")
-  cv.alpha2.v2 <- posterior.crossvalidation.covariance(theta, graph,
+  cv.alpha2.v1 <- posterior_crossvalidation(theta, graph, model = "alpha2")
+  cv.alpha2.v2 <- posterior_crossvalidation_covariance(theta, graph,
                                                        model = "alpha2")
   expect_equal(cv.alpha2.v1$mu, cv.alpha2.v2$mu, tolerance = 1e-10)
   expect_equal(cv.alpha2.v1$var, cv.alpha2.v2$var, tolerance = 1e-10)
 
   graph$compute_laplacian()
-  cv.GL1.v1 <- posterior.crossvalidation(theta, graph, model = "GL1")
-  cv.GL1.v2 <- posterior.crossvalidation.covariance(theta, graph, model = "GL1")
+  cv.GL1.v1 <- posterior_crossvalidation(theta, graph, model = "GL1")
+  cv.GL1.v2 <- posterior_crossvalidation_covariance(theta, graph, model = "GL1")
   expect_equal(cv.GL1.v1$mu, cv.GL1.v2$mu, tolerance = 1e-10)
   expect_equal(cv.GL1.v1$var, cv.GL1.v2$var, tolerance = 1e-10)
 
-  cv.GL2.v1 <- posterior.crossvalidation(theta, graph, model = "GL2")
-  cv.GL2.v2 <- posterior.crossvalidation.covariance(theta, graph, model = "GL2")
+  cv.GL2.v1 <- posterior_crossvalidation(theta, graph, model = "GL2")
+  cv.GL2.v2 <- posterior_crossvalidation_covariance(theta, graph, model = "GL2")
   expect_equal(cv.GL2.v1$mu, cv.GL2.v2$mu, tolerance = 1e-10)
   expect_equal(cv.GL2.v1$var, cv.GL2.v2$var, tolerance = 1e-10)
 })

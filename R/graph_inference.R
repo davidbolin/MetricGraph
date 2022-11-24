@@ -75,7 +75,7 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 #'
 #' @return Vector with all predictions
 #' @export
-posterior.crossvalidation.covariance <- function(theta,
+posterior_crossvalidation_covariance <- function(theta,
                                                  graph,
                                                  model = "alpha1",
                                                  ind = NULL)
@@ -163,7 +163,7 @@ posterior.crossvalidation.covariance <- function(theta,
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
 #' @export
-posterior.crossvalidation <- function(theta,
+posterior_crossvalidation <- function(theta,
                                       graph,
                                       model = "alpha1",
                                       ind = NULL)
