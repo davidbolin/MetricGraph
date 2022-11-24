@@ -12,7 +12,7 @@ on:
 name: R-CMD-check
 
 jobs:
-  R-CMD-check:
+  R-CMD-check-MAC:
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
