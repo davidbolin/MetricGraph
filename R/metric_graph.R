@@ -96,6 +96,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
   #' @param E m x 2 matrix where each row represents an edge
+  #' @param tolerance vertices that are closer than this number in Euclidean
+  #' distance are merged when constructing the graph (default = 0).
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -103,34 +105,27 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' Thus, if two lines are intersecting somewhere else, this will not be
   #' viewed as a vertex.
   #' @return A metric_graph object
-  initialize = function(lines = NULL, V = NULL, E = NULL) {
+  initialize = function(lines = NULL, V = NULL, E = NULL,
+                        tolerance = 0) {
 
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
-      self$nE = length(lines)
       self$lines = lines
-      self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-      private$line_to_vertex()
     } else {
       if(is.null(V) || is.null(E)){
         stop("You must supply lines or V and E")
       }
-      self$E <- E
-      self$V <- V
-      self$nE <- dim(E)[1]
-      self$nV <- dim(self$V)[1]
-      self$edge_lengths <- sqrt((V[E[,2], 1] - V[E[, 1], 1])^2 +
-                                  (V[E[,2], 2] - V[E[, 1], 2])^2)
       lines <- list()
       for(i in 1:dim(E)[1]) {
         id <- sprintf("%d", i)
         lines[[i]] <- Lines(list(Line(rbind(V[E[i,1], ], V[E[i,2], ]))), ID = id)
       }
       self$lines <- SpatialLines(lines)
-      private$line_to_vertex()
     }
+    self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
+    private$line_to_vertex(tolerance = tolerance)
     private$initial_graph <- self$clone()
   },
 
@@ -385,16 +380,20 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' calculated internally.
   add_PtE_observations = function(y, PtE, Spoints=NULL, normalized = FALSE) {
 
-    self$y <- c(self$y, y)
-    private$raw_y <- c(private$raw_y, y)
-    if(min(PtE[,2]) < 0){
+    if (min(PtE[,2]) < 0) {
       stop("PtE[, 2] has negative values")
     }
-    if(normalized){
-      if(max(PtE[,2] > 1)){
-        stop("For normalized distances, the values in PtE[, 2] should not be
+    if ((max(PtE[,2]) > 1) && normalized) {
+      stop("For normalized distances, the values in PtE[, 2] should not be
              larger than 1")
-      }
+    }
+    if(max(PtE[,2] - self$edge_lengths[PtE[, 1]]) > 0 && !normalized) {
+      stop("PtE[, 2] contains values which are larger than the edge lengths")
+    }
+    self$y <- c(self$y, y)
+    private$raw_y <- c(private$raw_y, y)
+
+    if(normalized){
       self$PtE = rbind(self$PtE, PtE)
     } else {
       PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
@@ -537,7 +536,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
           Points <- gInterpolate(Line, d.e, normalized=TRUE)
           self$mesh$V <- rbind(self$mesh$V, Points@coords)
-          
+
         V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
         self$mesh$ind <- c(self$mesh$ind, V.int)
         self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i, 1], V.int),
@@ -864,8 +863,20 @@ metric_graph <-  R6::R6Class("metric_graph",
                                        color = color, ...),
                            split = ~i, showlegend = FALSE)
     } else {
-      p <- ggplot(data = data, aes(x = x, y = y, group = i, colour = z)) +
-        geom_path() + scale_color_viridis() + labs(colour = "")
+      if(is.null(p)) {
+        p <- ggplot(data = data, aes(x = x, y = y,
+                                     group = i,
+                                     colour = z),
+                    linewidth = line_width) +
+          geom_path() + scale_color_viridis() + labs(colour = "")
+      } else {
+        p <- p + geom_path(data = data,
+                           aes(x = x, y = y,
+                               group = i, colour = z),
+                           linewidth = line_width) +
+          scale_color_viridis() + labs(colour = "")
+      }
+
     }
 
     return(p)
@@ -1057,11 +1068,13 @@ metric_graph <-  R6::R6Class("metric_graph",
     },
 
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(){
+  line_to_vertex = function(tolerance = 0) {
     lines <- c()
     for(i in 1:length(self$lines)){
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
+      #lines contain [line index, start point, line length
+      #               line index, end point, line length]
       lines <- rbind(lines,
                      c(i, points[1,],
                        sp::LineLength(self$lines@lines[[i]]@Lines[[1]])),
@@ -1069,39 +1082,40 @@ metric_graph <-  R6::R6Class("metric_graph",
                        sp::LineLength(self$lines@lines[[i]]@Lines[[1]])))
     }
 
+    #save all vertices that are more than tolerance distance apart
     vertex <- lines[1, , drop = FALSE]
     for (i in 1:dim(lines)[1]) {
       tmp <- vertex[, 2:3] - matrix(rep(1,dim(vertex)[1]),
                                    dim(vertex)[1], 1) %*% lines[i,2:3]
-      if (min(rowSums(tmp^2)) > 1e-8) {
+      if (min(rowSums(tmp^2)) > tolerance) {
         vertex <- rbind(vertex, lines[i, ])
       }
     }
+    #lvl = c(line index, vertex number of start, vertex number of end, length])
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     for (i in 1:max(lines[, 1])) {
       which.line <- sort(which(lines[, 1] == i))
       line <- lines[which.line, ]
-      #ind1 <- (abs( vertex[,2] - line[1,2] )< 1e-10) * (abs( vertex[,3] - line[1,3] )< 1e-10)==1
-      #ind2 <-  (abs( vertex[,2] - line[2,2] )< 1e-10) * (abs( vertex[,3] - line[2,3] )< 1e-10)==1
-      ind1 <- which.min((vertex[,2] - line[1,2])^2 + ( vertex[,3] - line[1,3] )^2)
-      ind2 <- which.min((vertex[,2] - line[2,2])^2 + ( vertex[,3] - line[2,3] )^2)
-      lvl[i,1] <- i
-      lvl[i,2] <- ind1#which(ind1)
-      lvl[i,3] <- ind2#which(ind2)
-      lvl[i,4] <- line[1,4]
+      #index of vertex corresponding to the start of the line
+      ind1 <- which.min((vertex[, 2] - line[1, 2])^2 +
+                          (vertex[, 3] - line[1, 3])^2)
+      #index of vertex corresponding to the end of the line
+      ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
+                          (vertex[, 3] - line[2, 3])^2)
+      lvl[i,] <- c(i, ind1, ind2, line[1,4])
     }
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
     self$nV <- dim(self$V)[1]
-
+    self$nE <- dim(self$E)[1]
     self$LtE <- Matrix::sparseMatrix(j = 1:dim(self$E)[1],
                                      i = c(1:length(self$lines)),
                                      x = rep(1,dim(self$E)[1]),
                                      dims = c(dim(self$E)[1],
                                               length(self$lines)))
-    self$ELend = rep(1,dim(self$E)[1])
-    self$ELstart = rep(0,dim(self$E)[1])
+    self$ELend <- rep(1, dim(self$E)[1])
+    self$ELstart <- rep(0, dim(self$E)[1])
   },
 
   #Compute PtE for mesh given PtE for graph
@@ -1161,7 +1175,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       coords <- lapply(coordinates(self$lines), function(x) x[[1]])
       nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
       xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
-    
+
     if(is.null(p)){
       p <- ggplot()+ geom_path(data = data.frame(x = xyl[, 1],
                                                  y = xyl[,2],
