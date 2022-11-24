@@ -6,6 +6,7 @@
 #' @param kappa parameter kappa
 #' @param sigma parameter sigma
 #' @param sigma_e parameter sigma_e
+#' @param alpha order of the SPDE
 #' @param graph metric_graph object
 #' @param PtE matrix with locations (edge, normalized distance on edge) to
 #' sample from
@@ -205,6 +206,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 #' @param  py  (n x 1) observation locations
 #' @param  y (n x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
+#' @noRd
 sample_alpha1_line <- function(kappa, sigma, sigma_e,
                                u_e, l_e, t = NULL,
                                nt = 100,  py = NULL,
@@ -292,6 +294,7 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
 #' @param  py  (n x 1) observation locations
 #' @param  y (n x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
+#' @noRd
 sample_alpha2_line <-function(kappa, sigma, sigma_e,
                               u_e, l_e, t=NULL, Line=NULL,
                               nt=100,  py=NULL, y=NULL, sample=TRUE) {

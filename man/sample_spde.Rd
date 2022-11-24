@@ -25,6 +25,8 @@ sample_spde(
 
 \item{sigma_e}{parameter sigma_e}
 
+\item{alpha}{order of the SPDE}
+
 \item{graph}{metric_graph object}
 
 \item{PtE}{matrix with locations (edge, normalized distance on edge) to

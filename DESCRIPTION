@@ -10,7 +10,7 @@ Maintainer: David Bolin <davidbolin@gmail.com>
 Description: Functions for specifying Gaussian random fields on metric graphs and 
     using them for data analysis.
 License: GPL (>=3)
-Imports: stats, maptools, ggplot2, rgeos, igraph, sp, plotly, viridis, CB, rSPDE, Matrix, magrittr, methods
+Imports: stats, ggplot2, rgeos, igraph, sp, plotly, viridis, CB, rSPDE, Matrix, magrittr, methods
 Suggests: knitr, testthat, INLA (>= 0.0-1468840039), inlabru, osmdata
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 BugReports: https://github.com/davidbolin/GPGraph/issues

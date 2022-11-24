@@ -55,39 +55,45 @@ graph <- metric_graph$new(lines = Lines)
 graph$plot()
 ```
 
-The `metric_graph` class then automatically constructs the list of edges, 
+
+<!-- The `metric_graph` class then automatically constructs the list of edges, 
 vertices, and edge lengths. These are available as public elements in the 
-object: 
-```{r}
-V <- graph$V
-E <- graph$E
-edge_lengths <- graph$edge_lengths
-```
-An alternative method is to specify these in the construction:
-```{r}
-graph2 <- metric_graph$new(V = V, E = E, edge_lengths = edge_lengths)
-graph2$plot()
-```
+object:  -->
+
+<!-- # ```{r}
+# V <- graph$V
+# E <- graph$E
+# edge_lengths <- graph$edge_lengths
+# ``` -->
+<!-- An alternative method is to specify these in the construction: -->
+<!-- # ```{r}
+# graph2 <- metric_graph$new(V = V, E = E, edge_lengths = edge_lengths)
+# graph2$plot()
+# ```  -->
+
 
 This graph has the same properties as the first, but since we have not provided
 the lines for each edge, it is visualized as having straight lines. If we know
 that the graph only has straight lines, we may exclude the edge length
 information in the construction: 
 ```{r}
+V <- graph$V
+E <- graph$E
 graph3 <- metric_graph$new(V = V, E = E)
 graph3$plot()
 ```
 
-We now have three graphs with the same edges and vertices. The first two are 
+<!-- We now have three graphs with the same edges and vertices. The first two are 
 identical from a modelling point of view, since they also have the same 
 edge lengths. The third, is different since it assumes straight edges and 
-therefore has a different edge length for one of the edges. 
-```{r}
-print(cbind(graph$edge_lengths, graph2$edge_lengths, graph3$edge_lengths))
-```
-Thus, from a modelling perspective, it is enough to specify the vertices,
+therefore has a different edge length for one of the edges.  -->
+<!-- # ```{r}
+# print(cbind(graph$edge_lengths, graph2$edge_lengths, graph3$edge_lengths))
+# ``` -->
+<!-- Thus, from a modelling perspective, it is enough to specify the vertices,
 edges, and edge lengths, but to obtain correct visualizations, the spatial
-lines for the edges need to be specified. 
+lines for the edges need to be specified.  -->
+
 
 ## An example with data from OpenStreetMap
 This format of constructing graphs is compatible with data from OpenStreetMap,

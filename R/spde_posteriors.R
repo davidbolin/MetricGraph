@@ -3,13 +3,10 @@
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph  metric_graph object
 #' @param alpha alpha parameter (1 or 2)
-#' @param obs if TRUE, then the posterior mean is calculated at the observation
-#' locations, otherwise it is computed at the vertices in the graph
-#' @param leave_edge_out if obs=TRUE, then leave_edge_out = TRUE means that the
+#' @param type decides where to predict, 'obs' or 'mesh'.
+#' @param leave_edge_out leave_edge_out = TRUE means that the
 #' posterior mean is computed for each observation based on all observations
-#' which are not on that edge. If obs=FALSE, then leave_edge_out = e means that
-#' the posterior mean is computed based on all observations except those on that
-#' particular edge.
+#' which are not on that edge. 
 #' @export
 spde_posterior_mean <- function(theta,
                                 graph,
@@ -50,6 +47,7 @@ spde_posterior_mean <- function(theta,
 #' @param type decides where to predict, 'obs' or 'mesh'.
 #' @param leave.edge.out compute the mean of the graph if the observations
 #' are not on the edge
+#' @noRd
 posterior_mean_obs_alpha1 <- function(theta,
                                       graph,
                                       type = "obs",
@@ -135,6 +133,7 @@ posterior_mean_obs_alpha1 <- function(theta,
 #' @param leave.edge.out compute the expectation of the graph if the
 #' @param type Set to 'obs' for computation at observation locations, or to
 #' 'mesh' for computation at mesh locations.
+#' @noRd
 posterior_mean_obs_alpha2 <- function(theta,
                                       graph,
                                       type = "obs",
@@ -249,6 +248,7 @@ posterior_mean_obs_alpha2 <- function(theta,
 #' @param theta     - (sigma_e, sigma, kappa)
 #' @param graph - metric_graph object
 #' @param rem.edge  - remove edge
+#' @noRd
 posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
 
   sigma_e <- theta[1]
@@ -321,6 +321,7 @@ posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
 #' Computes the posterior mean for alpha = 2
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
+#' @noRd
 posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
 
   sigma_e <- theta[1]

@@ -126,9 +126,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       lines <- list()
       for(i in 1:dim(E)[1]) {
         id <- sprintf("%d", i)
-        lines[[i]] <- Lines(list(Line(rbind(V[E[i,1]], V[E[i,2]]))), ID = id)
+        lines[[i]] <- Lines(list(Line(rbind(V[E[i,1], ], V[E[i,2], ]))), ID = id)
       }
       self$lines <- SpatialLines(lines)
+      private$line_to_vertex()
     }
     private$initial_graph <- self$clone()
   },
