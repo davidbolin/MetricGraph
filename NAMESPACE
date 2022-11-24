@@ -3,9 +3,6 @@
 S3method(gg_df,metric_graph_spde_result)
 S3method(summary,metric_graph_spde_result)
 export(Cholesky)
-export(Diagonal)
-export(Q.alpha2.base)
-export(Q.alpha2.line)
 export(Q.vertex.exp)
 export(build.C.beta1)
 export(build.Sigma.beta1)
@@ -48,7 +45,6 @@ if (getRversion() >= "3.6.0") {
 
 import(Matrix)
 importFrom(CB,c_basis2)
-importFrom(Matrix,t)
 importFrom(ggplot2,aes)
 importFrom(ggplot2,coord_fixed)
 importFrom(ggplot2,geom_path)

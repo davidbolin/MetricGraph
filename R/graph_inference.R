@@ -41,10 +41,10 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
-    K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+    K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
     Q <- K %*% K / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
@@ -105,10 +105,10 @@ posterior.crossvalidation.covariance <- function(theta,
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
-    K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+    K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
     Q <- K %*% K / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
@@ -197,9 +197,9 @@ posterior.crossvalidation <- function(theta,
     if(model == "alpha1"){
       Q <- Qalpha1(c(sigma, kappa), graph)
     } else if(model == "GL1"){
-      Q <- (kappa^2*Diagonal(graph$nV,1) + graph$Laplacian) / sigma^2
+      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian) / sigma^2
     } else if (model == "GL2") {
-      K <- (kappa^2*Diagonal(graph$nV,1) + graph$Laplacian)
+      K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian)
       Q <- K %*% K / sigma^2
     }
     A <- graph$A
@@ -223,7 +223,7 @@ posterior.crossvalidation <- function(theta,
                                                           Sigma.o[-i, i])
       var.p[i] <- diag(Sigma.p)
     } else {
-      A <- Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+      A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
       Q.p <- Q + t(A) %*% A / sigma_e^2
       mu.p[i] <- solve(Q.p,
                        as.vector(t(A) %*% graph$y[-i] / sigma_e^2))[graph$PtV[i]]

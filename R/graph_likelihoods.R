@@ -200,7 +200,7 @@ likelihood_alpha1_v2 <- function(theta, graph) {
   #build Q
   Q <- spde_precision(kappa = theta[3], sigma = theta[2],
                       alpha = 1, graph = graph)
-  A <- Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
+  A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
   Q.p <- Q  + t(A) %*% A / sigma_e^2
   mu.p <- solve(Q.p, as.vector(t(A) %*% graph$y/sigma_e^2))
 
@@ -335,12 +335,12 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
   } else if (model == "GL1"){
 
-    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
   } else if (model == "GL2"){
 
-    Q <- (kappa^2 * Diagonal(graph$nV, 1) + graph$Laplacian)
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian)
     Q <- Q %*% Q / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 

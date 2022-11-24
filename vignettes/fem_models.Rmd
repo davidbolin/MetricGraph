@@ -162,7 +162,7 @@ Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the ration
   v_bar <- kronecker(matrix(1, nrow = rspde.order + 1),
                      v)
   A_bar <- kronecker(matrix(1, ncol = rspde.order + 1), 
-                     Diagonal(dim(graph$mesh$V)[1]))
+                     Matrix::Diagonal(dim(graph$mesh$V)[1]))
   c_cov <- (A_bar) %*% solve(Q, v_bar)
   graph$plot_function_mesh(c_cov, plotly = TRUE)
 ```
@@ -225,7 +225,7 @@ Let us update the model object with the fitted parameters:
 We can now perform kriging with the `predict()` method:
 
 ```{r}
-  u.krig <- predict(op, A = A, Aprd = Diagonal(op$sizeC), Y = Y, sigma.e = sigma.e)
+  u.krig <- predict(op, A = A, Aprd = Matrix::Diagonal(op$sizeC), Y = Y, sigma.e = sigma.e)
 ```
 Since we predicted at the mesh nodes, `Aprd` was chosen as the identity matrix with the size of the mesh. If we wish to predict at some other locations, we can simply change `Aprd` to be the observation matrix for those locations.
 

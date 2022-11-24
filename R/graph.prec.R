@@ -120,79 +120,82 @@ build.Sigma.beta1 <- function(P,E,kappa,sigma,n){
               P = t(P.sigma[,!duplicated(t(P.sigma))])))
 }
 
-#' Title precision for alpha=2 process on interval
-#'
-#' @param l length of interval
-#' @param kappa range parameter
-#' @param tau precision parameter
-#'
-#' @return precision matrix
-#' @export
-Q.alpha2.base <- function(l,kappa,tau){
-  if(1){
-    C <- build.C.beta1(0.5, kappa=kappa, sigma=1, nu=3/2)
-    S1 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l)
-    S2 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(0,1))
-    S3 <- matern.neumann.free2(x, x, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(1,1))
-    Sigma  <- rbind(cbind(S1, S2), cbind(t(S2),S3))
-    Q <- solve(Sigma)[c(1,3,2,4),c(1,3,2,4)]
-  } else{
-    T = kappa*l
-    c <- 2*kappa*tau^2/((1-2*T^2)^2 - 2*exp(2*T)*(2*T^2+1)+exp(4*T))
-    q1 <- exp(4*T) - (1-2*T^2)^2 + 4*T*exp(2*T)
-    q2 <- 4*T*exp(2*T)
-    q3 <- 2*exp(T)*(2*T^2*(T-1)-T-exp(2*T)*(T+1)+1)
-    q4 <- 2*T*exp(T)*(2*T^2-exp(2*T)-1)
-    q5 <- -kappa^2*(1-2*T^2)^2 + exp(2*T)*(2*kappa^2+4*(kappa^2-1)*T^2 - 4*T - 2) - (kappa^2-2)*exp(4*T)
-    q6 <- 2*exp(T)*(-2*T^3 - 2*T^2 + T + exp(2*T)*(T-1)+1)
-    Q <- c*matrix(c(kappa^2*q1,kappa*q2,kappa^2*q3,kappa*q4,
-                    kappa*q2,q5,kappa*q4,q6,
-                    kappa^2*q3, kappa*q4, kappa^2*q1, kappa*q2,
-                    kappa*q4, q6, kappa*q2, q5),4,4)
-  }
+# #' Title precision for alpha=2 process on interval
+# #'
+# #' @param l length of interval
+# #' @param kappa range parameter
+# #' @param tau precision parameter
+# #'
+# #' @return precision matrix
+# #' @export
+# Q.alpha2.base <- function(l,kappa,tau, type = c("indirect", "direct")){
+#   type <- type[[1]]
+#   if(type == "indirect"){
+#     C <- build.C.beta1(0.5, kappa=kappa, sigma=1)
+#     S1 <- matern.neumann.free2(l, l, C, kappa=kappa, sigma=1, nu=3/2, L = l)
+#     S2 <- matern.neumann.free2(l, l, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(0,1))
+#     S3 <- matern.neumann.free2(l, l, C, kappa=kappa, sigma=1, nu=3/2, L = l, deriv = c(1,1))
+#     Sigma  <- rbind(cbind(S1, S2), cbind(t(S2),S3))
+#     Q <- solve(Sigma)[c(1,3,2,4),c(1,3,2,4)]
+#   } else if(type == "direct"){
+#     T = kappa*l
+#     c <- 2*kappa*tau^2/((1-2*T^2)^2 - 2*exp(2*T)*(2*T^2+1)+exp(4*T))
+#     q1 <- exp(4*T) - (1-2*T^2)^2 + 4*T*exp(2*T)
+#     q2 <- 4*T*exp(2*T)
+#     q3 <- 2*exp(T)*(2*T^2*(T-1)-T-exp(2*T)*(T+1)+1)
+#     q4 <- 2*T*exp(T)*(2*T^2-exp(2*T)-1)
+#     q5 <- -kappa^2*(1-2*T^2)^2 + exp(2*T)*(2*kappa^2+4*(kappa^2-1)*T^2 - 4*T - 2) - (kappa^2-2)*exp(4*T)
+#     q6 <- 2*exp(T)*(-2*T^3 - 2*T^2 + T + exp(2*T)*(T-1)+1)
+#     Q <- c*matrix(c(kappa^2*q1,kappa*q2,kappa^2*q3,kappa*q4,
+#                     kappa*q2,q5,kappa*q4,q6,
+#                     kappa^2*q3, kappa*q4, kappa^2*q1, kappa*q2,
+#                     kappa*q4, q6, kappa*q2, q5),4,4)
+#   } else{
+#     stop("The type should either be 'direct' or 'indirect'!")
+#   }
 
-  return(Q)
-}
+#   return(Q)
+# }
 
-#' Build components for Q on line for alpha=2
-#'
-#' @param loc locations
-#' @param kappa range parameter
-#' @param tau precision parameter
-#'
-#' @return List with elements for the precision
-#' @importFrom Matrix t
-#' @export
-Q.alpha2.line <- function(loc,kappa,tau){
-  l <- diff(loc)
-  n.int <- length(loc)-1
-  for(i in 1:n.int){
-    A.i <- Matrix(0,nrow=2,ncol=4*n.int)
-    if(i == 1){
-      Q <- Q.alpha2.base(l[i],kappa,tau)
-      A.i[1,4*(i-1)+3] = 1
-      A.i[1,4*i+1] = -1
-      A.i[2,4*(i-1)+4] = 1
-      A.i[2,4*i+2] = 1
-      A <- A.i
-    } else {
-      Q <- bdiag(Q,Q.alpha2.base(l[i],kappa,tau))
-      if(i < n.int){
-        A.i[1,4*(i-1)+3] = 1
-        A.i[1,4*i+1] = -1
-        A.i[2,4*(i-1)+4] = 1
-        A.i[2,4*i+2] = 1
-        A <- rbind(A,A.i)
-      }
-    }
+# #' Build components for Q on line for alpha=2
+# #'
+# #' @param loc locations
+# #' @param kappa range parameter
+# #' @param tau precision parameter
+# #'
+# #' @return List with elements for the precision
+# #' @importFrom Matrix t
+# #' @export
+# Q.alpha2.line <- function(loc,kappa,tau){
+#   l <- diff(loc)
+#   n.int <- length(loc)-1
+#   for(i in 1:n.int){
+#     A.i <- Matrix(0,nrow=2,ncol=4*n.int)
+#     if(i == 1){
+#       Q <- Q.alpha2.base(l[i],kappa,tau)
+#       A.i[1,4*(i-1)+3] = 1
+#       A.i[1,4*i+1] = -1
+#       A.i[2,4*(i-1)+4] = 1
+#       A.i[2,4*i+2] = 1
+#       A <- A.i
+#     } else {
+#       Q <- bdiag(Q,Q.alpha2.base(l[i],kappa,tau))
+#       if(i < n.int){
+#         A.i[1,4*(i-1)+3] = 1
+#         A.i[1,4*i+1] = -1
+#         A.i[2,4*(i-1)+4] = 1
+#         A.i[2,4*i+2] = 1
+#         A <- rbind(A,A.i)
+#       }
+#     }
 
 
-  }
-  ind.proc <- c(seq(from=1,to=4*n.int,by=4),4*n.int-1)
-  ind.der <- c(seq(from=2,to=4*n.int,by=4),4*n.int)
-  Q.i <- solve(Q)
-  Sigma <- Q.i - Q.i%*%t(A)%*%solve(A%*%Q.i%*%t(A))%*%A%*%Q.i
-  Sigma <- Sigma[c(ind.proc,ind.der),c(ind.proc,ind.der)]
-  return(list(Q=Q,A=A,ind.proc = ind.proc, ind.der = ind.der,
-              Sigma = Sigma))
-}
+#   }
+#   ind.proc <- c(seq(from=1,to=4*n.int,by=4),4*n.int-1)
+#   ind.der <- c(seq(from=2,to=4*n.int,by=4),4*n.int)
+#   Q.i <- solve(Q)
+#   Sigma <- Q.i - Q.i%*%t(A)%*%solve(A%*%Q.i%*%t(A))%*%A%*%Q.i
+#   Sigma <- Sigma[c(ind.proc,ind.der),c(ind.proc,ind.der)]
+#   return(list(Q=Q,A=A,ind.proc = ind.proc, ind.der = ind.der,
+#               Sigma = Sigma))
+# }

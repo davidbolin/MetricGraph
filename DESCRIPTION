@@ -1,6 +1,6 @@
 Package: GPGraph
 Type: Package
-Title: Gaussian fields on metric graphs
+Title: Gaussian Fields on Metric Graphs
 Version: 0.1.0
 Authors@R: c(
     person("David", "Bolin", email = "davidbolin@gmail.com", role = c("cre", "aut")),

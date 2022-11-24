@@ -2,6 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{gg_df.metric_graph_spde_result}
 \alias{gg_df.metric_graph_spde_result}
+\alias{gg_df}
 \title{Data frame for metric_graph_spde_result objects to be used in ggplot2}
 \usage{
 \method{gg_df}{metric_graph_spde_result}(

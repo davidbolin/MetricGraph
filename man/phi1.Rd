@@ -7,7 +7,7 @@
 phi1(t, kappa, sigma, nu = 3/2, L = 1, deriv = 0)
 }
 \arguments{
-\item{t}{(n x 1) where to evaluate phi (in \link{0,L})}
+\item{t}{(n x 1) where to evaluate phi (in \verb{[0,L]})}
 
 \item{kappa}{matern param}
 

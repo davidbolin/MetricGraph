@@ -419,7 +419,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
 #' Data frame for metric_graph_spde_result objects to be used in ggplot2
 #'
 #' Returns a ggplot-friendly data-frame with the marginal posterior densities.
-#'
+#' @aliases gg_df gg_df.metric_graph_spde_result
 #' @param result An metric_graph_spde_result object.
 #' @param parameter Vector. Which parameters to get the posterior density in the data.frame? The options are `sigma`, `range` or `kappa`.
 #' @param transform Should the posterior density be given in the original scale?

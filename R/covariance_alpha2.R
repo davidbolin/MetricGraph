@@ -45,19 +45,20 @@ graph_posterior_mean_matern2 <- function(graph,  theta, sample=FALSE) {
   check <- gpgraph_check_graph(graph)
 
   X <- c()
-  V.post.mean <- posterior.mean.matern2(theta, graph)
+  # V.post.mean <- posterior.mean.matern2(theta, graph)
+    V.post.mean <- posterior_mean_alpha2(theta, graph)
   for(i in 1:dim(graph$E)[1]){
     V.i <-   V.post.mean[4*(i-1) + 1:4]
 
     ind <- which(graph$PtE[,1] == i)
     if(length(ind)==0){
-      X.i   <- sample.line.matern2(theta,
+      X.i   <- sample_alpha2_line(theta,
                            V.i,
                            graph$edge_lengths[i],
                            nt = 100,
                            sample=sample)
     }else{
-      X.i   <- sample.line.matern2(theta,
+      X.i   <- sample_alpha2_line(theta,
                            V.i,
                            graph$edge_lengths[i],
                            nt = 100,
@@ -81,8 +82,8 @@ graph_posterior_mean_matern2 <- function(graph,  theta, sample=FALSE) {
 #' @param sigma parameter sigma
 #' @param  graph metric_graph object
 #' @param  n.p number of points to compute the covariance on each edge
-#' @return C (n.p*numer of edges x 3) [,1] edge number [,2] distance from
-#' lower edge [,3] covariance
+#' @return C (n.p*numer of edges x 3) `[,1]` edge number `[,2]` distance from
+#' lower edge `[,3]` covariance
 #' @export
 covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 

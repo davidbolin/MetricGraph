@@ -218,7 +218,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       Wmat[self$E[i, 1], self$E[i, 2]] <- 1/self$edge_lengths[i]
       Wmat[self$E[i, 2], self$E[i, 1]] <- 1/self$edge_lengths[i]
     }
-    self$Laplacian <- Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
+    self$Laplacian <- Matrix::Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
   },
 
   #' @description Add observation locations as vertices in the graph
@@ -261,13 +261,13 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if(!is.null(self$CBobj)) {
       self$buildC(2)
     }
-    self$A <- Diagonal(self$nV)[self$PtV, ]
+    self$A <- Matrix::Diagonal(self$nV)[self$PtV, ]
 
     if(length(self$PtV)==1){
       self$A <- matrix(self$A, ncol=2)
     }
 
-    # self$A <- Diagonal(self$nV)[min(self$PtV):max(self$PtV), ]
+    # self$A <- Matrix::Diagonal(self$nV)[min(self$PtV):max(self$PtV), ]
 
     # Ordering back
     # self$A[order_idx,] <- self$A
@@ -298,7 +298,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       # }
 
     # self$y[order_idx] <- self$y
-    # self$A <- Diagonal(self$nV)[self$PtV, ]
+    # self$A <- Matrix::Diagonal(self$nV)[self$PtV, ]
     self$add_responses(private$raw_y)
   },
   #' @description Clear all observations from the object

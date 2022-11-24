@@ -380,7 +380,7 @@ posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
 
     E <- graph$E[e,]
     if (E[1] == E[2]) {
-      error("circle not implemented")
+      stop("circle not implemented")
     } else {
       BtSinvB <- BtSinvB[c(3, 1, 4, 2), c(3, 1, 4, 2)]
       Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4*(e-1)+1:4] +

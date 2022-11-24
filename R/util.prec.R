@@ -1,6 +1,6 @@
 #'
 #' simple dim corrector function
-#' @param t (n x 1) where to evaluate phi (in [0,L])
+#' @param t (n x 1) where to evaluate phi (in `[0,L]`)
 #' @param kappa  matern param
 #' @param sigma  matern param
 #' @param nu     shape param
@@ -23,7 +23,7 @@ phi1 <- function(t, kappa, sigma, nu=3/2, L=1, deriv=0){
 
 #'
 #' simple dim corrector function v2
-#' @param t (n x 1) where to evaluate phi (in [0,L])
+#' @param t (n x 1) where to evaluate phi (in `[0,L]`)
 #' @param kappa  matern param
 #' @param sigma  matern param
 #' @param nu     shape param
@@ -45,7 +45,7 @@ phi2 <- function(t, kappa, sigma, nu=3/2, L=1, deriv=0){
 
 #'
 #' one dim corrector function
-#' @param t (n x 1) where to evaluate phi (in [0,L])
+#' @param t (n x 1) where to evaluate phi (in `[0,L]`)
 #' @param kappa  matern param
 #' @param sigma  matern param
 #' @param nu     shape param

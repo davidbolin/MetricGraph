@@ -418,7 +418,7 @@ Clearly, we did not expect the parameters here to be similar since they have
 different meanings than for the isotropic exponential model. So let us generate
 some data from the model and then redo the fit: 
 ```{r}
-Q <- (kappa^2*Diagonal(graph$nV) + graph$Laplacian)/sigma^2
+Q <- (kappa^2*Matrix::Diagonal(graph$nV) + graph$Laplacian)/sigma^2
 u <- solve(chol(Q), rnorm(graph$nV))
 y <- graph$A%*%u + sigma_e*rnorm(length(graph$PtV))
 graph$y <- y

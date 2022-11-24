@@ -1,9 +1,24 @@
+#' Circular `sp` SpatialPolygons
+#'
+#'   This routine will create an "sp" circular SpatialPolygons object based on
+# ''  the arguments...
+#'
+#' @param radius the radius of the circle
+#' @param spUnits the CRS units
+#' @param centerPoint the circle's cente
+#' @param nptsPerimeter the number of points forming the perimeter of the polygon
+#' @param spID the spatial ID for the object
+#' @param ... additional arguments to be passed.
+#'
+#' @return a list with...
+#'       spCircle = the SpatialPolygons circular object
+#'       location =  the SpatialPoints center point
 #' @export
 spCircle = function(radius,
                     spUnits = CRS(projargs=as.character(NA)),
                     centerPoint = c(x=0, y=0),   #centerPoint
                     nptsPerimeter = 100,
-                    spID = paste('circle',.StemEnv$randomID(),sep=':'),
+                    spID = paste('circle',round(1000*stats::runif(1)),sep=':'),
                     ...
                    )
 {
