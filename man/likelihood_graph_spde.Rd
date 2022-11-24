@@ -11,6 +11,8 @@ likelihood_graph_spde(theta, graph, alpha = 1, version = 1)
 
 \item{graph}{metric_graph object}
 
+\item{alpha}{the order of the SPDE}
+
 \item{version}{if 1, the likelihood is computed by integrating out
 the vertex locations, if 2, no integration is done}
 }

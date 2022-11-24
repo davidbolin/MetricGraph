@@ -11,7 +11,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 
 y <- c(1,2,3)
@@ -43,7 +43,7 @@ line3 <- Line(rbind(c(0,1),c(-1,1)))
 Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 p <- graph$plot()
 
 y <- c(1,2,3)
@@ -62,7 +62,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 kappa <- 10
 sigma <- 2

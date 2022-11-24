@@ -26,7 +26,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 }
 \section{Public fields}{
@@ -114,19 +114,19 @@ locations}
 \subsection{Method \code{new()}}{
 Create a new gpgraph_graph object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(Lines = NULL, V = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(lines = NULL, V = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Lines}}{sp object SpatialLines DataFrame or SpatialLines}
-
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices}
 
 \item{\code{E}}{m x 2 matrix where each line represents an edge}
 
 \item{\code{edge_lengths}}{m x 1 vector with edge lengths}
+
+\item{\code{Lines}}{sp object SpatialLines DataFrame or SpatialLines}
 }
 \if{html}{\out{</div>}}
 }
@@ -441,7 +441,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 }
 \if{html}{\out{</div>}}

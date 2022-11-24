@@ -19,7 +19,7 @@ TE <- table(c(EtV$V1,EtV$V2))
 
 # Create graph object
 if(0){
-  graph <-  metric_graph$new(Lines = as_Spatial(Lines))
+  graph <-  metric_graph$new(lines = as_Spatial(Lines))
   y <- colMeans(Y)
   graph$add_PtE_observations(y,PtE)
 } else {

@@ -17,7 +17,7 @@ data <- osmdata_sp(call)
 
 Lines <- largest_component(SpatialLines(data$osm_lines@lines))
 
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 
 #split circular edges (only needed for alpha = 2)
 if(0){

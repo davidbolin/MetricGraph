@@ -11,7 +11,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line4),ID="3"),
                               Lines(list(line3),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$build_mesh(h = 0.01)
 graph$plot(mesh=TRUE)
 C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
@@ -33,7 +33,7 @@ line1 <- Line(rbind(c(0,0),c(0,1)))
 line2 <- Line(rbind(c(0,1),c(0,2.5)))
 Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 
 graph$build_mesh(h = 1)
 graph$plot(mesh=TRUE)
@@ -58,7 +58,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line4),ID="3"),
                               Lines(list(line3),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$build_mesh(h = 0.2)
 graph$plot(mesh=TRUE)
 

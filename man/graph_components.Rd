@@ -4,10 +4,10 @@
 \alias{graph_components}
 \title{Create metric graphs for connected components of a SpatialLines object}
 \usage{
-graph_components(Lines, by_length = TRUE, only_largest = TRUE)
+graph_components(lines, by_length = TRUE, only_largest = TRUE)
 }
 \arguments{
-\item{Lines}{Object of class \code{SpatialLines}}
+\item{lines}{Object of class \code{SpatialLines}}
 
 \item{by_length}{Sort the components by total edge length? If FALSE,
 the components are sorted by the number of vertices.}
