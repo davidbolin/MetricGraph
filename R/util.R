@@ -56,7 +56,7 @@ graph_components <- function(lines, by_length = TRUE, only_largest = TRUE) {
         edge_rem <- c(edge_rem, i)
     }
     edge_keep <- setdiff(1:graph$nE, edge_rem)
-    Graphs[[k]] = metric_graph$new(lines = Lines[edge_keep])
+    Graphs[[k]] = metric_graph$new(lines = lines[edge_keep])
   }
   sizes <- components$csize
   lengths <- unlist(lapply(1:nc, function(x) sum(Graphs[[x]]$edge_lengths)))

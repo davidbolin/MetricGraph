@@ -26,6 +26,7 @@
 #' @export Cholesky t
 #' @importFrom igraph graph distances
 #' @importFrom rSPDE matern.covariance gg_df
+#' @importFrom methods is slot
 #' @export gg_df
 #' @importFrom stats approx dist dnorm pnorm rnorm
 #' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates
