@@ -1,7 +1,7 @@
 #internal function for checking metric_graph inputs
 gpgraph_check_graph <- function(graph)
 {
-  if (!inherits(graph, "GPGraph::graph")) {
+  if (!inherits(graph, "metric_graph")) {
     stop("The graph object is not a metric graph")
   }
   out <- list(has.mesh = FALSE,

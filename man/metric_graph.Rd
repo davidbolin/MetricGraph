@@ -4,13 +4,25 @@
 \alias{metric_graph}
 \title{Metric graph object for specification of Gaussian processes}
 \description{
-Class representing general metric graphs.
+Class representing a general metric graphs.
 }
 \details{
 A graph object created from vertex and edge matrices, or from an
-sp::Lines object where each line is representing and edge.
+sp::Lines object where each line is representing and edge. For more details,
+see the help vignette:
+\code{vignette("metric_graph", package = "GPGraph")}
 }
 \examples{
+library(sp)
+line1 <- Line(rbind(c(0, 0), c(2, 0)))
+line2 <- Line(rbind(c(2, 0), c(1, 1)))
+line3 <- Line(rbind(c(1, 1), c(0, 0)))
+lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
+                           Lines(list(line2), ID = "2"),
+                           Lines(list(line3), ID = "3")))
+graph <- metric_graph$new(lines)
+graph$plot()
+
 
 ## ------------------------------------------------
 ## Method `metric_graph$plot`
@@ -26,116 +38,118 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{V}}{Position in Euclidean space of the vertices}
+\item{\code{V}}{matrix with positions in Euclidean space of the vertices of the
+graph}
 
-\item{\code{nV}}{number of vertices}
+\item{\code{nV}}{the number of vertices}
 
-\item{\code{E}}{Edges,  E\link{i,1} is the vertex at the start of the edge and  E\link{i,2}
-is the vertex at the end of the edge}
+\item{\code{E}}{matrix with the edges of the graph, where \code{E[i,1]} is the vertex
+at the start of the ith edge and \code{E[i,2]} is the vertex at the end of the
+edge}
 
-\item{\code{nE}}{number of edges}
+\item{\code{nE}}{the number of edges}
 
-\item{\code{edge_lengths}}{length of edges}
+\item{\code{edge_lengths}}{vector with the lengths of the edges in the graph}
 
-\item{\code{EID}}{ID of edges}
+\item{\code{EID}}{vector with the IDs of the edges in the graph}
 
-\item{\code{LtE}}{Edge positions on lines}
+\item{\code{LtE}}{matrix with edge positions on the lines}
 
-\item{\code{ELend}}{normalized end point of edge on line (normalized on the line)}
+\item{\code{ELend}}{vector with the locations of the end points of the edges on
+the lines in the graph. The locations are normalized on the line}
 
-\item{\code{ELstart}}{normalized start point of edge on line (normalized on the line)}
+\item{\code{ELstart}}{vector with the locations of the starting points of the
+edges on the lines in the graph. The locations are normalized on the line}
 
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
-\item{\code{A}}{Matrix specifying which vertices are observation locations}
+\item{\code{A}}{sparse matrix specifying which vertices are observation locations}
 
-\item{\code{CBobj}}{svd stuct object used for Kirchhoff constraints}
+\item{\code{CoB}}{change-of-basis object used for Kirchhoff constraints}
 
-\item{\code{Points}}{Observations in SpatialPointsDataFrame}
+\item{\code{points}}{the observations in a SpatialPointsDataFrame}
 
-\item{\code{y}}{the data connected to P}
+\item{\code{y}}{vector with data on the graph}
 
-\item{\code{PtE}}{Points to Line (connected to Points)
-\link{,1} edge index
-\link{,2} normalized distance along the line (i.e. distance to initial point)}
+\item{\code{PtE}}{matrix specifying the locations of the observation points on
+the edges, where \code{PtE[i,1]} is the edge index for the ith observation
+and  \code{PtE[,2]} is the normalized distance on the edge}
 
-\item{\code{PtV}}{Vector with the indices of the vertices which are observation
+\item{\code{PtV}}{vector with the indices of the vertices which are observation
 locations}
 
 \item{\code{mesh}}{mesh object used for plotting}
 
-\item{\code{Lines}}{List of Lines object for building the graph}
+\item{\code{lines}}{the lines in the graph}
 
-\item{\code{geo.dist}}{Geodesic distance matrix}
+\item{\code{geo_dist}}{geodesic distances between the vertices in the graph}
 
-\item{\code{res.dist}}{Resistance distance matrix}
+\item{\code{res_dist}}{resistance distances between the observation locations}
 
-\item{\code{Laplacian}}{The weighted graph Laplacian}
+\item{\code{Laplacian}}{the weighted graph Laplacian of the vertices in the
+graph. The weights are given by the edge lengths}
 }
 \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-GPGraph::graph-new}{\code{metric_graph$new()}}
-\item \href{#method-GPGraph::graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
-\item \href{#method-GPGraph::graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
-\item \href{#method-GPGraph::graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
-\item \href{#method-GPGraph::graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
-\item \href{#method-GPGraph::graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
-\item \href{#method-GPGraph::graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
-\item \href{#method-GPGraph::graph-clear_observations}{\code{metric_graph$clear_observations()}}
-\item \href{#method-GPGraph::graph-add_observations}{\code{metric_graph$add_observations()}}
-\item \href{#method-GPGraph::graph-add_PtE_observations}{\code{metric_graph$add_PtE_observations()}}
-\item \href{#method-GPGraph::graph-buildC}{\code{metric_graph$buildC()}}
-\item \href{#method-GPGraph::graph-build_mesh}{\code{metric_graph$build_mesh()}}
-\item \href{#method-GPGraph::graph-compute_fem}{\code{metric_graph$compute_fem()}}
-\item \href{#method-GPGraph::graph-mesh_A}{\code{metric_graph$mesh_A()}}
-\item \href{#method-GPGraph::graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
-\item \href{#method-GPGraph::graph-plot}{\code{metric_graph$plot()}}
-\item \href{#method-GPGraph::graph-plot_function}{\code{metric_graph$plot_function()}}
-\item \href{#method-GPGraph::graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
-\item \href{#method-GPGraph::graph-split_edge}{\code{metric_graph$split_edge()}}
-\item \href{#method-GPGraph::graph-add_responses}{\code{metric_graph$add_responses()}}
-\item \href{#method-GPGraph::graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
-\item \href{#method-GPGraph::graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
-\item \href{#method-GPGraph::graph-clone}{\code{metric_graph$clone()}}
+\item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
+\item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
+\item \href{#method-metric_graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
+\item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
+\item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
+\item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
+\item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
+\item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
+\item \href{#method-metric_graph-add_PtE_observations}{\code{metric_graph$add_PtE_observations()}}
+\item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
+\item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
+\item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
+\item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
+\item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
+\item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
+\item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
+\item \href{#method-metric_graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
+\item \href{#method-metric_graph-split_edge}{\code{metric_graph$split_edge()}}
+\item \href{#method-metric_graph-add_responses}{\code{metric_graph$add_responses()}}
+\item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
+\item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
+\item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-new"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-new}{}}}
+\if{html}{\out{<a id="method-metric_graph-new"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new gpgraph_graph object
+Create a new \code{metric_graph} object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(Lines = NULL, V = NULL, E = NULL, edge_lengths = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(lines = NULL, V = NULL, E = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Lines}}{sp object SpatialLines DataFrame or SpatialLines}
+\item{\code{lines}}{object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}}
 
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices}
 
-\item{\code{E}}{m x 2 matrix where each line represents an edge}
-
-\item{\code{edge_lengths}}{m x 1 vector with edge lengths}
+\item{\code{E}}{m x 2 matrix where each row represents an edge}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
 A graph object can be initialized in two ways. The first method
-is to specify V and E. In this case, if edge_lengths is not specified, all
-edges are assumed to be straight lines. Otherwise the edge lengths set in
-edge_lengths are used. The second option is to specify the graph based on
-Lines. In this case, the vertices are set by the end points of the lines.
+is to specify V and E. In this case, all edges are assumed to be straight
+lines. The second option is to specify the graph via the \code{lines} input.
+In this case, the vertices are set by the end points of the lines.
 Thus, if two lines are intersecting somewhere else, this will not be
 viewed as a vertex.
 }
@@ -145,8 +159,8 @@ A metric_graph object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-compute_geodist"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_geodist}{}}}
+\if{html}{\out{<a id="method-metric_graph-compute_geodist"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_geodist}{}}}
 \subsection{Method \code{compute_geodist()}}{
 Computes shortest path distances between the vertices in the
 graph
@@ -156,8 +170,8 @@ graph
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-compute_geodist_mesh"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_geodist_mesh}{}}}
+\if{html}{\out{<a id="method-metric_graph-compute_geodist_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_geodist_mesh}{}}}
 \subsection{Method \code{compute_geodist_mesh()}}{
 Computes shortest path distances between the vertices in the
 mesh
@@ -167,10 +181,11 @@ mesh
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-compute_resdist"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist}{}}}
+\if{html}{\out{<a id="method-metric_graph-compute_resdist"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_resdist}{}}}
 \subsection{Method \code{compute_resdist()}}{
-Computes the resistance metric of observations
+Computes the resistance distance between the observation
+locations
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(PtE = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
 }
@@ -187,8 +202,8 @@ is computed and stored for the observations in the graph}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-compute_resdist_mesh"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_resdist_mesh}{}}}
+\if{html}{\out{<a id="method-metric_graph-compute_resdist_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_resdist_mesh}{}}}
 \subsection{Method \code{compute_resdist_mesh()}}{
 Computes the resistance metric between the vertices in the
 mesh
@@ -198,28 +213,28 @@ mesh
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-compute_laplacian"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_laplacian}{}}}
+\if{html}{\out{<a id="method-metric_graph-compute_laplacian"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_laplacian}{}}}
 \subsection{Method \code{compute_laplacian()}}{
-Compute graph Laplacian for the graph
+Computes the weigthed graph Laplacian for the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-observation_to_vertex"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-observation_to_vertex}{}}}
+\if{html}{\out{<a id="method-metric_graph-observation_to_vertex"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-observation_to_vertex}{}}}
 \subsection{Method \code{observation_to_vertex()}}{
-Add observation locations as vertices in the graph
+Adds observation locations as vertices in the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-clear_observations"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-clear_observations}{}}}
+\if{html}{\out{<a id="method-metric_graph-clear_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-clear_observations}{}}}
 \subsection{Method \code{clear_observations()}}{
 Clear all observations from the object
 \subsection{Usage}{
@@ -228,10 +243,10 @@ Clear all observations from the object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-add_observations"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_observations}{}}}
+\if{html}{\out{<a id="method-metric_graph-add_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-add_observations}{}}}
 \subsection{Method \code{add_observations()}}{
-Add observations to the object
+Add observations to the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(Spoints, y = NULL, y.index = NULL)}\if{html}{\out{</div>}}
 }
@@ -254,10 +269,10 @@ that the data is in the first column}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-add_PtE_observations"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_PtE_observations}{}}}
+\if{html}{\out{<a id="method-metric_graph-add_PtE_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-add_PtE_observations}{}}}
 \subsection{Method \code{add_PtE_observations()}}{
-add observations to the object
+Add observations to the object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_PtE_observations(y, PtE, Spoints = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
 }
@@ -265,45 +280,46 @@ add observations to the object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{y}}{(n x 1) the value of the observations}
+\item{\code{y}}{vector with the values of the observations}
 
-\item{\code{PtE}}{(n x 2) edge index, distance on index}
+\item{\code{PtE}}{matrix where \code{PtE[i,1]} is the index of the edge for the ith
+observation and \code{PtE[i,2]} is the distance on the edge where the
+observation is located}
 
-\item{\code{Spoints}}{Optional argument of class SpatialPoints or
-SpatialPointsDataFrame specifying the Euclidean coordinates of the
+\item{\code{Spoints}}{Optional argument of class \code{SpatialPoints} or
+\code{SpatialPointsDataFrame} specifying the Euclidean coordinates of the
 observation locations. If this is not provided, the coordinates are
 calculated internally.}
 
-\item{\code{normalized}}{if TRUE, then the distances in PtE are assumed to be
-normalized to (0,1), default FALSE.}
+\item{\code{normalized}}{if TRUE, then the distances in \code{PtE} are assumed to be
+normalized to (0,1). Default FALSE.}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-buildC"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-buildC}{}}}
+\if{html}{\out{<a id="method-metric_graph-buildC"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-buildC}{}}}
 \subsection{Method \code{buildC()}}{
-build Kirchoff constraint matrix from edges, NOT implemented
-for circles (i.e. self closed edges)
+build Kirchoff constraint matrix from edges, currently not
+implemented for circles (edges that start and end in the same vertex)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$buildC(alpha, edge_constraint = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$buildC(alpha = 2, edge_constraint = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{alpha}}{(int) which type of constraint (currently only 2 implemented)}
+\item{\code{alpha}}{the type of constraint (currently only supports 2)}
 
-\item{\code{edge_constraint}}{(bool) if true add constraint on vertices of
-degree 1.}
+\item{\code{edge_constraint}}{if TRUE, add constraints on vertices of degree 1}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-build_mesh"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-build_mesh}{}}}
+\if{html}{\out{<a id="method-metric_graph-build_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-build_mesh}{}}}
 \subsection{Method \code{build_mesh()}}{
 build mesh object for graph
 \subsection{Usage}{
@@ -334,8 +350,8 @@ The mesh is a list with the objects
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-compute_fem"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-compute_fem}{}}}
+\if{html}{\out{<a id="method-metric_graph-compute_fem"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_fem}{}}}
 \subsection{Method \code{compute_fem()}}{
 build mass and stiffness matrices for given mesh object
 \subsection{Usage}{
@@ -344,8 +360,8 @@ build mass and stiffness matrices for given mesh object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-mesh_A"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-mesh_A}{}}}
+\if{html}{\out{<a id="method-metric_graph-mesh_A"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-mesh_A}{}}}
 \subsection{Method \code{mesh_A()}}{
 Computes observation matrix for mesh
 \subsection{Usage}{
@@ -361,22 +377,23 @@ Computes observation matrix for mesh
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-VtEfirst"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-VtEfirst}{}}}
+\if{html}{\out{<a id="method-metric_graph-VtEfirst"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-VtEfirst}{}}}
 \subsection{Method \code{VtEfirst()}}{
-Find one Edge correspond to each Vertex (warning very
-inefficient implementation)
+Find one edge corresponding to each vertex
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$VtEfirst()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-VtE (n.v x 2) \link{1} edge number, \link{2} 0=  lower edge, 1=  upper edge
+VtE matrix where \code{VtE[i,1]} is the edge number, \code{VtE[i,2] = 0}
+if the vertex is at the start of the edge and \code{VtE[i,1] = 1} if the vertex
+is at the end of the edge
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-plot"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-plot}{}}}
+\if{html}{\out{<a id="method-metric_graph-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-plot}{}}}
 \subsection{Method \code{plot()}}{
 plot a metric graph
 \subsection{Usage}{
@@ -441,7 +458,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
-graph <- metric_graph$new(Lines = Lines)
+graph <- metric_graph$new(lines = Lines)
 graph$plot()
 }
 \if{html}{\out{</div>}}
@@ -450,10 +467,10 @@ graph$plot()
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-plot_function"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function}{}}}
+\if{html}{\out{<a id="method-metric_graph-plot_function"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-plot_function}{}}}
 \subsection{Method \code{plot_function()}}{
-plot continuous function X on the graph
+plot continuous function on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
@@ -472,9 +489,9 @@ plot continuous function X on the graph
 \describe{
 \item{\code{X}}{Either an m x 3 matrix with (edge number, position on
 curve (in length), value) or a vector with values for the function
-evaluated at a precomputed mesh.}
+evaluated at the mesh in the graph}
 
-\item{\code{plotly}}{plot in 2D or 3D?}
+\item{\code{plotly}}{if TRUE, then plot is shown in 3D}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
@@ -482,7 +499,7 @@ evaluated at a precomputed mesh.}
 
 \item{\code{vertex_size}}{for 3D plot, the vertex size of the vertices}
 
-\item{\code{color}}{Color of curve}
+\item{\code{color}}{color of curve}
 
 \item{\code{p}}{previous plot in which the new plot should be added.}
 
@@ -490,10 +507,13 @@ evaluated at a precomputed mesh.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+either a ggplot or a plot_ly object
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-plot_function_mesh"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-plot_function_mesh}{}}}
+\if{html}{\out{<a id="method-metric_graph-plot_function_mesh"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-plot_function_mesh}{}}}
 \subsection{Method \code{plot_function_mesh()}}{
 plot continuous function on the mesh of a graph
 \subsection{Usage}{
@@ -532,12 +552,15 @@ evaluated at a precomputed mesh.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+A ggplot or a plot_ly object
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-split_edge"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-split_edge}{}}}
+\if{html}{\out{<a id="method-metric_graph-split_edge"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-split_edge}{}}}
 \subsection{Method \code{split_edge()}}{
-split_edge Function for splitting lines
+function for splitting lines in the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_edge(Ei, t)}\if{html}{\out{</div>}}
 }
@@ -553,10 +576,11 @@ split_edge Function for splitting lines
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-add_responses"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_responses}{}}}
+\if{html}{\out{<a id="method-metric_graph-add_responses"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-add_responses}{}}}
 \subsection{Method \code{add_responses()}}{
-Auxiliar function for adding simulated response variables in the correct order.
+function for adding simulated response variables in the
+correct order.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_responses(y)}\if{html}{\out{</div>}}
 }
@@ -570,8 +594,8 @@ Auxiliar function for adding simulated response variables in the correct order.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-add_mesh_observations"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-add_mesh_observations}{}}}
+\if{html}{\out{<a id="method-metric_graph-add_mesh_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-add_mesh_observations}{}}}
 \subsection{Method \code{add_mesh_observations()}}{
 Add observations on mesh to the object
 \subsection{Usage}{
@@ -581,15 +605,14 @@ Add observations on mesh to the object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{y}}{the observations. These are used if provided, and otherwise the
-observations are assumed to be in Spoints}
+\item{\code{y}}{the observations.}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-get_initial_graph"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-get_initial_graph}{}}}
+\if{html}{\out{<a id="method-metric_graph-get_initial_graph"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_initial_graph}{}}}
 \subsection{Method \code{get_initial_graph()}}{
 Get a copy of the initial graph
 \subsection{Usage}{
@@ -598,8 +621,8 @@ Get a copy of the initial graph
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-GPGraph::graph-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-GPGraph::graph-clone}{}}}
+\if{html}{\out{<a id="method-metric_graph-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

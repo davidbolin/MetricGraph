@@ -1,166 +1,172 @@
 #' @title Metric graph object for specification of Gaussian processes
-#' @description Class representing general metric graphs.
+#' @description Class representing a general metric graphs.
 #' @details A graph object created from vertex and edge matrices, or from an
-#' sp::Lines object where each line is representing and edge.
+#' sp::Lines object where each line is representing and edge. For more details,
+#'  see the help vignette:
+#' \code{vignette("metric_graph", package = "GPGraph")}
+#' @examples
+#' library(sp)
+#' line1 <- Line(rbind(c(0, 0), c(2, 0)))
+#' line2 <- Line(rbind(c(2, 0), c(1, 1)))
+#' line3 <- Line(rbind(c(1, 1), c(0, 0)))
+
+#' lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
+#'                            Lines(list(line2), ID = "2"),
+#'                            Lines(list(line3), ID = "3")))
+#' graph <- metric_graph$new(lines)
+#' graph$plot()
 #'
 #' @export
-metric_graph <-  R6::R6Class("GPGraph::graph",
+metric_graph <-  R6::R6Class("metric_graph",
   public = list(
-  #' @field V Position in Euclidean space of the vertices
+  #' @field V matrix with positions in Euclidean space of the vertices of the
+  #' graph
   V = NULL,
 
-  #' @field nV number of vertices
+  #' @field nV the number of vertices
   nV = 0,
 
-  #' @field E Edges,  E[i,1] is the vertex at the start of the edge and  E[i,2]
-  #' is the vertex at the end of the edge
+  #' @field E matrix with the edges of the graph, where `E[i,1]` is the vertex
+  #' at the start of the ith edge and `E[i,2]` is the vertex at the end of the
+  #' edge
   E = NULL,
 
-  #' @field nE number of edges
+  #' @field nE the number of edges
   nE= 0,
 
-  #' @field edge_lengths length of edges
+  #' @field edge_lengths vector with the lengths of the edges in the graph
   edge_lengths = NULL,
 
-  #' @field EID ID of edges
+  #' @field EID vector with the IDs of the edges in the graph
   EID = NULL,
 
 
-  #' @field LtE Edge positions on lines
+  #' @field LtE matrix with edge positions on the lines
   LtE = NULL,
 
-  #' @field ELend normalized end point of edge on line (normalized on the line)
+  #' @field ELend vector with the locations of the end points of the edges on
+  #' the lines in the graph. The locations are normalized on the line
   ELend = NULL,
 
-  #' @field ELstart normalized start point of edge on line (normalized on the line)
+  #' @field ELstart vector with the locations of the starting points of the
+  #' edges on the lines in the graph. The locations are normalized on the line
   ELstart = NULL,
 
   #' @field C constraint matrix used to set Kirchhoff constraints
   C = NULL,
 
-  #' @field A Matrix specifying which vertices are observation locations
+  #' @field A sparse matrix specifying which vertices are observation locations
   A = NULL,
 
-  #' @field CBobj svd stuct object used for Kirchhoff constraints
-  CBobj = NULL,
+  #' @field CoB change-of-basis object used for Kirchhoff constraints
+  CoB = NULL,
 
-  #' @field Points Observations in SpatialPointsDataFrame
-  Points  = NULL,
+  #' @field points the observations in a SpatialPointsDataFrame
+  points  = NULL,
 
-  #' @field y the data connected to P
+  #' @field y vector with data on the graph
   y = NULL,
 
-  #' @field PtE Points to Line (connected to Points)
-  #'  [,1] edge index
-  #'  [,2] normalized distance along the line (i.e. distance to initial point)
+  #' @field PtE matrix specifying the locations of the observation points on
+  #' the edges, where `PtE[i,1]` is the edge index for the ith observation
+  #' and  `PtE[,2]` is the normalized distance on the edge
   PtE = NULL,
 
-  #' @field PtV Vector with the indices of the vertices which are observation
+  #' @field PtV vector with the indices of the vertices which are observation
   #' locations
   PtV  = NULL,
 
   #' @field mesh mesh object used for plotting
   mesh = NULL,
 
-  #' @field Lines List of Lines object for building the graph
-  Lines = NULL,
+  #' @field lines the lines in the graph
+  lines = NULL,
 
-  #' @field geo.dist Geodesic distance matrix
-  geo.dist = NULL,
+  #' @field geo_dist geodesic distances between the vertices in the graph
+  geo_dist = NULL,
 
-  #' @field res.dist Resistance distance matrix
-  res.dist = NULL,
+  #' @field res_dist resistance distances between the observation locations
+  res_dist = NULL,
 
-  #' @field Laplacian The weighted graph Laplacian
+  #' @field Laplacian the weighted graph Laplacian of the vertices in the
+  #' graph. The weights are given by the edge lengths
   Laplacian = NULL,
 
-  #' @description Create a new gpgraph_graph object
-  #' @param Lines sp object SpatialLines DataFrame or SpatialLines
+  #' @description Create a new `metric_graph` object
+  #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
-  #' @param E m x 2 matrix where each line represents an edge
-  #' @param edge_lengths m x 1 vector with edge lengths
+  #' @param E m x 2 matrix where each row represents an edge
   #' @details A graph object can be initialized in two ways. The first method
-  #' is to specify V and E. In this case, if edge_lengths is not specified, all
-  #' edges are assumed to be straight lines. Otherwise the edge lengths set in
-  #' edge_lengths are used. The second option is to specify the graph based on
-  #' Lines. In this case, the vertices are set by the end points of the lines.
+  #' is to specify V and E. In this case, all edges are assumed to be straight
+  #' lines. The second option is to specify the graph via the `lines` input.
+  #' In this case, the vertices are set by the end points of the lines.
   #' Thus, if two lines are intersecting somewhere else, this will not be
   #' viewed as a vertex.
   #' @return A metric_graph object
-  initialize = function(Lines = NULL, V = NULL, E = NULL, edge_lengths = NULL) {
-    #We have three different ways of initializing:
+  initialize = function(lines = NULL, V = NULL, E = NULL) {
 
-    #option 1: initialization from lines
-    if(!is.null(Lines)){
-      if(!is.null(edge_lengths) || !is.null(V) || !is.null(E)){
-        warning("object initialized from lines, then E,V,edge_lengths are
-                ignored")
+    if(!is.null(lines)){
+      if(!is.null(V) || !is.null(E)){
+        warning("object initialized from lines, then E and V are ignored")
       }
-      self$nE = length(Lines)
-      self$Lines = Lines
-
-      self$EID = sapply(slot(self$Lines,"lines"), function(x) slot(x, "ID"))
+      self$nE = length(lines)
+      self$lines = lines
+      self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
       private$line_to_vertex()
     } else {
       if(is.null(V) || is.null(E)){
-        stop("You must supply Lines or V and E")
+        stop("You must supply lines or V and E")
       }
-      self$nE <- dim(E)[1]
-      self$V   <- V
       self$E <- E
+      self$V <- V
+      self$nE <- dim(E)[1]
       self$nV <- dim(self$V)[1]
-      if(is.null(edge_lengths)){
-        self$edge_lengths <- sqrt((self$V[self$E[,2], 1] -
-                                     self$V[self$E[, 1], 1])^2 +
-                                    (self$V[self$E[,2], 2] -
-                                       self$V[self$E[, 1], 2])^2)
-      } else {
-        self$edge_lengths = edge_lengths
+      self$edge_lengths <- sqrt((V[E[,2], 1] - V[E[, 1], 1])^2 +
+                                  (V[E[,2], 2] - V[E[, 1], 2])^2)
+      lines <- list()
+      for(i in 1:dim(E)[1]) {
+        id <- sprintf("%d", i)
+        lines[[i]] <- Lines(list(Line(rbind(V[E[i,1]], V[E[i,2]]))), ID = id)
       }
-      # private$line_to_vertex()
+      self$lines <- SpatialLines(lines)
     }
-    # private$initial_V <- self$V
-    # private$initial_E <- self$E
-    # private$initial_Lines <- self$Lines
-    # private$initial_LtE <- self$LtE
-    # private$initial_ELstart <- self$ELstart
-    # private$initial_ELend <- self$ELend
     private$initial_graph <- self$clone()
   },
 
   #' @description Computes shortest path distances between the vertices in the
   #' graph
-  compute_geodist = function(){
+  compute_geodist = function() {
     g <- graph(edges = c(t(self$E)), directed = FALSE)
     E(g)$weight <- self$edge_lengths
-    self$geo.dist <- distances(g)
+    self$geo_dist <- distances(g)
   },
 
   #' @description Computes shortest path distances between the vertices in the
   #' mesh
-  compute_geodist_mesh = function(){
+  compute_geodist_mesh = function() {
     g <- graph(edges = c(t(self$mesh$E)), directed = FALSE)
     E(g)$weight <- self$mesh$h_e
-    self$mesh$geo.dist <- distances(g)
+    self$mesh$geo_dist <- distances(g)
   },
 
-  #' @description Computes the resistance metric of observations
+  #' @description Computes the resistance distance between the observation
+  #' locations
   #' @param PtE points to compute the metric for, if not provided, the metric
   #' is computed and stored for the observations in the graph
   #' @param normalized are the locations in PtE in normalized distance?
-  compute_resdist = function(PtE = NULL, normalized = FALSE){
+  compute_resdist = function(PtE = NULL, normalized = FALSE) {
     if (is.null(PtE)) {
       graph.temp <- self$clone()
-      reo <- order(graph.temp$PtE[,1],graph.temp$PtE[,2])
+      reo <- order(graph.temp$PtE[, 1], graph.temp$PtE[, 2])
       if(is.null(graph.temp$PtV)) {
         graph.temp$observation_to_vertex()
       }
-      if(is.null(graph.temp$geo.dist)){
+      if(is.null(graph.temp$geo_dist)){
         graph.temp$compute_geodist()
       }
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
-        tmp <- -1 / graph.temp$geo.dist[graph.temp$E[i, 1], graph.temp$E[i, 2]]
+        tmp <- -1 / graph.temp$geo_dist[graph.temp$E[i, 1], graph.temp$E[i, 2]]
         L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
         L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
       }
@@ -173,31 +179,31 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       R <- -2*Li + t(diag(Li)) %x% rep(1, graph.temp$nV) +
         t(rep(1, graph.temp$nV)) %x% diag(Li)
 
-      self$res.dist <- R[graph.temp$PtV, graph.temp$PtV]
+      self$res_dist <- R[graph.temp$PtV, graph.temp$PtV]
       reo <- order(self$PtE[,1],self$PtE[,2])
-      self$res.dist <- as.matrix(self$res.dist[reo,reo])
+      self$res_dist <- as.matrix(self$res_dist[reo,reo])
     } else {
       reo <- order(PtE[,1],PtE[,2])
       graph.temp <- self$clone()
       graph.temp$add_PtE_observations(y = rep(0, dim(PtE)[1]), PtE,
                                    normalized = normalized)
       graph.temp$compute_resdist()
-      return(graph.temp$res.dist)
+      return(graph.temp$res_dist)
     }
   },
 
   #' @description Computes the resistance metric between the vertices in the
   #' mesh
-  compute_resdist_mesh = function(){
+  compute_resdist_mesh = function() {
     if (is.null(self$mesh)) {
       stop("no mesh provided")
     }
-    if(is.null(self$mesh$geo.dist)){
+    if(is.null(self$mesh$geo_dist)){
       self$compute_geodist_mesh()
     }
     L <- Matrix(0, dim(self$mesh$V)[1], dim(self$mesh$V)[1])
     for (i in 1:dim(self$mesh$E)[1]) {
-      tmp <- -1 / self$mesh$geo.dist[self$mesh$E[i, 1], self$mesh$E[i, 2]]
+      tmp <- -1 / self$mesh$geo_dist[self$mesh$E[i, 1], self$mesh$E[i, 2]]
       L[self$mesh$E[i, 2], self$mesh$E[i, 1]] <- tmp
       L[self$mesh$E[i, 1], self$mesh$E[i, 2]] <- tmp
     }
@@ -207,110 +213,87 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     L[1, 1] <- L[1, 1] + 1
 
     Li <- solve(L)
-    self$mesh$res.dist <- -2*Li + t(diag(Li)) %x% rep(1,dim(self$mesh$V)[1]) +
+    self$mesh$res_dist <- -2*Li + t(diag(Li)) %x% rep(1,dim(self$mesh$V)[1]) +
       t(rep(1,dim(self$mesh$V)[1])) %x% diag(Li)
   },
 
-  #' @description Compute graph Laplacian for the graph
-  compute_laplacian = function(){
+  #' @description Computes the weigthed graph Laplacian for the graph
+  compute_laplacian = function() {
     Wmat <- Matrix(0,self$nV,self$nV)
-    for(i in 1:self$nE){
+    for (i in 1:self$nE) {
       Wmat[self$E[i, 1], self$E[i, 2]] <- 1/self$edge_lengths[i]
       Wmat[self$E[i, 2], self$E[i, 1]] <- 1/self$edge_lengths[i]
     }
     self$Laplacian <- Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
   },
 
-  #' @description Add observation locations as vertices in the graph
-  observation_to_vertex = function(){
+  #' @description Adds observation locations as vertices in the graph
+  observation_to_vertex = function() {
     # Reordering
-    order_idx <- order(self$PtE[,1], self$PtE[,2])
+    order_idx <- order(self$PtE[, 1], self$PtE[, 2])
 
     private$reorder_idx <- c(private$reorder_idx, list(order_idx))
 
-    self$PtE <- self$PtE[order_idx,]
+    self$PtE <- self$PtE[order_idx, ]
 
-    if(length(order_idx)==1){
-      self$PtE <- matrix(self$PtE, ncol=2)
+    if (length(order_idx) == 1) {
+      self$PtE <- matrix(self$PtE, ncol = 2)
     }
-
     l <- length(self$PtE[, 1])
     self$PtV <- rep(0, l)
-    for(i in 1:l){
+    for (i in 1:l) {
         e <- as.vector(self$PtE[i, 1])
         t <- as.vector(self$PtE[i, 2])
         l_e <- self$edge_lengths[e]
-        if(abs(t) < 10^-10){
+        if (abs(t) < 10^-10) {
           self$PtE[i, 2] <- 0
           self$PtV[i] <- self$E[e, 1]
-        }else if(t > 1 - 10^-10){
+        } else if (t > 1 - 10^-10) {
           self$PtE[i, 2] <- 1
           self$PtV[i] <- self$E[e, 2]
-        }else{
+        } else {
           self$split_edge(e, t)
           self$PtV[i] <- dim(self$V)[1]
         }
     }
 
-    if(!is.null(self$geo.dist)){
+    if (!is.null(self$geo_dist)) {
       self$compute_geodist()
     }
-    if(!is.null(self$res.dist)){
+    if (!is.null(self$res_dist)) {
       self$compute_resdist()
     }
-    if(!is.null(self$CBobj)) {
+    if (!is.null(self$CoB)) {
       self$buildC(2)
     }
     self$A <- Diagonal(self$nV)[self$PtV, ]
 
-    if(length(self$PtV)==1){
-      self$A <- matrix(self$A, ncol=2)
+    if (length(self$PtV) == 1) {
+      self$A <- matrix(self$A, ncol = 2)
     }
 
-    # self$A <- Diagonal(self$nV)[min(self$PtV):max(self$PtV), ]
+    for (i in length(private$reorder_idx):1) {
+      idx <- private$reorder_idx[[i]]
+      A_tmp <- self$A[1:length(idx), ]
+      if (length(idx)==1) {
+        A_tmp <- matrix(A_tmp, ncol = 2)
+      }
+      self$A[idx, ] <- A_tmp
+    }
 
-    # Ordering back
-    # self$A[order_idx,] <- self$A
-    #   idx <- private$reorder_idx[[1]]
-    #   A_tmp <- self$A[1:length(idx),]
-    #   self$A[idx,] <- A_tmp
-    #   if(length(private$reorder_idx)>1){
-    #      for(i in 2:length(private$reorder_idx)){
-    #       idx <- private$reorder_idx[[i]]
-    #       A_tmp <- self$A[idx,]
-    #       self$A[1:length(idx),] <- A_tmp
-    #     }
-    #   }
-
-         for(i in length(private$reorder_idx):1){
-          idx <- private$reorder_idx[[i]]
-          A_tmp <- self$A[1:length(idx),]
-          if(length(idx)==1){
-            A_tmp <- matrix(A_tmp, ncol=2)
-          }
-          self$A[idx,] <- A_tmp
-        }
-
-      # for(i in 1:length(private$reorder_idx)){
-      #   idx <- private$reorder_idx[[i]]
-      #   A_tmp <- self$A[1:length(idx),]
-      #   self$A[idx,] <- A_tmp
-      # }
-
-    # self$y[order_idx] <- self$y
-    # self$A <- Diagonal(self$nV)[self$PtV, ]
     self$add_responses(private$raw_y)
   },
+
   #' @description Clear all observations from the object
-  clear_observations = function(){
+  clear_observations = function() {
    self$y <- NULL
    self$PtE <- NULL
-   self$Points <- NULL
+   self$points <- NULL
    private$raw_y <- c()
    private$reorder_idx <- list()
   },
 
-  #' @description Add observations to the object
+  #' @description Add observations to the graph
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations,
   #' which may include the coordinates only, or the coordinates as well as the
   #' observations
@@ -319,8 +302,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param y.index If `y` is not provided, `y.index` gives the column number
   #' for the data to use in `Spoints@data`. If it is not provided, it is assumed
   #' that the data is in the first column
-  #' @importFrom  maptools snapPointsToLines
-  add_observations = function(Spoints, y = NULL, y.index = NULL){
+  add_observations = function(Spoints, y = NULL, y.index = NULL) {
 
     if (!is.null(y) && is.null(y)) {
       stop("if y is provided, then y.index must be provided as well.")
@@ -345,7 +327,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$y <- c(self$y, y)
     private$raw_y <- c(private$raw_y, y)
 
-    SP <- maptools::snapPointsToLines(Spoints, self$Lines)
+    SP <- snapPointsToLines(Spoints, self$lines)
     coords.old <- as.data.frame(Spoints@coords)
     colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
     Spoints@coords = SP@coords
@@ -356,56 +338,60 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     }else{
       Spoints <- SpatialPointsDataFrame(Spoints, data = coords.old)
     }
-    for(ind in unique(LtE[,1])){
-        index.p = LtE[,1]==ind
-        LtE[index.p,2]=rgeos::gProject(self$Lines[ind,], Spoints[index.p,],
-        normalized=TRUE)
+    for (ind in unique(LtE[, 1])) {
+        index.p <- LtE[, 1] == ind
+        LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
+                                       normalized=TRUE)
     }
-    PtE = LtE
-    for(ind in unique(LtE[,1])){
-      Es_ind <- which(self$LtE[ind,]>0)
-      index.p = which(LtE[,1]==ind)
-      for(j in index.p){
-        E_ind <- which.min(replace(self$ELend[Es_ind], self$ELend[Es_ind] < LtE[j,2], NA))
-        PtE[j,1] <- Es_ind[E_ind]
-        PtE[j,2] <- (LtE[j,2] - self$ELstart[PtE[j,1]])/  (self$ELend[PtE[j,1]]- self$ELstart[PtE[j,1]])
+    PtE <- LtE
+    for (ind in unique(LtE[, 1])) {
+      Es_ind <- which(self$LtE[ind, ] > 0)
+      index.p <- which(LtE[, 1] == ind)
+      for (j in index.p) {
+        E_ind <- which.min(replace(self$ELend[Es_ind],
+                                   self$ELend[Es_ind] < LtE[j,2], NA))
+        PtE[j, 1] <- Es_ind[E_ind]
+        PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
+          (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
       }
     }
-    if(is.null(self$Points)){
-      self$Points = Spoints
-      self$PtE = PtE
-    }else{
-        df1 <- self$Points@data
-        df2 <- Spoints@data
-        df1[setdiff(names(df2), names(df1))] <- NA
-        df2[setdiff(names(df1), names(df2))] <- NA  
-        self$Points@data <- df1
-        Spoints@data <- df2
-        self$Points = rbind(self$Points, Spoints)
-      self$Points = rbind(self$Points,Spoints)
-      self$PtE = rbind(self$PtE,PtE)
+    if (is.null(self$points)) {
+      self$points <- Spoints
+      self$PtE <- PtE
+    } else {
+      df1 <- self$points@data
+      df2 <- Spoints@data
+      df1[setdiff(names(df2), names(df1))] <- NA
+      df2[setdiff(names(df1), names(df2))] <- NA
+      self$points@data <- df1
+      Spoints@data <- df2
+      self$points <- rbind(self$points, Spoints)
+      self$points <- rbind(self$points, Spoints)
+      self$PtE <- rbind(self$PtE, PtE)
     }
   },
 
-  #' @description add observations to the object
-  #' @param y (n x 1) the value of the observations
-  #' @param PtE (n x 2) edge index, distance on index
-  #' @param normalized if TRUE, then the distances in PtE are assumed to be
-  #' normalized to (0,1), default FALSE.
-  #' @param Spoints Optional argument of class SpatialPoints or
-  #' SpatialPointsDataFrame specifying the Euclidean coordinates of the
+  #' @description Add observations to the object
+  #' @param y vector with the values of the observations
+  #' @param PtE matrix where `PtE[i,1]` is the index of the edge for the ith
+  #' observation and `PtE[i,2]` is the distance on the edge where the
+  #' observation is located
+  #' @param normalized if TRUE, then the distances in `PtE` are assumed to be
+  #' normalized to (0,1). Default FALSE.
+  #' @param Spoints Optional argument of class `SpatialPoints` or
+  #' `SpatialPointsDataFrame` specifying the Euclidean coordinates of the
   #' observation locations. If this is not provided, the coordinates are
   #' calculated internally.
-  add_PtE_observations = function(y, PtE, Spoints=NULL, normalized = FALSE){
+  add_PtE_observations = function(y, PtE, Spoints=NULL, normalized = FALSE) {
 
     self$y <- c(self$y, y)
     private$raw_y <- c(private$raw_y, y)
     if(min(PtE[,2]) < 0){
-      stop("PtE[,2] has negative values")
+      stop("PtE[, 2] has negative values")
     }
     if(normalized){
       if(max(PtE[,2] > 1)){
-        stop("For normalized distances, the values in PtE[,2] should not be
+        stop("For normalized distances, the values in PtE[, 2] should not be
              larger than 1")
       }
       self$PtE = rbind(self$PtE, PtE)
@@ -414,7 +400,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       self$PtE = rbind(self$PtE, PtE)
     }
 
-    if(!is.null(self$Lines)){
+    if(!is.null(self$lines)){
 
       if(!is.null(Spoints)){
               if("SpatialPointsDataFrame"%in%is(Spoints)){
@@ -427,7 +413,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         for(i in 1:dim(PtE)[1]){
 
           LT = private$edge_pos_to_line_pos(PtE[i, 1] , PtE[i, 2])
-          points <- rgeos::gInterpolate(self$Lines[LT[1,1],],
+          points <- rgeos::gInterpolate(self$lines[LT[1,1],],
                                         LT[1,2],
                                         normalized = TRUE)
           coords <- rbind(coords, points@coords)
@@ -436,79 +422,74 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         Spoints <- sp::SpatialPoints(coords)
         Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
       }
-      if(is.null(self$Points)){
-        self$Points <- Spoints
+      if(is.null(self$points)){
+        self$points <- Spoints
       } else {
-        df1 <- self$Points@data
+        df1 <- self$points@data
         df2 <- Spoints@data
         df1[setdiff(names(df2), names(df1))] <- NA
-        df2[setdiff(names(df1), names(df2))] <- NA  
-        self$Points@data <- df1
+        df2[setdiff(names(df1), names(df2))] <- NA
+        self$points@data <- df1
         Spoints@data <- df2
-        self$Points = rbind(self$Points, Spoints)
+        self$points = rbind(self$points, Spoints)
       }
     }
   },
 
-
-
-  #' @description build Kirchoff constraint matrix from edges, NOT implemented
-  #' for circles (i.e. self closed edges)
-  #' @param alpha (int) which type of constraint (currently only 2 implemented)
-  #' @param edge_constraint (bool) if true add constraint on vertices of
-  #' degree 1.
-  buildC = function(alpha, edge_constraint=FALSE){
+  #' @description build Kirchoff constraint matrix from edges, currently not
+  #' implemented for circles (edges that start and end in the same vertex)
+  #' @param alpha the type of constraint (currently only supports 2)
+  #' @param edge_constraint if TRUE, add constraints on vertices of degree 1
+  buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
       i_  =  rep(0, 2*self$nE)
       j_  =  rep(0, 2*self$nE)
       x_  =  rep(0, 2*self$nE)
 
-      count_constraint = 0
-      count            = 0
-      for(v in 1:self$nV){
-        lower.edges  = which(self$E[,1]%in%v)
-        upper.edges  = which(self$E[,2]%in%v)
-        n_e = length(lower.edges) + length(upper.edges)
+      count_constraint <- 0
+      count <- 0
+      for (v in 1:self$nV) {
+        lower.edges  <- which(self$E[, 1] %in% v)
+        upper.edges  <- which(self$E[, 2] %in% v)
+        n_e <- length(lower.edges) + length(upper.edges)
+
         #derivative constraint
-        if((edge_constraint & n_e ==1) | n_e > 1) {
+        if ((edge_constraint & n_e ==1) | n_e > 1) {
           i_[count + 1:n_e] <- count_constraint + 1
           j_[count + 1:n_e] <- c(4 * (lower.edges-1) + 2, 4 * (upper.edges-1) + 4)
-          x_[count + 1:n_e]     <- c( rep(1,length(lower.edges)),
-                                      rep(-1,length(upper.edges)))
+          x_[count + 1:n_e] <- c(rep(1,length(lower.edges)),
+                                 rep(-1,length(upper.edges)))
           count <- count + n_e
           count_constraint <- count_constraint + 1
         }
-        if(n_e > 1){
-          if(length(upper.edges)==0){
+        if (n_e > 1) {
+          if (length(upper.edges) == 0) {
             edges <- cbind(lower.edges, 1)
-
-          }else if(length(lower.edges)==0){
+          } else if(length(lower.edges) == 0){
             edges <- cbind(upper.edges, 3)
-
           }else{
             edges <- rbind(cbind(lower.edges, 1),
                            cbind(upper.edges, 3))
-
           }
-          for(i in 2:n_e){
-            i_[count + 1:2]   <- count_constraint + 1
+          for (i in 2:n_e) {
+            i_[count + 1:2] <- count_constraint + 1
             j_[count + 1:2] <- c(4 * (edges[i-1,1] - 1) + edges[i-1, 2],
                                  4 * (edges[i,1]   - 1) + edges[i,   2])
-            x_[count + 1:2]     <- c(1,-1)
+            x_[count + 1:2] <- c(1,-1)
             count <- count + 2
             count_constraint <- count_constraint + 1
           }
         }
       }
-      C <- Matrix::sparseMatrix(i    = i_[1:count],
-                                j    = j_[1:count],
-                                x    = x_[1:count],
-                                dims = c(count_constraint, 4*self$nE) )
+      C <- Matrix::sparseMatrix(i = i_[1:count],
+                                j = j_[1:count],
+                                x = x_[1:count],
+                                dims = c(count_constraint, 4*self$nE))
       self$C = C
 
-      self$CBobj <- c_basis2(self$C)
-      self$CBobj$T <- t(self$CBobj$T)
+      self$CoB <- c_basis2(self$C)
+      self$CoB$T <- t(self$CoB$T)
     }else{
       error("only alpha=2 implimented")
     }
@@ -525,12 +506,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' - h_e the mesh width per edge in the graph
   #' - ind the indices of the vertices in the mesh
   #' - VtE all mesh locations including the original vertices
-  build_mesh = function(h,n=NULL){
+  build_mesh = function(h,n=NULL) {
 
     self$mesh <- list(PtE = NULL,
                       V = NULL,
                       E = NULL,
-                      n_e = rep(0,self$nV),
+                      n_e = rep(0, self$nV),
                       h_e = NULL,
                       ind = 1:self$nV,
                       VtE = NULL)
@@ -552,14 +533,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$h_e <- c(self$mesh$h_e,
                            rep(self$edge_lengths[i] * d.e[1],
                                self$mesh$n_e[i] + 1))
-        if(is.null(self$Lines)) {
+        if(is.null(self$lines)) {
           self$mesh$V <- rbind(self$mesh$V,
                                cbind(self$V[self$E[i,1], 1]*(1 - d.e) +
                                        d.e*self$V[self$E[i, 2],1],
                                      self$V[self$E[i,1], 2]*(1 - d.e) +
                                        d.e*self$V[self$E[i, 2],2]))
         } else {
-          Line <- self$Lines[i,]
+          Line <- self$lines[i,]
           val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
           Points <- gInterpolate(Line, d.e, normalized=TRUE)
           self$mesh$V <- rbind(self$mesh$V, Points@coords)
@@ -573,38 +554,36 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
     }
-
-    self$mesh$VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
+    self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
   },
 
   #' @description build mass and stiffness matrices for given mesh object
-  compute_fem = function(){
-    if(is.null(self$mesh)){
+  compute_fem = function() {
+    if (is.null(self$mesh)) {
       stop("no mesh provided")
     }
-
     nV <- dim(self$mesh$V)[1]
     self$mesh$G <- self$mesh$C <- Matrix(0,nrow=nV,ncol=nV)
 
-    for(e in 1:dim(self$mesh$E)[1]){
-      v1 <- self$mesh$E[e,1]
-      v2 <- self$mesh$E[e,2]
+    for (e in 1:dim(self$mesh$E)[1]) {
+      v1 <- self$mesh$E[e, 1]
+      v2 <- self$mesh$E[e, 2]
 
-      self$mesh$C[v1,v1] <- self$mesh$C[v1,v1] +  self$mesh$h_e[e]/3
-      self$mesh$C[v2,v2] <- self$mesh$C[v2,v2] +  self$mesh$h_e[e]/3
-      self$mesh$C[v1,v2] <- self$mesh$C[v1,v2] +  self$mesh$h_e[e]/6
-      self$mesh$C[v2,v1] <- self$mesh$C[v2,v1] +  self$mesh$h_e[e]/6
+      self$mesh$C[v1,v1] <- self$mesh$C[v1, v1] + self$mesh$h_e[e]/3
+      self$mesh$C[v2,v2] <- self$mesh$C[v2, v2] + self$mesh$h_e[e]/3
+      self$mesh$C[v1,v2] <- self$mesh$C[v1, v2] + self$mesh$h_e[e]/6
+      self$mesh$C[v2,v1] <- self$mesh$C[v2, v1] + self$mesh$h_e[e]/6
 
-      self$mesh$G[v1,v1] <- self$mesh$G[v1,v1] +  1/self$mesh$h_e[e]
-      self$mesh$G[v2,v2] <- self$mesh$G[v2,v2] +  1/self$mesh$h_e[e]
-      self$mesh$G[v1,v2] <- self$mesh$G[v1,v2] -  1/self$mesh$h_e[e]
-      self$mesh$G[v2,v1] <- self$mesh$G[v2,v1] -  1/self$mesh$h_e[e]
+      self$mesh$G[v1,v1] <- self$mesh$G[v1, v1] + 1 / self$mesh$h_e[e]
+      self$mesh$G[v2,v2] <- self$mesh$G[v2, v2] + 1 / self$mesh$h_e[e]
+      self$mesh$G[v1,v2] <- self$mesh$G[v1, v2] - 1 / self$mesh$h_e[e]
+      self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
     }
   },
   #' @description Computes observation matrix for mesh
   #' @param PtE locations given as (edge number in graph, location on edge)
-  mesh_A = function(PtE){
-    if(is.null(self$mesh)){
+  mesh_A = function(PtE) {
+    if (is.null(self$mesh)) {
       stop("no mesh given")
     }
     x <- private$PtE_to_mesh(PtE)
@@ -617,19 +596,20 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(A)
   },
 
-  #' @description Find one Edge correspond to each Vertex (warning very
-  #' inefficient implementation)
-  #' @return VtE (n.v x 2) [1] edge number, [2] 0=  lower edge, 1=  upper edge
-  VtEfirst = function(){
+  #' @description Find one edge corresponding to each vertex
+  #' @return VtE matrix where `VtE[i,1]` is the edge number, `VtE[i,2] = 0`
+  #' if the vertex is at the start of the edge and `VtE[i,1] = 1` if the vertex
+  #' is at the end of the edge
+  VtEfirst = function() {
     n.V <- dim(self$V)[1]
-    VtE <- matrix(0,n.V, 2)
+    VtE <- matrix(0, n.V, 2)
 
-    for(i in 1:n.V){
-      Ei <- which(self$E[,1]==i)[1]
+    for (i in 1:n.V) {
+      Ei <- which(self$E[, 1] == i)[1]
       pos <- 0
-      if(is.na(Ei)==1){
+      if (is.na(Ei) == 1) {
         pos <- 1
-        Ei <- which(self$E[,2]==i)[1]
+        Ei <- which(self$E[, 2] == i)[1]
       }
       VtE[i,] <- c(Ei, pos)
     }
@@ -662,7 +642,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #'                               Lines(list(line2),ID="2"),
   #'                               Lines(list(line3),ID="3"),
   #'                               Lines(list(line4),ID="4")))
-  #' graph <- metric_graph$new(Lines = Lines)
+  #' graph <- metric_graph$new(lines = Lines)
   #' graph$plot()
   plot = function(plotly = FALSE,
                   line_width = 0.3,
@@ -675,7 +655,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                   X = NULL,
                   X_loc = NULL,
                   p = NULL,
-                  ...){
+                  ...) {
     if(!plotly){
       p <- private$plot_2d(line_width = line_width,
                            marker_size = vertex_size,
@@ -704,18 +684,18 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     return(p)
   },
 
-  #' @description plot continuous function X on the graph
+  #' @description plot continuous function on the graph
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
-  #' evaluated at a precomputed mesh.
-  #' @param plotly plot in 2D or 3D?
-  #'
+  #' evaluated at the mesh in the graph
+  #' @param plotly if TRUE, then plot is shown in 3D
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param line_width for 3D plot, the line width of the graph.
   #' @param vertex_size for 3D plot, the vertex size of the vertices
-  #' @param color Color of curve
+  #' @param color color of curve
   #' @param p previous plot in which the new plot should be added.
   #' @param ... additional arguments for ggplot or plot_ly
+  #' @return either a ggplot or a plot_ly object
   plot_function = function(X,
                            plotly = FALSE,
                            graph_color = 'black',
@@ -821,7 +801,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
           }
         }
       }
-      if (is.null(private$initial_graph$Lines) == TRUE) {
+      if (is.null(private$initial_graph$lines) == TRUE) {
         data.to.plot.order <- vals[order(vals[, 1]), ]
         V <- private$initial_graph$V[private$initial_graph$E[i, ], ]
 
@@ -862,7 +842,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
             rel.pos = rel.pos + private$initial_graph$ELstart[i]
 
           data.to.plot <- cbind(rel.pos,vals[index_j, 2])
-          Line_edge <- SpatialLines(list(private$initial_graph$Lines@lines[[LinesPos[j, 1]]]))
+          Line_edge <- SpatialLines(list(private$initial_graph$lines@lines[[LinesPos[j, 1]]]))
 
           data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                              drop = FALSE]
@@ -909,6 +889,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #' @param color Color of the curves
   #' @param p previous ggplot or plot_ly object to add the plot to
   #' @param ... additional arguments for ggplot or plot_ly
+  #' @return A ggplot or a plot_ly object
   plot_function_mesh = function(X,
                                 plotly = FALSE,
                                 graph_color = 'black',
@@ -922,21 +903,21 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                        color = color, p = p, ...)
   },
 
-  #' @description split_edge Function for splitting lines
+  #' @description function for splitting lines in the graph
   #' @param Ei index of line to split
   #' @param t  position on line to split (normalized)
-  split_edge = function(Ei, t){
-    if (!is.null(self$Lines)) {
-
-      index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
+  split_edge = function(Ei, t) {
+    if (!is.null(self$lines)) {
+      index <- (self$LtE@p[Ei] + 1):(self$LtE@p[Ei + 1])
       LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
-      LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
-      j <-  min(which(t  <= LinesPos[,2]))
+      LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
+      j <- min(which(t <= LinesPos[, 2]))
       t_mod <- t
-      if(j == 1){
-        t_mod <- t_mod/LinesPos[j,2]
-      }else{
-        t_mod <- (t_mod-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+      if (j == 1) {
+        t_mod <- t_mod/LinesPos[j, 2]
+      } else {
+        t_mod <- (t_mod - LinesPos[j - 1, 2]) /
+          (LinesPos[j, 2] - LinesPos[j - 1, 2])
       }
       mult_ <- 1
       if(j== dim(LinesPos)[1] ){
@@ -950,7 +931,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         t_mod = t_mod + self$ELstart[Ei]
       }
 
-      Line <- self$Lines[LinesPos[j,1], ]
+      Line <- self$lines[LinesPos[j,1], ]
       val_line <- gInterpolate(Line, t_mod, normalized = TRUE)@coords
 
       #change LtE
@@ -978,19 +959,15 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
         self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
       }
       LtE.p_new <- self$LtE@p[n.p] + sum(large)
-
-      self$LtE <-Matrix::sparseMatrix(i    = c(LtE.i, LtE.i_new)+1,
-                                      p    = c(LtE.p, LtE.p_new),
-                                      x    = c(LtE.x, LtE.x_new),
-                                      dims = LtE.dim )
-
-
-    }else{
+      self$LtE <- Matrix::sparseMatrix(i = c(LtE.i, LtE.i_new)+1,
+                                       p = c(LtE.p, LtE.p_new),
+                                       x = c(LtE.x, LtE.x_new),
+                                       dims = LtE.dim)
+    } else {
       V1 <- self$V[self$E[Ei, 1], ]
       V2 <- self$V[self$E[Ei, 2], ]
-      val_line <- (1-t)*V1 + t*V2
+      val_line <- (1 - t) * V1 + t * V2
     }
-
     newV <- self$nV + 1
     self$V <- rbind(self$V, c(val_line))
     l_e <- self$edge_lengths[Ei]
@@ -1000,88 +977,61 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
     self$E[Ei, 2] <- newV
     ind <- which(self$PtE[, 1] %in% Ei)
-    for(i in ind){
+    for (i in ind) {
       if (self$PtE[i, 2] >= t - 1e-10) {
         self$PtE[i, 1] <- self$nE
-        self$PtE[i, 2] <- abs(self$PtE[i, 2] - t)/(1 - t)
+        self$PtE[i, 2] <- abs(self$PtE[i, 2] - t) / (1 - t)
       }
     }
     self$nV <- dim(self$V)[1]
-
-
   },
 
-  #' @description Auxiliar function for adding simulated response variables in the correct order.
+  #' @description function for adding simulated response variables in the
+  #' correct order.
   #' @param y A vector of response variables
-  #' @export
-  add_responses = function(y){
-  # stopifnot(length(y) == length(self$y))
+  add_responses = function(y) {
   stopifnot(length(y) == nrow(self$PtE))
-
   private$raw_y <- y
   self$y <- y
-
-
-  # idx <- private$reorder_idx[[1]]
-  # y_tmp <- self$y[1:length(idx)]
-  # self$y[idx] <- y_tmp
-  # if(length(private$reorder_idx)>1){
-  #   for(i in 2:length(private$reorder_idx)){
-  #     idx <- private$reorder_idx[[i]]
-  #     y_tmp <- self$y[1:length(idx)]
-  #     self$y <- y_tmp[idx]
-  #   }
-  # }
-
   idx <- private$reorder_idx[[1]]
   y_tmp <- self$y[idx]
   self$y[1:length(idx)] <- y_tmp
-  if(length(private$reorder_idx)>1){
-    for(i in 2:length(private$reorder_idx)){
+  if (length(private$reorder_idx) > 1) {
+    for (i in 2:length(private$reorder_idx)) {
       idx <- private$reorder_idx[[i]]
       y_tmp <- self$y[1:length(idx)]
       self$y <- y_tmp[idx]
     }
   }
-
-
-  # idx <- as.vector(A %*% 1:ncol(A))
-  # offset_idx <- min(idx)-1
-  # stopifnot(length(y) == length(self$y))
-  # self$y[idx-offset_idx] <- y
 },
 
   #' @description Add observations on mesh to the object
-  #' @param y the observations. These are used if provided, and otherwise the
-  #' observations are assumed to be in Spoints
-  add_mesh_observations = function(y){
+  #' @param y the observations.
+  add_mesh_observations = function(y) {
     if(is.null(self$mesh)){
       stop("You should have a mesh!")
     }
-    Spoints <- self$mesh$V[(nrow(self$VtEfirst())+1):nrow(self$mesh$V),]
+    Spoints <- self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ]
     rownames(Spoints) <- 1:nrow(Spoints)
     Spoints <- SpatialPoints(coords = Spoints)
     self$add_observations(Spoints = Spoints, y = y)
   },
 
   #' @description Get a copy of the initial graph
-
-  get_initial_graph = function(){
+  get_initial_graph = function() {
     return(private$initial_graph$clone())
   }
-
-
   ),
 
   private = list(
     #computes which line and which position t_E on Ei belongs to
     # Ei  (int)   edge index
     # t_e (n x 1) number of positions on Ei
-    edge_pos_to_line_pos = function(Ei, t_E){
+    edge_pos_to_line_pos = function(Ei, t_E) {
 
       LT <- matrix(0, nrow= length(t_E),2)
-
       L_index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
+
       #LinPos line number and end relative end of the line on the edge
       LinesPos <- cbind(self$LtE@i[L_index] + 1, self$LtE@x[L_index])
       LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
@@ -1116,14 +1066,14 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
   #function for creating Vertex and Edges from self$lines
   line_to_vertex = function(){
     lines <- c()
-    for(i in 1:length(self$Lines)){
-      points <- self$Lines@lines[[i]]@Lines[[1]]@coords
+    for(i in 1:length(self$lines)){
+      points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
       lines <- rbind(lines,
                      c(i, points[1,],
-                       sp::LineLength(self$Lines@lines[[i]]@Lines[[1]])),
+                       sp::LineLength(self$lines@lines[[i]]@Lines[[1]])),
                      c(i, points[n,],
-                       sp::LineLength(self$Lines@lines[[i]]@Lines[[1]])))
+                       sp::LineLength(self$lines@lines[[i]]@Lines[[1]])))
     }
 
     vertex <- lines[1, , drop = FALSE]
@@ -1152,13 +1102,13 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     self$edge_lengths <- lvl[,4]
     self$nV <- dim(self$V)[1]
 
-    self$LtE <-Matrix::sparseMatrix(j    = 1:dim(self$E)[1],
-                                    i    = c(1:length(self$Lines)),
-                                    x    = rep(1,dim(self$E)[1]),
-                                    dims = c(dim(self$E)[1], length(self$Lines)) )
+    self$LtE <- Matrix::sparseMatrix(j = 1:dim(self$E)[1],
+                                     i = c(1:length(self$lines)),
+                                     x = rep(1,dim(self$E)[1]),
+                                     dims = c(dim(self$E)[1],
+                                              length(self$lines)))
     self$ELend = rep(1,dim(self$E)[1])
     self$ELstart = rep(0,dim(self$E)[1])
-
   },
 
   #Compute PtE for mesh given PtE for graph
@@ -1214,12 +1164,12 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                      p = NULL,
                      ...){
     xyl <- c()
-    if(is.null(self$Lines)){
+    if(is.null(self$lines)){
       xyl <- cbind(c(self$V[self$E[, 1], 1], self$V[self$E[, 2], 1]),
                    c(self$V[self$E[, 1], 2], self$V[self$E[, 2], 2]),
                    c(1:self$nE, 1:self$nE))
     } else {
-      coords <- lapply(coordinates(self$Lines), function(x) x[[1]])
+      coords <- lapply(coordinates(self$lines), function(x) x[[1]])
       nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
       xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
     }
@@ -1238,8 +1188,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                          linewidth = line_width,
                          colour = edge_color)
     }
-
-
     if (marker_size > 0) {
       p <- p + geom_point(data = data.frame(x = self$V[, 1],
                                             y = self$V[, 2]),
@@ -1247,30 +1195,27 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                           colour = vertex_color,
                           size= marker_size)
     }
-
     if (data) {
       x <- y <- NULL
       for (i in 1:length(self$y)) {
-        if(is.null(self$Lines)){
+        if(is.null(self$lines)){
           Ei <- self$PtE[i, 1]
           V <- private$initial_graph$V[private$initial_graph$E[Ei, ], ]
 
           alpha <- PtE[i, 2]
           coords <- cbind((1 - alpha) * V[1, 1] + alpha * V[2, 1],
                           (1 - alpha) * V[1, 2] + alpha * V[2, 2])
-
           x = c(x, coords[, 1])
           y = c(y, coords[, 2])
         } else {
           LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
-          Line <- self$Lines[LT[1, 1], ]
+          Line <- self$lines[LT[1, 1], ]
           val_line <- gProject(Line, as(Line, "SpatialPoints"),
                                normalized = TRUE)
           Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
           x <- c(x, Point@coords[1])
           y <- c(y, Point@coords[2])
         }
-
       }
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(self$y)),
@@ -1294,7 +1239,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
       x <- y <- NULL
       for (i in 1:length(as.vector(X))) {
         LT <- private$edge_pos_to_line_pos(X_loc[i, 1], X_loc[i, 2])
-        Line <- self$Lines[LT[1, 1], ]
+        Line <- self$lines[LT[1, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
         Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
         x <- c(x, Point@coords[1])
@@ -1306,9 +1251,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                           size = data_size) +
         scale_color_viridis() + labs(colour = "")
     }
-
     p <- p + coord_fixed()
-
     return(p)
   },
 
@@ -1321,7 +1264,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                      mesh = FALSE,
                      p = NULL,
                      ...){
-    if (is.null(self$Lines)) {
+    if (is.null(self$lines)) {
       data.plot <- data.frame(x = c(self$V[E[, 1], 1], self$V[E[, 2], 1]),
                               y = c(self$V[E[, 1], 2], self$V[E[, 2], 2]),
                               z = rep(0, 2 * self$nE),
@@ -1329,8 +1272,8 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     } else {
       x <- y <- ei <- NULL
       for (i in 1:self$nE) {
-        xi <- self$Lines@lines[[i]]@Lines[[1]]@coords[, 1]
-        yi <- self$Lines@lines[[i]]@Lines[[1]]@coords[, 2]
+        xi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 1]
+        yi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 2]
         ii <- rep(i,length(xi))
         x <- c(x, xi)
         y <- c(y, yi)
@@ -1366,7 +1309,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
     if (data) {
       x <- y <- NULL
       for (i in 1:length(self$y)) {
-        Line <- self$Lines[PtE[i, 1], ]
+        Line <- self$lines[PtE[i, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
         Point <- gInterpolate(Line, PtE[i, 2], normalized = TRUE)
         x <- c(x, Point@coords[1])
@@ -1394,15 +1337,6 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
                            showlegend = FALSE)
     }
     xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
-
-    #ax <- list(title = '',
-    #           zeroline = FALSE,
-    #           showgrid = FALSE,
-    #           showticklabels=FALSE)
-    #p <- p %>% layout(title = '',
-    #                  scene = list(xaxis = ax, yaxis = ax, zaxis = ax,
-    #                               aspectmode='data'))
-
     return(p)
   },
 
@@ -1426,7 +1360,7 @@ metric_graph <-  R6::R6Class("GPGraph::graph",
 
   # initial_E = NULL,
 
-  # # Initial Lines
+  # # Initial lines
 
   # initial_Lines = NULL,
 
