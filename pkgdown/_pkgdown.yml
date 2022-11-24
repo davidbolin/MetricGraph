@@ -70,11 +70,7 @@ reference:
     - spde_posterior_mean
     - posterior_crossvalidation
     - posterior_crossvalidation_covariance
-    - posterior_mean_alpha1
-    - posterior_mean_alpha2
     - posterior_mean_covariance
-    - posterior_mean_obs_alpha1
-    - posterior_mean_obs_alpha2
   - title: Likelihood functions
     contents:
     - likelihood_graph_spde
@@ -86,4 +82,18 @@ reference:
   - title: Precision matrices
     contents:
     - spde_precision
-
+    - precision_exp_line
+    - Qalpha1
+    - Qalpha2
+  - title: Covariance functions
+    contents:
+    - covariance_alpha1
+    - covariance_alpha1_mesh
+    - covariance_alpha2
+    - covariance_alpha2_mesh
+    - matern_derivative
+    - matern_neumann_free
+    - matern_neumann_free2
+    - precision_exp_line 
+    - r_1
+    - r_1_circle
