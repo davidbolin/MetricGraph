@@ -88,7 +88,7 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     EtV3 <- EtV[,2]
     El <- as.vector(El)
 
-  gpgraph_lib <- system.file('shared', package='GPGraph')
+  gpgraph_lib <- system.file('shared', package='MetricGraph')
 
   idx_ij <- order(i_, j_)
   j_ <- j_[idx_ij]

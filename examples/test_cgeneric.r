@@ -1,6 +1,6 @@
 library(sp)
 library(INLA)
-library(GPGraph)
+library(MetricGraph)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -135,7 +135,7 @@ summary(spde_result)
 
 ##############
 
-library(GPGraph)
+library(MetricGraph)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -309,7 +309,7 @@ graph$plot_function(X = m.prd.matrix, marker_size = 3, plotly=TRUE)
 
 library(sp)
 library(INLA)
-library(GPGraph)
+library(MetricGraph)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -454,7 +454,7 @@ summary(spde_result)
 #####
 
 
-library(GPGraph)
+library(MetricGraph)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))

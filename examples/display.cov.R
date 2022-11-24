@@ -1,6 +1,6 @@
 #build graph Figure covariance between points
 
-library(GPGraph)
+library(MetricGraph)
 
 theta <- c(2, 5) #kappa, sigma
 P <- rbind(c(0,0),

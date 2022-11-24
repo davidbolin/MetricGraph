@@ -1,2 +1,2 @@
 library(testthat)
-test_check("GPGraph")
+test_check("MetricGraph")

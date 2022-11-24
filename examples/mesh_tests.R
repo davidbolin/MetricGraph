@@ -1,4 +1,4 @@
-library(GPGraph)
+library(MetricGraph)
 library(sp)
 library(INLA)
 

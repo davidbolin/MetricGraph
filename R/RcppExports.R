@@ -22,6 +22,6 @@ NULL
 #' @noRd
 #'
 c_basis2 <- function(A, eps_limit = 1e-10) {
-    .Call(`_GPGraph_c_basis2`, A, eps_limit)
+    .Call(`_MetricGraph_c_basis2`, A, eps_limit)
 }
 

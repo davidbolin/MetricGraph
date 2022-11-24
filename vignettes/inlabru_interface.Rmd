@@ -39,7 +39,7 @@ references:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 set.seed(1)
-library(GPGraph)
+library(MetricGraph)
 ```
 
 # Introduction
@@ -75,11 +75,11 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 
 # A toy dataset 
 
-Let us begin by loading the `GPGraph` package
+Let us begin by loading the `MetricGraph` package
 and creating a metric graph:
 
 ```{r}
-library(GPGraph)
+library(MetricGraph)
 library(sp)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))

@@ -74,7 +74,7 @@ references:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 set.seed(1)
-library(GPGraph)
+library(MetricGraph)
 ```
 
 # Introduction
@@ -187,7 +187,7 @@ graph$plot_function_mesh(u, plotly = TRUE)
 
 ## Inference
 
-Mostly for illustration purposes, the `GPGraph` package contains implementations
+Mostly for illustration purposes, the `MetricGraph` package contains implementations
 of likelihoods for Whittle--Matérn fields observed under Gaussian measurement 
 noise. In this section we will illustrate these methods. For the use of the 
 Whittle--Matérn fields in more complicated hierarchical models, we recommend
@@ -368,7 +368,7 @@ graph$plot(X = u_est_exp, X_loc = graph$PtE)
 
 
 # Models based on the Graph Laplacian
-A final set of Gaussian models that is supported by `GPGraph` is the Matérn type
+A final set of Gaussian models that is supported by `MetricGraph` is the Matérn type
 processes based on the graph Laplacian introduced
 by [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). These are multivariate Gaussian distributions, which are defined in the
 vertices through the equation

@@ -124,7 +124,7 @@ spCircle = function(radius,
 
 
 graphics.off()
-library(GPGraph)
+library(MetricGraph)
 library(sp)
 library(maptools)
 dbh = 20

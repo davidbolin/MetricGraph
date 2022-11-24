@@ -1,5 +1,5 @@
 library('sf')
-library(GPGraph)
+library(MetricGraph)
 
 graph.type = 2
 if(graph.type == 1){

@@ -10,7 +10,7 @@ Class representing a general metric graphs.
 A graph object created from vertex and edge matrices, or from an
 sp::Lines object where each line is representing and edge. For more details,
 see the help vignette:
-\code{vignette("metric_graph", package = "GPGraph")}
+\code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
 library(sp)

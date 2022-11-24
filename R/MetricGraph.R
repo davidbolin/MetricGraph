@@ -1,6 +1,6 @@
 #'  Gaussian processes on metric graphs
 #'
-#' `GPGraph` is used for specifying Gaussian random fields on metric graphs.
+#' `MetricGraph` is used for specifying Gaussian random fields on metric graphs.
 #' The main models are the Whittle-Matérn fields, which are specified through the
 #' fractional elliptic SPDE
 #' \deqn{(\kappa^2 - \Delta)^{\alpha/2} (\tau u(s)) = W,}
@@ -18,10 +18,10 @@
 #' predictions (see ...) are also implemented...
 #'
 #'
-#' For a more detailed introduction to the package, see the GPGraph Vignettes.
+#' For a more detailed introduction to the package, see the MetricGraph Vignettes.
 #'
 #' @docType package
-#' @name GPGraph
+#' @name MetricGraph
 #' @import Matrix
 #' @export Cholesky t
 #' @importFrom igraph graph distances
@@ -37,5 +37,5 @@
 #' @importFrom magrittr %>%
 #' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
-#' @useDynLib GPGraph, .registration = TRUE
+#' @useDynLib MetricGraph, .registration = TRUE
 NULL

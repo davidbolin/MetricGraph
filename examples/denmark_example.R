@@ -1,4 +1,4 @@
-library(GPGraph)
+library(MetricGraph)
 library(ggplot2)
 library(maptools)
 library(Matrix)

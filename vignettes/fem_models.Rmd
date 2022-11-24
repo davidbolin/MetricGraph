@@ -62,11 +62,11 @@ For further details on the construction of metric graphs, see
 [Working with metric graphs](metric_graphs.html)
 
 ## Constructing the graph and the mesh
-We begin by loading the `rSPDE` and `GPGraph` packages:
+We begin by loading the `rSPDE` and `MetricGraph` packages:
 
 ```{r, message=FALSE, warning=FALSE}
   library(rSPDE)
-  library(GPGraph)
+  library(MetricGraph)
 ```
 
 As an example, we consider the following metric graph

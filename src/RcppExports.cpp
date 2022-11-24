@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // c_basis2
 Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
-RcppExport SEXP _GPGraph_c_basis2(SEXP ASEXP, SEXP eps_limitSEXP) {
+RcppExport SEXP _MetricGraph_c_basis2(SEXP ASEXP, SEXP eps_limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,11 +25,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_GPGraph_c_basis2", (DL_FUNC) &_GPGraph_c_basis2, 2},
+    {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_GPGraph(DllInfo *dll) {
+RcppExport void R_init_MetricGraph(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

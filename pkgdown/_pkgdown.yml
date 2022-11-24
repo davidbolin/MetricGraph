@@ -1,4 +1,4 @@
-url: https://davidbolin.github.io/GPGraph/
+url: https://davidbolin.github.io/MetricGraph/
 
 destination: docs
 
@@ -43,9 +43,9 @@ home:
    
     
 reference:
-  - title: GPGraph package
+  - title: MetricGraph package
     contents: 
-    - GPGraph
+    - MetricGraph
   - title: Metric graph constructor
     contents:
     - metric_graph
@@ -65,8 +65,6 @@ reference:
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
-    - sample_alpha1_line
-    - sample_alpha2_line
   - title: Posterior tools
     contents:
     - spde_posterior_mean
@@ -88,27 +86,4 @@ reference:
   - title: Precision matrices
     contents:
     - spde_precision
-    - Qalpha1
-    - Qalpha2
-  - title: Covariance (and related) functions
-    contents:
-    - covariance_alpha1
-    - covariance_alpha1_mesh
-    - covariance_alpha2
-    - covariance_alpha2_mesh
-    - matern_derivative
-    - matern_neumann_free
-    - matern_neumann_free2
-    - r_1
-    - r_1_circle
-    - r_2
-  - title: Auxiliary functions
-    contents:
-    - phi
-    - phi1
-    - phi2
-    - plot_r_1
-    - plot_r_2
-    - corrector
-    - corrector_inverse_e
-    - corrector_neumann_free
+

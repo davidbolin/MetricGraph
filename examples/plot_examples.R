@@ -1,4 +1,4 @@
-library(GPGraph)
+library(MetricGraph)
 library(sp)
 
 # Example 1: plot of graph, observations, and covariance for alpha = 1

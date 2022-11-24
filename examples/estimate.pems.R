@@ -4,7 +4,7 @@
 
 # Load library
 library('sf')
-library(GPGraph)
+library(MetricGraph)
 # Load shapefile
 Lines <- read_sf('data.pems/lines.shp')
 V <- read.csv('data.pems/V.csv',header=T, row.names = NULL)

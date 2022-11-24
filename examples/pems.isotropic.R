@@ -1,5 +1,5 @@
 library('sf')
-library(GPGraph)
+library(MetricGraph)
 library(xtable)
 library(scales)
 save.fig=F

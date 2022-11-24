@@ -21,7 +21,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macOS-latest, r: 'release'}
           - {os: ubuntu-20.04, r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-20.04, r: 'release'}
 
@@ -66,7 +65,7 @@ jobs:
         shell: Rscript {0}
       - name: Installing rSPDE
         run: |
-          install.packages("remotes",dependencies=TRUE)
+          install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
           remotes::install_github("davidbolin/rSPDE")
         shell: Rscript {0}        
       - uses: r-lib/actions/check-r-package@v2

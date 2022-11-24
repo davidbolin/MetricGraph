@@ -1,4 +1,4 @@
-library(GPGraph)
+library(MetricGraph)
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))

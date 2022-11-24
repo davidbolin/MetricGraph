@@ -3,7 +3,7 @@
 #' @details A graph object created from vertex and edge matrices, or from an
 #' sp::Lines object where each line is representing and edge. For more details,
 #'  see the help vignette:
-#' \code{vignette("metric_graph", package = "GPGraph")}
+#' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @examples
 #' library(sp)
 #' line1 <- Line(rbind(c(0, 0), c(2, 0)))

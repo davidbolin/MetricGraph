@@ -3,7 +3,7 @@
 #'
 #'
 #rm(list=ls())
-library(GPGraph)
+library(MetricGraph)
 library(Matrix)
 library(sp)
 set.seed(4)
