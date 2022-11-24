@@ -401,7 +401,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$PtE = rbind(self$PtE, PtE)
     }
 
-    if(!is.null(self$lines)){
 
       if(!is.null(Spoints)){
               if("SpatialPointsDataFrame"%in%is(Spoints)){
@@ -434,7 +433,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         Spoints@data <- df2
         self$points = rbind(self$points, Spoints)
       }
-    }
   },
 
   #' @description build Kirchoff constraint matrix from edges, currently not
@@ -534,18 +532,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$mesh$h_e <- c(self$mesh$h_e,
                            rep(self$edge_lengths[i] * d.e[1],
                                self$mesh$n_e[i] + 1))
-        if(is.null(self$lines)) {
-          self$mesh$V <- rbind(self$mesh$V,
-                               cbind(self$V[self$E[i,1], 1]*(1 - d.e) +
-                                       d.e*self$V[self$E[i, 2],1],
-                                     self$V[self$E[i,1], 2]*(1 - d.e) +
-                                       d.e*self$V[self$E[i, 2],2]))
-        } else {
+
           Line <- self$lines[i,]
           val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
           Points <- gInterpolate(Line, d.e, normalized=TRUE)
           self$mesh$V <- rbind(self$mesh$V, Points@coords)
-        }
+          
         V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
         self$mesh$ind <- c(self$mesh$ind, V.int)
         self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i, 1], V.int),
@@ -1165,15 +1157,11 @@ metric_graph <-  R6::R6Class("metric_graph",
                      p = NULL,
                      ...){
     xyl <- c()
-    if(is.null(self$lines)){
-      xyl <- cbind(c(self$V[self$E[, 1], 1], self$V[self$E[, 2], 1]),
-                   c(self$V[self$E[, 1], 2], self$V[self$E[, 2], 2]),
-                   c(1:self$nE, 1:self$nE))
-    } else {
+
       coords <- lapply(coordinates(self$lines), function(x) x[[1]])
       nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
       xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
-    }
+    
     if(is.null(p)){
       p <- ggplot()+ geom_path(data = data.frame(x = xyl[, 1],
                                                  y = xyl[,2],
@@ -1199,16 +1187,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if (data) {
       x <- y <- NULL
       for (i in 1:length(self$y)) {
-        if(is.null(self$lines)){
-          Ei <- self$PtE[i, 1]
-          V <- private$initial_graph$V[private$initial_graph$E[Ei, ], ]
 
-          alpha <- PtE[i, 2]
-          coords <- cbind((1 - alpha) * V[1, 1] + alpha * V[2, 1],
-                          (1 - alpha) * V[1, 2] + alpha * V[2, 2])
-          x = c(x, coords[, 1])
-          y = c(y, coords[, 2])
-        } else {
           LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
           val_line <- gProject(Line, as(Line, "SpatialPoints"),
@@ -1216,7 +1195,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
           x <- c(x, Point@coords[1])
           y <- c(y, Point@coords[2])
-        }
+
       }
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(self$y)),
