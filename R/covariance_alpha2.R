@@ -3,6 +3,7 @@
 #' @param sigma parameter sigma
 #' @param kappa parameter kappa
 #' @param deriv (0,1,2) no derivative, first, or second order
+#' @noRd
 r_2 <- function(D, kappa, sigma, deriv = 0){
   aD <- abs(D)
   c <- ( sigma^2/(4 * kappa^3))
@@ -20,60 +21,6 @@ r_2 <- function(D, kappa, sigma, deriv = 0){
   stop("deriv must be either (0,1,2)")
 }
 
-#' plot the Matern alpha = 2
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
-#' @param sigma_e parameter sigma_e
-plot_r_2 <-function(kappa, sigma, sigma_e, t = NULL) {
-  if (is.null(t)) {
-    r_p <- 4.743859 / kappa
-    t <- seq(0, r_p, length.out = 100)
-  }
-  r_  <- r_2(t,kappa, sigma)
-  if (t[1] == 0)
-    r_[1] = r_[1] + sigma_e
-  plot(t, r_, type = "l")
-
-}
-
-#' Generates samples of the entire graph
-#' @param graph   - graphical object
-#' @param theta  - (sigma_e, sigma, kappa)
-#' @export
-graph_posterior_mean_matern2 <- function(graph,  theta, sample=FALSE) {
-
-  check <- gpgraph_check_graph(graph)
-
-  X <- c()
-  # V.post.mean <- posterior.mean.matern2(theta, graph)
-    V.post.mean <- posterior_mean_alpha2(theta, graph)
-  for(i in 1:dim(graph$E)[1]){
-    V.i <-   V.post.mean[4*(i-1) + 1:4]
-
-    ind <- which(graph$PtE[,1] == i)
-    if(length(ind)==0){
-      X.i   <- sample_alpha2_line(theta,
-                           V.i,
-                           graph$edge_lengths[i],
-                           nt = 100,
-                           sample=sample)
-    }else{
-      X.i   <- sample_alpha2_line(theta,
-                           V.i,
-                           graph$edge_lengths[i],
-                           nt = 100,
-                           y = graph$y[ind],
-                           py =graph$PtE[ind,2],
-                           sample=sample)
-
-    }
-    X.i[,1] <- X.i[,1]/graph$edge_lengths[i]
-    X <- rbind(X, cbind(X.i,i))
-
-  }
-  return(X)
-
-}
 
 #' Compute covariance of a point to the entire graph (discretized) for
 #' alpha=2 model

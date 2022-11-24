@@ -7,22 +7,6 @@ r_1 <- function(D, kappa, sigma) {
   return((sigma^2 / (2 * kappa)) * exp(-kappa * abs(D)))
 }
 
-#' plot the exponential covariance for parameter set
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
-#' @param sigma_e parameter sigma_e (nugget)
-plot_r_1 <- function(kappa, sigma, sigma_e, t = NULL) {
-  if (is.null(t)) {
-    r_0 <- r_1(0, kappa, sigma)
-    r_p <- -log(0.05)/sigma
-    t <- seq(0, r_p, length.out = 100)
-  }
-  r_ <- r_1(t, kappa, sigma)
-  if (t[1] == 0)
-    r_[1] = r_[1] + sigma_e^2
-  plot(t, r_, type = "l")
-
-}
 
 #' the Whittle--Matern covariance with alpha=1 on a circle
 #' @param t locations

@@ -77,7 +77,6 @@ reference:
     - posterior_mean_covariance
     - posterior_mean_obs_alpha1
     - posterior_mean_obs_alpha2
-    - graph_posterior_mean_matern2
   - title: Likelihood functions
     contents:
     - likelihood_graph_spde

@@ -55,7 +55,7 @@ is the vertex at the end of the edge}
 
 \item{\code{A}}{Matrix specifying which vertices are observation locations}
 
-\item{\code{CBobj}}{svd stuct object used for Kirchhoff constraints}
+\item{\code{CoB}}{svd stuct object used for Kirchhoff constraints}
 
 \item{\code{Points}}{Observations in SpatialPointsDataFrame}
 
@@ -72,9 +72,9 @@ locations}
 
 \item{\code{Lines}}{List of Lines object for building the graph}
 
-\item{\code{geo.dist}}{Geodesic distance matrix}
+\item{\code{geo_dist}}{Geodesic distance matrix}
 
-\item{\code{res.dist}}{Resistance distance matrix}
+\item{\code{res_dist}}{Resistance distance matrix}
 
 \item{\code{Laplacian}}{The weighted graph Laplacian}
 }

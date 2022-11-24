@@ -10,13 +10,13 @@
 #' @param stationary_endpoints Which vertices of degree 1 should contain stationary boundary conditions?
 #' @param parameterization Which parameterization to be used? The options are 'matern' (sigma and range) and 'spde' (sigma and kappa).
 #' @param start_range Starting value for range parameter.
-#' @param prior.range a `list` containing the elements `meanlog` and
+#' @param prior_range a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation on the log scale. Will not be used if prior.kappa is non-null.
 #' @param start_kappa Starting value for kappa.
 #' @param start_sigma Starting value for sigma.
-#' @param prior.kappa a `list` containing the elements `meanlog` and
+#' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation on the log scale.
-#' @param prior.sigma a `list` containing the elements `meanlog` and
+#' @param prior_sigma a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation on the log scale.
 #' @param debug Should debug be displayed?
 #'

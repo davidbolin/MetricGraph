@@ -2,6 +2,7 @@
 #'
 #' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
+#' @param alpha the order of the SPDE
 #' @param version if 1, the likelihood is computed by integrating out
 #' the vertex locations, if 2, no integration is done
 #' @return The log-likelihood
