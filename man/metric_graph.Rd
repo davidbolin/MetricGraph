@@ -131,7 +131,7 @@ graph. The weights are given by the edge lengths}
 \subsection{Method \code{new()}}{
 Create a new \code{metric_graph} object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(lines = NULL, V = NULL, E = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(lines = NULL, V = NULL, E = NULL, tolerance = 2e-16)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -142,6 +142,9 @@ Create a new \code{metric_graph} object
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices}
 
 \item{\code{E}}{m x 2 matrix where each row represents an edge}
+
+\item{\code{tolerance}}{vertices that are closer than this number in Euclidean
+distance are merged when constructing the graph (default = 2e-16).}
 }
 \if{html}{\out{</div>}}
 }

@@ -97,7 +97,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
   #' @param E m x 2 matrix where each row represents an edge
   #' @param tolerance vertices that are closer than this number in Euclidean
-  #' distance are merged when constructing the graph (default = 0).
+  #' distance are merged when constructing the graph (default = 2e-16).
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -106,7 +106,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' viewed as a vertex.
   #' @return A metric_graph object
   initialize = function(lines = NULL, V = NULL, E = NULL,
-                        tolerance = 0) {
+                        tolerance = 2e-16) {
 
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
