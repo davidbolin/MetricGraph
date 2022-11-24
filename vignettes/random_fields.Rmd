@@ -4,7 +4,7 @@ author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Random fields on metric graphs}
+  %\VignetteIndexEntry{Gaussian random fields on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
