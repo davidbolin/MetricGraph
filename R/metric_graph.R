@@ -127,6 +127,19 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
     private$line_to_vertex(tolerance = tolerance)
     private$initial_graph <- self$clone()
+
+    # Checking if graph is connected
+    g <- graph(edges = c(t(self$E)), directed = FALSE)
+    components <- igraph::clusters(g, mode="weak")
+    nc <- components$no
+    if(nc>1){
+      warning("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+    }
+
+    # Checking if there is some edge with infinite length
+    if(any(!is.finite(self$edge_lengths))){
+      warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
+    }
   },
 
   #' @description Computes shortest path distances between the vertices in the
