@@ -17,7 +17,7 @@ test_that("Check agrement derivative covariance function agrees", {
   c <- 1/(4*kappa^3)
   x <- seq(-1, 1, length.out = 20)
   expect_equal(GPGraph:::r_2(x, sigma = sigma, kappa = kappa, deriv = 1),
-               matern.derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+               matern_derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
 })
 test_that("Check agrement derivative covariance function agrees", {
   set.seed(1)
@@ -27,7 +27,7 @@ test_that("Check agrement derivative covariance function agrees", {
   x <- seq(-1,1,length.out=20)
   expect_equal(GPGraph:::r_2(x, sigma = sigma, kappa = kappa,
                              deriv = 2),
-               matern.derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
+               matern_derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
 })
 
 test_that("Check agrement covariance matrix", {
@@ -39,8 +39,8 @@ test_that("Check agrement covariance matrix", {
   x_ <- c(0,l_e)
   D <- outer(x_, x_, "-")
   r <- rSPDE::matern.covariance(D, kappa = kappa, nu = 3/2, sigma = sigma)
-  r1 <- -matern.derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
-  r2 <- -matern.derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
+  r1 <- -matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
+  r2 <- -matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
   Sigma.0 <- rbind(cbind(r, r1), cbind(t(r1), r2))*c
   r_00 <- GPGraph:::r_2(D, sigma = sigma, kappa = kappa)
   r_01 <- - GPGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 1)
@@ -71,16 +71,16 @@ test_that("test agrement precision matrix and article method", {
                                             cbind(matrix(0, 2, 2), R_00)))
 
 
-  build.C.beta1 <- function(L, kappa, sigma){
-    C_0 <- matern.neumann.free(c(0,L), c(0,L), kappa, sigma = 1,
+  build_C_beta1 <- function(L, kappa, sigma){
+    C_0 <- matern_neumann_free(c(0,L), c(0,L), kappa, sigma = 1,
                                nu = 3/2, L = L,deriv = c(1,1))
     return(sigma^2 * solve(solve(C_0) - 0.5 * diag(2) / kappa^2))
   }
-  C <- build.C.beta1(l_e, kappa, sigma)
-  r_free.2 <- matern.neumann.free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e)
-  rd1_free.2 <- matern.neumann.free2(x_, x_,C, kappa, sigma,
+  C <- build_C_beta1(l_e, kappa, sigma)
+  r_free.2 <- matern_neumann_free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e)
+  rd1_free.2 <- matern_neumann_free2(x_, x_,C, kappa, sigma,
                                      nu=3/2, L = l_e, deriv = c(0,1))
-  rd2_free.2 <- matern.neumann.free2(x_, x_,C, kappa, sigma,
+  rd2_free.2 <- matern_neumann_free2(x_, x_,C, kappa, sigma,
                                      nu=3/2, L = l_e, deriv = c(1,1))
   Sigma.2  <- rbind(cbind(r_free.2, rd1_free.2),
                     cbind(t(rd1_free.2),rd2_free.2)) * c
