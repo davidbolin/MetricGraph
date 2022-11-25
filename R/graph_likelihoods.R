@@ -314,6 +314,10 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
   sigma <- theta[2]
   kappa <- theta[3]
 
+  if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
+    graph$compute_laplacian()
+  }
+
   #build covariance matrix
   if (model == "alpha1") {
 
@@ -341,7 +345,7 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
   } else if (model == "GL2"){
 
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian)
+    Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
     Q <- Q %*% Q / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
@@ -377,28 +381,33 @@ likelihood_graph_laplacian <- function(theta, graph, alpha) {
   if(alpha%%1 != 0){
     stop("only integer values of alpha supported")
   }
+  if(is.null(graph$Laplacian)) {
+    graph$compute_laplacian()
+  }
 
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
 
   K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
-  Q <- K / sigma^2
+  Q <- K
   if (alpha>1) {
     for (k in 2:alpha) {
       Q <- Q %*% K
     }
   }
-
-  Q.p <- Q  + t(graph$A) %*% graph$A/sigma_e^2
-  mu.p <- solve(Q.p,as.vector(t(graph$A) %*% graph$y / sigma_e^2))
+  Q <- Q / sigma^2
+  A <- Diagonal(graph$nV, 1)
+  A <- A[graph$PtV, ]
+  Q.p <- Q  + t(A) %*% A/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(A) %*% graph$y / sigma_e^2))
 
   R <- chol(Q)
   R.p <- chol(Q.p)
 
   n.o <- length(graph$y)
   l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
-  v <- graph$y - graph$A%*%mu.p
+  v <- graph$y - A%*%mu.p
   l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
   return(as.double(l))
 }

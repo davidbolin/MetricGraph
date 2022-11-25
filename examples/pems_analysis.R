@@ -21,6 +21,7 @@ TE <- table(c(EtV$V1,EtV$V2))
 
 graph <-  metric_graph$new(lines = as_Spatial(Lines))
 
+
 #convert PtE to relative distances
 edge_length_m <- EtV[,4]
 PtE[,2] = PtE[,2]/edge_length_m[PtE[,1]]
@@ -33,7 +34,7 @@ graph$y <- Y - mean(Y)
 
 
 # Fit alpha=1 model
-theta.alpha1 <- c(6.9038951, 91.6852582,  0.2621412)
+theta.alpha1 <- c(6.881176, 94.194243,  9.184849)
 res <- optim(log(theta.alpha1), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 1),
@@ -43,7 +44,7 @@ like.alpha1 <- -res$value
 
 #fit alpha = 2 model
 graph$buildC(2)
-theta.alpha2 <- c(7.254335, 10861.170069, 41.815064)
+theta.alpha2 <- c(7.254335, 1086, 10)
 res <- optim(log(theta.alpha2), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 2),
@@ -54,7 +55,7 @@ like.alpha2 <- -res$value
 # Fit isotropic model
 graph$compute_resdist()
 
-theta.exp <- c(6.892917, 46.082757,  2.013006)
+theta.exp <- c(6.897021, 34.988880,  3.540205)
 res.exp <- optim(log(theta.exp), function(x) -likelihood_graph_covariance(exp(x),
                                                                           graph,
                                                                           model = "isoExp"),
@@ -108,10 +109,9 @@ result <- data.frame(RMSE  = sqrt(c(cv.exp$rmse, cv.alpha1$rmse, cv.GL1$rmse,
                      nlike = -c(like.exp, like.alpha1, like.GL1, like.GL2,
                                 like.alpha2),
                      row.names = c("isoExp","alpha1","GL1", "GL2","alpha2"))
-print(result)
+print(result, digits = 3)
 
-
-print(xtable(result))
+#print(xtable(result))
 
 
 ### plot
