@@ -29,7 +29,7 @@ Vignettes
 
 # Constructing metric graphs
 
-## Basic constructions
+## Basic constructions and properties
 A metric graph can be constructed in two ways. The first is to specify all edges
 in the graph as a `SpatialLines` object using the `sp` package. To illustrate
 this, we first load the `sp` package
@@ -54,47 +54,58 @@ We can now create the graph based on the `Lines` object as follows
 graph <- metric_graph$new(lines = Lines)
 graph$plot()
 ```
-
-
-<!-- The `metric_graph` class then automatically constructs the list of edges, 
-vertices, and edge lengths. These are available as public elements in the 
-object:  -->
-
-<!-- # ```{r}
-# V <- graph$V
-# E <- graph$E
-# edge_lengths <- graph$edge_lengths
-# ``` -->
-<!-- An alternative method is to specify these in the construction: -->
-<!-- # ```{r}
-# graph2 <- metric_graph$new(V = V, E = E, edge_lengths = edge_lengths)
-# graph2$plot()
-# ```  -->
-
-
-This graph has the same properties as the first, but since we have not provided
-the lines for each edge, it is visualized as having straight lines. If we know
-that the graph only has straight lines, we may exclude the edge length
-information in the construction: 
+The plot function that was used to create the plot above has various parameters
+to set the sizes and colors of the vertices and edges, and it has a `plotly`
+argument to visualize the graph in 3D:
 ```{r}
-V <- graph$V
-E <- graph$E
-graph3 <- metric_graph$new(V = V, E = E)
-graph3$plot()
+graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
+           edge_color = "red", edge_width = 2)
+```
+We can now obtain various properties of the graph: The vertex matrix, which
+specifies the Euclidian coordinates of the vertices is
+```{r}
+graph$V
+```
+and the edge matrix that specified the edges of the graph (i.e., which vertices
+that are connected by lines) is
+```{r}
+graph$E
+```
+To obtain the geodesic (shortes path) distance between the vertices, we can use
+the function `compute_geodist`:
+```{r}
+graph$compute_geodist()
+graph$geo_dist
+```
+The second option it to construct the graph using two matrices `V` and `E` that
+specify the location (in Euclidean space) of the vertices and the edges. In this
+case, it is assumed that the graph only has straight lines:
+```{r}
+V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1))
+E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 1))
+graph2 <- metric_graph$new(V = V, E = E)
+graph2$plot()
 ```
 
-<!-- We now have three graphs with the same edges and vertices. The first two are 
-identical from a modelling point of view, since they also have the same 
-edge lengths. The third, is different since it assumes straight edges and 
-therefore has a different edge length for one of the edges.  -->
-<!-- # ```{r}
-# print(cbind(graph$edge_lengths, graph2$edge_lengths, graph3$edge_lengths))
-# ``` -->
-<!-- Thus, from a modelling perspective, it is enough to specify the vertices,
-edges, and edge lengths, but to obtain correct visualizations, the spatial
-lines for the edges need to be specified.  -->
+The constructor of the graph has one argument `tolerance` which is used to merge
+vertices that are close in Euclidean space. The default value for this parameter
+is `2e-16`, which means that any two vertices that are closer than that are 
+merged. For example, in the following graph, we have two vertices that are 
+close but not close enough to be merged:
+```{r}
+V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1), c(0,-0.03))
+E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 5))
+graph3 <- metric_graph$new(V = V, E = E)
+graph3$plot()
+print(graph3$nV)
+```
 
-
+This can be adjusted by increasing the tolerance:
+```{r}
+graph4 <- metric_graph$new(V = V, E = E, tolerance = 0.05)
+graph4$plot()
+print(graph4$nV)
+```
 ## An example with data from OpenStreetMap
 This format of constructing graphs is compatible with data from OpenStreetMap,
 and to illustrate this we use the `osmdata` to construct a metric graph 
@@ -107,24 +118,18 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway",
                                                         "primary","secondary"))
 data <- osmdata_sp(call)
 
-graph4 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
-graph4$plot(vertex_size = 0)
-```
-
-For complex networks like this, one might be interested in looking only at
-removing lines that are not connected to the main network. This can be 
-done by using the function `largest_component` on the lines object as follows:
-```{r}
-graph5 <- graph_components(SpatialLines(data$osm_lines@lines))
+graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
 graph5$plot(vertex_size = 0)
 ```
 
-We can also use the function to extract all connected components as follows:
+As can be noted, the constructor here gave a warning that the graph is not 
+connected. This might not be ideal for modeling and we may want to study the 
+different connected components separately. To construct all connected components,
+we can use the `graph_components` function:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components(SpatialLines(data$osm_lines@lines),
-                           only_largest =  FALSE)
-p <- NULL
-for(i in 1:(length(graphs)-1)){
+graphs <- graph_components(SpatialLines(data$osm_lines@lines))
+p <- graphs[[1]]$plot(vertex_size = 0, edge_color = "black")  
+for(i in 2:(length(graphs)-1)){
 p <- graphs[[i]]$plot(vertex_size = 0, 
                       edge_color = rgb(runif(1),runif(1),runif(1)),
                       p = p)  
@@ -133,6 +138,29 @@ graphs[[length(graphs)]]$plot(vertex_size = 0,
                               edge_color = rgb(runif(1),runif(1),runif(1)),
                               p = p)
 ```
+
+Thus, we see that there are a few different connected components. One reason for
+this might be that we set the tolerance for merging nodes too low. Let us
+increase the tolerance and redo the creation: 
+```{r message=FALSE, warning=FALSE}
+graphs <- graph_components(SpatialLines(data$osm_lines@lines),
+                           tolerance = 1e-6)
+p <- graphs[[1]]$plot(vertex_size = 0, edge_color = "black")
+for(i in 2:(length(graphs)-1)){
+p <- graphs[[i]]$plot(vertex_size = 0, 
+                      edge_color = rgb(runif(1),runif(1),runif(1)),
+                      p = p)  
+}
+graphs[[length(graphs)]]$plot(vertex_size = 0,
+                              edge_color = rgb(runif(1),runif(1),runif(1)),
+                              p = p)
+```
+
+With this choice, we see that there is one large connected component and a few
+small. If we are interested in only getting the largest component, we can
+extract it as the first element of the `graphs` list (which is ordered by size).
+Alternatively, we can call `graph_components` with the argument 
+`only_largest = TRUE`. 
 
 # Adding data to the graph 
 

@@ -360,9 +360,9 @@ m_prd_bru <- spde_bru_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
-using the `plot_function_mesh()` method:
+using the `plot_function()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru$plot_function_mesh(X = m_prd_bru)
+graph_bru$plot_function(X = m_prd_bru, vertex_size = 0)
 ```
 
 We will now plot the predictions together with
@@ -381,7 +381,8 @@ graph_bru$add_responses(y_new_bru)
 
 Now, we plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru$plot(data=TRUE)
+p <- graph_bru$plot_function(X = m_prd_bru, vertex_size = 0) 
+graph_bru$plot(data=TRUE, vertex_size = 0, edge_width = 0, p = p, data_size = 2)
 ```
 
 ## Kriging by adding the prediction locations from the very beginning
@@ -472,29 +473,13 @@ m_prd2_bru <- spde_bru_fit_prd2$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
-using the `plot_function_mesh()` method:
+using the `plot_function()` method together with the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru_prd$plot_function_mesh(X = m_prd2_bru)
+p <- graph_bru_prd$plot_function(X = m_prd2_bru, vertex_size = 0)
+graph_bru_prd$plot(data=TRUE, vertex_size = 0, edge_width = 0, data_size = 2,
+                   p = p)
 ```
 
-We will now plot the predictions together with
-the data. To this end we need to create a new 
-vector `y` which is a concatenation of `y`
-and `m_prd`, then use it as the vector of 
-responses of `graph`, which is done by using the
-`add_responses()` method. Then, we plot.
-
-Let us begin by concatenating the vectors and adding
-the responses to `graph`:
-```{r}
-y_new2 <- c(y, m_prd2_bru)
-graph_bru_prd$add_responses(y_new2)
-```
-
-Now, we plot:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru_prd$plot(data=TRUE)
-```
 
 ## Fitting `inlabru` models with replicates
 

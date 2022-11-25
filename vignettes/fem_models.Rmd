@@ -82,7 +82,7 @@ As an example, we consider the following metric graph
                                 Lines(list(line3),ID="3"),
                                 Lines(list(line4),ID="4")))
   graph <- metric_graph$new(lines = Lines)
-  graph$plot(line_width = 0.3)
+  graph$plot()
 ```
 
 To construct a FEM approximation of a Whittle--Matérn field with general smoothness, 
@@ -126,7 +126,7 @@ The object `op_cov` contains the matrices needed for evaluating the distribution
 Let us simulate the field $u$ at the mesh locations and plot the result:
 ```{r} 
 u <- simulate(op)
-graph$plot_function_mesh(u, plotly = TRUE)
+graph$plot_function(u, plotly = TRUE)
 ```
 
 If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to multiply the weights with the FEM basis functions $\varphi_i(s)$ evaluated at the locations. For this, we can construct the observation matrix $\boldsymbol{\mathrm{A}}$, with elements $A_{ij} = \varphi_j(s_i)$, which links the FEM basis functions to the locations. This can be done
@@ -164,7 +164,7 @@ Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the ration
   A_bar <- kronecker(matrix(1, ncol = rspde.order + 1), 
                      Matrix::Diagonal(dim(graph$mesh$V)[1]))
   c_cov <- (A_bar) %*% solve(Q, v_bar)
-  graph$plot_function_mesh(c_cov, plotly = TRUE)
+  graph$plot_function(c_cov, plotly = TRUE)
 ```
 
 
@@ -232,7 +232,7 @@ Since we predicted at the mesh nodes, `Aprd` was chosen as the identity matrix w
 The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function_mesh(as.vector(u.krig[[1]]), plotly = TRUE)  
+  graph$plot_function(as.vector(u.krig[[1]]), plotly = TRUE)  
 ```
 
 ## Fitting a model with replicates
@@ -417,9 +417,9 @@ m.prd <- rspde_fitprd$summary.fitted.values$mean[id.prd]
 ```
 
 Finally, let us plot the predicted values. To this end 
-we will use the `plot_function_mesh()` graph method. 
+we will use the `plot_function()` graph method. 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function_mesh(m.prd, plotly = TRUE)  
+  graph$plot_function(m.prd, plotly = TRUE)  
 ```
 
 ## Using `R-INLA` implementation to fit models with replicates
@@ -590,7 +590,7 @@ along with the fitted object `rspde_bru_fit`:
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function_mesh(field_pred$mean, plotly = TRUE)  
+  graph$plot_function(field_pred$mean, plotly = TRUE)  
 ```
 
 ## Using inlabru to fit models with replicates
