@@ -23,6 +23,7 @@ check_graph <- function(graph)
 #' the components are sorted by the number of vertices.
 #' @param only_largest if TRUE, only return the largest component.
 #' Otherwise return an ordered list with the components (largest first)
+#' @param ... additional arguments used when specifying the graph
 #'
 #' @return A `metric_graph` object created from the largest component, or a
 #' list of `metric_graph` objects for all connected components
@@ -40,9 +41,10 @@ check_graph <- function(graph)
 #' graphs <- graph_components(Lines, only_largest = FALSE)
 #' p <- graphs[[1]]$plot(edge_color = "red")
 #' graphs[[2]]$plot(p = p, edge_color = "blue")
-graph_components <- function(lines, by_length = TRUE, only_largest = TRUE) {
+graph_components <- function(lines, by_length = TRUE, only_largest = FALSE,
+                             ...) {
 
-  graph <- metric_graph$new(lines = lines)
+  graph <- metric_graph$new(lines = lines, ...)
   g <- graph(edges = c(t(graph$E)), directed = FALSE)
   igraph::E(g)$weight <- graph$edge_lengths
   components <- igraph::clusters(g, mode="weak")
@@ -58,7 +60,7 @@ graph_components <- function(lines, by_length = TRUE, only_largest = TRUE) {
           edge_rem <- c(edge_rem, i)
       }
       edge_keep <- setdiff(1:graph$nE, edge_rem)
-      Graphs[[k]] = metric_graph$new(lines = lines[edge_keep])
+      Graphs[[k]] = metric_graph$new(lines = lines[edge_keep], ...)
     }
     sizes <- components$csize
     lengths <- unlist(lapply(1:nc, function(x) sum(Graphs[[x]]$edge_lengths)))
@@ -480,7 +482,7 @@ nearestPointOnSegment <- function(s, p){
 #' @param graph a `metric_graph` object.
 #' @param model type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
 #' are supported
-#' @param data Should the data be used to obtain improved starting values? 
+#' @param data Should the data be used to obtain improved starting values?
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
@@ -490,7 +492,7 @@ graph_starting_values <- function(graph, model = NULL, data=TRUE){
     graph$compute_geodist()
   }
   check_graph(graph)
-  
+
   if(data){
     if(is.null(graph$y)) {
       stop("No data provided, if you want the version without data set the 'data' argument to FALSE!")
@@ -540,7 +542,7 @@ graph_starting_values <- function(graph, model = NULL, data=TRUE){
       v <- rep(0,graph$nV)
       v[1] <- 1
       s2 <- solve(Q,v)[1]
-      start_sigma <- data_std / sqrt(s2)      
+      start_sigma <- data_std / sqrt(s2)
     } else{
       start_sigma <- 1
     }

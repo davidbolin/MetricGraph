@@ -102,7 +102,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
 graph <- metric_graph$new(lines = Lines)
-graph$plot(line_width = 0.3)
+graph$plot()
 ```
 
 For further details on the construction of metric graphs, see
@@ -149,7 +149,7 @@ result as a function as follows:
 ```{r}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function_mesh(u)
+graph$plot_function(u)
 ```
 
 Let us construct a finer mesh, simulate the field, and visualize the simulation
@@ -158,7 +158,7 @@ in 3D by specifying the `plotly` argument in the plot function:
 graph$build_mesh(h = 0.01)
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function_mesh(u, plotly = TRUE)
+graph$plot_function(u, plotly = TRUE)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -167,7 +167,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r}
 C <- covariance_alpha1_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
                             graph = graph)
-graph$plot_function_mesh(C, plotly = TRUE)
+graph$plot_function(C, plotly = TRUE)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
@@ -175,14 +175,14 @@ The corresponding covariance function then looks as follows:
 ```{r}
 C <- covariance_alpha2_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
                             graph = graph)
-graph$plot_function_mesh(C, plotly = TRUE)
+graph$plot_function(C, plotly = TRUE)
 ```
 
 Let us simulate a process with $\alpha=2$ as well:
 ```{r}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
                  graph = graph, type = "mesh")
-graph$plot_function_mesh(u, plotly = TRUE)
+graph$plot_function(u, plotly = TRUE)
 ```
 
 ## Inference
@@ -260,7 +260,7 @@ on the regular mesh that we previously constructed.
 u_est <- spde_posterior_mean(c(sigma_e_est, sigma_est, kappa_est),
                              graph, alpha = 1, type = "mesh")
 
-graph$plot_function_mesh(u_est, plotly = TRUE)
+graph$plot_function(u_est, plotly = TRUE)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -295,7 +295,7 @@ We can now construct the covariance matrix for the process:
 sigma <- 1
 kappa <- 5
 Sigma <- sigma^2*exp(-kappa*graph$mesh$res_dist)
-graph$plot_function_mesh(Sigma[20,], plotly = TRUE)
+graph$plot_function(Sigma[20,], plotly = TRUE)
 ```
 
 One can note that this covariance function looks quite similar to that of the 
@@ -304,9 +304,9 @@ Whittle--Mat\'ern covariance to compare:
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
 C.wm <- covariance_alpha1_mesh(P,kappa, sigma, graph, scale = TRUE)
-p <- graph$plot_function_mesh(Sigma[20,], plotly = TRUE)
-graph$plot_function_mesh(C.wm, plotly = TRUE, p = p, 
-                         color = 'rgb(100,0,0)')
+p <- graph$plot_function(Sigma[20,], plotly = TRUE)
+graph$plot_function(C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
+                    support_width = 0)
 ```
 
 Because of the similarities between these two covairance functions, we recomend
@@ -394,6 +394,7 @@ follows:
 graph$observation_to_vertex()
 graph$plot(data = TRUE)
 ```
+
 Now, to work with these models, we first precompute the graph Laplacian of this
 extended graph:
 ```{r}

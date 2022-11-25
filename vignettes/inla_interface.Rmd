@@ -369,28 +369,16 @@ m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
-using the `plot_function_mesh()` method:
+using the `plot_function()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot_function_mesh(X = m_prd)
+graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 2)
 ```
 
-We will now plot the predictions together with
-the data. To this end we need to create a new 
-vector `y` which is a concatenation of `y`
-and `m_prd`, then use it as the vector of 
-responses of `graph`, which is done by using the
-`add_responses()` method. Then, we plot.
-
-Let us begin by concatenating the vectors and adding
-the responses to `graph`:
-```{r}
-y_new <- c(y, m_prd)
-graph$add_responses(y_new)
-```
-
-Now, we plot:
+Finally, we can plot the predictions together with
+the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot(data=TRUE)
+p <- graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
+graph$plot(data=TRUE, vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```
 
 ## Kriging by adding the prediction locations from the very beginning
@@ -496,28 +484,16 @@ m_prd2 <- spde_fit_prd2$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means
-using the `plot_function_mesh()` method:
+using the `plot_function()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$plot_function_mesh(X = m_prd2) 
+graph_prd$plot_function(X = m_prd2, vertex_size = 0) 
 ```
 
 We will now plot the predictions together with
-the data. To this end we need to create a new 
-vector `y` which is a concatenation of `y`
-and `m_prd`, then use it as the vector of 
-responses of `graph`, which is done by using the
-`add_responses()` method. Then, we plot.
-
-Let us begin by concatenating the vectors and adding
-the responses to `graph`:
-```{r}
-y_new2 <- c(y, m_prd2)
-graph_prd$add_responses(y_new2)
-```
-
-Now, we plot:
+the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$plot(data=TRUE)
+p <- graph_prd$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
+graph_prd$plot(data=TRUE, vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```
 
 ## Fitting `R-INLA` models with replicates

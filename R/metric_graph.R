@@ -663,9 +663,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description plot a metric graph
   #' @param plotly use plot_ly for 3D plot (default FALSE)
-  #' @param line_width line width for edges
   #' @param vertex_size size of the vertices
   #' @param vertex_color color of vertices
+  #' @param edge_width line width for edges
   #' @param edge_color color of edges
   #' @param data Plot the data?
   #' @param data_size size of markers for data
@@ -690,9 +690,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' graph <- metric_graph$new(lines = Lines)
   #' graph$plot()
   plot = function(plotly = FALSE,
-                  line_width = 0.3,
                   vertex_size = 3,
                   vertex_color = 'black',
+                  edge_width = 0.3,
                   edge_color = 'black',
                   data = FALSE,
                   data_size = 1,
@@ -702,7 +702,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                   p = NULL,
                   ...) {
     if(!plotly){
-      p <- private$plot_2d(line_width = line_width,
+      p <- private$plot_2d(line_width = edge_width,
                            marker_size = vertex_size,
                            vertex_color = vertex_color,
                            edge_color = edge_color,
@@ -714,7 +714,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            p = p,
                            ...)
     } else {
-      p <- private$plot_3d(line_width = line_width,
+      p <- private$plot_3d(line_width = edge_width,
                            marker_size = vertex_size,
                            vertex_color = vertex_color,
                            edge_color = edge_color,
@@ -734,21 +734,33 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at the mesh in the graph
   #' @param plotly if TRUE, then plot is shown in 3D
-  #' @param graph_color for 3D plot, the color of the graph.
-  #' @param line_width for 3D plot, the line width of the graph.
+  #' @param vertex_size size of the vertices
+  #' @param vertex_color color of vertices
+  #' @param edge_width width for edges
+  #' @param edge_color for 3D plot, color of edges
+  #' @param line_width for 3D plot, line width of the function curve.
   #' @param vertex_size for 3D plot, the vertex size of the vertices
-  #' @param color color of curve
+  #' @param line_color color of the function curve
+  #' @param support_width for 3D plot, width of support lines
+  #' @param support_color for 3D plot, color of support lines
   #' @param p previous plot in which the new plot should be added.
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return either a ggplot or a plot_ly object
   plot_function = function(X,
                            plotly = FALSE,
-                           graph_color = 'black',
-                           line_width = 1,
-                           vertex_size = 10,
-                           color = 'rgb(0,0,200)',
+                           vertex_size = 5,
+                           vertex_color = "black",
+                           edge_width = 1,
+                           edge_color = 'black',
+                           line_width = NULL,
+                           line_color = 'rgb(0,0,200)',
+                           support_width = 0.5,
+                           support_color = "gray",
                            p = NULL,
                            ...){
+    if (is.null(line_width)) {
+      line_width = edge_width
+    }
 
     mesh <- FALSE
 
@@ -907,21 +919,33 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(plotly){
       if(is.null(p)){
-        p <- self$plot(plotly = TRUE, color = graph_color,
-                       line_width = line_width, vertex_size = vertex_size)
+        p <- self$plot(plotly = TRUE,
+                       vertex_color = vertex_color,
+                       vertex_size = vertex_size,
+                       edge_width = edge_width,
+                       edge_color = edge_color)
       }
       p <- p %>% add_trace(data = data, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
                            line = list(width = line_width,
-                                       color = color, ...),
-                           split = ~i, showlegend = FALSE)
+                                       color = line_color),
+                           split = ~i, showlegend = FALSE, ...)
+      if(support_width > 0) {
+        data.mesh <- data.frame(x = c(x.loc, x.loc), y = c(y.loc, y.loc),
+                                z = c(rep(0, length(z.loc)), z.loc),
+                                i = rep(1:length(z.loc),2))
+        p <- p %>% add_trace(data = data.mesh, x = ~y, y = ~x, z = ~z,
+                             mode = "lines", type = "scatter3d",
+                             line = list(width = support_width,
+                                         color = support_color),
+                             split = ~i, showlegend = FALSE)
+      }
     } else {
       if(is.null(p)) {
         p <- ggplot(data = data, aes(x = x, y = y,
                                      group = i,
-                                     colour = z),
-                    linewidth = line_width) +
-          geom_path() + scale_color_viridis() + labs(colour = "")
+                                     colour = z)) +
+          geom_path(linewidth = line_width) + scale_color_viridis() + labs(colour = "")
       } else {
         p <- p + geom_path(data = data,
                            aes(x = x, y = y,
@@ -929,35 +953,10 @@ metric_graph <-  R6::R6Class("metric_graph",
                            linewidth = line_width) +
           scale_color_viridis() + labs(colour = "")
       }
-
+      p <- self$plot(edge_width = 0, vertex_size = vertex_size,
+                     vertex_color = vertex_color, p = p)
     }
-
     return(p)
-  },
-
-  #' @description plot continuous function on the mesh of a graph
-  #' @param X Either an m x 3 matrix with (edge number, position on
-  #' curve (in length), value) or a vector with values for the function
-  #' evaluated at a precomputed mesh.
-  #' @param plotly plot in 2D or 3D?
-  #' @param graph_color for 3D plot, the color of the graph.
-  #' @param line_width for 3D plot, the line width of the curves.
-  #' @param vertex_size for 3D plot, the size of the vertices
-  #' @param color Color of the curves
-  #' @param p previous ggplot or plot_ly object to add the plot to
-  #' @param ... additional arguments for ggplot or plot_ly
-  #' @return A ggplot or a plot_ly object
-  plot_function_mesh = function(X,
-                                plotly = FALSE,
-                                graph_color = 'black',
-                                line_width = 1,
-                                vertex_size = 10,
-                                color = 'rgb(0,0,200)',
-                                p = NULL,
-                                ...){
-    self$plot_function(X = X, plotly = plotly, graph_color = graph_color,
-                       line_width = line_width, vertex_size = vertex_size,
-                       color = color, p = p, ...)
   },
 
   #' @description function for splitting lines in the graph
@@ -1161,11 +1160,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       n <- dim(points)[1]
       #lines contain [line index, start point, line length
       #               line index, end point, line length]
-      lines <- rbind(lines,
-                     c(i, points[1,],
-                       sp::LineLength(self$lines@lines[[i]]@Lines[[1]])),
-                     c(i, points[n,],
-                       sp::LineLength(self$lines@lines[[i]]@Lines[[1]])))
+      lines <- rbind(lines, c(i, points[1,]), c(i, points[n,]))
     }
 
     #save all vertices that are more than tolerance distance apart
@@ -1188,7 +1183,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
                           (vertex[, 3] - line[2, 3])^2)
-      lvl[i,] <- c(i, ind1, ind2, line[1,4])
+
+      self$lines@lines[[i]]@Lines[[1]]@coords[1,] <- vertex[ind1, 2:3]
+      i.e <- dim(self$lines@lines[[i]]@Lines[[1]]@coords)[1]
+      self$lines@lines[[i]]@Lines[[1]]@coords[i.e,] <- vertex[ind2, 2:3]
+      ll <- LineLength(self$lines@lines[[i]]@Lines[[1]])
+      lvl[i,] <- c(i, ind1, ind2, ll)
     }
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
@@ -1268,21 +1268,21 @@ metric_graph <-  R6::R6Class("metric_graph",
                                                  group = xyl[,3]),
                                mapping = aes(x = x, y = y, group = group),
                                linewidth = line_width,
-                               colour = edge_color)
+                               colour = edge_color, ...)
     } else {
       p <- p + geom_path(data = data.frame(x = xyl[, 1],
                                                  y = xyl[,2],
                                                  group = xyl[,3]),
                          mapping = aes(x = x, y = y, group = group),
                          linewidth = line_width,
-                         colour = edge_color)
+                         colour = edge_color, ...)
     }
     if (marker_size > 0) {
       p <- p + geom_point(data = data.frame(x = self$V[, 1],
                                             y = self$V[, 2]),
                           mapping = aes(x, y),
                           colour = vertex_color,
-                          size= marker_size)
+                          size= marker_size, ...)
     }
     if (data) {
       x <- y <- NULL
@@ -1297,10 +1297,11 @@ metric_graph <-  R6::R6Class("metric_graph",
           y <- c(y, Point@coords[2])
 
       }
-      p <- p + geom_point(data = data.frame(x = x, y = y,
-                                            val = as.vector(self$y)),
+      p <- p + geom_point(data = data.frame(x = x[!is.na(self$y)],
+                                            y = y[!is.na(self$y)],
+                                            val = as.vector(self$y[!is.na(self$y)])),
                           mapping = aes(x, y, color = val),
-                          size = data_size) +
+                          size = data_size, ...) +
         scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
