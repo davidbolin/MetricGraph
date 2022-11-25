@@ -480,34 +480,53 @@ nearestPointOnSegment <- function(s, p){
 #' @param graph a `metric_graph` object.
 #' @param model type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
 #' are supported
+#' @param data Should the data be used to obtain improved starting values? 
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
-graph_starting_values <- function(graph, model = NULL, range = FALSE){
+graph_starting_values <- function(graph, model = NULL, data=TRUE){
 
   if(is.null(graph$geo_dist)){
     graph$compute_geodist()
   }
   gpgraph_check_graph(graph)
-  if(is.null(graph$y)) {
-    stop("No data provided")
+  
+  if(data){
+    if(is.null(graph$y)) {
+      stop("No data provided, if you want the version without data set the 'data' argument to FALSE!")
+    }
+    data_std <- sqrt(var(as.vector(graph$y)))
+  } else{
+    data_std <- NA
   }
 
   finite_geodist <- is.finite(graph$geo_dist)
   finite_geodist <- graph$geo_dist[finite_geodist]
   prior.range.nominal <- max(finite_geodist) * 0.2
-  data_std <- sqrt(var(as.vector(graph$y)))
+
   if (model == "alpha1") {
     start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
     #variance is sigma^2/2 kappa
-    start_sigma <- sqrt(2*start_kappa) * data_std
+    if(data){
+      start_sigma <- sqrt(2*start_kappa) * data_std
+    } else{
+      start_sigma <- 1
+    }
   } else if (model == "alpha2") {
     start_kappa <- sqrt(8 * 1.5) / prior.range.nominal
-    #variance is sigma^2/(4 * kappa^3)
-    start_sigma <- sqrt(4*start_kappa^3) * data_std
+    if(data){
+      #variance is sigma^2/(4 * kappa^3)
+      start_sigma <- sqrt(4*start_kappa^3) * data_std
+    } else{
+      start_sigma <- 1
+    }
   } else if (model == "isoExp") {
     start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
-    start_sigma <- data_std
+    if(data){
+      start_sigma <- data_std
+    } else{
+      start_sigma <- 1
+    }
   } else if (model == "GL1") {
     if(is.null(graph$Laplacian)) {
       graph$compute_laplacian()
@@ -515,11 +534,17 @@ graph_starting_values <- function(graph, model = NULL, range = FALSE){
     h <- mean(graph$edge_lengths)
     k <- sqrt(8 * 0.5) / prior.range.nominal
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
-    Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
-    v <- rep(0,graph$nV)
-    v[1] <- 1
-    s2 <- solve(Q,v)[1]
-    start_sigma <- data_std / sqrt(s2)
+
+    if(data){
+      Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+      v <- rep(0,graph$nV)
+      v[1] <- 1
+      s2 <- solve(Q,v)[1]
+      start_sigma <- data_std / sqrt(s2)      
+    } else{
+      start_sigma <- 1
+    }
+
   } else if (model == "GL2") {
     if(is.null(graph$Laplacian)) {
       graph$compute_laplacian()
@@ -527,11 +552,16 @@ graph_starting_values <- function(graph, model = NULL, range = FALSE){
     h <- mean(graph$edge_lengths)
     k <- sqrt(8 * 0.5) / prior.range.nominal
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
-    Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
-    v <- rep(0,graph$nV)
-    v[1] <- 1
-    s2 <- solve(Q %*% Q,v)[1]
-    start_sigma <- data_std / sqrt(s2)
+    if(data){
+      Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+      v <- rep(0,graph$nV)
+      v[1] <- 1
+      s2 <- solve(Q %*% Q,v)[1]
+      start_sigma <- data_std / sqrt(s2)
+    } else{
+      start_sigma <- 1
+    }
+
   } else {
     stop("wrong model choice")
   }

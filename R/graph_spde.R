@@ -30,6 +30,12 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
  prior_sigma = NULL, debug = FALSE){
 
   parameterization <- parameterization[[1]]
+  if(!(alpha%in%c(1,2))){
+    stop("alpha must be either 1 or 2!")
+  }
+  if(alpha == 2){
+    stop("Only alpha=1 implemented.")
+  }
   nu <- alpha - 0.5
   V <- graph_object$V
   EtV <- graph_object$E
@@ -124,27 +130,20 @@ gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
   idx_ij <- idx_ij - 1
 
+
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
-      if(is.null(graph_object$geo_dist)){
-        graph_object$compute_geodist()
-      }
-      finite_geodist <- is.finite(graph_object$geo_dist)
-      finite_geodist <- graph_object$geo_dist[finite_geodist]
-      prior.range.nominal <- max(finite_geodist) * 0.2
-      prior_kappa$meanlog <- log(sqrt(8 *
-      exp(0.5) / prior.range.nominal))
-      prior_range$meanlog <- log(prior.range.nominal)
+      model_start <- ifelse(alpha==1,"alpha1", "alpha2")
+      start_values_vector <- graph_starting_values(graph_object, 
+                      model = model_start, data=FALSE)
+
+      prior_kappa$meanlog <- log(start_values_vector[3])
+      prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
     } else if(is.null(prior_range$meanlog)){
-      if(is.null(graph_object$geo_dist)){
-        graph_object$compute_geodist()
-      }
-      finite_geodist <- is.finite(graph_object$geo_dist)
-      finite_geodist <- graph_object$geo_dist[finite_geodist]
-      prior.range.nominal <- max(finite_geodist) * 0.2
-      prior_range$meanlog <- log(prior.range.nominal)
+      prior_range$meanlog <- log(sqrt(8 * nu)) -
+      prior_kappa$meanlog
     } else{
-      prior_kappa$meanlog <- log(sqrt(8 *
-      exp(0.5))) - prior_range$meanlog
+      prior_kappa$meanlog <- log(sqrt(8 * nu)) - 
+      prior_range$meanlog
     }
 
   if (is.null(prior_kappa$sdlog)) {
