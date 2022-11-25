@@ -326,15 +326,15 @@ implemented for circles (edges that start and end in the same vertex)
 \subsection{Method \code{build_mesh()}}{
 build mesh object for graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h, n = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h = NULL, n = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{h}}{maximum distance between mesh nodes}
+\item{\code{h}}{maximum distance between mesh nodes (should be provided if n is not provided)}
 
-\item{\code{n}}{maximum number of nodes per edge}
+\item{\code{n}}{maximum number of nodes per edge (should be provided if h is not provided)}
 }
 \if{html}{\out{</div>}}
 }
@@ -374,7 +374,7 @@ Computes observation matrix for mesh
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{PtE}}{locations given as (edge number in graph, location on edge)}
+\item{\code{PtE}}{locations given as (edge number in graph, normalized location on edge)}
 }
 \if{html}{\out{</div>}}
 }

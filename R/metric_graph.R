@@ -514,8 +514,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description build mesh object for graph
-  #' @param h maximum distance between mesh nodes
-  #' @param n maximum number of nodes per edge
+  #' @param h maximum distance between mesh nodes (should be provided if n is not provided)
+  #' @param n maximum number of nodes per edge (should be provided if h is not provided)
   #' @details The mesh is a list with the objects
   #' - PtE which contains the mesh locations excluding the original vertices
   #' - V the verties of the mesh
@@ -524,15 +524,23 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' - h_e the mesh width per edge in the graph
   #' - ind the indices of the vertices in the mesh
   #' - VtE all mesh locations including the original vertices
-  build_mesh = function(h,n=NULL) {
+  build_mesh = function(h=NULL,n=NULL) {
 
-    if(length(h)>1 || (!is.numeric(h))){
-      stop("h should be a single number")
+    if(is.null(h) && is.null(n)){
+      stop("You should specify either h or n!")
     }
 
-    if(h<=0){
-      stop("h must be positive!")
+    if(!is.null(h)){
+      if(length(h)>1 || (!is.numeric(h))){
+        stop("h should be a single number")
+      }
+
+      if(h<=0){
+        stop("h must be positive!")
+      }
     }
+
+
 
     if(!is.null(n)){
       if(length(n)>1 || (!is.numeric(n))){
