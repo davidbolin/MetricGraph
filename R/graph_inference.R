@@ -202,7 +202,7 @@ posterior_crossvalidation <- function(theta,
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian)
       Q <- K %*% K / sigma^2
     }
-    A <- graph$A
+    A <- graph$A()
     Q.p <- Q  + t(A)%*%A/sigma_e^2
   } else {
     stop("Wrong model choice.")

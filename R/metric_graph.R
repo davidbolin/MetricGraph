@@ -55,9 +55,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field C constraint matrix used to set Kirchhoff constraints
   C = NULL,
 
-  #' @field A sparse matrix specifying which vertices are observation locations
-  A = NULL,
-
   #' @field CoB change-of-basis object used for Kirchhoff constraints
   CoB = NULL,
 
@@ -277,19 +274,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     if (!is.null(self$CoB)) {
       self$buildC(2)
     }
-    self$A <- Matrix::Diagonal(self$nV)[self$PtV, ]
+    private$internal_A <- Matrix::Diagonal(self$nV)[self$PtV, ]
 
     if (length(self$PtV) == 1) {
-      self$A <- matrix(self$A, ncol = 2)
-    }
-
-    for (i in length(private$reorder_idx):1) {
-      idx <- private$reorder_idx[[i]]
-      A_tmp <- self$A[1:length(idx), ]
-      if (length(idx)==1) {
-        A_tmp <- matrix(A_tmp, ncol = 2)
-      }
-      self$A[idx, ] <- A_tmp
+        private$internal_A <- matrix(private$internal_A, ncol = 2)
     }
 
     self$add_responses(private$raw_y)
@@ -1088,8 +1076,39 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Get a copy of the initial graph
   get_initial_graph = function() {
     return(private$initial_graph$clone())
+  },
+
+  #' @description Get the observation/prediction matrix A
+  #' @param order Which order should be considered? The options are 'internal' and 'original'.
+  #'  The order 'internal' is the order of `graph$y``, for a metric_graph `graph`. The order 'original'
+  #' is the order of the user's input.
+  #' @param obs_to_vert Should the observations be turned into vertices?
+
+  A = function(order = "internal", obs_to_vert = FALSE){
+    if(is.null(private$internal_A) && !obs_to_vert){
+        stop("The A matrix was not computed. If you want to compute rerun this method with 'obs_to_vertex=TRUE', in which the observations will be turned to vertices and the A matrix will then be computed")
+    } else if(is.null(private$internal_A)){
+      self$observation_to_vertex()
+    }
+
+    if(order == "internal"){
+      return(private$internal_A)
+    } else if(order == "original"){
+      orig_A <- private$internal_A
+      for (i in length(private$reorder_idx):1) {
+      idx <- private$reorder_idx[[i]]
+      A_tmp <- orig_A[1:length(idx), ]
+      if (length(idx)==1) {
+        A_tmp <- matrix(A_tmp, ncol = 2)
+      }
+      orig_A[idx, ] <- A_tmp
+    }
+    return(orig_A)
+    } else{
+      stop("The order must be either 'internal' or 'original'!")
+    }
   }
-  ),
+    ), 
 
   private = list(
     #computes which line and which position t_E on Ei belongs to
@@ -1408,31 +1427,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   # Initial graph
 
-  initial_graph = NULL
+  initial_graph = NULL,
 
-  # # Initial number of vertices
+  # Internal A matrix
 
-  # initial_V = NULL,
-
-  # # Initial edges
-
-  # initial_E = NULL,
-
-  # # Initial lines
-
-  # initial_Lines = NULL,
-
-  # # Initial LtE
-
-  # initial_LtE = NULL,
-
-  # # Initial ELstart
-
-  # initial_ELstart = NULL,
-
-  # # Initial ELend
-
-  # initial_ELend = NULL
+  internal_A = NULL
 
 ))
 

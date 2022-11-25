@@ -420,7 +420,7 @@ some data from the model and then redo the fit:
 ```{r}
 Q <- (kappa^2*Matrix::Diagonal(graph$nV) + graph$Laplacian)/sigma^2
 u <- solve(chol(Q), rnorm(graph$nV))
-y <- graph$A%*%u + sigma_e*rnorm(length(graph$PtV))
+y <- graph$A()%*%u + sigma_e*rnorm(length(graph$PtV))
 graph$y <- y
 
 res.exp <- optim(log(theta0), 

@@ -4,12 +4,14 @@
 \alias{graph_spde_make_A}
 \title{Observation/prediction matrices for rSPDE models.}
 \usage{
-graph_spde_make_A(graph, n.repl = 1)
+graph_spde_make_A(graph, n.repl = 1, obs_to_vert = FALSE)
 }
 \arguments{
 \item{graph}{An object of class \code{metric_graph}}
 
 \item{n.repl}{Number of replicates}
+
+\item{obs_to_vert}{Should the observations be turned into vertices?}
 }
 \value{
 The observation matrix

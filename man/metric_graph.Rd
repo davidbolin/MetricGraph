@@ -69,8 +69,6 @@ edges on the lines in the graph. The locations are normalized on the line}
 
 \item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
 
-\item{\code{A}}{sparse matrix specifying which vertices are observation locations}
-
 \item{\code{CoB}}{change-of-basis object used for Kirchhoff constraints}
 
 \item{\code{points}}{the observations in a SpatialPointsDataFrame}
@@ -122,6 +120,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-add_responses}{\code{metric_graph$add_responses()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
+\item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -622,6 +621,27 @@ Get a copy of the initial graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_initial_graph()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-A"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-A}{}}}
+\subsection{Method \code{A()}}{
+Get the observation/prediction matrix A
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$A(order = "internal", obs_to_vert = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{order}}{Which order should be considered? The options are 'internal' and 'original'.
+The order 'internal' is the order of \verb{graph$y``, for a metric_graph }graph`. The order 'original'
+is the order of the user's input.}
+
+\item{\code{obs_to_vert}}{Should the observations be turned into vertices?}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-clone"></a>}}
