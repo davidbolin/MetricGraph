@@ -1,6 +1,6 @@
 #' internal function for checking metric_graph inputs
 #' @noRd
-gpgraph_check_graph <- function(graph)
+check_graph <- function(graph)
 {
   if (!inherits(graph, "metric_graph")) {
     stop("The graph object is not a metric graph")
@@ -489,7 +489,7 @@ graph_starting_values <- function(graph, model = NULL, data=TRUE){
   if(is.null(graph$geo_dist)){
     graph$compute_geodist()
   }
-  gpgraph_check_graph(graph)
+  check_graph(graph)
   
   if(data){
     if(is.null(graph$y)) {

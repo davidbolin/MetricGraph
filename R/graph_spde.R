@@ -22,7 +22,7 @@
 #'
 #' @return An inla object.
 #' @export
-gpgraph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
+graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
  parameterization = c("matern", "spde"),
  start_range = NULL, prior_range = NULL,
  start_kappa = NULL, start_sigma = NULL,

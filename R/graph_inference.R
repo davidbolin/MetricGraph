@@ -13,7 +13,7 @@
 #' @export
 posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 {
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if(is.null(graph$PtV) && (model != "isoExp")){
     stop("You must run graph$observation_to_vertex() first.")
@@ -80,7 +80,7 @@ posterior_crossvalidation_covariance <- function(theta,
                                                  model = "alpha1",
                                                  ind = NULL)
 {
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if(is.null(graph$PtV)){
     stop("You must run graph$observation_to_vertex() first.")
@@ -168,7 +168,7 @@ posterior_crossvalidation <- function(theta,
                                       model = "alpha1",
                                       ind = NULL)
 {
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
   if(is.null(graph$PtV)){
     stop("You must run graph$observation_to_vertex() first.")
   }

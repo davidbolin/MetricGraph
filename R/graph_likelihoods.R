@@ -9,7 +9,7 @@
 #' @export
 likelihood_graph_spde <- function(theta, graph, alpha = 1, version = 1) {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if (alpha == 1 && version == 1) {
     return(likelihood_alpha1(theta, graph))
@@ -308,7 +308,7 @@ likelihood_alpha1 <- function(theta, graph) {
 #' @export
 likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   sigma_e <- theta[1]
   sigma <- theta[2]
@@ -376,7 +376,7 @@ likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
 #' @export
 likelihood_graph_laplacian <- function(theta, graph, alpha) {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if(alpha%%1 != 0){
     stop("only integer values of alpha supported")

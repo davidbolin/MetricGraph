@@ -52,7 +52,7 @@ reference:
     - graph_components
   - title: INLA and SPDE approach on metric graphs
     contents:
-    - gpgraph_spde
+    - graph_spde
     - spde_metric_graph_result
     - summary.metric_graph_spde_result
     - gg_df.metric_graph_spde_result

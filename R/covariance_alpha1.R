@@ -116,7 +116,7 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
                               scale = FALSE){
 
-  gpgraph_check_graph(graph)
+  check_graph(graph)
 
   #compute covarains of the two edges of EP[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -189,7 +189,7 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
 #' @export
 covariance_alpha1_mesh <- function(P, kappa, sigma, graph, scale = FALSE) {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if(!check$has.mesh) {
     stop("No mesh provided.")

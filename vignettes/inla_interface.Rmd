@@ -160,12 +160,12 @@ graph$plot(data=TRUE)
 
 Now, we load the `R-INLA` package and
 create the `inla` model object with the
-`gpgraph_spde` function. By default we have
+`graph_spde` function. By default we have
 `alpha=1`. 
 
 ```{r}
 library(INLA)
-spde_model <- gpgraph_spde(graph)
+spde_model <- graph_spde(graph)
 ```
 
 Now, we need to create the index object with 
@@ -315,10 +315,10 @@ graph$plot(data=TRUE)
 
 We will now fit a new model with `R-INLA` with this new
 graph that contains the prediction locations. To this end,
-we create a new model object with the `gpgraph_spde()` function:
+we create a new model object with the `graph_spde()` function:
 
 ```{r}
-spde_model_prd <- gpgraph_spde(graph)
+spde_model_prd <- graph_spde(graph)
 ```
 
 Now, let us create a new index object and a new observation (`A`):
@@ -440,7 +440,7 @@ graph_prd$plot(data=TRUE)
 Now, we proceed as in the first part. We first create
 the model:
 ```{r}
-spde_model_prd2 <- gpgraph_spde(graph_prd)
+spde_model_prd2 <- graph_spde(graph_prd)
 ```
 
 We now create the observation (`A`) matrix, the index object
@@ -571,7 +571,7 @@ graph_rep$plot(data=TRUE)
 Let us now create the model object:
 
 ```{r}
-spde_model_rep <- gpgraph_spde(graph_rep)
+spde_model_rep <- graph_spde(graph_rep)
 ```
 
 We now create the index object by using the

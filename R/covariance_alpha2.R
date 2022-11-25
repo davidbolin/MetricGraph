@@ -34,7 +34,7 @@ r_2 <- function(D, kappa, sigma, deriv = 0){
 #' @export
 covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -143,7 +143,7 @@ covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 #' @export
 covariance_alpha2_mesh <- function(P, kappa, sigma, graph){
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if(!check$has.mesh) {
     stop("No mesh provided.")

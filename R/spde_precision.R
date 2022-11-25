@@ -11,7 +11,7 @@
 #' @export
 spde_precision <- function(kappa, sigma, alpha, graph, BC = 1, build = TRUE) {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if (alpha == 1) {
     return(Qalpha1(theta = c(sigma, kappa),

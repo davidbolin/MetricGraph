@@ -65,7 +65,7 @@ graph$add_mesh_observations(y_mesh)
 
 graph$observation_to_vertex()
 
-spde_model_bru <- gpgraph_spde(graph, parameterization = "spde")
+spde_model_bru <- graph_spde(graph, parameterization = "spde")
 
 data_list <- list(y = as.vector(y_mesh), loc = graph$PtE)
 

@@ -68,9 +68,9 @@ graph$y <- as.vector(y)
 
 # graph$plot(line_width = 0.3, data=TRUE)
 
-spde_model <- gpgraph_spde(graph)
+spde_model <- graph_spde(graph)
 
-spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
+spde_model_check <- graph_spde(graph, start_kappa = kappa,
                                     start_sigma = sigma,
                                     parameterization = "spde")
 
@@ -226,9 +226,9 @@ graph$add_responses(y)
 
 graph$plot(line_width = 0.3, data=TRUE)
 
-spde_model <- gpgraph_spde(graph)
+spde_model <- graph_spde(graph)
 
-spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
+spde_model_check <- graph_spde(graph, start_kappa = kappa,
                                     start_sigma = sigma,
                                     parameterization = "spde")
 
@@ -381,9 +381,9 @@ graph$y <- as.vector(y)
 
 # graph$plot(line_width = 0.3, data=TRUE)
 
-spde_model <- gpgraph_spde(graph)
+spde_model <- graph_spde(graph)
 
-spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
+spde_model_check <- graph_spde(graph, start_kappa = kappa,
                                     start_sigma = sigma,
                                     parameterization = "spde")
 
@@ -574,9 +574,9 @@ graph_prd$plot(line_width = 0.3, data=TRUE)
 
 graph$plot(line_width = 0.3, data=TRUE)
 
-spde_model <- gpgraph_spde(graph_prd)
+spde_model <- graph_spde(graph_prd)
 
-spde_model_check <- gpgraph_spde(graph, start_kappa = kappa,
+spde_model_check <- graph_spde(graph, start_kappa = kappa,
                                     start_sigma = sigma,
                                     parameterization = "spde")
 

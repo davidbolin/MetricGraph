@@ -168,13 +168,13 @@ graph_bru$plot(data=TRUE)
 
 Now, we load `INLA` and `inlabru` packages. We will also
 need to create the `inla` model object with the
-`gpgraph_spde` function. By default we have
+`graph_spde` function. By default we have
 `alpha=1`. 
 
 ```{r, message=FALSE}
 library(INLA)
 library(inlabru)
-spde_model_bru <- gpgraph_spde(graph_bru)
+spde_model_bru <- graph_spde(graph_bru)
 ```
 The next step is to create the data list containing
 the reponse variables and the `PtE` attribute:
@@ -312,10 +312,10 @@ graph_bru$plot(data=TRUE)
 
 We will now fit a new model with `inlabru` with this new
 graph that contains the prediction locations. To this end,
-we create a new model object with the `gpgraph_spde()` function:
+we create a new model object with the `graph_spde()` function:
 
 ```{r}
-spde_model_bru_prd <- gpgraph_spde(graph_bru)
+spde_model_bru_prd <- graph_spde(graph_bru)
 ```
 
 We will create a new vector of response variables,
@@ -434,7 +434,7 @@ graph_bru_prd$plot(data=TRUE)
 Now, we proceed as in the first part. We first create
 the model:
 ```{r}
-spde_model_bru_prd2 <- gpgraph_spde(graph_bru_prd)
+spde_model_bru_prd2 <- graph_spde(graph_bru_prd)
 ```
 Next, we create the new data list:
 ```{r}
@@ -548,7 +548,7 @@ graph_bru_rep$plot(data=TRUE)
 Let us now create the model object:
 
 ```{r}
-spde_model_bru_rep <- gpgraph_spde(graph_bru_rep)
+spde_model_bru_rep <- graph_spde(graph_bru_rep)
 ```
 
 Let us now create a new data list, where we provide

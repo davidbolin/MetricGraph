@@ -27,7 +27,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                         method = c("conditional", "Q"),
                         BC = 1) {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
   method <- method[[1]]
 
   if (!(type %in% c("manual","mesh", "obs"))) {

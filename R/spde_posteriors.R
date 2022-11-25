@@ -14,7 +14,7 @@ spde_posterior_mean <- function(theta,
                                 type = "mesh",
                                 leave_edge_out = FALSE) {
 
-  check <- gpgraph_check_graph(graph)
+  check <- check_graph(graph)
 
   if (!(type %in% c("mesh", "obs"))) {
     stop("Type must be 'mesh' or 'obs'.")
