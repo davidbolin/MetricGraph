@@ -426,7 +426,7 @@ plot a metric graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{plotly}}{use plot_ly for 3D plot (default FALSE)}
+\item{\code{plotly}}{use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.}
 
 \item{\code{line_width}}{line width for edges}
 
@@ -501,7 +501,7 @@ plot continuous function on the graph
 curve (in length), value) or a vector with values for the function
 evaluated at the mesh in the graph}
 
-\item{\code{plotly}}{if TRUE, then plot is shown in 3D}
+\item{\code{plotly}}{if TRUE, then plot is shown in 3D. This option requires the package 'plotly'.}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 
@@ -546,7 +546,7 @@ plot continuous function on the mesh of a graph
 curve (in length), value) or a vector with values for the function
 evaluated at a precomputed mesh.}
 
-\item{\code{plotly}}{plot in 2D or 3D?}
+\item{\code{plotly}}{plot in 2D or 3D? If TRUE, this option requires the package 'plotly'.}
 
 \item{\code{graph_color}}{for 3D plot, the color of the graph.}
 

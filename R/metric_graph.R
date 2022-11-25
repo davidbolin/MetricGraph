@@ -966,7 +966,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param Ei index of line to split
   #' @param t  position on line to split (normalized)
   split_edge = function(Ei, t) {
-    if (!is.null(self$lines)) {
+
       index <- (self$LtE@p[Ei] + 1):(self$LtE@p[Ei + 1])
       LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
       LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
@@ -1022,11 +1022,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                        p = c(LtE.p, LtE.p_new),
                                        x = c(LtE.x, LtE.x_new),
                                        dims = LtE.dim)
-    } else {
-      V1 <- self$V[self$E[Ei, 1], ]
-      V2 <- self$V[self$E[Ei, 2], ]
-      val_line <- (1 - t) * V1 + t * V2
-    }
+
     newV <- self$nV + 1
     self$V <- rbind(self$V, c(val_line))
     l_e <- self$edge_lengths[Ei]
@@ -1346,12 +1342,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                      mesh = FALSE,
                      p = NULL,
                      ...){
-    if (is.null(self$lines)) {
-      data.plot <- data.frame(x = c(self$V[E[, 1], 1], self$V[E[, 2], 1]),
-                              y = c(self$V[E[, 1], 2], self$V[E[, 2], 2]),
-                              z = rep(0, 2 * self$nE),
-                              i = c(1:self$nE, 1:self$nE))
-    } else {
       x <- y <- ei <- NULL
       for (i in 1:self$nE) {
         xi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 1]
@@ -1362,7 +1352,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         ei <- c(ei, ii)
       }
       data.plot <- data.frame(x = x, y = y, z = rep(0,length(x)), i = ei)
-    }
+
     if(is.null(p)) {
       p <- plotly::plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z)
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
