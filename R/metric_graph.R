@@ -662,7 +662,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description plot a metric graph
-  #' @param plotly use plot_ly for 3D plot (default FALSE)
+  #' @param plotly use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.
   #' @param line_width line width for edges
   #' @param vertex_size size of the vertices
   #' @param vertex_color color of vertices
@@ -714,6 +714,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            p = p,
                            ...)
     } else {
+      requireNamespace("plotly")
       p <- private$plot_3d(line_width = line_width,
                            marker_size = vertex_size,
                            vertex_color = vertex_color,
@@ -733,7 +734,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at the mesh in the graph
-  #' @param plotly if TRUE, then plot is shown in 3D
+  #' @param plotly if TRUE, then plot is shown in 3D. This option requires the package 'plotly'.
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param line_width for 3D plot, the line width of the graph.
   #' @param vertex_size for 3D plot, the vertex size of the vertices
@@ -906,11 +907,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
 
     if(plotly){
+      requireNamespace("plotly")
       if(is.null(p)){
         p <- self$plot(plotly = TRUE, color = graph_color,
                        line_width = line_width, vertex_size = vertex_size)
       }
-      p <- p %>% add_trace(data = data, x = ~y, y = ~x, z = ~z,
+      p <- plotly::add_trace(p, data = data, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
                            line = list(width = line_width,
                                        color = color, ...),
@@ -939,7 +941,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at a precomputed mesh.
-  #' @param plotly plot in 2D or 3D?
+  #' @param plotly plot in 2D or 3D? If TRUE, this option requires the package 'plotly'.
   #' @param graph_color for 3D plot, the color of the graph.
   #' @param line_width for 3D plot, the line width of the curves.
   #' @param vertex_size for 3D plot, the size of the vertices
@@ -1362,14 +1364,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       data.plot <- data.frame(x = x, y = y, z = rep(0,length(x)), i = ei)
     }
     if(is.null(p)) {
-      p <- plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z)
-      p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
+      p <- plotly::plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z)
+      p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
                            line = list(width = line_width,
                                        color = edge_color, ...),
                            split = ~i, showlegend = FALSE)
     } else {
-      p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
+      p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
                            line = list(width = line_width,
                                        color = edge_color, ...),
@@ -1380,7 +1382,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(marker_size > 0) {
       data.plot2 <- data.frame(x = self$V[, 1], y = self$V[, 2],
                                z = rep(0, self$nV))
-      p <- p %>% add_trace(data = data.plot2, x = ~y, y = ~x, z = ~z,
+      p <- plotly::add_trace(p, data = data.plot2, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
                                          color = vertex_color, ...))
@@ -1398,7 +1400,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       data.plot <- data.frame(x = x, y = y,
                               z = rep(0,length(x)),
                               val = self$y)
-      p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
+      p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
                                          color = ~val,
@@ -1410,7 +1412,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       data.plot <- data.frame(x = self$mesh$V[, 1],
                               y = self$mesh$V[, 2],
                               z = rep(0, dim(self$mesh$V)[1]))
-      p <- p %>% add_trace(data = data.plot, x = ~y, y = ~x, z = ~z,
+      p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size/2,
                                          color = 'rgb(100,100,100)'),

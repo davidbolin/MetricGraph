@@ -33,8 +33,6 @@
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend
 #' @importFrom rgeos gInterpolate gProject
 #' @importFrom igraph E E<-
-#' @importFrom plotly plot_ly add_trace
-#' @importFrom magrittr %>%
 #' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
 #' @useDynLib MetricGraph, .registration = TRUE
