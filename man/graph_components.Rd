@@ -4,7 +4,7 @@
 \alias{graph_components}
 \title{Create metric graphs for connected components of a SpatialLines object}
 \usage{
-graph_components(lines, by_length = TRUE, only_largest = TRUE)
+graph_components(lines, by_length = TRUE, only_largest = FALSE, ...)
 }
 \arguments{
 \item{lines}{Object of class \code{SpatialLines}}
@@ -14,6 +14,8 @@ the components are sorted by the number of vertices.}
 
 \item{only_largest}{if TRUE, only return the largest component.
 Otherwise return an ordered list with the components (largest first)}
+
+\item{...}{additional arguments used when specifying the graph}
 }
 \value{
 A \code{metric_graph} object created from the largest component, or a

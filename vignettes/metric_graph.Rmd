@@ -54,10 +54,11 @@ We can now create the graph based on the `Lines` object as follows
 graph <- metric_graph$new(lines = Lines)
 graph$plot()
 ```
+
 The plot function that was used to create the plot above has various parameters
 to set the sizes and colors of the vertices and edges, and it has a `plotly`
 argument to visualize the graph in 3D:
-```{r}
+```{r, message=FALSE}
 graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
 ```

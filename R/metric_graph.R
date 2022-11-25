@@ -735,12 +735,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at the mesh in the graph
   #' @param plotly if TRUE, then plot is shown in 3D. This option requires the package 'plotly'.
-  #' @param vertex_size size of the vertices
+  #' @param vertex_size (for both 2d and 3d plots) size of the vertices
   #' @param vertex_color color of vertices
   #' @param edge_width width for edges
   #' @param edge_color for 3D plot, color of edges
   #' @param line_width for 3D plot, line width of the function curve.
-  #' @param vertex_size for 3D plot, the vertex size of the vertices
   #' @param line_color color of the function curve
   #' @param support_width for 3D plot, width of support lines
   #' @param support_color for 3D plot, color of support lines
@@ -936,7 +935,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         data.mesh <- data.frame(x = c(x.loc, x.loc), y = c(y.loc, y.loc),
                                 z = c(rep(0, length(z.loc)), z.loc),
                                 i = rep(1:length(z.loc),2))
-        p <- p %>% add_trace(data = data.mesh, x = ~y, y = ~x, z = ~z,
+        p <- plotly::add_trace(p, data = data.mesh, x = ~y, y = ~x, z = ~z,
                              mode = "lines", type = "scatter3d",
                              line = list(width = support_width,
                                          color = support_color),

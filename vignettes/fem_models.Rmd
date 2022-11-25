@@ -124,7 +124,7 @@ $\sigma, \nu$. Here, `sigma` denotes the standard deviation of the field and `nu
 The object `op_cov` contains the matrices needed for evaluating the distribution of the stochastic weights in the FEM approximation. 
 
 Let us simulate the field $u$ at the mesh locations and plot the result:
-```{r} 
+```{r, message=FALSE} 
 u <- simulate(op)
 graph$plot_function(u, plotly = TRUE)
 ```

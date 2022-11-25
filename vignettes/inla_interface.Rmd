@@ -376,7 +376,7 @@ graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 2)
 
 Finally, we can plot the predictions together with
 the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 p <- graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
 graph$plot(data=TRUE, vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```
@@ -491,7 +491,7 @@ graph_prd$plot_function(X = m_prd2, vertex_size = 0)
 
 We will now plot the predictions together with
 the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 p <- graph_prd$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
 graph_prd$plot(data=TRUE, vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```

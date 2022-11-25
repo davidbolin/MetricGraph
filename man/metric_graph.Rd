@@ -115,7 +115,6 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
-\item \href{#method-metric_graph-plot_function_mesh}{\code{metric_graph$plot_function_mesh()}}
 \item \href{#method-metric_graph-split_edge}{\code{metric_graph$split_edge()}}
 \item \href{#method-metric_graph-add_responses}{\code{metric_graph$add_responses()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
@@ -409,9 +408,9 @@ plot a metric graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   plotly = FALSE,
-  line_width = 0.3,
   vertex_size = 3,
   vertex_color = "black",
+  edge_width = 0.3,
   edge_color = "black",
   data = FALSE,
   data_size = 1,
@@ -428,11 +427,11 @@ plot a metric graph
 \describe{
 \item{\code{plotly}}{use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.}
 
-\item{\code{line_width}}{line width for edges}
-
 \item{\code{vertex_size}}{size of the vertices}
 
 \item{\code{vertex_color}}{color of vertices}
+
+\item{\code{edge_width}}{line width for edges}
 
 \item{\code{edge_color}}{color of edges}
 
@@ -485,10 +484,14 @@ plot continuous function on the graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
   X,
   plotly = FALSE,
-  graph_color = "black",
-  line_width = 1,
-  vertex_size = 10,
-  color = "rgb(0,0,200)",
+  vertex_size = 5,
+  vertex_color = "black",
+  edge_width = 1,
+  edge_color = "black",
+  line_width = NULL,
+  line_color = "rgb(0,0,200)",
+  support_width = 0.5,
+  support_color = "gray",
   p = NULL,
   ...
 )}\if{html}{\out{</div>}}
@@ -503,13 +506,21 @@ evaluated at the mesh in the graph}
 
 \item{\code{plotly}}{if TRUE, then plot is shown in 3D. This option requires the package 'plotly'.}
 
-\item{\code{graph_color}}{for 3D plot, the color of the graph.}
+\item{\code{vertex_size}}{(for both 2d and 3d plots) size of the vertices}
 
-\item{\code{line_width}}{for 3D plot, the line width of the graph.}
+\item{\code{vertex_color}}{color of vertices}
 
-\item{\code{vertex_size}}{for 3D plot, the vertex size of the vertices}
+\item{\code{edge_width}}{width for edges}
 
-\item{\code{color}}{color of curve}
+\item{\code{edge_color}}{for 3D plot, color of edges}
+
+\item{\code{line_width}}{for 3D plot, line width of the function curve.}
+
+\item{\code{line_color}}{color of the function curve}
+
+\item{\code{support_width}}{for 3D plot, width of support lines}
+
+\item{\code{support_color}}{for 3D plot, color of support lines}
 
 \item{\code{p}}{previous plot in which the new plot should be added.}
 
@@ -519,51 +530,6 @@ evaluated at the mesh in the graph}
 }
 \subsection{Returns}{
 either a ggplot or a plot_ly object
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-plot_function_mesh"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-plot_function_mesh}{}}}
-\subsection{Method \code{plot_function_mesh()}}{
-plot continuous function on the mesh of a graph
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function_mesh(
-  X,
-  plotly = FALSE,
-  graph_color = "black",
-  line_width = 1,
-  vertex_size = 10,
-  color = "rgb(0,0,200)",
-  p = NULL,
-  ...
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
-curve (in length), value) or a vector with values for the function
-evaluated at a precomputed mesh.}
-
-\item{\code{plotly}}{plot in 2D or 3D? If TRUE, this option requires the package 'plotly'.}
-
-\item{\code{graph_color}}{for 3D plot, the color of the graph.}
-
-\item{\code{line_width}}{for 3D plot, the line width of the curves.}
-
-\item{\code{vertex_size}}{for 3D plot, the size of the vertices}
-
-\item{\code{color}}{Color of the curves}
-
-\item{\code{p}}{previous ggplot or plot_ly object to add the plot to}
-
-\item{\code{...}}{additional arguments for ggplot or plot_ly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A ggplot or a plot_ly object
 }
 }
 \if{html}{\out{<hr>}}

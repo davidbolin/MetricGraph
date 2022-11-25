@@ -365,22 +365,9 @@ using the `plot_function()` method:
 graph_bru$plot_function(X = m_prd_bru, vertex_size = 0)
 ```
 
-We will now plot the predictions together with
-the data. To this end we need to create a new 
-vector `y` which is a concatenation of `y`
-and `m_prd_bru`, then use it as the vector of 
-responses of `graph_bru`, which is done by using the
-`add_responses()` method. Then, we plot.
-
-Let us begin by concatenating the vectors and adding
-the responses to `graph_bru`:
-```{r}
-y_new_bru <- c(y, m_prd_bru)
-graph_bru$add_responses(y_new_bru)
-```
-
-Now, we plot:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+Finally, we can plot the predictions together with
+the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 p <- graph_bru$plot_function(X = m_prd_bru, vertex_size = 0) 
 graph_bru$plot(data=TRUE, vertex_size = 0, edge_width = 0, p = p, data_size = 2)
 ```
@@ -472,9 +459,8 @@ idx_prd <- which(is.na(y_cmp))
 m_prd2_bru <- spde_bru_fit_prd2$summary.fitted.values$mean[idx_prd]
 ```
 
-To improve visualization, we will plot the posterior means
-using the `plot_function()` method together with the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+We will now plot the predictions together with the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 p <- graph_bru_prd$plot_function(X = m_prd2_bru, vertex_size = 0)
 graph_bru_prd$plot(data=TRUE, vertex_size = 0, edge_width = 0, data_size = 2,
                    p = p)
