@@ -142,8 +142,9 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 
 
       if(type == "mesh") {
+        initial_graph <- graph$get_initial_graph()
         u_s <- u_e[seq(from=1, by = 2, to = length(u_e))]
-        u <- u_s[which(!duplicated(c(t(graph$E))))]
+        u <- u_s[which(!duplicated(c(t(initial_graph$E))))]
         inds_PtE <- unique(graph$mesh$PtE[,1])
       } else if (type == "obs") {
         u <- NULL
