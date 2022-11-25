@@ -1,0 +1,35 @@
+citHeader("To cite MetricGraph in publications use the first of the following
+references to cite the package and the second to cite the Whittle--Matérn models
+          (for example if you use graph_spde in INLA or inlabru)")
+
+bibentry( bibtype = "Manual",
+          title = "MetricGraph: Random fields on metric graphs",
+          author = c(person(given = "David",
+                            family = "Bolin",
+                            email = "davidbolin@gmail.com"),
+                     person("Jonas", "Wallin",
+                            email = "jonas.wallin81@gmail.com",
+                            role = "aut"),
+                     person(given = "Alexandre B.",
+                            family = "Simas",
+                            email = "alexandre.simas@kaust.edu.sa")),
+          year = "2022",
+          note = "R package version 0.1.0",
+          url = "https://CRAN.R-project.org/package=MetricGraph",
+)
+
+bibentry(bibtype = "Article",
+         title  = "Gaussian Whittle-Matérn fields on metric graphs",
+         author = c(person(given = "David",
+                           family = "Bolin",
+                           email = "davidbolin@gmail.com"),
+                    person(given = "Alexandre B.",
+                           family = "Simas",
+                           email = "alexandre.simas@kaust.edu.sa"),
+                    person("Jonas", "Wallin",
+                           email = "jonas.wallin81@gmail.com",
+                           role = "aut")),
+         year = "2022",
+         journal = "arXiv preprint arXiv:2205.06163",
+         doi = "10.48550/arXiv.2205.06163"
+)

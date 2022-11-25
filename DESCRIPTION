@@ -1,14 +1,13 @@
 Package: MetricGraph
 Type: Package
-Title: Gaussian Fields on Metric Graphs
+Title: Random fields on metric graphs
 Version: 0.1.0
 Authors@R: c(
     person("David", "Bolin", email = "davidbolin@gmail.com", role = c("cre", "aut")),
     person("Jonas", "Wallin", email = "jonas.wallin81@gmail.com", role = "aut"),
     person("Alexandre", "Simas", email = "alexandre.impa@gmail.com", role = "aut"))
 Maintainer: David Bolin <davidbolin@gmail.com>
-Description: Functions for specifying Gaussian random fields on metric graphs and 
-    using them for data analysis.
+Description: Functions for working random fields on metric graphs.
 License: GPL (>=3)
 Imports: stats, ggplot2, rgeos, igraph, sp, plotly, viridis, rSPDE, Matrix, magrittr, methods,  Rcpp (>= 1.0.5)
 Suggests: knitr, testthat, INLA (>= 0.0-1468840039), inlabru, osmdata, sn
