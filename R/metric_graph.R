@@ -189,7 +189,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       self$res_dist <- R[graph.temp$PtV, graph.temp$PtV]
       reo <- order(self$PtE[,1],self$PtE[,2])
-      self$res_dist <- as.matrix(self$res_dist[reo,reo])
+      self$res_dist[reo, reo] <- as.matrix(self$res_dist)
+      self$res_dist <- as.matrix(self$res_dist)
     } else {
       graph.temp <- self$clone()
       graph.temp$add_PtE_observations(y = rep(0, dim(PtE)[1]), PtE,

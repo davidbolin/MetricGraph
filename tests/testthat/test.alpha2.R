@@ -130,15 +130,21 @@ test_that("test likelihood",{
 
   graph$add_PtE_observations(y = X[,2], PtE = X[,c(3, 1)])
   graph$buildC(2, FALSE)
+
+  #standard likelihood
   lik <- likelihood_graph_spde(theta = theta, graph = graph, alpha = 2)
   graph2 <- graph
   graph2$observation_to_vertex()
   graph2$buildC(2, FALSE)
+
+  #covariance likelihood
   lik2 <-likelihood_graph_covariance(theta = theta,
                                      graph = graph2,
                                      model = "alpha2")
-
+  #likelihood with extended graph
+  lik3 <- likelihood_graph_spde(theta = theta, graph = graph, alpha = 2)
   expect_equal(as.matrix(lik), as.matrix(lik2), tolerance = 1e-10)
+  expect_equal(as.matrix(lik), as.matrix(lik3), tolerance = 1e-10)
 })
 
 test_that("test posterior mean",{
