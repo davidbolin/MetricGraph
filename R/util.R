@@ -469,3 +469,50 @@ nearestPointOnSegment <- function(s, p){
     names(result) = c("X","Y","distance")
     result
 }
+
+
+
+
+#' Starting values for metric graph SPDE models
+#'
+#' Provides starting values for metric graph SPDE models, the results
+#' are given as `c(start_sigma_e, start_sigma, start_kappa)` by default
+#' or `c(start_sigma_e, start_sigma, start_range)` if `range=TRUE`.
+#'
+#' @param graph A `metric_graph` object.
+#' @param data A vector or matrix of response variables.
+#' @param range Logical. Should starting values for range be returned instead of starting values for kappa?
+#'
+#' @return A vector, if `data` is not `NULL`, returns `c(start_sigma_e, start_sigma, start_kappa)` by default
+#' or `c(start_sigma_e, start_sigma, start_range)` if `range=TRUE`.
+#' If `data` is `NULL`, returns `c(start_sigma, start_kappa)` by default
+#' or `c(start_sigma, start_range)` if `range=TRUE`.
+
+spde_starting_values <- function(graph, data=NULL, range = FALSE){
+      if(is.null(graph$geo_dist)){
+        graph$compute_geodist()
+      }
+      finite_geodist <- is.finite(graph$geo_dist)
+      finite_geodist <- graph$geo_dist[finite_geodist]
+      prior.range.nominal <- max(finite_geodist) * 0.2
+      start_kappa <- sqrt(8 *
+      exp(0.5) / prior.range.nominal)
+      start_range <- prior.range.nominal
+      start_sigma <- 1
+
+      if(!is.null(data)){
+              start_sigma_e <- 0.1 * sqrt(var(as.vector(data)))
+            if(range){
+                 return(c(start_sigma_e, start_sigma, start_range))
+            } else{
+                 return(c(start_sigma_e, start_sigma, start_kappa))
+                }
+      } else{
+        if(range){
+          return(c(start_sigma, start_range))
+        } else{
+          return(c(start_sigma, start_kappa))
+        }
+      }
+      
+}
