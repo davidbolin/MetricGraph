@@ -390,15 +390,15 @@ likelihood_graph_laplacian <- function(theta, graph, alpha) {
     }
   }
 
-  Q.p <- Q  + t(graph$A) %*% graph$A/sigma_e^2
-  mu.p <- solve(Q.p,as.vector(t(graph$A) %*% graph$y / sigma_e^2))
+  Q.p <- Q  + t(graph$A()) %*% graph$A()/sigma_e^2
+  mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% graph$y / sigma_e^2))
 
   R <- chol(Q)
   R.p <- chol(Q.p)
 
   n.o <- length(graph$y)
   l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
-  v <- graph$y - graph$A%*%mu.p
+  v <- graph$y - graph$A()%*%mu.p
   l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
   return(as.double(l))
 }

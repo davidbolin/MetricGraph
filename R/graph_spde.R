@@ -248,15 +248,13 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
 #'
 #' @param graph An object of class `metric_graph`
 #' @param n.repl Number of replicates
+#' @param obs_to_vert Should the observations be turned into vertices?
 #'
 #' @return The observation matrix
 #' @export
 
-graph_spde_make_A <- function (graph, n.repl = 1) {
-   if(is.null(graph$A)){
-    graph$observation_to_vertex()
-   }
-   return(kronecker(Matrix::Diagonal(n.repl), graph$A))
+graph_spde_make_A <- function (graph, n.repl = 1, obs_to_vert = FALSE) {
+   return(kronecker(Matrix::Diagonal(n.repl), graph$A(order = "original", obs_to_vert = obs_to_vert)))
 }
 
 
@@ -578,12 +576,10 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   }
   model <- mapper[["model"]]
 
-  if(is.null(model$graph_obj$A)){
-    model$graph_obj$observation_to_vertex()
-  }
-  n.rep <- nrow(input)/nrow(model$graph_obj$A)
+  A_bru <- model$graph_obj$A(order = "original")
+  n.rep <- nrow(input)/nrow(A_bru)
   return(kronecker(matrix(rep(1,n.rep),nrow=n.rep),
-  model$graph_obj$A))
+  A_bru))
 }
 
 #' @rdname bru_mapper.inla_metric_graph_spde
