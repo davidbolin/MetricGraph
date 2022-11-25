@@ -95,6 +95,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param E m x 2 matrix where each row represents an edge
   #' @param tolerance vertices that are closer than this number in Euclidean
   #' distance are merged when constructing the graph (default = 2e-16).
+  #' @param scale value to scale the coordinates in the lines object with
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -103,7 +104,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' viewed as a vertex.
   #' @return A metric_graph object
   initialize = function(lines = NULL, V = NULL, E = NULL,
-                        tolerance = 2e-16) {
+                        tolerance = 2e-16, scale = 1) {
 
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
@@ -125,7 +126,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$lines <- SpatialLines(lines)
     }
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-    private$line_to_vertex(tolerance = tolerance)
+    private$line_to_vertex(tolerance = tolerance, scale = scale)
     private$initial_graph <- self$clone()
 
     # Checking if graph is connected
@@ -1108,7 +1109,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       stop("The order must be either 'internal' or 'original'!")
     }
   }
-    ), 
+    ),
 
   private = list(
     #computes which line and which position t_E on Ei belongs to
@@ -1151,9 +1152,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     },
 
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0) {
+  line_to_vertex = function(tolerance = 0, scale = 1) {
     lines <- c()
     for(i in 1:length(self$lines)){
+      tmp <- self$lines@lines[[i]]@Lines[[1]]@coords
+      self$lines@lines[[i]]@Lines[[1]]@coords <- tmp*scale
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
       #lines contain [line index, start point, line length

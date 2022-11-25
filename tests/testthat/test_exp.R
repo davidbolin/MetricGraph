@@ -23,25 +23,32 @@ test_that("Check agrement beteen covariance and precision matrix formulation", {
 
 test_that("Check agrement beteen covariance and precision likelihoods", {
   nt <- 10
-  kappa <- 0.1
+  kappa <- 1
   sigma_e <- 0.1
   sigma   <- 2
-  line1 <- Line(rbind(c(30, 80), c(120, 80)))
-  line2 <- Line(rbind(c(30, 00), c(30, 80)))
+  #line1 <- Line(rbind(c(30, 80), c(120, 80)))
+  #line2 <- Line(rbind(c(30, 00), c(30, 80)))
+  line1 <- Line(rbind(c(0, 0), c(1e-0, 0)))
+  line2 <- Line(rbind(c(0, 1e-0), c(0, 0)))
 
   graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line1), ID = "1"),
                                                    Lines(list(line2), ID = "2")
                                                    )))
-  PtE <- rbind(cbind(rep(1,nt/2),
-                     seq(from = 0,to =1, length.out = nt/2 + 1)[1:(nt/2)]),
-               cbind(rep(2,nt/2),
-                     seq(from = 0,to =1, length.out = nt/2 + 1)[1:(nt/2)]))
 
+  n.obs.per.edge <- 10
+  PtE <- NULL
+  for(i in 1:graph$nE){
+    PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), (runif(n.obs.per.edge))))
+  }
+
+
+  nt <- graph$nE* n.obs.per.edge
+  PtE <- PtE[sample(1:nt),]
   u <- sample_spde(kappa = kappa, sigma = sigma,
                    alpha = 1, graph = graph, PtE = PtE)
 
   y <- u + sigma_e*rnorm(nt)
-  graph$add_PtE_observations(y = y, PtE = PtE)
+  graph$add_PtE_observations(y = y, PtE = PtE, normalized = TRUE)
   theta <-  c(sigma_e, kappa, sigma)
   lik <- likelihood_graph_spde(theta,graph, alpha = 1, version = 1)
 

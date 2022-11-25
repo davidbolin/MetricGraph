@@ -19,7 +19,10 @@ Y <- read.csv('examples/data.pems/Y.csv',header=T, row.names = NULL)
 Y <- as.matrix(Y[,-1])
 TE <- table(c(EtV$V1,EtV$V2))
 
-graph <-  metric_graph$new(lines = as_Spatial(Lines))
+lines <- as_Spatial(Lines)
+#graph <-  metric_graph$new(lines = as_Spatial(Lines), scale = 1)
+scale <- 1000
+graph <-  metric_graph$new(lines = as_Spatial(Lines), scale = scale)
 
 
 #convert PtE to relative distances
@@ -32,9 +35,9 @@ graph$add_PtE_observations(Y,as.matrix(PtE), normalized = TRUE)
 #center data to assume zero mean
 graph$y <- Y - mean(Y)
 
-
+graph$observation_to_vertex()
 # Fit alpha=1 model
-theta.alpha1 <- c(6.881176, 94.194243,  9.184849)
+theta.alpha1 <- c(6.881176, 94.194243,  9.184849/scale)
 res <- optim(log(theta.alpha1), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 1),
@@ -44,7 +47,7 @@ like.alpha1 <- -res$value
 
 #fit alpha = 2 model
 graph$buildC(2)
-theta.alpha2 <- c(7.254335, 1086, 10)
+theta.alpha2 <- c(7.254335, 10860, 10/scale)
 res <- optim(log(theta.alpha2), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 2),
@@ -55,7 +58,7 @@ like.alpha2 <- -res$value
 # Fit isotropic model
 graph$compute_resdist()
 
-theta.exp <- c(6.897021, 34.988880,  3.540205)
+theta.exp <- c(6.897021, 34.988880,  3.540205/scale)
 res.exp <- optim(log(theta.exp), function(x) -likelihood_graph_covariance(exp(x),
                                                                           graph,
                                                                           model = "isoExp"),
@@ -115,6 +118,8 @@ print(result, digits = 3)
 
 
 ### plot
+if(0) {
+
 
 map2=get_map(c(left = -121.91, bottom = 37.3,
                right = -121.85, top = 37.35),
@@ -188,4 +193,4 @@ graph$build_mesh(h=1e-04)
 mu_alpha2 <- mean(Y) + spde_posterior_mean(theta.alpha2, graph, alpha = 2,
                                            type = "mesh")
 
-graph$y <- Y - mean(Y)
+}
