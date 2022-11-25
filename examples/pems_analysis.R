@@ -21,7 +21,7 @@ TE <- table(c(EtV$V1,EtV$V2))
 
 lines <- as_Spatial(Lines)
 #graph <-  metric_graph$new(lines = as_Spatial(Lines), scale = 1)
-scale <- 1000
+scale <- 1
 graph <-  metric_graph$new(lines = as_Spatial(Lines), scale = scale)
 
 
@@ -37,7 +37,7 @@ graph$y <- Y - mean(Y)
 
 graph$observation_to_vertex()
 # Fit alpha=1 model
-theta.alpha1 <- c(6.881176, 94.194243,  9.184849/scale)
+theta.alpha1 <- graph_starting_values(graph, model = "alpha1")
 res <- optim(log(theta.alpha1), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 1),
@@ -47,7 +47,7 @@ like.alpha1 <- -res$value
 
 #fit alpha = 2 model
 graph$buildC(2)
-theta.alpha2 <- c(7.254335, 10860, 10/scale)
+theta.alpha2 <- graph_starting_values(graph, model = "alpha2")
 res <- optim(log(theta.alpha2), function(x) -likelihood_graph_spde(exp(x),
                                                                    graph,
                                                                    alpha = 2),
@@ -58,7 +58,7 @@ like.alpha2 <- -res$value
 # Fit isotropic model
 graph$compute_resdist()
 
-theta.exp <- c(6.897021, 34.988880,  3.540205/scale)
+theta.exp <- graph_starting_values(graph, model = "isoExp")
 res.exp <- optim(log(theta.exp), function(x) -likelihood_graph_covariance(exp(x),
                                                                           graph,
                                                                           model = "isoExp"),
@@ -67,9 +67,8 @@ theta.exp <- exp(res.exp$par)
 like.exp <- -res.exp$value
 
 # Fit graph Laplace model
-graph$observation_to_vertex()
 graph$compute_laplacian()
-theta.GL1 <- c(14.715361309, 12.818164905,  0.007864066)
+theta.GL1 <- graph_starting_values(graph, model = "GL1")
 res <- optim(log(theta.GL1), function(x) -likelihood_graph_laplacian(exp(x),
                                                                        graph,
                                                                        alpha = 1))
@@ -77,7 +76,7 @@ theta.GL1 <- exp(res$par)
 like.GL1 <- -res$value
 
 # Fit graph Laplace model 2
-theta.GL2 <- c(14.82798626,  1.23925446,  0.02715596)
+theta.GL2 <- graph_starting_values(graph, model = "GL2")
 res <- optim(log(theta.GL2), function(x) -likelihood_graph_laplacian(exp(x),graph,
                                                                      alpha = 2))
 theta.GL2 <- exp(res$par)

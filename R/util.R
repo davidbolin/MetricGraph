@@ -473,46 +473,67 @@ nearestPointOnSegment <- function(s, p){
 
 
 
-#' Starting values for metric graph SPDE models
+#' Starting values for random field models on metric graphs
 #'
-#' Provides starting values for metric graph SPDE models, the results
-#' are given as `c(start_sigma_e, start_sigma, start_kappa)` by default
-#' or `c(start_sigma_e, start_sigma, start_range)` if `range=TRUE`.
+#' The results are given as `c(start_sigma_e, start_sigma, start_kappa)`
 #'
-#' @param graph A `metric_graph` object.
-#' @param data A vector or matrix of response variables.
-#' @param range Logical. Should starting values for range be returned instead of starting values for kappa?
+#' @param graph a `metric_graph` object.
+#' @param model type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
+#' are supported
 #'
-#' @return A vector, if `data` is not `NULL`, returns `c(start_sigma_e, start_sigma, start_kappa)` by default
-#' or `c(start_sigma_e, start_sigma, start_range)` if `range=TRUE`.
-#' If `data` is `NULL`, returns `c(start_sigma, start_kappa)` by default
-#' or `c(start_sigma, start_range)` if `range=TRUE`.
+#' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
+#' @export
+graph_starting_values <- function(graph, model = NULL, range = FALSE){
 
-spde_starting_values <- function(graph, data=NULL, range = FALSE){
-      if(is.null(graph$geo_dist)){
-        graph$compute_geodist()
-      }
-      finite_geodist <- is.finite(graph$geo_dist)
-      finite_geodist <- graph$geo_dist[finite_geodist]
-      prior.range.nominal <- max(finite_geodist) * 0.2
-      start_kappa <- sqrt(8 *
-      exp(0.5) / prior.range.nominal)
-      start_range <- prior.range.nominal
-      start_sigma <- 1
+  if(is.null(graph$geo_dist)){
+    graph$compute_geodist()
+  }
+  gpgraph_check_graph(graph)
+  if(is.null(graph$y)) {
+    stop("No data provided")
+  }
 
-      if(!is.null(data)){
-              start_sigma_e <- 0.1 * sqrt(var(as.vector(data)))
-            if(range){
-                 return(c(start_sigma_e, start_sigma, start_range))
-            } else{
-                 return(c(start_sigma_e, start_sigma, start_kappa))
-                }
-      } else{
-        if(range){
-          return(c(start_sigma, start_range))
-        } else{
-          return(c(start_sigma, start_kappa))
-        }
-      }
-      
+  finite_geodist <- is.finite(graph$geo_dist)
+  finite_geodist <- graph$geo_dist[finite_geodist]
+  prior.range.nominal <- max(finite_geodist) * 0.2
+  data_std <- sqrt(var(as.vector(graph$y)))
+  if (model == "alpha1") {
+    start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
+    #variance is sigma^2/2 kappa
+    start_sigma <- sqrt(2*start_kappa) * data_std
+  } else if (model == "alpha2") {
+    start_kappa <- sqrt(8 * 1.5) / prior.range.nominal
+    #variance is sigma^2/(4 * kappa^3)
+    start_sigma <- sqrt(4*start_kappa^3) * data_std
+  } else if (model == "isoExp") {
+    start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
+    start_sigma <- data_std
+  } else if (model == "GL1") {
+    if(is.null(graph$Laplacian)) {
+      graph$compute_laplacian()
+    }
+    h <- mean(graph$edge_lengths)
+    k <- sqrt(8 * 0.5) / prior.range.nominal
+    start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
+    Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+    v <- rep(0,graph$nV)
+    v[1] <- 1
+    s2 <- solve(Q,v)[1]
+    start_sigma <- data_std / sqrt(s2)
+  } else if (model == "GL2") {
+    if(is.null(graph$Laplacian)) {
+      graph$compute_laplacian()
+    }
+    h <- mean(graph$edge_lengths)
+    k <- sqrt(8 * 0.5) / prior.range.nominal
+    start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
+    Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+    v <- rep(0,graph$nV)
+    v[1] <- 1
+    s2 <- solve(Q %*% Q,v)[1]
+    start_sigma <- data_std / sqrt(s2)
+  } else {
+    stop("wrong model choice")
+  }
+  return(c(0.1 * data_std, start_sigma, start_kappa))
 }
