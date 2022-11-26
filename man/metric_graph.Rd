@@ -270,8 +270,9 @@ Add observations to the graph
 which may include the coordinates only, or the coordinates as well as the
 observations}
 
-\item{\code{y}}{the observations. These are used if provided, and otherwise the
-observations are assumed to be in Spoints}
+\item{\code{y}}{the observations. A matrix \verb{N x k}, where \code{N} is the number of observations and
+\code{k} is the number of replicates. Can be \code{NA} if the observation is not available. These are used if provided, and otherwise the
+observations are assumed to be in Spoints.}
 
 \item{\code{y.index}}{If \code{y} is not provided, \code{y.index} gives the column number
 for the data to use in \code{Spoints@data}. If it is not provided, it is assumed
@@ -416,6 +417,7 @@ plot a metric graph
   edge_width = 0.3,
   edge_color = "black",
   data = FALSE,
+  repl = 1,
   data_size = 1,
   mesh = FALSE,
   X = NULL,
@@ -439,6 +441,8 @@ plot a metric graph
 \item{\code{edge_color}}{color of edges}
 
 \item{\code{data}}{Plot the data?}
+
+\item{\code{repl}}{If there are replicates, which replicate to plot?}
 
 \item{\code{data_size}}{size of markers for data}
 

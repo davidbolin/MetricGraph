@@ -302,16 +302,13 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations,
   #' which may include the coordinates only, or the coordinates as well as the
   #' observations
-  #' @param y the observations. These are used if provided, and otherwise the
-  #' observations are assumed to be in Spoints
+  #' @param y the observations. A matrix `N x k`, where `N` is the number of observations and
+  #' `k` is the number of replicates. Can be `NA` if the observation is not available. These are used if provided, and otherwise the
+  #' observations are assumed to be in Spoints. 
   #' @param y.index If `y` is not provided, `y.index` gives the column number
   #' for the data to use in `Spoints@data`. If it is not provided, it is assumed
   #' that the data is in the first column
   add_observations = function(Spoints, y = NULL, y.index = NULL) {
-
-    if (!is.null(y) && is.null(y)) {
-      stop("if y is provided, then y.index must be provided as well.")
-    }
 
     if("SpatialPointsDataFrame"%in%is(Spoints)){
     if(is.null(y)){
@@ -324,13 +321,20 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
         }
         y <- Spoints@data[,y.index]
+        y <- matrix(y, nrow = nrow(Spoints@coords))
     }
     }
     if(is.null(y)){
       y <- rep(NA, nrow(Spoints@coords))
+      y <- matrix(y, ncol=1)
     }
-    self$y <- c(self$y, y)
-    private$raw_y <- c(private$raw_y, y)
+    
+    if(!is.null(y)){
+      y <- matrix(y, nrow = nrow(Spoints@coords))
+    }
+
+    self$y <- rbind(self$y, y)
+    private$raw_y <- rbind(private$raw_y, y)
 
     SP <- snapPointsToLines(Spoints, self$lines)
     coords.old <- as.data.frame(Spoints@coords)
@@ -403,8 +407,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(max(PtE[,2] - self$edge_lengths[PtE[, 1]]) > 0 && !normalized) {
       stop("PtE[, 2] contains values which are larger than the edge lengths")
     }
-    self$y <- c(self$y, y)
-    private$raw_y <- c(private$raw_y, y)
+    y <- matrix(y, nrow = nrow(PtE))
+    self$y <- rbind(self$y, y)
+    private$raw_y <- rbind(private$raw_y, y)
 
     if(normalized){
       self$PtE = rbind(self$PtE, PtE)
@@ -674,6 +679,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param edge_width line width for edges
   #' @param edge_color color of edges
   #' @param data Plot the data?
+  #' @param repl If there are replicates, which replicate to plot? 
   #' @param data_size size of markers for data
   #' @param mesh Plot the mesh locations?
   #' @param X Additional values to plot
@@ -701,6 +707,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                   edge_width = 0.3,
                   edge_color = 'black',
                   data = FALSE,
+                  repl = 1,
                   data_size = 1,
                   mesh = FALSE,
                   X = NULL,
@@ -714,6 +721,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            edge_color = edge_color,
                            data = data,
                            data_size = data_size,
+                           column_y = repl,
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
@@ -727,6 +735,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            edge_color = edge_color,
                            data = data,
                            data_size = data_size,
+                           column_y = repl,
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
@@ -786,16 +795,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
 
       if (length(X) == PtE_dim) {
-        X <- c(rep(NA, dim(private$initial_graph$V)[1]), X)
+        X <- c(rep(NA, dim(self$V)[1]), X)
       }
 
-      if (length(X) != dim(private$initial_graph$V)[1] + PtE_dim) {
+      if (length(X) != dim(self$V)[1] + PtE_dim) {
         stop("X does not have the correct size")
       }
     }
 
     if (mesh) {
-      n.v <- dim(private$initial_graph$V)[1]
+      n.v <- dim(self$V)[1]
       XV <- X[1:n.v]
     }
 
@@ -821,7 +830,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         vals <- X[X[, 1]==i, 2:3, drop = FALSE]
         if (max(vals[, 1]) < 1) {
           #check if we can add end value from other edge
-          Ei <- self$E[, 1] == Ve #edges that start in Ve
+          Ei <- private$initial_graph$E[, 1] == Ve #edges that start in Ve
           if (sum(Ei) > 0) {
             ind <- which(X[Ei, 2] == 0)[1]
           } else {
@@ -830,7 +839,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           if (length(ind) > 0) {
             vals <- rbind(vals, c(1, X[ind, 3]))
           } else {
-            Ei <- self$E[, 2] == Ve #edges that end in Ve
+            Ei <- private$initial_graph$E[, 2] == Ve #edges that end in Ve
             if (sum(Ei)  > 0) {
               ind <- which(X[Ei, 2] == 1)[1]
             } else {
@@ -843,7 +852,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         if (min(vals[, 1] > 0)) {
           #check if we can add start value from other edge
-          Ei <- self$E[, 1] == Vs #edges that start in Vs
+          Ei <- private$initial_graph$E[, 1] == Vs #edges that start in Vs
           if (sum(Ei) > 0) {
             ind <- which(X[Ei, 2] == 0)[1]
           } else {
@@ -852,7 +861,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           if (length(ind) > 0) {
             vals <- rbind(c(0, X[ind, 3]), vals)
           } else {
-            Ei <- self$E[, 2] == Vs #edges that end in Vs
+            Ei <- private$initial_graph$E[, 2] == Vs #edges that end in Vs
             if (sum(Ei) > 0) {
               ind <- which(X[Ei, 2] == 1)[1]
             } else {
@@ -864,20 +873,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
         }
       }
-      if (is.null(private$initial_graph$lines) == TRUE) {
-        data.to.plot.order <- vals[order(vals[, 1]), ]
-        V <- private$initial_graph$V[private$initial_graph$E[i, ], ]
 
-        alpha <- data.to.plot.order[,1]
-        coords <- cbind((1 - alpha) * V[1, 1] + alpha * V[2, 1],
-                        (1 - alpha) * V[1, 2] + alpha * V[2, 2])
-
-        x.loc = c(x.loc, coords[, 1])
-        y.loc = c(y.loc, coords[, 2])
-        z.loc = c(z.loc, data.to.plot.order[, 2])
-        i.loc = c(i.loc, rep(kk, length(coords[, 1])))
-        kk = kk+1
-      } else {
         index <- (private$initial_graph$LtE@p[i] + 1) :
           (private$initial_graph$LtE@p[i + 1])
         LinesPos <- cbind(private$initial_graph$LtE@i[index] + 1,
@@ -919,7 +915,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
           kk = kk+1
         }
-      }
+
     }
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
 
@@ -1049,17 +1045,17 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' correct order.
   #' @param y A vector of response variables
   add_responses = function(y) {
-  stopifnot(length(y) == nrow(self$PtE))
+  y <- matrix(y, nrow = nrow(self$PtE))
   private$raw_y <- y
   self$y <- y
   idx <- private$reorder_idx[[1]]
-  y_tmp <- self$y[idx]
-  self$y[1:length(idx)] <- y_tmp
+  y_tmp <- self$y[idx,]
+  self$y[1:length(idx),] <- y_tmp
   if (length(private$reorder_idx) > 1) {
     for (i in 2:length(private$reorder_idx)) {
       idx <- private$reorder_idx[[i]]
-      y_tmp <- self$y[1:length(idx)]
-      self$y <- y_tmp[idx]
+      y_tmp <- matrix(self$y[1:length(idx),], nrow = length(idx))
+      self$y[1:length(idx),] <- y_tmp[idx,]
     }
   }
 },
@@ -1330,12 +1326,15 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(PtE_update)
   },
 
+  ## Adding column_y argument which tells which column of y to get
+
   plot_2d = function(line_width = 0.1,
                      marker_size = 1,
                      vertex_color = 'black',
                      edge_color = 'black',
                      data = FALSE,
                      data_size = 1,
+                     column_y = 1,
                      mesh = FALSE,
                      X = NULL,
                      X_loc = NULL,
@@ -1371,7 +1370,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     if (data) {
       x <- y <- NULL
-      for (i in 1:length(self$y)) {
+      for (i in 1:nrow(self$y)) {
 
           LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
@@ -1382,9 +1381,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           y <- c(y, Point@coords[2])
 
       }
-      p <- p + geom_point(data = data.frame(x = x[!is.na(self$y)],
-                                            y = y[!is.na(self$y)],
-                                            val = as.vector(self$y[!is.na(self$y)])),
+      p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(self$y[, column_y]))],
+                                            y = y[!is.na(as.vector(self$y[, column_y]))],
+                                            val = as.vector(self$y[!is.na(self$y), column_y])),
                           mapping = aes(x, y, color = val),
                           size = data_size, ...) +
         scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
@@ -1421,12 +1420,15 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
+  ## Adding column_y argument which tells which column of y to get
+
   plot_3d = function(line_width = 1,
                      marker_size = 1,
                      vertex_color = 'rgb(0,0,0)',
                      edge_color = 'rgb(0,0,0)',
                      data = FALSE,
                      data_size = 1,
+                     column_y = 1,
                      mesh = FALSE,
                      p = NULL,
                      ...){
@@ -1468,16 +1470,17 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if (data) {
       x <- y <- NULL
-      for (i in 1:length(self$y)) {
+      for (i in 1:nrow(self$y)) {
         Line <- self$lines[PtE[i, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
         Point <- gInterpolate(Line, PtE[i, 2], normalized = TRUE)
         x <- c(x, Point@coords[1])
         y <- c(y, Point@coords[2])
       }
-      data.plot <- data.frame(x = x, y = y,
-                              z = rep(0,length(x)),
-                              val = self$y)
+      data.plot <- data.frame(x = x[!is.na(as.vector(self$y[, column_y]))],
+                                            y = y[!is.na(as.vector(self$y[, column_y]))],
+                              z = rep(0,length(x[!is.na(as.vector(self$y[, column_y]))])),
+                              val = as.vector(self$y[!is.na(self$y), column_y]))
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
