@@ -96,7 +96,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param longlat If TRUE, then it is assumed that the coodinates are given
   #' in Longitude/Latitude and that distances should be computed in km.
   #' @param tolerance vertices that are closer than this number are merged when
-  #' constructing the graph (default = 2e-16). If `longlat = TRUE`, the
+  #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
   #' tolerance is given in km.
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
@@ -109,7 +109,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
-                        tolerance = 2e-16) {
+                        tolerance = 1e-10) {
 
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){

@@ -29,7 +29,7 @@
 #' @importFrom methods is slot
 #' @export gg_df
 #' @importFrom stats approx dist dnorm pnorm rnorm var
-#' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates SpatialLines LineLength
+#' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates SpatialLines LineLength spDists
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend
 #' @importFrom rgeos gInterpolate gProject
 #' @importFrom igraph E E<-

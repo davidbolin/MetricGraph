@@ -135,7 +135,7 @@ Create a new \code{metric_graph} object
   V = NULL,
   E = NULL,
   longlat = FALSE,
-  tolerance = 2e-16
+  tolerance = 1e-10
 )}\if{html}{\out{</div>}}
 }
 
@@ -152,7 +152,7 @@ Create a new \code{metric_graph} object
 in Longitude/Latitude and that distances should be computed in km.}
 
 \item{\code{tolerance}}{vertices that are closer than this number are merged when
-constructing the graph (default = 2e-16). If \code{longlat = TRUE}, the
+constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the
 tolerance is given in km.}
 }
 \if{html}{\out{</div>}}
@@ -626,7 +626,7 @@ is the order of the user's input.}
 \subsection{Method \code{coodinates()}}{
 Convert between locations on the graph and Euclidean coordinates
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$coodinates(PtE = NULL, XY = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$coodinates(PtE = NULL, XY = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -636,6 +636,10 @@ Convert between locations on the graph and Euclidean coordinates
 position on the edge).}
 
 \item{\code{XY}}{matrix with locations in Euclidean space}
+
+\item{\code{normalized}}{If TRUE, it is assumed that the positions in \code{PtE} are
+normalized to (0,1), and the object returned if \code{XY} is specified contains
+normalized locations.}
 }
 \if{html}{\out{</div>}}
 }
