@@ -8,6 +8,7 @@ likelihood_graph_covariance(
   graph,
   model = "alpha1",
   cov_function = NULL,
+  covariates = FALSE,
   log_scale = TRUE,
   maximize = FALSE
 )
@@ -24,6 +25,9 @@ model with isotropic covariance.}
 of \verb{(h, theta_cov)}, where \code{h} is a vector, or matrix, containing the distances to evaluate the covariance function at, and
 \code{theta_cov} is the vector of parameters of the covariance function \code{cov_function}.}
 
+\item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
+covariates included by the method \code{add_covariates()}.}
+
 \item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
 
 \item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
@@ -34,7 +38,13 @@ For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter \code{theta} must 
 the vector \code{c(sigma_e, sigma, kappa)}.
 
 For 'isoCov' model, theta must be a vector such that \code{theta[1]} is \code{sigma.e} and the vector
-\code{theta[2:length(theta)]} is the input of \code{cov_function}.
+\code{theta[2:(q+1)]} is the input of \code{cov_function}, where \code{q} is the number of parameters of the covariance function.
+
+If \code{covariates} is \code{TRUE}, then the parameter \code{theta} must be supplied as the vector \code{c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])},
+where \verb{beta[1],...,beta[p]} are the coefficients and \code{p} is the number of covariates.
+
+For the remaining models, if \code{covariates} is \code{TRUE}, then \code{theta} must be supplied as the vector \code{c(sigma_e, sigma, kappa, beta[1], ..., beta[p])},
+where \verb{beta[1],...,beta[p]} are the coefficients and \code{p} is the number of covariates.
 }
 \description{
 Function factory for likelihood evaluation not using sparsity

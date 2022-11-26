@@ -7,6 +7,7 @@
 likelihood_graph_spde(
   graph,
   alpha = 1,
+  covariates = FALSE,
   log_scale = TRUE,
   maximize = FALSE,
   version = 1
@@ -15,8 +16,10 @@ likelihood_graph_spde(
 \arguments{
 \item{graph}{metric_graph object}
 
-\item{alpha}{Order of the SPDE, should be either 1 or 2.
-the vertex locations, if 2, no integration is done}
+\item{alpha}{Order of the SPDE, should be either 1 or 2.}
+
+\item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
+covariates included by the method \code{add_covariates()}.}
 
 \item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
 
@@ -28,6 +31,9 @@ the vertex locations, if 2, no integration is done}
 The log-likelihood function, which is returned as a function with parameter 'theta'.
 The parameter \code{theta} must be supplied as
 the vector \code{c(sigma_e, sigma, kappa)}.
+
+If \code{covariates} is \code{TRUE}, then the parameter \code{theta} must be supplied as the vector \code{c(sigma_e, sigma, kappa, beta[1], ..., beta[p])},
+where \verb{beta[1],...,beta[p]} are the coefficients and \code{p} is the number of covariates.
 }
 \description{
 Function factory for likelihood evaluation for the metric graph SPDE model

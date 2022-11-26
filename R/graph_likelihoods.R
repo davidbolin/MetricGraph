@@ -2,16 +2,20 @@
 #'
 #' @param graph metric_graph object
 #' @param alpha Order of the SPDE, should be either 1 or 2.
-#' the vertex locations, if 2, no integration is done
+#' @param covariates Logical. If `TRUE`, the model will be considered with covariates. It requires `graph` to have
+#' covariates included by the method `add_covariates()`.
 #' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
-#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @param version if 1, the likelihood is computed by integrating out
+#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
 #' The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
+#' 
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
 
-likelihood_graph_spde <- function(graph, alpha = 1, log_scale = TRUE, maximize = FALSE, version = 1) {
+likelihood_graph_spde <- function(graph, alpha = 1, covariates = FALSE, log_scale = TRUE, maximize = FALSE, version = 1) {
 
   check <- check_graph(graph)
 
@@ -29,15 +33,15 @@ likelihood_graph_spde <- function(graph, alpha = 1, log_scale = TRUE, maximize =
       switch(alpha,
       "1" = {
         if(version == 1){
-          loglik_val <- likelihood_alpha1(theta_spde, graph)
+          loglik_val <- likelihood_alpha1(theta_spde, graph, covariates)
         } else if(version == 2){
-          loglik_val <- likelihood_alpha1_v2(theta_spde, graph)
+          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, covariates)
         } else{
           stop("Version should be either 1 or 2!")
         }
       },
       "2" = {
-        loglik_val <- likelihood_alpha2(theta_spde, graph)
+        loglik_val <- likelihood_alpha2(theta_spde, graph, covariates)
       }
       )
       if(maximize){
@@ -51,6 +55,7 @@ likelihood_graph_spde <- function(graph, alpha = 1, log_scale = TRUE, maximize =
 #' Computes the log likelihood function fo theta for the graph object
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph  metric_graph object
+#' @noRd
 likelihood_alpha2 <- function(theta, graph) {
   if(is.null(graph$C)){
     graph$buildC(2)
@@ -88,6 +93,21 @@ likelihood_alpha2 <- function(theta, graph) {
       for (e in obs.edges) {
         obs.id <- graph$PtE[,1] == e
         y_i <- graph$y[obs.id, repl_y]
+
+        if(covariates){
+          n_cov <- ncol(graph$covariates[[1]])
+        if(length(graph_covariates)==1){
+          X_cov <- graph$covariates[[1]]
+        } else if(length(graph$covariates) == ncol(graph$y)){
+          X_cov <- graph$covariates[[repl_y]]
+        } else{
+          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+        }
+
+        X_cov <- X_cov[obs.id,]
+        y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
+      }
+
         l <- graph$edge_lengths[e]
         t <- c(0, l, l*graph$PtE[obs.id, 2])
 
@@ -232,10 +252,12 @@ likelihood_alpha2 <- function(theta, graph) {
 #'
 #' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
+#' @param covariates logical. Should covariates be included?
 #' @details This function computes the likelihood without integrating out
 #' the vertices.
 #' @return The log-likelihood
-likelihood_alpha1_v2 <- function(theta, graph) {
+#' @noRd
+likelihood_alpha1_v2 <- function(theta, graph, covariates) {
   sigma_e <- theta[1]
   #build Q
   Q <- spde_precision(kappa = theta[3], sigma = theta[2],
@@ -244,16 +266,32 @@ likelihood_alpha1_v2 <- function(theta, graph) {
     stop("No observation at the vertices! Run observation_to_vertex().")
   }
   A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
-  Q.p <- Q  + t(A) %*% A / sigma_e^2
-
   R <- chol(Q)
-  R.p <- chol(Q.p)
-  n.o <- nrow(graph$y)
 
   for(i in 1:ncol(graph$y)){
-      mu.p <- solve(Q.p, as.vector(t(A) %*% graph$y[, i]/sigma_e^2))
-      l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o * log(sigma_e)
-      v <- graph$y[, i]  - A %*% mu.p
+      na_obs <- is.na(graph$y[, i])
+      n.o <- nrow(graph$y[!na_obs,])
+      y_ <- graph$y[!na_obs, i]
+      Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
+      R.p <- chol(Q.p)
+      
+      mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% y_ / sigma_e^2))
+      l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      v <- y_ - A[!na_obs,]%*%mu.p
+      if(covariates){
+        n_cov <- ncol(graph$covariates[[1]])
+        if(length(graph_covariates)==1){
+          X_cov <- graph$covariates[[1]]
+        } else if(length(graph$covariates) == ncol(graph$y)){
+          X_cov <- graph$covariates[[i]]
+        } else{
+          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+        }
+
+        X_cov <- X_cov[!na_obs,]
+        v <- v - X_cov %*% theta[4:(3+n_cov)]
+      }
+
       l <- l - 0.5*(t(mu.p) %*% Q %*% mu.p + t(v) %*% v / sigma_e^2) -
         0.5 * n.o * log(2*pi)
   }
@@ -264,7 +302,8 @@ likelihood_alpha1_v2 <- function(theta, graph) {
 #' Log-likelihood calculation for alpha=1 model
 #' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
-likelihood_alpha1 <- function(theta, graph) {
+#' @noRd
+likelihood_alpha1 <- function(theta, graph, covariates) {
   sigma_e <- theta[1]
   #build Q
 
@@ -297,6 +336,21 @@ likelihood_alpha1 <- function(theta, graph) {
     for (e in obs.edges) {
       obs.id <- graph$PtE[,1] == e
       y_i <- graph$y[obs.id, repl_y]
+
+        if(covariates){
+          n_cov <- ncol(graph$covariates[[1]])
+        if(length(graph_covariates)==1){
+          X_cov <- graph$covariates[[1]]
+        } else if(length(graph$covariates) == ncol(graph$y)){
+          X_cov <- graph$covariates[[repl_y]]
+        } else{
+          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+        }
+
+        X_cov <- X_cov[obs.id,]
+        y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
+      }
+
       l <- graph$edge_lengths[e]
       D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
       S <- r_1(D_matrix, kappa = theta[3], sigma = theta[2])
@@ -367,6 +421,8 @@ likelihood_alpha1 <- function(theta, graph) {
 #' @param cov_function The covariance function to be used in case 'model' is chosen as 'isoCov'. `cov_function` must be a function
 #' of `(h, theta_cov)`, where `h` is a vector, or matrix, containing the distances to evaluate the covariance function at, and
 #' `theta_cov` is the vector of parameters of the covariance function `cov_function`.
+#' @param covariates Logical. If `TRUE`, the model will be considered with covariates. It requires `graph` to have
+#' covariates included by the method `add_covariates()`.
 #' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
@@ -374,9 +430,15 @@ likelihood_alpha1 <- function(theta, graph) {
 #' the vector `c(sigma_e, sigma, kappa)`.
 #'
 #' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e` and the vector
-#' `theta[2:length(theta)]` is the input of `cov_function`.
+#' `theta[2:(q+1)]` is the input of `cov_function`, where `q` is the number of parameters of the covariance function.
+#' 
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates. 
+#' 
+#' For the remaining models, if `covariates` is `TRUE`, then `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
-likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = NULL, log_scale = TRUE, maximize = FALSE) {
+likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = NULL, covariates = FALSE, log_scale = TRUE, maximize = FALSE) {
 
   check <- check_graph(graph)
 
@@ -460,11 +522,28 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
 
       diag(Sigma) <- diag(Sigma) + sigma_e^2
 
-      R <- chol(Sigma)
+
       loglik_val <- 0
       for(i in 1:ncol(graph$y)){
-          loglik_val <- loglik_val + as.double(-sum(log(diag(R))) - 0.5*t(graph$y[, i])%*%solve(Sigma,graph$y[, i]) -
-                         nrow(graph$y)*log(2*pi)/2)        
+          na_obs <- is.na(graph$y[, i])
+          Sigma_non_na <- Sigma[!na_obs, !na_obs]
+          R <- chol(Sigma_non_na)
+          v <- graph$y[!na_obs, i]
+          if(covariates){
+          n_cov <- ncol(graph$covariates[[1]])
+          if(length(graph_covariates)==1){
+            X_cov <- graph$covariates[[1]]
+          } else if(length(graph$covariates) == ncol(graph$y)){
+            X_cov <- graph$covariates[[i]]
+          } else{
+            stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+          }
+              X_cov <- X_cov[!na_obs,]
+              v <- v - X_cov %*% theta[4:(3+n_cov)]
+          }
+
+          loglik_val <- loglik_val + as.double(-sum(log(diag(R))) - 0.5*t(v)%*%solve(Sigma_non_na,v) -
+                         length(v)*log(2*pi)/2)        
       }
 
       if(maximize){
@@ -481,14 +560,19 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
 #'
 #' @param graph metric_graph object
 #' @param alpha integer greater or equal to 1. Order of the equation.
+#' @param covariates Logical. If `TRUE`, the model will be considered with covariates. It requires `graph` to have
+#' covariates included by the method `add_covariates()`.
 #' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
 #' The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
+#' 
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
 
-likelihood_graph_laplacian <- function(graph, alpha, log_scale = TRUE, maximize = FALSE) {
+likelihood_graph_laplacian <- function(graph, alpha, covariates = FALSE, log_scale = TRUE, maximize = FALSE) {
 
   check <- check_graph(graph)
 
@@ -502,6 +586,12 @@ likelihood_graph_laplacian <- function(graph, alpha, log_scale = TRUE, maximize 
 
   if(is.null(graph$Laplacian)) {
     graph$compute_laplacian()
+  }
+
+  if(covariates){
+    if(is.null(graph$covariates)){
+      stop("If 'covariates' is set to TRUE, the graph must have covariates!")
+    }
   }
 
   loglik <- function(theta){
@@ -524,17 +614,32 @@ likelihood_graph_laplacian <- function(graph, alpha, log_scale = TRUE, maximize 
     }
     Q <- Q / sigma^2
 
-    Q.p <- Q  + t(graph$A()) %*% graph$A()/sigma_e^2
-
     R <- chol(Q)
-    R.p <- chol(Q.p)
-    n.o <- nrow(graph$y)
-
     l <- 0
+
     for(i in 1:ncol(graph$y)){
-      mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% graph$y[, i] / sigma_e^2))
+      na_obs <- is.na(graph$y[, i])
+      n.o <- nrow(graph$y[!na_obs,])
+      y_ <- graph$y[!na_obs, i]
+      Q.p <- Q  + t(graph$A()[!na_obs,]) %*% graph$A()[!na_obs,]/sigma_e^2
+      R.p <- chol(Q.p)
+      
+      mu.p <- solve(Q.p,as.vector(t(graph$A()[!na_obs,]) %*% y_ / sigma_e^2))
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
-      v <- graph$y[, i] - graph$A()%*%mu.p
+      v <- y_ - graph$A()[!na_obs,]%*%mu.p
+      if(covariates){
+        n_cov <- ncol(graph$covariates[[1]])
+        if(length(graph_covariates)==1){
+          X_cov <- graph$covariates[[1]]
+        } else if(length(graph$covariates) == ncol(graph$y)){
+          X_cov <- graph$covariates[[i]]
+        } else{
+          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+        }
+
+        X_cov <- X_cov[!na_obs,]
+        v <- v - X_cov %*% theta[4:(3+n_cov)]
+      }
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }
     if(maximize){
