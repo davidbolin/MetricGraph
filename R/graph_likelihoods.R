@@ -7,7 +7,7 @@
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @param version if 1, the likelihood is computed by integrating out
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
-#' The parameter `theta` must be supplied as 
+#' The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
 #' @export
 
@@ -31,7 +31,7 @@ likelihood_graph_spde <- function(graph, alpha = 1, log_scale = TRUE, maximize =
         if(version == 1){
           loglik_val <- likelihood_alpha1(theta_spde, graph)
         } else if(version == 2){
-          loglik_val <- likelihood_alpha1_v2(theta, graph)
+          loglik_val <- likelihood_alpha1_v2(theta_spde, graph)
         } else{
           stop("Version should be either 1 or 2!")
         }
@@ -329,16 +329,16 @@ likelihood_alpha1 <- function(theta, graph) {
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoCov" gives a
-#' model with isotropic covariance. 
-#' @param cov_function The covariance function to be used in case 'model' is chosen as 'isoCov'. `cov_function` must be a function 
+#' model with isotropic covariance.
+#' @param cov_function The covariance function to be used in case 'model' is chosen as 'isoCov'. `cov_function` must be a function
 #' of `(h, theta_cov)`, where `h` is a vector, or matrix, containing the distances to evaluate the covariance function at, and
 #' `theta_cov` is the vector of parameters of the covariance function `cov_function`.
 #' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
-#' For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter `theta` must be supplied as 
+#' For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
-#' 
+#'
 #' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e` and the vector
 #' `theta[2:length(theta)]` is the input of `cov_function`.
 #' @export
@@ -380,14 +380,14 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
       #build covariance matrix
       switch(model,
       alpha1 = {
-      
+
         Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph)
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
       },
       alpha2 = {
-      
+
         n.c <- 1:length(graph$CoB$S)
         Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
                             graph = graph, BC = 1)
@@ -400,12 +400,12 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
       }, GL1 = {
-      
+
         Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
       }, GL2 = {
-      
+
         Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
         Q <- Q %*% Q / sigma^2
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
@@ -417,12 +417,12 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
         if(!is.function(cov_function)){
           stop("'cov_function' must be a function!")
         }
-      
+
         if(is.null(graph$res_dist)){
           stop("You must first compute the resistance metric for the observations")
         }
         Sigma <- as.matrix(cov_function(graph$res_dist, theta_cov))
-      }) 
+      })
 
       diag(Sigma) <- diag(Sigma) + sigma_e^2
 
@@ -435,7 +435,7 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
         return(-loglik_val)
       }
       }
-  
+
 }
 
 
@@ -446,7 +446,7 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
 #' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
-#' The parameter `theta` must be supplied as 
+#' The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
 #' @export
 

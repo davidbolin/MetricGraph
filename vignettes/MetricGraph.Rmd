@@ -1,0 +1,430 @@
+---
+title: "MetricGraph: Random Fields on Metric Graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{MetricGraph: Random Fields on Metric Graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matéern fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2205.06163
+  type: preprint
+  issued:
+  year: 2022
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:??
+  type: preprint
+  issued:
+  year: 2022
+- id: Anderes2020
+  title: "Isotropic covariance functions on graphs and their edges"
+  author:
+  - family: Anderes
+    given: Ethan
+  - family: Møller
+    given: Jesper
+  - family: Rasmussen
+    given: Jakob G
+  container-title: Annals of Statistics
+  type: article
+  issued: 48
+  pages: 2478--2503
+  year: 2020
+- id: Borovitskiy2021
+  title: "Matérn Gaussian processes on graphs"
+  author:
+  - family: Borovitskiy
+    given: Viacheslav
+  - family: Azangulov
+    given: Iskander
+  - family: Terenin
+    given: Alexander 
+  - family: Mostowsky
+    given: Peter
+  - family: Deisenroth
+    given: Marc
+  - family: Durrande
+    given: Nicolas
+  container-title: International Conference on Artificial Intelligence and Statistics
+  type: article
+  issued: 
+  pages: 2593--2601
+  year: 2021
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MetricGraph)
+library(sp)
+library(osmdata)
+set.seed(1)
+```
+
+# Introduction
+
+There has lately been much interest in statistical modeling of data on compact metric graphs such as street or river networks based on Gaussian random fields.
+
+
+The `R` package `MetricGraph` contains functions for working with data and 
+random fields on compact metric graphs. The main functionality is contained in 
+the `metric_graph` class, which is used for specifying metric graphs, adding data to them, visualization, and other basic functions that are needed for working with data and random fields on metric graphs. The package also implements three types
+of Gaussian processes on metric graphs: The Whittle--Matérn fields introduced 
+by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??), Gaussian
+processes with isotropic covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Gaussian models based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
+
+Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` (REF, package available from \url{http://R-INLA.
+org/download/} and `inlabru` (REF) that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
+
+The package is available to install from the Comprehensive R Archive
+Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository \url{https://github.com/davidbolin/MetricGraph}. The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage. 
+
+The following sections describe the main functionality of the package and summarizes some of the required theory. Section 2 introduces metric graphs and the `metric_graph` class, Section 3 shows how to work with random fields on metric graphs, and Section 4 introduces the `inlabru` interface of the package through an application to real data. For a complete introduction to the functionality of the package, we refer to the Vignettes available on the package homepage \url{https://davidbolin.github.io/MetricGraph/}. In particular, that contains an introduction to the `INLA` interface, the implementation of Whittle--Matérn fields with general smoothness, and further details and examples for all methods in the package. 
+
+
+# The `metric_graph` class
+
+A compact metric graph $\Gamma$ consists of a set of finitely many vertices $\mathcal{V}=\{v_i\}$ and a finite set $\mathcal{E}=\{e_j\}$ of edges connecting the vertices. Each edge $e$ is defined by a pair of vertices $(v_i,v_k)$ and a finite length $l_e \in (0,\infty)$. An edge in the graph is a curve parametrized by arc-length, and a location $s\in \Gamma$ is a position on an edge, and can thus be represented as a touple $(e,t)$ where $t\in[0,l_e]$. 
+
+## Basic constructions 	
+A metric graph is represented in the `MetricGraph` package through the class `metric_graph`. An object of this class can be constructed in two ways. The first is to specify the vertex matrix `V` and the edge matrix `E`, and it is then assumed that all edges are straight lines. The second, more flexible, option is to specify the object from a `SpatialLines` object using the `sp` package (REF). 
+
+To illustrate this, we use the `osmdata` package to download data from OpenStreetMap. In the following code, we extract the streets on the campus of 
+King Abdullah University of Science and Technology (KAUST) as a `SpatialLines` object:
+
+```{r}
+call <- opq(bbox = c(39.0884, 22.33, 39.115, 22.3056))
+call <- add_osm_feature(call, key = "highway",value=c("motorway",
+                                                      "primary","secondary",
+                                                      "tertiary",
+                                                      "residential"))
+data <- osmdata_sp(call)
+lines <- SpatialLines(data$osm_lines@lines)
+```
+
+We can now create the metric graph as follows. In the command we set the argument `longlat = TRUE` since the coordinates of the vertices are given in Longitude and Latitude.
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph <- metric_graph$new(lines, longlat = TRUE)
+graph$plot(vertex_size = 0.5)
+```
+
+We can note the warning that the graph is not connected, so let us extract the 
+largest connected component to work with
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph <- graph_components(lines = lines, longlat = TRUE, only_largest = TRUE)
+graph$plot(vertex_size = 0)
+```
+
+The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$edge_lengths` given in the unit km (since we specified `longlat = TRUE` in the construction). Thus, we can obtain the range of the edge lengths in the unit m as:
+```{r}
+range(graph$edge_lengths) * 1000
+```
+Here, we see that some edges are very short, and one might want to merge such vertices in the construction of the graph. This can be done by setting the parameter `tolerance` to some desired value of the minimum distance between vertices. 
+
+## Understanding coordinates on graphs
+The locations of the vertices are specified in Euclidean coordinates. However, 
+when specifying a position on the graph, it is not practical to work with 
+Euclidean coordinates since not all locations in Euclidean space are locations
+on the graph. It is instead better to specify a location on the graph by the 
+touple $(i, t)$, where $i$ denotes the number of the edge and $t$ is the 
+location on the edge. The location $t$ can either be specified as the 
+distance from the start of the edge (and then takes values between 0 and the 
+length of the edge) or as the normalized distance from the start of the edge
+(and then takes values between 0 and 1). The function `coordinates` can be used
+to convert between coodinates in Euclidean space and locations on the graph. 
+For example the location at normalized distance 0.2 from the start of the second edge is:
+```{r}
+graph$coodinates(PtE = matrix(c(2, 0.2), 1,2), normalized = TRUE)
+```
+
+The function can also be used to find the closest location on the graph for 
+a location in Euclidean space: 
+```{r}
+graph$coodinates(XY = matrix(c(39.117, 22.319), 1,2))
+```
+In this case, the `normalized` argument decides whether the returned value 
+should be given in normalized distance or not. 
+
+## Adding data to the graph 
+
+Given that we have constructed the metric graph, we can now add data to it. 
+As an example, let us sample some locations on edges at random and add data to them in the graph: 
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+n.obs <- 10
+obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
+obs <- rnorm(n.obs)
+graph$add_PtE_observations(obs, PtE = obs.loc, normalized = TRUE)
+graph$plot(data = TRUE, vertex_size = 0)
+```
+
+One should note here that one needs to specify `normalized = TRUE` in the function `add_PtE_observations()` to specify that the locations are in normalized distance on the edges. Alternatively, if one has data as `SpatialPoints` objects, these can be added to the graph via the function `add_observations()`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPoints` object which we add to the graph:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
+obs.lonlat <- graph$coodinates(PtE = obs.loc, normalized = TRUE)
+obs <- rnorm(n.obs)
+points <- SpatialPointsDataFrame(coords = obs.loc,
+                                 data = data.frame(y = obs))
+graph$add_observations(points)
+graph$plot(data = TRUE, vertex_size = 0)
+```
+
+If we want to replace the data in the object, we can use `clear_observations()`
+to remove all current data.
+
+## Working with functions on metric graphs
+
+When working with data on metric graphs, one often wants to display functions
+on the graph. The best way to visualize functions on the graph is to evaluate
+them on a fine mesh over the graph and then use `plot_function`. To illustrate
+this procedure, let us construct a mesh on the graph:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph$build_mesh(h = 100/1000)
+graph$plot(mesh=TRUE)
+```
+
+In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. Above we chose that as 100m which is a bit coarse. So let us reduce the value of `h` to 1m and rebuild the mesh:
+```{r}
+  graph$build_mesh(h = 1/1000)
+```
+
+Suppose now that we want to display the function $f(s) = \text{Longitude}(s) - \Latitude(s)$ on this graph. We then first evaluate it on the vertices of the mesh and then use the  function `plot_function` to display it:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+lon <- graph$mesh$V[, 1]
+lat <- graph$mesh$V[, 2]
+f <- lon - lat
+graph$plot_function(f, vertex_size = 0, edge_width = 0.5)
+```
+
+Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
+visualization of the function by using the `plotly` (REF) package. 
+When the first argument of `plot_function` is a vector, the function assumes that 
+the values in the vector are the values of the function evaluated at the vertices
+of the mesh. As an alternative, one can also provide the first argument as a 
+matrix consisting of the triplets $(i, t, f(i, t))$, where $i$ denotes the 
+edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point.
+
+# Random fields on metric graphs
+Having defined the metric graph, we are now ready to specify Gaussian processes on it. In this section, we will briefly cover the three main types of Gaussian processes that are supported. Be begin by the main class of models, the Whittle--Matérn fields, then consider Gaussian processes with isotropic covariance functions, and finally look at discrete models based on the graph Laplacian.
+
+## Whittle--Matérn fields 
+The Gaussian Whittle--Matérn fields are specified as solutions to the stochastic
+differential equation 
+$$
+  (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}
+$$
+on the metric graph $\Gamma$. We can work with these models without
+and approximations if the smoothness parameter $\alpha$ is an integer, and this 
+is what we focus on in this vignette. For details on the case of a general 
+smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_models.html). 
+
+### Sampling 
+
+As an example, let us simulate the field $u$ on the graph using $\alpha = 1$. 
+To do so, we again draw some locations at random, then sample the field, clear the observations that we previously added to the graph, and finally add the sampled values:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+n.obs <- 200
+obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
+sigma <- 2
+kappa <- 0.5
+sigma_e <- 0.1
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+                 graph = graph, PtE = obs.loc)
+y <- u + sigma_e*rnorm(n.obs)
+graph$clear_observations()
+graph$add_PtE_observations(u, PtE = obs.loc, normalized = TRUE)
+graph$plot(data = TRUE, vertex_size = 0)
+```
+
+Here, we generated the observations
+$$
+y_i = u(s_i) + \varepsilon_i, \quad i=1,\ldots,n
+$$
+where $s_i\in \Gamma$ are observation locations and $\varepsilon_i$ are
+independent centered Gaussian variables $N(0,\sigma_e^2)$ representing 
+measurement noise. 
+
+As an illustration, we can also sample the field at the mesh on the graph as follows:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+                 graph = graph, type = "mesh")
+graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
+```
+
+Since $\alpha=1$, these sample paths are continuous but not differentiable. 
+To visualize the correlation structure of the field, we can compute and plot
+the covariances between some point and all other points in the graph as follows:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+C <- covariance_alpha1_mesh(c(200, 0.1), kappa = kappa, sigma = sigma, 
+                            graph = graph)
+graph$plot_function(C, vertex_size = 0, edge_width = 0.5)
+```
+
+To obtain a field with differentiable sample paths, we can change to $\alpha=2$ in the code above.
+
+
+### Inference
+
+The `MetricGraph` package contains implementations of likelihoods for Whittle--Matérn fields observed under Gaussian measurement  noise. In this section we will illustrate these methods. 
+Suppose that we want to estimate the model parameters of a Whittle--Matérn field
+$u(s)$ observed under Gaussian measurement noise. We have already added data of this type to the graph, so let us now estimate the model parameters based on this data. 
+
+We can now use the `likelihood_graph_spde` function to obtain the log-likelihood function for the data based on a Whittle--Matérn field. 
+
+
+model for $u$. This function is actually a function factory and returns
+the loglikehood function as a function of the parameter `theta`,
+which is given in the order `(sigma.e, sigma, kappa)`. By default,
+this function gives the parameters in log scale and returns minus 
+the value of the log-likelihood so one can directly supply it to the `optim` function.
+Assuming that $\alpha=1$, we optimize this likelihood using 
+`optim` as follows:
+
+```{r}
+theta0 <- graph_starting_values(graph, model = "alpha1")
+loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1)
+res <- optim(log(theta0), loglik_alpha1)
+theta.est <- exp(res$par)
+sigma_e_est <- theta.est[1]
+sigma_est <- theta.est[2]
+kappa_est <- theta.est[3]
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+Given these estimated parameters, we can now do kriging to estimate the 
+field at locations in the graph. As an example, we now estimate the field 
+on the regular mesh that we previously constructed. 
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+u_est <- spde_posterior_mean(c(sigma_e_est, sigma_est, kappa_est),
+                             graph, alpha = 1, type = "mesh")
+
+graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
+```
+
+The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
+from data as described in the vignette 
+[Whittle--Matérn fields with general smoothness](fem_models.html).
+
+
+## Isotropic Gaussian processes
+
+For metric graphs with Euclidean edges, [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full)
+showed that one can define  valid Gaussian processes through various isotropic
+covariance functions if the distances between points are measured in the 
+so-called resistance metric $d(\cdot,\cdot)$. One example of a valid covariance
+function is the isotropic exponential covariance
+function 
+$$
+r(d(s,t)) = \sigma^2\exp(-\kappa d(s,t)).
+$$
+This covariance is very similar to that of the 
+Whittle--Mat\'ern fields with $\alpha = 1$. Between the two, we recommend
+using the Whittle--Matérn model since it has Markov properties which makes inference much faster. Further, that covariance is well-defined for any
+compact metric graph, whereas the isotropic exponential is only guaranteed to be
+positive definite if the graph has Euclidean edges. See [@BSW2022b](??) for 
+further comparisons. 
+
+However, let us now illustrate how to use it for the data that we generated above. To work with the covariance function, the only cumbersome thing is to compute the metric. The `metric_graph` class has 
+built in support for this, and we can obtain the distances between the observation locations as 
+```{r}
+graph$compute_resdist()
+```
+
+We fit the model to the data by using `optim` in combination with the  function `likelihood_graph_covariance()` which implements, among other models, Gaussian processes with isotropic exponential covariance functions. 
+Similarly to the `likelihood_graph_spde()` function, `likelihood_graph_covariance()` is also a function
+factory.  By default `likelihood_graph_covariance()` returns a function of the parameters given in log-scale and returns minus the log-likelihood,
+so one can directly apply it to the `optim` function. Let us create the likelihood function and 
+find the maximum:
+```{r}
+loglik_isoExp <- likelihood_graph_covariance(graph, 
+                                      model = "isoCov", 
+                                      cov_function = exp_covariance)
+res.exp <- optim(log(theta0), loglik_isoExp)
+theta.exp <- exp(res.exp$par)
+sigma_e_est <- theta.exp[1]
+sigma_est <- theta.exp[2]
+kappa_est <- theta.exp[3]
+results <- data.frame(sigma_e = c(sigma_e_est),
+                      sigma = c(sigma_est),
+                      kappa = c(kappa_est),
+                      row.names = c("Estimate"))
+print(results)
+```
+
+Let us now compute the posterior mean for the field at the observation 
+locations and plot the residuals between the data and the field
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+u_est_exp <- posterior_mean_covariance(theta.exp, graph, model = "isoExp")
+graph$plot(X = u_est_exp - graph$y, X_loc = graph$PtE, vertex_size = 0)
+```
+
+To perform kriging prediction to the mesh locations based on this model, one can first use the function `compute_resdist_mesh()` to get the resistance metric between those locations. However, since we in this example have a rather large mesh this takes a lot of time, and we do not illustrate it here. 
+
+## Models based on the Graph Laplacian
+A final set of Gaussian models that is supported by `MetricGraph` is the Matérn type
+processes based on the graph Laplacian introduced
+by [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). These are multivariate Gaussian distributions, which are defined in the
+vertices through the equation
+$$
+(\kappa^2\mathbf{I} - \mathbf{\Delta}_\Gamma)^{\alpha/2}\mathbf{u} = \mathbf{W}
+$$
+Here $\mathbf{W}\sim N(0,\sigma^2\mathbf{I})$ is a vector with independent Gaussian
+variables and $\mathbf{\Delta}_\Gamma$ is the graph Laplacian. Further, $\mathbf{u}$
+is a vector with the values of the process in the vertices of $\Gamma$, which
+by definition has precision matrix
+$$
+\mathbf{Q} = \sigma^{-2}(\kappa^2\mathbf{I} - \mathbf{\Delta}_\Gamma)^{\alpha}
+$$
+Thus, to define these models, the only ``difficult'' thing is to compute the 
+graph Laplacian. The (weighted) graph Laplacian, where the weights are specified
+by the edge lengths can be computed by the function `compute_laplacian()` in the
+`metric_graph` object. Suppose that we want to model the data that we defined
+above with this model. The first thing we then need to do is to add all observation locations as vertices in the graph (since the model is only defined in vertices), and then compute the graph Laplacian on this extended graph:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph$observation_to_vertex()
+graph$compute_laplacian()
+```
+
+We can then fit the model to data similarly to how we fit the previous models, with the help of the function factory `likelihood_graph_laplacian()`:
+```{r}
+loglik_GL1 <- likelihood_graph_laplacian(graph, 
+                                          alpha = 1)
+res <- optim(log(theta0), loglik_GL1)
+theta.exp <- exp(res$par)
+sigma_e_est <- theta.exp[1]
+sigma_est <- theta.exp[2]
+kappa_est <- theta.exp[3]
+results <- data.frame(sigma_e = c(sigma_e_est),
+                      sigma = c(sigma_est),
+                      kappa = c(kappa_est),
+                      row.names = c("Estimate"))
+print(results)
+```
+
+
+# The `inlabru` interface
+
+# References
+```
