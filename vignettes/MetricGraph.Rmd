@@ -11,7 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 references:
 - id: BSW2022a
-  title: "Gaussian Whittle--Matéern fields on metric graphs"
+  title: "Gaussian Whittle--Matérn fields on metric graphs"
   author:
   - family: Bolin
     given: David
@@ -22,7 +22,7 @@ references:
   container-title: arXiv:2205.06163
   type: preprint
   issued:
-  year: 2022
+    year: 2022
 - id: BSW2022b
   title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
   author:
@@ -35,7 +35,7 @@ references:
   container-title: arXiv:??
   type: preprint
   issued:
-  year: 2022
+    year: 2022
 - id: Anderes2020
   title: "Isotropic covariance functions on graphs and their edges"
   author:
@@ -47,9 +47,10 @@ references:
     given: Jakob G
   container-title: Annals of Statistics
   type: article
-  issued: 48
-  pages: 2478--2503
-  year: 2020
+  issue: 48
+  pages: 2478-2503
+  issued:
+    year: 2020
 - id: Borovitskiy2021
   title: "Matérn Gaussian processes on graphs"
   author:
@@ -67,9 +68,9 @@ references:
     given: Nicolas
   container-title: International Conference on Artificial Intelligence and Statistics
   type: article
+  pages: 2593-2601
   issued: 
-  pages: 2593--2601
-  year: 2021
+    year: 2021
 ---
 
 ```{r setup, include=FALSE}
@@ -92,13 +93,13 @@ of Gaussian processes on metric graphs: The Whittle--Matérn fields introduced
 by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??), Gaussian
 processes with isotropic covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Gaussian models based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
-Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` (REF, package available from \url{http://R-INLA.
-org/download/} and `inlabru` (REF) that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
+Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` (REF, package available from [http://R-INLA.
+org/download/](http://R-INLA.org/download/) and `inlabru` (REF) that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
 
 The package is available to install from the Comprehensive R Archive
-Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository \url{https://github.com/davidbolin/MetricGraph}. The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage. 
+Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository [https://github.com/davidbolin/MetricGraph](https://github.com/davidbolin/MetricGraph). The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage. 
 
-The following sections describe the main functionality of the package and summarizes some of the required theory. Section 2 introduces metric graphs and the `metric_graph` class, Section 3 shows how to work with random fields on metric graphs, and Section 4 introduces the `inlabru` interface of the package through an application to real data. For a complete introduction to the functionality of the package, we refer to the Vignettes available on the package homepage \url{https://davidbolin.github.io/MetricGraph/}. In particular, that contains an introduction to the `INLA` interface, the implementation of Whittle--Matérn fields with general smoothness, and further details and examples for all methods in the package. 
+The following sections describe the main functionality of the package and summarizes some of the required theory. Section 2 introduces metric graphs and the `metric_graph` class, Section 3 shows how to work with random fields on metric graphs, and Section 4 introduces the `inlabru` interface of the package through an application to real data. For a complete introduction to the functionality of the package, we refer to the Vignettes available on the package homepage [https://davidbolin.github.io/MetricGraph/](https://davidbolin.github.io/MetricGraph/). In particular, that contains an introduction to the `INLA` interface, the implementation of Whittle--Matérn fields with general smoothness, and further details and examples for all methods in the package. 
 
 
 # The `metric_graph` class
@@ -327,7 +328,7 @@ from data as described in the vignette
 [Whittle--Matérn fields with general smoothness](fem_models.html).
 
 
-## Isotropic Gaussian processes
+## Isotropic Gaussian fields
 
 For metric graphs with Euclidean edges, [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full)
 showed that one can define  valid Gaussian processes through various isotropic
@@ -380,7 +381,18 @@ u_est_exp <- posterior_mean_covariance(theta.exp, graph, model = "isoExp")
 graph$plot(X = u_est_exp - graph$y, X_loc = graph$PtE, vertex_size = 0)
 ```
 
-To perform kriging prediction to the mesh locations based on this model, one can first use the function `compute_resdist_mesh()` to get the resistance metric between those locations. However, since we in this example have a rather large mesh this takes a lot of time, and we do not illustrate it here. 
+To perform kriging prediction to other locations, one can use the `compute_resdist()` function with an argument that is the matrix of the observation locations and prediction locations, and then use the standard formulat for the conditional expectation of a multivariate normal. For example, suppose that we want to predict the value of the process at the midpoint of the first edge in the graph:
+```{r}
+locs <- rbind(c(1,0.5), graph$PtE)
+D <- graph$compute_resdist(locs, normalized = TRUE)
+Sigma <- exp_covariance(D, theta.exp[2:3])
+Sigma.o <- Sigma[-1,-1]
+diag(Sigma.o) <- diag(Sigma.o) + theta.exp[1]^2
+
+mu.p <- Sigma[1,-1]%*%solve(Sigma.o, graph$y)
+var.p <- Sigma[1,1] - Sigma[1,-1]%*%solve(Sigma.o, Sigma[-1,1])
+print(c(mu.p, sqrt(var.p)))
+```
 
 ## Models based on the Graph Laplacian
 A final set of Gaussian models that is supported by `MetricGraph` is the Matérn type
@@ -397,19 +409,20 @@ by definition has precision matrix
 $$
 \mathbf{Q} = \sigma^{-2}(\kappa^2\mathbf{I} - \mathbf{\Delta}_\Gamma)^{\alpha}
 $$
-Thus, to define these models, the only ``difficult'' thing is to compute the 
+Thus, to define these models, the only "difficult" thing is to compute the 
 graph Laplacian. The (weighted) graph Laplacian, where the weights are specified
 by the edge lengths can be computed by the function `compute_laplacian()` in the
 `metric_graph` object. Suppose that we want to model the data that we defined
-above with this model. The first thing we then need to do is to add all observation locations as vertices in the graph (since the model is only defined in vertices), and then compute the graph Laplacian on this extended graph:
+above with this model. The first thing we then need to do is to add all observation locations as vertices in the graph (since the model is only defined in vertices), and then compute the graph Laplacian on this extended graph. We first clone the original graph and then add the observation locations as vertices in the new graph, so that we have the original graph stored. 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph$observation_to_vertex()
-graph$compute_laplacian()
+graph_extended <- graph$clone()
+graph_extended$observation_to_vertex()
+graph_extended$compute_laplacian()
 ```
 
 We can then fit the model to data similarly to how we fit the previous models, with the help of the function factory `likelihood_graph_laplacian()`:
 ```{r}
-loglik_GL1 <- likelihood_graph_laplacian(graph, 
+loglik_GL1 <- likelihood_graph_laplacian(graph_extended, 
                                           alpha = 1)
 res <- optim(log(theta0), loglik_GL1)
 theta.exp <- exp(res$par)
@@ -425,6 +438,82 @@ print(results)
 
 
 # The `inlabru` interface
+In this vignette we will present our `inlabru`
+interface to Whittle--Matérn fields. The `MetricGraph` package also has a similar interface to`R-INLA`, which is described in detail in
+the [INLA interface of Whittle--Matérn fields](inla_interface.html) vignette.
 
-# References
+## Basic setup and estimation
+We will use the same graph and data as before. The `inlabru` implementation requires the observation locations to be added to the graph. However, note that for the Whittle--Matérn fields (contrary to the models based on the graph Laplacian) we are not changing the model by adding vertices at observation locations. We already created the extended graph above, so we can use that. Now, we load `INLA` and `inlabru` packages. We will also need to create the `inla` model object with the
+`graph_spde` function. By default we have `alpha=1`. 
+
+```{r, message=FALSE}
+library(INLA)
+library(inlabru)
+spde_model <- graph_spde(graph_extended)
 ```
+The next step is to create the data list containing
+the reponse variables and the `PtE` attribute:
+```{r}
+data_list <- list(y = y, loc = graph_extended$PtE)
+```
+
+Now, we create `inlabru`'s component, which is a  formula-like object:
+```{r}
+cmp <- y ~ -1 + field(loc, model = spde_model)
+```
+
+This formula is very simple since we are not assuming mean zero, so that we do not need an intercept, and we do not have any other covariates or model components. However, the setup is exactly  the same for more complicated models, with the only exception that we would have more terms in the formla. Now, we directly fit the model:
+
+```{r}
+spde_bru_fit <- bru(cmp, data=data_list)
+```
+
+The advantage / difference between the estimates we obtain here and those above is that the `bru` function does full Bayesian inference (assuming priors for the model parameters). We used the default priors when creating the `graph_spde` model (see the help text for that function). The advantage now is that we do not only obtain point estimates but entire posterior distributions for the parameters. To view the estimates we can use the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+
+```{r}
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+                    "field", spde_model)
+
+summary(spde_bru_result)
+```
+
+Here we are showing the estimate of the practical correlation range ($2/\kappa$) instead of $\kappa$ since that is easier to interpret. We now compare the means of the estimated values with the true values:
+
+```{r}
+  result_df_bru <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, 2 / kappa),
+    mean = c(
+      spde_bru_result$summary.sigma$mean,
+      spde_bru_result$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result$summary.sigma$mode,
+      spde_bru_result$summary.range$mode
+    )
+  )
+  print(result_df_bru)
+```
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+  posterior_df_bru_fit <- gg_df(spde_bru_result)
+
+  library(ggplot2)
+
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+
+## Kriging with the `inlabru` implementation
+
+There are two approaches to do kriging with our `inlabru` implementation of Whittle-Matérn fields on metric graphs. The simplest is to just add the locations where we want the predictions before fitting the model, and letting the data at those locations be `NA`. Again, since the Whittle--Matérn fields are invariant to the addition of vertices of degree two, this will not change the model. However, it will make the estimation slower since we need to work with a larger graph in `inlabru`. The second alternative, which is faster but also more complicated, is to do the fit without the prediction locations, and then add them at a second stage. We now illustrate how to do this. 
+
+
+## An example with real data and replicates
+
+# References {-}
+

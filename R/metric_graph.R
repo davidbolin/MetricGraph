@@ -199,6 +199,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$res_dist <- as.matrix(self$res_dist)
     } else {
       graph.temp <- self$clone()
+      graph.temp$clear_observations()
       graph.temp$add_PtE_observations(y = rep(0, dim(PtE)[1]), PtE,
                                    normalized = normalized)
       graph.temp$compute_resdist()

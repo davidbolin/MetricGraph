@@ -20,7 +20,7 @@ references:
   container-title: arXiv:2209.04670
   type: preprint
   issued:
-  year: 2022
+    year: 2022
 - id: graph_fem
   title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
   author:
@@ -35,7 +35,7 @@ references:
   container-title: arXiv:??
   type: preprint
   issued:
-  year: 2022
+    year: 2022
 ---
 
 ```{r setup, include=FALSE}
