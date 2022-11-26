@@ -93,9 +93,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
   #' @param E m x 2 matrix where each row represents an edge
-  #' @param tolerance vertices that are closer than this number in Euclidean
-  #' distance are merged when constructing the graph (default = 2e-16).
-  #' @param scale value to scale the coordinates in the lines object with
+  #' @param longlat If TRUE, then it is assumed that the coodinates are given
+  #' in Longitude/Latitude and that distances should be computed in km.
+  #' @param tolerance vertices that are closer than this number are merged when
+  #' constructing the graph (default = 2e-16). If `longlat = TRUE`, the
+  #' tolerance is given in km.
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -103,8 +105,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' Thus, if two lines are intersecting somewhere else, this will not be
   #' viewed as a vertex.
   #' @return A metric_graph object
-  initialize = function(lines = NULL, V = NULL, E = NULL,
-                        tolerance = 2e-16, scale = 1) {
+  initialize = function(lines = NULL,
+                        V = NULL,
+                        E = NULL,
+                        longlat = FALSE,
+                        tolerance = 2e-16) {
 
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
@@ -126,7 +131,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$lines <- SpatialLines(lines)
     }
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-    private$line_to_vertex(tolerance = tolerance, scale = scale)
+    private$line_to_vertex(tolerance = tolerance, longlat = longlat)
     private$initial_graph <- self$clone()
 
     # Checking if graph is connected
@@ -613,6 +618,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
     }
   },
+
   #' @description Computes observation matrix for mesh
   #' @param PtE locations given as (edge number in graph, normalized location on edge)
   mesh_A = function(PtE) {
@@ -1104,6 +1110,85 @@ metric_graph <-  R6::R6Class("metric_graph",
     } else{
       stop("The order must be either 'internal' or 'original'!")
     }
+  },
+
+  #' @description Convert between locations on the graph and Euclidean coordinates
+  #' @param PtE matrix with locations on the graph (edge number and normalized
+  #' position on the edge).
+  #' @param XY matrix with locations in Euclidean space
+  #' @param normalized If TRUE, it is assumed that the positions in `PtE` are
+  #' normalized to (0,1), and the object returned if `XY` is specified contains
+  #' normalized locations.
+  #' @return If `PtE` is specified, then a matrix with Euclidean coordinates of
+  #' the locations is returned. If `XY` is provided, then a matrix with the
+  #' closest locations on the graph is returned
+  coodinates = function(PtE = NULL, XY = NULL, normalized = TRUE) {
+    if(is.null(PtE) && is.null(XY)) {
+      stop("PtE or XY must be provided")
+    } else if(!is.null(PtE) && !is.null(XY)) {
+      stop("Either PtE or XY must be provided, not both")
+    }
+    x <- y <- NULL
+    if (!is.null(PtE)) {
+      if(ncol(PtE)!= 2){
+        stop("PtE must have two columns!")
+      }
+
+      if (min(PtE[,2]) < 0) {
+        stop("PtE[, 2] has negative values")
+      }
+      if ((max(PtE[,2]) > 1) && normalized) {
+        stop("For normalized distances, the values in PtE[, 2] should not be
+             larger than 1")
+      }
+      if(max(PtE[,2] - self$edge_lengths[PtE[, 1]]) > 0 && !normalized) {
+        stop("PtE[, 2] contains values which are larger than the edge lengths")
+      }
+
+      if(!normalized) {
+        PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
+      }
+      for (i in 1:dim(PtE)[1]) {
+        LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
+        Line <- self$lines[LT[1, 1], ]
+        val_line <- gProject(Line, as(Line, "SpatialPoints"),
+                             normalized = TRUE)
+        Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
+        x <- c(x, Point@coords[1])
+        y <- c(y, Point@coords[2])
+      }
+      return(cbind(x,y))
+    } else {
+      Spoints <- SpatialPoints(XY)
+      SP <- snapPointsToLines(Spoints, self$lines)
+      coords.old <- as.data.frame(Spoints@coords)
+      colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
+      Spoints@coords = SP@coords
+      Spoints@bbox   = SP@bbox
+      LtE = cbind(match(SP@data[,1], self$EID),0)
+
+      for (ind in unique(LtE[, 1])) {
+        index.p <- LtE[, 1] == ind
+        LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
+                                       normalized=TRUE)
+      }
+      PtE <- LtE
+      for (ind in unique(LtE[, 1])) {
+        Es_ind <- which(self$LtE[ind, ] > 0)
+        index.p <- which(LtE[, 1] == ind)
+        for (j in index.p) {
+          E_ind <- which.min(replace(self$ELend[Es_ind],
+                                     self$ELend[Es_ind] < LtE[j,2], NA))
+          PtE[j, 1] <- Es_ind[E_ind]
+          PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
+            (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
+        }
+      }
+      if (!normalized) {
+        PtE <- cbind(PtE[, 1], PtE[, 2] * self$edge_lengths[PtE[, 1]])
+      }
+      return(PtE)
+    }
   }
     ),
 
@@ -1148,11 +1233,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     },
 
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0, scale = 1) {
+  line_to_vertex = function(tolerance = 0, longlat = FALSE) {
     lines <- c()
     for(i in 1:length(self$lines)){
       tmp <- self$lines@lines[[i]]@Lines[[1]]@coords
-      self$lines@lines[[i]]@Lines[[1]]@coords <- tmp*scale
+      self$lines@lines[[i]]@Lines[[1]]@coords <- tmp
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
       #lines contain [line index, start point, line length
@@ -1161,11 +1246,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     #save all vertices that are more than tolerance distance apart
+    dists <- spDists(lines[, 2:3, drop = FALSE], longlat = longlat)
     vertex <- lines[1, , drop = FALSE]
-    for (i in 1:dim(lines)[1]) {
-      tmp <- vertex[, 2:3] - matrix(rep(1,dim(vertex)[1]),
-                                   dim(vertex)[1], 1) %*% lines[i,2:3]
-      if (min(rowSums(tmp^2)) > tolerance) {
+    for (i in 2:dim(lines)[1]) {
+      if (min(dists[i, 1:(i-1)]) > tolerance) {
         vertex <- rbind(vertex, lines[i, ])
       }
     }
@@ -1184,7 +1268,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$lines@lines[[i]]@Lines[[1]]@coords[1,] <- vertex[ind1, 2:3]
       i.e <- dim(self$lines@lines[[i]]@Lines[[1]]@coords)[1]
       self$lines@lines[[i]]@Lines[[1]]@coords[i.e,] <- vertex[ind2, 2:3]
-      ll <- LineLength(self$lines@lines[[i]]@Lines[[1]])
+      ll <- LineLength(self$lines@lines[[i]]@Lines[[1]], longlat = longlat)
       lvl[i,] <- c(i, ind1, ind2, ll)
     }
     self$V <- vertex[, 2:3]

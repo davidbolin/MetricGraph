@@ -120,6 +120,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
+\item \href{#method-metric_graph-coodinates}{\code{metric_graph$coodinates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -133,8 +134,8 @@ Create a new \code{metric_graph} object
   lines = NULL,
   V = NULL,
   E = NULL,
-  tolerance = 2e-16,
-  scale = 1
+  longlat = FALSE,
+  tolerance = 2e-16
 )}\if{html}{\out{</div>}}
 }
 
@@ -147,10 +148,12 @@ Create a new \code{metric_graph} object
 
 \item{\code{E}}{m x 2 matrix where each row represents an edge}
 
-\item{\code{tolerance}}{vertices that are closer than this number in Euclidean
-distance are merged when constructing the graph (default = 2e-16).}
+\item{\code{longlat}}{If TRUE, then it is assumed that the coodinates are given
+in Longitude/Latitude and that distances should be computed in km.}
 
-\item{\code{scale}}{value to scale the coordinates in the lines object with}
+\item{\code{tolerance}}{vertices that are closer than this number are merged when
+constructing the graph (default = 2e-16). If \code{longlat = TRUE}, the
+tolerance is given in km.}
 }
 \if{html}{\out{</div>}}
 }
@@ -615,6 +618,31 @@ is the order of the user's input.}
 \item{\code{obs_to_vert}}{Should the observations be turned into vertices?}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-coodinates"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-coodinates}{}}}
+\subsection{Method \code{coodinates()}}{
+Convert between locations on the graph and Euclidean coordinates
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$coodinates(PtE = NULL, XY = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{matrix with locations on the graph (edge number and normalized
+position on the edge).}
+
+\item{\code{XY}}{matrix with locations in Euclidean space}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+If \code{PtE} is specified, then a matrix with Euclidean coordinates of
+the locations is returned. If \code{XY} is provided, then a matrix with the
+closest locations on the graph is returned
 }
 }
 \if{html}{\out{<hr>}}

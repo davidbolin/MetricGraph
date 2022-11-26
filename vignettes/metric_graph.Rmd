@@ -17,10 +17,9 @@ set.seed(1)
 
 # Introduction
 
-In this vignette we will introduce the `metric_graph` class. We will first show
-how to construct metric graphs and then how to add data to them. For details 
-about how to work with Gaussian processes on metric graphs, we refer to the
-Vignettes 
+In this vignette we will introduce the `metric_graph` class. We will show
+how to construct metric graphs, add data to them, and work with functions 
+defined on the graphs. For details about how to work with Gaussian processes on metric graphs, we refer to the Vignettes 
 
 * [Gaussian random fields on metric graphs](random_fields.html)
 * [INLA interface of Whittle--Matérn fields](inla_interface.html)
@@ -57,7 +56,8 @@ graph$plot()
 
 The plot function that was used to create the plot above has various parameters
 to set the sizes and colors of the vertices and edges, and it has a `plotly`
-argument to visualize the graph in 3D:
+argument to visualize the graph in 3D. For this to work, the `plotly` library
+must be installed.
 ```{r, message=FALSE}
 graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
@@ -107,10 +107,42 @@ graph4 <- metric_graph$new(V = V, E = E, tolerance = 0.05)
 graph4$plot()
 print(graph4$nV)
 ```
-## An example with data from OpenStreetMap
-This format of constructing graphs is compatible with data from OpenStreetMap,
-and to illustrate this we use the `osmdata` to construct a metric graph 
-consting of highways in Copenhagen:
+
+## Understanding coordinates on graphs
+
+The locations of the vertices are specified in Euclidean coordinates. However, 
+when specifying a position on the graph, it is not practical to work with 
+Euclidean coordinates since not all locations in Euclidean space are locations
+on the graph. It is instead better to specify a location on the graph by the 
+touple $(i, t)$, where $i$ denotes the number of the edge and $t$ is the 
+location on the edge. The location $t$ can either be specified as the 
+distance from the start of the edge (and then takes values between 0 and the 
+length of the edge) or as the normalized distance from the start of the edge
+(and then takes values between 0 and 1). The function `coordinates` can be used
+to convert between coodinates in Euclidean space and locations on the graph. 
+For example the location at distance 0.2 from the start of the second edge is:
+```{r}
+graph$coodinates(PtE = matrix(c(2, 0.2), 1,2), normalized = FALSE)
+```
+In this case, since the edge has length 1, the location of the point at 
+normalized distance 0.2 from the start of the edge is the same:
+```{r}
+graph$coodinates(PtE = matrix(c(2, 0.2), 1,2), normalized = TRUE)
+```
+
+The function can also be used to find the closest location on the graph for 
+a location in Euclidean space: 
+```{r}
+graph$coodinates(XY = matrix(c(0, 0.2), 1,2))
+```
+In this case, the `normalized` argument decides whether the returned value 
+should be given in normalized distance or not. 
+
+## Methods for working with real data
+
+To illustrate the use of `MetricGraph` on some real data, we use the 
+`osmdata` package to download data from OpenStreetMap. In the following code,
+we extract highways in the city of Copenhagen:
 ```{r}
 library(osmdata)
 set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
@@ -123,12 +155,31 @@ graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
 graph5$plot(vertex_size = 0)
 ```
 
-As can be noted, the constructor here gave a warning that the graph is not 
-connected. This might not be ideal for modeling and we may want to study the 
-different connected components separately. To construct all connected components,
-we can use the `graph_components` function:
+There are a few things to note about data like this. The first is that the 
+coordinates are given in Longitude and Latitude. Because of this, the edge 
+lengths are by default given in degrees, which may result in very small 
+numbers:
+```{r}
+range(graph5$edge_lengths)
+```
+This may cause numerical instabilities when dealing with random fields on the
+graph, and it also makes it difficult to interpret results (unless one has a 
+good intuition about distances in degrees). To avoid such problems, it is 
+better to set the `longlat` argument when constructing the graph:
+```{r}
+graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+```
+This tells the constructor that the coordinates are given in Longitude and 
+Latitude and that distances should be calculated in km. So if we now look at the
+edge lengths, they are given in km:
+```{r}
+range(graph5$edge_lengths)
+```
+The second thing to note is that the constructor gave a warning that the graph
+is not connected. This might not be ideal for modeling and we may want to study
+the different connected components separately. To construct all connected components, we can use the `graph_components` function:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components(SpatialLines(data$osm_lines@lines))
+graphs <- graph_components(SpatialLines(data$osm_lines@lines), longlat = TRUE)
 p <- graphs[[1]]$plot(vertex_size = 0, edge_color = "black")  
 for(i in 2:(length(graphs)-1)){
 p <- graphs[[i]]$plot(vertex_size = 0, 
@@ -141,11 +192,17 @@ graphs[[length(graphs)]]$plot(vertex_size = 0,
 ```
 
 Thus, we see that there are a few different connected components. One reason for
-this might be that we set the tolerance for merging nodes too low. Let us
-increase the tolerance and redo the creation: 
+this might be that we set the tolerance for merging nodes too low. In fact, 
+by looking at the edge lengths we see that we have vertices that are as close 
+as 
+```{r}
+min(graph5$edge_lengths) * 1000
+```
+meters. Let us increase the tolerance and say that any vertices that are at most
+a distance of 50 meters (0.05km) apart should be merged:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components(SpatialLines(data$osm_lines@lines),
-                           tolerance = 1e-6)
+graphs <- graph_components(SpatialLines(data$osm_lines@lines), longlat = TRUE,
+                           tolerance = 0.05)
 p <- graphs[[1]]$plot(vertex_size = 0, edge_color = "black")
 for(i in 2:(length(graphs)-1)){
 p <- graphs[[i]]$plot(vertex_size = 0, 
@@ -214,4 +271,57 @@ in the graph. This can be done as follows:
 ```{r}
 graph$observation_to_vertex()
 graph$plot(data = TRUE)
+```
+
+# Working with functions on metric graphs
+
+When working with data on metric graphs, one often wants to display functions
+on the graph. The best way to visualize functions on the graph is to evaluate
+them on a fine mesh over the graph and then use `plot_function`. To illustrate
+this procedure, let us consider the following graph:
+```{r}
+V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1), c(-1, 1), c(-1, 0), c(0, -1))
+E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),
+           c(5, 6), c(6, 1), c(4, 1),c(1, 7))
+graph <- metric_graph$new(V = V, E = E)
+graph$build_mesh(h = 0.5)
+graph$plot(mesh=TRUE)
+```
+
+In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in
+the mesh. As can be seen in the plot, the mesh is very coarse, so let's reduce the value of `h` and rebuild the mesh:
+```{r}
+  graph$build_mesh(h = 0.01)
+```
+
+Suppose now that we want to display the function $f(x, y) = x^2 - y^2$ on this
+graph. We then first evaluate it on the vertices of the mesh and then use the 
+function `plot_function` to display it:
+```{r}
+x <- graph$mesh$V[, 1]
+y <- graph$mesh$V[, 2]
+f <- x^2 - y^2
+graph$plot_function(f)
+```
+
+Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
+visualization of the function:
+```{r}
+graph$plot_function(f, plotly = TRUE)
+```
+When the first argument of `plot_function` is a vector, the function assumes that 
+the values in the vector are the values of the function evaluated at the vertices
+of the mesh. As an alternative, one can also provide the first argument as a 
+matrix consisting of the triplets $(i, t, f(i, t))$. Here $i$ denotes the 
+edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point.
+To illustrate this, let us first construct a set of locations that are evenly 
+spaced over each edge, then convert these to Euclidean coordinates so that we
+can evaluate the function above, and finally plot the result:
+```{r}
+n.e <- 30
+PtE <- cbind(rep(1:graph$nE, each = n.e), 
+             rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))
+XY <- graph$coodinates(PtE)
+f <- XY[, 1]^2 - XY[, 2]^2
+graph$plot_function(cbind(PtE, f), plotly = TRUE)
 ```
