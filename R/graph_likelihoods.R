@@ -1,24 +1,50 @@
-#' Log-likelihood calculation for alpha=1 model
+#' Function factory for likelihood evaluation for the metric graph SPDE model
 #'
-#' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
-#' @param alpha the order of the SPDE
-#' @param version if 1, the likelihood is computed by integrating out
+#' @param alpha Order of the SPDE, should be either 1 or 2.
 #' the vertex locations, if 2, no integration is done
-#' @return The log-likelihood
+#' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
+#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
+#' @param version if 1, the likelihood is computed by integrating out
+#' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
+#' The parameter `theta` must be supplied as 
+#' the vector `c(sigma_e, sigma, kappa)`.
 #' @export
-likelihood_graph_spde <- function(theta, graph, alpha = 1, version = 1) {
+
+likelihood_graph_spde <- function(graph, alpha = 1, log_scale = TRUE, maximize = FALSE, version = 1) {
 
   check <- check_graph(graph)
 
-  if (alpha == 1 && version == 1) {
-    return(likelihood_alpha1(theta, graph))
-  } else if (alpha == 1 && version == 2) {
-    return(likelihood_alpha1_v2(theta, graph))
-  } else if (alpha == 2) {
-    return(likelihood_alpha2(theta, graph))
-  } else {
-    stop("Only alpha = 1 and alpha = 2 implemented")
+  if(!(alpha%in%c(1,2))){
+    stop("alpha must be either 1 or 2!")
+  }
+
+  loglik <- function(theta){
+        if(log_scale){
+          theta_spde <- exp(theta)
+        } else{
+          theta_spde <- theta
+        }
+
+      switch(alpha,
+      "1" = {
+        if(version == 1){
+          loglik_val <- likelihood_alpha1(theta_spde, graph)
+        } else if(version == 2){
+          loglik_val <- likelihood_alpha1_v2(theta, graph)
+        } else{
+          stop("Version should be either 1 or 2!")
+        }
+      },
+      "2" = {
+        loglik_val <- likelihood_alpha2(theta_spde, graph)
+      }
+      )
+      if(maximize){
+        return(loglik_val)
+      } else{
+        return(-loglik_val)
+      }
   }
 }
 
@@ -297,116 +323,183 @@ likelihood_alpha1 <- function(theta, graph) {
 }
 
 
-#' Likelihood evaluation not using sparsity
+#' Function factory for likelihood evaluation not using sparsity
 #'
-#' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
-#' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
-#' model with isotropic exponential covariance#' @return The log-likelihood
+#' model based on the graph Laplacian with smoothness 2, and "isoCov" gives a
+#' model with isotropic covariance. 
+#' @param cov_function The covariance function to be used in case 'model' is chosen as 'isoCov'. `cov_function` must be a function 
+#' of `(h, theta_cov)`, where `h` is a vector, or matrix, containing the distances to evaluate the covariance function at, and
+#' `theta_cov` is the vector of parameters of the covariance function `cov_function`.
+#' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
+#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
+#' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
+#' For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter `theta` must be supplied as 
+#' the vector `c(sigma_e, sigma, kappa)`.
+#' 
+#' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e` and the vector
+#' `theta[2:length(theta)]` is the input of `cov_function`.
 #' @export
-likelihood_graph_covariance <- function(theta, graph, model = "alpha1") {
+likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = NULL, log_scale = TRUE, maximize = FALSE) {
 
   check <- check_graph(graph)
 
-  sigma_e <- theta[1]
-  sigma <- theta[2]
-  kappa <- theta[3]
-
-  if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
-    graph$compute_laplacian()
+  if(!(model%in%c("alpha1", "alpha2", "GL1", "GL2", "isoCov"))){
+    stop("The available models are: 'alpha1', 'alpha2', 'GL1', 'GL2' and 'isoCov'!")
   }
 
-  #build covariance matrix
-  if (model == "alpha1") {
+  loglik <- function(theta){
+      if(model == "isoCov"){
+        if(log_scale){
+          sigma_e <- exp(theta[1])
+          theta_cov <- exp(theta[2:length(theta)])
+        } else{
+          sigma_e <- theta[1]
+          theta_cov <- theta[2:length(theta)]
+        }
+      } else{
+        if(log_scale){
+          sigma_e <- exp(theta[1])
+          sigma <- exp(theta[2])
+          kappa <- exp(theta[3])
+        } else{
+          sigma_e <- theta[1]
+          sigma <- theta[2]
+          kappa <- theta[3]
+        }
+      }
 
-    Q <- spde_precision(kappa = kappa, sigma = sigma,
-                        alpha = 1, graph = graph)
-    Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
-  } else if (model == "alpha2") {
 
-    n.c <- 1:length(graph$CoB$S)
-    Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
-                        graph = graph, BC = 1)
-    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-    Qtilde <- Qtilde[-n.c,-n.c]
-    Sigma.overdetermined  = t(graph$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-      (graph$CoB$T[-n.c,])
-    index.obs <- 4 * (graph$PtE[,1] - 1) + 1.0 * (abs(graph$PtE[, 2]) < 1e-14) +
-      3.0 * (abs(graph$PtE[, 2]) > 1e-14)
-    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+      if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
+        graph$compute_laplacian()
+      }
 
-  } else if (model == "GL1"){
+      #build covariance matrix
+      switch(model,
+      alpha1 = {
+      
+        Q <- spde_precision(kappa = kappa, sigma = sigma,
+                            alpha = 1, graph = graph)
+        Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
-    Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
+      },
+      alpha2 = {
+      
+        n.c <- 1:length(graph$CoB$S)
+        Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
+                            graph = graph, BC = 1)
+        Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
+        Qtilde <- Qtilde[-n.c,-n.c]
+        Sigma.overdetermined  = t(graph$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+          (graph$CoB$T[-n.c,])
+        index.obs <- 4 * (graph$PtE[,1] - 1) + 1.0 * (abs(graph$PtE[, 2]) < 1e-14) +
+          3.0 * (abs(graph$PtE[, 2]) > 1e-14)
+        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
-  } else if (model == "GL2"){
+      }, GL1 = {
+      
+        Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+        Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
-    Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
-    Q <- Q %*% Q / sigma^2
-    Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
+      }, GL2 = {
+      
+        Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
+        Q <- Q %*% Q / sigma^2
+        Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
-  } else if (model == "isoExp"){
+      }, isoCov = {
+        if(is.null(cov_function)){
+          stop("If model is 'isoCov' the covariance function must be supplied!")
+        }
+        if(!is.function(cov_function)){
+          stop("'cov_function' must be a function!")
+        }
+      
+        if(is.null(graph$res_dist)){
+          stop("You must first compute the resistance metric for the observations")
+        }
+        Sigma <- as.matrix(cov_function(graph$res_dist, theta_cov))
+      }) 
 
-    if(is.null(graph$res_dist)){
-      stop("You must first compute the resistance metric for the observations")
-    }
-    Sigma <- as.matrix(sigma^2 * exp(-kappa * graph$res_dist))
-  } else {
-    stop("wrong model choice.")
-  }
+      diag(Sigma) <- diag(Sigma) + sigma_e^2
 
-  diag(Sigma) <- diag(Sigma) + sigma_e^2
-
-  R <- chol(Sigma)
-  return(as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) -
-                     length(graph$y)*log(2*pi)/2))
+      R <- chol(Sigma)
+      loglik_val <- as.double(-sum(log(diag(R))) - 0.5*t(graph$y)%*%solve(Sigma,graph$y) -
+                         length(graph$y)*log(2*pi)/2)
+      if(maximize){
+        return(loglik_val)
+      } else{
+        return(-loglik_val)
+      }
+      }
+  
 }
 
 
-#' Log-likelihood calculation for graph Laplacian model with alpha=1
+#' Function factory for likelihood evaluation for the graph Laplacian model
 #'
-#' @param theta (sigma_e, sigma, kappa)
-#' @param graph metric graph object
-#' @param alpha integer values supported
-#' @return The log-likelihood
+#' @param graph metric_graph object
+#' @param alpha integer greater or equal to 1. Order of the equation.
+#' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
+#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
+#' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
+#' The parameter `theta` must be supplied as 
+#' the vector `c(sigma_e, sigma, kappa)`.
 #' @export
-likelihood_graph_laplacian <- function(theta, graph, alpha) {
+
+likelihood_graph_laplacian <- function(graph, alpha, log_scale = TRUE, maximize = FALSE) {
 
   check <- check_graph(graph)
 
   if(alpha%%1 != 0){
     stop("only integer values of alpha supported")
   }
+
+  if(alpha<= 0){
+    stop("alpha must be positive!")
+  }
+
   if(is.null(graph$Laplacian)) {
     graph$compute_laplacian()
   }
 
-  sigma_e <- theta[1]
-  sigma <- theta[2]
-  kappa <- theta[3]
+  loglik <- function(theta){
+        if(log_scale){
+          sigma_e <- exp(theta[1])
+          sigma <- exp(theta[2])
+          kappa <- exp(theta[3])
+        } else{
+          sigma_e <- theta[1]
+          sigma <- theta[2]
+          kappa <- theta[3]
+        }
 
-  K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
-  Q <- K
-  if (alpha>1) {
-    for (k in 2:alpha) {
-      Q <- Q %*% K
+    K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+    Q <- K
+    if (alpha>1) {
+      for (k in 2:alpha) {
+        Q <- Q %*% K
+      }
+    }
+    Q <- Q / sigma^2
+
+    Q.p <- Q  + t(graph$A()) %*% graph$A()/sigma_e^2
+    mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% graph$y / sigma_e^2))
+
+    R <- chol(Q)
+    R.p <- chol(Q.p)
+
+    n.o <- length(graph$y)
+    l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+    v <- graph$y - graph$A()%*%mu.p
+    l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
+    if(maximize){
+      return(as.double(l))
+    } else{
+      return(-as.double(l))
     }
   }
-  Q <- Q / sigma^2
-
-  Q.p <- Q  + t(graph$A()) %*% graph$A()/sigma_e^2
-  mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% graph$y / sigma_e^2))
-
-  R <- chol(Q)
-  R.p <- chol(Q.p)
-
-  n.o <- length(graph$y)
-  l <- sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
-  v <- graph$y - graph$A()%*%mu.p
-  l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
-  return(as.double(l))
 }

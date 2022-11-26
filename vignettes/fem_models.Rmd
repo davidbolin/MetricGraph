@@ -283,7 +283,7 @@ This function contains the same arguments as the function
 `rspde.matern()`. We refer the reader to the  [R-INLA implementation of the rational SPDE approach](https://davidbolin.github.io/rSPDE/articles/rspde_inla.html) vignette for further details.
 
 Let us create the model object:
-```{r}
+```{r, message=FALSE}
   library(INLA)
   rspde_model <- rspde.metric_graph(graph)
 ```

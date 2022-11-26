@@ -2,23 +2,33 @@
 % Please edit documentation in R/graph_likelihoods.R
 \name{likelihood_graph_spde}
 \alias{likelihood_graph_spde}
-\title{Log-likelihood calculation for alpha=1 model}
+\title{Function factory for likelihood evaluation for the metric graph SPDE model}
 \usage{
-likelihood_graph_spde(theta, graph, alpha = 1, version = 1)
+likelihood_graph_spde(
+  graph,
+  alpha = 1,
+  log_scale = TRUE,
+  maximize = FALSE,
+  version = 1
+)
 }
 \arguments{
-\item{theta}{(sigma_e, sigma, kappa)}
-
 \item{graph}{metric_graph object}
 
-\item{alpha}{the order of the SPDE}
-
-\item{version}{if 1, the likelihood is computed by integrating out
+\item{alpha}{Order of the SPDE, should be either 1 or 2.
 the vertex locations, if 2, no integration is done}
+
+\item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
+
+\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
+
+\item{version}{if 1, the likelihood is computed by integrating out}
 }
 \value{
-The log-likelihood
+The log-likelihood function, which is returned as a function with parameter 'theta'.
+The parameter \code{theta} must be supplied as
+the vector \code{c(sigma_e, sigma, kappa)}.
 }
 \description{
-Log-likelihood calculation for alpha=1 model
+Function factory for likelihood evaluation for the metric graph SPDE model
 }

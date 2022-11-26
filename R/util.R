@@ -569,3 +569,23 @@ graph_starting_values <- function(graph, model = NULL, data=TRUE){
   }
   return(c(0.1 * data_std, start_sigma, start_kappa))
 }
+
+
+
+
+#' Exponential covariance function
+#'
+#' `exp_covariance` evaluates the exponential covariance function
+#' \deqn{C(h) = \sigma^2 \exp\{-kappa h\}}
+#'
+#' @param h Distances to evaluate the covariance function at.
+#' @param theta A vector `c(sigma, kappa)`, where `sigma` is the standard deviation and `kappa` is a range-like parameter.
+#'
+#' @return A vector with the values C(h).
+#' @export 
+
+exp_covariance <- function(h, theta){
+  sigma <- theta[1]
+  kappa <- theta[2]
+  return(sigma^2 * exp(-kappa * h))
+}

@@ -212,7 +212,7 @@ kappa <- 10
 sigma <- 2
 sigma_e <- 0.1
 alpha <- 1
-theta <-  c(sigma_e, kappa, sigma)
+theta <-  c(sigma_e, sigma, kappa)
 
 n.obs.per.edge <- 10
 PtE <- NULL
@@ -232,7 +232,12 @@ graph$plot(data = TRUE)
 
 We can now use the `likelihood_graph_spde` function to evaluate the 
 log-likelihood function for this data based on a Whittle--Matérn field 
-model for $u$. Assuming that $\alpha=1$, we optimize this likelihood using 
+model for $u$. This function is actually a function factory and returns
+the loglikehood function as a function of the parameter `theta`,
+which is given in the order `(sigma.e, sigma, kappa)`. By default,
+this function gives the parameters in log scale and returns minus 
+the value of the log-likelihood so one can directly supply it to the `optim` function.
+Assuming that $\alpha=1$, we optimize this likelihood using 
 `optim` as follows:
 
 ```{r}
@@ -241,9 +246,8 @@ sigma_start <- 2
 kappa_start <- 10
 
 theta0 <- c(sigma_e_start, sigma_start, kappa_start) 
-res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x),
-                                                                   graph,
-                                                                   alpha = 1))
+loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1)
+res <- optim(log(theta0), loglik_alpha1)
 sigma_e_est <- exp(res$par[1])
 sigma_est <- exp(res$par[2])
 kappa_est <- exp(res$par[3])
@@ -344,9 +348,17 @@ Gaussian processes with isotropic exponential covariance functions. To use this
 we first need to compute the resistance metric: 
 ```{r}
 graph$compute_resdist()
-res.exp <- optim(log(theta0), 
-                 function(x) -likelihood_graph_covariance(exp(x), graph,
-                                                          model = "isoExp"))
+```
+Similarly to the `likelihood_graph_spde()` function, `likelihood_graph_covariance()` is also a function
+factory. 
+By default `likelihood_graph_covariance()` returns a function of the parameters given in log-scale and returns minus the log-likelihood,
+so one can directly apply it to the `optim` function. Let us create the likelihood function and 
+find the maximum:
+```{r}
+loglik_isoExp <- likelihood_graph_covariance(graph, 
+                                      model = "isoCov", 
+                                      cov_function = exp_covariance)
+res.exp <- optim(log(theta0), loglik_isoExp)
 theta.exp <- exp(res.exp$par)
 sigma_e_est <- theta.exp[1]
 sigma_est <- theta.exp[2]
@@ -401,10 +413,12 @@ extended graph:
 graph$compute_laplacian()
 ```
 
-We can then fit the model to data similarly to how we fit the previous models:
+We can then fit the model to data similarly to how we fit the previous models, with the help
+of the function factory `likelihood_graph_laplacian()`:
 ```{r}
-res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                                  alpha = 1))
+loglik_GL1 <- likelihood_graph_laplacian(graph, 
+                                          alpha = 1)
+res <- optim(log(theta0), loglik_GL1)
 theta.exp <- exp(res$par)
 sigma_e_est <- theta.exp[1]
 sigma_est <- theta.exp[2]
@@ -424,9 +438,7 @@ u <- solve(chol(Q), rnorm(graph$nV))
 y <- graph$A()%*%u + sigma_e*rnorm(length(graph$PtV))
 graph$y <- y
 
-res.exp <- optim(log(theta0), 
-                 function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                         alpha = 1))
+res.exp <- optim(log(theta0), loglik_GL1)
 theta.exp <- exp(res.exp$par)
 sigma_e_est <- theta.exp[1]
 sigma_est <- theta.exp[2]
@@ -496,34 +508,41 @@ We now fit the different models to this data:
 ```{r}
 theta0 <- theta
 #alpha = 1 model
-res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
-                                                             alpha = 1))
+loglik_alpha1 <- likelihood_graph_spde(graph,
+                                        alpha = 1)
+res <- optim(log(theta0), loglik_alpha1)
 theta.alpha1 <- exp(res$par)
 
 #alpha = 2 model
 graph$buildC(2)
-res <- optim(log(theta0), function(x) -likelihood_graph_spde(exp(x), graph,
-                                                             alpha = 2))
+loglik_alpha2 <- likelihood_graph_spde(graph,
+                                        alpha = 2)
+res <- optim(log(theta0), loglik_alpha2)
 theta.alpha2 <- exp(res$par)
 
 #Isotropic exponential
 graph$compute_resdist()
-res <- optim(log(theta0), 
-             function(x) -likelihood_graph_covariance(exp(x), graph,
-                                                      model = "isoExp"))
+loglik_isoExp <- likelihood_graph_covariance(graph,
+                                              model = "isoCov",
+                                              cov_function = exp_covariance)
+res <- optim(log(theta0), loglik_isoExp)
 theta.exp <- exp(res$par)
 
 #Graph Laplacian 
 graph$observation_to_vertex()
 graph$compute_laplacian()
-res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                                  alpha = 1))
-res <- optim(res$par, function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                                  alpha = 1))
+
+loglik_GL1 <- likelihood_graph_laplacian(graph, 
+                                          alpha = 1)
+
+res <- optim(log(theta0), loglik_GL1)
+
 theta.GL1 <- exp(res$par)
 
-res <- optim(log(theta0), function(x) -likelihood_graph_laplacian(exp(x), graph, 
-                                                                  alpha = 2))
+loglik_GL2 <- likelihood_graph_laplacian(graph, 
+                                          alpha = 2)
+
+res <- optim(log(theta0), loglik_GL2)
 theta.GL2 <- exp(res$par)
 ```
 

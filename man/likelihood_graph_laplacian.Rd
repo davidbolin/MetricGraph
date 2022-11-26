@@ -2,20 +2,24 @@
 % Please edit documentation in R/graph_likelihoods.R
 \name{likelihood_graph_laplacian}
 \alias{likelihood_graph_laplacian}
-\title{Log-likelihood calculation for graph Laplacian model with alpha=1}
+\title{Function factory for likelihood evaluation for the graph Laplacian model}
 \usage{
-likelihood_graph_laplacian(theta, graph, alpha)
+likelihood_graph_laplacian(graph, alpha, log_scale = TRUE, maximize = FALSE)
 }
 \arguments{
-\item{theta}{(sigma_e, sigma, kappa)}
+\item{graph}{metric_graph object}
 
-\item{graph}{metric graph object}
+\item{alpha}{integer greater or equal to 1. Order of the equation.}
 
-\item{alpha}{integer values supported}
+\item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
+
+\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
 }
 \value{
-The log-likelihood
+The log-likelihood function, which is returned as a function with parameter 'theta'.
+The parameter \code{theta} must be supplied as
+the vector \code{c(sigma_e, sigma, kappa)}.
 }
 \description{
-Log-likelihood calculation for graph Laplacian model with alpha=1
+Function factory for likelihood evaluation for the graph Laplacian model
 }

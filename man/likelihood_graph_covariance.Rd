@@ -2,20 +2,40 @@
 % Please edit documentation in R/graph_likelihoods.R
 \name{likelihood_graph_covariance}
 \alias{likelihood_graph_covariance}
-\title{Likelihood evaluation not using sparsity}
+\title{Function factory for likelihood evaluation not using sparsity}
 \usage{
-likelihood_graph_covariance(theta, graph, model = "alpha1")
+likelihood_graph_covariance(
+  graph,
+  model = "alpha1",
+  cov_function = NULL,
+  log_scale = TRUE,
+  maximize = FALSE
+)
 }
 \arguments{
-\item{theta}{parameters (sigma_e, sigma, kappa)}
-
 \item{graph}{metric_graph object}
 
 \item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 the model based on the graph Laplacian with smoothness 1, "GL2" gives the
-model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
-model with isotropic exponential covariance#' @return The log-likelihood}
+model based on the graph Laplacian with smoothness 2, and "isoCov" gives a
+model with isotropic covariance.}
+
+\item{cov_function}{The covariance function to be used in case 'model' is chosen as 'isoCov'. \code{cov_function} must be a function
+of \verb{(h, theta_cov)}, where \code{h} is a vector, or matrix, containing the distances to evaluate the covariance function at, and
+\code{theta_cov} is the vector of parameters of the covariance function \code{cov_function}.}
+
+\item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
+
+\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
+}
+\value{
+The log-likelihood function, which is returned as a function with parameter 'theta'.
+For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter \code{theta} must be supplied as
+the vector \code{c(sigma_e, sigma, kappa)}.
+
+For 'isoCov' model, theta must be a vector such that \code{theta[1]} is \code{sigma.e} and the vector
+\code{theta[2:length(theta)]} is the input of \code{cov_function}.
 }
 \description{
-Likelihood evaluation not using sparsity
+Function factory for likelihood evaluation not using sparsity
 }
