@@ -50,12 +50,15 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
   y <- u + sigma_e*rnorm(nt)
   graph$add_PtE_observations(y = y, PtE = PtE, normalized = TRUE)
   theta <-  c(sigma_e, kappa, sigma)
-  lik <- likelihood_graph_spde(theta,graph, alpha = 1, version = 1)
+  lik <- likelihood_graph_spde(graph, alpha = 1, version = 1, log_scale = FALSE)
+  lik <- lik(theta)
 
   graph$observation_to_vertex()
-  lik.v2 <- likelihood_graph_spde(theta, graph, alpha = 1, version = 2)
+  lik.v2 <- likelihood_graph_spde(graph, alpha = 1, version = 2, log_scale = FALSE)
+  lik.v2 <- lik.v2(theta)
 
-  lik.cov <- likelihood_graph_covariance(theta, graph, model = "alpha1")
+  lik.cov <- likelihood_graph_covariance(graph, model = "alpha1", log_scale = FALSE)
+  lik.cov <- lik.cov(theta)
 
   #version 1
   expect_equal(as.matrix(lik.v2),as.matrix(lik.cov), tolerance=1e-10)

@@ -29,7 +29,8 @@ test_that("Test resistance metric", {
   expect_equal(as.vector(D1), as.vector(distances), tolerance = 1e-10)
 
   theta <- c(1, 2, 3)
-  lik1 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
+  lik1 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale=FALSE, maximize = TRUE)
+  lik1 <- lik1(theta)
 
   Sigma <- theta[2]^2 * exp(-theta[3]*distances)
   diag(Sigma) <- diag(Sigma) + theta[1]
@@ -39,17 +40,20 @@ test_that("Test resistance metric", {
 
 
   graph$observation_to_vertex()
-  lik2 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
+  lik2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
+  lik2 <- lik2(theta)
 
   PtE.order <- PtE[reo, ]
   y.order <- y[reo]
   graph <- metric_graph$new(lines = Lines)
   graph$add_PtE_observations(y.order,PtE.order, normalized = TRUE)
   graph$compute_resdist()
-  lik3 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
+  lik3 <- likelihood_graph_covariance(graph,  model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
+  lik3 <- lik3(theta)
 
   graph$observation_to_vertex()
-  lik4 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
+  lik4 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
+  lik4 <- lik4(theta)
 
   expect_equal(lik.true, lik1, tolerance = 1e-10)
   expect_equal(lik.true, lik2, tolerance = 1e-10)

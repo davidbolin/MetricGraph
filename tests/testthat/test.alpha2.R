@@ -132,17 +132,20 @@ test_that("test likelihood",{
   graph$buildC(2, FALSE)
 
   #standard likelihood
-  lik <- likelihood_graph_spde(theta = theta, graph = graph, alpha = 2)
+  lik <- likelihood_graph_spde(graph = graph, alpha = 2, log_scale = FALSE)
+  lik <- lik(theta)
   graph2 <- graph
   graph2$observation_to_vertex()
   graph2$buildC(2, FALSE)
 
   #covariance likelihood
-  lik2 <-likelihood_graph_covariance(theta = theta,
-                                     graph = graph2,
-                                     model = "alpha2")
+  lik2 <-likelihood_graph_covariance(graph = graph2,
+                                     model = "alpha2",
+                                     log_scale = FALSE)
+  lik2 <- lik2(theta)
   #likelihood with extended graph
-  lik3 <- likelihood_graph_spde(theta = theta, graph = graph, alpha = 2)
+  lik3 <- likelihood_graph_spde(graph = graph, alpha = 2, log_scale = FALSE)
+  lik3 <- lik3(theta)
   expect_equal(as.matrix(lik), as.matrix(lik2), tolerance = 1e-10)
   expect_equal(as.matrix(lik), as.matrix(lik3), tolerance = 1e-10)
 })

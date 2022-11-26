@@ -24,20 +24,26 @@ test_that("Check likelihoods for alternative models", {
 
   graph$add_PtE_observations(y,PtE, normalized = TRUE)
   graph$compute_resdist()
-  lik.exp.v1 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
+  lik.exp.v1 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE)
+  lik.exp.v1 <- lik.exp.v1(theta)
 
 
   graph$observation_to_vertex()
   graph$compute_geodist()
   graph$compute_resdist()
-  lik.exp.v2 <- likelihood_graph_covariance(theta, graph, model = "isoExp")
+  lik.exp.v2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE)
+  lik.exp.v2 <- lik.exp.v2(theta)
 
   graph$compute_laplacian()
-  lik.gl1.v1 <- likelihood_graph_covariance(theta, graph, model = "GL1")
-  lik.gl2.v1 <- likelihood_graph_covariance(theta, graph, model = "GL2")
+  lik.gl1.v1 <- likelihood_graph_covariance(graph, model = "GL1", log_scale = FALSE)
+  lik.gl1.v1 <- lik.gl1.v1(theta)
+  lik.gl2.v1 <- likelihood_graph_covariance(graph, model = "GL2", log_scale = FALSE)
+  lik.gl2.v1 <- lik.gl2.v1(theta)
 
-  lik.gl1.v2 <- likelihood_graph_laplacian(theta, graph, alpha = 1)
-  lik.gl2.v2 <- likelihood_graph_laplacian(theta, graph, alpha = 2)
+  lik.gl1.v2 <- likelihood_graph_laplacian(graph, alpha = 1, log_scale = FALSE)
+  lik.gl1.v2 <- lik.gl1.v2(theta)
+  lik.gl2.v2 <- likelihood_graph_laplacian(graph, alpha = 2, log_scale = FALSE)
+  lik.gl2.v2 <- lik.gl2.v2(theta)
 
   expect_equal(lik.exp.v1, lik.exp.v2, tolerance = 1e-10)
   expect_equal(lik.gl1.v1, lik.gl1.v2, tolerance = 1e-10)
