@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 references:
 - id: BSW2022a
-  title: "Gaussian Whittle--Matéern fields on metric graphs"
+  title: "Gaussian Whittle--Matérn fields on metric graphs"
   author:
   - family: Bolin
     given: David
@@ -453,7 +453,7 @@ print(results)
 
 # A comparison using cross-validation 
 
-Let us finally compare the different models in terms of predictive ability. 
+Let us now compare the different models in terms of predictive ability. 
 We start by simulating some data frome a Whittle--Matérn field with $\alpha = 2$,
 fit all different models that we have discussed, and then compare their 
 predictive ability through leave-one-out crossvalidation. To change things
@@ -477,7 +477,7 @@ E <- rbind(c(1, 2),
            c(1, 7))
 graph <- metric_graph$new(V = V, E = E)
 graph$plot()
-``` 
+```
 
 Let us now generate some observation locations at random locations on each edge
 and sample the process: 
@@ -549,6 +549,7 @@ theta.GL2 <- exp(res$par)
 Finally, we use the function `posterior_crossvalidation` to perform 
 leave-one-out cross validation based on the estimated parameters and compare
 the results:
+
 ```{r}
 cv.alpha1 <- posterior_crossvalidation(theta.alpha1, graph, model = "alpha1")
 cv.alpha2 <- posterior_crossvalidation(theta.alpha2, graph, model = "alpha2")
@@ -589,6 +590,119 @@ results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                       row.names = c("alpha=1", "alpha=2", "isoExp",
                                     "GL1", "GL2"))
 round(1000*results)
-
 ```
+
+# A model with replicates
+
+Let us illustrate now how one can fit a model with replicates. To this end, we will consider the same graph from the previous example.
+
+```{r} 
+V <- rbind(c(0, 0),
+           c(1, 0),
+           c(1, 1),
+           c(0, 1),
+           c(-1, 1),
+           c(-1, 0),
+           c(0, -1))
+E <- rbind(c(1, 2),
+           c(2, 3),
+           c(3, 4),
+           c(4, 5),
+           c(5, 6),
+           c(6, 1),
+           c(4, 1),
+           c(1, 7))
+graph <- metric_graph$new(V = V, E = E)
+graph$plot()
+```
+
+Let us now generate some observation locations at random locations on each edge
+and sample the process. Let us sample from a Whitlle--Matérn process on the metric graph with
+`alpha=1`. We will consider 20 replicates. To this end, we will set `nsim=20`:
+
+```{r}
+kappa <- 10
+sigma <- 20
+sigma_e <- 0.1
+theta <-  c(sigma_e, sigma, kappa)
+
+n_repl <- 20
+
+n.obs.per.edge <- 30
+PtE <- NULL
+for(i in 1:graph$nE){
+  #add locations sampled at random to each edge
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+}
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+                 graph = graph, PtE = PtE, nsim = n_repl)
+
+y <- u + sigma_e*matrix(rnorm(n.obs.per.edge * graph$nE * n_repl), ncol = n_repl)
+
+graph$add_PtE_observations(y,PtE, normalized = TRUE)
+```
+
+To plot the first replicate, we can simply call `graph$plot(data=TRUE)`. To plot another replicate, we set the 
+argument `repl` to the index of the replicate we want to plot. Let us plot the first and second replicates:
+
+```{r}
+graph$plot(data=TRUE)
+graph$plot(data=TRUE, repl=2)
+```
+
+To fit the model, we simply proceed in an identical manner as for the case without replicates. In this case, 
+we will use the function factory `likelihood_graph_spde()`:
+
+```{r}
+sigma_e_start <- 0.2
+sigma_start <- 2
+kappa_start <- 10
+
+theta0 <- c(sigma_e_start, sigma_start, kappa_start) 
+loglik_alpha1_repl <- likelihood_graph_spde(graph, alpha = 1)
+res <- optim(log(theta0), loglik_alpha1_repl)
+sigma_e_est <- exp(res$par[1])
+sigma_est <- exp(res$par[2])
+kappa_est <- exp(res$par[3])
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+
+Let us now sample from a Whitlle--Matérn process with
+`alpha=2` at the same locations. We will also consider 20 replicates:
+
+```{r}
+u_alpha2 <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+                 graph = graph, PtE = PtE, nsim = n_repl)
+
+y_alpha2 <- u_alpha2 + sigma_e*matrix(rnorm(n.obs.per.edge * graph$nE * n_repl), ncol = n_repl)
+```
+
+We will now clear the observations and add the new ones:
+
+```{r}
+graph$clear_observations()
+graph$add_PtE_observations(y_alpha2,PtE, normalized = TRUE)
+```
+
+We can now estimate the parameters:
+
+```{r}
+
+loglik_alpha2_repl <- likelihood_graph_spde(graph, alpha = 2)
+res <- optim(log(theta0), loglik_alpha2_repl)
+sigma_e_est <- exp(res$par[1])
+sigma_est <- exp(res$par[2])
+kappa_est <- exp(res$par[3])
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+
 # References

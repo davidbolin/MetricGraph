@@ -289,8 +289,7 @@ $u(s)$ observed under Gaussian measurement noise. We have already added data of 
 
 We can now use the `likelihood_graph_spde` function to obtain the log-likelihood function for the data based on a Whittle--Matérn field. 
 
-
-model for $u$. This function is actually a function factory and returns
+This function is actually a function factory and returns
 the loglikehood function as a function of the parameter `theta`,
 which is given in the order `(sigma.e, sigma, kappa)`. By default,
 this function gives the parameters in log scale and returns minus 

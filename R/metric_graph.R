@@ -1383,7 +1383,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(self$y[, column_y]))],
                                             y = y[!is.na(as.vector(self$y[, column_y]))],
-                                            val = as.vector(self$y[!is.na(self$y), column_y])),
+                                            val = as.vector(self$y[!is.na(as.vector(self$y[, column_y])), column_y])),
                           mapping = aes(x, y, color = val),
                           size = data_size, ...) +
         scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
@@ -1480,7 +1480,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       data.plot <- data.frame(x = x[!is.na(as.vector(self$y[, column_y]))],
                                             y = y[!is.na(as.vector(self$y[, column_y]))],
                               z = rep(0,length(x[!is.na(as.vector(self$y[, column_y]))])),
-                              val = as.vector(self$y[!is.na(self$y), column_y]))
+                              val = as.vector(self$y[!is.na(as.vector(self$y[, column_y])), column_y]))
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
