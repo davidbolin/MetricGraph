@@ -20,7 +20,7 @@ references:
   container-title: arXiv:2205.06163
   type: preprint
   issued:
-  year: 2022
+    year: 2022
 - id: BSW2022b
   title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
   author:
@@ -33,7 +33,7 @@ references:
   container-title: arXiv:??
   type: preprint
   issued:
-  year: 2022
+    year: 2022
 - id: Anderes2020
   title: "Isotropic covariance functions on graphs and their edges"
   author:
@@ -45,9 +45,10 @@ references:
     given: Jakob G
   container-title: Annals of Statistics
   type: article
-  issued: 48
-  pages: 2478--2503
-  year: 2020
+  issue: 48
+  pages: 2478-2503
+  issued:
+    year: 2020
 - id: Borovitskiy2021
   title: "Matérn Gaussian processes on graphs"
   author:
@@ -65,9 +66,9 @@ references:
     given: Nicolas
   container-title: International Conference on Artificial Intelligence and Statistics
   type: article
+  pages: 2593-2601
   issued: 
-  pages: 2593--2601
-  year: 2021
+    year: 2021
 ---
 
 	
@@ -705,4 +706,4 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
 print(results)
 ```
 
-# References
+# References {-}
