@@ -10,7 +10,7 @@ check_graph <- function(graph)
   if(!is.null(graph$mesh)){
     out$has.mesh = TRUE
   }
-  if(!is.null(graph$y) && !is.null(graph$PtE))
+  if(!is.null(graph$data) && !is.null(graph$PtE))
     out$has.data = TRUE
   return(out)
 }
@@ -486,7 +486,8 @@ nearestPointOnSegment <- function(s, p){
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
-graph_starting_values <- function(graph, model = NULL, data=TRUE){
+graph_starting_values <- function(graph, model = NULL, data=TRUE, column_data=NULL,
+manual_data = NULL){
 
   if(is.null(graph$geo_dist)){
     graph$compute_geodist()
@@ -494,10 +495,19 @@ graph_starting_values <- function(graph, model = NULL, data=TRUE){
   check_graph(graph)
 
   if(data){
-    if(is.null(graph$y)) {
+    if(is.null(graph$data)) {
       stop("No data provided, if you want the version without data set the 'data' argument to FALSE!")
     }
-    data_std <- sqrt(var(as.vector(graph$y)))
+    if(is.null(column_data) && is.null(manual_data)){
+      stop("If data is true, you must either supply the column data or manual data.")
+    }
+    if(!is.null(column_data)){
+      y <- graph$data[, column_data]
+    }
+    if(!is.null(manual_data)){
+      y <- manual_data
+    }
+    data_std <- sqrt(var(as.vector(y)))
   } else{
     data_std <- NA
   }

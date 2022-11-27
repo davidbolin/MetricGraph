@@ -4,7 +4,13 @@
 \alias{graph_starting_values}
 \title{Starting values for random field models on metric graphs}
 \usage{
-graph_starting_values(graph, model = NULL, data = TRUE)
+graph_starting_values(
+  graph,
+  model = NULL,
+  data = TRUE,
+  column_data = NULL,
+  manual_data = NULL
+)
 }
 \arguments{
 \item{graph}{a \code{metric_graph} object.}

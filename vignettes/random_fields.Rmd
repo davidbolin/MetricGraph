@@ -732,12 +732,13 @@ and sample the process. Let us sample from a Whitlle--Matérn process on the met
 We need to pass the covariates as a list.
 
 ```{r}
+graph$clear_observations()
 kappa <- 10
 sigma <- 2
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
 
-n.obs.per.edge <- 30
+n.obs.per.edge <- 50
 PtE <- NULL
 for(i in 1:graph$nE){
   #add locations sampled at random to each edge
@@ -752,8 +753,11 @@ beta <- c(2,1)
 X_cov <- cbind(1, runif(nrow(PtE)))
 
 y <- X_cov %*% beta +  u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+```
 
-graph$add_PtE_observations(y, PtE, covariates = list(X_cov), normalized = TRUE)
+```{r}
+df_graph <- data.frame(y=y, Intercept = X_cov[,1], x1 = X_cov[,2], edge_number = PtE[,1], distance_on_edge=PtE[,2])
+graph$add_PtE_observations(data_frame=df_graph, normalized = TRUE)
 ```
 
 Let us now estimate the parameters. We should suppy the start vector as `c(sigma_e, sigma, kappa, beta_1, beta_2)`, where `beta_1` and `beta_2` are

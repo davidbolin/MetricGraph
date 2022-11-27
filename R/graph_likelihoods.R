@@ -15,7 +15,9 @@
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
 
-likelihood_graph_spde <- function(graph, alpha = 1, covariates = FALSE, log_scale = TRUE, maximize = FALSE, version = 1) {
+likelihood_graph_spde <- function(graph, alpha = 1, 
+X_cov, y, log_scale = TRUE, maximize = FALSE, version = 1,
+repl=NULL) {
 
   check <- check_graph(graph)
 
@@ -36,7 +38,7 @@ likelihood_graph_spde <- function(graph, alpha = 1, covariates = FALSE, log_scal
         if(version == 1){
           loglik_val <- likelihood_alpha1(theta_spde, graph, covariates)
         } else if(version == 2){
-          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, covariates)
+          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl) 
         } else{
           stop("Version should be either 1 or 2!")
         }
@@ -258,7 +260,10 @@ likelihood_alpha2 <- function(theta, graph, covariates) {
 #' the vertices.
 #' @return The log-likelihood
 #' @noRd
-likelihood_alpha1_v2 <- function(theta, graph, covariates) {
+likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl) {
+  if(is.null(repl)){
+    repl <- 1:length(y)
+  }
   sigma_e <- theta[1]
   #build Q
   Q <- spde_precision(kappa = theta[3], sigma = theta[2],
@@ -266,14 +271,16 @@ likelihood_alpha1_v2 <- function(theta, graph, covariates) {
   if(is.null(graph$PtV)){
     stop("No observation at the vertices! Run observation_to_vertex().")
   }
-  A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
   R <- chol(Q)
 
   l <- 0
 
-  for(i in 1:ncol(graph$y)){
-      na_obs <- is.na(graph$y[, i])
-      y_ <- graph$y[!na_obs, i]
+  for(i in repl){
+      A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
+      y_tmp <- as.vector(y[[i]])
+      X_cov_tmp <- X_cov[[i]]
+      na_obs <- is.na(y_tmp)
+      y_ <- y_tmp[!na_obs]
       n.o <- length(y_)
       Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
       R.p <- chol(Q.p)
@@ -282,20 +289,10 @@ likelihood_alpha1_v2 <- function(theta, graph, covariates) {
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
       v <- y_
+      n_cov <- ncol(X_cov_tmp)
+      X_cov_tmp <- X_cov_tmp[!na_obs,]
 
-      if(covariates){
-        n_cov <- ncol(graph$covariates[[1]])
-        if(length(graph$covariates)==1){
-          X_cov <- graph$covariates[[1]]
-        } else if(length(graph$covariates) == ncol(graph$y)){
-          X_cov <- graph$covariates[[i]]
-        } else{
-          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-        }
-        X_cov <- X_cov[!na_obs,]
-
-        v <- v - X_cov %*% theta[4:(3+n_cov)]
-      }
+      v <- v - X_cov_tmp %*% theta[4:(3+n_cov)]
 
       mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
       v <- v - A[!na_obs,]%*%mu.p
