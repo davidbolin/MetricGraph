@@ -609,32 +609,34 @@ process_data_frame_add_obs <- function(Spoints, data_frame, replicates){
     n_repl <- length(unique(replicates))
     unique_replicates <- unique(data_frame[, replicates])
   }
-  data_list <- list()
-  index_replicates <- list()
   data_full <- matrix(NA, nrow = nrow(unique_coords), ncol = ncol(data_frame))
   data_full <- as.data.frame(data_full)
   colnames(data_full) <- colnames(data_frame)
 
+  data_full <- matrix(NA, nrow = nrow(unique_coords), ncol = ncol(data_frame))
+  data_full <- as.data.frame(data_full)
+  colnames(data_full) <- colnames(data_frame)
+
+  data_list_return <- vector(mode = "list", n_repl)
+  data_list_return <- lapply(1:n_repl, function(i){data_full})
+  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ]))})
+
     for(i in n_repl:1){
-      data_tmp <- data_frame[data_frame[, replicates] == unique_replicates[i], ]
-      coords_tmp <- Spoints@coords[data_frame[, replicates] == unique_replicates[i], ]
-      index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
-      for(j in 1:nrow(coords_tmp)){
-        count <- 1
-        while(!(all(coords_tmp[j,] == unique_coords[count,]))){
-          count <- count+1
-        }
-        index_replicates[[i]][j] <- count
-      }
-      data_list[[i]] <- data_full
-      data_list[[i]][index_replicates[[i]], ] <- data_tmp
-      data_list[[i]] <- data_list[[i]][,!(colnames(data_list[[i]])%in%c("__idx_repl"))]
-      data_list[[i]] <- as.data.frame(data_list[[i]])
-      colnames(data_list[[i]]) <- colnames(data_frame)[!(colnames(data_frame)%in%c("__idx_repl"))]
+        index_replicates[[i]] <- which(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ] == unique_coords)
     }
 
+     
+      for(i in 1:n_repl){
+        data_tmp <- data_list[[i]]
+        data_list_return[[i]][index_replicates[[i]], ] <- data_tmp
+        data_list_return[[i]] <- data_list_return[[i]][,!(colnames(data_list_return[[i]])%in%c(edge_number, distance_on_edge,"__idx_repl"))]
+        data_list_return[[i]] <- as.data.frame(data_list_return[[i]])
+        colnames(data_list_return[[i]]) <- colnames(data_list[[i]])[!(colnames(data_list[[i]])%in%c(edge_number, distance_on_edge, "__idx_repl"))]
+      }
+
+
     Spoints <- SpatialPoints(unique_coords)
-    return(list(Spoints = Spoints, index_replicates = index_replicates, data_list = data_list))
+    return(list(Spoints = Spoints, index_replicates = index_replicates, data_list = data_list_return))
 }
 
 #' @noRd
@@ -654,32 +656,30 @@ process_Spoints_add_obs <- function(Spoints, replicates){
     n_repl <- length(unique(replicates))
     unique_replicates <- unique(data_frame[, replicates])
   }
-  data_list <- list()
-  index_replicates <- list()
+
   data_full <- matrix(NA, nrow = nrow(unique_coords), ncol = ncol(data_frame))
   data_full <- as.data.frame(data_full)
   colnames(data_full) <- colnames(data_frame)
 
+  data_list_return <- vector(mode = "list", n_repl)
+  data_list_return <- lapply(1:n_repl, function(i){data_full})
+  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ]))})
+
     for(i in n_repl:1){
-      data_tmp <- data_frame[data_frame[, replicates] == unique_replicates[i], ]
-      coords_tmp <- Spoints@coords[data_frame[, replicates] == unique_replicates[i], ]
-      index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
-      for(j in 1:nrow(coords_tmp)){
-        count <- 1
-        while(!(all(coords_tmp[j,] == unique_coords[count,]))){
-          count <- count+1
-        }
-        index_replicates[[i]][j] <- count
-      }
-      data_list[[i]] <- data_full
-      data_list[[i]][index_replicates[[i]], ] <- data_tmp
-      data_list[[i]] <- data_list[[i]][,!(colnames(data_list[[i]])%in%c("__idx_repl"))]
-      data_list[[i]] <- as.data.frame(data_list[[i]])
-      colnames(data_list[[i]]) <- colnames(data_frame)[!(colnames(data_frame)%in%c("__idx_repl"))]
+        index_replicates[[i]] <- which(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ] == unique_coords)
     }
 
+     
+      for(i in 1:n_repl){
+        data_tmp <- data_list[[i]]
+        data_list_return[[i]][index_replicates[[i]], ] <- data_tmp
+        data_list_return[[i]] <- data_list_return[[i]][,!(colnames(data_list_return[[i]])%in%c(edge_number, distance_on_edge,"__idx_repl"))]
+        data_list_return[[i]] <- as.data.frame(data_list_return[[i]])
+        colnames(data_list_return[[i]]) <- colnames(data_list[[i]])[!(colnames(data_list[[i]])%in%c(edge_number, distance_on_edge, "__idx_repl"))]
+      }
+
     Spoints <- SpatialPoints(unique_coords)
-    return(list(Spoints = Spoints, index_replicates = index_replicates, data_list = data_list))
+    return(list(Spoints = Spoints, index_replicates = index_replicates, data_list = data_list_return))
 }
 
 #' @noRd 
@@ -699,31 +699,30 @@ process_DF_PtE_add_obs <- function(data_frame, edge_number, distance_on_edge, re
     unique_replicates <- unique(data_frame[, replicates])
   }
 
-  data_list <- list()
-  index_replicates <- list()
   data_full <- matrix(NA, nrow = nrow(PtE), ncol = ncol(data_frame))
   data_full <- as.data.frame(data_full)
   colnames(data_full) <- colnames(data_frame)
 
-    for(i in n_repl:1){
-      data_tmp <- data_frame[data_frame[, replicates] == unique_replicates[i], ]
-      coords_tmp <- PtE_repeated[data_frame[, replicates] == unique_replicates[i], ]
-      index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
-      for(j in 1:nrow(coords_tmp)){
-        count <- 1
-        while(!(all(coords_tmp[j,] == PtE[count,]))){
-          count <- count+1
-        }
-        index_replicates[[i]][j] <- count
-      }
-      data_list[[i]] <- data_full
-      data_list[[i]][index_replicates[[i]], ] <- data_tmp
-      data_list[[i]] <- data_list[[i]][,!(colnames(data_list[[i]])%in%c(edge_number, distance_on_edge, "__idx_repl"))]
-      data_list[[i]] <- as.data.frame(data_list[[i]])
-      colnames(data_list[[i]]) <- colnames(data_frame)[!(colnames(data_frame)%in%c(edge_number, distance_on_edge, "__idx_repl"))]
-    }
+  data_list_return <- vector(mode = "list", n_repl)
+  data_list_return <- lapply(1:n_repl, function(i){data_full})
+  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(PtE_list[[i]]))})
 
-    return(list(PtE = PtE, index_replicates = index_replicates, data_list = data_list))
+    for(i in n_repl:1){
+        index_replicates[[i]] <- which(PtE_list[[i]] == PtE)
+  }
+
+     
+      for(i in 1:n_repl){
+        data_tmp <- data_frame[data_frame[, replicates] == unique_replicates[i], ]
+        coords_tmp <- PtE_repeated[data_frame[, replicates] == unique_replicates[i], ]
+        data_list_return[[i]][index_replicates[[i]], ] <- data_tmp
+        data_list_return[[i]] <- data_list_return[[i]][,!(colnames(data_list_return[[i]])%in%c(edge_number, distance_on_edge,"__idx_repl"))]
+        data_list_return[[i]] <- as.data.frame(data_list_return[[i]])
+        colnames(data_list_return[[i]]) <- colnames(data_frame)[!(colnames(data_frame)%in%c(edge_number, distance_on_edge, "__idx_repl"))]
+      }
+
+
+    return(list(PtE = PtE, index_replicates = index_replicates, data_list = data_list_return))
 }
 
 #' @noRd 
@@ -735,26 +734,24 @@ process_DL_PtE_add_obs <- function(data_list, edge_number, distance_on_edge){
   data_full <- matrix(NA, nrow = nrow(PtE), ncol = ncol(data_list[[1]]))
   data_full <- as.data.frame(data_full)
   colnames(data_full) <- colnames(data_list[[1]])
-  index_replicates <- list()
 
-  data_list_return <- list()
-  for(i in length(data_list):1){
-      data_tmp <- data_list[[i]]
-      coords_tmp <- PtE_list[[i]]
-      index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
-      for(j in 1:nrow(coords_tmp)){
-        count <- 1
-        while(!(all(coords_tmp[j,] == PtE[count,]))){
-          count <- count+1
-        }
-        index_replicates[[i]][j] <- count
-      }
-      data_list_return[[i]] <- data_full
-      data_list_return[[i]][index_replicates[[i]], ] <- data_tmp
-      data_list_return[[i]] <- data_list_return[[i]][,!(colnames(data_list_return[[i]])%in%c(edge_number, distance_on_edge))]
-      data_list_return[[i]] <- as.data.frame(data_list_return[[i]])
-      colnames(data_list_return[[i]]) <- colnames(data_list[[i]])[!(colnames(data_list[[i]])%in%c(edge_number, distance_on_edge))]
+  data_list_return <- vector(mode = "list", length(data_list))
+  data_list_return <- lapply(1:length(data_list), function(i){data_full})
+  index_replicates <- lapply(1:length(data_list), function(i){rep(NA,nrow(PtE_list[[i]]))})
+
+    for(i in length(data_list):1){
+        index_replicates[[i]] <- which(PtE_list[[i]] == PtE)
   }
+
+     
+      for(i in 1:length(data_list)){
+        data_tmp <- data_list[[i]]
+        data_list_return[[i]][index_replicates[[i]], ] <- data_tmp
+        data_list_return[[i]] <- data_list_return[[i]][,!(colnames(data_list_return[[i]])%in%c(edge_number, distance_on_edge))]
+        data_list_return[[i]] <- as.data.frame(data_list_return[[i]])
+        colnames(data_list_return[[i]]) <- colnames(data_list[[i]])[!(colnames(data_list[[i]])%in%c(edge_number, distance_on_edge))]
+      }
+
 
   return(list(PtE = PtE, data_list = data_list_return, index_replicates = index_replicates))
 }

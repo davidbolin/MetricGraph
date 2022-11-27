@@ -152,10 +152,13 @@ with `R-INLA` implementation* section.
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 # Cloning the graph
 graph_bkp <- graph$clone()
+
+df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
+                        distance_on_edge = obs_loc[,2])
 # Adding observations and turning them to vertices
-graph$add_PtE_observations(y, PtE = obs_loc, normalized=TRUE)
+graph$add_PtE_observations(df_graph, normalized=TRUE)
 graph$observation_to_vertex()
-graph$plot(data=TRUE)
+graph$plot(data="y")
 ```
 
 Now, we load the `R-INLA` package and
@@ -302,7 +305,8 @@ the number of rows of the `mesh$PtE` attribute.
 ```{r}
 n_obs_mesh <- nrow(graph$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
-graph$add_mesh_observations(y = y_prd)
+data_mesh <- data.frame(y = y_prd)
+graph$add_mesh_observations(data_frame = data_mesh)
 graph$observation_to_vertex()
 ```
 
@@ -310,7 +314,7 @@ Let us plot the resulting graph (the gray dots indicate
 the new locations):
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot(data=TRUE)
+graph$plot(data="y")
 ```
 
 We will now fit a new model with `R-INLA` with this new
@@ -378,7 +382,7 @@ Finally, we can plot the predictions together with
 the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 p <- graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
-graph$plot(data=TRUE, vertex_size = 0, data_size = 2, p = p, edge_width = 0)
+graph$plot(data="y", vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```
 
 ## Kriging by adding the prediction locations from the very beginning
@@ -400,7 +404,7 @@ We will first add the observations at the locations
 `obs_loc`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$add_PtE_observations(y, PtE = obs_loc, 
+graph_prd$add_PtE_observations(data_frame = df_graph, 
                             normalized=TRUE)
 ```
 
@@ -416,13 +420,14 @@ Now, we will add `NA` observations at the mesh locations:
 ```{r}
 n_obs_mesh <- nrow(graph_prd$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
-graph_prd$add_mesh_observations(y = y_prd)
+data_mesh2 <- data.frame(y = y_prd)
+graph_prd$add_mesh_observations(data_frame = data_mesh2)
 ```
 
 Finally, we turn these observations to vertices:
 ```{r fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph_prd$observation_to_vertex()
-graph_prd$plot(data=TRUE)
+graph_prd$plot(data="y")
 ```
 
 Now, we proceed as in the first part. We first create
@@ -493,7 +498,7 @@ We will now plot the predictions together with
 the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 p <- graph_prd$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
-graph_prd$plot(data=TRUE, vertex_size = 0, data_size = 2, p = p, edge_width = 0)
+graph_prd$plot(data="y", vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```
 
 ## Fitting `R-INLA` models with replicates
@@ -538,8 +543,10 @@ y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
 Since we are considering a model with replicates, we will
 add only the first replicate to the graph object:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph_rep$add_PtE_observations(y_rep[,1], 
-                    PtE = obs_loc, normalized=TRUE)
+dl_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
+                                          edge_number = obs_loc[,1],
+                                          distance_on_edge = obs_loc[,2])})
+graph_rep$add_PtE_observations(data_list = dl_graph, normalized=TRUE)
 graph_rep$observation_to_vertex()
 graph_rep$plot(data=TRUE)
 ```
