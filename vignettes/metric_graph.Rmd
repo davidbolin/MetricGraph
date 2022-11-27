@@ -232,7 +232,7 @@ obs <- c(1,2,3,4)
 df_graph <- data.frame(y = obs, edge_number = obs.loc[,1], 
                         distance_on_edge = obs.loc[,2])
 graph$add_PtE_observations(data_frame = df_graph)
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 Thus, each row in `PtE` specifies the edge of the observation and the distance

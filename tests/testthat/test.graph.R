@@ -19,7 +19,8 @@ test_that("Test adding point", {
                                                            Lines(list(line.line2),ID="2"))))
   P1 <- matrix(c(1,0.5), nrow=1,ncol=2)
   p <- SpatialPoints(matrix(c(0,0.5),1,2))
-  graph$add_PtE_observations(y = 1, PtE = P1, Spoints = p)
+  
+  graph$add_observations(Spoints = p, data_frame = data.frame(y=1))
   graph$observation_to_vertex()
 
   expect_equal(graph$V, matrix(c(0, 0, 1, 0, 0, 1, 1, 0.5), 4, 2), tol=1e-9)
