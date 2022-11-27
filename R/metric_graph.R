@@ -200,7 +200,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     } else {
       graph.temp <- self$clone()
       graph.temp$clear_observations()
-      graph.temp$add_PtE_observations(y = rep(0, dim(PtE)[1]), PtE,
+      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                          edge_number = PtE[,1],
+                          distance_on_edge = PtE[,2])
+      graph.temp$add_PtE_observations(data_frame = df_temp,
                                    normalized = normalized)
       graph.temp$compute_resdist()
       return(graph.temp$res_dist)
@@ -324,12 +327,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       process_list <- process_data_frame_add_obs(Spoints, data_frame, replicate)
       Spoints <- process_list[["Spoints"]]
       data_list <- process_list[["data_list"]]
-      index_replicates <- process_list[["index_replicate"]]
+      index_replicates <- process_list[["index_replicates"]]
     } else if("SpatialPointsDataFrame"%in%is(Spoints)){
       process_list <- process_Spoints_add_obs(Spoints, data_frame, replicate)
       Spoints <- process_list[["Spoints"]]
       data_list <- process_list[["data_list"]]
-      index_replicates <- process_list[["index_replicate"]]
+      index_replicates <- process_list[["index_replicates"]]
     } else{
       stop("No data provided!")
     }
@@ -342,9 +345,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$data <- lapply(1:length(self$data), function(i){rbind(self$data[[i]], data_list[[i]])})
       private$raw_data <- lapply(1:length(private$raw_data), function(i){rbind(private$raw_data[[i]], data_list[[i]])})
       index_replicates <- lapply(1:length(private$index_replicates), function(i){max(private$index_replicates[[i]]) + index_replicates[[i]]})
-      private$index_replicates <- lapply(1:length(private$index_replicates), function(i){rbind(private$index_replicates[[i]], index_replicates[[i]])})
+      private$index_replicates <- lapply(1:length(private$index_replicates), function(i){c(private$index_replicates[[i]], index_replicates[[i]])})
     }
-
 
     SP <- snapPointsToLines(Spoints, self$lines)
     coords.old <- as.data.frame(Spoints@coords)
@@ -418,8 +420,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
       data_list <- process_list[["data_list"]]
-      index_replicates <- process_list[["index_replicate"]]
-      PtE <- process_list[["PtE"]]
+      index_replicates <- process_list[["index_replicates"]]
+      PtE <- as.matrix(process_list[["PtE"]])
 
     if(ncol(PtE)!= 2){
       stop("PtE must have two columns!")
@@ -444,7 +446,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$data <- lapply(1:length(self$data), function(i){rbind(self$data[[i]], data_list[[i]])})
       private$raw_data <- lapply(1:length(private$raw_data), function(i){rbind(private$raw_data[[i]], data_list[[i]])})
       index_replicates <- lapply(1:length(private$index_replicates), function(i){max(private$index_replicates[[i]]) + index_replicates[[i]]})
-      private$index_replicates <- lapply(1:length(private$index_replicates), function(i){rbind(private$index_replicates[[i]], index_replicates[[i]])})
+      private$index_replicates <- lapply(1:length(private$index_replicates), function(i){c(private$index_replicates[[i]], index_replicates[[i]])})
     }
 
     if(normalized){
@@ -465,7 +467,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       rownames(coords) <- 1:dim(coords)[1]
       Spoints <- sp::SpatialPoints(coords)
       Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
-      
       if(is.null(self$points)){
         self$points <- Spoints
       } else {
@@ -1384,7 +1385,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if (!is.null(data)) {
       x <- y <- NULL
       y_plot <- self$data[[repl]][, data]
-      for (i in 1:nrow(y_plot)) {
+      for (i in 1:length(y_plot)) {
 
           LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
