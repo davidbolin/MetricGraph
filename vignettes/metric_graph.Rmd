@@ -119,21 +119,21 @@ location on the edge. The location $t$ can either be specified as the
 distance from the start of the edge (and then takes values between 0 and the 
 length of the edge) or as the normalized distance from the start of the edge
 (and then takes values between 0 and 1). The function `coordinates` can be used
-to convert between coodinates in Euclidean space and locations on the graph. 
+to convert between coordinates in Euclidean space and locations on the graph. 
 For example the location at distance 0.2 from the start of the second edge is:
 ```{r}
-graph$coodinates(PtE = matrix(c(2, 0.2), 1,2), normalized = FALSE)
+graph$coordinates(PtE = matrix(c(2, 0.2), 1,2), normalized = FALSE)
 ```
 In this case, since the edge has length 1, the location of the point at 
 normalized distance 0.2 from the start of the edge is the same:
 ```{r}
-graph$coodinates(PtE = matrix(c(2, 0.2), 1,2), normalized = TRUE)
+graph$coordinates(PtE = matrix(c(2, 0.2), 1,2), normalized = TRUE)
 ```
 
 The function can also be used to find the closest location on the graph for 
 a location in Euclidean space: 
 ```{r}
-graph$coodinates(XY = matrix(c(0, 0.2), 1,2))
+graph$coordinates(XY = matrix(c(0, 0.2), 1,2))
 ```
 In this case, the `normalized` argument decides whether the returned value 
 should be given in normalized distance or not. 
@@ -321,7 +321,7 @@ can evaluate the function above, and finally plot the result:
 n.e <- 30
 PtE <- cbind(rep(1:graph$nE, each = n.e), 
              rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))
-XY <- graph$coodinates(PtE)
+XY <- graph$coordinates(PtE)
 f <- XY[, 1]^2 - XY[, 2]^2
 graph$plot_function(cbind(PtE, f), plotly = TRUE)
 ```

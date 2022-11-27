@@ -151,16 +151,16 @@ location on the edge. The location $t$ can either be specified as the
 distance from the start of the edge (and then takes values between 0 and the 
 length of the edge) or as the normalized distance from the start of the edge
 (and then takes values between 0 and 1). The function `coordinates` can be used
-to convert between coodinates in Euclidean space and locations on the graph. 
+to convert between coordinates in Euclidean space and locations on the graph. 
 For example the location at normalized distance 0.2 from the start of the second edge is:
 ```{r}
-graph$coodinates(PtE = matrix(c(2, 0.2), 1,2), normalized = TRUE)
+graph$coordinates(PtE = matrix(c(2, 0.2), 1,2), normalized = TRUE)
 ```
 
 The function can also be used to find the closest location on the graph for 
 a location in Euclidean space: 
 ```{r}
-graph$coodinates(XY = matrix(c(39.117, 22.319), 1,2))
+graph$coordinates(XY = matrix(c(39.117, 22.319), 1,2))
 ```
 In this case, the `normalized` argument decides whether the returned value 
 should be given in normalized distance or not. 
@@ -180,7 +180,7 @@ graph$plot(data = TRUE, vertex_size = 0)
 One should note here that one needs to specify `normalized = TRUE` in the function `add_PtE_observations()` to specify that the locations are in normalized distance on the edges. Alternatively, if one has data as `SpatialPoints` objects, these can be added to the graph via the function `add_observations()`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPoints` object which we add to the graph:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
-obs.lonlat <- graph$coodinates(PtE = obs.loc, normalized = TRUE)
+obs.lonlat <- graph$coordinates(PtE = obs.loc, normalized = TRUE)
 obs <- rnorm(n.obs)
 points <- SpatialPointsDataFrame(coords = obs.loc,
                                  data = data.frame(y = obs))

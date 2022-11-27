@@ -330,7 +330,7 @@ finally construct the data to add to the metric graph:
 graph$clear_observations()
 sigma <-2 
 kappa <- 20
-n.obs.per.edge <- 10
+n.obs.per.edge <- 50
 PtE <- NULL
 for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
@@ -339,6 +339,7 @@ D <- graph$compute_resdist(PtE, normalized = TRUE)
 Sigma <- sigma^2*exp(-kappa*D)
 u <- t(chol(Sigma))%*%rnorm(n.obs.per.edge * graph$nE)
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+
 graph$add_PtE_observations(y, PtE, normalized=TRUE)
 graph$plot(data = TRUE)
 ```
@@ -705,5 +706,206 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
 ```
+
+# A model with covariates
+
+In this example we will consider the first graph:
+
+```{r}
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+graph <- metric_graph$new(lines = Lines)
+graph$plot()
+```
+
+Let us now generate some observation locations at random locations on each edge
+and sample the process. Let us sample from a Whitlle--Matérn process on the metric graph with
+`alpha=1`. We will include an intercept and covariates. The covariates can be added by using the
+`covariates` argument from the `add_PtE_observations()` or from the `add_observations()` functions.
+We need to pass the covariates as a list.
+
+```{r}
+kappa <- 10
+sigma <- 2
+sigma_e <- 0.1
+theta <-  c(sigma_e, sigma, kappa)
+
+n.obs.per.edge <- 250
+PtE <- NULL
+for(i in 1:graph$nE){
+  #add locations sampled at random to each edge
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+}
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+                 graph = graph, PtE = PtE)
+
+beta <- c(2,1)
+
+X_cov <- cbind(1, runif(nrow(PtE)))
+
+y <- X_cov %*% beta +  u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+
+graph$add_PtE_observations(y, PtE, covariates = list(X_cov), normalized = TRUE)
+```
+
+Let us now estimate the parameters. We should suppy the start vector as `c(sigma_e, sigma, kappa, beta_1, beta_2)`, where `beta_1` and `beta_2` are
+the coefficients of the covariates.
+
+```{r}
+theta0 <- graph_starting_values(graph, model="alpha1")
+log_theta0 <- log(theta0)
+beta_1_start <- 0
+beta_2_start <- 0
+
+loglik_alpha1_cov <- likelihood_graph_spde(graph, alpha = 1, covariates = TRUE)
+res <- optim(c(log_theta0, beta_1_start, beta_2_start), loglik_alpha1_cov)
+sigma_e_est <- exp(res$par[1])
+sigma_est <- exp(res$par[2])
+kappa_est <- exp(res$par[3])
+beta_1_est <- res$par[4]
+beta_2_est <- res$par[5]
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      beta_1 = c(beta[1], beta_1_est),
+                      beta_2 = c(beta[2], beta_2_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+
+
+# A model with covariates and replicates
+
+Let us consider the same graph from the previous example:
+
+```{r}
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+graph <- metric_graph$new(lines = Lines)
+graph$plot()
+```
+
+Let us now generate some observation locations at random locations on each edge
+and sample the process. Let us sample from a Whitlle--Matérn process on the metric graph with
+`alpha=1` and 20 replicates. We will include an intercept and covariates. The covariates can be added by using the
+`covariates` argument from the `add_PtE_observations()` or from the `add_observations()` functions.
+We are passing the covariates as a list, and observe that we considered a different set of covariates for each replicate.
+
+
+```{r}
+kappa <- 10
+sigma <- 2
+sigma_e <- 0.1
+theta <-  c(sigma_e, sigma, kappa)
+
+n.obs.per.edge <- 30
+n_repl <- 20
+PtE <- NULL
+for(i in 1:graph$nE){
+  #add locations sampled at random to each edge
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+}
+
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+                 graph = graph, PtE = PtE, nsim = n_repl)
+
+beta <- c(2,1)
+
+X_cov <- lapply(1:n_repl, function(i){cbind(1, runif(nrow(PtE)))})
+
+y <- NULL
+for(i in 1:n_repl){
+y_tmp <- X_cov[[i]] %*% beta +  u[,i] + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+y <- cbind(y, y_tmp)
+}
+
+
+graph$add_PtE_observations(y, PtE, covariates = X_cov, normalized = TRUE)
+```
+
+Let us now estimate the parameters. We should suppy the start vector as `c(sigma_e, sigma, kappa, beta_1, beta_2)`, where `beta_1` and `beta_2` are
+the coefficients of the covariates.
+
+```{r}
+theta0 <- graph_starting_values(graph, model="alpha2")
+log_theta0 <- log(theta0)
+beta_1_start <- 0
+beta_2_start <- 0
+
+loglik_alpha1_cov <- likelihood_graph_spde(graph, alpha = 1, covariates = TRUE)
+res <- optim(c(log_theta0, beta_1_start, beta_2_start), loglik_alpha1_cov)
+sigma_e_est <- exp(res$par[1])
+sigma_est <- exp(res$par[2])
+kappa_est <- exp(res$par[3])
+beta_1_est <- res$par[4]
+beta_2_est <- res$par[5]
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      beta_1 = c(beta[1], beta_1_est),
+                      beta_2 = c(beta[2], beta_2_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+
+We can also pass a list with a single set of covariates:
+
+
+```{r}
+graph$clear_observations()
+
+beta <- c(2,1)
+
+X_cov <- cbind(1, runif(nrow(PtE)))
+
+y <- NULL
+for(i in 1:n_repl){
+y_tmp <- X_cov %*% beta +  u[,i] + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+y <- cbind(y, y_tmp)
+}
+
+
+graph$add_PtE_observations(y, PtE, covariates = list(X_cov), normalized = TRUE)
+```
+
+Then, we proceed as usual to fit the model:
+
+```{r}
+theta0 <- graph_starting_values(graph, model="alpha2")
+log_theta0 <- log(theta0)
+beta_1_start <- 0
+beta_2_start <- 0
+
+loglik_alpha1_cov <- likelihood_graph_spde(graph, alpha = 1, covariates = TRUE)
+res <- optim(c(log_theta0, beta_1_start, beta_2_start), loglik_alpha1_cov)
+sigma_e_est <- exp(res$par[1])
+sigma_est <- exp(res$par[2])
+kappa_est <- exp(res$par[3])
+beta_1_est <- res$par[4]
+beta_2_est <- res$par[5]
+results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
+                      sigma = c(sigma, sigma_est),
+                      kappa = c(kappa, kappa_est),
+                      beta_1 = c(beta[1], beta_1_est),
+                      beta_2 = c(beta[2], beta_2_est),
+                      row.names = c("Truth", "Estimate"))
+print(results)
+```
+
 
 # References {-}

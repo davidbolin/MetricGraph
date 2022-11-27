@@ -64,6 +64,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field y vector with data on the graph
   y = NULL,
 
+  #' @field list containing the covariates
+  
+  covariates = NULL,
+
   #' @field PtE matrix specifying the locations of the observation points on
   #' the edges, where `PtE[i,1]` is the edge index for the ith observation
   #' and  `PtE[,2]` is the normalized distance on the edge
@@ -93,7 +97,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
   #' @param E m x 2 matrix where each row represents an edge
-  #' @param longlat If TRUE, then it is assumed that the coodinates are given
+  #' @param longlat If TRUE, then it is assumed that the coordinates are given
   #' in Longitude/Latitude and that distances should be computed in km.
   #' @param tolerance vertices that are closer than this number are merged when
   #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
@@ -288,6 +292,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     self$add_responses(private$raw_y)
+    if(!is.null(self$covariates)){
+      private$add_covariates(private$raw_covariates)
+    }
   },
 
   #' @description Clear all observations from the object
@@ -297,6 +304,8 @@ metric_graph <-  R6::R6Class("metric_graph",
    self$points <- NULL
    private$raw_y <- c()
    private$reorder_idx <- list()
+   self$covariates <- NULL
+   private$raw_covariates <- NULL
   },
 
   #' @description Add observations to the graph
@@ -306,11 +315,13 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param y the observations. A matrix `N x k`, where `N` is the number of observations and
   #' `k` is the number of replicates. Can be `NA` if the observation is not available. These are used if provided, and otherwise the
   #' observations are assumed to be in Spoints. 
+  #' @param covariates the covariates. A list, with either 1 entry or entries `1,...,n_repl`, where `n_repl` is the number of replicates.
+  #' Each entry consists of a matrix `N x p`, where `N` is the number of observations and
+  #' `p` is the number of covariates. 
   #' @param y.index If `y` is not provided, `y.index` gives the column number
   #' for the data to use in `Spoints@data`. If it is not provided, it is assumed
   #' that the data is in the first column
-  add_observations = function(Spoints, y = NULL, y.index = NULL) {
-
+  add_observations = function(Spoints, y = NULL, covariates = NULL, y.index = NULL) {
     if("SpatialPointsDataFrame"%in%is(Spoints)){
     if(is.null(y)){
         if(is.null(y.index)) {
@@ -334,8 +345,28 @@ metric_graph <-  R6::R6Class("metric_graph",
       y <- matrix(y, nrow = nrow(Spoints@coords))
     }
 
+    if(is.null(y) && !is.null(covariates)){
+      stop("If you add covariates, you should also add observations!")
+    }
+
     self$y <- rbind(self$y, y)
     private$raw_y <- rbind(private$raw_y, y)
+    
+    if(!is.null(covariates)){
+      if( (length(covariates)!=1)&&(length(covariates)!=ncol(self$y))){
+        stop("The covariates list should contain either one entry, or one entry per replicate.")
+      }
+      if(length(covariates)==1){
+        self$covariates[[1]] <- rbind(self$covariates[[1]], covariates[[1]])
+        private$raw_covariates[[1]] <- rbind(private$raw_covariates[[1]], covariates[[1]])        
+      } else{
+        for(i in length(covariates):1){
+          self$covariates[[i]] <- rbind(self$covariates[[i]], covariates[[i]])
+          private$raw_covariates[[i]] <- rbind(private$raw_covariates[[i]], covariates[[i]])
+        }
+      }
+    }
+
 
     SP <- snapPointsToLines(Spoints, self$lines)
     coords.old <- as.data.frame(Spoints@coords)
@@ -392,7 +423,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' `SpatialPointsDataFrame` specifying the Euclidean coordinates of the
   #' observation locations. If this is not provided, the coordinates are
   #' calculated internally.
-  add_PtE_observations = function(y, PtE, Spoints=NULL, normalized = FALSE) {
+  add_PtE_observations = function(y, PtE, covariates = NULL, Spoints=NULL, normalized = FALSE) {
 
     if(ncol(PtE)!= 2){
       stop("PtE must have two columns!")
@@ -411,6 +442,26 @@ metric_graph <-  R6::R6Class("metric_graph",
     y <- matrix(y, nrow = nrow(PtE))
     self$y <- rbind(self$y, y)
     private$raw_y <- rbind(private$raw_y, y)
+
+    if(is.null(y) && !is.null(covariates)){
+      stop("If you add covariates, you should also add observations!")
+    }
+    
+    if(!is.null(covariates)){
+      if( (length(covariates)!=1)&&(length(covariates)!=ncol(self$y))){
+        stop("The covariates list should contain either one entry, or one entry per replicate.")
+      }
+      if(length(covariates)==1){
+        self$covariates[[1]] <- rbind(self$covariates[[1]], covariates[[1]])
+        private$raw_covariates[[1]] <- rbind(private$raw_covariates[[1]], covariates[[1]])        
+      } else{
+        for(i in length(covariates):1){
+          self$covariates[[i]] <- rbind(self$covariates[[i]], covariates[[i]])
+          private$raw_covariates[[i]] <- rbind(private$raw_covariates[[i]], covariates[[i]])
+        }
+      }
+    }
+
 
     if(normalized){
       self$PtE = rbind(self$PtE, PtE)
@@ -1063,14 +1114,15 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Add observations on mesh to the object
   #' @param y the observations.
-  add_mesh_observations = function(y) {
+  #' @param covariates A list containing the covariates.
+  add_mesh_observations = function(y, covariates = NULL) {
     if(is.null(self$mesh)){
       stop("You should have a mesh!")
     }
     Spoints <- self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ]
     rownames(Spoints) <- 1:nrow(Spoints)
     Spoints <- SpatialPoints(coords = Spoints)
-    self$add_observations(Spoints = Spoints, y = y)
+    self$add_observations(Spoints = Spoints, y = y, covariates = covariates)
   },
 
   #' @description Get a copy of the initial graph
@@ -1119,7 +1171,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @return If `PtE` is specified, then a matrix with Euclidean coordinates of
   #' the locations is returned. If `XY` is provided, then a matrix with the
   #' closest locations on the graph is returned
-  coodinates = function(PtE = NULL, XY = NULL, normalized = TRUE) {
+  coordinates = function(PtE = NULL, XY = NULL, normalized = TRUE) {
     if(is.null(PtE) && is.null(XY)) {
       stop("PtE or XY must be provided")
     } else if(!is.null(PtE) && !is.null(XY)) {
@@ -1504,6 +1556,27 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
+  #' @description function for adding covariates in the
+  #' correct order.
+  #' @param covariate A vector of response variables
+
+  add_covariates = function(covariates) {
+  private$raw_covariates <- covariates
+  self$covariates <- covariates
+  for(j in 1:length(covariates)){
+    idx <- private$reorder_idx[[1]]
+    covariates_tmp <- self$covariates[[j]][idx,]
+    self$covariates[[j]][1:length(idx),] <- covariates_tmp
+    if (length(private$reorder_idx) > 1) {
+      for (i in 2:length(private$reorder_idx)) {
+        idx <- private$reorder_idx[[i]]
+        covariates_tmp <- matrix(self$covariates[[j]][1:length(idx),], nrow = length(idx))
+        self$covariates[[j]][1:length(idx),] <- y_tmp[idx,]
+      }
+    }
+  }
+},
+
   # Ordering indexes
 
   reorder_idx = list(),
@@ -1518,7 +1591,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   # Internal A matrix
 
-  internal_A = NULL
+  internal_A = NULL,
+
+  # unordered covariates,
+
+  raw_covariates = NULL
 
 ))
 

@@ -75,6 +75,8 @@ edges on the lines in the graph. The locations are normalized on the line}
 
 \item{\code{y}}{vector with data on the graph}
 
+\item{\code{list}}{containing the covariates}
+
 \item{\code{PtE}}{matrix specifying the locations of the observation points on
 the edges, where \code{PtE[i,1]} is the edge index for the ith observation
 and  \code{PtE[,2]} is the normalized distance on the edge}
@@ -92,6 +94,13 @@ locations}
 
 \item{\code{Laplacian}}{the weighted graph Laplacian of the vertices in the
 graph. The weights are given by the edge lengths}
+}
+\if{html}{\out{</div>}}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{list}}{containing the covariates}
 }
 \if{html}{\out{</div>}}
 }
@@ -120,7 +129,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
-\item \href{#method-metric_graph-coodinates}{\code{metric_graph$coodinates()}}
+\item \href{#method-metric_graph-coordinates}{\code{metric_graph$coordinates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -148,7 +157,7 @@ Create a new \code{metric_graph} object
 
 \item{\code{E}}{m x 2 matrix where each row represents an edge}
 
-\item{\code{longlat}}{If TRUE, then it is assumed that the coodinates are given
+\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given
 in Longitude/Latitude and that distances should be computed in km.}
 
 \item{\code{tolerance}}{vertices that are closer than this number are merged when
@@ -260,7 +269,12 @@ Clear all observations from the object
 \subsection{Method \code{add_observations()}}{
 Add observations to the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(Spoints, y = NULL, y.index = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
+  Spoints,
+  y = NULL,
+  covariates = NULL,
+  y.index = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -273,6 +287,10 @@ observations}
 \item{\code{y}}{the observations. A matrix \verb{N x k}, where \code{N} is the number of observations and
 \code{k} is the number of replicates. Can be \code{NA} if the observation is not available. These are used if provided, and otherwise the
 observations are assumed to be in Spoints.}
+
+\item{\code{covariates}}{the covariates. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
+Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
+\code{p} is the number of covariates.}
 
 \item{\code{y.index}}{If \code{y} is not provided, \code{y.index} gives the column number
 for the data to use in \code{Spoints@data}. If it is not provided, it is assumed
@@ -287,7 +305,13 @@ that the data is in the first column}
 \subsection{Method \code{add_PtE_observations()}}{
 Add observations to the object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_PtE_observations(y, PtE, Spoints = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_PtE_observations(
+  y,
+  PtE,
+  covariates = NULL,
+  Spoints = NULL,
+  normalized = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -582,13 +606,15 @@ correct order.
 \subsection{Method \code{add_mesh_observations()}}{
 Add observations on mesh to the object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(y)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(y, covariates = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{y}}{the observations.}
+
+\item{\code{covariates}}{A list containing the covariates.}
 }
 \if{html}{\out{</div>}}
 }
@@ -625,12 +651,12 @@ is the order of the user's input.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-coodinates"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-coodinates}{}}}
-\subsection{Method \code{coodinates()}}{
+\if{html}{\out{<a id="method-metric_graph-coordinates"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-coordinates}{}}}
+\subsection{Method \code{coordinates()}}{
 Convert between locations on the graph and Euclidean coordinates
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$coodinates(PtE = NULL, XY = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$coordinates(PtE = NULL, XY = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
