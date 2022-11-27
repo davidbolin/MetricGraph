@@ -73,9 +73,7 @@ edges on the lines in the graph. The locations are normalized on the line}
 
 \item{\code{points}}{the observations in a SpatialPointsDataFrame}
 
-\item{\code{y}}{vector with data on the graph}
-
-\item{\code{covariates}}{list containing the covariates}
+\item{\code{data}}{a list containing the data on the graph}
 
 \item{\code{PtE}}{matrix specifying the locations of the observation points on
 the edges, where \code{PtE[i,1]} is the edge index for the ith observation
@@ -118,12 +116,10 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-metric_graph-split_edge}{\code{metric_graph$split_edge()}}
-\item \href{#method-metric_graph-add_responses}{\code{metric_graph$add_responses()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
 \item \href{#method-metric_graph-coordinates}{\code{metric_graph$coordinates()}}
-\item \href{#method-metric_graph-add_covariates}{\code{metric_graph$add_covariates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -265,9 +261,9 @@ Add observations to the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
   Spoints,
-  y = NULL,
-  covariates = NULL,
-  y.index = NULL
+  data_frame = NULL,
+  data_list = NULL,
+  replicates = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -278,17 +274,14 @@ Add observations to the graph
 which may include the coordinates only, or the coordinates as well as the
 observations}
 
-\item{\code{y}}{the observations. A matrix \verb{N x k}, where \code{N} is the number of observations and
-\code{k} is the number of replicates. Can be \code{NA} if the observation is not available. These are used if provided, and otherwise the
-observations are assumed to be in Spoints.}
+\item{\code{data_frame}}{A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
 
-\item{\code{covariates}}{the covariates. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
-Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
-\code{p} is the number of covariates.}
+\item{\code{data_list}}{A list, whose entries are given by one data.frame per replicate. When a data_list is given, the \code{replicates} argument is not used.
+If \code{data_list} is not \code{NULL}, it takes priority over both \code{Spoints} and \code{data_frame}. If a \code{data_list} is given, all the replicates must be observed
+at the same locations, which are given in the \code{coords} slot of \code{Spoints}. In particular, all data frames in the list must have the same dimensions.}
 
-\item{\code{y.index}}{If \code{y} is not provided, \code{y.index} gives the column number
-for the data to use in \code{Spoints@data}. If it is not provided, it is assumed
-that the data is in the first column}
+\item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
 }
 \if{html}{\out{</div>}}
 }
@@ -300,10 +293,11 @@ that the data is in the first column}
 Add observations to the object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_PtE_observations(
-  y,
-  PtE,
-  covariates = NULL,
-  Spoints = NULL,
+  data_frame = NULL,
+  data_list = NULL,
+  edge_number = "edge_number",
+  distance_on_edge = "distance_on_edge",
+  replicates = NULL,
   normalized = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -311,20 +305,20 @@ Add observations to the object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{y}}{vector with the values of the observations}
+\item{\code{data_frame}}{A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
 
-\item{\code{PtE}}{matrix where \code{PtE[i,1]} is the index of the edge for the ith
-observation and \code{PtE[i,2]} is the distance on the edge where the
-observation is located}
+\item{\code{data_list}}{A list, whose entries are given by one data.frame per replicate. When a data_list is given, the \code{replicates} argument is not used.
+If \code{data_list} is not \code{NULL}, it takes priority over both \code{Spoints} and \code{data_frame}. The replicates of the \code{data_list} can be given for
+different locations across the replicates.}
 
-\item{\code{covariates}}{the covariates. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
-Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
-\code{p} is the number of covariates.}
+\item{\code{edge_number}}{Column of the \code{data_frame} or from the entries of the \code{data_list} that contain the edge numbers. If not supplied,
+the column with name "edge_number" will be chosen.}
 
-\item{\code{Spoints}}{Optional argument of class \code{SpatialPoints} or
-\code{SpatialPointsDataFrame} specifying the Euclidean coordinates of the
-observation locations. If this is not provided, the coordinates are
-calculated internally.}
+\item{\code{distance_on_edge}}{Column of the \code{data_frame} or from the entries of the \code{data_list} that contain the edge numbers. If not supplied,
+the column with name "distance_on_edge" will be chosen.}
+
+\item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{PtE} are assumed to be
 normalized to (0,1). Default FALSE.}
@@ -433,13 +427,13 @@ is at the end of the edge
 plot a metric graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
+  data = NULL,
+  repl = 1,
   plotly = FALSE,
   vertex_size = 3,
   vertex_color = "black",
   edge_width = 0.3,
   edge_color = "black",
-  data = FALSE,
-  repl = 1,
   data_size = 1,
   mesh = FALSE,
   X = NULL,
@@ -452,6 +446,10 @@ plot a metric graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be plotted.}
+
+\item{\code{repl}}{If there are replicates, which replicate to plot?}
+
 \item{\code{plotly}}{use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.}
 
 \item{\code{vertex_size}}{size of the vertices}
@@ -461,10 +459,6 @@ plot a metric graph
 \item{\code{edge_width}}{line width for edges}
 
 \item{\code{edge_color}}{color of edges}
-
-\item{\code{data}}{Plot the data?}
-
-\item{\code{repl}}{If there are replicates, which replicate to plot?}
 
 \item{\code{data_size}}{size of markers for data}
 
@@ -581,38 +575,29 @@ function for splitting lines in the graph
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-add_responses"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-add_responses}{}}}
-\subsection{Method \code{add_responses()}}{
-function for adding simulated response variables in the
-correct order.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_responses(y)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{y}}{A vector of response variables}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-add_mesh_observations"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-add_mesh_observations}{}}}
 \subsection{Method \code{add_mesh_observations()}}{
 Add observations on mesh to the object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(y, covariates = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(
+  data_frame = NULL,
+  data_list = NULL,
+  replicates = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{y}}{the observations.}
+\item{\code{data_frame}}{A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
 
-\item{\code{covariates}}{A list containing the covariates.}
+\item{\code{data_list}}{A list, whose entries are given by one data.frame per replicate. When a data_list is given, the \code{replicates} argument is not used.
+If \code{data_list} is not \code{NULL}, it takes priority over both \code{Spoints} and \code{data_frame}. If a \code{data_list} is given, all the replicates must be observed
+at the same locations, which are given in the \code{coords} slot of \code{Spoints}. In particular, all data frames in the list must have the same dimensions.}
+
+\item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
 }
 \if{html}{\out{</div>}}
 }
@@ -675,26 +660,11 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-add_covariates"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-add_covariates}{}}}
-\subsection{Method \code{add_covariates()}}{
-function for adding covariates in the
+function for adding the data in the
 correct order.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_covariates(covariates)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{covariates}}{the covariates. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
+data - the data. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
 Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
-\code{p} is the number of covariates.}
-}
-\if{html}{\out{</div>}}
+\code{p} is the number of covariates.
 }
 }
 \if{html}{\out{<hr>}}

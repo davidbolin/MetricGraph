@@ -700,7 +700,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description plot a metric graph
-  #' @param data Which column of the data to plot?
+  #' @param data Which column of the data to plot? If `NULL`, no data will be plotted.
   #' @param repl If there are replicates, which replicate to plot? 
   #' @param plotly use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.
   #' @param vertex_size size of the vertices
@@ -728,7 +728,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #'                               Lines(list(line4),ID="4")))
   #' graph <- metric_graph$new(lines = Lines)
   #' graph$plot()
-  plot = function(data,
+  plot = function(data = NULL,
                   repl = 1,
                   plotly = FALSE,
                   vertex_size = 3,
@@ -1069,16 +1069,20 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Add observations on mesh to the object
-  #' @param y the observations.
-  #' @param covariates A list containing the covariates.
-  add_mesh_observations = function(y, covariates = NULL) {
+  #' @param data_frame A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+  #' indicating the index of the replicate. If `data_frame` is not `NULL`, it takes priority over any eventual data in `Spoints`.
+  #' @param data_list A list, whose entries are given by one data.frame per replicate. When a data_list is given, the `replicates` argument is not used.
+  #' If `data_list` is not `NULL`, it takes priority over both `Spoints` and `data_frame`. If a `data_list` is given, all the replicates must be observed
+  #' at the same locations, which are given in the `coords` slot of `Spoints`. In particular, all data frames in the list must have the same dimensions.
+  #' @param replicates If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.
+  add_mesh_observations = function(data_frame = NULL, data_list = NULL, replicates = NULL) {
     if(is.null(self$mesh)){
       stop("You should have a mesh!")
     }
     Spoints <- self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ]
     rownames(Spoints) <- 1:nrow(Spoints)
     Spoints <- SpatialPoints(coords = Spoints)
-    self$add_observations(Spoints = Spoints, y = y, covariates = covariates)
+    self$add_observations(Spoints = Spoints, data_frame = data_frame, data_list = data_list, replicates = replicates)
   },
 
   #' @description Get a copy of the initial graph
@@ -1341,9 +1345,9 @@ metric_graph <-  R6::R6Class("metric_graph",
                      marker_size = 1,
                      vertex_color = 'black',
                      edge_color = 'black',
-                     data = FALSE,
+                     data,
                      data_size = 1,
-                     column_y = 1,
+                     repl = 1,
                      mesh = FALSE,
                      X = NULL,
                      X_loc = NULL,
@@ -1377,9 +1381,10 @@ metric_graph <-  R6::R6Class("metric_graph",
                           colour = vertex_color,
                           size= marker_size, ...)
     }
-    if (data) {
+    if (!is.null(data)) {
       x <- y <- NULL
-      for (i in 1:nrow(self$y)) {
+      y_plot <- self$data[[repl]][, data]
+      for (i in 1:nrow(y_plot)) {
 
           LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
@@ -1390,9 +1395,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           y <- c(y, Point@coords[2])
 
       }
-      p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(self$y[, column_y]))],
-                                            y = y[!is.na(as.vector(self$y[, column_y]))],
-                                            val = as.vector(self$y[!is.na(as.vector(self$y[, column_y])), column_y])),
+      p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(y_plot))],
+                                            y = y[!is.na(as.vector(y_plot))],
+                                            val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
                           size = data_size, ...) +
         scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
@@ -1435,9 +1440,9 @@ metric_graph <-  R6::R6Class("metric_graph",
                      marker_size = 1,
                      vertex_color = 'rgb(0,0,0)',
                      edge_color = 'rgb(0,0,0)',
-                     data = FALSE,
+                     data,
                      data_size = 1,
-                     column_y = 1,
+                     repl = 1,
                      mesh = FALSE,
                      p = NULL,
                      ...){
@@ -1477,19 +1482,20 @@ metric_graph <-  R6::R6Class("metric_graph",
                                          color = vertex_color, ...))
     }
 
-    if (data) {
+    if (!is.null(data)) {
       x <- y <- NULL
-      for (i in 1:nrow(self$y)) {
+      y_plot <- self$data[[repl]][, data]
+      for (i in 1:nrow(y_plot)) {
         Line <- self$lines[PtE[i, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
         Point <- gInterpolate(Line, PtE[i, 2], normalized = TRUE)
         x <- c(x, Point@coords[1])
         y <- c(y, Point@coords[2])
       }
-      data.plot <- data.frame(x = x[!is.na(as.vector(self$y[, column_y]))],
-                                            y = y[!is.na(as.vector(self$y[, column_y]))],
-                              z = rep(0,length(x[!is.na(as.vector(self$y[, column_y]))])),
-                              val = as.vector(self$y[!is.na(as.vector(self$y[, column_y])), column_y]))
+      data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
+                                            y = y[!is.na(as.vector(y_plot))],
+                              z = rep(0,length(x[!is.na(as.vector(y_plot))])),
+                              val = as.vector(y_plot[!is.na(as.vector(y_plot))]))
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
@@ -1512,9 +1518,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
-  #' @description function for adding the data in the
+  #'  function for adding the data in the
   #' correct order.
-  #' @param data the data. A list, with either 1 entry or entries `1,...,n_repl`, where `n_repl` is the number of replicates.
+  #' data - the data. A list, with either 1 entry or entries `1,...,n_repl`, where `n_repl` is the number of replicates.
   #' Each entry consists of a matrix `N x p`, where `N` is the number of observations and
   #' `p` is the number of covariates. 
 
