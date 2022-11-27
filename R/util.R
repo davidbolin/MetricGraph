@@ -621,7 +621,7 @@ process_data_frame_add_obs <- function(Spoints, data_frame, replicates){
       index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
       for(j in 1:nrow(coords_tmp)){
         count <- 1
-        while(!(all(coords_tmp[j,] != unique_coords[k,]))){
+        while(!(all(coords_tmp[j,] != unique_coords[count,]))){
           count <- count+1
         }
         index_replicates[[i]][j] <- count
@@ -663,7 +663,7 @@ process_Spoints_add_obs <- function(Spoints, replicate){
       index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
       for(j in 1:nrow(coords_tmp)){
         count <- 1
-        while(!(all(coords_tmp[j,] != unique_coords[k,]))){
+        while(!(all(coords_tmp[j,] != unique_coords[count,]))){
           count <- count+1
         }
         index_replicates[[i]][j] <- count
@@ -704,7 +704,7 @@ process_DF_PtE_add_obs <- function(data_frame, edge_number, distance_on_edge, re
       index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
       for(j in 1:nrow(coords_tmp)){
         count <- 1
-        while(!(all(coords_tmp[j,] != PtE[k,]))){
+        while(!(all(coords_tmp[j,] != PtE[count,]))){
           count <- count+1
         }
         index_replicates[[i]][j] <- count
@@ -726,20 +726,21 @@ process_DL_PtE_add_obs <- function(data_list, edge_number, distance_on_edge){
   data_full <- as.data.frame(data_full)
   colnames(data_full) <- colnames(data_list[[1]])
 
-  data_list <- list()
+  data_list_return <- list()
   for(i in length(data_list):1){
+      data_tmp <- data_list[[i]]
       coords_tmp <- PtE_list[[i]]
       index_replicates[[i]] <- rep(NA,nrow(coords_tmp))
       for(j in 1:nrow(coords_tmp)){
         count <- 1
-        while(!(all(coords_tmp[j,] != unique_coords[k,]))){
+        while(!(all(coords_tmp[j,] != PtE[count,]))){
           count <- count+1
         }
         index_replicates[[i]][j] <- count
       }
-      data_list[[i]] <- data_full
-      data_list[[i]][index_replicates[[i]], ] <- data_tmp
+      data_list_return[[i]] <- data_full
+      data_list_return[[i]][index_replicates[[i]], ] <- data_tmp
   }
 
-  return(list(PtE = PtE, data_list = data_list, index_replicates = index_replicates))
+  return(list(PtE = PtE, data_list = data_list_return, index_replicates = index_replicates))
 }
