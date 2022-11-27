@@ -64,7 +64,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field y vector with data on the graph
   y = NULL,
 
-  #' @field list containing the covariates
+  #' @field covariates list containing the covariates
   
   covariates = NULL,
 
@@ -293,7 +293,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     self$add_responses(private$raw_y)
     if(!is.null(self$covariates)){
-      private$add_covariates(private$raw_covariates)
+      self$add_covariates(private$raw_covariates)
     }
   },
 
@@ -353,6 +353,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$raw_y <- rbind(private$raw_y, y)
     
     if(!is.null(covariates)){
+      if(!is.list(covariates)){
+        stop("The covariates should be a list containing the covariates matrices!")
+      }
       if( (length(covariates)!=1)&&(length(covariates)!=ncol(self$y))){
         stop("The covariates list should contain either one entry, or one entry per replicate.")
       }
@@ -417,6 +420,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param PtE matrix where `PtE[i,1]` is the index of the edge for the ith
   #' observation and `PtE[i,2]` is the distance on the edge where the
   #' observation is located
+  #' @param covariates the covariates. A list, with either 1 entry or entries `1,...,n_repl`, where `n_repl` is the number of replicates.
+  #' Each entry consists of a matrix `N x p`, where `N` is the number of observations and
+  #' `p` is the number of covariates. 
   #' @param normalized if TRUE, then the distances in `PtE` are assumed to be
   #' normalized to (0,1). Default FALSE.
   #' @param Spoints Optional argument of class `SpatialPoints` or
@@ -448,6 +454,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     
     if(!is.null(covariates)){
+      if(!is.list(covariates)){
+        stop("The covariates should be a list containing the covariates matrices!")
+      }
       if( (length(covariates)!=1)&&(length(covariates)!=ncol(self$y))){
         stop("The covariates list should contain either one entry, or one entry per replicate.")
       }
@@ -1100,16 +1109,19 @@ metric_graph <-  R6::R6Class("metric_graph",
   y <- matrix(y, nrow = nrow(self$PtE))
   private$raw_y <- y
   self$y <- y
-  idx <- private$reorder_idx[[1]]
-  y_tmp <- self$y[idx,]
-  self$y[1:length(idx),] <- y_tmp
-  if (length(private$reorder_idx) > 1) {
-    for (i in 2:length(private$reorder_idx)) {
-      idx <- private$reorder_idx[[i]]
-      y_tmp <- matrix(self$y[1:length(idx),], nrow = length(idx))
-      self$y[1:length(idx),] <- y_tmp[idx,]
+  if(length(private$reorder_idx)>0){
+    idx <- private$reorder_idx[[1]]
+    y_tmp <- self$y[idx,]
+    self$y[1:length(idx),] <- y_tmp
+    if (length(private$reorder_idx) > 1) {
+      for (i in 2:length(private$reorder_idx)) {
+        idx <- private$reorder_idx[[i]]
+        y_tmp <- matrix(self$y[1:length(idx),], nrow = length(idx))
+        self$y[1:length(idx),] <- y_tmp[idx,]
+      }
     }
   }
+
 },
 
   #' @description Add observations on mesh to the object
@@ -1238,7 +1250,43 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       return(PtE)
     }
+  },
+   #' @description function for adding covariates in the
+  #' correct order.
+  #' @param covariates the covariates. A list, with either 1 entry or entries `1,...,n_repl`, where `n_repl` is the number of replicates.
+  #' Each entry consists of a matrix `N x p`, where `N` is the number of observations and
+  #' `p` is the number of covariates. 
+
+  add_covariates = function(covariates) {
+  if(is.null(self$y)){
+    stop("You should add observations first!")
   }
+  if(!is.list(covariates)){
+    stop("The covariates must be a list!")
+  }
+  lapply(covariates, function(covariate){
+    if(nrow(covariate) != nrow(self$y)){
+      stop("The covariate matrix should have the same number of rows as the observations!")
+    }
+  })
+  private$raw_covariates <- covariates
+  self$covariates <- covariates
+  if(length(private$reorder_idx)>0){
+    for(j in 1:length(covariates)){
+      idx <- private$reorder_idx[[1]]
+      covariates_tmp <- self$covariates[[j]][idx,]
+      self$covariates[[j]][1:length(idx),] <- covariates_tmp
+      if (length(private$reorder_idx) > 1) {
+        for (i in 2:length(private$reorder_idx)) {
+          idx <- private$reorder_idx[[i]]
+          covariates_tmp <- matrix(self$covariates[[j]][1:length(idx),], nrow = length(idx))
+          self$covariates[[j]][1:length(idx),] <- y_tmp[idx,]
+        }
+      }
+    }
+  }
+
+}
     ),
 
   private = list(
@@ -1555,27 +1603,6 @@ metric_graph <-  R6::R6Class("metric_graph",
     xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
     return(p)
   },
-
-  #' @description function for adding covariates in the
-  #' correct order.
-  #' @param covariate A vector of response variables
-
-  add_covariates = function(covariates) {
-  private$raw_covariates <- covariates
-  self$covariates <- covariates
-  for(j in 1:length(covariates)){
-    idx <- private$reorder_idx[[1]]
-    covariates_tmp <- self$covariates[[j]][idx,]
-    self$covariates[[j]][1:length(idx),] <- covariates_tmp
-    if (length(private$reorder_idx) > 1) {
-      for (i in 2:length(private$reorder_idx)) {
-        idx <- private$reorder_idx[[i]]
-        covariates_tmp <- matrix(self$covariates[[j]][1:length(idx),], nrow = length(idx))
-        self$covariates[[j]][1:length(idx),] <- y_tmp[idx,]
-      }
-    }
-  }
-},
 
   # Ordering indexes
 

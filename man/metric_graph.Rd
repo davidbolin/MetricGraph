@@ -75,7 +75,7 @@ edges on the lines in the graph. The locations are normalized on the line}
 
 \item{\code{y}}{vector with data on the graph}
 
-\item{\code{list}}{containing the covariates}
+\item{\code{covariates}}{list containing the covariates}
 
 \item{\code{PtE}}{matrix specifying the locations of the observation points on
 the edges, where \code{PtE[i,1]} is the edge index for the ith observation
@@ -94,13 +94,6 @@ locations}
 
 \item{\code{Laplacian}}{the weighted graph Laplacian of the vertices in the
 graph. The weights are given by the edge lengths}
-}
-\if{html}{\out{</div>}}
-}
-\section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{list}}{containing the covariates}
 }
 \if{html}{\out{</div>}}
 }
@@ -130,6 +123,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
 \item \href{#method-metric_graph-coordinates}{\code{metric_graph$coordinates()}}
+\item \href{#method-metric_graph-add_covariates}{\code{metric_graph$add_covariates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
 }
@@ -322,6 +316,10 @@ Add observations to the object
 \item{\code{PtE}}{matrix where \code{PtE[i,1]} is the index of the edge for the ith
 observation and \code{PtE[i,2]} is the distance on the edge where the
 observation is located}
+
+\item{\code{covariates}}{the covariates. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
+Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
+\code{p} is the number of covariates.}
 
 \item{\code{Spoints}}{Optional argument of class \code{SpatialPoints} or
 \code{SpatialPointsDataFrame} specifying the Euclidean coordinates of the
@@ -677,6 +675,26 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-add_covariates"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-add_covariates}{}}}
+\subsection{Method \code{add_covariates()}}{
+function for adding covariates in the
+correct order.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_covariates(covariates)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{covariates}}{the covariates. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
+Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
+\code{p} is the number of covariates.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
