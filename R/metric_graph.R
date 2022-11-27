@@ -324,12 +324,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(nrow(data_frame)!= nrow(Spoints@coords)){
         stop("You must have one observation per location! If it is not a mistake, you can fill the empty locations with NA.")
       }
-      process_list <- process_data_frame_add_obs(Spoints, data_frame, replicate)
+      process_list <- process_data_frame_add_obs(Spoints, data_frame, replicates)
       Spoints <- process_list[["Spoints"]]
       data_list <- process_list[["data_list"]]
       index_replicates <- process_list[["index_replicates"]]
     } else if("SpatialPointsDataFrame"%in%is(Spoints)){
-      process_list <- process_Spoints_add_obs(Spoints, data_frame, replicate)
+      process_list <- process_Spoints_add_obs(Spoints, replicates)
       Spoints <- process_list[["Spoints"]]
       data_list <- process_list[["data_list"]]
       index_replicates <- process_list[["index_replicates"]]
@@ -1532,7 +1532,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   private$raw_data <- data
   self$data <- data
   if(length(private$reorder_idx)>0){
-    for(j in 1:length(covariates)){
+    for(j in 1:length(data)){
       idx <- private$reorder_idx[[1]]
       data_tmp <- self$data[[j]][idx,]
       self$data[[j]][1:length(idx),] <- data_tmp

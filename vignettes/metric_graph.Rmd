@@ -248,7 +248,7 @@ obs <- c(5)
 df_new <- data.frame(y=obs, edge_number = obs.loc[,1], 
                           distance_on_edge = obs.loc[,2])
 graph$add_PtE_observations(data_frame=df_new, normalized = TRUE)
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 An alternative method is to specify the observations as spatial points objects,
@@ -259,7 +259,7 @@ obs <- c(6,7)
 points <- SpatialPointsDataFrame(coords = obs.loc,
                                  data = data.frame(y = obs))
 graph$add_observations(points)
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 If we want to replace the data in the object, we can use `clear_observations()`
@@ -267,14 +267,14 @@ to remove all current data, and then add the new data:
 ```{r}
 graph$clear_observations()
 graph$add_observations(points)
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 In some cases, we might want to add the observation locations as vertices 
 in the graph. This can be done as follows: 
 ```{r}
 graph$observation_to_vertex()
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 # Working with functions on metric graphs

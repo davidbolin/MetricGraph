@@ -628,6 +628,9 @@ process_data_frame_add_obs <- function(Spoints, data_frame, replicates){
       }
       data_list[[i]] <- data_full
       data_list[[i]][index_replicates[[i]], ] <- data_tmp
+      data_list[[i]] <- data_list[[i]][,!(colnames(data_list[[i]])%in%c("__idx_repl"))]
+      data_list[[i]] <- as.data.frame(data_list[[i]])
+      colnames(data_list[[i]]) <- colnames(data_frame)[!(colnames(data_frame)%in%c("__idx_repl"))]
     }
 
     Spoints <- SpatialPoints(unique_coords)
@@ -670,6 +673,9 @@ process_Spoints_add_obs <- function(Spoints, replicates){
       }
       data_list[[i]] <- data_full
       data_list[[i]][index_replicates[[i]], ] <- data_tmp
+      data_list[[i]] <- data_list[[i]][,!(colnames(data_list[[i]])%in%c("__idx_repl"))]
+      data_list[[i]] <- as.data.frame(data_list[[i]])
+      colnames(data_list[[i]]) <- colnames(data_frame)[!(colnames(data_frame)%in%c("__idx_repl"))]
     }
 
     Spoints <- SpatialPoints(unique_coords)
