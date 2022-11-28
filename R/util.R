@@ -654,7 +654,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
 #' @noRd 
 #' 
 
-idx_all_NA <- function(data_list){
+idx_not_all_NA <- function(data_list){
      data_list[["__edge_number"]] <- NULL
      data_list[["distance_on_edge"]] <- NULL
      data_list[["coord_x"]] <- NULL
@@ -685,3 +685,19 @@ select_replicate <- function(data_list, replicate){
                             })
     return(data_result)
 }
+
+#' Select coords in which there exists at least 
+#' one observation for a corresponding replicate
+#' @noRd 
+#' 
+
+select_coords_replicate <- function(data_list, replicate){
+  data_repl <- select_replicate(data_list, replicate)
+  idx_notna <- idx_not_all_NA(data_repl)
+  data_repl <- lapply(data_repl, function(dat){
+        dat[idx_notna]
+  })
+  return(data_repl)
+}
+
+

@@ -164,16 +164,21 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$geo_dist[["__complete"]] <- distances(g)
     } else{
       if(is.null(repl)){
-        lapply()
-      } else{
-
+          repl <- unique(self$data[["__repl"]])
+      }
+      for(replicate in repl){
+          data_repl <- select_replicate(data_list, replicate)
+          idx_notna <- idx_not_all_NA(data_repl)
+          g <- graph(edges = c(t(self$E[idx_notna,])), directed = FALSE)
+          E(g)$weight <- self$edge_lengths
+          self$geo_dist[[replicate]] <- distances(g)
       }
     }
   },
 
   #' @description Computes shortest path distances between the vertices in the
   #' mesh
-  compute_geodist_mesh = function(full = FALSE, repl=NULL) {
+  compute_geodist_mesh = function() {
     g <- graph(edges = c(t(self$mesh$E)), directed = FALSE)
     E(g)$weight <- self$mesh$h_e
     self$mesh$geo_dist <- distances(g)
@@ -181,18 +186,46 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Computes the resistance distance between the observation
   #' locations
-  #' @param PtE points to compute the metric for, if not provided, the metric
-  #' is computed and stored for the observations in the graph
+  #' @param full Should the resistance distances be computed for all
+  #' the available locations. If `FALSE`, it will be computed
+  #' separately for the locations of each replicate.
+  #' @param repl vector or list containing which replicates
+  #' to compute the distance. If `NULL`, it will be computed
+  #' for all replicates. 
+  compute_resdist = function(full = FALSE, repl = NULL) {
+    self$res_dist <- list()
+    if(full){
+      PtE <- self$get_PtE()
+      self$res_dist[["__complete"]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
+    } else{
+      if(is.null(repl)){
+          repl <- unique(self$data[["__repl"]])
+      }
+      for(replicate in repl){
+          data_repl <- select_replicate(data_list, replicate)
+          idx_notna <- idx_not_all_NA(data_repl)
+          PtE <- cbind(data_repl[["__edge_number"]][idx_notna],
+                          data_repl[["__distance_on_edge"]][idx_notna])
+          self$res_dist[[replicate]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
+      }
+    }
+  },
+
+  #' @description Computes the resistance distance between the observation
+  #' locations
+  #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
-  compute_resdist = function(PtE = NULL, normalized = FALSE) {
-    if (is.null(PtE)) {
+  compute_resdist_PtE = function(PtE, normalized = TRUE) {
       graph.temp <- self$clone()
-      if(is.null(graph.temp$PtV)) {
+      graph.temp$clear_observations()
+      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                            edge_number = PtE[,1],
+                            distance_on_edge = PtE[,2])
+      graph.temp$add_observations(data = df_temp,
+                                     normalized = normalized)
         graph.temp$observation_to_vertex()
-      }
-      if(is.null(graph.temp$geo_dist)){
         graph.temp$compute_geodist()
-      }
+    
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
         tmp <- -1 / graph.temp$geo_dist[graph.temp$E[i, 1], graph.temp$E[i, 2]]
@@ -208,21 +241,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       R <- -2*Li + t(diag(Li)) %x% rep(1, graph.temp$nV) +
         t(rep(1, graph.temp$nV)) %x% diag(Li)
 
-      self$res_dist <- R[graph.temp$PtV, graph.temp$PtV]
-      reo <- order(self$PtE[,1],self$PtE[,2])
-      self$res_dist[reo, reo] <- as.matrix(self$res_dist)
-      self$res_dist <- as.matrix(self$res_dist)
-    } else {
-      graph.temp <- self$clone()
-      graph.temp$clear_observations()
-      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
-                          edge_number = PtE[,1],
-                          distance_on_edge = PtE[,2])
-      graph.temp$add_PtE_observations(data_frame = df_temp,
-                                   normalized = normalized)
-      graph.temp$compute_resdist()
-      return(graph.temp$res_dist)
-    }
+      R <- R[graph.temp$PtV, graph.temp$PtV]
+      return(R)
   },
 
   #' @description Computes the resistance metric between the vertices in the
@@ -251,13 +271,51 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Computes the weigthed graph Laplacian for the graph
-  compute_laplacian = function() {
-    Wmat <- Matrix(0,self$nV,self$nV)
-    for (i in 1:self$nE) {
-      Wmat[self$E[i, 1], self$E[i, 2]] <- 1/self$edge_lengths[i]
-      Wmat[self$E[i, 2], self$E[i, 1]] <- 1/self$edge_lengths[i]
+  #' @param full Should the resistance distances be computed for all
+  #' the available locations. If `FALSE`, it will be computed
+  #' separately for the locations of each replicate.
+  #' @param repl vector or list containing which replicates
+  #' to compute the distance. If `NULL`, it will be computed
+  #' for all replicates. 
+  compute_laplacian = function(full = FALSE, repl = NULL) {
+    self$Laplacian <- list()
+    if(full){
+      PtE <- self$get_PtE()
+      self$Laplacian[["__complete"]] <- self$compute_laplacian_PtE(PtE, normalized=TRUE)
+    } else{
+      if(is.null(repl)){
+          repl <- unique(self$data[["__repl"]])
+      }
+      for(replicate in repl){
+          data_repl <- select_replicate(data_list, replicate)
+          idx_notna <- idx_not_all_NA(data_repl)
+          PtE <- cbind(data_repl[["__edge_number"]][idx_notna],
+                          data_repl[["__distance_on_edge"]][idx_notna])
+          self$Laplacian[[replicate]] <- self$compute_laplacian_PtE(PtE, normalized=TRUE)
+      }
     }
-    self$Laplacian <- Matrix::Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
+  },
+
+  #' @description Computes the weigthed graph Laplacian for the graph
+  #' @param PtE points to compute the metric for.
+  #' @param normalized are the locations in PtE in normalized distance?
+  compute_laplacian_PtE = function(PtE, normalized = TRUE) {
+
+    graph.temp <- self$clone()
+    graph.temp$clear_observations()
+    df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                            edge_number = PtE[,1],
+                            distance_on_edge = PtE[,2])
+    graph.temp$add_observations(data = df_temp,
+                                     normalized = normalized)
+    graph.temp$observation_to_vertex()
+    Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
+    for (i in 1:self$nE) {
+      Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1/graph.temp$edge_lengths[i]
+      Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1/graph.temp$edge_lengths[i]
+    }
+    Laplacian <- Matrix::Diagonal(graph.temp$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
+    return(Laplacian)
   },
 
   #' @description Gets PtE from the data
@@ -340,6 +398,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Clear all observations from the object
   clear_observations = function() {
    self$data <- NULL
+   self$geo_dist <- NULL
+   self$res_dist <- NULL
   },
 
   #' @description Add observations to the graph
@@ -1009,14 +1069,18 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
     self$E[Ei, 2] <- newV
 
-    ind <- which(self$data[["__edge_number"]] %in% Ei)
+    PtE <- self$get_PtE()
+
+    ind <- which(PtE[, 1] %in% Ei)
     for (i in ind) {
-      if (self$data[["__distance_on_edge"]][i] >= t - 1e-10) {
-        self$data[["__edge_number"]][i] <- self$nE
-        self$data[["__distance_on_edge"]][i] <- 
-        abs(self$data[["__distance_on_edge"]][i] - t) / (1 - t)
+      if (PtE[i, 2] >= t - 1e-10) {
+        PtE[i, 1] <- self$nE
+        PtE[i, 2] <- abs(self$PtE[i, 2] - t) / (1 - t)
       }
     }
+    n_repl <- unique(self$data[["__repl"]])
+    self$data[["__edge_number"]] <- rep(PtE[,1], times = n_repl)
+    self$data[["__distance_on_edge"]] <- rep(PtE[,2], times = n_repl)
 
     self$nV <- dim(self$V)[1]
   },
@@ -1041,33 +1105,43 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Get the observation/prediction matrix A
-  #' @param order Which order should be considered? The options are 'internal' and 'original'.
-  #'  The order 'internal' is the order of `graph$y``, for a metric_graph `graph`. The order 'original'
-  #' is the order of the user's input.
+  #' @param repl A vector. If `NULL`, the A matrix for all replicates will be returned.
+  #' Otherwise, the A matrix for the replicates in the vector will be returned.
   #' @param obs_to_vert Should the observations be turned into vertices?
+  #' @param include_NA Should the locations for which all observations are NA be included?
 
-  A = function(order = "internal", obs_to_vert = FALSE){
-    if(is.null(private$internal_A) && !obs_to_vert){
+  A = function(repl = NULL, obs_to_vert = FALSE,
+                include_NA = TRUE){
+    if(is.null(self$PtV) && !obs_to_vert){
         stop("The A matrix was not computed. If you want to compute rerun this method with 'obs_to_vertex=TRUE', in which the observations will be turned to vertices and the A matrix will then be computed")
-    } else if(is.null(private$internal_A)){
+    } else if(is.null(self$PtV)){
       self$observation_to_vertex()
     }
 
-    if(order == "internal"){
-      return(private$internal_A)
-    } else if(order == "original"){
-      orig_A <- private$internal_A
-      for (i in length(private$reorder_idx):1) {
-      idx <- private$reorder_idx[[i]]
-      A_tmp <- orig_A[1:length(idx), ]
-      if (length(idx)==1) {
-        A_tmp <- matrix(A_tmp, ncol = 2)
-      }
-      orig_A[idx, ] <- A_tmp
+    if(is.null(repl)){
+          repl <- unique(self$data[["__repl"]])
     }
-    return(orig_A)
+    
+    if(include_NA){
+      A <- Matrix::Diagonal(self$nV)[self$PtV, ]
+      return(Matrix::kronecker(Diagonal(n_repl),A))
     } else{
-      stop("The order must be either 'internal' or 'original'!")
+      if(length(repl) == 1){
+        A <- Matrix::Diagonal(self$nV)[self$PtV, ]
+        return(A)
+      } else{
+        data_repl <- select_replicate(data_list, repl[1])
+        idx_notna <- idx_not_all_NA(data_repl)
+        nV_tmp <- sum(idx_notna)
+        A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
+        for(i in 2:length(repl)){
+          data_repl <- select_replicate(data_list, repl[i])
+          idx_notna <- idx_not_all_NA(data_repl)
+          nV_tmp <- sum(idx_notna)
+          A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
+        }
+        return(A)
+      }
     }
   },
 
@@ -1333,10 +1407,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     if (!is.null(data)) {
       x <- y <- NULL
-      y_plot <- self$data[[repl]][, data]
+      data_repl <- select_replicate(data_list, repl)
+      y_plot <- self$data_repl[[data]]
+      PtE <- self$get_PtE()
       for (i in 1:length(y_plot)) {
 
-          LT <- private$edge_pos_to_line_pos(self$PtE[i, 1], self$PtE[i, 2])
+          LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
           val_line <- gProject(Line, as(Line, "SpatialPoints"),
                                normalized = TRUE)
@@ -1434,7 +1510,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if (!is.null(data)) {
       x <- y <- NULL
-      y_plot <- self$data[[repl]][, data]
+      data_repl <- select_replicate(data_list, repl)
+      y_plot <- self$data_repl[[data]]
+      PtE <- self$get_PtE()
       for (i in 1:nrow(y_plot)) {
         Line <- self$lines[PtE[i, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
@@ -1467,7 +1545,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
     return(p)
   },
-
+  
   # Initial graph
 
   initial_graph = NULL,
