@@ -617,7 +617,7 @@ process_data_frame_add_obs <- function(Spoints, data_frame, replicates){
     unique_replicates <- 1
   } else{
     n_repl <- length(unique(replicates))
-    unique_replicates <- unique(data_frame[, replicates])
+    unique_replicates <- sort(unique(data_frame[, replicates]))
   }
   data_full <- matrix(NA, nrow = nrow(unique_coords), ncol = ncol(data_frame))
   data_full <- as.data.frame(data_full)
@@ -629,7 +629,7 @@ process_data_frame_add_obs <- function(Spoints, data_frame, replicates){
 
   data_list_return <- vector(mode = "list", n_repl)
   data_list_return <- lapply(1:n_repl, function(i){data_full})
-  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ]))})
+  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(matrix(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ],ncol=2)))})
 
        tmp_coords <- as.matrix(unique_coords)
        rownames(tmp_coords) <- NULL
@@ -637,7 +637,7 @@ process_data_frame_add_obs <- function(Spoints, data_frame, replicates){
        tmp_coords_rows <- lapply(1:nrow(tmp_coords), function(i){as.matrix(tmp_coords[i,])})
 
     for(i in n_repl:1){
-      tmp_matr <- Spoints@coords[data_frame[, replicates] == unique_replicates[i], ] 
+      tmp_matr <- matrix(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ], ncol=2)
       n_temp <- nrow(tmp_matr)
       rownames(tmp_matr) <- NULL
       colnames(tmp_matr) <- NULL
@@ -671,7 +671,7 @@ process_Spoints_add_obs <- function(Spoints, replicates){
     unique_replicates <- 1
   } else{
     n_repl <- length(unique(replicates))
-    unique_replicates <- unique(data_frame[, replicates])
+    unique_replicates <- sort(unique(data_frame[, replicates]))
   }
 
   data_full <- matrix(NA, nrow = nrow(unique_coords), ncol = ncol(data_frame))
@@ -680,7 +680,7 @@ process_Spoints_add_obs <- function(Spoints, replicates){
 
   data_list_return <- vector(mode = "list", n_repl)
   data_list_return <- lapply(1:n_repl, function(i){data_full})
-  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ]))})
+  index_replicates <- lapply(1:n_repl, function(i){rep(NA,nrow(matrix(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ],ncol=2)))})
 
        tmp_coords <- as.matrix(unique_coords)
        rownames(tmp_coords) <- NULL
@@ -688,7 +688,7 @@ process_Spoints_add_obs <- function(Spoints, replicates){
        tmp_coords_rows <- lapply(1:nrow(tmp_coords), function(i){as.matrix(tmp_coords[i,])})
 
     for(i in n_repl:1){
-      tmp_matr <- Spoints@coords[data_frame[, replicates] == unique_replicates[i], ] 
+      tmp_matr <- matrix(Spoints@coords[data_frame[, replicates] == unique_replicates[i], ], ncol=2)
       n_temp <- nrow(tmp_matr)
       rownames(tmp_matr) <- NULL
       colnames(tmp_matr) <- NULL
@@ -720,7 +720,7 @@ process_DF_PtE_add_obs <- function(data_frame, edge_number, distance_on_edge, re
     unique_replicates <- 1
   } else{
     n_repl <- length(unique(replicates))
-    unique_replicates <- unique(data_frame[, replicates])
+    unique_replicates <- sort(unique(data_frame[, replicates]))
   }
 
   data_full <- matrix(NA, nrow = nrow(PtE), ncol = ncol(data_frame))
