@@ -3,7 +3,7 @@
 #' @export
 
 graph_lme <- function(formula, graph, 
-                model = c("alpha1", "alpha2", "GL1", "GL2", "isoCov"), 
+                model = list(type = "WhittleMatern", alpha = 1), 
                 cov_function = NULL,
                 repl = NULL,
                 optim_method = "L-BFGS-B", optim_controls = list(),

@@ -150,15 +150,30 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Computes shortest path distances between the vertices in the
   #' graph
-  compute_geodist = function() {
-    g <- graph(edges = c(t(self$E)), directed = FALSE)
-    E(g)$weight <- self$edge_lengths
-    self$geo_dist <- distances(g)
+  #' @param full Should the geodesic distances be computed for all
+  #' the available locations. If `FALSE`, it will be computed
+  #' separately for the locations of each replicate.
+  #' @param repl vector or list containing which replicates
+  #' to compute the distance. If `NULL`, it will be computed
+  #' for all replicates.
+  compute_geodist = function(full = FALSE, repl = NULL) {
+    self$geo_dist <- list()
+    if(full){
+      g <- graph(edges = c(t(self$E)), directed = FALSE)
+      E(g)$weight <- self$edge_lengths
+      self$geo_dist[["__complete"]] <- distances(g)
+    } else{
+      if(is.null(repl)){
+        lapply()
+      } else{
+
+      }
+    }
   },
 
   #' @description Computes shortest path distances between the vertices in the
   #' mesh
-  compute_geodist_mesh = function() {
+  compute_geodist_mesh = function(full = FALSE, repl=NULL) {
     g <- graph(edges = c(t(self$mesh$E)), directed = FALSE)
     E(g)$weight <- self$mesh$h_e
     self$mesh$geo_dist <- distances(g)
@@ -245,35 +260,68 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$Laplacian <- Matrix::Diagonal(self$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
   },
 
+  #' @description Gets PtE from the data
+  
+  get_PtE = function() {
+    if(is.null(self$data)){
+      stop("There is no data!")
+    }
+    repl <- self$data[["__repl"]]
+    repl <- repl[repl == repl[1]]
+
+    PtE <- cbind(self$data[["__edge_number"]][repl], 
+                self$data[["__distance_on_edge"]][repl])
+    return(PtE)
+  },
+
+  get_Spoints <- function(){
+     if(is.null(self$data)){
+      stop("There is no data!")
+    }
+    repl <- self$data[["__repl"]]
+    repl <- repl[repl == repl[1]]
+    Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][repl], 
+                                        self$data[["__coord_y"]][repl]))
+    return(Spoints)
+  },
+
   #' @description Adds observation locations as vertices in the graph
   observation_to_vertex = function() {
     # Reordering
-    order_idx <- order(self$PtE[, 1], self$PtE[, 2])
+    PtE <- get_PtE()
+    order_idx <- order(PtE[, 1], PtE[, 2])
 
-    private$reorder_idx <- c(private$reorder_idx, list(order_idx))
-
-    self$PtE <- self$PtE[order_idx, ]
+    PtE <- PtE[order_idx, ]
 
     if (length(order_idx) == 1) {
-      self$PtE <- matrix(self$PtE, ncol = 2)
+      PtE <- matrix(PtE, ncol = 2)
     }
-    l <- length(self$PtE[, 1])
+    l <- length(PtE[, 1])
     self$PtV <- rep(0, l)
     for (i in 1:l) {
-        e <- as.vector(self$PtE[i, 1])
-        t <- as.vector(self$PtE[i, 2])
+        e <- as.vector(PtE[i, 1])
+        t <- as.vector(PtE[i, 2])
         l_e <- self$edge_lengths[e]
         if (abs(t) < 10^-10) {
-          self$PtE[i, 2] <- 0
+          PtE[i, 2] <- 0
           self$PtV[i] <- self$E[e, 1]
         } else if (t > 1 - 10^-10) {
-          self$PtE[i, 2] <- 1
+          PtE[i, 2] <- 1
           self$PtV[i] <- self$E[e, 2]
         } else {
           self$split_edge(e, t)
           self$PtV[i] <- dim(self$V)[1]
         }
     }
+    
+    # Updates the columns `__edge_number` and `__distance_on_edge`
+    # and reorders the data. 
+
+    self$data <- lapply(self$data, function(data){return(dat[order_idx,])})
+    self$data[["__edge_number"]] <- PtE[ ,1]
+    self$data[["__distance_on_edge"]] <- PtE[ ,2]
+
+    self$mesh$PtE <- self$coordinates(XY = self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ])
 
     if (!is.null(self$geo_dist)) {
       self$compute_geodist()
@@ -284,201 +332,101 @@ metric_graph <-  R6::R6Class("metric_graph",
     if (!is.null(self$CoB)) {
       self$buildC(2)
     }
-    private$internal_A <- Matrix::Diagonal(self$nV)[self$PtV, ]
 
-    if (length(self$PtV) == 1) {
-        private$internal_A <- matrix(private$internal_A, ncol = 2)
-    }
+    # Now we compute an on the method
 
-    private$add_data(private$raw_data)
   },
 
   #' @description Clear all observations from the object
   clear_observations = function() {
    self$data <- NULL
-   self$PtE <- NULL
-   self$points <- NULL
-   private$raw_data <- c()
-   private$reorder_idx <- list()
-   private$index_replicates <- NULL
   },
 
   #' @description Add observations to the graph
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations,
   #' which may include the coordinates only, or the coordinates as well as the
-  #' observations
-  #' @param data_frame A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-  #' indicating the index of the replicate. If `data_frame` is not `NULL`, it takes priority over any eventual data in `Spoints`.
-  #' @param data_list A list, whose entries are given by one data.frame per replicate. When a data_list is given, the `replicates` argument is not used.
-  #' If `data_list` is not `NULL`, it takes priority over both `Spoints` and `data_frame`. If a `data_list` is given, all the replicates must be observed
-  #' at the same locations, which are given in the `coords` slot of `Spoints`. In particular, all data frames in the list must have the same dimensions.
-  #' @param replicates If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.
-  add_observations = function(Spoints, data_frame = NULL, data_list = NULL, replicates = NULL) {
-
-    if(!is.null(data_list)){
-      if(length(data_list)>1){
-        lapply(2:length(data_list), function(i){if(dim(data_list[[i-1]])!=dim(data_list[[i]])){stop("All the data frames in the 'data_list' must have the same dimension!")}})
+  #' observations.
+  #' @param data A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+  #' indicating the index of the replicate. If `data` is not `NULL`, it takes priority over any eventual data in `Spoints`.
+  #' @param edge_number Column (or entry on the list) of the `data` that contains the edge numbers. If not supplied,
+  #' the column with name "edge_number" will be chosen.   Will not be used if `Spoints` is not `NULL`.
+  #' @param distance_on_edge Column (or entry on the list) of the `data` that contains the edge numbers. If not supplied,
+  #' the column with name "distance_on_edge" will be chosen.  Will not be used if `Spoints` is not `NULL`.
+  #' @param coord_x Column (or entry on the list) of the `data` that contains the x coordinate. If not supplied,
+  #' the column with name "coord_x" will be chosen.  Will not be used if `Spoints` is not `NULL` or if `data_coords` is `PtE`.
+   #' @param coord_y Column (or entry on the list) of the `data` that contains the y coordinate. If not supplied,
+  #' the column with name "coord_x" will be chosen.  Will not be used if `Spoints` is not `NULL` or if `data_coords` is `PtE`.
+  #' @param data_coords To be used only if `Spoints` is `NULL`. Which coordinate system to use? If `PtE`, the user must provide
+  #' `edge_number` and `distance_on_edge`, otherwise if `euclidean`, the user must provide `coord_x` and `coord_y`.
+  #' @param replicates If the data contains replicates, one must provide the column (or entry on the list) in which the replicate indices are stored.
+  #' @param normalized if TRUE, then the distances in `distance_on_edge` are assumed to be
+  #' normalized to (0,1). Default FALSE. Will not be used if `Spoints` is not `NULL`.
+  add_observations = function(Spoints = NULL, data = NULL, edge_number = "edge_number",
+                                          distance_on_edge = "distance_on_edge",
+                                          coord_x = "coord_x",
+                                          coord_y = "coord_y",
+                                          data_coords = c("PtE", "euclidean"),
+                                          replicates = NULL, normalized = FALSE) {
+    data_coords <- data_coords[[1]]
+    if(is.null(data)){
+      if(is.null(Spoints)){
+        stop("No data provided!")
       }
-      index_replicates <- lapply(data_list, function(dat){1:nrow(dat)})
-    } else if(!is.null(data_frame)){
-      if(nrow(data_frame)!= nrow(Spoints@coords)){
-        stop("You must have one observation per location! If it is not a mistake, you can fill the empty locations with NA.")
+      if("SpatialPointsDataFrame"%in%is(Spoints)){
+        data <- Spoints@data
+      } else{
+        stop("No data provided!")
       }
-      process_list <- process_data_frame_add_obs(Spoints, data_frame, replicates)
-      Spoints <- process_list[["Spoints"]]
-      data_list <- process_list[["data_list"]]
-      index_replicates <- process_list[["index_replicates"]]
-    } else if("SpatialPointsDataFrame"%in%is(Spoints)){
-      process_list <- process_Spoints_add_obs(Spoints, replicates)
-      Spoints <- process_list[["Spoints"]]
-      data_list <- process_list[["data_list"]]
-      index_replicates <- process_list[["index_replicates"]]
-    } else{
-      stop("No data provided!")
-    }
+    } 
 
-    if(is.null(self$data)){
-      self$data <- data_list
-      private$raw_data <- data_list
-      private$index_replicates <- index_replicates
-    } else{
-      self$data <- lapply(1:length(self$data), function(i){rbind(self$data[[i]], data_list[[i]])})
-      private$raw_data <- lapply(1:length(private$raw_data), function(i){rbind(private$raw_data[[i]], data_list[[i]])})
-      index_replicates <- lapply(1:length(private$index_replicates), function(i){max(private$index_replicates[[i]]) + index_replicates[[i]]})
-      private$index_replicates <- lapply(1:length(private$index_replicates), function(i){c(private$index_replicates[[i]], index_replicates[[i]])})
-    }
+      lapply(data, function(dat){if(nrow(matrix(Spoints@coords, ncol=2)) != length(dat)){
+        stop(paste(dat,"has a different number of elements than the number of coordinates!"))
+      }})
 
-    SP <- snapPointsToLines(Spoints, self$lines)
-    coords.old <- as.data.frame(Spoints@coords)
-    colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
-    Spoints@coords = SP@coords
-    Spoints@bbox   = SP@bbox
-    LtE = cbind(match(SP@data[,1], self$EID),0)
-    if("SpatialPointsDataFrame"%in%is(Spoints)){
-      Spoints@data <- cbind(Spoints@data,coords.old)
-    }else{
-      Spoints <- SpatialPointsDataFrame(Spoints, data = coords.old)
-    }
-    for (ind in unique(LtE[, 1])) {
-        index.p <- LtE[, 1] == ind
-        LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
-                                       normalized=TRUE)
-    }
-    PtE <- LtE
-    for (ind in unique(LtE[, 1])) {
-      Es_ind <- which(self$LtE[ind, ] > 0)
-      index.p <- which(LtE[, 1] == ind)
-      for (j in index.p) {
-        E_ind <- which.min(replace(self$ELend[Es_ind],
-                                   self$ELend[Es_ind] < LtE[j,2], NA))
-        PtE[j, 1] <- Es_ind[E_ind]
-        PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
-          (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
+      if(!is.null(Spoints)){
+        PtE <- self$coordinates(Spoints@coords)
+      } else{
+        if(data_coords == "PtE"){
+          if(normalized){
+            PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
+          } else{
+            PtE <- cbind(data[[edge_number]], data[[distance_on_edge]] / self$edge_lengths[PtE[, 1]])
+          }
+        } else if(data_coords == "euclidean"){
+            point_coords <- cbind(data[[coord_x]], data[[coord_y]])
+            PtE <- self$coordinates(point_coords)
+        } else{
+          stop("The options for 'data_coords' are 'PtE' and 'euclidean'.")
+        }
       }
-    }
-    if (is.null(self$points)) {
-      self$points <- Spoints
-      self$PtE <- PtE
-    } else {
-      df1 <- self$points@data
-      df2 <- Spoints@data
-      df1[setdiff(names(df2), names(df1))] <- NA
-      df2[setdiff(names(df1), names(df2))] <- NA
-      self$points@data <- df1
-      Spoints@data <- df2
-      self$points <- rbind(self$points, Spoints)
-      self$points <- rbind(self$points, Spoints)
-      self$PtE <- rbind(self$PtE, PtE)
-    }
-  },
+     if(!is.null(replicates)){
+      replicate_vector <- data[[replicates]]
+     } else{
+      replicate_vector <- NULL
+     }
 
-  #' @description Add observations to the object
-  #' @param data_frame A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-  #' indicating the index of the replicate. If `data_frame` is not `NULL`, it takes priority over any eventual data in `Spoints`.
-  #' @param data_list A list, whose entries are given by one data.frame per replicate. When a data_list is given, the `replicates` argument is not used.
-  #' If `data_list` is not `NULL`, it takes priority over both `Spoints` and `data_frame`. The replicates of the `data_list` can be given for
-  #' different locations across the replicates.
-  #' @param edge_number Column of the `data_frame` or from the entries of the `data_list` that contain the edge numbers. If not supplied,
-  #' the column with name "edge_number" will be chosen. 
-  #' @param distance_on_edge Column of the `data_frame` or from the entries of the `data_list` that contain the edge numbers. If not supplied,
-  #' the column with name "distance_on_edge" will be chosen. 
-  #' @param replicates If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.
-  #' @param normalized if TRUE, then the distances in `PtE` are assumed to be
-  #' normalized to (0,1). Default FALSE.
+     data[[edge_number]] <- NULL
+     data[[distance_on_edge]] <- NULL
+     data[[coord_x]] <- NULL
+     data[[coord_y]] <- NULL 
+     data[[replicates]] <- NULL
 
-  add_PtE_observations = function(data_frame = NULL, data_list = NULL, edge_number = "edge_number", 
-                                  distance_on_edge = "distance_on_edge", replicates = NULL,
-                                  normalized = FALSE) {
-    if(is.null(data_frame) && is.null(data_list)){
-      stop("No data supplied!")
-    }
+      
+      ## convert everything to PtE
 
-    if(!is.null(data_list)){
-      process_list <- process_DL_PtE_add_obs(data_list, edge_number, distance_on_edge)
-    } else{
-      process_list <- process_DF_PtE_add_obs(data_frame, edge_number, distance_on_edge, replicates)
-    }
+      self$data <- process_data_add_obs(PtE, new_data = data, self$data, replicate_vector)
 
-      data_list <- process_list[["data_list"]]
-      index_replicates <- process_list[["index_replicates"]]
-      PtE <- as.matrix(process_list[["PtE"]])
+      ## convert to Spoints and add
 
-    if(ncol(PtE)!= 2){
-      stop("PtE must have two columns!")
-    }
+      PtE <- get_PtE()
 
-    if (min(PtE[,2]) < 0) {
-      stop("PtE[, 2] has negative values")
-    }
-    if ((max(PtE[,2]) > 1) && normalized) {
-      stop("For normalized distances, the values in PtE[, 2] should not be
-             larger than 1")
-    }
-    if(max(PtE[,2] - self$edge_lengths[PtE[, 1]]) > 0 && !normalized) {
-      stop("PtE[, 2] contains values which are larger than the edge lengths")
-    }
+      Spoints <- self$coordinates(PtE = PtE)
 
-    if(is.null(self$data)){
-      self$data <- data_list
-      private$raw_data <- data_list
-      private$index_replicates <- index_replicates
-    } else{
-      self$data <- lapply(1:length(self$data), function(i){rbind(self$data[[i]], data_list[[i]])})
-      private$raw_data <- lapply(1:length(private$raw_data), function(i){rbind(private$raw_data[[i]], data_list[[i]])})
-      index_replicates <- lapply(1:length(private$index_replicates), function(i){max(private$index_replicates[[i]]) + index_replicates[[i]]})
-      private$index_replicates <- lapply(1:length(private$index_replicates), function(i){c(private$index_replicates[[i]], index_replicates[[i]])})
-    }
+      self$data[["__coord_x"]] <- Spoints@coords[,1]
+      self$data[["__coord_y"]] <- Spoints@coords[,2]
+  
+    },
 
-    if(normalized){
-      self$PtE = rbind(self$PtE, PtE)
-    } else {
-      PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
-      self$PtE = rbind(self$PtE, PtE)
-    }
-
-      coords <- c()
-      for(i in 1:dim(PtE)[1]){
-        LT = private$edge_pos_to_line_pos(PtE[i, 1] , PtE[i, 2])
-        points <- rgeos::gInterpolate(self$lines[LT[1,1],],
-                                      LT[1,2],
-                                      normalized = TRUE)
-        coords <- rbind(coords, points@coords)
-      }
-      rownames(coords) <- 1:dim(coords)[1]
-      Spoints <- sp::SpatialPoints(coords)
-      Spoints <- SpatialPointsDataFrame(Spoints, data = as.data.frame(PtE))
-      if(is.null(self$points)){
-        self$points <- Spoints
-      } else {
-        df1 <- self$points@data
-        df2 <- Spoints@data
-        df1[setdiff(names(df2), names(df1))] <- NA
-        df2[setdiff(names(df1), names(df2))] <- NA
-        self$points@data <- df1
-        Spoints@data <- df2
-        self$points = rbind(self$points, Spoints)
-      }
-  },
 
   #' @description build Kirchoff constraint matrix from edges, currently not
   #' implemented for circles (edges that start and end in the same vertex)
@@ -604,8 +552,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       if (self$mesh$n_e[i] > 0) {
         d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
         d.e <- d.e[2:(1+self$mesh$n_e[i])]
-        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
-                                                    d.e))
 
         self$mesh$h_e <- c(self$mesh$h_e,
                            rep(self$edge_lengths[i] * d.e[1],
@@ -626,6 +572,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
     self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
+
+    ### Update mesh PtE 
+    self$mesh$PtE <- self$coordinates(XY = Points@coords)
   },
 
   #' @description build mass and stiffness matrices for given mesh object
@@ -838,9 +787,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
     kk = 1
-    for (i in 1:private$initial_graph$nE) {
-      Vs <- private$initial_graph$E[i, 1]
-      Ve <- private$initial_graph$E[i, 2]
+    for (i in 1:self$nE) {
+      Vs <- self$E[i, 1]
+      Ve <- self$E[i, 2]
       if (mesh) {
         ind <- self$mesh$PtE[, 1] == i
 
@@ -858,7 +807,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         vals <- X[X[, 1]==i, 2:3, drop = FALSE]
         if (max(vals[, 1]) < 1) {
           #check if we can add end value from other edge
-          Ei <- private$initial_graph$E[, 1] == Ve #edges that start in Ve
+          Ei <- self$E[, 1] == Ve #edges that start in Ve
           if (sum(Ei) > 0) {
             ind <- which(X[Ei, 2] == 0)[1]
           } else {
@@ -867,7 +816,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           if (length(ind) > 0) {
             vals <- rbind(vals, c(1, X[ind, 3]))
           } else {
-            Ei <- private$initial_graph$E[, 2] == Ve #edges that end in Ve
+            Ei <- self$E[, 2] == Ve #edges that end in Ve
             if (sum(Ei)  > 0) {
               ind <- which(X[Ei, 2] == 1)[1]
             } else {
@@ -880,7 +829,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         if (min(vals[, 1] > 0)) {
           #check if we can add start value from other edge
-          Ei <- private$initial_graph$E[, 1] == Vs #edges that start in Vs
+          Ei <- self$E[, 1] == Vs #edges that start in Vs
           if (sum(Ei) > 0) {
             ind <- which(X[Ei, 2] == 0)[1]
           } else {
@@ -889,7 +838,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           if (length(ind) > 0) {
             vals <- rbind(c(0, X[ind, 3]), vals)
           } else {
-            Ei <- private$initial_graph$E[, 2] == Vs #edges that end in Vs
+            Ei <- self$E[, 2] == Vs #edges that end in Vs
             if (sum(Ei) > 0) {
               ind <- which(X[Ei, 2] == 1)[1]
             } else {
@@ -902,10 +851,10 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
       }
 
-        index <- (private$initial_graph$LtE@p[i] + 1) :
-          (private$initial_graph$LtE@p[i + 1])
-        LinesPos <- cbind(private$initial_graph$LtE@i[index] + 1,
-                          private$initial_graph$LtE@x[index])
+        index <- (self$LtE@p[i] + 1) :
+          (self$LtE@p[i + 1])
+        LinesPos <- cbind(self$LtE@i[index] + 1,
+                          self$LtE@x[index])
         LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
         for (j in 1:length(index)) {
           if (j==1) {
@@ -924,12 +873,12 @@ metric_graph <-  R6::R6Class("metric_graph",
               (LinesPos[j, 2] - LinesPos[j - 1, 2])
           }
           if (j == dim(LinesPos)[1])
-            rel.pos = private$initial_graph$ELend[i] * rel.pos
+            rel.pos = self$ELend[i] * rel.pos
           if (j==1)
-            rel.pos = rel.pos + private$initial_graph$ELstart[i]
+            rel.pos = rel.pos + self$ELstart[i]
 
           data.to.plot <- cbind(rel.pos,vals[index_j, 2])
-          Line_edge <- SpatialLines(list(private$initial_graph$lines@lines[[LinesPos[j, 1]]]))
+          Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
 
           data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                              drop = FALSE]
@@ -1059,31 +1008,31 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$nE <- self$nE + 1
     self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
     self$E[Ei, 2] <- newV
-    ind <- which(self$PtE[, 1] %in% Ei)
+
+    ind <- which(self$data[["__edge_number"]] %in% Ei)
     for (i in ind) {
-      if (self$PtE[i, 2] >= t - 1e-10) {
-        self$PtE[i, 1] <- self$nE
-        self$PtE[i, 2] <- abs(self$PtE[i, 2] - t) / (1 - t)
+      if (self$data[["__distance_on_edge"]][i] >= t - 1e-10) {
+        self$data[["__edge_number"]][i] <- self$nE
+        self$data[["__distance_on_edge"]][i] <- 
+        abs(self$data[["__distance_on_edge"]][i] - t) / (1 - t)
       }
     }
+
     self$nV <- dim(self$V)[1]
   },
 
   #' @description Add observations on mesh to the object
-  #' @param data_frame A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+  #' @param data A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
   #' indicating the index of the replicate. If `data_frame` is not `NULL`, it takes priority over any eventual data in `Spoints`.
-  #' @param data_list A list, whose entries are given by one data.frame per replicate. When a data_list is given, the `replicates` argument is not used.
-  #' If `data_list` is not `NULL`, it takes priority over both `Spoints` and `data_frame`. If a `data_list` is given, all the replicates must be observed
-  #' at the same locations, which are given in the `coords` slot of `Spoints`. In particular, all data frames in the list must have the same dimensions.
   #' @param replicates If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.
-  add_mesh_observations = function(data_frame = NULL, data_list = NULL, replicates = NULL) {
+  add_mesh_observations = function(data = NULL, replicates = NULL) {
     if(is.null(self$mesh)){
       stop("You should have a mesh!")
     }
     Spoints <- self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ]
     rownames(Spoints) <- 1:nrow(Spoints)
     Spoints <- SpatialPoints(coords = Spoints)
-    self$add_observations(Spoints = Spoints, data_frame = data_frame, data_list = data_list, replicates = replicates)
+    self$add_observations(Spoints = Spoints, data = data, replicates = replicates)
   },
 
   #' @description Get a copy of the initial graph
@@ -1519,53 +1468,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
-  #'  function for adding the data in the
-  #' correct order.
-  #' data - the data. A list, with either 1 entry or entries `1,...,n_repl`, where `n_repl` is the number of replicates.
-  #' Each entry consists of a matrix `N x p`, where `N` is the number of observations and
-  #' `p` is the number of covariates. 
-
-  add_data = function(data) {
-  if(is.null(data)){
-    stop("You should add observations first!")
-  }
-  private$raw_data <- data
-  self$data <- data
-  if(length(private$reorder_idx)>0){
-    for(j in 1:length(data)){
-      idx <- private$reorder_idx[[1]]
-      data_tmp <- self$data[[j]][idx,]
-      self$data[[j]][1:length(idx),] <- data_tmp
-      if (length(private$reorder_idx) > 1) {
-        for (i in 2:length(private$reorder_idx)) {
-          idx <- private$reorder_idx[[i]]
-          data_tmp <- matrix(self$data[[j]][1:length(idx),], nrow = length(idx))
-          self$data[[j]][1:length(idx),] <- data_tmp[idx,]
-        }
-      }
-    }
-  }
-
-},
-
-  # Ordering indexes
-
-  reorder_idx = list(),
-
-  # unordered data
-
-  raw_data = c(),
-
   # Initial graph
 
   initial_graph = NULL,
 
-  # Internal A matrix
-
-  internal_A = NULL,
-
-  # index of the entries of each replicate
-  index_replicates  = NULL
 
 ))
 
