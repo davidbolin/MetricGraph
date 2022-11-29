@@ -611,11 +611,11 @@ exp_covariance <- function(h, theta){
 process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
   new_data[["__edge_number"]] <- PtE[,1]
   new_data[["__distance_on_edge"]] <- PtE[,2]
+
   if(is.null(replicate_vector)){
-      new_data[["__repl"]] <- rep(1, length(PtE[,1]))
-  } else{
-      new_data[["__repl"]] <- replicate_vector
+      replicate_vector <- rep(1, length(PtE[,1]))
   }
+
   if(is.null(old_data)){
     full_colnames <- names(new_data)
     data_coords_new <- data.frame(PtE1 = PtE[,1],
@@ -623,6 +623,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     data_coords <- unique(data_coords_new)
     data_coords <- data_coords[order(data_coords$PtE1, 
                           data_coords$PtE2),]
+
     data_coords_tmp <- data_coords
     repl_val <- unique(replicate_vector)
     n_repl <- length(repl_val)
@@ -636,6 +637,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     }
     data_coords_new[["repl"]] <- replicate_vector
     data_coords[["idx"]] <- 1:nrow(data_coords)
+    print(data_coords)
     idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE, sort = FALSE)
     idx_new_entries <- idx_new_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
@@ -653,12 +655,19 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     new_data[["__edge_number"]] <- data_coords[["PtE1"]]
     new_data[["__distance_on_edge"]] <- data_coords[["PtE2"]]
     new_data[["__repl"]] <- data_coords[["repl"]]
+    print(new_data)
     return(new_data)
   } else{
 
     old_colnames <- names(old_data)
     new_colnames <- names(new_data)
     full_colnames <- union(old_colnames, new_colnames)
+
+    new_df <- data.frame(PtE1 = PtE[,1],
+                          PtE2 = PtE[,2])
+    
+    old_df <- data.frame(PtE1 = old_data[["edge_number"]],
+                          PtE2 = old_data[["distance_on_edge"]])
 
     data_coords <- unique(rbind(old_df[,c(1,2)], new_df[,c(1,2)]))
     data_coords <- data_coords[order(data_coords$PtE1, 
