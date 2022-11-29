@@ -1474,6 +1474,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         x <- points_xy[,1]
         y <- points_xy[,2]
+
       }
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(X)),
@@ -1539,6 +1540,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       y_plot <- self$data_repl[[data]]
       PtE <- self$get_PtE()
       points_xy <- self$coordinates(PtE = PtE)
+      
       x <- points_xy[,1]
       y <- points_xy[,2]
       
