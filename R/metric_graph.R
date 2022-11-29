@@ -635,11 +635,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$mesh$h_e <- c(self$mesh$h_e,
                            rep(self$edge_lengths[i] * d.e[1],
                                self$mesh$n_e[i] + 1))
-          # idx_line <- which(self$LtE[,i]==1)
-          # Line <- self$lines[idx_line,]
-
-          # Points <- gInterpolate(Line, d.e, normalized=TRUE)
-          # self$mesh$V <- rbind(self$mesh$V, Points@coords)
 
         V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
         self$mesh$ind <- c(self$mesh$ind, V.int)
@@ -650,15 +645,10 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
       }
     }
-        ### Update mesh PtE
-    # self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
-    # self$mesh$PtE <- self$mesh$PtE[order(self$mesh$PtE[,1],
-    #                           self$mesh$PtE[,2]),]
-    self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
-    self$mesh$V <- self$coordinates(PtE = self$mesh$PtE)
 
-    ### Update mesh PtE
-    self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
+    self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
+    self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
+
   },
 
   #' @description build mass and stiffness matrices for given mesh object
@@ -1221,6 +1211,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!normalized) {
         PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
       }
+ 
       for (i in 1:dim(PtE)[1]) {
         LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
         Line <- self$lines[LT[1, 1], ]
@@ -1286,7 +1277,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         if(sum(index_j) == 0)
           next
 
-        LT[index_j,1] = LinesPos[j,1]
+        LT[index_j,1] <- LinesPos[j,1]
         rel.pos = t_E[index_j]
         if(j == 1){
           rel.pos <- rel.pos/LinesPos[j,2]

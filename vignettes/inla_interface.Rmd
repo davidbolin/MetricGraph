@@ -98,7 +98,7 @@ Let us add 50 random locations in each edge where we will
 have observations:
 
 ```{r}
-obs_per_edge <- 50
+obs_per_edge <- 20
 obs_loc <- NULL
 for(i in 1:(graph$nE)) {
   obs_loc <- rbind(obs_loc,
@@ -285,7 +285,7 @@ Let us begin by obtaining an evenly spaced mesh with respect to the base
 graph:
 
 ```{r}
-obs_per_edge_prd <- 2
+obs_per_edge_prd <- 5
 graph$build_mesh(n = obs_per_edge_prd)
 ```
 
