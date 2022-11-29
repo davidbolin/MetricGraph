@@ -703,6 +703,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description plot a metric graph
   #' @param data Which column of the data to plot? If `NULL`, no data will be plotted.
   #' @param repl If there are replicates, which replicate to plot? 
+  #' If `repl` is a number, it will be the index of the replicate
+  #' as stored internally. If `repl` is a character, then the replicate will be chosen
+  #' by its name.
   #' @param plotly use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.
   #' @param vertex_size size of the vertices
   #' @param vertex_color color of vertices
@@ -742,6 +745,13 @@ metric_graph <-  R6::R6Class("metric_graph",
                   X_loc = NULL,
                   p = NULL,
                   ...) {
+    if(!is.null(data) && is.null(self$data)){
+      stop("The graph does not contain data.")
+    }
+    if(is.numeric(repl) && !is.null(data)){
+      unique_repl <- unique(self$data[["__repl"]])
+      repl <- unique_repl[[repl]]
+    }
     if(!plotly){
       p <- private$plot_2d(line_width = edge_width,
                            marker_size = vertex_size,

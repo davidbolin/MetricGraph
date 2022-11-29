@@ -654,8 +654,9 @@ To plot the first replicate, we can simply call `graph$plot(data=TRUE)`. To plot
 argument `repl` to the index of the replicate we want to plot. Let us plot the first and second replicates:
 
 ```{r}
-graph$plot(data=TRUE)
-graph$plot(data=TRUE, repl=2)
+graph$plot(data="y")
+graph$plot(data="y", repl="y.2")
+graph$plot(data="y", repl=2)
 ```
 
 To fit the model, we simply proceed in an identical manner as for the case without replicates. In this case, 
