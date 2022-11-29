@@ -217,7 +217,7 @@ spde_fit <- inla(f.s, data = data_stk)
 Let us now obtain the estimates in the original scale
 by using the `spde_metric_graph_result()` function, then
 taking a `summary()`:
-
+      
 ```{r}
 spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 
@@ -338,11 +338,9 @@ formula object and the
 `inla.stack` object:
 
 ```{r}
-y_cmp <- c(y, y_prd)
-
 f_s_prd <- y ~ -1 + Intercept + f(field, model = spde_model_prd)
 
-stk_dat_prd <- inla.stack(data = list(y=y_cmp), 
+stk_dat_prd <- inla.stack(data = graph$data, 
                         A = A_prd, 
                         effects = c(
       spde_index_prd,
@@ -367,13 +365,18 @@ summary(spde_result_prd)
 
 We will now extract the means at the prediction locations:
 ```{r}
-idx_prd <- which(is.na(y_cmp))
+idx_prd <- which(is.na(graph$data[["y"]]))
 
 m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
+
+m_prd <- cbind(graph$data[["__edge_number"]][idx_prd],
+                    graph$data[["__distance_on_edge"]][idx_prd],
+                    m_prd)
+
 ```
 
 To improve visualization, we will plot the posterior means
-using the `plot_function()` method:
+using the `plot()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 2)
 ```

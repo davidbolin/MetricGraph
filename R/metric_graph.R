@@ -106,6 +106,9 @@ metric_graph <-  R6::R6Class("metric_graph",
                         longlat = FALSE,
                         tolerance = 1e-10) {
 
+      private$longlat <- longlat
+      private$tolerance <- tolerance
+
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
@@ -369,13 +372,25 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
     self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
 
-    # self$data[["__edge_number"]] <- private$temp_PtE[,1]
-    # self$data[["__distance_on_edge"]] <- private$temp_PtE[,2]
-
     private$temp_PtE <- NULL
 
+    # Updating lines
+    lines <- list()
+      for(i in 1:dim(self$E)[1]) {
+        id <- sprintf("%d", i)
+        lines[[i]] <- Lines(list(Line(rbind(self$V[self$E[i,1], ], self$V[self$E[i,2], ]))), ID = id)
+      }
+    self$lines <- SpatialLines(lines)
+    self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
+    private$line_to_vertex(tolerance = private$tolerance, longlat = private$longlat)
+
     if(!is.null(self$mesh)){
-      self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
+      if(is.null(self$PtV)){
+        min_num <- nrow(self$VtEfirst()) + 1
+      } else{
+        min_num <- min(self$PtV)
+      }
+      self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(min_num):nrow(self$mesh$V), ],ncol=2))
     }
 
     if (!is.null(self$geo_dist)) {
@@ -1576,8 +1591,14 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   # Temp PtE
 
-  temp_PtE = NULL
+  temp_PtE = NULL,
 
+  # longlat
+  longlat = NULL,
+
+  # tolerance
+
+  tolerance = NULL
 
 ))
 
