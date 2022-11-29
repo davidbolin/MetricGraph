@@ -189,7 +189,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' separately for the locations of each replicate.
   #' @param repl vector or list containing which replicates
   #' to compute the distance. If `NULL`, it will be computed
-  #' for all replicates. 
+  #' for all replicates.
   compute_resdist = function(full = FALSE, repl = NULL) {
     self$res_dist <- list()
     if(full){
@@ -223,7 +223,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                      normalized = normalized)
         graph.temp$observation_to_vertex()
         graph.temp$compute_geodist(full=TRUE)
-    
+
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
         tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1], graph.temp$E[i, 2]]
@@ -274,7 +274,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' separately for the locations of each replicate.
   #' @param repl vector or list containing which replicates
   #' to compute the distance. If `NULL`, it will be computed
-  #' for all replicates. 
+  #' for all replicates.
   compute_laplacian = function(full = FALSE, repl = NULL) {
     self$Laplacian <- list()
     if(full){
@@ -317,17 +317,18 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Gets PtE from the data
-  
+
   get_PtE = function() {
     if(is.null(self$data)){
       stop("There is no data!")
     }
-    repl <- self$data[["__repl"]]
-    repl <- which(repl == repl[1])
-
-    PtE <- cbind(self$data[["__edge_number"]][repl], 
-                self$data[["__distance_on_edge"]][repl])
-    PtE <- PtE[order(PtE[,1], PtE[,2]),]
+    #repl <- self$data[["__repl"]]
+    #repl <- which(repl == repl[1])
+    PtE <- cbind(self$data[["__edge_number"]],
+                self$data[["__distance_on_edge"]])
+    #PtE <- cbind(self$data[["__edge_number"]][repl],
+    #            self$data[["__distance_on_edge"]][repl])
+    PtE <- PtE[order(self$data[["__repl"]], PtE[,1], PtE[,2]),]
     return(PtE)
   },
 
@@ -338,7 +339,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     repl <- self$data[["__repl"]]
     repl <- which(repl == repl[1])
-    Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][repl], 
+    Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][repl],
                                         self$data[["__coord_y"]][repl]))
     return(Spoints)
   },
@@ -366,10 +367,10 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
     }
 
-    
+
     self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
     self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
-    
+
     private$temp_PtE <- NULL
 
     if(!is.null(self$mesh)){
@@ -432,7 +433,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       } else{
         stop("No data provided!")
       }
-    } 
+    }
 
     data <- as.list(data)
 
@@ -465,11 +466,11 @@ metric_graph <-  R6::R6Class("metric_graph",
      data[[edge_number]] <- NULL
      data[[distance_on_edge]] <- NULL
      data[[coord_x]] <- NULL
-     data[[coord_y]] <- NULL 
+     data[[coord_y]] <- NULL
      data[[replicates]] <- NULL
      self$data[["__coord_x"]] <- NULL
      self$data[["__coord_y"]] <- NULL
-      
+
       ## convert everything to PtE
 
       self$data <- process_data_add_obs(PtE, new_data = data, self$data, replicate_vector)
@@ -482,7 +483,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       self$data[["__coord_x"]] <- points[,1]
       self$data[["__coord_y"]] <- points[,2]
-  
+
     },
 
 
@@ -631,7 +632,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
 
-    ### Update mesh PtE 
+    ### Update mesh PtE
     self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
   },
 
@@ -709,7 +710,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description plot a metric graph
   #' @param data Which column of the data to plot? If `NULL`, no data will be plotted.
-  #' @param repl If there are replicates, which replicate to plot? 
+  #' @param repl If there are replicates, which replicate to plot?
   #' If `repl` is a number, it will be the index of the replicate
   #' as stored internally. If `repl` is a character, then the replicate will be chosen
   #' by its name.
@@ -1131,7 +1132,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(is.null(repl)){
           repl <- unique(self$data[["__repl"]])
     }
-    
+
     if(include_NA){
       A <- Matrix::Diagonal(self$nV)[self$PtV, ]
       return(Matrix::kronecker(Diagonal(n_repl),A))
@@ -1419,9 +1420,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       x <- y <- NULL
       data_repl <- select_replicate(self$data, repl)
       y_plot <-data_repl[[data]]
+      repl_id <- which(self$data[["__repl"]] == repl)
       PtE <- self$get_PtE()
       for (i in 1:length(y_plot)) {
-          LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
+          LT <- private$edge_pos_to_line_pos(PtE[repl_id[i], 1],
+                                             PtE[repl_id[i], 2])
           Line <- self$lines[LT[1, 1], ]
           val_line <- gProject(Line, as(Line, "SpatialPoints"),
                                normalized = TRUE)
@@ -1554,7 +1557,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
     return(p)
   },
-  
+
   # Initial graph
 
   initial_graph = NULL,
