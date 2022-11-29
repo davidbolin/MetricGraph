@@ -614,6 +614,23 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
       new_data[["__repl"]] <- replicate_vector
   }
   if(is.null(old_data)){
+    full_colnames <- names(new_data)
+    data_coords <- data.frame(PtE1 = PtE[,1],
+                          PtE2 = PtE[,2],
+                          repl = new_data[["__repl"]])
+    idx_coords <- order(data_coords$repl, data_coords$PtE1, data_coords$PtE2)
+    list_result <- vector(mode = "list", length(full_colnames))
+    names(list_result) <- full_colnames
+        list_result[1:length(list_result)] <- full_colnames
+        new_data <- lapply(list_result, function(col_name){
+          mode_vector <- typeof(new_data[[col_name]])
+          tmp <- vector(mode=mode_vector, length = nrow(data_coords))
+          is.na(tmp) <- 1:length(tmp)
+           for(i in 1:length(idx_coords)){
+               tmp[[i]] <- new_data[[col_name]][[idx_coords[i]]]
+            }
+            return(tmp)
+        })
     return(new_data)
   } else{
 
@@ -647,6 +664,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
       }
       tmp <- vector(mode=mode_vector, length = nrow(data_coords))
       is.na(tmp) <- 1:length(tmp)
+
 
       if(length(idx_new_entries)>0){
         for(i in 1:length(idx_new_entries)){

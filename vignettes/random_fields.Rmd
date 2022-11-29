@@ -642,7 +642,12 @@ u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
 
 y <- u + sigma_e*matrix(rnorm(n.obs.per.edge * graph$nE * n_repl), ncol = n_repl)
 
-graph$add_PtE_observations(y,PtE, normalized = TRUE)
+df_graph <- data.frame(y=y, edge_number = PtE[,1],
+                      distance_on_edge = PtE[,2])
+
+df_graph <- pivot_longer(df_graph, cols = `y.1`:`y.20`, names_to = "repl", values_to = "y")
+
+graph$add_observations(data = df_graph, normalized = TRUE, replicates="repl")
 ```
 
 To plot the first replicate, we can simply call `graph$plot(data=TRUE)`. To plot another replicate, we set the 
@@ -891,7 +896,7 @@ y <- cbind(y, y_tmp)
 }
 
 
-graph$add_PtE_observations(y, PtE, covariates = X_cov, normalized = TRUE)
+graph$add_observations(y, PtE, covariates = X_cov, normalized = TRUE)
 ```
 
 Let us now estimate the parameters. We should suppy the start vector as `c(sigma_e, sigma, kappa, beta_1, beta_2)`, where `beta_1` and `beta_2` are
