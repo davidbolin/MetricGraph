@@ -462,6 +462,8 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop(paste(dat,"has a different number of elements than the number of coordinates!"))
        }})
 
+    n_repl <- length(unique(replicate_vector))
+
      data[[edge_number]] <- NULL
      data[[distance_on_edge]] <- NULL
      data[[coord_x]] <- NULL
@@ -480,8 +482,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       points <- self$coordinates(PtE = PtE)
 
-      self$data[["__coord_x"]] <- points[,1]
-      self$data[["__coord_y"]] <- points[,2]
+      self$data[["__coord_x"]] <- rep(points[,1], times = n_repl)
+      self$data[["__coord_y"]] <- rep(points[,2], times = n_repl)
   
     },
 

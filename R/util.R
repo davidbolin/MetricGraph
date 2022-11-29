@@ -618,10 +618,26 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
   }
   if(is.null(old_data)){
     full_colnames <- names(new_data)
-    data_coords <- data.frame(PtE1 = PtE[,1],
-                          PtE2 = PtE[,2],
-                          repl = new_data[["__repl"]])
-    idx_coords <- order(data_coords$repl, data_coords$PtE1, data_coords$PtE2)
+    data_coords_new <- data.frame(PtE1 = PtE[,1],
+                          PtE2 = PtE[,2])
+    data_coords <- unique(data_coords_new)
+    data_coords <- data_coords[order(data_coords$PtE1, 
+                          data_coords$PtE2),]
+    data_coords_tmp <- data_coords
+    repl_val <- unique(replicate_vector)
+    n_repl <- length(repl_val)
+    data_coords[["repl"]] <- repl_val[[1]]
+    if(n_repl>1){
+      for(i in 2:n_repl){
+          tmp_coords <- data_coords_tmp
+          tmp_coords[["repl"]] <- repl_val[[i]]
+          data_coords <- rbind(data_coords, tmp_coords)
+      }    
+    }
+    data_coords_new[["repl"]] <- replicate_vector
+    data_coords[["idx"]] <- 1:nrow(data_coords)
+    idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE, sort = FALSE)
+    idx_new_entries <- idx_new_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
         list_result[1:length(list_result)] <- full_colnames
@@ -629,29 +645,41 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
           mode_vector <- typeof(new_data[[col_name]])
           tmp <- vector(mode=mode_vector, length = nrow(data_coords))
           is.na(tmp) <- 1:length(tmp)
-           for(i in 1:length(idx_coords)){
-               tmp[[i]] <- new_data[[col_name]][[idx_coords[i]]]
+           for(i in 1:length(idx_new_entries)){
+               tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
             }
             return(tmp)
         })
+    new_data[["__edge_number"]] <- data_coords[["PtE1"]]
+    new_data[["__distance_on_edge"]] <- data_coords[["PtE2"]]
+    new_data[["__repl"]] <- data_coords[["repl"]]
     return(new_data)
   } else{
 
     old_colnames <- names(old_data)
     new_colnames <- names(new_data)
     full_colnames <- union(old_colnames, new_colnames)
-    old_df <- data.frame(PtE1 = old_data[["__edge_number"]],
-                          PtE2 = old_data[["__distance_on_edge"]],
-                          repl = old_data[["__repl"]])
-    new_df <- data.frame(PtE1 = PtE[,1],
-                          PtE2 = PtE[,2],
-                          repl = new_data[["__repl"]])
-    data_coords <- merge(old_df, new_df, by = c("PtE1", "PtE2", "repl"), sort=FALSE, all = TRUE)
-    data_coords <- data_coords[order(data_coords$repl, data_coords$PtE1, data_coords$PtE2),] 
+
+    data_coords <- unique(rbind(old_df[,c(1,2)], new_df[,c(1,2)]))
+    data_coords <- data_coords[order(data_coords$PtE1, 
+                          data_coords$PtE2),]
+    
+    data_coords_tmp <- data_coords
+    repl_val <- unique(replicate_vector)
+    n_repl <- length(repl_val)
+    data_coords <- cbind(data_coords, repl_val[[1]])
+    if(n_repl>1){
+      for(i in 2:n_repl){
+          tmp_coords <- cbind(data_coords_tmp, repl_val[[i]])
+          data_coords <- rbind(data_coords, tmp_coords)
+      }    
+    }
+    data_coords <- as.data.frame(data_coords)
+    colnames(data_coords) <- c("PtE1", "PtE2", "repl")
+
     data_coords[["idx"]] <- 1:nrow(data_coords)
 
     idx_new_entries <- merge(new_df, data_coords, all=FALSE, sort = FALSE)
-
     idx_new_entries <- idx_new_entries[["idx"]]
     idx_old_entries <- merge(old_df, data_coords, all=FALSE, sort = FALSE)
     idx_old_entries <- idx_old_entries[["idx"]]
