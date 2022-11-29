@@ -247,7 +247,7 @@ obs.loc <- matrix(c(4, 0.5),1,2)
 obs <- c(5)
 df_new <- data.frame(y=obs, edge_number = obs.loc[,1], 
                           distance_on_edge = obs.loc[,2])
-graph$add_PtE_observations(data_frame=df_new, normalized = TRUE)
+graph$add_observations(data=df_new, normalized = TRUE)
 graph$plot(data = "y")
 ```
 

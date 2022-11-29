@@ -470,6 +470,8 @@ metric_graph <-  R6::R6Class("metric_graph",
      data[[coord_x]] <- NULL
      data[[coord_y]] <- NULL 
      data[[replicates]] <- NULL
+     self$data[["__coord_x"]] <- NULL
+     self$data[["__coord_y"]] <- NULL
       
       ## convert everything to PtE
 
@@ -1410,7 +1412,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       y_plot <-data_repl[[data]]
       PtE <- self$get_PtE()
       for (i in 1:length(y_plot)) {
-          print(i)
           LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
           val_line <- gProject(Line, as(Line, "SpatialPoints"),

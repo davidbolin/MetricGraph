@@ -606,21 +606,16 @@ exp_covariance <- function(h, theta){
 #' 
 
 process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
-  if(is.null(old_data)){
-    new_data[["__edge_number"]] <- PtE[,1]
-    new_data[["__distance_on_edge"]] <- PtE[,2]
-    if(is.null(replicate_vector)){
+  new_data[["__edge_number"]] <- PtE[,1]
+  new_data[["__distance_on_edge"]] <- PtE[,2]
+  if(is.null(replicate_vector)){
       new_data[["__repl"]] <- rep(1, length(PtE[,1]))
-    } else{
+  } else{
       new_data[["__repl"]] <- replicate_vector
-    }
+  }
+  if(is.null(old_data)){
     return(new_data)
   } else{
-    if(is.null(replicate_vector)){
-      repl_tmp <- rep(1, length(PtE[,1]))
-    } else{
-      repl_tmp <- replicate_vector
-    }
 
     old_colnames <- names(old_data)
     new_colnames <- names(new_data)
@@ -630,18 +625,39 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
                           repl = old_data[["__repl"]])
     new_df <- data.frame(PtE1 = PtE[,1],
                           PtE2 = PtE[,2],
-                          repl = repl_tmp)
+                          repl = new_data[["__repl"]])
     data_coords <- merge(old_df, new_df, by = c("PtE1", "PtE2", "repl"), sort=FALSE, all = TRUE)
     data_coords <- data_coords[order(data_coords$repl, data_coords$PtE1, data_coords$PtE2),] 
     data_coords[["idx"]] <- 1:nrow(data_coords)
     idx_new_entries <- merge(new_df, data_coords, all=FALSE, sort = FALSE)
-    idx_new_entries <- idx_new_entries
+    idx_new_entries <- idx_new_entries[["idx"]]
     idx_old_entries <- merge(old_df, data_coords, all=FALSE, sort = FALSE)
-    idx_old_entries <- idx_old_entries
-    list_result <- lapply(full_colnames, function(col_name){
-      tmp <- rep(NA, nrow(data_coords))
-      tmp[idx_new_entries] <- new_data[[col_name]]
-      tmp[idx_old_entries] <- old_data[[col_name]]
+    idx_old_entries <- idx_old_entries[["idx"]]
+    list_result <- vector(mode = "list", length(full_colnames))
+    names(list_result) <- full_colnames
+    list_result[1:length(list_result)] <- full_colnames
+    list_result <- lapply(list_result, function(col_name){
+
+      if(!is.null(new_data[[col_name]])){
+        mode_vector <- typeof(new_data[[col_name]])
+      } else{
+        mode_vector <- typeof(old_data[[col_name]])
+      }
+      tmp <- vector(mode=mode_vector, length = nrow(data_coords))
+      is.na(tmp) <- 1:length(tmp)
+
+      if(length(idx_new_entries)>0){
+        for(i in 1:length(idx_new_entries)){
+          tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
+        }
+      }
+
+      if(length(idx_old_entries)>0){
+        for(i in 1:length(idx_old_entries)){
+          tmp[[idx_old_entries[i]]] <- old_data[[col_name]][[i]]
+        }
+      }
+      return(tmp)
     })
     list_result[["__edge_number"]] <- data_coords[["PtE1"]]
     list_result[["__distance_on_edge"]] <- data_coords[["PtE2"]]
