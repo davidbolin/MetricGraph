@@ -347,7 +347,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Adds observation locations as vertices in the graph
   observation_to_vertex = function() {
-
     private$temp_PtE <- self$get_PtE()
     n_repl <- length(unique(self$data[["__repl"]]))
     l <- length(private$temp_PtE[, 1])
@@ -385,10 +384,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$line_to_vertex(tolerance = private$tolerance, longlat = private$longlat)
 
     if(!is.null(self$mesh)){
-      if(is.null(self$PtV)){
+      if(is.null(self$mesh$V)){
         min_num <- nrow(self$VtEfirst()) + 1
       } else{
-        min_num <- min(self$PtV)
+        min_num <- nrow(self$mesh$V)-nrow(self$mesh$PtE) + 1
       }
       self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(min_num):nrow(self$mesh$V), ],ncol=2))
     }
@@ -1130,10 +1129,13 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(is.null(self$mesh)){
       stop("You should have a mesh!")
     }
-    Spoints <- self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ]
-    rownames(Spoints) <- 1:nrow(Spoints)
-    Spoints <- SpatialPoints(coords = Spoints)
-    self$add_observations(Spoints = Spoints, data = data, replicates = replicates)
+    PtE_mesh <- self$mesh$PtE
+    data[["__edge_number"]] <- PtE_mesh[,1]
+    data[["__distance_on_edge"]] <- PtE_mesh[,2]
+    self$add_observations(data = data, replicates = replicates,
+                          edge_number = "__edge_number",
+                          distance_on_edge = "__distance_on_edge",
+                          normalized = TRUE)
   },
 
   #' @description Get a copy of the initial graph

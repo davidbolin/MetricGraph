@@ -368,17 +368,12 @@ We will now extract the means at the prediction locations:
 idx_prd <- which(is.na(graph$data[["y"]]))
 
 m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
-
-m_prd <- cbind(graph$data[["__edge_number"]][idx_prd],
-                    graph$data[["__distance_on_edge"]][idx_prd],
-                    m_prd)
-
 ```
 
 To improve visualization, we will plot the posterior means
 using the `plot()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 2)
+graph$plot_function(m_prd, vertex_size = 0, edge_width = 2)
 ```
 
 Finally, we can plot the predictions together with
