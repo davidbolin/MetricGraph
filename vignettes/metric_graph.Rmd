@@ -17,9 +17,13 @@ set.seed(1)
 
 # Introduction
 
-In this vignette we will introduce the `metric_graph` class. We will show
-how to construct metric graphs, add data to them, and work with functions 
-defined on the graphs. For details about how to work with Gaussian processes on metric graphs, we refer to the Vignettes 
+Networks such as street or river networks are examples of metric graphs. 
+A compact metric graph $\Gamma$ consists of a set of finitely many vertices $\mathcal{V}=\{v_i\}$ and a finite set $\mathcal{E}=\{e_j\}$ of edges connecting the vertices. Each edge $e$ is a curve of finite length $l_e$ that connects two vertices. These curves are parameterized by arc length and a location $s\in \Gamma$ is a position on an edge, and can thus be represented as a touple $(e,t)$ where $t\in[0,l_e]$. 
+Compared to regular graphs, where one typically defines functions on the vertices, we are for metric graphs interested in function that are defined on both the vertices and the edges. 
+
+In this vignette we will introduce the `metric_graph` class of the `MetricGraph` package. This class provides a user friendly representation of metric graphs, and we will show how to use the class to construct and visualize metric graphs, add data to them, and work with functions defined on the graphs.
+
+For details about Gaussian processes and inference on metric graphs, we refer to the Vignettes 
 
 * [Gaussian random fields on metric graphs](random_fields.html)
 * [INLA interface of Whittle--Matérn fields](inla_interface.html)
@@ -49,7 +53,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
 ```
 We can now create the graph based on the `Lines` object as follows
 
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph <- metric_graph$new(lines = Lines)
 graph$plot()
 ```
@@ -58,7 +62,7 @@ The plot function that was used to create the plot above has various parameters
 to set the sizes and colors of the vertices and edges, and it has a `plotly`
 argument to visualize the graph in 3D. For this to work, the `plotly` library
 must be installed.
-```{r, message=FALSE}
+```{r, message=FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
 ```
@@ -79,9 +83,9 @@ graph$compute_geodist()
 graph$geo_dist
 ```
 The second option it to construct the graph using two matrices `V` and `E` that
-specify the location (in Euclidean space) of the vertices and the edges. In this
+specify the locations (in Euclidean space) of the vertices and the edges. In this
 case, it is assumed that the graph only has straight lines:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1))
 E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 1))
 graph2 <- metric_graph$new(V = V, E = E)
@@ -90,10 +94,10 @@ graph2$plot()
 
 The constructor of the graph has one argument `tolerance` which is used to merge
 vertices that are close in Euclidean space. The default value for this parameter
-is `2e-16`, which means that any two vertices that are closer than that are 
+is `1e-10`, which means that any two vertices that are closer than that are 
 merged. For example, in the following graph, we have two vertices that are 
 close but not close enough to be merged:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1), c(0,-0.03))
 E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 5))
 graph3 <- metric_graph$new(V = V, E = E)
@@ -102,7 +106,7 @@ print(graph3$nV)
 ```
 
 This can be adjusted by increasing the tolerance:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph4 <- metric_graph$new(V = V, E = E, tolerance = 0.05)
 graph4$plot()
 print(graph4$nV)
@@ -140,15 +144,15 @@ should be given in normalized distance or not.
 
 ## Methods for working with real data
 
-To illustrate the use of `MetricGraph` on some real data, we use the 
+To illustrate the useage of `metric_graph` on some real data, we use the 
 `osmdata` package to download data from OpenStreetMap. In the following code,
 we extract highways in the city of Copenhagen:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 library(osmdata)
 set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 call <- opq(bbox = c(12.4,55.5,12.65,55.9))
-call <- add_osm_feature(call, key = "highway",value=c("motorway",
-                                                        "primary","secondary"))
+call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
+                                                      "secondary"))
 data <- osmdata_sp(call)
 
 graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
@@ -177,22 +181,27 @@ range(graph5$edge_lengths)
 ```
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
-the different connected components separately. To construct all connected components, we can use the `graph_components` function:
+the different connected components separately. If this is not a concern, one can
+set the argument `check_connected = FALSE` while creating the graph. In this case
+the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components(SpatialLines(data$osm_lines@lines), longlat = TRUE)
-p <- graphs[[1]]$plot(vertex_size = 0, edge_color = "black")  
-for(i in 2:(length(graphs)-1)){
-p <- graphs[[i]]$plot(vertex_size = 0, 
-                      edge_color = rgb(runif(1),runif(1),runif(1)),
-                      p = p)  
-}
-graphs[[length(graphs)]]$plot(vertex_size = 0,
-                              edge_color = rgb(runif(1),runif(1),runif(1)),
-                              p = p)
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+```
+The `graph_components` class contains a list of `metric_graph` objects, one for
+each connected component. In this case, we have 
+```{r}
+graphs$n
+```
+components in total, and their total edge lengths in km at 
+```{r}
+graphs$lengths
+```
+To plot all of them, we can use the `plot` command of the class:
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graphs$plot(vertex_size = 0)
 ```
 
-Thus, we see that there are a few different connected components. One reason for
-this might be that we set the tolerance for merging nodes too low. In fact, 
+One reason for having multiple components here might be that we set the tolerance for merging nodes too low. In fact, 
 by looking at the edge lengths we see that we have vertices that are as close 
 as 
 ```{r}
@@ -200,18 +209,10 @@ min(graph5$edge_lengths) * 1000
 ```
 meters. Let us increase the tolerance and say that any vertices that are at most
 a distance of 50 meters (0.05km) apart should be merged:
-```{r message=FALSE, warning=FALSE}
-graphs <- graph_components(SpatialLines(data$osm_lines@lines), longlat = TRUE,
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
                            tolerance = 0.05)
-p <- graphs[[1]]$plot(vertex_size = 0, edge_color = "black")
-for(i in 2:(length(graphs)-1)){
-p <- graphs[[i]]$plot(vertex_size = 0, 
-                      edge_color = rgb(runif(1),runif(1),runif(1)),
-                      p = p)  
-}
-graphs[[length(graphs)]]$plot(vertex_size = 0,
-                              edge_color = rgb(runif(1),runif(1),runif(1)),
-                              p = p)
+graphs$plot(vertex_size = 0)
 ```
 
 With this choice, we see that there is one large connected component and a few
@@ -226,7 +227,7 @@ Given that we have constructed the metric graph, we can now add data to it.
 As an example, let us consider the first graph again and suppose that we have 
 observations at a distance 0.5 from the start of each edge. One way of specifying
 this is as follows 
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 obs.loc <- cbind(1:4, rep(0.5, 4))
 obs <- c(1,2,3,4)
 df_graph <- data.frame(y = obs, edge_number = obs.loc[,1], 
@@ -240,7 +241,7 @@ the edges, so that 0 represents the start and 1 the end of the edge (instead of
 the edge length). To do so, we can simply specify `normalized = TRUE` when adding 
 the observations. For example, let us add one more observation at the midpoint 
 of the fourth edge:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 obs.loc <- matrix(c(4, 0.5),1,2)
 obs <- c(5)
 df_new <- data.frame(y=obs, edge_number = obs.loc[,1], 
@@ -252,7 +253,7 @@ graph$plot(data = "y")
 An alternative method is to specify the observations as spatial points objects,
 where the locations are given in Euclidean coordinates. In this case the
 observations are added to the closes location on the graph:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 obs.loc <- rbind(c(0.7, 0), c(0, 0.2))
 obs <- c(6,7)
 points <- SpatialPointsDataFrame(coords = obs.loc,
@@ -268,8 +269,9 @@ graph$clear_observations()
 ```
 
 The `metric_graph` object can hold multiple variables of data, and one can also 
-specify a `replicates` argument that it useful for specifying that data is observed at different time points. As an example, let us add two variables observed at two
-separate locations 
+specify a `group` argument that it useful for specifying that data is grouped, 
+which for example is the case with data observed at different time points.
+As an example, let us add two variables observed at two separate time points: 
 ```{r}
 obs.loc <- cbind(c(1:4, 1:4), c(rep(0.5, 4), rep(0.7, 4)))
 df_rep <- data.frame(y = c(1, 2, NA, 3, 4, 6, 5, 7),
@@ -277,24 +279,24 @@ df_rep <- data.frame(y = c(1, 2, NA, 3, 4, 6, 5, 7),
                      edge_number = obs.loc[,1], 
                      distance_on_edge = obs.loc[,2],
                      time = c(rep(1, 4), rep(2, 4)))
-graph$add_observations(data = df_rep, replicates = "time")
+graph$add_observations(data = df_rep, group = "time")
 ```
 If `NA` is given in some variable, this indicates that this specific variable is
-not measured at that location and replicate. 
-We can now plot the individual variables by specifying their names in the 
-plot function together with the replicate number that we want to see. By default
-the first replicate is shown. 
-```{r}
-graph$plot(data = "y", repl = 2)
+not measured at that location and group. We can now plot the individual
+variables by specifying their names in the  plot function together with the
+group number that we want to see. By default the first group is shown. 
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph$plot(data = "y", group = 2)
 ```
 
 In some cases, we might want to add the observation locations as vertices 
 in the graph. This can be done as follows: 
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph$observation_to_vertex()
-graph$plot(data = "y", repl = 1)
+graph$plot(data = "y", group = 1)
 ```
-One can note that the command adds all observation locations, from all replicates
+
+One can note that the command adds all observation locations, from all groups
 as vertices. 
 
 # Working with functions on metric graphs
@@ -303,7 +305,7 @@ When working with data on metric graphs, one often wants to display functions
 on the graph. The best way to visualize functions on the graph is to evaluate
 them on a fine mesh over the graph and then use `plot_function`. To illustrate
 this procedure, let us consider the following graph:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1), c(-1, 1), c(-1, 0), c(0, -1))
 E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),
            c(5, 6), c(6, 1), c(4, 1),c(1, 7))
@@ -321,7 +323,7 @@ the mesh. As can be seen in the plot, the mesh is very coarse, so let's reduce t
 Suppose now that we want to display the function $f(x, y) = x^2 - y^2$ on this
 graph. We then first evaluate it on the vertices of the mesh and then use the 
 function `plot_function` to display it:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 x <- graph$mesh$V[, 1]
 y <- graph$mesh$V[, 2]
 f <- x^2 - y^2
@@ -330,9 +332,10 @@ graph$plot_function(f)
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
 visualization of the function:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph$plot_function(f, plotly = TRUE)
 ```
+
 When the first argument of `plot_function` is a vector, the function assumes that 
 the values in the vector are the values of the function evaluated at the vertices
 of the mesh. As an alternative, one can also provide the first argument as a 
@@ -341,7 +344,7 @@ edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point
 To illustrate this, let us first construct a set of locations that are evenly 
 spaced over each edge, then convert these to Euclidean coordinates so that we
 can evaluate the function above, and finally plot the result:
-```{r}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 n.e <- 30
 PtE <- cbind(rep(1:graph$nE, each = n.e), 
              rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))

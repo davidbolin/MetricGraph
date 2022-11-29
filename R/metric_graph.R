@@ -1,5 +1,5 @@
-#' @title Metric graph object for specification of Gaussian processes
-#' @description Class representing a general metric graphs.
+#' @title Metric graph
+#' @description Class representing a general metric graph
 #' @details A graph object created from vertex and edge matrices, or from an
 #' sp::Lines object where each line is representing and edge. For more details,
 #'  see the help vignette:
@@ -93,6 +93,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param tolerance vertices that are closer than this number are merged when
   #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
   #' tolerance is given in km.
+  #' @param check_connected If `TRUE`, it is checked whether the graph is
+  #' connected and a warning is given if this is not the case.
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -104,7 +106,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
-                        tolerance = 1e-10) {
+                        tolerance = 1e-10,
+                        check_connected = TRUE) {
 
       private$longlat <- longlat
       private$tolerance <- tolerance
@@ -133,11 +136,13 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$initial_graph <- self$clone()
 
     # Checking if graph is connected
-    g <- graph(edges = c(t(self$E)), directed = FALSE)
-    components <- igraph::clusters(g, mode="weak")
-    nc <- components$no
-    if(nc>1){
-      warning("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+    if (check_connected) {
+      g <- graph(edges = c(t(self$E)), directed = FALSE)
+      components <- igraph::clusters(g, mode="weak")
+      nc <- components$no
+      if(nc>1){
+        warning("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+      }
     }
 
     # Checking if there is some edge with infinite length
@@ -150,11 +155,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' graph
   #' @param full Should the geodesic distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
-  #' separately for the locations of each replicate.
-  #' @param repl vector or list containing which replicates
-  #' to compute the distance. If `NULL`, it will be computed
-  #' for all replicates.
-  compute_geodist = function(full = FALSE, repl = NULL) {
+  #' separately for the locations of each group.
+  #' @param group vector or list containing which groups to compute the distance
+  #' for. If `NULL`, it will be computed for all groups.
+  compute_geodist = function(full = FALSE, group = NULL) {
     self$geo_dist <- list()
     if(is.null(self$data)){
       full <- TRUE
@@ -164,15 +168,15 @@ metric_graph <-  R6::R6Class("metric_graph",
       E(g)$weight <- self$edge_lengths
       self$geo_dist[["__complete"]] <- distances(g)
     } else{
-      if(is.null(repl)){
-          repl <- unique(self$data[["__repl"]])
+      if(is.null(group)){
+          group <- unique(self$data[["__group"]])
       }
-      for(replicate in repl){
-          data_repl <- select_replicate(self$data, replicate)
-          idx_notna <- idx_not_all_NA(data_repl)
-          g <- graph(edges = c(t(self$E[idx_notna,])), directed = FALSE)
+      for(grp in group){
+          data_grp <- select_group(self$data, grp)
+          idx_notna <- idx_not_all_NA(data_grp)
+          g <- graph(edges = c(t(self$E[idx_notna, ])), directed = FALSE)
           E(g)$weight <- self$edge_lengths
-          self$geo_dist[[replicate]] <- distances(g)
+          self$geo_dist[[grp]] <- distances(g)
       }
     }
   },
@@ -189,25 +193,25 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' locations
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
-  #' separately for the locations of each replicate.
-  #' @param repl vector or list containing which replicates
-  #' to compute the distance. If `NULL`, it will be computed
-  #' for all replicates.
-  compute_resdist = function(full = FALSE, repl = NULL) {
+  #' separately for the locations of each group.
+  #' @param group vector or list containing which groups to compute the distance
+  #' for. If `NULL`, it will be computed for all groups.
+  compute_resdist = function(full = FALSE, group = NULL) {
     self$res_dist <- list()
     if(full){
       PtE <- self$get_PtE()
-      self$res_dist[["__complete"]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
+      self$res_dist[["__complete"]] <- self$compute_resdist_PtE(PtE,
+                                                                normalized=TRUE)
     } else{
-      if(is.null(repl)){
-          repl <- unique(self$data[["__repl"]])
+      if(is.null(group)){
+          group <- unique(self$data[["__group"]])
       }
-      for(replicate in repl){
-          data_repl <- select_replicate(self$data, replicate)
-          idx_notna <- idx_not_all_NA(data_repl)
-          PtE <- cbind(data_repl[["__edge_number"]][idx_notna],
-                          data_repl[["__distance_on_edge"]][idx_notna])
-          self$res_dist[[replicate]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
+      for(grp in group){
+        data_grp <- select_group(self$data, grp)
+        idx_notna <- idx_not_all_NA(data_grp)
+        PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
+                     data_grp[["__distance_on_edge"]][idx_notna])
+        self$res_dist[[grp]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
       }
     }
   },
@@ -229,7 +233,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
-        tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1], graph.temp$E[i, 2]]
+        tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1],
+                                                        graph.temp$E[i, 2]]
         L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
         L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
       }
@@ -274,25 +279,26 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Computes the weigthed graph Laplacian for the graph
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
-  #' separately for the locations of each replicate.
-  #' @param repl vector or list containing which replicates
-  #' to compute the distance. If `NULL`, it will be computed
-  #' for all replicates.
-  compute_laplacian = function(full = FALSE, repl = NULL) {
+  #' separately for the locations of each group.
+  #' @param group vector or list containing which groups to compute the
+  #' Laplacian for. If `NULL`, it will be computed for all groups.
+  compute_laplacian = function(full = FALSE, group = NULL) {
     self$Laplacian <- list()
     if(full){
       PtE <- self$get_PtE()
-      self$Laplacian[["__complete"]] <- self$compute_laplacian_PtE(PtE, normalized=TRUE)
+      self$Laplacian[["__complete"]] <- self$compute_laplacian_PtE(PtE,
+                                                            normalized = TRUE)
     } else{
-      if(is.null(repl)){
-          repl <- unique(self$data[["__repl"]])
+      if(is.null(group)){
+          group <- unique(self$data[["__group"]])
       }
-      for(replicate in repl){
-          data_repl <- select_replicate(self$data, replicate)
-          idx_notna <- idx_not_all_NA(data_repl)
-          PtE <- cbind(data_repl[["__edge_number"]][idx_notna],
-                          data_repl[["__distance_on_edge"]][idx_notna])
-          self$Laplacian[[replicate]] <- self$compute_laplacian_PtE(PtE, normalized=TRUE)
+      for(grp in group){
+          data_grp <- select_group(self$data, grp)
+          idx_notna <- idx_not_all_NA(data_grp)
+          PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
+                       data_grp[["__distance_on_edge"]][idx_notna])
+          self$Laplacian[[grp]] <- self$compute_laplacian_PtE(PtE,
+                                                              normalized = TRUE)
       }
     }
   },
@@ -302,20 +308,20 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param normalized are the locations in PtE in normalized distance?
   compute_laplacian_PtE = function(PtE, normalized = TRUE) {
 
-    graph.temp <- self$clone()
-    graph.temp$clear_observations()
-    df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
-                            edge_number = PtE[,1],
-                            distance_on_edge = PtE[,2])
-    graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized)
-    graph.temp$observation_to_vertex()
-    Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
+    graph.tmp <- self$clone()
+    graph.tmp$clear_observations()
+    df_tmp <- data.frame(y = rep(0, dim(PtE)[1]),
+                         edge_number = PtE[,1],
+                         distance_on_edge = PtE[,2])
+    graph.tmp$add_observations(data = df_tmp, normalized = normalized)
+    graph.tmp$observation_to_vertex()
+    Wmat <- Matrix(0,graph.tmp$nV,graph.tmp$nV)
     for (i in 1:self$nE) {
-      Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1/graph.temp$edge_lengths[i]
-      Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1/graph.temp$edge_lengths[i]
+      Wmat[graph.tmp$E[i, 1], graph.tmp$E[i, 2]] <- 1 / graph.tmp$edge_lengths[i]
+      Wmat[graph.tmp$E[i, 2], graph.tmp$E[i, 1]] <- 1 / graph.tmp$edge_lengths[i]
     }
-    Laplacian <- Matrix::Diagonal(graph.temp$nV,as.vector(Matrix::rowSums(Wmat))) - Wmat
+    Laplacian <- Matrix::Diagonal(graph.tmp$nV,
+                                  as.vector(Matrix::rowSums(Wmat))) - Wmat
     return(Laplacian)
   },
 
@@ -325,10 +331,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(is.null(self$data)){
       stop("There is no data!")
     }
-    repl <- self$data[["__repl"]]
-    repl <- which(repl == repl[1])
-    PtE <- cbind(self$data[["__edge_number"]][repl],
-                self$data[["__distance_on_edge"]][repl])
+    group <- self$data[["__group"]]
+    group <- which(group == group[1])
+    PtE <- cbind(self$data[["__edge_number"]][group],
+                 self$data[["__distance_on_edge"]][group])
 
     return(PtE)
   },
@@ -338,59 +344,47 @@ metric_graph <-  R6::R6Class("metric_graph",
      if(is.null(self$data)){
       stop("There is no data!")
     }
-    repl <- self$data[["__repl"]]
-    repl <- which(repl == repl[1])
-    Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][repl],
-                                        self$data[["__coord_y"]][repl]))
+    group <- self$data[["__group"]]
+    group <- which(group == group[1])
+    Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][group],
+                                   self$data[["__coord_y"]][group]))
     return(Spoints)
   },
 
   #' @description Adds observation locations as vertices in the graph
   observation_to_vertex = function() {
     private$temp_PtE <- self$get_PtE()
-    n_repl <- length(unique(self$data[["__repl"]]))
+    n_group <- length(unique(self$data[["__group"]]))
     l <- length(private$temp_PtE[, 1])
     self$PtV <- rep(0, l)
     for (i in 1:l) {
-        e <- as.vector(private$temp_PtE[i, 1])
-        t <- as.vector(private$temp_PtE[i, 2])
-        l_e <- self$edge_lengths[e]
-        if (abs(t) < 10^-10) {
-          private$temp_PtE[i, 2] <- 0
-          self$PtV[i] <- self$E[e, 1]
-        } else if (t > 1 - 10^-10) {
-          private$temp_PtE[i, 2] <- 1
-          self$PtV[i] <- self$E[e, 2]
-        } else {
-          self$split_edge(e, t)
-          self$PtV[i] <- dim(self$V)[1]
-        }
+      e <- as.vector(private$temp_PtE[i, 1])
+      t <- as.vector(private$temp_PtE[i, 2])
+      l_e <- self$edge_lengths[e]
+      if (abs(t) < 10^-10) {
+        private$temp_PtE[i, 2] <- 0
+        self$PtV[i] <- self$E[e, 1]
+      } else if (t > 1 - 10^-10) {
+        private$temp_PtE[i, 2] <- 1
+        self$PtV[i] <- self$E[e, 2]
+      } else {
+        self$split_edge(e, t)
+        self$PtV[i] <- dim(self$V)[1]
+      }
     }
 
-
-    self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
-    self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
+    self$data[["__edge_number"]] <- rep(private$temp_PtE[,1],
+                                        times = n_group)
+    self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2],
+                                             times = n_group)
 
     tmp_df <- data.frame(PtE1 = self$data[["__edge_number"]],
               PtE2 = self$data[["__distance_on_edge"]],
-              repl = self$data[["__repl"]])
-    index_order <- order(tmp_df$repl, tmp_df$PtE1, tmp_df$PtE2)
-    self$data <- lapply(self$data, function(dat){
-      dat[index_order]
-    })
-
+              group = self$data[["__group"]])
+    index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
+    self$data <- lapply(self$data, function(dat){ dat[index_order]})
 
     private$temp_PtE <- NULL
-
-    # Updating lines
-    # lines <- list()
-    #   for(i in 1:dim(self$E)[1]) {
-    #     id <- sprintf("%d", i)
-    #     lines[[i]] <- Lines(list(Line(rbind(self$V[self$E[i,1], ], self$V[self$E[i,2], ]))), ID = id)
-    #   }
-    # self$lines <- SpatialLines(lines)
-    # self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-    # private$line_to_vertex(tolerance = private$tolerance, longlat = private$longlat)
 
     if (!is.null(self$geo_dist)) {
       self$compute_geodist()
@@ -401,43 +395,57 @@ metric_graph <-  R6::R6Class("metric_graph",
     if (!is.null(self$CoB)) {
       self$buildC(2)
     }
-
-    # Now we compute an on the method
-
   },
 
   #' @description Clear all observations from the object
   clear_observations = function() {
-   self$data <- NULL
-   self$geo_dist <- NULL
-   self$res_dist <- NULL
+    self$data <- NULL
+    self$geo_dist <- NULL
+    self$res_dist <- NULL
   },
 
   #' @description Add observations to the graph
   #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations,
   #' which may include the coordinates only, or the coordinates as well as the
   #' observations.
-  #' @param data A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-  #' indicating the index of the replicate. If `data` is not `NULL`, it takes priority over any eventual data in `Spoints`.
-  #' @param edge_number Column (or entry on the list) of the `data` that contains the edge numbers. If not supplied,
-  #' the column with name "edge_number" will be chosen.   Will not be used if `Spoints` is not `NULL`.
-  #' @param distance_on_edge Column (or entry on the list) of the `data` that contains the edge numbers. If not supplied,
-  #' the column with name "distance_on_edge" will be chosen.  Will not be used if `Spoints` is not `NULL`.
-  #' @param coord_x Column (or entry on the list) of the `data` that contains the x coordinate. If not supplied,
-  #' the column with name "coord_x" will be chosen.  Will not be used if `Spoints` is not `NULL` or if `data_coords` is `PtE`.
-   #' @param coord_y Column (or entry on the list) of the `data` that contains the y coordinate. If not supplied,
-  #' the column with name "coord_x" will be chosen.  Will not be used if `Spoints` is not `NULL` or if `data_coords` is `PtE`.
-  #' @param data_coords To be used only if `Spoints` is `NULL`. Which coordinate system to use? If `PtE`, the user must provide
-  #' `edge_number` and `distance_on_edge`, otherwise if `euclidean`, the user must provide `coord_x` and `coord_y`.
-  #' @param replicates If the data contains replicates, one must provide the column (or entry on the list) in which the replicate indices are stored.
-  #' @param normalized if TRUE, then the distances in `distance_on_edge` are assumed to be
-  #' normalized to (0,1). Default FALSE. Will not be used if `Spoints` is not `NULL`.
-  add_observations = function(Spoints = NULL, data = NULL, edge_number = "edge_number",
-                                          distance_on_edge = "distance_on_edge",
-                                          coord_x = "coord_x",
-                                          coord_y = "coord_y",
-                                          data_coords = c("PtE", "euclidean"),
-                                          replicates = NULL, normalized = FALSE) {
+  #' @param data A data.frame or named list containing the observations. In case
+  #' of groups, the data.frames for the groups should be stacked vertically,
+  #' with a column indicating the index of the group. If `data` is not `NULL`,
+  #' it takes priority over any eventual data in `Spoints`.
+  #' @param edge_number Column (or entry on the list) of the `data` that
+  #' contains the edge numbers. If not supplied, the column with name
+  #' "edge_number" will be chosen. Will not be used if `Spoints` is not `NULL`.
+  #' @param distance_on_edge Column (or entry on the list) of the `data` that
+  #' contains the edge numbers. If not supplied, the column with name
+  #' "distance_on_edge" will be chosen.  Will not be used if `Spoints` is not
+  #' `NULL`.
+  #' @param coord_x Column (or entry on the list) of the `data` that contains
+  #' the x coordinate. If not supplied, the column with name "coord_x" will be
+  #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
+  #' `PtE`.
+  #' @param coord_y Column (or entry on the list) of the `data` that contains
+  #' the y coordinate. If not supplied, the column with name "coord_x" will be
+  #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
+  #' `PtE`.
+  #' @param data_coords To be used only if `Spoints` is `NULL`. It decides which
+  #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
+  #' `distance_on_edge`, otherwise if `euclidean`, the user must provide
+  #' `coord_x` and `coord_y`.
+  #' @param group If the data is grouped (for example measured at different time
+  #' points), this argument specifies the the column (or entry on the list) in
+  #' which the group varialbe is stored.
+  #' @param normalized if TRUE, then the distances in `distance_on_edge` are
+  #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
+  #' `Spoints` is not `NULL`.
+  add_observations = function(Spoints = NULL,
+                              data = NULL,
+                              edge_number = "edge_number",
+                              distance_on_edge = "distance_on_edge",
+                              coord_x = "coord_x",
+                              coord_y = "coord_y",
+                              data_coords = c("PtE", "euclidean"),
+                              group = NULL,
+                              normalized = FALSE) {
     data_coords <- data_coords[[1]]
     if(is.null(data)){
       if(is.null(Spoints)){
@@ -467,41 +475,38 @@ metric_graph <-  R6::R6Class("metric_graph",
           stop("The options for 'data_coords' are 'PtE' and 'euclidean'.")
         }
       }
-     if(!is.null(replicates)){
-      replicate_vector <- data[[replicates]]
+     if(!is.null(group)){
+       group_vector <- data[[group]]
      } else{
-      replicates <- "__repl"
-      replicate_vector <- NULL
+       group <- "__group"
+       group_vector <- NULL
      }
 
     lapply(data, function(dat){if(nrow(matrix(PtE, ncol=2)) != length(dat)){
-        stop(paste(dat,"has a different number of elements than the number of coordinates!"))
+        stop(paste(dat,"has a different number of elements than the number of
+                   coordinates!"))
        }})
 
-    n_repl <- length(unique(replicate_vector))
+    n_group <- length(unique(group_vector))
 
-     data[[edge_number]] <- NULL
-     data[[distance_on_edge]] <- NULL
-     data[[coord_x]] <- NULL
-     data[[coord_y]] <- NULL
-     data[[replicates]] <- NULL
-     self$data[["__coord_x"]] <- NULL
-     self$data[["__coord_y"]] <- NULL
+    data[[edge_number]] <- NULL
+    data[[distance_on_edge]] <- NULL
+    data[[coord_x]] <- NULL
+    data[[coord_y]] <- NULL
+    data[[group]] <- NULL
+    self$data[["__coord_x"]] <- NULL
+    self$data[["__coord_y"]] <- NULL
 
-      ## convert everything to PtE
+    ## convert everything to PtE
+    self$data <- process_data_add_obs(PtE, new_data = data, self$data,
+                                        group_vector)
 
-      self$data <- process_data_add_obs(PtE, new_data = data, self$data, replicate_vector)
-
-      ## convert to Spoints and add
-
-      PtE <- self$get_PtE()
-
-      points <- self$coordinates(PtE = PtE)
-
-      self$data[["__coord_x"]] <- rep(points[,1], times = n_repl)
-      self$data[["__coord_y"]] <- rep(points[,2], times = n_repl)
-
-    },
+    ## convert to Spoints and add
+    PtE <- self$get_PtE()
+    points <- self$coordinates(PtE = PtE)
+    self$data[["__coord_x"]] <- rep(points[,1], times = n_group)
+    self$data[["__coord_y"]] <- rep(points[,2], times = n_group)
+  },
 
 
   #' @description build Kirchoff constraint matrix from edges, currently not
@@ -511,34 +516,34 @@ metric_graph <-  R6::R6Class("metric_graph",
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
-      i_  =  rep(0, 2*self$nE)
-      j_  =  rep(0, 2*self$nE)
-      x_  =  rep(0, 2*self$nE)
+      i_  =  rep(0, 2 * self$nE)
+      j_  =  rep(0, 2 * self$nE)
+      x_  =  rep(0, 2 * self$nE)
 
       count_constraint <- 0
       count <- 0
       for (v in 1:self$nV) {
-        lower.edges  <- which(self$E[, 1] %in% v)
-        upper.edges  <- which(self$E[, 2] %in% v)
-        n_e <- length(lower.edges) + length(upper.edges)
+        lower_edges  <- which(self$E[, 1] %in% v)
+        upper_edges  <- which(self$E[, 2] %in% v)
+        n_e <- length(lower_edges) + length(upper_edges)
 
         #derivative constraint
         if ((edge_constraint & n_e ==1) | n_e > 1) {
           i_[count + 1:n_e] <- count_constraint + 1
-          j_[count + 1:n_e] <- c(4 * (lower.edges-1) + 2, 4 * (upper.edges-1) + 4)
-          x_[count + 1:n_e] <- c(rep(1,length(lower.edges)),
-                                 rep(-1,length(upper.edges)))
+          j_[count + 1:n_e] <- c(4 * (lower_edges-1) + 2, 4 * (upper_edges-1) + 4)
+          x_[count + 1:n_e] <- c(rep(1,length(lower_edges)),
+                                 rep(-1,length(upper_edges)))
           count <- count + n_e
           count_constraint <- count_constraint + 1
         }
         if (n_e > 1) {
-          if (length(upper.edges) == 0) {
-            edges <- cbind(lower.edges, 1)
-          } else if(length(lower.edges) == 0){
-            edges <- cbind(upper.edges, 3)
+          if (length(upper_edges) == 0) {
+            edges <- cbind(lower_edges, 1)
+          } else if(length(lower_edges) == 0){
+            edges <- cbind(upper_edges, 3)
           }else{
-            edges <- rbind(cbind(lower.edges, 1),
-                           cbind(upper.edges, 3))
+            edges <- rbind(cbind(lower_edges, 1),
+                           cbind(upper_edges, 3))
           }
           for (i in 2:n_e) {
             i_[count + 1:2] <- count_constraint + 1
@@ -590,8 +595,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
 
-
-
     if(!is.null(n)){
       if(length(n)>1 || (!is.numeric(n))){
         stop("n should be a single number")
@@ -599,15 +602,13 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       if(n<=0){
         stop("n must be positive!")
-       }
+      }
 
-     if(n%%1!=0){
-      warning("A noninteger n was given, we are rounding it to an integer.")
-      n <- round(n)
+      if(n%%1!=0){
+        warning("A noninteger n was given, we are rounding it to an integer.")
+        n <- round(n)
+      }
     }
-    }
-
-
 
     self$mesh <- list(PtE = NULL,
                       V = NULL,
@@ -676,7 +677,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Computes observation matrix for mesh
-  #' @param PtE locations given as (edge number in graph, normalized location on edge)
+  #' @param PtE locations given as (edge number in graph, normalized location on
+  #' edge)
   mesh_A = function(PtE) {
     if(ncol(PtE)!= 2){
       stop("PtE must have two columns!")
@@ -724,12 +726,13 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description plot a metric graph
-  #' @param data Which column of the data to plot? If `NULL`, no data will be plotted.
-  #' @param repl If there are replicates, which replicate to plot?
-  #' If `repl` is a number, it will be the index of the replicate
-  #' as stored internally. If `repl` is a character, then the replicate will be chosen
-  #' by its name.
-  #' @param plotly use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.
+  #' @param data Which column of the data to plot? If `NULL`, no data will be
+  #' plotted.
+  #' @param group If there are groups, which group to plot? If `group` is a
+  #' number, it will be the index of the group as stored internally. If `group`
+  #' is a character, then the group will be chosen by its name.
+  #' @param plotly use plot_ly for 3D plot (default FALSE). This option requires
+  #' the 'plotly' package.
   #' @param vertex_size size of the vertices
   #' @param vertex_color color of vertices
   #' @param edge_width line width for edges
@@ -756,7 +759,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' graph <- metric_graph$new(lines = Lines)
   #' graph$plot()
   plot = function(data = NULL,
-                  repl = 1,
+                  group = 1,
                   plotly = FALSE,
                   vertex_size = 3,
                   vertex_color = 'black',
@@ -771,9 +774,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(!is.null(data) && is.null(self$data)){
       stop("The graph does not contain data.")
     }
-    if(is.numeric(repl) && !is.null(data)){
-      unique_repl <- unique(self$data[["__repl"]])
-      repl <- unique_repl[repl]
+    if(is.numeric(group) && !is.null(data)){
+      unique_group <- unique(self$data[["__group"]])
+      group <- unique_group[group]
     }
     if(!plotly){
       p <- private$plot_2d(line_width = edge_width,
@@ -782,7 +785,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            edge_color = edge_color,
                            data = data,
                            data_size = data_size,
-                           repl = repl,
+                           group = group,
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
@@ -796,7 +799,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            edge_color = edge_color,
                            data = data,
                            data_size = data_size,
-                           repl = repl,
+                           group = group,
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
@@ -810,7 +813,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at the mesh in the graph
-  #' @param plotly if TRUE, then plot is shown in 3D. This option requires the package 'plotly'.
+  #' @param plotly if TRUE, then plot is shown in 3D. This option requires the
+  #' package 'plotly'.
   #' @param vertex_size (for both 2d and 3d plots) size of the vertices
   #' @param vertex_color color of vertices
   #' @param edge_width width for edges
@@ -934,49 +938,46 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
         }
       }
-
-        index <- (self$LtE@p[i] + 1) :
-          (self$LtE@p[i + 1])
-        LinesPos <- cbind(self$LtE@i[index] + 1,
-                          self$LtE@x[index])
-        LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
-        for (j in 1:length(index)) {
-          if (j==1) {
-            index_j <- vals[, 1] <= LinesPos[j, 2]
-          } else {
-            index_j <- (vals[, 1] <= LinesPos[j, 2]) &
-              (vals[, 1] > LinesPos[j - 1, 2])
-          }
-          if (sum(index_j) == 0)
-            next
-          rel.pos = vals[index_j, 1]
-          if (j == 1) {
-            rel.pos <- rel.pos / LinesPos[j, 2]
-          } else {
-            rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
-              (LinesPos[j, 2] - LinesPos[j - 1, 2])
-          }
-          if (j == dim(LinesPos)[1])
-            rel.pos = self$ELend[i] * rel.pos
-          if (j==1)
-            rel.pos = rel.pos + self$ELstart[i]
-
-          data.to.plot <- cbind(rel.pos,vals[index_j, 2])
-          Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
-
-          data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
-                                             drop = FALSE]
-          p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
-                                                                  drop = FALSE],
-                                    normalized = TRUE)
-          coords <-p2@coords
-          x.loc <- c(x.loc, coords[, 1])
-          y.loc <- c(y.loc, coords[, 2])
-          z.loc <- c(z.loc, data.to.plot.order[, 2])
-          i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
-          kk = kk+1
+      index <- (self$LtE@p[i] + 1) : (self$LtE@p[i + 1])
+      LinesPos <- cbind(self$LtE@i[index] + 1,
+                        self$LtE@x[index])
+      LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
+      for (j in 1:length(index)) {
+        if (j==1) {
+          index_j <- vals[, 1] <= LinesPos[j, 2]
+        } else {
+          index_j <- (vals[, 1] <= LinesPos[j, 2]) &
+            (vals[, 1] > LinesPos[j - 1, 2])
         }
+        if (sum(index_j) == 0)
+          next
+        rel.pos = vals[index_j, 1]
+        if (j == 1) {
+          rel.pos <- rel.pos / LinesPos[j, 2]
+        } else {
+          rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
+            (LinesPos[j, 2] - LinesPos[j - 1, 2])
+        }
+        if (j == dim(LinesPos)[1])
+          rel.pos = self$ELend[i] * rel.pos
+        if (j==1)
+          rel.pos = rel.pos + self$ELstart[i]
 
+        data.to.plot <- cbind(rel.pos,vals[index_j, 2])
+        Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
+
+        data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
+                                           drop = FALSE]
+        p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
+                                                                drop = FALSE],
+                                  normalized = TRUE)
+        coords <-p2@coords
+        x.loc <- c(x.loc, coords[, 1])
+        y.loc <- c(y.loc, coords[, 2])
+        z.loc <- c(z.loc, data.to.plot.order[, 2])
+        i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
+        kk = kk+1
+      }
     }
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
 
@@ -997,7 +998,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(support_width > 0) {
         data.mesh <- data.frame(x = c(x.loc, x.loc), y = c(y.loc, y.loc),
                                 z = c(rep(0, length(z.loc)), z.loc),
-                                i = rep(1:length(z.loc),2))
+                                i = rep(1:length(z.loc), 2))
         p <- plotly::add_trace(p, data = data.mesh, x = ~y, y = ~x, z = ~z,
                              mode = "lines", type = "scatter3d",
                              line = list(width = support_width,
@@ -1009,7 +1010,8 @@ metric_graph <-  R6::R6Class("metric_graph",
         p <- ggplot(data = data, aes(x = x, y = y,
                                      group = i,
                                      colour = z)) +
-          geom_path(linewidth = line_width) + scale_color_viridis() + labs(colour = "")
+          geom_path(linewidth = line_width) + scale_color_viridis() +
+          labs(colour = "")
       } else {
         p <- p + geom_path(data = data,
                            aes(x = x, y = y,
@@ -1028,61 +1030,61 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param t  position on line to split (normalized)
   split_edge = function(Ei, t) {
 
-      index <- (self$LtE@p[Ei] + 1):(self$LtE@p[Ei + 1])
-      LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
-      LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
-      j <- min(which(t <= LinesPos[, 2]))
-      t_mod <- t
-      if (j == 1) {
-        t_mod <- t_mod/LinesPos[j, 2]
-      } else {
-        t_mod <- (t_mod - LinesPos[j - 1, 2]) /
-          (LinesPos[j, 2] - LinesPos[j - 1, 2])
-      }
-      mult_ <- 1
-      if(j== dim(LinesPos)[1] ){
-        mult_ <- self$ELend[Ei]
-      }
-      if(j==1)
-        mult_ = mult_ - self$ELstart[Ei]
-      t_mod = mult_ * t_mod
+    index <- (self$LtE@p[Ei] + 1):(self$LtE@p[Ei + 1])
+    LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
+    LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
+    j <- min(which(t <= LinesPos[, 2]))
+    t_mod <- t
+    if (j == 1) {
+      t_mod <- t_mod/LinesPos[j, 2]
+    } else {
+      t_mod <- (t_mod - LinesPos[j - 1, 2]) /
+        (LinesPos[j, 2] - LinesPos[j - 1, 2])
+    }
+    mult_ <- 1
+    if(j== dim(LinesPos)[1] ){
+      mult_ <- self$ELend[Ei]
+    }
+    if(j==1)
+      mult_ = mult_ - self$ELstart[Ei]
+    t_mod = mult_ * t_mod
 
-      if(j==1){
-        t_mod = t_mod + self$ELstart[Ei]
-      }
+    if(j==1){
+      t_mod = t_mod + self$ELstart[Ei]
+    }
 
-      Line <- self$lines[LinesPos[j,1], ]
-      val_line <- gInterpolate(Line, t_mod, normalized = TRUE)@coords
+    Line <- self$lines[LinesPos[j,1], ]
+    val_line <- gInterpolate(Line, t_mod, normalized = TRUE)@coords
 
-      #change LtE
-      self$ELend <- c(self$ELend, self$ELend[Ei])
-      self$ELend[Ei] <- t_mod
-      self$ELstart <- c(self$ELstart, t_mod)
-      LtE.i <- self$LtE@i
-      LtE.p <- self$LtE@p
-      LtE.x <- self$LtE@x
-      LtE.dim <- self$LtE@Dim
-      LtE.dim[2] <- LtE.dim[2] + 1
-      # add the new column
-      LtE.i_new <- LinesPos[j,1] - 1
-      LtE.x_new <- LinesPos[j,2]
-      large <- LtE.x[index] > t
+    #change LtE
+    self$ELend <- c(self$ELend, self$ELend[Ei])
+    self$ELend[Ei] <- t_mod
+    self$ELstart <- c(self$ELstart, t_mod)
+    LtE.i <- self$LtE@i
+    LtE.p <- self$LtE@p
+    LtE.x <- self$LtE@x
+    LtE.dim <- self$LtE@Dim
+    LtE.dim[2] <- LtE.dim[2] + 1
+    # add the new column
+    LtE.i_new <- LinesPos[j,1] - 1
+    LtE.x_new <- LinesPos[j,2]
+    large <- LtE.x[index] > t
 
-      n.p <- length(self$LtE@p)
-      if(sum(large)>1){
-        index.rem = index[large]
-        index.rem <- index.rem[-length(index.rem)]
-        LtE.i_new = c(LtE.i_new,LtE.i[index.rem])
-        LtE.x_new = c(LtE.x_new,LtE.x[index.rem])
-        LtE.i <- LtE.i[-index.rem]
-        LtE.x <- LtE.x[-index.rem]
-        self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
-      }
-      LtE.p_new <- self$LtE@p[n.p] + sum(large)
-      self$LtE <- Matrix::sparseMatrix(i = c(LtE.i, LtE.i_new)+1,
-                                       p = c(LtE.p, LtE.p_new),
-                                       x = c(LtE.x, LtE.x_new),
-                                       dims = LtE.dim)
+    n.p <- length(self$LtE@p)
+    if(sum(large)>1){
+      index.rem = index[large]
+      index.rem <- index.rem[-length(index.rem)]
+      LtE.i_new = c(LtE.i_new,LtE.i[index.rem])
+      LtE.x_new = c(LtE.x_new,LtE.x[index.rem])
+      LtE.i <- LtE.i[-index.rem]
+      LtE.x <- LtE.x[-index.rem]
+      self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
+    }
+    LtE.p_new <- self$LtE@p[n.p] + sum(large)
+    self$LtE <- Matrix::sparseMatrix(i = c(LtE.i, LtE.i_new)+1,
+                                     p = c(LtE.p, LtE.p_new),
+                                     x = c(LtE.x, LtE.x_new),
+                                     dims = LtE.dim)
 
     newV <- self$nV + 1
     self$V <- rbind(self$V, c(val_line))
@@ -1092,37 +1094,35 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$nE <- self$nE + 1
     self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
     self$E[Ei, 2] <- newV
-
     self$nV <- dim(self$V)[1]
 
     if(!is.null(self$data)){
-
-        ind <- which(private$temp_PtE[, 1] %in% Ei)
-
-        for (i in ind) {
-          if (private$temp_PtE[i, 2] >= t - 1e-10) {
-            private$temp_PtE[i, 1] <- self$nE
-            private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
-          }
+      ind <- which(private$temp_PtE[, 1] %in% Ei)
+      for (i in ind) {
+        if (private$temp_PtE[i, 2] >= t - 1e-10) {
+          private$temp_PtE[i, 1] <- self$nE
+          private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
         }
+      }
     }
-
-
-
   },
 
   #' @description Add observations on mesh to the object
-  #' @param data A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-  #' indicating the index of the replicate. If `data_frame` is not `NULL`, it takes priority over any eventual data in `Spoints`.
-  #' @param replicates If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.
-  add_mesh_observations = function(data = NULL, replicates = NULL) {
+  #' @param data A data.frame or named list containing the observations. In case
+  #' of groups, the data.frames for the groups should be stacked vertically,
+  #' with a column indicating the index of the group. If `data_frame` is not
+  #' `NULL`, it takes priority over any eventual data in `Spoints`.
+  #' @param group If the data_frame contains groups, one must provide the column
+  #' in which the group indices are stored.
+  add_mesh_observations = function(data = NULL, group = NULL) {
+
     if(is.null(self$mesh)){
       stop("You should have a mesh!")
     }
     PtE_mesh <- self$mesh$PtE
     data[["__edge_number"]] <- PtE_mesh[,1]
     data[["__distance_on_edge"]] <- PtE_mesh[,2]
-    self$add_observations(data = data, replicates = replicates,
+    self$add_observations(data = data, group = group,
                           edge_number = "__edge_number",
                           distance_on_edge = "__distance_on_edge",
                           normalized = TRUE)
@@ -1134,39 +1134,45 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Get the observation/prediction matrix A
-  #' @param repl A vector. If `NULL`, the A matrix for all replicates will be returned.
-  #' Otherwise, the A matrix for the replicates in the vector will be returned.
+  #' @param group A vector. If `NULL`, the A matrix for all groups will be
+  #' returned. Otherwise, the A matrix for the groups in the vector will be
+  #' returned.
   #' @param obs_to_vert Should the observations be turned into vertices?
-  #' @param include_NA Should the locations for which all observations are NA be included?
+  #' @param include_NA Should the locations for which all observations are NA be
+  #' included?
 
-  A = function(repl = NULL, obs_to_vert = FALSE,
-                include_NA = TRUE){
+  A = function(group = NULL,
+               obs_to_vert = FALSE,
+               include_NA = TRUE){
+
     if(is.null(self$PtV) && !obs_to_vert){
-        stop("The A matrix was not computed. If you want to compute rerun this method with 'obs_to_vertex=TRUE', in which the observations will be turned to vertices and the A matrix will then be computed")
+        stop("The A matrix was not computed. If you want to compute rerun this
+             method with 'obs_to_vertex=TRUE', in which the observations will be
+             turned to vertices and the A matrix will then be computed")
     } else if(is.null(self$PtV)){
       self$observation_to_vertex()
     }
 
-    if(is.null(repl)){
-          repl <- unique(self$data[["__repl"]])
-          n_repl <- length(repl)
+    if(is.null(group)){
+      group <- unique(self$data[["__group"]])
+      n_group <- length(group)
     }
 
     if(include_NA){
       A <- Matrix::Diagonal(self$nV)[self$PtV, ]
-      return(Matrix::kronecker(Diagonal(n_repl),A))
+      return(Matrix::kronecker(Diagonal(n_group),A))
     } else{
-      if(length(repl) == 1){
+      if(length(group) == 1){
         A <- Matrix::Diagonal(self$nV)[self$PtV, ]
         return(A)
-      } else{
-        data_repl <- select_replicate(self$data, repl[1])
-        idx_notna <- idx_not_all_NA(data_repl)
+      } else {
+        data_group <- select_group(self$data, group[1])
+        idx_notna <- idx_not_all_NA(data_group)
         nV_tmp <- sum(idx_notna)
         A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
-        for(i in 2:length(repl)){
-          data_repl <- select_replicate(self$data, repl[i])
-          idx_notna <- idx_not_all_NA(data_repl)
+        for (i in 2:length(group)) {
+          data_group <- select_group(self$data, group[i])
+          idx_notna <- idx_not_all_NA(data_group)
           nV_tmp <- sum(idx_notna)
           A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
         }
@@ -1175,7 +1181,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
 
-  #' @description Convert between locations on the graph and Euclidean coordinates
+  #' @description Convert between locations on the graph and Euclidean
+  #' coordinates
   #' @param PtE matrix with locations on the graph (edge number and normalized
   #' position on the edge).
   #' @param XY matrix with locations in Euclidean space
@@ -1211,12 +1218,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!normalized) {
         PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
       }
- 
+
       for (i in 1:dim(PtE)[1]) {
-        # Ei <- PtE[i,1]
-        # Ei <- which(self$LtE[,i] == 1)
         LT <- private$edge_pos_to_line_pos2(PtE[i, 1], PtE[i, 2])
-        # LT <- private$edge_pos_to_line_pos(Ei, PtE[i, 2])
         Line <- self$lines[LT[1, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"),
                              normalized = TRUE)
@@ -1229,10 +1233,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       Spoints <- SpatialPoints(XY)
       SP <- snapPointsToLines(Spoints, self$lines)
       coords.old <- as.data.frame(Spoints@coords)
-      colnames(coords.old) <- paste(colnames(coords.old) ,'_old',sep="")
+      colnames(coords.old) <- paste(colnames(coords.old), '_old', sep="")
       Spoints@coords = SP@coords
       Spoints@bbox   = SP@bbox
-      LtE = cbind(match(SP@data[,1], self$EID),0)
+      LtE = cbind(match(SP@data[,1], self$EID), 0)
 
       for (ind in unique(LtE[, 1])) {
         index.p <- LtE[, 1] == ind
@@ -1260,45 +1264,6 @@ metric_graph <-  R6::R6Class("metric_graph",
     ),
 
   private = list(
-    # #computes which line and which position t_E on Ei belongs to
-    # # Ei  (int)   edge index
-    # # t_e (n x 1) number of positions on Ei
-    # edge_pos_to_line_pos = function(Ei, t_E) {
-
-    #   LT <- matrix(0, nrow= length(t_E),2)
-    #   L_index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
-
-    #   #LinPos line number and end relative end of the line on the edge
-    #   LinesPos <- cbind(self$LtE@i[L_index] + 1, self$LtE@x[L_index])
-    #   LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
-    #   for(j in 1:length(L_index)){
-    #     if(j==1){
-    #       index_j <-  t_E <= LinesPos[j,2]
-    #     }else{
-    #       index_j <- (t_E <= LinesPos[j,2]) &  (t_E > LinesPos[j-1,2])
-    #     }
-    #     if(sum(index_j) == 0)
-    #       next
-
-    #     LT[index_j,1] <- LinesPos[j,1]
-    #     rel.pos = t_E[index_j]
-    #     if(j == 1){
-    #       rel.pos <- rel.pos/LinesPos[j,2]
-    #     }else{
-    #       rel.pos <- (rel.pos-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
-    #     }
-
-    #     if(j== dim(LinesPos)[1] )
-    #       rel.pos = self$ELend[Ei]*rel.pos
-    #     if(j==1)
-    #       rel.pos = rel.pos + self$ELstart[Ei]
-
-    #     LT[index_j,2] = rel.pos
-
-    #   }
-    #   return(LT)
-    # },
-
   #function for creating Vertex and Edges from self$lines
   line_to_vertex = function(tolerance = 0, longlat = FALSE) {
     lines <- c()
@@ -1358,18 +1323,18 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #Compute PtE for mesh given PtE for graph
   PtE_to_mesh = function(PtE){
-    VtE <- rbind(self$VtEfirst(),self$mesh$PtE)
-    PtE_update <- matrix(0,dim(PtE)[1],2)
-    for(i in 1:dim(PtE)[1]) {
-      ei <- PtE[i,1]
-      ind <- which(VtE[,1]==ei)
-      if(PtE[i,2]<min(VtE[ind,2])){ #node in first edge on line
-        v1 <- self$E[ei,1]
-        ind2 <- which.min(VtE[ind,2])
+    VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
+    PtE_update <- matrix(0, dim(PtE)[1], 2)
+    for (i in 1:dim(PtE)[1]) {
+      ei <- PtE[i, 1]
+      ind <- which(VtE[,1] == ei)
+      if (PtE[i,2]<min(VtE[ind, 2])) { #node on first edge on line
+        v1 <- self$E[ei, 1]
+        ind2 <- which.min(VtE[ind, 2])
         v2 <- ind[ind2]
         d1 <- 0
         d2 <- VtE[v2, 2]
-      } else if (PtE[i,2] > max(VtE[ind,2])) { #node in last edge on line
+      } else if (PtE[i,2] > max(VtE[ind,2])) { #node on last edge on line
         ind2 <- which.max(VtE[ind, 2])
         v1 <- ind[ind2]
         v2 <- self$E[ei, 2]
@@ -1383,15 +1348,14 @@ metric_graph <-  R6::R6Class("metric_graph",
         d1 <- VtE[v1, 2]
         d2 <- VtE[v2, 2]
       }
-      #edge in mesh
-      e <- which(rowSums((self$mesh$E==v1) + (self$mesh$E==v2))==2)
+      #edge on mesh
+      e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
       #distance on edge
       if (self$mesh$E[e, 1] == v1) {
         d <- (PtE[i, 2] - d1)/(d2 - d1)
       } else {
         d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
       }
-
       PtE_update[i, ] <- c(e, d)
     }
     return(PtE_update)
@@ -1405,7 +1369,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                      edge_color = 'black',
                      data,
                      data_size = 1,
-                     repl = 1,
+                     group = 1,
                      mesh = FALSE,
                      X = NULL,
                      X_loc = NULL,
@@ -1413,22 +1377,22 @@ metric_graph <-  R6::R6Class("metric_graph",
                      ...){
     xyl <- c()
 
-      coords <- lapply(coordinates(self$lines), function(x) x[[1]])
-      nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
-      xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
+    coords <- lapply(coordinates(self$lines), function(x) x[[1]])
+    nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
+    xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
 
     if(is.null(p)){
-      p <- ggplot()+ geom_path(data = data.frame(x = xyl[, 1],
-                                                 y = xyl[,2],
-                                                 group = xyl[,3]),
-                               mapping = aes(x = x, y = y, group = group),
-                               linewidth = line_width,
-                               colour = edge_color, ...)
+      p <- ggplot() + geom_path(data = data.frame(x = xyl[, 1],
+                                                  y = xyl[, 2],
+                                                  grp = xyl[, 3]),
+                                mapping = aes(x = x, y = y, group = grp),
+                                linewidth = line_width,
+                                colour = edge_color, ...)
     } else {
       p <- p + geom_path(data = data.frame(x = xyl[, 1],
-                                                 y = xyl[,2],
-                                                 group = xyl[,3]),
-                         mapping = aes(x = x, y = y, group = group),
+                                           y = xyl[,2],
+                                           grp = xyl[,3]),
+                         mapping = aes(x = x, y = y, group = grp),
                          linewidth = line_width,
                          colour = edge_color, ...)
     }
@@ -1440,10 +1404,9 @@ metric_graph <-  R6::R6Class("metric_graph",
                           size= marker_size, ...)
     }
     if (!is.null(data)) {
-
       x <- y <- NULL
-      data_repl <- select_replicate(self$data, repl)
-      y_plot <-data_repl[[data]]
+      data_group <- select_group(self$data, group)
+      y_plot <-data_group[[data]]
       points_xy <- self$coordinates(PtE = self$get_PtE())
       x <- points_xy[,1]
       y <- points_xy[,2]
@@ -1494,7 +1457,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                      edge_color = 'rgb(0,0,0)',
                      data,
                      data_size = 1,
-                     repl = 1,
+                     group = 1,
                      mesh = FALSE,
                      p = NULL,
                      ...){
@@ -1536,16 +1499,16 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if (!is.null(data)) {
       x <- y <- NULL
-      data_repl <- select_replicate(self$data, repl)
-      y_plot <- self$data_repl[[data]]
+      data_group <- select_group(self$data, group)
+      y_plot <- self$data_group[[data]]
       PtE <- self$get_PtE()
       points_xy <- self$coordinates(PtE = PtE)
-      
+
       x <- points_xy[,1]
       y <- points_xy[,2]
-      
+
       data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
-                                            y = y[!is.na(as.vector(y_plot))],
+                              y = y[!is.na(as.vector(y_plot))],
                               z = rep(0,length(x[!is.na(as.vector(y_plot))])),
                               val = as.vector(y_plot[!is.na(as.vector(y_plot))]))
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
@@ -1566,13 +1529,11 @@ metric_graph <-  R6::R6Class("metric_graph",
                                          color = 'rgb(100,100,100)'),
                            showlegend = FALSE)
     }
-    xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
     return(p)
   },
 
   # Version 2 edge_pos_to_line_pos
   # Gets relative position on the line
-
   edge_pos_to_line_pos2 = function(E_i, t_i){
     line_E_i <- which(self$LtE[,E_i] == 1)
     start_point <- self$ELstart[E_i]
@@ -1597,6 +1558,150 @@ metric_graph <-  R6::R6Class("metric_graph",
 
 ))
 
+#' @title Connected components of metric graph
+#' @description Class representing connected components of a metric graph
+#' @details A list of graph objects created from vertex and edge matrices, or
+#' from an sp::Lines object where each line is representing and edge. For more
+#' details, see the help vignette:
+#' \code{vignette("metric_graph", package = "MetricGraph")}
+#' @examples
+#' library(sp)
+#' line1 <- Line(rbind(c(0, 0), c(1, 0)))
+#' line2 <- Line(rbind(c(1, 0), c(2, 0)))
+#' line3 <- Line(rbind(c(1, 1), c(2, 1)))
 
+#' Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
+#'                            Lines(list(line2), ID = "2"),
+#'                            Lines(list(line3), ID = "3")))
+#' graphs <- graph_components(Lines)
+#' graphs$plot()
+#' @export
+graph_components <-  R6::R6Class("graph_components",
+   public = list(
+   #' @field graphs list of graphs
+   graphs = NULL,
 
+   #' @field n the number of graphs
+   n = 0,
 
+   #' @field sizes number of vertices for each of the graphs
+   sizes = NULL,
+
+   #' @field lengths total edge lengths for each of the graphs
+   lengths = NULL,
+
+   #' Create metric graphs for connected components
+   #'
+   #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`
+   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
+   #' @param E m x 2 matrix where each row represents an edge
+   #' @param longlat If TRUE, then it is assumed that the coordinates are given
+   #' in Longitude/Latitude and that distances should be computed in km.
+   #' @param tolerance vertices that are closer than this number are merged when
+   #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
+   #' tolerance is given in km.
+   #' @param by_length Sort the components by total edge length? If FALSE,
+   #' the components are sorted by the number of vertices.
+   #' @param ... additional arguments used when specifying the graphs
+   #' @return A `graph_components` object
+   initialize = function(lines = NULL,
+                         V = NULL,
+                         E = NULL,
+                         by_length = TRUE,
+                         ...) {
+     graph <- metric_graph$new(lines = lines, V = V, E = E,
+                               check_connected = FALSE, ...)
+     g <- graph(edges = c(t(graph$E)), directed = FALSE)
+     igraph::E(g)$weight <- graph$edge_lengths
+     components <- igraph::clusters(g, mode="weak")
+
+     self$n <- components$no
+     if(self$n > 1) {
+       self$graphs <- list()
+       for(k in 1:self$n) {
+         vert_ids <- igraph::V(g)[components$membership == k]
+         edge_rem <- NULL
+         for (i in 1:graph$nE) {
+           if(!(graph$E[i, 1] %in% vert_ids) && !(graph$E[i, 2] %in% vert_ids))
+             edge_rem <- c(edge_rem, i)
+         }
+         edge_keep <- setdiff(1:graph$nE, edge_rem)
+         self$graphs[[k]] = metric_graph$new(lines = lines[edge_keep],
+                                             check_connected = FALSE, ...)
+       }
+       self$sizes <- components$csize
+       self$lengths <- unlist(lapply(1:self$n,
+                                     function(x) sum(self$graphs[[x]]$edge_lengths)))
+       if(by_length) {
+         reo <- sort(self$lengths, decreasing = TRUE, index.return = TRUE)$ix
+       } else {
+         reo <- sort(self$sizes, decreasing = TRUE, index.return = TRUE)$ix
+       }
+       self$graphs <- self$graphs[reo]
+       self$lengths <- self$lengths[reo]
+       self$sizes <- self$sizes[reo]
+     } else {
+       self$graphs <- list(graph)
+       self$lengths <- sum(graph$edge_lengths)
+       self$sizes <- graph$nV
+     }
+   },
+
+   #' @description Return the largest component
+   get_largest = function() {
+     return(self$graphs[[1]])
+   },
+
+   #' Plot all components
+   #'
+   #' @param edge_colors a 3 x nc matrix with RGB values for the edge colors to
+   #' be used when plotting each graph
+   #' @param vertex_colors a 3 x nc matrix with RGB values for the edge colors to
+   #' be used when plotting each graph
+   #' @param ... additional arguments for plotting the individual graphs
+   plot = function(edge_colors = NULL, vertex_colors = NULL, ...) {
+
+     if (is.null(edge_colors)) {
+       edge_colors <- matrix(0, nrow = self$n, ncol = 3)
+       if(self$n > 1) {
+        for(i in 2:self$n) {
+         edge_colors[i, ] = runif(3)
+        }
+       }
+     } else {
+       if (ncol(edge_colors)!= 3) {
+         stop("edge_colors must have three columns!")
+       }
+       if (nrow(edge_colors)!= self$n) {
+         stop("edge_colors must have the same number of rows as there are components!")
+       }
+     }
+     if (is.null(vertex_colors)) {
+       vertex_colors <- edge_colors
+     } else {
+       if (ncol(vertex_colors)!= 3) {
+         stop("vertex_colors must have three columns!")
+       }
+       if (nrow(vertex_colors)!= self$n) {
+         stop("vertex_colors must have the same number of rows as there are components!")
+       }
+     }
+     p <- self$graphs[[1]]$plot(edge_color = rgb(edge_colors[1, 1],
+                                                 edge_colors[1, 2],
+                                                 edge_colors[1, 3]),
+                                vertex_color = rgb(vertex_colors[1, 1],
+                                                   vertex_colors[1, 2],
+                                                   vertex_colors[1, 3]), ...)
+     if (self$n > 1) {
+       for(i in 2:self$n){
+         suppressWarnings(p <- self$graphs[[i]]$plot(edge_color = rgb(edge_colors[i, 1],
+                                                     edge_colors[i, 2],
+                                                     edge_colors[i, 3]),
+                                    vertex_color = rgb(vertex_colors[i, 1],
+                                                       vertex_colors[i, 2],
+                                                       vertex_colors[i, 3]),
+                                    p = p, ...))
+       }
+     }
+     return(p)
+   }))

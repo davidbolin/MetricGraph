@@ -2,9 +2,9 @@
 % Please edit documentation in R/metric_graph.R
 \name{metric_graph}
 \alias{metric_graph}
-\title{Metric graph object for specification of Gaussian processes}
+\title{Metric graph}
 \description{
-Class representing a general metric graphs.
+Class representing a general metric graph
 }
 \details{
 A graph object created from vertex and edge matrices, or from an
@@ -133,7 +133,8 @@ Create a new \code{metric_graph} object
   V = NULL,
   E = NULL,
   longlat = FALSE,
-  tolerance = 1e-10
+  tolerance = 1e-10,
+  check_connected = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -152,6 +153,9 @@ in Longitude/Latitude and that distances should be computed in km.}
 \item{\code{tolerance}}{vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the
 tolerance is given in km.}
+
+\item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
+connected and a warning is given if this is not the case.}
 }
 \if{html}{\out{</div>}}
 }
@@ -175,7 +179,7 @@ A metric_graph object
 Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(full = FALSE, repl = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(full = FALSE, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -183,11 +187,10 @@ graph
 \describe{
 \item{\code{full}}{Should the geodesic distances be computed for all
 the available locations. If \code{FALSE}, it will be computed
-separately for the locations of each replicate.}
+separately for the locations of each group.}
 
-\item{\code{repl}}{vector or list containing which replicates
-to compute the distance. If \code{NULL}, it will be computed
-for all replicates.}
+\item{\code{group}}{vector or list containing which groups to compute the distance
+for. If \code{NULL}, it will be computed for all groups.}
 }
 \if{html}{\out{</div>}}
 }
@@ -210,7 +213,7 @@ mesh
 Computes the resistance distance between the observation
 locations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, repl = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -218,11 +221,10 @@ locations
 \describe{
 \item{\code{full}}{Should the resistance distances be computed for all
 the available locations. If \code{FALSE}, it will be computed
-separately for the locations of each replicate.}
+separately for the locations of each group.}
 
-\item{\code{repl}}{vector or list containing which replicates
-to compute the distance. If \code{NULL}, it will be computed
-for all replicates.}
+\item{\code{group}}{vector or list containing which groups to compute the distance
+for. If \code{NULL}, it will be computed for all groups.}
 }
 \if{html}{\out{</div>}}
 }
@@ -264,7 +266,7 @@ mesh
 \subsection{Method \code{compute_laplacian()}}{
 Computes the weigthed graph Laplacian for the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(full = FALSE, repl = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(full = FALSE, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -272,11 +274,10 @@ Computes the weigthed graph Laplacian for the graph
 \describe{
 \item{\code{full}}{Should the resistance distances be computed for all
 the available locations. If \code{FALSE}, it will be computed
-separately for the locations of each replicate.}
+separately for the locations of each group.}
 
-\item{\code{repl}}{vector or list containing which replicates
-to compute the distance. If \code{NULL}, it will be computed
-for all replicates.}
+\item{\code{group}}{vector or list containing which groups to compute the
+Laplacian for. If \code{NULL}, it will be computed for all groups.}
 }
 \if{html}{\out{</div>}}
 }
@@ -354,7 +355,7 @@ Add observations to the graph
   coord_x = "coord_x",
   coord_y = "coord_y",
   data_coords = c("PtE", "euclidean"),
-  replicates = NULL,
+  group = NULL,
   normalized = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -366,28 +367,42 @@ Add observations to the graph
 which may include the coordinates only, or the coordinates as well as the
 observations.}
 
-\item{\code{data}}{A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-indicating the index of the replicate. If \code{data} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
+\item{\code{data}}{A data.frame or named list containing the observations. In case
+of groups, the data.frames for the groups should be stacked vertically,
+with a column indicating the index of the group. If \code{data} is not \code{NULL},
+it takes priority over any eventual data in \code{Spoints}.}
 
-\item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that contains the edge numbers. If not supplied,
-the column with name "edge_number" will be chosen.   Will not be used if \code{Spoints} is not \code{NULL}.}
+\item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that
+contains the edge numbers. If not supplied, the column with name
+"edge_number" will be chosen. Will not be used if \code{Spoints} is not \code{NULL}.}
 
-\item{\code{distance_on_edge}}{Column (or entry on the list) of the \code{data} that contains the edge numbers. If not supplied,
-the column with name "distance_on_edge" will be chosen.  Will not be used if \code{Spoints} is not \code{NULL}.}
+\item{\code{distance_on_edge}}{Column (or entry on the list) of the \code{data} that
+contains the edge numbers. If not supplied, the column with name
+"distance_on_edge" will be chosen.  Will not be used if \code{Spoints} is not
+\code{NULL}.}
 
-\item{\code{coord_x}}{Column (or entry on the list) of the \code{data} that contains the x coordinate. If not supplied,
-the column with name "coord_x" will be chosen.  Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is \code{PtE}.}
+\item{\code{coord_x}}{Column (or entry on the list) of the \code{data} that contains
+the x coordinate. If not supplied, the column with name "coord_x" will be
+chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
+\code{PtE}.}
 
-\item{\code{coord_y}}{Column (or entry on the list) of the \code{data} that contains the y coordinate. If not supplied,
-the column with name "coord_x" will be chosen.  Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is \code{PtE}.}
+\item{\code{coord_y}}{Column (or entry on the list) of the \code{data} that contains
+the y coordinate. If not supplied, the column with name "coord_x" will be
+chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
+\code{PtE}.}
 
-\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. Which coordinate system to use? If \code{PtE}, the user must provide
-\code{edge_number} and \code{distance_on_edge}, otherwise if \code{euclidean}, the user must provide \code{coord_x} and \code{coord_y}.}
+\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
+\code{distance_on_edge}, otherwise if \code{euclidean}, the user must provide
+\code{coord_x} and \code{coord_y}.}
 
-\item{\code{replicates}}{If the data contains replicates, one must provide the column (or entry on the list) in which the replicate indices are stored.}
+\item{\code{group}}{If the data is grouped (for example measured at different time
+points), this argument specifies the the column (or entry on the list) in
+which the group varialbe is stored.}
 
-\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are assumed to be
-normalized to (0,1). Default FALSE. Will not be used if \code{Spoints} is not \code{NULL}.}
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
+assumed to be normalized to (0,1). Default FALSE. Will not be used if
+\code{Spoints} is not \code{NULL}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -466,7 +481,8 @@ Computes observation matrix for mesh
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{PtE}}{locations given as (edge number in graph, normalized location on edge)}
+\item{\code{PtE}}{locations given as (edge number in graph, normalized location on
+edge)}
 }
 \if{html}{\out{</div>}}
 }
@@ -494,7 +510,7 @@ plot a metric graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   data = NULL,
-  repl = 1,
+  group = 1,
   plotly = FALSE,
   vertex_size = 3,
   vertex_color = "black",
@@ -512,11 +528,15 @@ plot a metric graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be plotted.}
+\item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be
+plotted.}
 
-\item{\code{repl}}{If there are replicates, which replicate to plot?}
+\item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
+number, it will be the index of the group as stored internally. If \code{group}
+is a character, then the group will be chosen by its name.}
 
-\item{\code{plotly}}{use plot_ly for 3D plot (default FALSE). This option requires the 'plotly' package.}
+\item{\code{plotly}}{use plot_ly for 3D plot (default FALSE). This option requires
+the 'plotly' package.}
 
 \item{\code{vertex_size}}{size of the vertices}
 
@@ -593,7 +613,8 @@ plot continuous function on the graph
 curve (in length), value) or a vector with values for the function
 evaluated at the mesh in the graph}
 
-\item{\code{plotly}}{if TRUE, then plot is shown in 3D. This option requires the package 'plotly'.}
+\item{\code{plotly}}{if TRUE, then plot is shown in 3D. This option requires the
+package 'plotly'.}
 
 \item{\code{vertex_size}}{(for both 2d and 3d plots) size of the vertices}
 
@@ -646,16 +667,19 @@ function for splitting lines in the graph
 \subsection{Method \code{add_mesh_observations()}}{
 Add observations on mesh to the object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(data = NULL, replicates = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(data = NULL, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
+\item{\code{data}}{A data.frame or named list containing the observations. In case
+of groups, the data.frames for the groups should be stacked vertically,
+with a column indicating the index of the group. If \code{data_frame} is not
+\code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
 
-\item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
+\item{\code{group}}{If the data_frame contains groups, one must provide the column
+in which the group indices are stored.}
 }
 \if{html}{\out{</div>}}
 }
@@ -676,18 +700,20 @@ Get a copy of the initial graph
 \subsection{Method \code{A()}}{
 Get the observation/prediction matrix A
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$A(repl = NULL, obs_to_vert = FALSE, include_NA = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$A(group = NULL, obs_to_vert = FALSE, include_NA = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{repl}}{A vector. If \code{NULL}, the A matrix for all replicates will be returned.
-Otherwise, the A matrix for the replicates in the vector will be returned.}
+\item{\code{group}}{A vector. If \code{NULL}, the A matrix for all groups will be
+returned. Otherwise, the A matrix for the groups in the vector will be
+returned.}
 
 \item{\code{obs_to_vert}}{Should the observations be turned into vertices?}
 
-\item{\code{include_NA}}{Should the locations for which all observations are NA be included?}
+\item{\code{include_NA}}{Should the locations for which all observations are NA be
+included?}
 }
 \if{html}{\out{</div>}}
 }
@@ -696,7 +722,8 @@ Otherwise, the A matrix for the replicates in the vector will be returned.}
 \if{html}{\out{<a id="method-metric_graph-coordinates"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-coordinates}{}}}
 \subsection{Method \code{coordinates()}}{
-Convert between locations on the graph and Euclidean coordinates
+Convert between locations on the graph and Euclidean
+coordinates
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$coordinates(PtE = NULL, XY = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
 }

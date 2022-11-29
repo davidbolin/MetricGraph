@@ -15,73 +15,6 @@ check_graph <- function(graph)
   return(out)
 }
 
-
-#' Create metric graphs for connected components of a SpatialLines object
-#'
-#' @param lines Object of class `SpatialLines`
-#' @param by_length Sort the components by total edge length? If FALSE,
-#' the components are sorted by the number of vertices.
-#' @param only_largest if TRUE, only return the largest component.
-#' Otherwise return an ordered list with the components (largest first)
-#' @param ... additional arguments used when specifying the graph
-#'
-#' @return A `metric_graph` object created from the largest component, or a
-#' list of `metric_graph` objects for all connected components
-#' @export
-#'
-#' @examples
-#' library(sp)
-#' line1 <- Line(rbind(c(0, 0), c(1, 0)))
-#' line2 <- Line(rbind(c(1, 0), c(2, 0)))
-#' line3 <- Line(rbind(c(1, 1), c(2, 1)))
-
-#' Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
-#'                            Lines(list(line2), ID = "2"),
-#'                            Lines(list(line3), ID = "3")))
-#' graphs <- graph_components(Lines, only_largest = FALSE)
-#' p <- graphs[[1]]$plot(edge_color = "red")
-#' graphs[[2]]$plot(p = p, edge_color = "blue")
-graph_components <- function(lines, by_length = TRUE, only_largest = FALSE,
-                             ...) {
-
-  graph <- metric_graph$new(lines = lines, ...)
-  g <- graph(edges = c(t(graph$E)), directed = FALSE)
-  igraph::E(g)$weight <- graph$edge_lengths
-  components <- igraph::clusters(g, mode="weak")
-
-  nc <- components$no
-  if(nc > 1) {
-    Graphs <- list()
-    for(k in 1:nc) {
-      vert_ids <- igraph::V(g)[components$membership == k]
-      edge_rem <- NULL
-      for (i in 1:graph$nE) {
-        if(!(graph$E[i, 1] %in% vert_ids) && !(graph$E[i, 2] %in% vert_ids))
-          edge_rem <- c(edge_rem, i)
-      }
-      edge_keep <- setdiff(1:graph$nE, edge_rem)
-      Graphs[[k]] = metric_graph$new(lines = lines[edge_keep], ...)
-    }
-    sizes <- components$csize
-    lengths <- unlist(lapply(1:nc, function(x) sum(Graphs[[x]]$edge_lengths)))
-    if(by_length) {
-      reo <- sort(lengths, decreasing = TRUE, index.return = TRUE)$ix
-    } else {
-      reo <- sort(sizes, decreasing = TRUE, index.return = TRUE)$ix
-    }
-    g <- Graphs[reo]
-  } else {
-    g <- list(graph)
-  }
-
-  if(only_largest) {
-    return(g[[1]])
-  } else {
-    return(g)
-  }
-}
-
-
 #'
 #' computes the covariance of free space (r'=0) neumann boundary
 #' @param s (n x 1) location
@@ -512,7 +445,7 @@ manual_data = NULL){
     data_std <- NA
   }
 
-  finite_geodist <- lapply(graph$geo_dist, 
+  finite_geodist <- lapply(graph$geo_dist,
                 function(geo){
                   idx_fin <- is.finite(geo)
                   return(max(geo[idx_fin]))
@@ -595,7 +528,7 @@ manual_data = NULL){
 #' @param theta A vector `c(sigma, kappa)`, where `sigma` is the standard deviation and `kappa` is a range-like parameter.
 #'
 #' @return A vector with the values C(h).
-#' @export 
+#' @export
 
 exp_covariance <- function(h, theta){
   sigma <- theta[1]
@@ -606,43 +539,41 @@ exp_covariance <- function(h, theta){
 
 #' Processing data to be used in add_observations
 #' @noRd
-#' 
+#'
 
-process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
+process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
   new_data[["__edge_number"]] <- PtE[,1]
   new_data[["__distance_on_edge"]] <- PtE[,2]
 
-  if(is.null(replicate_vector)){
-      replicate_vector <- rep(1, length(PtE[,1]))
+  if (is.null(group_vector)) {
+      group_vector <- rep(1, length(PtE[,1]))
   }
 
-  if(is.null(old_data)){
+  if (is.null(old_data)) {
     full_colnames <- names(new_data)
-    data_coords_new <- data.frame(PtE1 = PtE[,1],
-                          PtE2 = PtE[,2])
+    data_coords_new <- data.frame(PtE1 = PtE[,1], PtE2 = PtE[,2])
     data_coords <- unique(data_coords_new)
-    data_coords <- data_coords[order(data_coords$PtE1, 
-                          data_coords$PtE2),]
+    data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
 
     data_coords_tmp <- data_coords
-    repl_val <- unique(replicate_vector)
-    n_repl <- length(repl_val)
-    data_coords[["repl"]] <- repl_val[[1]]
-    if(n_repl>1){
-      for(i in 2:n_repl){
-          tmp_coords <- data_coords_tmp
-          tmp_coords[["repl"]] <- repl_val[[i]]
-          data_coords <- rbind(data_coords, tmp_coords)
-      }    
+    group_val <- unique(group_vector)
+    n_group <- length(group_val)
+    data_coords[["group"]] <- group_val[[1]]
+    if (n_group>1) {
+      for (i in 2:n_group) {
+        tmp_coords <- data_coords_tmp
+        tmp_coords[["group"]] <- group_val[[i]]
+        data_coords <- rbind(data_coords, tmp_coords)
+      }
     }
-    data_coords_new[["repl"]] <- replicate_vector
+    data_coords_new[["group"]] <- group_vector
     data_coords[["idx"]] <- 1:nrow(data_coords)
     idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE, sort = FALSE)
     idx_new_entries <- idx_new_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
-        list_result[1:length(list_result)] <- full_colnames
-        new_data <- lapply(list_result, function(col_name){
+    list_result[1:length(list_result)] <- full_colnames
+    new_data <- lapply(list_result, function(col_name){
           mode_vector <- typeof(new_data[[col_name]])
           tmp <- vector(mode=mode_vector, length = nrow(data_coords))
           is.na(tmp) <- 1:length(tmp)
@@ -650,94 +581,88 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
                tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
             }
             return(tmp)
-        })
+          })
     new_data[["__edge_number"]] <- data_coords[["PtE1"]]
     new_data[["__distance_on_edge"]] <- data_coords[["PtE2"]]
-    new_data[["__repl"]] <- data_coords[["repl"]]
+    new_data[["__group"]] <- data_coords[["group"]]
     return(new_data)
-  } else{
-
+  } else {
     old_colnames <- names(old_data)
     new_colnames <- names(new_data)
     full_colnames <- union(old_colnames, new_colnames)
 
-    new_df <- data.frame(PtE1 = PtE[,1],
-                          PtE2 = PtE[,2])
-    
+    new_df <- data.frame(PtE1 = PtE[,1], PtE2 = PtE[,2])
+
     old_df <- data.frame(PtE1 = old_data[["__edge_number"]],
-                          PtE2 = old_data[["__distance_on_edge"]])
+                         PtE2 = old_data[["__distance_on_edge"]])
 
     data_coords <- unique(rbind(old_df, new_df))
-    data_coords <- data_coords[order(data_coords$PtE1, 
-                          data_coords$PtE2),]
-    
+    data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
+
     data_coords_tmp <- data_coords
-    repl_val <- unique(replicate_vector)
-    n_repl <- length(repl_val)
-    data_coords[["repl"]] <- repl_val[[1]]
-    if(n_repl>1){
-      for(i in 2:n_repl){
+    group_val <- unique(group_vector)
+    n_group <- length(group_val)
+    data_coords[["group"]] <- group_val[[1]]
+    if (n_group>1) {
+      for (i in 2:n_group) {
           tmp_coords <- data_coords_tmp
-          tmp_coords[["repl"]] <- repl_val[[i]]
+          tmp_coords[["group"]] <- group_val[[i]]
           data_coords <- rbind(data_coords, tmp_coords)
-      }    
+      }
     }
     data_coords <- as.data.frame(data_coords)
-    new_df[["repl"]] <- replicate_vector
-    old_df[["repl"]] <- old_data[["__repl"]]
+    new_df[["group"]] <- group_vector
+    old_df[["group"]] <- old_data[["__group"]]
     data_coords[["idx"]] <- 1:nrow(data_coords)
 
-    idx_new_entries <- merge(new_df, data_coords, all=FALSE, sort = FALSE)
+    idx_new_entries <- merge(new_df, data_coords, all = FALSE, sort = FALSE)
     idx_new_entries <- idx_new_entries[["idx"]]
-    idx_old_entries <- merge(old_df, data_coords, all=FALSE, sort = FALSE)
+    idx_old_entries <- merge(old_df, data_coords, all = FALSE, sort = FALSE)
     idx_old_entries <- idx_old_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
     list_result[["__edge_number"]] <- NULL
     list_result[["__distance_on_edge"]] <- NULL
-    list_result[["__repl"]] <- NULL
+    list_result[["__group"]] <- NULL
     list_result <- lapply(list_result, function(col_name){
-
-      if(!is.null(new_data[[col_name]])){
-        mode_vector <- typeof(new_data[[col_name]])
-      } else{
-        mode_vector <- typeof(old_data[[col_name]])
-      }
-      tmp <- vector(mode=mode_vector, length = nrow(data_coords))
-      is.na(tmp) <- 1:length(tmp)
-
-
-      if(length(idx_new_entries)>0){
-        for(i in 1:length(idx_new_entries)){
-          tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
+        if(!is.null(new_data[[col_name]])){
+          mode_vector <- typeof(new_data[[col_name]])
+        } else{
+          mode_vector <- typeof(old_data[[col_name]])
         }
-      }
+        tmp <- vector(mode=mode_vector, length = nrow(data_coords))
+        is.na(tmp) <- 1:length(tmp)
 
-      if(length(idx_old_entries)>0){
-        for(i in 1:length(idx_old_entries)){
-          tmp[[idx_old_entries[i]]] <- old_data[[col_name]][[i]]
+        if(length(idx_new_entries)>0){
+          for(i in 1:length(idx_new_entries)){
+            tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
+          }
         }
-      }
-      return(tmp)
-    })
-    list_result[["__edge_number"]] <- data_coords[["PtE1"]]
-    list_result[["__distance_on_edge"]] <- data_coords[["PtE2"]]
-    list_result[["__repl"]] <- data_coords[["repl"]]
-    return(list_result)
+        if(length(idx_old_entries)>0){
+          for(i in 1:length(idx_old_entries)){
+            tmp[[idx_old_entries[i]]] <- old_data[[col_name]][[i]]
+          }
+        }
+        return(tmp)
+      })
+  list_result[["__edge_number"]] <- data_coords[["PtE1"]]
+  list_result[["__distance_on_edge"]] <- data_coords[["PtE2"]]
+  list_result[["__group"]] <- data_coords[["group"]]
+  return(list_result)
   }
 }
 
 #' find indices of the rows with all NA's in lists
-#' @noRd 
-#' 
+#' @noRd
+#'
 
 idx_not_all_NA <- function(data_list){
      data_list[["__edge_number"]] <- NULL
      data_list[["distance_on_edge"]] <- NULL
      data_list[["coord_x"]] <- NULL
-     data_list[["coord_y"]] <- NULL 
-     data_list[["replicates"]] <- NULL
+     data_list[["coord_y"]] <- NULL
+     data_list[["group"]] <- NULL
      data_names <- names(data_list)
      n_data <- length(data_list[[data_names[1]]])
      idx_non_na <- logical(n_data)
@@ -751,31 +676,26 @@ idx_not_all_NA <- function(data_list){
 }
 
 #' Select replicate
-#' @noRd 
-#' 
+#' @noRd
+#'
 
-select_replicate <- function(data_list, replicate){
-    repl <- data_list[["__repl"]]
-    repl <- which(repl == replicate)
-    data_result <- lapply(data_list,
-                            function(dat){
-                              dat[repl]
-                            })
+select_group <- function(data_list, group){
+    grp <- data_list[["__group"]]
+    grp <- which(grp == group)
+    data_result <- lapply(data_list, function(dat){dat[grp]})
     return(data_result)
 }
 
-#' Select coords in which there exists at least 
-#' one observation for a corresponding replicate
-#' @noRd 
-#' 
+#' Select coords in which there exists at least
+#' one observation for a corresponding group
+#' @noRd
+#'
 
-select_coords_replicate <- function(data_list, replicate){
-  data_repl <- select_replicate(data_list, replicate)
-  idx_notna <- idx_not_all_NA(data_repl)
-  data_repl <- lapply(data_repl, function(dat){
-        dat[idx_notna]
-  })
-  return(data_repl)
+select_coords_group <- function(data_list, group){
+  data_group <- select_group(data_list, group)
+  idx_notna <- idx_not_all_NA(data_group)
+  data_group <- lapply(data_repl, function(dat){dat[idx_notna]})
+  return(data_group)
 }
 
 
