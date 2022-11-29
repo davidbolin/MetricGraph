@@ -75,10 +75,6 @@ edges on the lines in the graph. The locations are normalized on the line}
 
 \item{\code{data}}{a list containing the data on the graph}
 
-\item{\code{PtE}}{matrix specifying the locations of the observation points on
-the edges, where \code{PtE[i,1]} is the edge index for the ith observation
-and  \code{PtE[,2]} is the normalized distance on the edge}
-
 \item{\code{PtV}}{vector with the indices of the vertices which are observation
 locations}
 
@@ -102,12 +98,15 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
 \item \href{#method-metric_graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
+\item \href{#method-metric_graph-compute_resdist_PtE}{\code{metric_graph$compute_resdist_PtE()}}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
+\item \href{#method-metric_graph-compute_laplacian_PtE}{\code{metric_graph$compute_laplacian_PtE()}}
+\item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
+\item \href{#method-metric_graph-get_Spoints}{\code{metric_graph$get_Spoints()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
-\item \href{#method-metric_graph-add_PtE_observations}{\code{metric_graph$add_PtE_observations()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
@@ -176,9 +175,22 @@ A metric_graph object
 Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(full = FALSE, repl = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{full}}{Should the geodesic distances be computed for all
+the available locations. If \code{FALSE}, it will be computed
+separately for the locations of each replicate.}
+
+\item{\code{repl}}{vector or list containing which replicates
+to compute the distance. If \code{NULL}, it will be computed
+for all replicates.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_geodist_mesh"></a>}}
@@ -198,14 +210,37 @@ mesh
 Computes the resistance distance between the observation
 locations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(PtE = NULL, normalized = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, repl = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{PtE}}{points to compute the metric for, if not provided, the metric
-is computed and stored for the observations in the graph}
+\item{\code{full}}{Should the resistance distances be computed for all
+the available locations. If \code{FALSE}, it will be computed
+separately for the locations of each replicate.}
+
+\item{\code{repl}}{vector or list containing which replicates
+to compute the distance. If \code{NULL}, it will be computed
+for all replicates.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_resdist_PtE"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_resdist_PtE}{}}}
+\subsection{Method \code{compute_resdist_PtE()}}{
+Computes the resistance distance between the observation
+locations
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{points to compute the metric for.}
 
 \item{\code{normalized}}{are the locations in PtE in normalized distance?}
 }
@@ -229,7 +264,59 @@ mesh
 \subsection{Method \code{compute_laplacian()}}{
 Computes the weigthed graph Laplacian for the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(full = FALSE, repl = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{full}}{Should the resistance distances be computed for all
+the available locations. If \code{FALSE}, it will be computed
+separately for the locations of each replicate.}
+
+\item{\code{repl}}{vector or list containing which replicates
+to compute the distance. If \code{NULL}, it will be computed
+for all replicates.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_laplacian_PtE"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_laplacian_PtE}{}}}
+\subsection{Method \code{compute_laplacian_PtE()}}{
+Computes the weigthed graph Laplacian for the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{points to compute the metric for.}
+
+\item{\code{normalized}}{are the locations in PtE in normalized distance?}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_PtE"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_PtE}{}}}
+\subsection{Method \code{get_PtE()}}{
+Gets PtE from the data
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_PtE()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_Spoints"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_Spoints}{}}}
+\subsection{Method \code{get_Spoints()}}{
+Gets the spatial points from the data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_Spoints()}\if{html}{\out{</div>}}
 }
 
 }
@@ -260,43 +347,13 @@ Clear all observations from the object
 Add observations to the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
-  Spoints,
-  data_frame = NULL,
-  data_list = NULL,
-  replicates = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations,
-which may include the coordinates only, or the coordinates as well as the
-observations}
-
-\item{\code{data_frame}}{A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
-
-\item{\code{data_list}}{A list, whose entries are given by one data.frame per replicate. When a data_list is given, the \code{replicates} argument is not used.
-If \code{data_list} is not \code{NULL}, it takes priority over both \code{Spoints} and \code{data_frame}. If a \code{data_list} is given, all the replicates must be observed
-at the same locations, which are given in the \code{coords} slot of \code{Spoints}. In particular, all data frames in the list must have the same dimensions.}
-
-\item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-add_PtE_observations"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-add_PtE_observations}{}}}
-\subsection{Method \code{add_PtE_observations()}}{
-Add observations to the object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_PtE_observations(
-  data_frame = NULL,
-  data_list = NULL,
+  Spoints = NULL,
+  data = NULL,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
+  coord_x = "coord_x",
+  coord_y = "coord_y",
+  data_coords = c("PtE", "euclidean"),
   replicates = NULL,
   normalized = FALSE
 )}\if{html}{\out{</div>}}
@@ -305,23 +362,32 @@ Add observations to the object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data_frame}}{A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
-indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
+\item{\code{Spoints}}{SpatialPoints or SpatialPointsDataFrame of the observations,
+which may include the coordinates only, or the coordinates as well as the
+observations.}
 
-\item{\code{data_list}}{A list, whose entries are given by one data.frame per replicate. When a data_list is given, the \code{replicates} argument is not used.
-If \code{data_list} is not \code{NULL}, it takes priority over both \code{Spoints} and \code{data_frame}. The replicates of the \code{data_list} can be given for
-different locations across the replicates.}
+\item{\code{data}}{A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+indicating the index of the replicate. If \code{data} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
 
-\item{\code{edge_number}}{Column of the \code{data_frame} or from the entries of the \code{data_list} that contain the edge numbers. If not supplied,
-the column with name "edge_number" will be chosen.}
+\item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that contains the edge numbers. If not supplied,
+the column with name "edge_number" will be chosen.   Will not be used if \code{Spoints} is not \code{NULL}.}
 
-\item{\code{distance_on_edge}}{Column of the \code{data_frame} or from the entries of the \code{data_list} that contain the edge numbers. If not supplied,
-the column with name "distance_on_edge" will be chosen.}
+\item{\code{distance_on_edge}}{Column (or entry on the list) of the \code{data} that contains the edge numbers. If not supplied,
+the column with name "distance_on_edge" will be chosen.  Will not be used if \code{Spoints} is not \code{NULL}.}
 
-\item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
+\item{\code{coord_x}}{Column (or entry on the list) of the \code{data} that contains the x coordinate. If not supplied,
+the column with name "coord_x" will be chosen.  Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is \code{PtE}.}
 
-\item{\code{normalized}}{if TRUE, then the distances in \code{PtE} are assumed to be
-normalized to (0,1). Default FALSE.}
+\item{\code{coord_y}}{Column (or entry on the list) of the \code{data} that contains the y coordinate. If not supplied,
+the column with name "coord_x" will be chosen.  Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is \code{PtE}.}
+
+\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. Which coordinate system to use? If \code{PtE}, the user must provide
+\code{edge_number} and \code{distance_on_edge}, otherwise if \code{euclidean}, the user must provide \code{coord_x} and \code{coord_y}.}
+
+\item{\code{replicates}}{If the data contains replicates, one must provide the column (or entry on the list) in which the replicate indices are stored.}
+
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are assumed to be
+normalized to (0,1). Default FALSE. Will not be used if \code{Spoints} is not \code{NULL}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -580,22 +646,14 @@ function for splitting lines in the graph
 \subsection{Method \code{add_mesh_observations()}}{
 Add observations on mesh to the object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(
-  data_frame = NULL,
-  data_list = NULL,
-  replicates = NULL
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_mesh_observations(data = NULL, replicates = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data_frame}}{A data.frame containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
+\item{\code{data}}{A data.frame or named list containing the observations. In case of replicates, the data.frames for the replicates should stacked vertically, with a column
 indicating the index of the replicate. If \code{data_frame} is not \code{NULL}, it takes priority over any eventual data in \code{Spoints}.}
-
-\item{\code{data_list}}{A list, whose entries are given by one data.frame per replicate. When a data_list is given, the \code{replicates} argument is not used.
-If \code{data_list} is not \code{NULL}, it takes priority over both \code{Spoints} and \code{data_frame}. If a \code{data_list} is given, all the replicates must be observed
-at the same locations, which are given in the \code{coords} slot of \code{Spoints}. In particular, all data frames in the list must have the same dimensions.}
 
 \item{\code{replicates}}{If the data_frame contains replicates, one must provide the column in which the replicate indices are stored.}
 }
@@ -618,17 +676,18 @@ Get a copy of the initial graph
 \subsection{Method \code{A()}}{
 Get the observation/prediction matrix A
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$A(order = "internal", obs_to_vert = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$A(repl = NULL, obs_to_vert = FALSE, include_NA = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{order}}{Which order should be considered? The options are 'internal' and 'original'.
-The order 'internal' is the order of \verb{graph$y``, for a metric_graph }graph`. The order 'original'
-is the order of the user's input.}
+\item{\code{repl}}{A vector. If \code{NULL}, the A matrix for all replicates will be returned.
+Otherwise, the A matrix for the replicates in the vector will be returned.}
 
 \item{\code{obs_to_vert}}{Should the observations be turned into vertices?}
+
+\item{\code{include_NA}}{Should the locations for which all observations are NA be included?}
 }
 \if{html}{\out{</div>}}
 }
@@ -660,11 +719,6 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned
-function for adding the data in the
-correct order.
-data - the data. A list, with either 1 entry or entries \verb{1,...,n_repl}, where \code{n_repl} is the number of replicates.
-Each entry consists of a matrix \verb{N x p}, where \code{N} is the number of observations and
-\code{p} is the number of covariates.
 }
 }
 \if{html}{\out{<hr>}}

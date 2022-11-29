@@ -64,11 +64,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field data a list containing the data on the graph
   data = NULL,
 
-  #' @field PtE matrix specifying the locations of the observation points on
-  #' the edges, where `PtE[i,1]` is the edge index for the ith observation
-  #' and  `PtE[,2]` is the normalized distance on the edge
-  PtE = NULL,
-
   #' @field PtV vector with the indices of the vertices which are observation
   #' locations
   PtV  = NULL,
@@ -158,6 +153,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' for all replicates.
   compute_geodist = function(full = FALSE, repl = NULL) {
     self$geo_dist <- list()
+    if(is.null(self$data)){
+      full <- TRUE
+    }
     if(full){
       g <- graph(edges = c(t(self$E)), directed = FALSE)
       E(g)$weight <- self$edge_lengths
@@ -167,7 +165,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           repl <- unique(self$data[["__repl"]])
       }
       for(replicate in repl){
-          data_repl <- select_replicate(data_list, replicate)
+          data_repl <- select_replicate(self$data, replicate)
           idx_notna <- idx_not_all_NA(data_repl)
           g <- graph(edges = c(t(self$E[idx_notna,])), directed = FALSE)
           E(g)$weight <- self$edge_lengths
@@ -202,7 +200,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           repl <- unique(self$data[["__repl"]])
       }
       for(replicate in repl){
-          data_repl <- select_replicate(data_list, replicate)
+          data_repl <- select_replicate(self$data, replicate)
           idx_notna <- idx_not_all_NA(data_repl)
           PtE <- cbind(data_repl[["__edge_number"]][idx_notna],
                           data_repl[["__distance_on_edge"]][idx_notna])
@@ -287,7 +285,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           repl <- unique(self$data[["__repl"]])
       }
       for(replicate in repl){
-          data_repl <- select_replicate(data_list, replicate)
+          data_repl <- select_replicate(self$data, replicate)
           idx_notna <- idx_not_all_NA(data_repl)
           PtE <- cbind(data_repl[["__edge_number"]][idx_notna],
                           data_repl[["__distance_on_edge"]][idx_notna])
@@ -325,19 +323,20 @@ metric_graph <-  R6::R6Class("metric_graph",
       stop("There is no data!")
     }
     repl <- self$data[["__repl"]]
-    repl <- repl[repl == repl[1]]
+    repl <- which(repl == repl[1])
 
     PtE <- cbind(self$data[["__edge_number"]][repl], 
                 self$data[["__distance_on_edge"]][repl])
     return(PtE)
   },
 
-  get_Spoints <- function(){
+  #' @description Gets the spatial points from the data.
+  get_Spoints = function(){
      if(is.null(self$data)){
       stop("There is no data!")
     }
     repl <- self$data[["__repl"]]
-    repl <- repl[repl == repl[1]]
+    repl <- which(repl == repl[1])
     Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][repl], 
                                         self$data[["__coord_y"]][repl]))
     return(Spoints)
@@ -427,6 +426,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                           coord_y = "coord_y",
                                           data_coords = c("PtE", "euclidean"),
                                           replicates = NULL, normalized = FALSE) {
+    data <- as.list(data)
     data_coords <- data_coords[[1]]
     if(is.null(data)){
       if(is.null(Spoints)){
@@ -439,20 +439,15 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     } 
 
-      lapply(data, function(dat){if(nrow(matrix(Spoints@coords, ncol=2)) != length(dat)){
-        stop(paste(dat,"has a different number of elements than the number of coordinates!"))
-      }})
-
       if(!is.null(Spoints)){
         PtE <- self$coordinates(Spoints@coords)
       } else{
         if(data_coords == "PtE"){
-          if(normalized){
             PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
-          } else{
-            PtE <- cbind(data[[edge_number]], data[[distance_on_edge]] / self$edge_lengths[PtE[, 1]])
-          }
-        } else if(data_coords == "euclidean"){
+            if(!normalized){
+              PtE[, 2] <- PtE[,2] / self$edge_lengths[PtE[, 1]]
+            }
+          } else if(data_coords == "euclidean"){
             point_coords <- cbind(data[[coord_x]], data[[coord_y]])
             PtE <- self$coordinates(point_coords)
         } else{
@@ -462,15 +457,19 @@ metric_graph <-  R6::R6Class("metric_graph",
      if(!is.null(replicates)){
       replicate_vector <- data[[replicates]]
      } else{
+      replicates <- "__repl"
       replicate_vector <- NULL
      }
+
+    lapply(data, function(dat){if(nrow(matrix(PtE, ncol=2)) != length(dat)){
+        stop(paste(dat,"has a different number of elements than the number of coordinates!"))
+       }})
 
      data[[edge_number]] <- NULL
      data[[distance_on_edge]] <- NULL
      data[[coord_x]] <- NULL
      data[[coord_y]] <- NULL 
      data[[replicates]] <- NULL
-
       
       ## convert everything to PtE
 
@@ -478,12 +477,12 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       ## convert to Spoints and add
 
-      PtE <- get_PtE()
+      PtE <- self$get_PtE()
 
-      Spoints <- self$coordinates(PtE = PtE)
+      points <- self$coordinates(PtE = PtE)
 
-      self$data[["__coord_x"]] <- Spoints@coords[,1]
-      self$data[["__coord_y"]] <- Spoints@coords[,2]
+      self$data[["__coord_x"]] <- points[,1]
+      self$data[["__coord_y"]] <- points[,2]
   
     },
 
@@ -1130,12 +1129,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         A <- Matrix::Diagonal(self$nV)[self$PtV, ]
         return(A)
       } else{
-        data_repl <- select_replicate(data_list, repl[1])
+        data_repl <- select_replicate(self$data, repl[1])
         idx_notna <- idx_not_all_NA(data_repl)
         nV_tmp <- sum(idx_notna)
         A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
         for(i in 2:length(repl)){
-          data_repl <- select_replicate(data_list, repl[i])
+          data_repl <- select_replicate(self$data, repl[i])
           idx_notna <- idx_not_all_NA(data_repl)
           nV_tmp <- sum(idx_notna)
           A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
@@ -1407,11 +1406,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     if (!is.null(data)) {
       x <- y <- NULL
-      data_repl <- select_replicate(data_list, repl)
-      y_plot <- self$data_repl[[data]]
+      data_repl <- select_replicate(self$data, repl)
+      y_plot <-data_repl[[data]]
       PtE <- self$get_PtE()
       for (i in 1:length(y_plot)) {
-
+          print(i)
           LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
           Line <- self$lines[LT[1, 1], ]
           val_line <- gProject(Line, as(Line, "SpatialPoints"),
@@ -1510,7 +1509,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if (!is.null(data)) {
       x <- y <- NULL
-      data_repl <- select_replicate(data_list, repl)
+      data_repl <- select_replicate(self$data, repl)
       y_plot <- self$data_repl[[data]]
       PtE <- self$get_PtE()
       for (i in 1:nrow(y_plot)) {
@@ -1548,7 +1547,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   
   # Initial graph
 
-  initial_graph = NULL,
+  initial_graph = NULL
 
 
 ))

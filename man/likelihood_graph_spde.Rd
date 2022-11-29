@@ -11,7 +11,8 @@ likelihood_graph_spde(
   y,
   log_scale = TRUE,
   maximize = FALSE,
-  version = 1
+  version = 1,
+  repl = NULL
 )
 }
 \arguments{

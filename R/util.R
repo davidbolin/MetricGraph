@@ -677,8 +677,8 @@ idx_not_all_NA <- function(data_list){
 #' 
 
 select_replicate <- function(data_list, replicate){
-    repl <- self$data[["__repl"]]
-    repl <- repl[repl == replicate]
+    repl <- data_list[["__repl"]]
+    repl <- which(repl == replicate)
     data_result <- lapply(data_list,
                             function(dat){
                               dat[repl]

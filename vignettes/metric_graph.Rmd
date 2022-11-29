@@ -231,7 +231,7 @@ obs.loc <- cbind(1:4, rep(0.5, 4))
 obs <- c(1,2,3,4)
 df_graph <- data.frame(y = obs, edge_number = obs.loc[,1], 
                         distance_on_edge = obs.loc[,2])
-graph$add_PtE_observations(data_frame = df_graph)
+graph$add_observations(data = df_graph)
 graph$plot(data = "y")
 ```
 
