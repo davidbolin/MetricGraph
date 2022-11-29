@@ -344,15 +344,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Adds observation locations as vertices in the graph
   observation_to_vertex = function() {
-    # Reordering
-    PtE <- get_PtE()
-    order_idx <- order(PtE[, 1], PtE[, 2])
 
-    PtE <- PtE[order_idx, ]
+    PtE <- self$get_PtE()
 
-    if (length(order_idx) == 1) {
-      PtE <- matrix(PtE, ncol = 2)
-    }
     l <- length(PtE[, 1])
     self$PtV <- rep(0, l)
     for (i in 1:l) {
@@ -371,14 +365,9 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
     }
     
-    # Updates the columns `__edge_number` and `__distance_on_edge`
-    # and reorders the data. 
-
-    self$data <- lapply(self$data, function(data){return(dat[order_idx,])})
-    self$data[["__edge_number"]] <- PtE[ ,1]
-    self$data[["__distance_on_edge"]] <- PtE[ ,2]
-
-    self$mesh$PtE <- self$coordinates(XY = self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ])
+    if(!is.null(self$mesh)){
+      self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
+    }
 
     if (!is.null(self$geo_dist)) {
       self$compute_geodist()
@@ -426,7 +415,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                                           coord_y = "coord_y",
                                           data_coords = c("PtE", "euclidean"),
                                           replicates = NULL, normalized = FALSE) {
-    data <- as.list(data)
     data_coords <- data_coords[[1]]
     if(is.null(data)){
       if(is.null(Spoints)){
@@ -439,8 +427,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     } 
 
+    data <- as.list(data)
+
       if(!is.null(Spoints)){
-        PtE <- self$coordinates(Spoints@coords)
+        PtE <- self$coordinates(XY = Spoints@coords)
       } else{
         if(data_coords == "PtE"){
             PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
@@ -635,7 +625,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
 
     ### Update mesh PtE 
-    self$mesh$PtE <- self$coordinates(XY = Points@coords)
+    self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
   },
 
   #' @description build mass and stiffness matrices for given mesh object
@@ -1076,7 +1066,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     for (i in ind) {
       if (PtE[i, 2] >= t - 1e-10) {
         PtE[i, 1] <- self$nE
-        PtE[i, 2] <- abs(self$PtE[i, 2] - t) / (1 - t)
+        PtE[i, 2] <- abs(PtE[i, 2] - t) / (1 - t)
       }
     }
     n_repl <- unique(self$data[["__repl"]])
