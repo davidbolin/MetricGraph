@@ -629,7 +629,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     data_coords <- merge(old_df, new_df, by = c("PtE1", "PtE2", "repl"), sort=FALSE, all = TRUE)
     data_coords <- data_coords[order(data_coords$repl, data_coords$PtE1, data_coords$PtE2),] 
     data_coords[["idx"]] <- 1:nrow(data_coords)
+
     idx_new_entries <- merge(new_df, data_coords, all=FALSE, sort = FALSE)
+
     idx_new_entries <- idx_new_entries[["idx"]]
     idx_old_entries <- merge(old_df, data_coords, all=FALSE, sort = FALSE)
     idx_old_entries <- idx_old_entries[["idx"]]

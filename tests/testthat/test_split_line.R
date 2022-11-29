@@ -20,18 +20,17 @@ graph$plot()
 PtE <- cbind(c(1,2),c(0.2,0.8))
 df_graph <- data.frame(y = c(1,2), edge_number = PtE[,1],
                         distance_on_edge=PtE[,2])
-graph$add_PtE_observations(data_frame = df_graph)
+graph$add_observations(data = df_graph)
 graph$split_edge(1,0.5)
-graph$plot()
+graph$plot(data="y")
 
-xc = c(-0.5,-0.5, 0.75,0.45)
-yc = c(1, 0.25,0,0)
+xc = c(-0.15,-0.51, 0.35,0.45)
+yc = c(0.4, 0.25,0,0.4)
 Spoints = SpatialPoints(cbind(xc, yc))
 Spoints = SpatialPointsDataFrame(Spoints,  data.frame(a=1:4))
 
-Spoints2 = Spoints = SpatialPoints(cbind(xc+1, yc+1))
 df_2 <- data.frame(y = c(1,2,3,4))
-graph$add_observations(Spoints, data_frame = df_2)
+graph$add_observations(Spoints, data = df_2)
 expect_equal(42,42)
 })
 

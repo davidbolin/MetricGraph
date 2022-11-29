@@ -1060,18 +1060,24 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
     self$E[Ei, 2] <- newV
 
-    PtE <- self$get_PtE()
+    if(!is.null(self$data)){
 
-    ind <- which(PtE[, 1] %in% Ei)
-    for (i in ind) {
-      if (PtE[i, 2] >= t - 1e-10) {
-        PtE[i, 1] <- self$nE
-        PtE[i, 2] <- abs(PtE[i, 2] - t) / (1 - t)
-      }
+        PtE <- self$get_PtE()
+
+        ind <- which(PtE[, 1] %in% Ei)
+
+        for (i in ind) {
+          if (PtE[i, 2] >= t - 1e-10) {
+            PtE[i, 1] <- self$nE
+            PtE[i, 2] <- abs(PtE[i, 2] - t) / (1 - t)
+          }
+        }
+
+        n_repl <- unique(self$data[["__repl"]])
+        self$data[["__edge_number"]] <- rep(PtE[,1], times = n_repl)
+        self$data[["__distance_on_edge"]] <- rep(PtE[,2], times = n_repl)
     }
-    n_repl <- unique(self$data[["__repl"]])
-    self$data[["__edge_number"]] <- rep(PtE[,1], times = n_repl)
-    self$data[["__distance_on_edge"]] <- rep(PtE[,2], times = n_repl)
+
 
     self$nV <- dim(self$V)[1]
   },
