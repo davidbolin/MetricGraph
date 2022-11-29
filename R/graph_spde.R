@@ -246,14 +246,15 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
 #' for metric graph models.
 #'
 #' @param graph An object of class `metric_graph`
-#' @param n.repl Number of replicates
+#' @param repl Which replicates? If there is no replicates, or to
+#' use all replicates, one can set to `NULL`.
 #' @param obs_to_vert Should the observations be turned into vertices?
 #'
 #' @return The observation matrix
 #' @export
 
-graph_spde_make_A <- function (graph, n.repl = 1, obs_to_vert = FALSE) {
-   return(kronecker(Matrix::Diagonal(n.repl), graph$A(order = "original", obs_to_vert = obs_to_vert)))
+graph_spde_make_A <- function (graph, repl = NULL, obs_to_vert = FALSE) {
+   return(graph$A(repl = repl))
 }
 
 

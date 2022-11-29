@@ -156,7 +156,7 @@ graph_bkp <- graph$clone()
 df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
                         distance_on_edge = obs_loc[,2])
 # Adding observations and turning them to vertices
-graph$add_PtE_observations(df_graph, normalized=TRUE)
+graph$add_observations(data=df_graph, normalized=TRUE)
 graph$observation_to_vertex()
 graph$plot(data="y")
 ```
@@ -194,7 +194,7 @@ formula object and the
 ```{r}
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
-stk.dat <- inla.stack(data = list(y=as.vector(y)), 
+stk.dat <- inla.stack(data = graph$data, 
                         A = A, 
                         effects = c(
       spde_index,
@@ -285,7 +285,7 @@ Let us begin by obtaining an evenly spaced mesh with respect to the base
 graph:
 
 ```{r}
-obs_per_edge_prd <- 50
+obs_per_edge_prd <- 2
 graph$build_mesh(n = obs_per_edge_prd)
 ```
 
@@ -306,7 +306,7 @@ the number of rows of the `mesh$PtE` attribute.
 n_obs_mesh <- nrow(graph$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
 data_mesh <- data.frame(y = y_prd)
-graph$add_mesh_observations(data_frame = data_mesh)
+graph$add_mesh_observations(data = data_mesh)
 graph$observation_to_vertex()
 ```
 
