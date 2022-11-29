@@ -194,7 +194,7 @@ formula object and the
 ```{r}
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
-stk.dat <- inla.stack(data = graph$data, 
+stk_dat <- inla.stack(data = graph$data, 
                         A = A, 
                         effects = c(
       spde_index,
@@ -205,7 +205,8 @@ stk.dat <- inla.stack(data = graph$data,
 Now, we use the `graph_stack()` function that behaves in 
 an analogous manner to the `inla.stack.data()` function:
 ```{r}
-data_stk <- graph_stack(stk.dat, "field")
+# data_stk <- graph_stack(stk.dat, "field")
+data_stk <- inla.stack.data(stk_dat)
 ```
 
 Finally, we fit the model:
@@ -350,7 +351,8 @@ stk_dat_prd <- inla.stack(data = graph$data,
 
 Now, we use the `graph_stack()` function and fit the model:
 ```{r}
-data_stk_prd <- graph_stack(stk_dat_prd, "field")
+# data_stk_prd <- graph_stack(stk_dat_prd, "field")
+data_stk_prd <- inla.stack.data(stk_dat_prd)
 
 spde_fit_prd <- inla(f_s_prd, data = data_stk_prd)
 ```
@@ -402,7 +404,7 @@ We will first add the observations at the locations
 `obs_loc`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_prd$add_PtE_observations(data_frame = df_graph, 
+graph_prd$add_observations(data = df_graph, 
                             normalized=TRUE)
 ```
 
@@ -419,7 +421,7 @@ Now, we will add `NA` observations at the mesh locations:
 n_obs_mesh <- nrow(graph_prd$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
 data_mesh2 <- data.frame(y = y_prd)
-graph_prd$add_mesh_observations(data_frame = data_mesh2)
+graph_prd$add_mesh_observations(data = data_mesh2)
 ```
 
 Finally, we turn these observations to vertices:
@@ -446,7 +448,7 @@ A_prd2 <- graph_spde_make_A(graph_prd)
 spde_index_prd2 <- graph_spde_make_index(name="field", 
                                         graph=graph_prd)
 
-stk_dat_prd2 <- inla.stack(data = list(y=y_cmp), 
+stk_dat_prd2 <- inla.stack(data = graph_prd$data, 
                         A = A_prd2, 
                         effects = c(
       spde_index_prd2,
@@ -460,7 +462,7 @@ f_s_prd2 <- y ~ -1 + Intercept + f(field, model = spde_model_prd2)
 ```
 Now, we use the `graph_stack()` function:
 ```{r}
-data_stk_prd2 <- graph_stack(stk_dat_prd2, "field")
+data_stk_prd2 <- inla.stack.data(stk_dat_prd2)
 ```
 
 Finally, we fit the model:
@@ -543,8 +545,13 @@ add only the first replicate to the graph object:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 dl_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
                                           edge_number = obs_loc[,1],
-                                          distance_on_edge = obs_loc[,2])})
-graph_rep$add_PtE_observations(data_list = dl_graph, normalized=TRUE)
+                                          distance_on_edge = obs_loc[,2],
+                                          repl = i)})
+dl_graph <- do.call(rbind, dl_graph)
+graph_rep$add_observations(data = dl_graph, normalized=TRUE, 
+                            repl = "repl",
+                            edge_number = "edge_number",
+                            distance_on_edge = "distance_on_edge")
 graph_rep$observation_to_vertex()
 graph_rep$plot(data=TRUE)
 ```
@@ -567,14 +574,14 @@ Similarly, we create the observation (`A`) matrix with the
 function `graph_spde_make_A()` setting the `n.repl` argument
 to the number of replicates:
 ```{r}
-A_rep <- graph_spde_make_A(graph_rep, n.repl = n_repl)
+A_rep <- graph_rep$A()
 ```
 
 Next, we create the stack object, remembering that
 we need to input the response variable `y` as a vector
 and the `sample_spde()` function returns a matrix.
 ```{r}
-stk_dat_rep <- inla.stack(data = list(y=as.vector(y_rep)), 
+stk_dat_rep <- inla.stack(data = graph_rep$data, 
                         A = A_rep, 
                         effects = c(
       spde_index_rep,

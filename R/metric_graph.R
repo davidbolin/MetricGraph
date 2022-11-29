@@ -327,8 +327,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     repl <- self$data[["__repl"]]
     repl <- which(repl == repl[1])
-    PtE <- cbind(self$data[["__edge_number"]],
-                self$data[["__distance_on_edge"]])
+    PtE <- cbind(self$data[["__edge_number"]][repl],
+                self$data[["__distance_on_edge"]][repl])
 
     return(PtE)
   },
@@ -498,8 +498,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       points <- self$coordinates(PtE = PtE)
 
-      self$data[["__coord_x"]] <- points[,1]
-      self$data[["__coord_y"]] <- points[,2]
+      self$data[["__coord_x"]] <- rep(points[,1], times = n_repl)
+      self$data[["__coord_y"]] <- rep(points[,2], times = n_repl)
 
     },
 
@@ -1213,7 +1213,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
  
       for (i in 1:dim(PtE)[1]) {
-        LT <- private$edge_pos_to_line_pos(PtE[i, 1], PtE[i, 2])
+        # Ei <- PtE[i,1]
+        # Ei <- which(self$LtE[,i] == 1)
+        LT <- private$edge_pos_to_line_pos2(PtE[i, 1], PtE[i, 2])
+        # LT <- private$edge_pos_to_line_pos(Ei, PtE[i, 2])
         Line <- self$lines[LT[1, 1], ]
         val_line <- gProject(Line, as(Line, "SpatialPoints"),
                              normalized = TRUE)
@@ -1576,6 +1579,16 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     xr <- 2*(diff(range(self$V[,1])) + diff(range(self$V[,2])))
     return(p)
+  },
+
+  # Version 2 edge_pos_to_line_pos
+  # Gets relative position on the line
+
+  edge_pos_to_line_pos2 = function(E_i, t_i){
+    line_E_i <- which(self$LtE[,E_i] == 1)
+    start_point <- self$ELstart[E_i]
+    exact_point <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
+    return(cbind(line_E_i, exact_point))
   },
 
   # Initial graph

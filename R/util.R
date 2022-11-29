@@ -677,6 +677,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     data_coords[["repl"]] <- repl_val[[1]]
     if(n_repl>1){
       for(i in 2:n_repl){
+          tmp_coords <- data_coords_tmp
           tmp_coords[["repl"]] <- repl_val[[i]]
           data_coords <- rbind(data_coords, tmp_coords)
       }    
