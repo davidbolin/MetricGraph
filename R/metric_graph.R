@@ -324,11 +324,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     repl <- self$data[["__repl"]]
     repl <- which(repl == repl[1])
-    # PtE <- cbind(self$data[["__edge_number"]],
-                # self$data[["__distance_on_edge"]])
-    PtE <- cbind(self$data[["__edge_number"]][repl],
-               self$data[["__distance_on_edge"]][repl])
-    PtE <- PtE[order(self$data[["__repl"]], PtE[,1], PtE[,2]),]
+    PtE <- cbind(self$data[["__edge_number"]],
+                self$data[["__distance_on_edge"]])
+
     return(PtE)
   },
 

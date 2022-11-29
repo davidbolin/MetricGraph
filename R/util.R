@@ -10,7 +10,7 @@ check_graph <- function(graph)
   if(!is.null(graph$mesh)){
     out$has.mesh = TRUE
   }
-  if(!is.null(graph$data) && !is.null(graph$PtE))
+  if(!is.null(graph$data))
     out$has.data = TRUE
   return(out)
 }
@@ -664,26 +664,26 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     new_df <- data.frame(PtE1 = PtE[,1],
                           PtE2 = PtE[,2])
     
-    old_df <- data.frame(PtE1 = old_data[["edge_number"]],
-                          PtE2 = old_data[["distance_on_edge"]])
+    old_df <- data.frame(PtE1 = old_data[["__edge_number"]],
+                          PtE2 = old_data[["__distance_on_edge"]])
 
-    data_coords <- unique(rbind(old_df[,c(1,2)], new_df[,c(1,2)]))
+    data_coords <- unique(rbind(old_df, new_df))
     data_coords <- data_coords[order(data_coords$PtE1, 
                           data_coords$PtE2),]
     
     data_coords_tmp <- data_coords
     repl_val <- unique(replicate_vector)
     n_repl <- length(repl_val)
-    data_coords <- cbind(data_coords, repl_val[[1]])
+    data_coords[["repl"]] <- repl_val[[1]]
     if(n_repl>1){
       for(i in 2:n_repl){
-          tmp_coords <- cbind(data_coords_tmp, repl_val[[i]])
+          tmp_coords[["repl"]] <- repl_val[[i]]
           data_coords <- rbind(data_coords, tmp_coords)
       }    
     }
     data_coords <- as.data.frame(data_coords)
-    colnames(data_coords) <- c("PtE1", "PtE2", "repl")
-
+    new_df[["repl"]] <- replicate_vector
+    old_df[["repl"]] <- old_data[["__repl"]]
     data_coords[["idx"]] <- 1:nrow(data_coords)
 
     idx_new_entries <- merge(new_df, data_coords, all=FALSE, sort = FALSE)
@@ -693,6 +693,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
+    list_result[["__edge_number"]] <- NULL
+    list_result[["__distance_on_edge"]] <- NULL
+    list_result[["__repl"]] <- NULL
     list_result <- lapply(list_result, function(col_name){
 
       if(!is.null(new_data[[col_name]])){
