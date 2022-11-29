@@ -371,26 +371,26 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
     self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
 
+    tmp_df <- data.frame(PtE1 = self$data[["__edge_number"]],
+              PtE2 = self$data[["__distance_on_edge"]],
+              repl = self$data[["__repl"]])
+    index_order <- order(tmp_df$repl, tmp_df$PtE1, tmp_df$PtE2)
+    self$data <- lapply(self$data, function(dat){
+      dat[index_order]
+    })
+
+
     private$temp_PtE <- NULL
 
     # Updating lines
-    lines <- list()
-      for(i in 1:dim(self$E)[1]) {
-        id <- sprintf("%d", i)
-        lines[[i]] <- Lines(list(Line(rbind(self$V[self$E[i,1], ], self$V[self$E[i,2], ]))), ID = id)
-      }
-    self$lines <- SpatialLines(lines)
-    self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-    private$line_to_vertex(tolerance = private$tolerance, longlat = private$longlat)
-
-    if(!is.null(self$mesh)){
-      if(is.null(self$mesh$V)){
-        min_num <- nrow(self$VtEfirst()) + 1
-      } else{
-        min_num <- nrow(self$mesh$V)-nrow(self$mesh$PtE) + 1
-      }
-      self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(min_num):nrow(self$mesh$V), ],ncol=2))
-    }
+    # lines <- list()
+    #   for(i in 1:dim(self$E)[1]) {
+    #     id <- sprintf("%d", i)
+    #     lines[[i]] <- Lines(list(Line(rbind(self$V[self$E[i,1], ], self$V[self$E[i,2], ]))), ID = id)
+    #   }
+    # self$lines <- SpatialLines(lines)
+    # self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
+    # private$line_to_vertex(tolerance = private$tolerance, longlat = private$longlat)
 
     if (!is.null(self$geo_dist)) {
       self$compute_geodist()
