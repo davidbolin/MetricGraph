@@ -773,7 +773,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     if(is.numeric(repl) && !is.null(data)){
       unique_repl <- unique(self$data[["__repl"]])
-      repl <- unique_repl[[repl]]
+      repl <- unique_repl[repl]
     }
     if(!plotly){
       p <- private$plot_2d(line_width = edge_width,
@@ -1260,44 +1260,44 @@ metric_graph <-  R6::R6Class("metric_graph",
     ),
 
   private = list(
-    #computes which line and which position t_E on Ei belongs to
-    # Ei  (int)   edge index
-    # t_e (n x 1) number of positions on Ei
-    edge_pos_to_line_pos = function(Ei, t_E) {
+    # #computes which line and which position t_E on Ei belongs to
+    # # Ei  (int)   edge index
+    # # t_e (n x 1) number of positions on Ei
+    # edge_pos_to_line_pos = function(Ei, t_E) {
 
-      LT <- matrix(0, nrow= length(t_E),2)
-      L_index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
+    #   LT <- matrix(0, nrow= length(t_E),2)
+    #   L_index <- (self$LtE@p[Ei]+1):(self$LtE@p[Ei+1])
 
-      #LinPos line number and end relative end of the line on the edge
-      LinesPos <- cbind(self$LtE@i[L_index] + 1, self$LtE@x[L_index])
-      LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
-      for(j in 1:length(L_index)){
-        if(j==1){
-          index_j <-  t_E <= LinesPos[j,2]
-        }else{
-          index_j <- (t_E <= LinesPos[j,2]) &  (t_E > LinesPos[j-1,2])
-        }
-        if(sum(index_j) == 0)
-          next
+    #   #LinPos line number and end relative end of the line on the edge
+    #   LinesPos <- cbind(self$LtE@i[L_index] + 1, self$LtE@x[L_index])
+    #   LinesPos <- LinesPos[order(LinesPos[,2]),,drop=F]
+    #   for(j in 1:length(L_index)){
+    #     if(j==1){
+    #       index_j <-  t_E <= LinesPos[j,2]
+    #     }else{
+    #       index_j <- (t_E <= LinesPos[j,2]) &  (t_E > LinesPos[j-1,2])
+    #     }
+    #     if(sum(index_j) == 0)
+    #       next
 
-        LT[index_j,1] <- LinesPos[j,1]
-        rel.pos = t_E[index_j]
-        if(j == 1){
-          rel.pos <- rel.pos/LinesPos[j,2]
-        }else{
-          rel.pos <- (rel.pos-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
-        }
+    #     LT[index_j,1] <- LinesPos[j,1]
+    #     rel.pos = t_E[index_j]
+    #     if(j == 1){
+    #       rel.pos <- rel.pos/LinesPos[j,2]
+    #     }else{
+    #       rel.pos <- (rel.pos-LinesPos[j-1,2])/(LinesPos[j,2]-LinesPos[j-1,2])
+    #     }
 
-        if(j== dim(LinesPos)[1] )
-          rel.pos = self$ELend[Ei]*rel.pos
-        if(j==1)
-          rel.pos = rel.pos + self$ELstart[Ei]
+    #     if(j== dim(LinesPos)[1] )
+    #       rel.pos = self$ELend[Ei]*rel.pos
+    #     if(j==1)
+    #       rel.pos = rel.pos + self$ELstart[Ei]
 
-        LT[index_j,2] = rel.pos
+    #     LT[index_j,2] = rel.pos
 
-      }
-      return(LT)
-    },
+    #   }
+    #   return(LT)
+    # },
 
   #function for creating Vertex and Edges from self$lines
   line_to_vertex = function(tolerance = 0, longlat = FALSE) {
@@ -1440,22 +1440,14 @@ metric_graph <-  R6::R6Class("metric_graph",
                           size= marker_size, ...)
     }
     if (!is.null(data)) {
+
       x <- y <- NULL
       data_repl <- select_replicate(self$data, repl)
       y_plot <-data_repl[[data]]
-      repl_id <- which(self$data[["__repl"]] == repl)
-      PtE <- self$get_PtE()
-      for (i in 1:length(y_plot)) {
-          LT <- private$edge_pos_to_line_pos(PtE[repl_id[i], 1],
-                                             PtE[repl_id[i], 2])
-          Line <- self$lines[LT[1, 1], ]
-          val_line <- gProject(Line, as(Line, "SpatialPoints"),
-                               normalized = TRUE)
-          Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
-          x <- c(x, Point@coords[1])
-          y <- c(y, Point@coords[2])
+      points_xy <- self$coordinates(PtE = self$get_PtE())
+      x <- points_xy[,1]
+      y <- points_xy[,2]
 
-      }
       p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(y_plot))],
                                             y = y[!is.na(as.vector(y_plot))],
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
@@ -1478,12 +1470,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       x <- y <- NULL
       for (i in 1:length(as.vector(X))) {
-        LT <- private$edge_pos_to_line_pos(X_loc[i, 1], X_loc[i, 2])
-        Line <- self$lines[LT[1, 1], ]
-        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
-        Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
-        x <- c(x, Point@coords[1])
-        y <- c(y, Point@coords[2])
+        points_xy <- self$coordinates(PtE = cbind(X_loc[i, 1], X_loc[i, 2]))
+
+        x <- points_xy[,1]
+        y <- points_xy[,2]
       }
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(X)),
@@ -1548,13 +1538,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       data_repl <- select_replicate(self$data, repl)
       y_plot <- self$data_repl[[data]]
       PtE <- self$get_PtE()
-      for (i in 1:nrow(y_plot)) {
-        Line <- self$lines[PtE[i, 1], ]
-        val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized = TRUE)
-        Point <- gInterpolate(Line, PtE[i, 2], normalized = TRUE)
-        x <- c(x, Point@coords[1])
-        y <- c(y, Point@coords[2])
-      }
+      points_xy <- self$coordinates(PtE = PtE)
+      x <- points_xy[,1]
+      y <- points_xy[,2]
+      
       data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
                                             y = y[!is.na(as.vector(y_plot))],
                               z = rep(0,length(x[!is.na(as.vector(y_plot))])),

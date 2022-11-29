@@ -285,7 +285,7 @@ We can now plot the individual variables by specifying their names in the
 plot function together with the replicate number that we want to see. By default
 the first replicate is shown. 
 ```{r}
-graph$plot(data = "x", repl = 2)
+graph$plot(data = "y", repl = 2)
 ```
 
 In some cases, we might want to add the observation locations as vertices 
