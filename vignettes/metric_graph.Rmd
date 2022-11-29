@@ -287,12 +287,15 @@ the first replicate is shown.
 ```{r}
 graph$plot(data = "x", repl = 2)
 ```
+
 In some cases, we might want to add the observation locations as vertices 
 in the graph. This can be done as follows: 
 ```{r}
 graph$observation_to_vertex()
-graph$plot(data = "y")
+graph$plot(data = "y", repl = 1)
 ```
+One can note that the command adds all observation locations, from all replicates
+as vertices. 
 
 # Working with functions on metric graphs
 
