@@ -222,11 +222,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       graph.temp$add_observations(data = df_temp,
                                      normalized = normalized)
         graph.temp$observation_to_vertex()
-        graph.temp$compute_geodist()
+        graph.temp$compute_geodist(full=TRUE)
     
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
-        tmp <- -1 / graph.temp$geo_dist[graph.temp$E[i, 1], graph.temp$E[i, 2]]
+        tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1], graph.temp$E[i, 2]]
         L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
         L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
       }
@@ -327,6 +327,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     PtE <- cbind(self$data[["__edge_number"]][repl], 
                 self$data[["__distance_on_edge"]][repl])
+    PtE <- PtE[order(PtE[,1], PtE[,2]),]
     return(PtE)
   },
 
@@ -345,26 +346,32 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Adds observation locations as vertices in the graph
   observation_to_vertex = function() {
 
-    PtE <- self$get_PtE()
-
-    l <- length(PtE[, 1])
+    private$temp_PtE <- self$get_PtE()
+    n_repl <- length(unique(self$data[["__repl"]]))
+    l <- length(private$temp_PtE[, 1])
     self$PtV <- rep(0, l)
     for (i in 1:l) {
-        e <- as.vector(PtE[i, 1])
-        t <- as.vector(PtE[i, 2])
+        e <- as.vector(private$temp_PtE[i, 1])
+        t <- as.vector(private$temp_PtE[i, 2])
         l_e <- self$edge_lengths[e]
         if (abs(t) < 10^-10) {
-          PtE[i, 2] <- 0
+          private$temp_PtE[i, 2] <- 0
           self$PtV[i] <- self$E[e, 1]
         } else if (t > 1 - 10^-10) {
-          PtE[i, 2] <- 1
+          private$temp_PtE[i, 2] <- 1
           self$PtV[i] <- self$E[e, 2]
         } else {
           self$split_edge(e, t)
           self$PtV[i] <- dim(self$V)[1]
         }
     }
+
     
+    self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
+    self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
+    
+    private$temp_PtE <- NULL
+
     if(!is.null(self$mesh)){
       self$mesh$PtE <- self$coordinates(XY = matrix(self$mesh$V[(nrow(self$VtEfirst()) + 1):nrow(self$mesh$V), ],ncol=2))
     }
@@ -1070,26 +1077,22 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
     self$E[Ei, 2] <- newV
 
+    self$nV <- dim(self$V)[1]
+
     if(!is.null(self$data)){
 
-        PtE <- self$get_PtE()
-
-        ind <- which(PtE[, 1] %in% Ei)
+        ind <- which(private$temp_PtE[, 1] %in% Ei)
 
         for (i in ind) {
-          if (PtE[i, 2] >= t - 1e-10) {
-            PtE[i, 1] <- self$nE
-            PtE[i, 2] <- abs(PtE[i, 2] - t) / (1 - t)
+          if (private$temp_PtE[i, 2] >= t - 1e-10) {
+            private$temp_PtE[i, 1] <- self$nE
+            private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
           }
         }
-
-        n_repl <- unique(self$data[["__repl"]])
-        self$data[["__edge_number"]] <- rep(PtE[,1], times = n_repl)
-        self$data[["__distance_on_edge"]] <- rep(PtE[,2], times = n_repl)
     }
 
 
-    self$nV <- dim(self$V)[1]
+
   },
 
   #' @description Add observations on mesh to the object
@@ -1554,7 +1557,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   
   # Initial graph
 
-  initial_graph = NULL
+  initial_graph = NULL,
+
+  # Temp PtE
+
+  temp_PtE = NULL
 
 
 ))
