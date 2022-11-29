@@ -235,12 +235,10 @@ graph$add_observations(data = df_graph)
 graph$plot(data = "y")
 ```
 
-Thus, each row in `PtE` specifies the edge of the observation and the distance
-along that edge where the observation location is. In certain situations, 
-it might be easier to specify the relative distances on the edges, so that 
-0 represents the start and 1 the end of the edge (instead of the edge length). 
-To do so, we can simply specify `normalized = TRUE` when adding the 
-observations. For example, let us add one more observation at the midpoint 
+In certain situations, it might be easier to specify the relative distances on 
+the edges, so that 0 represents the start and 1 the end of the edge (instead of 
+the edge length). To do so, we can simply specify `normalized = TRUE` when adding 
+the observations. For example, let us add one more observation at the midpoint 
 of the fourth edge:
 ```{r}
 obs.loc <- matrix(c(4, 0.5),1,2)
@@ -252,7 +250,8 @@ graph$plot(data = "y")
 ```
 
 An alternative method is to specify the observations as spatial points objects,
-where the locations are given in Euclidean coordinates: 
+where the locations are given in Euclidean coordinates. In this case the
+observations are added to the closes location on the graph:
 ```{r}
 obs.loc <- rbind(c(0.7, 0), c(0, 0.2))
 obs <- c(6,7)
@@ -263,19 +262,40 @@ graph$plot(data = "y")
 ```
 
 If we want to replace the data in the object, we can use `clear_observations()`
-to remove all current data, and then add the new data:
+to remove all current data: 
 ```{r}
 graph$clear_observations()
-graph$add_observations(points)
-graph$plot(data = "y")
+```
+
+The `metric_graph` object can hold multiple variables of data, and one can also 
+specify a `replicates` argument that it useful for specifying that data is observed at different time points. As an example, let us add two variables observed at two
+separate locations 
+```{r}
+obs.loc <- cbind(c(1:4, 1:4), c(rep(0.5, 4), rep(0.7, 4)))
+df_rep <- data.frame(y = c(1, 2, NA, 3, 4, 6, 5, 7),
+                     x = c(NA, 8, 9, 10, 11, 12, 13, NA),
+                     edge_number = obs.loc[,1], 
+                     distance_on_edge = obs.loc[,2],
+                     time = c(rep(1, 4), rep(2, 4)))
+graph$add_observations(data = df_rep, replicates = "time")
+```
+If `NA` is given in some variable, this indicates that this specific variable is
+not measured at that location and replicate. 
+We can now plot the individual variables by specifying their names in the 
+plot function together with the replicate number that we want to see. By default
+the first replicate is shown. 
+```{r}
+graph$plot(data = "x", repl = 2)
 ```
 
 In some cases, we might want to add the observation locations as vertices 
 in the graph. This can be done as follows: 
 ```{r}
 graph$observation_to_vertex()
-graph$plot(data = "y")
+graph$plot(data = "y", repl = 1)
 ```
+One can note that the command adds all observation locations, from all replicates
+as vertices. 
 
 # Working with functions on metric graphs
 
