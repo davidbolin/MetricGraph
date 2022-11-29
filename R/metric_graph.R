@@ -368,11 +368,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
 
-    #self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
-    #self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
+    self$data[["__edge_number"]] <- rep(private$temp_PtE[,1], times = n_repl)
+    self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2], times = n_repl)
 
-    self$data[["__edge_number"]] <- private$temp_PtE[,1]
-    self$data[["__distance_on_edge"]] <- private$temp_PtE[,2]
+    # self$data[["__edge_number"]] <- private$temp_PtE[,1]
+    # self$data[["__distance_on_edge"]] <- private$temp_PtE[,2]
 
     private$temp_PtE <- NULL
 

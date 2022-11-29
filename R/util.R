@@ -637,7 +637,6 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     }
     data_coords_new[["repl"]] <- replicate_vector
     data_coords[["idx"]] <- 1:nrow(data_coords)
-    print(data_coords)
     idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE, sort = FALSE)
     idx_new_entries <- idx_new_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
@@ -655,7 +654,6 @@ process_data_add_obs <- function(PtE, new_data, old_data, replicate_vector){
     new_data[["__edge_number"]] <- data_coords[["PtE1"]]
     new_data[["__distance_on_edge"]] <- data_coords[["PtE2"]]
     new_data[["__repl"]] <- data_coords[["repl"]]
-    print(new_data)
     return(new_data)
   } else{
 
