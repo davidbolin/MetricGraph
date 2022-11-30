@@ -29,6 +29,10 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
  prior_kappa = NULL,
  prior_sigma = NULL, debug = FALSE){
 
+  graph_spde <- graph_object$clone()
+
+  graph_spde$observation_to_vertex()
+
   parameterization <- parameterization[[1]]
   if(!(alpha%in%c(1,2))){
     stop("alpha must be either 1 or 2!")
@@ -37,9 +41,9 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     stop("Only alpha=1 implemented.")
   }
   nu <- alpha - 0.5
-  V <- graph_object$V
-  EtV <- graph_object$E
-  El <- graph_object$edge_lengths
+  V <- graph_spde$V
+  EtV <- graph_spde$E
+  El <- graph_spde$edge_lengths
 
   i_ <- j_ <- rep(0, dim(V)[1]*4)
   nE <- dim(EtV)[1]
@@ -94,7 +98,6 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     EtV3 <- EtV[,2]
     El <- as.vector(El)
 
-  gpgraph_lib <- system.file('shared', package='MetricGraph')
 
   idx_ij <- order(i_, j_)
   j_ <- j_[idx_ij]
@@ -133,7 +136,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
-      start_values_vector <- graph_starting_values(graph_object,
+      start_values_vector <- graph_starting_values(graph_spde,
                       model = model_start, data=FALSE)
 
       prior_kappa$meanlog <- log(start_values_vector[3])
@@ -186,6 +189,8 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     prior_theta <- prior_kappa
   }
 
+  gpgraph_lib <- system.file('shared', package='MetricGraph')
+  
   model <- do.call(
         'inla.cgeneric.define',
         list(model="inla_cgeneric_gpgraph_alpha1_model",
@@ -206,7 +211,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
             parameterization = parameterization))
-model$graph_obj <- graph_object
+model$graph_spde <- graph_spde
 model$parameterization <- parameterization
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
@@ -220,16 +225,16 @@ return(model)
 #' `INLA`-based metric graph models.
 #'
 #' @param name A character string with the base name of the effect.
-#' @param graph A `metric_graph` object.
+#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
 #' @param n.group Number of groups.
 #' @param n.repl Number of replicates.
 #' @param ... Currently not being used.
 #'
 #' @return A list of indexes.
 #' @export
-graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
-
-    n.spde <- dim(graph$V)[1]
+graph_spde_make_index <- function (name, graph_spde, n.group = 1, n.repl = 1, ...) {
+    graph_tmp <- graph_spde$graph_spde
+    n.spde <- dim(graph_spde$V)[1]
     name.group <- paste(name, ".group", sep = "")
     name.repl <- paste(name, ".repl", sep = "")
     out <- list()
@@ -245,7 +250,7 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
 #'
-#' @param graph An object of class `metric_graph`
+#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
 #' @param repl Which replicates? If there is no replicates, or to
 #' use all replicates, one can set to `NULL`.
 #' @param obs_to_vert Should the observations be turned into vertices?
@@ -253,8 +258,8 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
 #' @return The observation matrix
 #' @export
 
-graph_spde_make_A <- function (graph, repl = NULL, obs_to_vert = FALSE) {
-   return(graph$A(group = repl))
+graph_spde_make_A <- function (graph_spde, repl = NULL, obs_to_vert = FALSE) {
+   return(graph_spde$graph_spde$A(group = repl))
 }
 
 
@@ -576,7 +581,7 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   }
   model <- mapper[["model"]]
 
-  A_bru <- model$graph_obj$A(order = "original")
+  A_bru <- model$graph_spde$A()
   n.rep <- nrow(input)/nrow(A_bru)
   return(kronecker(matrix(rep(1,n.rep),nrow=n.rep),
   A_bru))
@@ -669,20 +674,20 @@ create_summary_from_density <- function(density_df, name) {
 }
 
 
-#' @name graph_stack
-#' @title Creates an inla.stack for metric graph objects
-#' @description Auxiliar function to create inla.stacks for metric graph objects
-#' @param stack_obj A density data frame
-#' @param name Name of the field
-#' @return A data object to be passed to inla
-#' @export
-graph_stack <- function(stack_obj, name){
-  A <- stack_obj$A
-  data_tmp <- INLA::inla.stack.data(stack_obj)
-  index_obj <- stack_obj[["effects"]][["data"]]
-  data_tmp[[name]] <- as.vector(A%*%index_obj[[name]])
-  return(data_tmp)
-}
+# #' @name graph_stack
+# #' @title Creates an inla.stack for metric graph objects
+# #' @description Auxiliar function to create inla.stacks for metric graph objects
+# #' @param stack_obj A density data frame
+# #' @param name Name of the field
+# #' @return A data object to be passed to inla
+# #' @export
+# graph_stack <- function(stack_obj, name){
+#   A <- stack_obj$A
+#   data_tmp <- INLA::inla.stack.data(stack_obj)
+#   index_obj <- stack_obj[["effects"]][["data"]]
+#   data_tmp[[name]] <- as.vector(A%*%index_obj[[name]])
+#   return(data_tmp)
+# }
 
 
 

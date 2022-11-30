@@ -422,9 +422,6 @@ nearestPointOnSegment <- function(s, p){
 graph_starting_values <- function(graph, model = NULL, data=TRUE, column_data=NULL,
 manual_data = NULL){
 
-  if(is.null(graph$geo_dist)){
-    graph$compute_geodist()
-  }
   check_graph(graph)
 
   if(data){
@@ -445,12 +442,12 @@ manual_data = NULL){
     data_std <- NA
   }
 
-  finite_geodist <- lapply(graph$geo_dist,
-                function(geo){
-                  idx_fin <- is.finite(geo)
-                  return(max(geo[idx_fin]))
-                })
-  prior.range.nominal <- max(unlist(finite_geodist)) * 0.2
+  if(is.null(graph_obj$geo_dist)){
+        graph_obj$compute_geodist(obs=FALSE)
+  }
+  finite_geodist <- is.finite(graph$geo_dist[["__vertices"]])
+  finite_geodist <- graph$geo_dist[["__vertices"]][finite_geodist]
+  prior.range.nominal <- max(finite_geodist) * 0.2
 
   if (model == "alpha1") {
     start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
