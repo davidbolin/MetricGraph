@@ -549,7 +549,7 @@ dl_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
                                           repl = i)})
 dl_graph <- do.call(rbind, dl_graph)
 graph_rep$add_observations(data = dl_graph, normalized=TRUE, 
-                            repl = "repl",
+                            group = "repl",
                             edge_number = "edge_number",
                             distance_on_edge = "distance_on_edge")
 graph_rep$observation_to_vertex()

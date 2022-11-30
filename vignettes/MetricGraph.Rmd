@@ -128,10 +128,11 @@ graph <- metric_graph$new(lines, longlat = TRUE)
 graph$plot(vertex_size = 0.5)
 ```
 
-We can note the warning that the graph is not connected, so let us extract the 
-largest connected component to work with
+We can note the warning that the graph is not connected, so let us create a 
+`graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph <- graph_components(lines = lines, longlat = TRUE, only_largest = TRUE)
+graphs <- graph_components$new(lines = lines, longlat = TRUE)
+graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
 ```
 
@@ -171,21 +172,22 @@ Given that we have constructed the metric graph, we can now add data to it.
 As an example, let us sample some locations on edges at random and add data to them in the graph: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 n.obs <- 10
-obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
-obs <- rnorm(n.obs)
-graph$add_PtE_observations(obs, PtE = obs.loc, normalized = TRUE)
-graph$plot(data = TRUE, vertex_size = 0)
+data <- data.frame(edge_number = sample(1:graph$nE, n.obs),
+                   distance_on_edge = runif(n.obs),
+                   y = rnorm(n.obs))
+graph$add_observations(data = data, normalized = TRUE)
+graph$plot(data = "y", vertex_size = 0)
 ```
 
-One should note here that one needs to specify `normalized = TRUE` in the function `add_PtE_observations()` to specify that the locations are in normalized distance on the edges. Alternatively, if one has data as `SpatialPoints` objects, these can be added to the graph via the function `add_observations()`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPoints` object which we add to the graph:
+One should note here that one needs to specify `normalized = TRUE` in the function to specify that the locations are in normalized distance on the edges. If this command is not set, the distances are interpreted as not being normalized. The `add_observations()` function accepts multiple types of inputs. One scenario that can be common in applications is to have the data as `SpatialPoints` objects, and one can then add the observations as a `SpatialPointsDataFrame`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPointsDataFrame` object which we add to the graph:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
 obs.lonlat <- graph$coordinates(PtE = obs.loc, normalized = TRUE)
 obs <- rnorm(n.obs)
-points <- SpatialPointsDataFrame(coords = obs.loc,
+points <- SpatialPointsDataFrame(coords = obs.lonlat,
                                  data = data.frame(y = obs))
 graph$add_observations(points)
-graph$plot(data = TRUE, vertex_size = 0)
+graph$plot(data = "y", vertex_size = 0)
 ```
 
 If we want to replace the data in the object, we can use `clear_observations()`
@@ -202,9 +204,9 @@ graph$build_mesh(h = 100/1000)
 graph$plot(mesh=TRUE)
 ```
 
-In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. Above we chose that as 100m which is a bit coarse. So let us reduce the value of `h` to 1m and rebuild the mesh:
+In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. Above we chose that as 100m which is a bit coarse. So let us reduce the value of `h` to 10m and rebuild the mesh:
 ```{r}
-  graph$build_mesh(h = 1/1000)
+  graph$build_mesh(h = 10/1000)
 ```
 
 Suppose now that we want to display the function $f(s) = \text{Longitude}(s) - \Latitude(s)$ on this graph. We then first evaluate it on the vertices of the mesh and then use the  function `plot_function` to display it:
@@ -240,8 +242,8 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 ### Sampling 
 
 As an example, let us simulate the field $u$ on the graph using $\alpha = 1$. 
-To do so, we again draw some locations at random, then sample the field, clear the observations that we previously added to the graph, and finally add the sampled values:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+To do so, we again draw some locations at random, then sample the field at these locations and plot the result
+```{r}
 n.obs <- 200
 obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
 sigma <- 2
@@ -249,21 +251,15 @@ kappa <- 0.5
 sigma_e <- 0.1
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
                  graph = graph, PtE = obs.loc)
-y <- u + sigma_e*rnorm(n.obs)
 graph$clear_observations()
-graph$add_PtE_observations(u, PtE = obs.loc, normalized = TRUE)
-graph$plot(data = TRUE, vertex_size = 0)
+graph$add_observations(data = data.frame(edge_number = obs.loc[, 1],
+                                         distance_on_edge = obs.loc[, 2],
+                                         u = u),
+                       normalized = TRUE)
+graph$plot(data = "u", vertex_size = 0)
 ```
 
-Here, we generated the observations
-$$
-y_i = u(s_i) + \varepsilon_i, \quad i=1,\ldots,n
-$$
-where $s_i\in \Gamma$ are observation locations and $\varepsilon_i$ are
-independent centered Gaussian variables $N(0,\sigma_e^2)$ representing 
-measurement noise. 
-
-As an illustration, we can also sample the field at the mesh on the graph as follows:
+We can also sample the field at the mesh on the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
                  graph = graph, type = "mesh")
@@ -284,9 +280,34 @@ To obtain a field with differentiable sample paths, we can change to $\alpha=2$ 
 
 ### Inference
 
-The `MetricGraph` package contains implementations of likelihoods for Whittle--Matérn fields observed under Gaussian measurement  noise. In this section we will illustrate these methods. 
-Suppose that we want to estimate the model parameters of a Whittle--Matérn field
-$u(s)$ observed under Gaussian measurement noise. We have already added data of this type to the graph, so let us now estimate the model parameters based on this data. 
+Suppose that we have data of the form 
+$$
+y_i = \beta_1\text{lon}(s_i) +  \beta_1\text{lat}(s_i) +  u(s_i) + \varepsilon_i, \quad i=1,\ldots,n
+$$
+where $s_i\in \Gamma$ are observation locations, lon and lat are the longitude and latitude of these locations, $\beta_1,\beta_2$ are some regression coefficients, and 
+$\varepsilon_i$ are independent centered Gaussian variables $N(0,\sigma_e^2)$ representing measurement noise. 
+
+Let us create such observations, clear the current data in the graph, and finally add the data on the graph:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+                 graph = graph, PtE = obs.loc)
+
+beta1 = 1
+beta2 = 2
+lonlat <- graph$coordinates(PtE = obs.loc)
+
+y <- beta1 * lonlat[, 1] + beta2 * lonlat[, 2] + u + sigma_e*rnorm(n.obs)
+
+data <- data.frame(edge_number = obs.loc[, 1],
+                   distance_on_edge = obs.loc[, 2],
+                   lon = lonlat[, 1],
+                   lat = lonlat[, 2],
+                   y = y)
+
+graph$clear_observations()
+graph$add_observations(data = data, normalized = TRUE)
+```
+
 
 We can now use the `likelihood_graph_spde` function to obtain the log-likelihood function for the data based on a Whittle--Matérn field. 
 

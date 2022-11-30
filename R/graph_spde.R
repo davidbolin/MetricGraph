@@ -133,7 +133,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
 
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
-      start_values_vector <- graph_starting_values(graph_object, 
+      start_values_vector <- graph_starting_values(graph_object,
                       model = model_start, data=FALSE)
 
       prior_kappa$meanlog <- log(start_values_vector[3])
@@ -142,7 +142,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
       prior_range$meanlog <- log(sqrt(8 * nu)) -
       prior_kappa$meanlog
     } else{
-      prior_kappa$meanlog <- log(sqrt(8 * nu)) - 
+      prior_kappa$meanlog <- log(sqrt(8 * nu)) -
       prior_range$meanlog
     }
 
@@ -254,7 +254,7 @@ graph_spde_make_index <- function (name, graph, n.group = 1, n.repl = 1, ...) {
 #' @export
 
 graph_spde_make_A <- function (graph, repl = NULL, obs_to_vert = FALSE) {
-   return(graph$A(repl = repl))
+   return(graph$A(group = repl))
 }
 
 
