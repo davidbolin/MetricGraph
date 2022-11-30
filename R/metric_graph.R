@@ -1694,7 +1694,7 @@ graph_components <-  R6::R6Class("graph_components",
                                                    vertex_colors[1, 3]), ...)
      if (self$n > 1) {
        for(i in 2:self$n){
-         suppressWarnings(p <- self$graphs[[i]]$plot(edge_color = rgb(edge_colors[i, 1],
+         suppressMessages(p <- self$graphs[[i]]$plot(edge_color = rgb(edge_colors[i, 1],
                                                      edge_colors[i, 2],
                                                      edge_colors[i, 3]),
                                     vertex_color = rgb(vertex_colors[i, 1],
