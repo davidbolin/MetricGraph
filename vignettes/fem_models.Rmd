@@ -183,9 +183,9 @@ as function of the parameters we want to estimate. We define
 the loglikelihood function parametrized using the logarithm of each
 parameter to avoid constrained optimization.
 
-    ```{r}
+```{r}
     mlik <- rSPDE.construct.matern.loglike(op, Y=Y, A=A)
-    ```
+```
 
 We now set some suitable initial values for the optimization and fit the 
 model using `optim`.
