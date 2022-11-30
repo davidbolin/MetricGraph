@@ -96,6 +96,7 @@ graph. The weights are given by the edge lengths}
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
+\item \href{#method-metric_graph-compute_geodist_PtE}{\code{metric_graph$compute_geodist_PtE()}}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
 \item \href{#method-metric_graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-metric_graph-compute_resdist_PtE}{\code{metric_graph$compute_resdist_PtE()}}
@@ -179,7 +180,7 @@ A metric_graph object
 Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(full = FALSE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -189,8 +190,30 @@ graph
 the available locations. If \code{FALSE}, it will be computed
 separately for the locations of each group.}
 
+\item{\code{obs}}{Should the geodesic distances be computed at the observation locations?}
+
 \item{\code{group}}{vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_geodist_PtE"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_geodist_PtE}{}}}
+\subsection{Method \code{compute_geodist_PtE()}}{
+Computes shortest path distances between the vertices in the
+graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{points to compute the metric for.}
+
+\item{\code{normalized}}{are the locations in PtE in normalized distance?}
 }
 \if{html}{\out{</div>}}
 }
@@ -213,7 +236,7 @@ mesh
 Computes the resistance distance between the observation
 locations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -222,6 +245,8 @@ locations
 \item{\code{full}}{Should the resistance distances be computed for all
 the available locations. If \code{FALSE}, it will be computed
 separately for the locations of each group.}
+
+\item{\code{obs}}{Should the resistance distances be computed at the observation locations?}
 
 \item{\code{group}}{vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
@@ -266,7 +291,7 @@ mesh
 \subsection{Method \code{compute_laplacian()}}{
 Computes the weigthed graph Laplacian for the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(full = FALSE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -275,6 +300,8 @@ Computes the weigthed graph Laplacian for the graph
 \item{\code{full}}{Should the resistance distances be computed for all
 the available locations. If \code{FALSE}, it will be computed
 separately for the locations of each group.}
+
+\item{\code{obs}}{Should the resistance distances be computed at the observation locations?}
 
 \item{\code{group}}{vector or list containing which groups to compute the
 Laplacian for. If \code{NULL}, it will be computed for all groups.}
@@ -356,7 +383,8 @@ Add observations to the graph
   coord_y = "coord_y",
   data_coords = c("PtE", "euclidean"),
   group = NULL,
-  normalized = FALSE
+  normalized = FALSE,
+  tolerance = max(self$edge_lengths)/2
 )}\if{html}{\out{</div>}}
 }
 
@@ -403,6 +431,12 @@ which the group varialbe is stored.}
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE. Will not be used if
 \code{Spoints} is not \code{NULL}.}
+
+\item{\code{tolerance}}{Parameter to control a warning when adding observations.
+If the distance of some location and the closest point on the graph is
+greater than the tolerance, the function will display a warning.
+This helps detecting mistakes on the input
+locations when adding new data.}
 }
 \if{html}{\out{</div>}}
 }

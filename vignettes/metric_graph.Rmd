@@ -76,7 +76,7 @@ that are connected by lines) is
 ```{r}
 graph$E
 ```
-To obtain the geodesic (shortes path) distance between the vertices, we can use
+To obtain the geodesic (shortest path) distance between the vertices, we can use
 the function `compute_geodist`:
 ```{r}
 graph$compute_geodist()
@@ -293,7 +293,7 @@ In some cases, we might want to add the observation locations as vertices
 in the graph. This can be done as follows: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph$observation_to_vertex()
-graph$plot(data = "y", group = 1)
+graph$plot(data = "x", group = 1)
 ```
 
 One can note that the command adds all observation locations, from all groups
