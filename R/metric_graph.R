@@ -1492,13 +1492,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop("X supplied but not X_loc")
       }
       x <- y <- NULL
-      for (i in 1:length(as.vector(X))) {
-        points_xy <- self$coordinates(PtE = cbind(X_loc[i, 1], X_loc[i, 2]))
-
-        x <- points_xy[,1]
-        y <- points_xy[,2]
-
+      if(length(X) != nrow(X_loc)){
+        stop("The number of observations does not match the number of observations!")
       }
+      points_xy <- self$coordinates(PtE = X_loc)
+      x <- points_xy[,1]
+      y <- points_xy[,2]
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(X)),
                           mapping = aes(x, y, color = val),

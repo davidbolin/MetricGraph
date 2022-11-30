@@ -4,10 +4,10 @@
 \alias{graph_spde_make_A}
 \title{Observation/prediction matrices for rSPDE models.}
 \usage{
-graph_spde_make_A(graph, repl = NULL, obs_to_vert = FALSE)
+graph_spde_make_A(graph_spde, repl = NULL, obs_to_vert = FALSE)
 }
 \arguments{
-\item{graph}{An object of class \code{metric_graph}}
+\item{graph_spde}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function.}
 
 \item{repl}{Which replicates? If there is no replicates, or to
 use all replicates, one can set to \code{NULL}.}
