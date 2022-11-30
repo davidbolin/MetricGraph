@@ -9,8 +9,9 @@ graph_data_spde(graph_spde, repl = NULL)
 \arguments{
 \item{graph_spde}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function.}
 
-\item{repl}{Which replicates? If there is no replicates, or to
-use all replicates, one can set to \code{NULL}.}
+\item{repl}{Which replicates? If there is no replicates, one
+can set \code{repl} to \code{NULL}. If one wants all replicates,
+then one sets to \code{repl} to \verb{__all}.}
 }
 \value{
 The observation matrix

@@ -740,8 +740,9 @@ Get the observation/prediction matrix A
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{group}}{A vector. If \code{NULL}, the A matrix for all groups will be
-returned. Otherwise, the A matrix for the groups in the vector will be
+\item{\code{group}}{A vector. If \code{NULL}, the A matrix for the first group will be
+returned. One can use all groups by simply setting the \code{group} variable
+to \verb{__all}. Otherwise, the A matrix for the groups in the vector will be
 returned.}
 
 \item{\code{obs_to_vert}}{Should the observations be turned into vertices?}

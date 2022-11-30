@@ -7,7 +7,8 @@
 bru_graph_rep(repl, graph_spde)
 }
 \arguments{
-\item{repl}{A density data frame}
+\item{repl}{A vector of replicates. If set to \verb{__all}, a vector
+for all replicates will be generated.}
 
 \item{graph_spde}{Name of the field}
 }
