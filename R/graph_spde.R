@@ -723,11 +723,60 @@ bru_graph_rep <- function(repl, graph_spde){
   }
   n_groups <- length(groups)
   length_resp <- sum(graph_spde$graph_spde$data[["__group"]] == groups[1])
-  # graph_spde_obj <- deparse(substitute(graph_spde))
-  # graph_spde$n_spde <- graph_spde$f$n * length(unique(repl))
-  # assign(graph_spde_obj, graph_spde, envir = parent.frame())
   return(rep(repl, each = length_resp ))
 }
 
+
+#' @name inlabru_predict
+#' @title Kriging with inlabru
+#' @description Auxiliar function to obtain predictions of the field
+#' using inlabru.
+#' @param bru_model  An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param bru_fit A fitted model using `inlabru` or `inla`.
+#' @param XY Euclidean coordinates of the prediction locations.
+#' @param PtE Relative positions on the edge to obtain predictions.
+#' @return A list with predictions.
+#' @export
+
+inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL){
+  if(is.null(XY) && is.null(PtE)){
+    stop("No location to predict was provided!")
+  }
+  graph_tmp <- bru_model$graph_spde$get_initial_graph()
+  repl <- unique(bru_model$graph_spde$data[["__group"]])
+  data_tmp <- graph_data_spde(bru_model, 
+            repl=repl[1])
+  graph_tmp$add_observations(data = data_tmp,
+                    coord_x = "__coord_x",
+                    coord_y = "__coord_y",
+                    data_coords = "euclidean")
+  if(!is.null(XY)){
+    PtE <- graph_tmp$coordinates(XY = XY)
+  }
+  resp <- as.character(cmp[2])
+  data_tmp <- list()
+  data_tmp[[resp]] <- rep(NA, nrow(PtE))
+  data_tmp[["edge_number"]] <- PtE[,1]
+  data_tmp[["distance_on_edge"]] <- PtE[,2]
+  graph_tmp$add_observations(data = data_tmp)
+  graph_tmp$observation_to_vertex()
+  spde____model <<- graph_spde(graph_tmp)
+  cmp_c <- as.character(cmp)
+  name_model <- deparse(substitute(bru_model))
+  cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
+  cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
+  bru_fit_new <- bru(cmp, 
+          data = graph_data_spde(spde____model),
+          options = list(
+            control.mode = list(
+              theta = bru_fit$mode$theta,
+              fixed = TRUE
+            )
+          ))
+  fitted_values <- bru_fit_new$summary.fitted.values
+  
+idx_prd <- which(is.na(graph_data_spde(spde____model)[[resp]]))
+return(fitted_values[idx_prd,])
+}
 
 

@@ -240,10 +240,68 @@ the `inlabru_predict()` function. We will first show
 how to do kriging with the help of this function. Then,
 we will show how to do it manually.
 
-We begin by creating a data with the positions we want the predictions.
+We begin by creating a data list
+with the positions we want the predictions. In this case,
+we will want the predictions on a mesh.
 
+Let us begin by obtaining an evenly spaced mesh with respect to the base
+graph:
 
+```{r}
+obs_per_edge_prd <- 50
+graph_bru$build_mesh(n = obs_per_edge_prd)
+```
 
+Let us plot the resulting graph:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bru$plot(mesh=TRUE)
+```
+
+The positions we want are the mesh positions, which
+are given in `graph_bru$mesh$PtE`.
+
+Now, we pass the spde model object, along with 
+our fitted object and the positions
+(the positions can be either Euclidean coordinates, 
+given by the argument `XY`, or relative positions on the
+edge, given by the `PtE` argument).
+
+```{r}
+PtE_prd <- graph_bru$mesh$PtE
+```
+
+Now, we simply call the `inlabru_predict()` function with
+the previous component, the previous model object,
+the previous fitted model and the locations:
+
+```{r}
+fitted_values <- inlabru_predict(spde_model_bru, 
+                                spde_bru_fit, 
+                                cmp, 
+                                PtE = PtE_prd)
+```
+
+Now, we can get the mean values:
+
+```{r}
+m_prd_bru <- fitted_values$mean
+```
+
+To improve visualization, we will plot the posterior means
+using the `plot_function()` method:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph_bru$plot_function(X = m_prd_bru, vertex_size = 0)
+```
+
+Finally, we can plot the predictions together with
+the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+p <- graph_bru$plot_function(X = m_prd_bru, vertex_size = 0) 
+graph_bru$plot(data=TRUE, vertex_size = 0, edge_width = 0, p = p, data_size = 2)
+```
+
+## Kriging by adding new observation locations to the fitted graph
 
 We will now illustrate the manual approach, which is very similar 
 to `R-INLA`'s implementation. However, it is much simpler 
@@ -274,20 +332,12 @@ observations are not vertices of the base graph.
 We will do kriging at an evenly spaced mesh across
 the metric graph.
 
-## Kriging by adding new observation locations to the fitted graph
-
 Let us begin by obtaining an evenly spaced mesh with respect to the base
 graph:
 
 ```{r}
 obs_per_edge_prd <- 50
 graph_bru$build_mesh(n = obs_per_edge_prd)
-```
-
-Let us plot the resulting graph:
-
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru$plot(mesh=TRUE)
 ```
 
 We will now add the observations on the mesh
@@ -334,16 +384,11 @@ cmp_prd <- y ~ -1 + Intercept(1) + field(NULL,
 Now, we fit the model:
 ```{r}
 spde_bru_fit_prd <-
-    bru(cmp_prd, data=graph_data_spde(spde_model_bru_prd))
-```
-
-Let us now obtain the estimates in the original scale:
-
-```{r}
-spde_result_bru_prd <- spde_metric_graph_result(spde_bru_fit_prd, 
-            "field", spde_model_bru_prd)
-
-summary(spde_result_bru_prd)
+    bru(cmp_prd, data=graph_data_spde(spde_model_bru_prd),
+      options = list(
+        control.mode = list(theta = spde_bru_fit$mode$theta,
+                          fixed = TRUE)
+      ))
 ```
 
 We will now extract the means at the prediction locations:

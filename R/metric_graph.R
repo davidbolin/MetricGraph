@@ -134,6 +134,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
     private$line_to_vertex(tolerance = tolerance, longlat = longlat)
     private$initial_graph <- self$clone()
+    #Cloning again to add the initial graph to the initial graph
+    private$initial_graph <- self$clone()
 
     # Checking if graph is connected
     if (check_connected) {
