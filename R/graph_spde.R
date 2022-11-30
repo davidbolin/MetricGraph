@@ -266,15 +266,20 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 #' for metric graph models.
 #'
 #' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
-#' @param repl Which replicates? If there is no replicates, or to
-#' use all replicates, one can set to `NULL`.
+#' @param repl Which replicates? If there is no replicates, one
+#' can set `repl` to `NULL`. If one wants all replicates,
+#' then one sets to `repl` to `__all`.
 #' @return The observation matrix
 #' @export
 
 graph_data_spde <- function (graph_spde, repl = NULL){
   if(is.null(repl)){
+    groups <- graph_spde$graph_spde$data[["__group"]]
+    repl <- groups[1]
+    return(select_group(graph_spde$graph_spde$data, repl))
+  } else if(repl[1] == "__all") {
     return(graph_spde$graph_spde$data)
-  } else{
+  } else {
     return(select_group(graph_spde$graph_spde$data, repl))
   }
 }
@@ -582,7 +587,8 @@ bru_mapper.inla_metric_graph_spde <- function(model,...) {
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   model <- mapper[["model"]]
-  model$f$n
+  n_groups <- length(unique(model$graph_spde$data[["__group"]]))
+  return(model$f$n)
 }
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
@@ -591,18 +597,27 @@ ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
 #' @param input The values for which to produce a mapping matrix
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
-  if (is.null(input)) {
-    return(Matrix::Matrix(0, 0, inlabru::ibm_n(mapper)))
-  }
-  if (!is.matrix(input) && !inherits(input, "Spatial")) {
-    input <- as.matrix(input)
-  }
   model <- mapper[["model"]]
-
-  A_bru <- model$graph_spde$A()
-  n.rep <- nrow(input)/nrow(A_bru)
-  return(kronecker(matrix(rep(1,n.rep),nrow=n.rep),
-  A_bru))
+  if(is.null(input)){
+    return(model$graph_spde$A())
+  } else if(input[1] == "__all"){
+    return(model$graph_spde$A(group="__all"))
+  } else{
+    A_list <- list()
+    for(repl_ in unique(input)){
+      graph_tmp <- model$graph_spde$get_initial_graph()
+      data_tmp <- graph_data_spde(model, 
+            repl=repl_)
+      graph_tmp$add_observations(data = data_tmp,
+                    coord_x = "__coord_x",
+                    coord_y = "__coord_y",
+                    data_coords = "euclidean")
+      graph_tmp$observation_to_vertex()
+      A_list <- c(A_list, graph_tmp$A(group=repl_))
+    }
+    A <- do.call(rbind, A_list)
+    return(A)
+  }
 }
 
 #' @rdname bru_mapper.inla_metric_graph_spde
@@ -692,20 +707,27 @@ create_summary_from_density <- function(density_df, name) {
 }
 
 
-# #' @name graph_stack
-# #' @title Creates an inla.stack for metric graph objects
-# #' @description Auxiliar function to create inla.stacks for metric graph objects
-# #' @param stack_obj A density data frame
-# #' @param name Name of the field
-# #' @return A data object to be passed to inla
-# #' @export
-# graph_stack <- function(stack_obj, name){
-#   A <- stack_obj$A
-#   data_tmp <- INLA::inla.stack.data(stack_obj)
-#   index_obj <- stack_obj[["effects"]][["data"]]
-#   data_tmp[[name]] <- as.vector(A%*%index_obj[[name]])
-#   return(data_tmp)
-# }
+#' @name bru_graph_rep
+#' @title Creates a vector of replicates to be used with inlabru
+#' @description Auxiliar function to create a vector of replicates to be used with inlabru
+#' @param repl A vector of replicates. If set to `__all`, a vector
+#' for all replicates will be generated.
+#' @param graph_spde Name of the field
+#' @return A vector of replicates to be used with inlabru
+#' @export
+
+bru_graph_rep <- function(repl, graph_spde){
+  groups <- unique(graph_spde$graph_spde$data[["__group"]])
+  if(repl[1] == "__all"){
+    repl <- groups
+  }
+  n_groups <- length(groups)
+  length_resp <- sum(graph_spde$graph_spde$data[["__group"]] == groups[1])
+  # graph_spde_obj <- deparse(substitute(graph_spde))
+  # graph_spde$n_spde <- graph_spde$f$n * length(unique(repl))
+  # assign(graph_spde_obj, graph_spde, envir = parent.frame())
+  return(rep(repl, each = length_resp ))
+}
 
 
 

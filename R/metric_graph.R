@@ -1195,8 +1195,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Get the observation/prediction matrix A
-  #' @param group A vector. If `NULL`, the A matrix for all groups will be
-  #' returned. Otherwise, the A matrix for the groups in the vector will be
+  #' @param group A vector. If `NULL`, the A matrix for the first group will be
+  #' returned. One can use all groups by simply setting the `group` variable
+  #' to `__all`. Otherwise, the A matrix for the groups in the vector will be
   #' returned.
   #' @param obs_to_vert Should the observations be turned into vertices?
   #' @param include_NA Should the locations for which all observations are NA be
@@ -1216,8 +1217,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(is.null(group)){
       group <- unique(self$data[["__group"]])
-      n_group <- length(group)
+      group <- group[1]
+    } else if (group[1] == "__all"){
+      group <- unique(self$data[["__group"]])
     }
+    n_group <- length(unique(group))
 
     if(include_NA){
       A <- Matrix::Diagonal(self$nV)[self$PtV, ]

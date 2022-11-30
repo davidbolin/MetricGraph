@@ -147,25 +147,14 @@ stack objects.
 We are now in a position to fit the model with our
 `inlabru` implementation. To this end,
 we need to add the observations to the graph, which we 
-will do with the `add_PtE_observations()` method. Then,
-we need to turn the observations into vertices of the 
-graph with the `observation_to_vertex()` method. 
-
-Before adding the observations we will grab a copy of
-the graph with the `clone()` method for two reasons: i. to make it better to 
-visualization; ii. we will need to provide another
-approach of kriging as we will see in the *Kriging
-with `inlabru` implementation* section.
+will do with the `add_observations()` method. 
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-# Cloning the graph
-graph_bkp <- graph_bru$clone()
 # Creating the data frame
 df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
                       distance_on_edge = obs_loc[,2])
 # Adding observations and turning them to vertices
-graph_bru$add_PtE_observations(data_frame = df_graph, normalized=TRUE)
-graph_bru$observation_to_vertex()
+graph_bru$add_observations(data = df_graph, normalized=TRUE)
 graph_bru$plot(data="y")
 ```
 
@@ -179,25 +168,24 @@ library(INLA)
 library(inlabru)
 spde_model_bru <- graph_spde(graph_bru)
 ```
-The next step is to create the data list containing
-the reponse variables and the `PtE` attribute:
-```{r}
-data_list <- list(y = y, loc = graph_bru$PtE)
-```
 
 Now, we create `inlabru`'s component, which is a 
-formula-like object:
+formula-like object. The index parameter in `inlabru`
+is not used in our implementation, thus, we replace it 
+by the `repl` argument, which tells which 
+replicates to use. If there is no replicates, we
+supply `NULL`.
 ```{r}
 cmp <-
-    y ~ -1 + Intercept(1) + field(loc, 
-                            model = spde_model_bru)
+    y ~ -1 + Intercept(1) + field(NULL,
+                    model = spde_model_bru)
 ```
 
 Now, we directly fit the model:
 
 ```{r}
 spde_bru_fit <-
-    bru(cmp, data=data_list)
+    bru(cmp, data=graph_data_spde(spde_model_bru))
 ```
 
 Let us now obtain the estimates in the original scale
@@ -247,7 +235,17 @@ Unfortunately, our `inlabru` implementation is not
 compatible with `inlabru`'s `predict()` method. This has
 to do with the nature of the metric graph's object.
 
-Therefore, the approach to do kriging is very similar 
+To this end, we have provided a helper function, namely
+the `inlabru_predict()` function. We will first show
+how to do kriging with the help of this function. Then,
+we will show how to do it manually.
+
+We begin by creating a data with the positions we want the predictions.
+
+
+
+
+We will now illustrate the manual approach, which is very similar 
 to `R-INLA`'s implementation. However, it is much simpler 
 since it does not require the user to handle 
 observation matrices, indices nor on stack objects.
@@ -303,15 +301,7 @@ the number of rows of the `mesh$PtE` attribute.
 n_obs_mesh <- nrow(graph_bru$mesh$PtE)
 y_prd <- rep(NA, n_obs_mesh)
 df_mesh <- data.frame(y = y_prd)
-graph_bru$add_mesh_observations(data_frame = df_mesh)
-graph_bru$observation_to_vertex()
-```
-
-Let us plot the resulting graph (the gray dots indicate
-the new locations):
-
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru$plot(data="y")
+graph_bru$add_mesh_observations(data = df_mesh)
 ```
 
 We will now fit a new model with `inlabru` with this new
@@ -337,14 +327,14 @@ Now, let us create a new
 `inlabru` component:
 
 ```{r}
-cmp_prd <- y ~ -1 + Intercept(1) + field(loc, 
+cmp_prd <- y ~ -1 + Intercept(1) + field(NULL, 
                             model = spde_model_bru_prd)
 ```
 
 Now, we fit the model:
 ```{r}
 spde_bru_fit_prd <-
-    bru(cmp_prd, data=data_list_prd)
+    bru(cmp_prd, data=graph_data_spde(spde_model_bru_prd))
 ```
 
 Let us now obtain the estimates in the original scale:
@@ -358,7 +348,7 @@ summary(spde_result_bru_prd)
 
 We will now extract the means at the prediction locations:
 ```{r}
-idx_prd <- which(is.na(y_cmp))
+idx_prd <- which(is.na(graph_data_spde(spde_model_bru_prd)[["y"]]))
 
 m_prd_bru <- spde_bru_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
@@ -376,115 +366,15 @@ p <- graph_bru$plot_function(X = m_prd_bru, vertex_size = 0)
 graph_bru$plot(data=TRUE, vertex_size = 0, edge_width = 0, p = p, data_size = 2)
 ```
 
-## Kriging by adding the prediction locations from the very beginning
-
-This method is much simpler than the previous one. 
-In this method
-we concatenate the observation locations with the 
-prediction locations,
-assign `NA` as the response values at 
-the prediction locations,
-then proceed as in the first part of this vignette.
-
-We start by getting a new copy of `graph_bkp` to be 
-used in this second
-prediction approach.
-
-```{r}
-graph_bru_prd <- graph_bkp$clone()
-```
-
-We will first add the observations at the locations
-`obs_loc`:
-```{r}
-df_graph <- data.frame(y=y, edge_number = obs_loc[,1],
-                      distance_on_edge = obs_loc[,2])
-```
-
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru_prd$add_PtE_observations(data_frame = df_graph,
-                            normalized=TRUE)
-```
-
-Now, we will obtain the locations from an evenly spaced mesh
-using the `build_mesh()` method:
-```{r}
-obs_per_edge_prd <- 50
-graph_bru_prd$build_mesh(n = obs_per_edge_prd)
-```
-
-Now, we will add `NA` observations at the mesh locations:
-
-```{r}
-n_obs_mesh <- nrow(graph_bru_prd$mesh$PtE)
-y_prd <- rep(NA, n_obs_mesh)
-df_mesh2 <- data.frame(y = y_prd)
-graph_bru_prd$add_mesh_observations(data_frame = df_mesh2)
-```
-
-Finally, we turn these observations to vertices:
-```{r fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru_prd$observation_to_vertex()
-graph_bru_prd$plot(data="y")
-```
-
-Now, we proceed as in the first part. We first create
-the model:
-```{r}
-spde_model_bru_prd2 <- graph_spde(graph_bru_prd)
-```
-Next, we create the new data list:
-```{r}
-data_list_prd2 <- list(y = y_cmp, 
-                            loc = graph_bru_prd$PtE)
-```
-
-Now we create the component object:
-```{r}
-cmp_prd2 <- y ~ -1 + Intercept(1) + field(loc, 
-                            model = spde_model_bru_prd2)
-```
-Finally, we fit the model:
-
-```{r}
-spde_bru_fit_prd2 <-
-    bru(cmp_prd2, data=data_list_prd2)
-```
-
-Let us now obtain the estimates in the original scale:
-
-```{r}
-spde_result_bru_prd2 <- spde_metric_graph_result(spde_bru_fit_prd2, 
-                                    "field", spde_model_bru_prd2)
-
-summary(spde_result_bru_prd2)
-```
-
-
-We will now extract the means at the prediction locations:
-```{r}
-idx_prd <- which(is.na(y_cmp))
-
-m_prd2_bru <- spde_bru_fit_prd2$summary.fitted.values$mean[idx_prd]
-```
-
-We will now plot the predictions together with the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
-p <- graph_bru_prd$plot_function(X = m_prd2_bru, vertex_size = 0)
-graph_bru_prd$plot(data=TRUE, vertex_size = 0, edge_width = 0, data_size = 2,
-                   p = p)
-```
-
-
 ## Fitting `inlabru` models with replicates
 
 We will now illustrate how to use our `inlabru` implementation to 
 fit models with replicates.
 
 To simplify exposition, we will use the same base graph.
-So, we begin by creating a copy:
+So, we begin by clearing the observations:
 ```{r}
-graph_bru_rep <- graph_bkp$clone()
+graph_bru$clear_observations()
 ```
 
 We will use the same observation locations as for the
@@ -500,7 +390,7 @@ n_repl <- 30
 
 u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
                  alpha = alpha_rep,
-                 graph = graph_bru_rep, PtE = obs_loc,
+                 graph = graph_bru, PtE = obs_loc,
                  nsim = n_repl)
 ```
 
@@ -516,59 +406,62 @@ y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
 ```
 
 
-Since we are considering a model with replicates, we will
-add only the first replicate to the graph object:
+We can now add the the observations by setting the `group`
+argument to `repl`:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 dl_rep_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
                                           edge_number = obs_loc[,1],
-                                          distance_on_edge = obs_loc[,2])})
-graph_bru_rep$add_PtE_observations(data_list = dl_rep_graph, normalized=TRUE)
-graph_bru_rep$observation_to_vertex()
-graph_bru_rep$plot(data="y")
-graph_bru_rep$plot(data="y", repl=2)
+                                          distance_on_edge = obs_loc[,2],
+                                          repl = i)})
+dl_rep_graph <- do.call(rbind, dl_rep_graph)
+
+graph_bru$add_observations(data = dl_rep_graph, normalized=TRUE,
+                                    group = "repl")
 ```
+
+By definition the `plot()` method plots the first replicate.
+We can select the other replicates with the `group` argument.
+See the [Working with metric graphs](metric_graphs.html)
+for more details.
+
+```{r}
+graph_bru$plot(data="y")
+```
+
+Let us plot another replicate:
+
+```{r}
+graph_bru$plot(data="y", group=2)
+```
+
 
 Let us now create the model object:
 
 ```{r}
-spde_model_bru_rep <- graph_spde(graph_bru_rep)
+spde_model_bru_rep <- graph_spde(graph_bru)
 ```
 
-Let us now create a new data list, where we provide
-the response variables (as a vector) and the 
-observation locations (for our current implementation,
-the observation locations must be same throughout
-the replicates):
+Let us first create a model using the replicates
+1, 3, 5, 7 and 9. To this end, we provide the vector
+of the replicates we want as the `input` argument to the `field`.
+We created a helper function, namely 
+`bru_graph_rep()` to help building this vector:
 ```{r}
-obs_loc_rep <- obs_loc
-for(i in 2:n_repl){
-    obs_loc_rep <- rbind(obs_loc_rep, obs_loc)
-}   
-data_list_rep <- list(y = as.vector(y_rep),
-                            loc = obs_loc_rep)
-```
-
-To create the component, we need to create a vector
-of replicate indexes. Recall that the number of 
-observations is stored in the variable `n_obs_rep`:
-```{r}
-repl <- rep(1:n_repl, each=n_obs_rep)
-```
-
-Now, we can create the component, setting the argument
-`replicate`, of the component `field`, to our vector `repl`:
-```{r}
+repl <- bru_graph_rep(c(1,3,5,7,9), spde_model_bru_rep)
 cmp_rep <-
-    y ~ -1 + Intercept(1) + field(loc, 
+    y ~ -1 + Intercept(1) + field(repl, 
                         model = spde_model_bru_rep,
                         replicate = repl)
 ```
 
-Now, we fit the model:
+Now, we fit the model, by setting the `repl` argument 
+to the replicates we want inside the
+`graph_data_spde()` function:
 ```{r}
 spde_bru_fit_rep <-
     bru(cmp_rep,
-        data=data_list_rep)
+        data=graph_data_spde(spde_model_bru_rep, 
+        repl=c(1,3,5,7,9)))
 ```
 
 Let us see the estimated values in the original scale:
@@ -596,3 +489,53 @@ Let us compare with the true values:
   )
   print(result_df_bru_rep)
 ```
+
+
+We will now show how to fit the model considering all replicates.
+To this end, we simply set the argument in `bru_graph_rep()`
+function to `__all`.
+
+```{r}
+repl <- bru_graph_rep("__all", spde_model_bru_rep)
+cmp_rep <-
+    y ~ -1 + Intercept(1) + field(repl, 
+                        model = spde_model_bru_rep,
+                        replicate = repl)
+```
+
+Similarly, we fit the model, by setting the `repl` argument 
+to "__all" inside the
+`graph_data_spde()` function:
+```{r}
+spde_bru_fit_rep <-
+    bru(cmp_rep,
+        data=graph_data_spde(spde_model_bru_rep, 
+        repl="__all"))
+```
+
+Let us see the estimated values in the original scale:
+```{r}
+spde_result_bru_rep <- spde_metric_graph_result(spde_bru_fit_rep, 
+                        "field", spde_model_bru_rep)
+
+summary(spde_result_bru_rep)
+```
+
+Let us compare with the true values:
+
+```{r}
+  result_df_bru_rep <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_result_bru_rep$summary.sigma$mean,
+      spde_result_bru_rep$summary.range$mean
+    ),
+    mode = c(
+      spde_result_bru_rep$summary.sigma$mode,
+      spde_result_bru_rep$summary.range$mode
+    )
+  )
+  print(result_df_bru_rep)
+```
+

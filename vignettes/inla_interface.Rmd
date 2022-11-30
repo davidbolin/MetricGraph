@@ -416,7 +416,8 @@ dl_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
                                           repl = i)})
 dl_graph <- do.call(rbind, dl_graph)
 ```
-We can now add the the observations:
+We can now add the the observations by setting the `group`
+argument to `repl`:
 ```{r}
 graph$add_observations(data = dl_graph, normalized=TRUE, 
                             group = "repl",
@@ -445,27 +446,37 @@ Let us now create the model object:
 spde_model_rep <- graph_spde(graph)
 ```
 
-We now create the index object by using the
+Let us first consider a case in which we do not use all
+replicates. Then, we consider the case in which we use all
+replicates. 
+
+Thus, let us assume we want only to consider replicates
+1, 3, 5, 7 and 9. To this end,
+we the index object by using the
 `graph_spde_make_index()` function with the
-argument `n.repl` set to the number of replicates:
+argument `n.repl` set to the number of replicates we want,
+in this case 5:
 ```{r}
 spde_index_rep <- graph_spde_make_index(name="field", 
                     graph_spde=spde_model_rep, 
-                    n.repl = n_repl)
+                    n.repl = 5)
 ```
 
 Similarly, we create the observation (`A`) matrix with the
-function `graph_spde_make_A()` setting the `n.repl` argument
-to the number of replicates:
+function `graph_spde_make_A()` setting the `repl` argument
+to the replicates we want:
 ```{r}
-A_rep <- graph_spde_make_A(graph_spde=spde_model_rep)
+A_rep <- graph_spde_make_A(graph_spde=spde_model_rep,
+                             repl = c(1,3,5,7,9))
 ```
 
 Next, we create the stack object, remembering that
-we need to input the response variable `y` as a vector
-and the `sample_spde()` function returns a matrix.
+we need to input the `data` argument
+with the function `graph_data_spde()`. There, we 
+determine the replicates we want with the `repl` argument.
 ```{r}
-stk_dat_rep <- inla.stack(data = graph_data_spde(spde_model_rep), 
+stk_dat_rep <- inla.stack(data = graph_data_spde(spde_model_rep,
+                                  repl = c(1,3,5,7,9)), 
                         A = A_rep, 
                         effects = c(
       spde_index_rep,
@@ -477,6 +488,79 @@ We now create the formula object, adding the
 name of the field (in our case `field`)
 attached with `.repl` a the `replicate` argument
 inside the `f()` function.
+```{r}
+f_s_rep <- y ~ -1 + Intercept + 
+    f(field, model = spde_model_rep, 
+        replicate = field.repl)
+```
+Then, we create the stack object with The
+`inla.stack.data()` function:
+```{r}
+data_stk_rep <- inla.stack.data(stk_dat_rep)
+```
+Now, we fit the model:
+```{r}
+spde_fit_rep <- inla(f_s_rep, data = data_stk_rep)
+```
+
+Let us see the estimated values in the original scale:
+```{r}
+spde_result_rep <- spde_metric_graph_result(spde_fit_rep, 
+                        "field", spde_model_rep)
+
+summary(spde_result_rep)
+```
+
+Let us compare with the true values:
+
+```{r}
+  result_df_rep <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_result_rep$summary.sigma$mean,
+      spde_result_rep$summary.range$mean
+    ),
+    mode = c(
+      spde_result_rep$summary.sigma$mode,
+      spde_result_rep$summary.range$mode
+    )
+  )
+  print(result_df_rep)
+```
+
+
+Now, let us consider the case with all replicates. 
+We create a new index object by using the
+`graph_spde_make_index()` function with the
+argument `n.repl` set to the total number of replicates:
+```{r}
+spde_index_rep <- graph_spde_make_index(name="field", 
+                    graph_spde=spde_model_rep, 
+                    n.repl = n_repl)
+```
+
+Similarly, we create a new observation (`A`) matrix with the
+function `graph_spde_make_A()` setting the `repl` argument
+to `__all`:
+```{r}
+A_rep <- graph_spde_make_A(graph_spde=spde_model_rep,
+                            repl="__all")
+```
+
+Now the stack, where we set the `repl` argument in 
+the function `graph_data_spde()` to `__all`:
+```{r}
+stk_dat_rep <- inla.stack(data = graph_data_spde(spde_model_rep,
+                                          repl = "__all"), 
+                        A = A_rep, 
+                        effects = c(
+      spde_index_rep,
+      list(Intercept = 1)
+    ))
+```
+
+We now create the formula object in the same way as before:
 ```{r}
 f_s_rep <- y ~ -1 + Intercept + 
     f(field, model = spde_model_rep, 
