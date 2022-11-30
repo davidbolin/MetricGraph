@@ -442,8 +442,8 @@ manual_data = NULL){
     data_std <- NA
   }
 
-  if(is.null(graph_obj$geo_dist)){
-        graph_obj$compute_geodist(obs=FALSE)
+  if(is.null(graph$geo_dist)){
+        graph$compute_geodist(obs=FALSE)
   }
   finite_geodist <- is.finite(graph$geo_dist[["__vertices"]])
   finite_geodist <- graph$geo_dist[["__vertices"]][finite_geodist]
@@ -678,7 +678,7 @@ idx_not_all_NA <- function(data_list){
 
 select_group <- function(data_list, group){
     grp <- data_list[["__group"]]
-    grp <- which(grp == group)
+    grp <- which(grp %in% group)
     data_result <- lapply(data_list, function(dat){dat[grp]})
     return(data_result)
 }

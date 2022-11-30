@@ -233,8 +233,7 @@ return(model)
 #' @return A list of indexes.
 #' @export
 graph_spde_make_index <- function (name, graph_spde, n.group = 1, n.repl = 1, ...) {
-    graph_tmp <- graph_spde$graph_spde
-    n.spde <- dim(graph_spde$V)[1]
+    n.spde <- dim(graph_spde$graph_spde$V)[1]
     name.group <- paste(name, ".group", sep = "")
     name.repl <- paste(name, ".repl", sep = "")
     out <- list()
@@ -253,14 +252,33 @@ graph_spde_make_index <- function (name, graph_spde, n.group = 1, n.repl = 1, ..
 #' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
 #' @param repl Which replicates? If there is no replicates, or to
 #' use all replicates, one can set to `NULL`.
-#' @param obs_to_vert Should the observations be turned into vertices?
-#'
 #' @return The observation matrix
 #' @export
 
-graph_spde_make_A <- function (graph_spde, repl = NULL, obs_to_vert = FALSE) {
+graph_spde_make_A <- function (graph_spde, repl = NULL) {
    return(graph_spde$graph_spde$A(group = repl))
 }
+
+
+#' Observation/prediction matrices for rSPDE models.
+#'
+#' Constructs observation/prediction weight matrices
+#' for metric graph models.
+#'
+#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param repl Which replicates? If there is no replicates, or to
+#' use all replicates, one can set to `NULL`.
+#' @return The observation matrix
+#' @export
+
+graph_data_spde <- function (graph_spde, repl = NULL){
+  if(is.null(repl)){
+    return(graph_spde$graph_spde$data)
+  } else{
+    return(select_group(graph_spde$graph_spde$data, repl))
+  }
+}
+
 
 
 #' @name spde_metric_graph_result

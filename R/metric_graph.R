@@ -547,6 +547,7 @@ metric_graph <-  R6::R6Class("metric_graph",
        }})
 
     n_group <- length(unique(group_vector))
+    n_group <- ifelse(n_group == 0, 1, n_group)
 
     data[[edge_number]] <- NULL
     data[[distance_on_edge]] <- NULL
@@ -563,9 +564,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
-    points <- self$coordinates(PtE = PtE)
-    self$data[["__coord_x"]] <- rep(points[,1], times = n_group)
-    self$data[["__coord_y"]] <- rep(points[,2], times = n_group)
+    spatial_points <- self$coordinates(PtE = PtE)
+    self$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
+    self$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
   },
 
 
