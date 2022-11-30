@@ -156,17 +156,23 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param full Should the geodesic distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
+  #' @param obs Should the geodesic distances be computed at the observation locations?
   #' @param group vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
-  compute_geodist = function(full = FALSE, group = NULL) {
+  compute_geodist = function(full = FALSE, obs = TRUE, group = NULL) {
     self$geo_dist <- list()
+
     if(is.null(self$data)){
-      full <- TRUE
+      obs <- FALSE
     }
-    if(full){
+    if(!obs){
       g <- graph(edges = c(t(self$E)), directed = FALSE)
       E(g)$weight <- self$edge_lengths
-      self$geo_dist[["__complete"]] <- distances(g)
+      self$geo_dist[["__vertices"]] <- distances(g)
+    } else if(full){
+      PtE_full <- self$get_PtE()
+      self$geo_dist[["__complete"]] <- self$compute_geodist_PtE(PtE = PtE_full, 
+                                                              normalized = TRUE)
     } else{
       if(is.null(group)){
           group <- unique(self$data[["__group"]])
@@ -174,11 +180,29 @@ metric_graph <-  R6::R6Class("metric_graph",
       for(grp in group){
           data_grp <- select_group(self$data, grp)
           idx_notna <- idx_not_all_NA(data_grp)
-          g <- graph(edges = c(t(self$E[idx_notna, ])), directed = FALSE)
-          E(g)$weight <- self$edge_lengths
-          self$geo_dist[[grp]] <- distances(g)
+          PtE_group <- cbind(data_grp[["__edge_number"]][idx_notna],
+                     data_grp[["__distance_on_edge"]][idx_notna])
+          self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group, 
+                                                              normalized = TRUE)
       }
     }
+  },
+  #' @description Computes shortest path distances between the vertices in the
+  #' graph
+  #' @param PtE points to compute the metric for.
+  #' @param normalized are the locations in PtE in normalized distance?
+  compute_geodist_PtE = function(PtE, normalized = TRUE){
+      graph.temp <- self$clone()
+      graph.temp$clear_observations()
+      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                            edge_number = PtE[,1],
+                            distance_on_edge = PtE[,2])
+      graph.temp$add_observations(data = df_temp,
+                                     normalized = normalized)
+      graph.temp$observation_to_vertex()
+      g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
+      E(g)$weight <- graph.temp$edge_lengths
+      return(distances(g))
   },
 
   #' @description Computes shortest path distances between the vertices in the
@@ -194,11 +218,19 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
+  #' @param obs Should the resistance distances be computed at the observation locations?
   #' @param group vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
-  compute_resdist = function(full = FALSE, group = NULL) {
+  compute_resdist = function(full = FALSE, obs = TRUE, group = NULL) {
     self$res_dist <- list()
-    if(full){
+    if(is.null(self$data)){
+      obs <- FALSE
+    }
+    if(!obs){
+      PtE <- self$coordinates(XY = self$V)
+      self$res_dist[["__vertices"]] <- self$compute_resdist_PtE(PtE,
+                                                                normalized=TRUE)
+    } else if(full){
       PtE <- self$get_PtE()
       self$res_dist[["__complete"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE)
@@ -280,11 +312,19 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
+  #' @param obs Should the resistance distances be computed at the observation locations?
   #' @param group vector or list containing which groups to compute the
   #' Laplacian for. If `NULL`, it will be computed for all groups.
-  compute_laplacian = function(full = FALSE, group = NULL) {
+  compute_laplacian = function(full = FALSE, obs = TRUE, group = NULL) {
     self$Laplacian <- list()
-    if(full){
+    if(is.null(self$data)){
+      obs <- FALSE
+    }
+    if(!obs){
+      PtE <- self$coordinates(XY = self$V)
+      self$res_dist[["__vertices"]] <- self$compute_laplacian_PtE(PtE,
+                                                            normalized = TRUE)
+    } else if(full){
       PtE <- self$get_PtE()
       self$Laplacian[["__complete"]] <- self$compute_laplacian_PtE(PtE,
                                                             normalized = TRUE)
@@ -387,10 +427,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$temp_PtE <- NULL
 
     if (!is.null(self$geo_dist)) {
-      self$compute_geodist()
+      self$geo_dist <- NULL
     }
     if (!is.null(self$res_dist)) {
-      self$compute_resdist()
+      self$res_dist <- NULL
     }
     if (!is.null(self$CoB)) {
       self$buildC(2)
@@ -437,6 +477,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
+  #' @param tolerance Parameter to control a warning when adding observations. 
+  #' If the distance of some location and the closest point on the graph is 
+  #' greater than the tolerance, the function will display a warning. 
+  #' This helps detecting mistakes on the input
+  #' locations when adding new data.
   add_observations = function(Spoints = NULL,
                               data = NULL,
                               edge_number = "edge_number",
@@ -445,7 +490,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                               coord_y = "coord_y",
                               data_coords = c("PtE", "euclidean"),
                               group = NULL,
-                              normalized = FALSE) {
+                              normalized = FALSE,
+                              tolerance = max(self$edge_lengths)/2) {
     data_coords <- data_coords[[1]]
     if(is.null(data)){
       if(is.null(Spoints)){
@@ -460,8 +506,15 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     data <- as.list(data)
 
+    ## convert everything to PtE
       if(!is.null(Spoints)){
         PtE <- self$coordinates(XY = Spoints@coords)
+        XY_new <- selft$coordinates(PtE = PtE)
+        norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
+        if(norm_XY > tolerance){
+          warning("There was at least one point whose location is far from the graph,
+          please consider checking the input.")
+        }
       } else{
         if(data_coords == "PtE"){
             PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
@@ -470,9 +523,15 @@ metric_graph <-  R6::R6Class("metric_graph",
             }
           } else if(data_coords == "euclidean"){
             point_coords <- cbind(data[[coord_x]], data[[coord_y]])
-            PtE <- self$coordinates(point_coords)
+            PtE <- self$coordinates(XY = point_coords)
+            XY_new <- selft$coordinates(PtE = PtE)
+            norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+            if(norm_XY > tolerance){
+              warning("There was at least one point whose location is far from the graph,
+                please consider checking the input.")
+              }
         } else{
-          stop("The options for 'data_coords' are 'PtE' and 'euclidean'.")
+            stop("The options for 'data_coords' are 'PtE' and 'euclidean'.")
         }
       }
      if(!is.null(group)){
@@ -497,7 +556,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$data[["__coord_x"]] <- NULL
     self$data[["__coord_y"]] <- NULL
 
-    ## convert everything to PtE
+    # Process the data (find all the different coordinates
+    # across the different replicates, and also merge the new data to the old data)
     self$data <- process_data_add_obs(PtE, new_data = data, self$data,
                                         group_vector)
 
