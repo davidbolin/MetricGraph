@@ -90,6 +90,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param E m x 2 matrix where each row represents an edge
   #' @param longlat If TRUE, then it is assumed that the coordinates are given
   #' in Longitude/Latitude and that distances should be computed in km.
+  #' @param merge_intersections Which strategy should we use when lines intersect?
+  #' The options are: "end_points", we merge the lines only if the end points intersect;
+  #' "end_mid", we merge lines if the end of one line intersects another line;
+  #' "all_intersections", we merge the lines whenever they intersect. By default 
+  #' we have "end_points".
   #' @param tolerance vertices that are closer than this number are merged when
   #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
   #' tolerance is given in km.
@@ -106,11 +111,19 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
+                        merge_intersections = c("end_points", 
+                            "end_mid", "all_intersections"),
                         tolerance = 1e-10,
                         check_connected = TRUE) {
 
       private$longlat <- longlat
       private$tolerance <- tolerance
+      merge_intersection <- merge_intersections[[1]]
+      if(!(merge_intersection%in%c("end_points", 
+                            "end_mid", "all_intersections"))){
+                              stop("The options for 'merge_intersections' are 'end_points', 
+                            'end_mid', 'all_intersections'.")
+                            }
 
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
@@ -133,6 +146,49 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
     private$line_to_vertex(tolerance = tolerance, longlat = longlat)
+
+    if(merge_intersection %in% c("all_intersections", "end_mid")){
+      all_combinations <- combn(1:length(self$lines), 2)
+      intersect_points <- c()
+      for(i in all_combinations[1,]){
+        for(j in all_combinations[2,]){
+          intersect_tmp <- rgeos::gIntersection(self$lines[i],
+                                            self$lines[j])
+          if(!is.null(intersect_tmp) && !("SpatialLines"%in%is(intersect_tmp))){
+            intersect_tmp <-intersect_tmp@coords
+            intersect_points <- rbind(intersect_points, intersect_tmp)
+          }
+        }
+      }
+
+      intersect_points <- unique(intersect_points)
+
+      if(merge_intersection == "all_intersections"){
+        if(!is.null(intersect_points)){
+        y_tmp <- rep(NA, nrow(intersect_points))
+        sp_temp <- SpatialPointsDataFrame(coords = intersect_points,
+                                 data = data.frame(y = y_tmp))
+        self$add_observations(Spoints = sp_temp)
+        self$observation_to_vertex()
+        self$clear_observations()
+      }
+      } else {
+        rows_ <- function(x){
+            paste0(x[,1], x[,2])
+        }
+        intersect_points <- intersect_points[rows_(intersect_points) %in% rows_(self$V),]
+        if(!is.null(intersect_points)){
+          y_tmp <- rep(NA, nrow(intersect_points))
+          sp_temp <- SpatialPointsDataFrame(coords = intersect_points,
+                                 data = data.frame(y = y_tmp))
+          self$add_observations(Spoints = sp_temp)
+          self$observation_to_vertex()
+          self$clear_observations()
+        }
+
+      }
+    }
+
     private$initial_graph <- self$clone()
     #Cloning again to add the initial graph to the initial graph
     private$initial_graph <- self$clone()
