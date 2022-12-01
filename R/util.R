@@ -688,14 +688,15 @@ select_group <- function(data_list, group){
 #' @return `SpatialLines` object with package name
 #' @export
 logo_lines <- function(){
+  n <- 100
   #G
-  theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+  theta <- seq(from=pi,to=3*pi/2,length.out = n)
   line1 <- Line(cbind(1+sin(theta),2+2*cos(theta)))
 
-  theta <- seq(from=pi/2,to=pi,length.out = 20)
+  theta <- seq(from=pi/2,to=pi,length.out = n)
   line2 <- Line(cbind(1+sin(theta),1.5+1.5*cos(theta)))
 
-  theta <- seq(from=3*pi/2,to=2*pi,length.out = 20)
+  theta <- seq(from=3*pi/2,to=2*pi,length.out = n)
   line3 <- Line(cbind(2+2*sin(theta),2+2*cos(theta)))
 
   line4 <- Line(rbind(c(1,1.5),c(2,1.5)))
@@ -703,7 +704,7 @@ logo_lines <- function(){
   #R
   line5 <- Line(rbind(c(2,0),c(2,4)))
   line6 <- Line(rbind(c(2,4),c(3,4)))
-  theta <- seq(from=0,to=pi,length.out = 20)
+  theta <- seq(from=0,to=pi,length.out = n)
   line7 <- Line(cbind(3+sin(theta),3+cos(theta)))
   line8 <- Line(rbind(c(3,2),c(2,2)))
   line9 <- Line(rbind(c(2,2),c(4,0)))
@@ -716,7 +717,7 @@ logo_lines <- function(){
   #P
   line13 <- Line(rbind(c(6,0),c(6,4)))
   line14 <- Line(rbind(c(6,4),c(7,4)))
-  theta <- seq(from=0,to=pi,length.out = 20)
+  theta <- seq(from=0,to=pi,length.out = n)
   line15 <- Line(cbind(7+sin(theta),3+cos(theta)))
   line16 <- Line(rbind(c(7,2),c(6,2)))
 
@@ -745,7 +746,7 @@ logo_lines <- function(){
   # R
   line30 <- Line(rbind(c(6,4),c(6,8)))
   line31 <- Line(rbind(c(6,8),c(7,8)))
-  theta <- seq(from=0,to=pi,length.out = 20)
+  theta <- seq(from=0,to=pi,length.out = n)
   line32 <- Line(cbind(7+sin(theta),7+cos(theta)))
   line33 <- Line(rbind(c(7,6),c(6,6)))
   line34 <- Line(rbind(c(6,6),c(8,4)))
@@ -754,9 +755,9 @@ logo_lines <- function(){
   line35 <- Line(rbind(c(8,4),c(8,8)))
 
   # C
-  theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+  theta <- seq(from=pi,to=3*pi/2,length.out = n)
   line36 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
-  theta <- seq(from=3*pi/2,to=2*pi,length.out = 20)
+  theta <- seq(from=3*pi/2,to=2*pi,length.out = n)
   line37 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
 
   return(sp::SpatialLines(list(Lines(list(line1),ID="1"),
