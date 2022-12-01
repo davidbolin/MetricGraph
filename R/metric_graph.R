@@ -93,12 +93,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param merge_intersections Which strategy should we use when lines intersect?
   #' The options are: "end_points", we merge the lines only if the end points intersect;
   #' "end_mid", we merge lines if the end of one line intersects another line;
-  #' "all_intersections", we merge the lines whenever they intersect. By default 
+  #' "all_intersections", we merge the lines whenever they intersect. By default
   #' we have "end_points".
   #' @param tolerance vertices that are closer than this number are merged when
   #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
   #' tolerance is given in km.
-  #' @param tolerance_intersections tolerance for considering intersections of 
+  #' @param tolerance_intersections tolerance for considering intersections of
   #' lines according to the `merge_intersections` argument. Default = 0.
   #' @param tolerance_overlapping tolerance for merging vertices that might seem overlapping.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
@@ -114,7 +114,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
-                        merge_intersections = c("end_points", 
+                        merge_intersections = c("end_points",
                             "end_mid", "all_intersections"),
                         tolerance = 1e-10,
                         tolerance_intersections = 0,
@@ -124,9 +124,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       private$longlat <- longlat
       private$tolerance <- tolerance
       merge_intersections <- merge_intersections[[1]]
-      if(!(merge_intersections%in%c("end_points", 
+      if(!(merge_intersections%in%c("end_points",
                             "end_mid", "all_intersections"))){
-                              stop("The options for 'merge_intersections' are 'end_points', 
+                              stop("The options for 'merge_intersections' are 'end_points',
                             'end_mid', 'all_intersections'.")
                             }
 
@@ -153,7 +153,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$line_to_vertex(tolerance = tolerance, longlat = longlat)
 
     if(merge_intersections == "all_intersections"){
-      
+
       all_combinations <- combn(1:length(self$lines), 2)
       intersect_points <- c()
       for(i in 1:ncol(all_combinations)){
@@ -175,7 +175,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
 
       intersect_points <- unique(intersect_points)
-      intersect_points <- as.matrix(intersect_points) 
+      intersect_points <- as.matrix(intersect_points)
 
       rows_ <- function(x){
             paste0(x[,1], x[,2])
@@ -257,7 +257,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$geo_dist[["__vertices"]] <- distances(g)
     } else if(full){
       PtE_full <- self$get_PtE()
-      self$geo_dist[["__complete"]] <- self$compute_geodist_PtE(PtE = PtE_full, 
+      self$geo_dist[["__complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
                                                               normalized = TRUE)
     } else{
       if(is.null(group)){
@@ -268,7 +268,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           idx_notna <- idx_not_all_NA(data_grp)
           PtE_group <- cbind(data_grp[["__edge_number"]][idx_notna],
                      data_grp[["__distance_on_edge"]][idx_notna])
-          self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group, 
+          self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group,
                                                               normalized = TRUE)
       }
     }
@@ -568,9 +568,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
-  #' @param tolerance Parameter to control a warning when adding observations. 
-  #' If the distance of some location and the closest point on the graph is 
-  #' greater than the tolerance, the function will display a warning. 
+  #' @param tolerance Parameter to control a warning when adding observations.
+  #' If the distance of some location and the closest point on the graph is
+  #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input
   #' locations when adding new data.
   add_observations = function(Spoints = NULL,
@@ -895,6 +895,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param X_loc locations of the additional values in the format
   #' (edge, normalized distance on edge)
   #' @param p existing ggplot or plot_ly object to add the graph to
+  #' @param degree show the degrees of the vertices?
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return a plot_ly or or ggplot object
   #' @examples
@@ -922,6 +923,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                   X = NULL,
                   X_loc = NULL,
                   p = NULL,
+                  degree = FALSE,
                   ...) {
     if(!is.null(data) && is.null(self$data)){
       stop("The graph does not contain data.")
@@ -942,6 +944,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            X = X,
                            X_loc = X_loc,
                            p = p,
+                           degree = degree,
                            ...)
     } else {
       requireNamespace("plotly")
@@ -1548,6 +1551,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                      X = NULL,
                      X_loc = NULL,
                      p = NULL,
+                     degree = FALSE,
                      ...){
     xyl <- c()
 
@@ -1571,11 +1575,27 @@ metric_graph <-  R6::R6Class("metric_graph",
                          colour = edge_color, ...)
     }
     if (marker_size > 0) {
-      p <- p + geom_point(data = data.frame(x = self$V[, 1],
-                                            y = self$V[, 2]),
-                          mapping = aes(x, y),
-                          colour = vertex_color,
-                          size= marker_size, ...)
+      if(degree) {
+        x <- self$V[,1]
+        y <- self$V[,2]
+        degrees <- rep(0,self$nV)
+        for(i in 1:self$nV) {
+          degrees[i] <- sum(self$E[,1]==i) + sum(self$E[,2]==i)
+        }
+        p <- p + geom_point(data = data.frame(x = self$V[, 1],
+                                              y = self$V[, 2],
+                                              degree = degrees),
+                            mapping = aes(x, y, color = degree),
+                            size= marker_size, ...) +
+    scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+      } else {
+        p <- p + geom_point(data = data.frame(x = self$V[, 1],
+                                              y = self$V[, 2]),
+                            mapping = aes(x, y),
+                            colour = vertex_color,
+                            size= marker_size, ...)
+      }
+
     }
     if (!is.null(data)) {
       x <- y <- NULL
@@ -1590,7 +1610,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
                           size = data_size, ...) +
-        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = "Degree"))
 
     }
     if (mesh) {
