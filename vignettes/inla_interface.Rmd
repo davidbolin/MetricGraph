@@ -246,31 +246,8 @@ help of the `gg_df()` function:
   facet_wrap(~parameter, scales = "free") + labs(y = "Density")
 ```
 
-## Kriging with the `R-INLA` implementation
 
-We can have two approaches to do kriging with our `R-INLA`
-implementation of Whittle-Matérn fields on metric graphs.
-
-* In the first we add a second set of `NA` add_observations
-at the locations in which we want to do kriging to the 
-graph in which we fitted the model. Then, fit a new model,
-and obtain the posterior mean at the desired locations.
-Observe that on this method, if we use the
-`add_PtE_observations()` method, we will need to provide the locations
-in which we want to predict in terms of the positions of
-the new graph, which contains the observed set of 
-observations as vertices.
-
-* In the second method we add the locations in which we
-want to predict together with the observations and 
-observed locations. In this method we provide the locations we
-want to predict in terms of the same base graph, as the
-observations are not vertices of the base graph.
-
-We will now do kriging at an evenly spaced mesh across
-the metric graph.
-
-## Kriging by adding new observation locations to the fitted graph
+## Kriging with our INLA implementation
 
 Let us begin by obtaining an evenly spaced mesh with respect to the base
 graph:
