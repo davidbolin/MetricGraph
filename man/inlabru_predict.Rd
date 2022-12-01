@@ -4,7 +4,14 @@
 \alias{inlabru_predict}
 \title{Kriging with inlabru}
 \usage{
-inlabru_predict(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL)
+inlabru_predict(
+  bru_model,
+  bru_fit,
+  cmp,
+  XY = NULL,
+  PtE = NULL,
+  data_pred = NULL
+)
 }
 \arguments{
 \item{bru_model}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function.}
