@@ -66,6 +66,27 @@ must be installed.
 graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
 ```
+
+It is also important to know that the `2d` version of the
+`plot()` method returns
+a `ggplot2` object and can be modified as such. For instance:
+
+```{r}
+p <- graph$plot()
+p + ggplot2::labs(title = "Metric graph",
+          x = "long", y = "lat")
+```
+
+Similarly, the `3d` version of the `plot()` method returns a 
+`plotly` object that can also be modified. For instance:
+```{r}
+p <- graph$plot(plotly = TRUE)
+p <- plotly::layout(p, title = "Metric graph", 
+              scene = list(xaxis=
+              list(title = "Long"),yaxis=list(title = "Lat")))
+p
+```
+
 We can now obtain various properties of the graph: The vertex matrix, which
 specifies the Euclidian coordinates of the vertices is
 ```{r}

@@ -738,27 +738,34 @@ bru_graph_rep <- function(repl, graph_spde){
 #' @return A list with predictions.
 #' @export
 
-inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL){
-  if(is.null(XY) && is.null(PtE)){
+inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL,
+                            data_pred = NULL){
+  if(is.null(XY) && is.null(PtE) && is.null(data_pred)){
     stop("No location to predict was provided!")
   }
   graph_tmp <- bru_model$graph_spde$get_initial_graph()
   repl <- unique(bru_model$graph_spde$data[["__group"]])
+
   data_tmp <- graph_data_spde(bru_model, 
             repl=repl[1])
   graph_tmp$add_observations(data = data_tmp,
                     coord_x = "__coord_x",
                     coord_y = "__coord_y",
                     data_coords = "euclidean")
-  if(!is.null(XY)){
-    PtE <- graph_tmp$coordinates(XY = XY)
-  }
-  resp <- as.character(cmp[2])
-  data_tmp <- list()
-  data_tmp[[resp]] <- rep(NA, nrow(PtE))
-  data_tmp[["edge_number"]] <- PtE[,1]
-  data_tmp[["distance_on_edge"]] <- PtE[,2]
-  graph_tmp$add_observations(data = data_tmp)
+
+  if(is.null(data_pred)){
+    if(!is.null(XY)){
+      PtE <- graph_tmp$coordinates(XY = XY)
+    }
+    resp <- as.character(cmp[2])
+    data_pred <- list()
+    data_pred[[resp]] <- rep(NA, nrow(PtE))
+    data_pred[["edge_number"]] <- PtE[,1]
+    data_pred[["distance_on_edge"]] <- PtE[,2]
+  } 
+
+
+  graph_tmp$add_observations(data = data_pred)
   graph_tmp$observation_to_vertex()
   spde____model <<- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
