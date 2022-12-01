@@ -204,7 +204,6 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$add_observations(data = data_tmp, edge_number = "edge_number",
                                         distance_on_edge = "distance_on_edge",
                                         normalized = TRUE)
-          print(self$data)
           self$observation_to_vertex(tolerance = max(tolerance_overlapping, 1e-10))
           self$clear_observations()
         }
