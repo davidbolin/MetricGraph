@@ -693,70 +693,71 @@ logo_lines <- function(){
   line1 <- Line(cbind(1+sin(theta),2+2*cos(theta)))
 
   theta <- seq(from=pi/2,to=pi,length.out = 20)
-  line2 <- Line(cbind(1+sin(theta),1+cos(theta)))
+  line2 <- Line(cbind(1+sin(theta),1.5+1.5*cos(theta)))
 
   theta <- seq(from=3*pi/2,to=2*pi,length.out = 20)
   line3 <- Line(cbind(2+2*sin(theta),2+2*cos(theta)))
+
   line4 <- Line(rbind(c(1,1.5),c(2,1.5)))
 
   #R
-  line6 <- Line(rbind(c(2,0),c(2,4)))
-  line7 <- Line(rbind(c(2,4),c(3,4)))
+  line5 <- Line(rbind(c(2,0),c(2,4)))
+  line6 <- Line(rbind(c(2,4),c(3,4)))
   theta <- seq(from=0,to=pi,length.out = 20)
-  line8 <- Line(cbind(3+sin(theta),3+cos(theta)))
-  line9 <- Line(rbind(c(3,2),c(2,2)))
-  line10 <- Line(rbind(c(2,2),c(4,0)))
+  line7 <- Line(cbind(3+sin(theta),3+cos(theta)))
+  line8 <- Line(rbind(c(3,2),c(2,2)))
+  line9 <- Line(rbind(c(2,2),c(4,0)))
 
   #A
-  line11 <- Line(rbind(c(4,0),c(5,4)))
-  line12 <- Line(rbind(c(5,4),c(6,0)))
-  line13 <- Line(rbind(c(4.5,2),c(5.5,2)))
+  line10 <- Line(rbind(c(4,0),c(5,4)))
+  line11 <- Line(rbind(c(5,4),c(6,0)))
+  line12 <- Line(rbind(c(4.5,2),c(5.5,2)))
 
   #P
-  line14 <- Line(rbind(c(6,0),c(6,4)))
-  line15 <- Line(rbind(c(6,4),c(7,4)))
+  line13 <- Line(rbind(c(6,0),c(6,4)))
+  line14 <- Line(rbind(c(6,4),c(7,4)))
   theta <- seq(from=0,to=pi,length.out = 20)
-  line16 <- Line(cbind(7+sin(theta),3+cos(theta)))
-  line17 <- Line(rbind(c(7,2),c(6,2)))
+  line15 <- Line(cbind(7+sin(theta),3+cos(theta)))
+  line16 <- Line(rbind(c(7,2),c(6,2)))
 
   #H
-  line18 <- Line(rbind(c(8,0),c(8,4)))
-  line19 <- Line(rbind(c(10,0),c(10,4)))
-  line20 <- Line(rbind(c(8,2),c(10,2)))
+  line17 <- Line(rbind(c(8,0),c(8,4)))
+  line18 <- Line(rbind(c(10,0),c(10,4)))
+  line19 <- Line(rbind(c(8,2),c(10,2)))
 
   #M
-  line21 <- Line(rbind(c(0,4),c(0.75,8)))
-  line22 <- Line(rbind(c(0.75,8),c(1.5,5)))
-  line23 <- Line(rbind(c(1.5,5),c(2.25,8)))
-  line24 <- Line(rbind(c(2.25,8),c(3,4)))
+  line20 <- Line(rbind(c(0,4),c(0.75,8)))
+  line21 <- Line(rbind(c(0.75,8),c(1.5,5)))
+  line22 <- Line(rbind(c(1.5,5),c(2.25,8)))
+  line23 <- Line(rbind(c(2.25,8),c(3,4)))
 
   # E
-  line25 <- Line(rbind(c(3,4),c(3,8)))
-  line26 <- Line(rbind(c(3,8),c(4,8)))
-  line27 <- Line(rbind(c(3,6),c(4,6)))
-  line28 <- Line(rbind(c(3,4),c(5,4)))
+  line24 <- Line(rbind(c(3,4),c(3,8)))
+  line25 <- Line(rbind(c(3,8),c(4,8)))
+  line26 <- Line(rbind(c(3,6),c(4,6)))
+  line27 <- Line(rbind(c(3,4),c(5,4)))
 
   # T
-  line29 <- Line(rbind(c(5,4),c(5,8)))
-  line30 <- Line(rbind(c(4,8),c(6,8)))
+  line28 <- Line(rbind(c(5,4),c(5,8)))
+  line29 <- Line(rbind(c(4,8),c(6,8)))
 
 
   # R
-  line31 <- Line(rbind(c(6,4),c(6,8)))
-  line32 <- Line(rbind(c(6,8),c(7,8)))
+  line30 <- Line(rbind(c(6,4),c(6,8)))
+  line31 <- Line(rbind(c(6,8),c(7,8)))
   theta <- seq(from=0,to=pi,length.out = 20)
-  line33 <- Line(cbind(7+sin(theta),7+cos(theta)))
-  line34 <- Line(rbind(c(7,6),c(6,6)))
-  line35 <- Line(rbind(c(6,6),c(8,4)))
+  line32 <- Line(cbind(7+sin(theta),7+cos(theta)))
+  line33 <- Line(rbind(c(7,6),c(6,6)))
+  line34 <- Line(rbind(c(6,6),c(8,4)))
 
   # I
-  line36 <- Line(rbind(c(8,4),c(8,8)))
+  line35 <- Line(rbind(c(8,4),c(8,8)))
 
   # C
   theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-  line37 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
+  line36 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
   theta <- seq(from=3*pi/2,to=2*pi,length.out = 20)
-  line38 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
+  line37 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
 
   return(sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                Lines(list(line2),ID="2"),
@@ -794,6 +795,5 @@ logo_lines <- function(){
                                Lines(list(line34),ID="34"),
                                Lines(list(line35),ID="35"),
                                Lines(list(line36),ID="36"),
-                               Lines(list(line37),ID="37"),
-                               Lines(list(line38),ID="38"))))
+                               Lines(list(line37),ID="37"))))
 }
