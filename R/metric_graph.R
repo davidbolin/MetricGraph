@@ -100,7 +100,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' tolerance is given in km.
   #' @param tolerance_intersections tolerance for considering intersections of 
   #' lines according to the `merge_intersections` argument. Default = 0.
-  #' @param 
+  #' @param tolerance_overlapping tolerance for merging vertices that might seem overlapping.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
   #' connected and a warning is given if this is not the case.
   #' @details A graph object can be initialized in two ways. The first method
@@ -118,6 +118,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                             "end_mid", "all_intersections"),
                         tolerance = 1e-10,
                         tolerance_intersections = 0,
+                        tolerance_overlapping = 0,
                         check_connected = TRUE) {
 
       private$longlat <- longlat
@@ -185,9 +186,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(nrow(intersect_points) == 0){
         intersect_points <- NULL
       }
+      intersect_points <- rbind(intersect_points, self$V)
 
       if(!is.null(intersect_points)){
-        PtE_tmp <- self$coordinates(XY = intersect_points)
+        PtE_tmp <- private$coordinates_multiple_snaps(XY = intersect_points,
+                                                  tolerance = tolerance_overlapping)
         PtE_tmp <- unique(PtE_tmp)
       } else{
         PtE_tmp <- NULL
@@ -195,14 +198,14 @@ metric_graph <-  R6::R6Class("metric_graph",
 
 
         if(!is.null(PtE_tmp)){
-          
           y_tmp <- rep(NA, nrow((PtE_tmp)))
           data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
                                 distance_on_edge = PtE_tmp[,2])
           self$add_observations(data = data_tmp, edge_number = "edge_number",
                                         distance_on_edge = "distance_on_edge",
                                         normalized = TRUE)
-          self$observation_to_vertex()
+          print(self$data)
+          self$observation_to_vertex(tolerance = max(tolerance_overlapping, 1e-10))
           self$clear_observations()
         }
 
@@ -211,7 +214,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
           self$add_observations(data = data_tmp, data_coords = "euclidean")
-          self$observation_to_vertex()
+          self$observation_to_vertex(tolerance = max(tolerance_overlapping, 1e-10))
           self$clear_observations()
     }
 
@@ -476,7 +479,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Adds observation locations as vertices in the graph
-  observation_to_vertex = function() {
+  observation_to_vertex = function(tolerance = 1e-10) {
+    if(tolerance <= 0 || tolerance >=1){
+      stop("tolerance should be between 0 and 1.")
+    }
     private$temp_PtE <- self$get_PtE()
     n_group <- length(unique(self$data[["__group"]]))
     l <- length(private$temp_PtE[, 1])
@@ -485,15 +491,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       e <- as.vector(private$temp_PtE[i, 1])
       t <- as.vector(private$temp_PtE[i, 2])
       l_e <- self$edge_lengths[e]
-      if (abs(t) < 10^-10) {
+      if (abs(t) < tolerance) {
         private$temp_PtE[i, 2] <- 0
         self$PtV[i] <- self$E[e, 1]
-      } else if (t > 1 - 10^-10) {
+      } else if (t > 1 - tolerance) {
         private$temp_PtE[i, 2] <- 1
         self$PtV[i] <- self$E[e, 2]
       } else {
-        self$split_edge(e, t)
-        self$PtV[i] <- dim(self$V)[1]
+        PtV_tmp <- self$split_edge(e, t, tolerance)
+        # self$PtV[i] <- dim(self$V)[1]
+        self$PtV[i] <- PtV_tmp
       }
     }
 
@@ -526,6 +533,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$data <- NULL
     self$geo_dist <- NULL
     self$res_dist <- NULL
+    self$PtV <- NULL
   },
 
   #' @description Add observations to the graph
@@ -954,6 +962,13 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
+  #' @description Plots the connections
+
+  plot_connections = function(){
+        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        plot(g)
+  },
+
   #' @description plot continuous function on the graph
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
@@ -1173,7 +1188,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description function for splitting lines in the graph
   #' @param Ei index of line to split
   #' @param t  position on line to split (normalized)
-  split_edge = function(Ei, t) {
+  #' @param tolerance tolerance for merging overlapping vertices
+  split_edge = function(Ei, t, tolerance = 0) {
 
     index <- (self$LtE@p[Ei] + 1):(self$LtE@p[Ei + 1])
     LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
@@ -1231,8 +1247,17 @@ metric_graph <-  R6::R6Class("metric_graph",
                                      x = c(LtE.x, LtE.x_new),
                                      dims = LtE.dim)
 
-    newV <- self$nV + 1
-    self$V <- rbind(self$V, c(val_line))
+    closest_vertex <- which.min(sapply(1:nrow(self$V), function(i){
+      (self$V[i,1]-val_line[1])^2 + (self$V[i,2] - val_line[2])^2
+    }))
+    min_dist <- sqrt(sum((val_line - self$V[closest_vertex,])^2))
+    if(min_dist <= tolerance){
+      newV <- closest_vertex
+    } else{
+      newV <- self$nV + 1
+      self$V <- rbind(self$V, c(val_line))
+    }
+
     l_e <- self$edge_lengths[Ei]
     self$edge_lengths[Ei] <- t * l_e
     self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
@@ -1244,12 +1269,13 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(!is.null(self$data)){
       ind <- which(private$temp_PtE[, 1] %in% Ei)
       for (i in ind) {
-        if (private$temp_PtE[i, 2] >= t - 1e-10) {
+        if (private$temp_PtE[i, 2] >= t - tolerance) {
           private$temp_PtE[i, 1] <- self$nE
           private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
         }
       }
     }
+    return(newV)
   },
 
   #' @description Add observations on mesh to the object
@@ -1680,6 +1706,42 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
+  ## Coordinates function to return all the lines intersecting within a tolerance
+
+    coordinates_multiple_snaps = function(XY, tolerance){
+      Spoints <- SpatialPoints(XY)
+      coords_line <- c()
+      coords_tmp <- c()
+      for(i in 1:length(self$lines)){
+        SP <- snapPointsToLines(Spoints, self$lines[i])
+        idx_tol <- (SP@data[["snap_dist"]] <= tolerance)
+        coords_line <- c(coords_line, SP@data[["nearest_line_id"]][idx_tol])
+        coords_tmp <- rbind(coords_tmp, SP@coords[idx_tol,])
+      }
+
+      Spoints@coords = coords_tmp
+      LtE = cbind(match(coords_line, self$EID), 0)
+
+      for (ind in unique(LtE[, 1])) {
+        index.p <- LtE[, 1] == ind
+        LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
+                                       normalized=TRUE)
+      }
+      PtE <- LtE
+      for (ind in unique(LtE[, 1])) {
+        Es_ind <- which(self$LtE[ind, ] > 0)
+        index.p <- which(LtE[, 1] == ind)
+        for (j in index.p) {
+          E_ind <- which.min(replace(self$ELend[Es_ind],
+                                     self$ELend[Es_ind] < LtE[j,2], NA))
+          PtE[j, 1] <- Es_ind[E_ind]
+          PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
+            (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
+        }
+      }
+      return(PtE)
+      },
+
   # Version 2 edge_pos_to_line_pos
   # Gets relative position on the line
   edge_pos_to_line_pos2 = function(E_i, t_i){
@@ -1799,6 +1861,7 @@ graph_components <-  R6::R6Class("graph_components",
    get_largest = function() {
      return(self$graphs[[1]])
    },
+
 
    #' Plot all components
    #'
