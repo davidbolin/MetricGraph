@@ -622,6 +622,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     list_result[["__edge_number"]] <- NULL
     list_result[["__distance_on_edge"]] <- NULL
     list_result[["__group"]] <- NULL
+
     list_result <- lapply(list_result, function(col_name){
         if(!is.null(new_data[[col_name]])){
           mode_vector <- typeof(new_data[[col_name]])
@@ -689,20 +690,20 @@ select_group <- function(data_list, group){
 #' @export
 logo_lines <- function(){
   #G
-  theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+  theta <- seq(from=pi,to=3*pi/2,length.out = 100)
   line1 <- Line(cbind(1+sin(theta),2+2*cos(theta)))
 
-  theta <- seq(from=pi/2,to=pi,length.out = 20)
+  theta <- seq(from=pi/2,to=pi,length.out = 100)
   line2 <- Line(cbind(1+sin(theta),1+cos(theta)))
 
-  theta <- seq(from=3*pi/2,to=2*pi,length.out = 20)
+  theta <- seq(from=3*pi/2,to=2*pi,length.out = 100)
   line3 <- Line(cbind(2+2*sin(theta),2+2*cos(theta)))
   line4 <- Line(rbind(c(1,1.5),c(2,1.5)))
 
   #R
   line6 <- Line(rbind(c(2,0),c(2,4)))
   line7 <- Line(rbind(c(2,4),c(3,4)))
-  theta <- seq(from=0,to=pi,length.out = 20)
+  theta <- seq(from=0,to=pi,length.out = 100)
   line8 <- Line(cbind(3+sin(theta),3+cos(theta)))
   line9 <- Line(rbind(c(3,2),c(2,2)))
   line10 <- Line(rbind(c(2,2),c(4,0)))
@@ -715,7 +716,7 @@ logo_lines <- function(){
   #P
   line14 <- Line(rbind(c(6,0),c(6,4)))
   line15 <- Line(rbind(c(6,4),c(7,4)))
-  theta <- seq(from=0,to=pi,length.out = 20)
+  theta <- seq(from=0,to=pi,length.out = 100)
   line16 <- Line(cbind(7+sin(theta),3+cos(theta)))
   line17 <- Line(rbind(c(7,2),c(6,2)))
 
@@ -744,7 +745,7 @@ logo_lines <- function(){
   # R
   line31 <- Line(rbind(c(6,4),c(6,8)))
   line32 <- Line(rbind(c(6,8),c(7,8)))
-  theta <- seq(from=0,to=pi,length.out = 20)
+  theta <- seq(from=0,to=pi,length.out = 100)
   line33 <- Line(cbind(7+sin(theta),7+cos(theta)))
   line34 <- Line(rbind(c(7,6),c(6,6)))
   line35 <- Line(rbind(c(6,6),c(8,4)))
@@ -753,16 +754,15 @@ logo_lines <- function(){
   line36 <- Line(rbind(c(8,4),c(8,8)))
 
   # C
-  theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+  theta <- seq(from=pi,to=3*pi/2,length.out = 100)
   line37 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
-  theta <- seq(from=3*pi/2,to=2*pi,length.out = 20)
+  theta <- seq(from=3*pi/2,to=2*pi,length.out = 100)
   line38 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
 
   return(sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                Lines(list(line2),ID="2"),
                                Lines(list(line3),ID="3"),
                                Lines(list(line4),ID="4"),
-                               Lines(list(line5),ID="5"),
                                Lines(list(line6),ID="6"),
                                Lines(list(line7),ID="7"),
                                Lines(list(line8),ID="8"),
