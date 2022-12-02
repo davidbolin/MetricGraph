@@ -28,12 +28,14 @@
 #' @importFrom rSPDE matern.covariance gg_df
 #' @importFrom methods is slot
 #' @export gg_df
-#' @importFrom stats approx dist dnorm pnorm rnorm var
+#' @importFrom stats approx dist dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms
 #' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates SpatialLines LineLength spDists
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend
 #' @importFrom igraph E E<-
 #' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
 #' @importFrom rgeos gProject gBuffer gDistance gInterpolate gIntersection
+#' @importFrom parallel detectCores
+#' @importFrom optimParallel optimParallel
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

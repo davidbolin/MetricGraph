@@ -291,6 +291,8 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param model type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
 #' are supported
 #' @param data Should the data be used to obtain improved starting values?
+#' @param column_data The column of `graph$data` that contains the response variable.
+#' @param manual_data A vector (or matrix) of response variables.
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export

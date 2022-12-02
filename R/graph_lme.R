@@ -15,6 +15,7 @@
 #' @param repl A vector containing the replicates.
 #' @param optim_method The method to be used with `optim` function.
 #' @param parallel Logical. Should optimParallel be used instead of optim?
+#' @param parallel_controls A list containing the parallel controls.
 #' @param optim_controls Additional controls to be passed to `optim` or `optimParallel`.
 #'
 #' @return A list containing the fitted model.
@@ -24,10 +25,11 @@
 
 graph_lme <- function(formula, graph, 
                 model = list(type = "WhittleMatern", alpha = 1), 
-                cov_function = NULL,
                 repl = NULL,
-                optim_method = "L-BFGS-B", optim_controls = list(),
-                version = 2) {
+                optim_method = "L-BFGS-B", 
+                parallel = FALSE,
+                parallel_controls = list(n_cores = parallel::detectCores() - 1),
+                optim_controls = list()) {
   model <- model[[1]]
   if(!(model%in% c("alpha1", "alpha2", "GL1", "GL2", "isoCov"))){
     stop("The possible models are 'alpha1', 'alpha2', 'GL1', 'GL2', 'isoCov')!")

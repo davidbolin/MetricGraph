@@ -8,11 +8,11 @@ graph_lme(
   formula,
   graph,
   model = list(type = "WhittleMatern", alpha = 1),
-  cov_function = NULL,
   repl = NULL,
   optim_method = "L-BFGS-B",
-  optim_controls = list(),
-  version = 2
+  parallel = FALSE,
+  parallel_controls = list(n_cores = parallel::detectCores() - 1),
+  optim_controls = list()
 )
 }
 \arguments{
@@ -31,9 +31,11 @@ exponential covariance, by default). Finally, for \code{Whittle-Matern} models, 
 
 \item{optim_method}{The method to be used with \code{optim} function.}
 
-\item{optim_controls}{Additional controls to be passed to \code{optim} or \code{optimParallel}.}
-
 \item{parallel}{Logical. Should optimParallel be used instead of optim?}
+
+\item{parallel_controls}{A list containing the parallel controls.}
+
+\item{optim_controls}{Additional controls to be passed to \code{optim} or \code{optimParallel}.}
 }
 \value{
 A list containing the fitted model.

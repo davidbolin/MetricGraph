@@ -18,9 +18,13 @@ inlabru_predict(
 
 \item{bru_fit}{A fitted model using \code{inlabru} or \code{inla}.}
 
+\item{cmp}{An inlabru component.}
+
 \item{XY}{Euclidean coordinates of the prediction locations.}
 
 \item{PtE}{Relative positions on the edge to obtain predictions.}
+
+\item{data_pred}{A data.frame containing the prediction locations along with the response variables (with NA if they are missing).}
 }
 \value{
 A list with predictions.

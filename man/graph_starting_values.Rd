@@ -19,6 +19,10 @@ graph_starting_values(
 are supported}
 
 \item{data}{Should the data be used to obtain improved starting values?}
+
+\item{column_data}{The column of \code{graph$data} that contains the response variable.}
+
+\item{manual_data}{A vector (or matrix) of response variables.}
 }
 \value{
 A vector, \code{c(start_sigma_e, start_sigma, start_kappa)}

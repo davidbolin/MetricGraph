@@ -733,8 +733,10 @@ bru_graph_rep <- function(repl, graph_spde){
 #' using inlabru.
 #' @param bru_model  An `inla_metric_graph_spde` object built with the `graph_spde()` function.
 #' @param bru_fit A fitted model using `inlabru` or `inla`.
+#' @param cmp An inlabru component.
 #' @param XY Euclidean coordinates of the prediction locations.
 #' @param PtE Relative positions on the edge to obtain predictions.
+#' @param data_pred A data.frame containing the prediction locations along with the response variables (with NA if they are missing).
 #' @return A list with predictions.
 #' @export
 
@@ -767,12 +769,12 @@ inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL,
 
   graph_tmp$add_observations(data = data_pred)
   graph_tmp$observation_to_vertex()
-  spde____model <<- graph_spde(graph_tmp)
+  spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
   name_model <- deparse(substitute(bru_model))
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
-  bru_fit_new <- bru(cmp, 
+  bru_fit_new <- inlabru::bru(cmp, 
           data = graph_data_spde(spde____model),
           options = list(
             control.mode = list(
