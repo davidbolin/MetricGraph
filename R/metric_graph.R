@@ -95,9 +95,17 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' "end_mid", we merge lines if the end of one line intersects another line;
   #' "all_intersections", we merge the lines whenever they intersect. By default
   #' we have "end_points".
-  #' @param tolerance vertices that are closer than this number are merged when
-  #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
-  #' tolerance is given in km.
+  #' @param tolerance a list that provides tolerances during the construction of
+  #' the graph:
+  #' - `vertex_vertex` vertices that are closer than this number are merged
+  #' (default = 1e-10).
+  #' - `vertex_line` if a vertex at the end of one line is closer than this
+  #' number to another line, this vertex is connected to that line
+  #' (default = 1e-10)
+  #' - `line_line` if two lines at some point are closer than this number, a new
+  #' vertex is added at that point and the two lines are connected (default = 0)
+  #'
+  #' If `longlat = TRUE`, the tolerances are given in km.
   #' @param tolerance_intersections tolerance for considering intersections of
   #' lines according to the `merge_intersections` argument. Default = 0.
   #' @param tolerance_overlapping tolerance for merging vertices that might seem overlapping.
@@ -114,22 +122,23 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
-                        merge_intersections = c("end_points",
-                            "end_mid", "all_intersections"),
-                        tolerance = 1e-10,
-                        tolerance_intersections = 0,
-                        tolerance_overlapping = 0,
+                        tolerance = list(vertex_vertex = 1e-10,
+                                         vertex_line = 1e-10,
+                                         line_line = 0),
                         check_connected = TRUE) {
 
-      private$longlat <- longlat
-      private$tolerance <- tolerance
-      merge_intersections <- merge_intersections[[1]]
-      if(!(merge_intersections%in%c("end_points",
-                            "end_mid", "all_intersections"))){
-                              stop("The options for 'merge_intersections' are 'end_points',
-                            'end_mid', 'all_intersections'.")
-                            }
+    private$longlat <- longlat
 
+    tolerance_default = list(vertex_vertex = 1e-10,
+                             vertex_line = 0,
+                             line_line = 0)
+
+    for(i in 1:length(tolerance_default)){
+      if(!(names(tolerance_default)[i] %in% names(tolerance))){
+        tolerance[names(tolerance_default)[i]] <- tolerance_default[i]
+      }
+    }
+    print(tolerance)
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
@@ -145,30 +154,35 @@ metric_graph <-  R6::R6Class("metric_graph",
       lines <- list()
       for(i in 1:dim(E)[1]) {
         id <- sprintf("%d", i)
-        lines[[i]] <- Lines(list(Line(rbind(V[E[i,1], ], V[E[i,2], ]))), ID = id)
+        lines[[i]] <- Lines(list(Line(rbind(V[E[i,1], ],
+                                            V[E[i,2], ]))),
+                            ID = id)
       }
       self$lines <- SpatialLines(lines)
     }
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-    private$line_to_vertex(tolerance = tolerance, longlat = longlat)
+    private$line_to_vertex(tolerance = tolerance$vertex_vertex,
+                           longlat = longlat)
 
-    if(merge_intersections == "all_intersections"){
+    if (tolerance$line_line > 0) {
 
       all_combinations <- combn(1:length(self$lines), 2)
       intersect_points <- c()
       for(i in 1:ncol(all_combinations)){
           tmp_line1 <- self$lines[all_combinations[1,i]]
-          if(tolerance_intersections > 0){
-            tmp_line1 <- rgeos::gBuffer(tmp_line1, width = tolerance_intersections)
+          if (tolerance$vertex_line > 0) {
+            tmp_line1 <- rgeos::gBuffer(tmp_line1,
+                                        width = tolerance$vertex_line)
           }
           intersect_tmp <- rgeos::gIntersection(tmp_line1,
                                             self$lines[all_combinations[2,i]])
 
-          if(!is.null(intersect_tmp)){
+          if (!is.null(intersect_tmp)) {
             intersect_tmp <-coordinates(intersect_tmp)
-            if(tolerance_intersections>0){
-              intersect_points <- rbind(intersect_points, intersect_tmp[[1]][[1]])
-            } else{
+            if (tolerance$vertex_line > 0) {
+              intersect_points <- rbind(intersect_points,
+                                        intersect_tmp[[1]][[1]])
+            } else {
               intersect_points <- rbind(intersect_points, intersect_tmp)
             }
           }
@@ -186,11 +200,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(nrow(intersect_points) == 0){
         intersect_points <- NULL
       }
+      #intersect_points <- rbind(intersect_points, self$V)
 
 
       if(!is.null(intersect_points)){
         PtE_tmp <- private$coordinates_multiple_snaps(XY = intersect_points,
-                                                  tolerance = tolerance_overlapping)
+                                                  tolerance = tolerance$line_line)
         PtE_tmp <- unique(PtE_tmp)
       } else{
         PtE_tmp <- NULL
@@ -204,16 +219,16 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$add_observations(data = data_tmp, edge_number = "edge_number",
                                         distance_on_edge = "distance_on_edge",
                                         normalized = TRUE)
-          self$observation_to_vertex(tolerance = max(tolerance_overlapping, 1e-10))
+          self$observation_to_vertex(tolerance = tolerance$line_line)
           self$clear_observations()
         }
 
-    } else if(merge_intersections == "end_mid"){
+    } else if(tolerance$vertex_line > 0){
           y_tmp <- rep(NA, nrow(self$V))
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
           self$add_observations(data = data_tmp, data_coords = "euclidean")
-          self$observation_to_vertex(tolerance = max(tolerance_overlapping, 1e-10))
+          self$observation_to_vertex(tolerance = tolerance$vertex_line)
           self$clear_observations()
     }
 
