@@ -98,10 +98,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param tolerance a list that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` vertices that are closer than this number are merged
-  #' (default = 1e-10).
+  #' (default = 1e-7).
   #' - `vertex_line` if a vertex at the end of one line is closer than this
   #' number to another line, this vertex is connected to that line
-  #' (default = 1e-10)
+  #' (default = 1e-7)
   #' - `line_line` if two lines at some point are closer than this number, a new
   #' vertex is added at that point and the two lines are connected (default = 0)
   #'
@@ -122,20 +122,16 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
-                        tolerance = list(vertex_vertex = 1e-8,
-                                         vertex_line = 1e-8,
-                                         buffer_vertex_line = 1e-8,
-                                         line_line = 0,
-                                         buffer_line_line = 0),
+                        tolerance = list(vertex_vertex = 1e-7,
+                                         vertex_line = 1e-7,
+                                         line_line = 0),
                         check_connected = TRUE) {
 
     private$longlat <- longlat
 
-    tolerance_default = list(vertex_vertex = 1e-8,
-                             vertex_line = 1e-8,
-                             buffer_vertex_line = 1e-8,
-                             line_line = 0,
-                             buffer_line_line = 0)
+    tolerance_default = list(vertex_vertex = 1e-7,
+                             vertex_line = 1e-7,
+                             line_line = 0)
 
 
 
@@ -143,6 +139,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!(names(tolerance_default)[i] %in% names(tolerance))){
         tolerance[names(tolerance_default)[i]] <- tolerance_default[i]
       }
+    }
+
+    if(is.null(tolerance$buffer_line_line)){
+      tolerance$buffer_line_line <- max(tolerance$line_line/2 - 1e-10,0)
+    }
+  
+    if(is.null(tolerance$buffer_vertex_line)){
+      tolerance$buffer_vertex_line <- max(tolerance$vertex_line/2 - 1e-10,0)
     }
 
     if(!is.null(lines)){
@@ -229,7 +233,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                         distance_on_edge = "distance_on_edge",
                                         normalized = TRUE)
           self$observation_to_vertex(tolerance = tolerance$line_line + 1e-15)
-          private$remove_tiny_loops(edge_lengths = 2 * tolerance$line_line + 1e-15)
+          # private$remove_tiny_loops(edge_lengths = 2 * tolerance$line_line + 1e-15)
           self$clear_observations()
         }
 
@@ -267,7 +271,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                           distance_on_edge = "distance_on_edge",
                                           normalized = TRUE)
             self$observation_to_vertex(tolerance = tolerance$vertex_line + 1e-15)
-            private$remove_tiny_loops(edge_lengths = 2 * tolerance$vertex_line + 1e-15)
+            # private$remove_tiny_loops(edge_lengths = 2 * tolerance$vertex_line + 1e-15)
             self$clear_observations()
         }
     }
@@ -551,7 +555,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$temp_PtE <- self$get_PtE()
     n_group <- length(unique(self$data[["__group"]]))
     l <- length(private$temp_PtE[, 1])
-    self$PtV <- rep(0, l)
+    self$PtV <- rep(NA, l)
     for (i in 1:l) {
       e <- as.vector(private$temp_PtE[i, 1])
       t <- as.vector(private$temp_PtE[i, 2])
@@ -565,9 +569,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       } else {
         PtV_tmp <- self$split_edge(e, t, tolerance)
         # self$PtV[i] <- dim(self$V)[1]
-        self$PtV[i] <- PtV_tmp
+        if(!is.null(PtV_tmp)){
+          self$PtV[i] <- PtV_tmp
+        }
       }
     }
+    self$PtV <- self$PtV[!is.na(self$PtV)]
 
     self$data[["__edge_number"]] <- rep(private$temp_PtE[,1],
                                         times = n_group)
@@ -1285,65 +1292,75 @@ metric_graph <-  R6::R6Class("metric_graph",
     Line <- self$lines[LinesPos[j,1], ]
     val_line <- rgeos::gInterpolate(Line, t_mod, normalized = TRUE)@coords
 
-    #change LtE
-    self$ELend <- c(self$ELend, self$ELend[Ei])
-    self$ELend[Ei] <- t_mod
-    self$ELstart <- c(self$ELstart, t_mod)
-    LtE.i <- self$LtE@i
-    LtE.p <- self$LtE@p
-    LtE.x <- self$LtE@x
-    LtE.dim <- self$LtE@Dim
-    LtE.dim[2] <- LtE.dim[2] + 1
-    # add the new column
-    LtE.i_new <- LinesPos[j,1] - 1
-    LtE.x_new <- LinesPos[j,2]
-    large <- LtE.x[index] > t
-
-    n.p <- length(self$LtE@p)
-    if(sum(large)>1){
-      index.rem = index[large]
-      index.rem <- index.rem[-length(index.rem)]
-      LtE.i_new = c(LtE.i_new,LtE.i[index.rem])
-      LtE.x_new = c(LtE.x_new,LtE.x[index.rem])
-      LtE.i <- LtE.i[-index.rem]
-      LtE.x <- LtE.x[-index.rem]
-      self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
-    }
-    LtE.p_new <- self$LtE@p[n.p] + sum(large)
-    self$LtE <- Matrix::sparseMatrix(i = c(LtE.i, LtE.i_new)+1,
-                                     p = c(LtE.p, LtE.p_new),
-                                     x = c(LtE.x, LtE.x_new),
-                                     dims = LtE.dim)
-
     closest_vertex <- which.min(sapply(1:nrow(self$V), function(i){
       (self$V[i,1]-val_line[1])^2 + (self$V[i,2] - val_line[2])^2
     }))
     min_dist <- sqrt(sum((val_line - self$V[closest_vertex,])^2))
+    add_V <- FALSE
     if(min_dist <= tolerance){
       newV <- closest_vertex
     } else{
       newV <- self$nV + 1
-      self$V <- rbind(self$V, c(val_line))
+      add_V <- TRUE
     }
 
-    l_e <- self$edge_lengths[Ei]
-    self$edge_lengths[Ei] <- t * l_e
-    self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
-    self$nE <- self$nE + 1
-    self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
-    self$E[Ei, 2] <- newV
-    self$nV <- dim(self$V)[1]
+    if((newV != self$E[Ei, 1]) && newV != self$E[Ei,2]){
+        #change LtE
+        self$ELend <- c(self$ELend, self$ELend[Ei])
+        self$ELend[Ei] <- t_mod
+        self$ELstart <- c(self$ELstart, t_mod)
+        LtE.i <- self$LtE@i
+        LtE.p <- self$LtE@p
+        LtE.x <- self$LtE@x
+        LtE.dim <- self$LtE@Dim
+        LtE.dim[2] <- LtE.dim[2] + 1
+        # add the new column
+        LtE.i_new <- LinesPos[j,1] - 1
+        LtE.x_new <- LinesPos[j,2]
+        large <- LtE.x[index] > t
 
-    if(!is.null(self$data)){
-      ind <- which(private$temp_PtE[, 1] %in% Ei)
-      for (i in ind) {
-        if (private$temp_PtE[i, 2] >= t - tolerance) {
-          private$temp_PtE[i, 1] <- self$nE
-          private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
+        n.p <- length(self$LtE@p)
+        if(sum(large)>1){
+          index.rem = index[large]
+          index.rem <- index.rem[-length(index.rem)]
+          LtE.i_new = c(LtE.i_new,LtE.i[index.rem])
+          LtE.x_new = c(LtE.x_new,LtE.x[index.rem])
+          LtE.i <- LtE.i[-index.rem]
+          LtE.x <- LtE.x[-index.rem]
+          self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
         }
-      }
+        LtE.p_new <- self$LtE@p[n.p] + sum(large)
+        self$LtE <- Matrix::sparseMatrix(i = c(LtE.i, LtE.i_new)+1,
+                                         p = c(LtE.p, LtE.p_new),
+                                         x = c(LtE.x, LtE.x_new),
+                                         dims = LtE.dim)
+
+        if(add_V){
+          self$V <- rbind(self$V, c(val_line))
+        }
+        l_e <- self$edge_lengths[Ei]
+        self$edge_lengths[Ei] <- t * l_e
+        self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
+        self$nE <- self$nE + 1
+        self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
+        self$E[Ei, 2] <- newV
+        self$nV <- dim(self$V)[1]
+
+        if(!is.null(self$data)){
+          ind <- which(private$temp_PtE[, 1] %in% Ei)
+          for (i in ind) {
+            if (private$temp_PtE[i, 2] >= t - tolerance) {
+              private$temp_PtE[i, 1] <- self$nE
+              private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
+            }
+          }
+        }
+        return(newV)
+    } else{
+      return(NULL)
     }
-    return(newV)
+
+
   },
 
   #' @description Add observations on mesh to the object
@@ -1462,16 +1479,13 @@ metric_graph <-  R6::R6Class("metric_graph",
         PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
       }
 
+      Points <- matrix(NA, nrow=nrow(PtE), ncol=ncol(PtE))
+
+      LT <- private$edge_pos_to_line_pos2(PtE[, 1], PtE[, 2])
       for (i in 1:dim(PtE)[1]) {
-        LT <- private$edge_pos_to_line_pos2(PtE[i, 1], PtE[i, 2])
-        Line <- self$lines[LT[1, 1], ]
-        val_line <- rgeos::gProject(Line, as(Line, "SpatialPoints"),
-                             normalized = TRUE)
-        Point <- rgeos::gInterpolate(Line,LT[1, 2], normalized = TRUE)
-        x <- c(x, Point@coords[1])
-        y <- c(y, Point@coords[2])
+        Points[i,] <- rgeos::gInterpolate(self$lines[LT[i, 1], ] ,LT[i, 2], normalized = TRUE)@coords
       }
-      return(cbind(x,y))
+      return(Points)
     } else {
       Spoints <- SpatialPoints(XY)
       SP <- snapPointsToLines(Spoints, self$lines)
@@ -1827,10 +1841,19 @@ metric_graph <-  R6::R6Class("metric_graph",
   # Version 2 edge_pos_to_line_pos
   # Gets relative position on the line
   edge_pos_to_line_pos2 = function(E_i, t_i){
-    line_E_i <- which(self$LtE[,E_i] == 1)
-    start_point <- self$ELstart[E_i]
-    exact_point <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
-    return(cbind(line_E_i, exact_point))
+    stopifnot(length(E_i) == length(t_i))
+    tmp_matrix <- matrix(NA, nrow=length(E_i), ncol=2)
+
+    for(i in 1:length(E_i)){
+      tmp_matrix[i,1] <- which(self$LtE[,E_i[i]] == 1)
+    }
+      start_points <- self$ELstart[E_i]
+      tmp_matrix[,2] <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
+    return(tmp_matrix)
+    # line_E_i <- which(self$LtE[,E_i] == 1)
+    # start_point <- self$ELstart[E_i]
+    # exact_point <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
+    # return(cbind(line_E_i, exact_point))
   },
 
   # Remove vertex of degree 2 whose edges are on the same line
@@ -1847,17 +1870,20 @@ metric_graph <-  R6::R6Class("metric_graph",
     
   },
 
-  # Remove tiny loops created by buffering
+  # # Remove tiny loops created by buffering
 
-  remove_tiny_loops = function(edge_lengths){
-    loops <- sapply(1:self$nE, function(i){
-      self$E[i,1] == self$E[i,2]
-    })
-    loops <- loops * (self$edge_lengths <= edge_lengths + 1e-15)
-    self$E <- self$E[!loops,]
-    self$LtE <- self$LtE[,!loops]
-    self$nE <- self$nE - sum(loops)
-  },
+  # remove_tiny_loops = function(edge_lengths){
+  #   loops <- sapply(1:self$nE, function(i){
+  #     self$E[i,1] == self$E[i,2]
+  #   })
+  #   if(sum(loops) > 0){
+  #     loops <- loops * (self$edge_lengths <= edge_lengths + 1e-15)
+  #     self$E <- self$E[!loops,]
+  #     self$LtE <- self$LtE[,!loops]
+  #     self$nE <- self$nE - sum(loops)
+  #     self$edge_lengths <- self$edge_lengths[!loops]
+  #   }
+  # },
 
 
   # Initial graph
