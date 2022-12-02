@@ -478,6 +478,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Adds observation locations as vertices in the graph
+  #' @param tolerance parameter in which we merge vertices together. Not intended for non-expert use.
   observation_to_vertex = function(tolerance = 1e-10) {
     if(tolerance <= 0 || tolerance >=1){
       stop("tolerance should be between 0 and 1.")
@@ -1217,7 +1218,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     Line <- self$lines[LinesPos[j,1], ]
-    val_line <- gInterpolate(Line, t_mod, normalized = TRUE)@coords
+    val_line <- rgeos::gInterpolate(Line, t_mod, normalized = TRUE)@coords
 
     #change LtE
     self$ELend <- c(self$ELend, self$ELend[Ei])
@@ -1399,9 +1400,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       for (i in 1:dim(PtE)[1]) {
         LT <- private$edge_pos_to_line_pos2(PtE[i, 1], PtE[i, 2])
         Line <- self$lines[LT[1, 1], ]
-        val_line <- gProject(Line, as(Line, "SpatialPoints"),
+        val_line <- rgeos::gProject(Line, as(Line, "SpatialPoints"),
                              normalized = TRUE)
-        Point <- gInterpolate(Line,LT[1, 2], normalized = TRUE)
+        Point <- rgeos::gInterpolate(Line,LT[1, 2], normalized = TRUE)
         x <- c(x, Point@coords[1])
         y <- c(y, Point@coords[2])
       }

@@ -1,6 +1,26 @@
-
+#' Metric graph linear mixed effects models
+#'
+#' Fitting linear mixed effects model in metric graphs. The random effects can be
+#' Whittle-Matern fields on metric graphs, Whittle-Matern fields based on the
+#' graph Laplacian as well as fields with isotropic covariance structure.
+#'
+#' @param formula Formula object describing the relation between the response variables and the fixed effects.
+#' @param graph A `metric_graph` object.
+#' @param model The random effects model that will be used. A list containing the elements `type`, which can be
+#' `Whittle-Matern`, `graph-Laplacian` or `isoCov`. For `Whittle-Matern` and `graph-Laplacian` models, the list
+#' must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
+#' contain a parameter `cov_function`, containing the covariance function (which is `exp_covariance`, the 
+#' exponential covariance, by default). Finally, for `Whittle-Matern` models, there is an additional parameter
+#' `version`, which can be either 1 or 2, to tell which version of the likelihood should be used (version is 1 by default).
+#' @param repl A vector containing the replicates.
+#' @param optim_method The method to be used with `optim` function.
+#' @param parallel Logical. Should optimParallel be used instead of optim?
+#' @param optim_controls Additional controls to be passed to `optim` or `optimParallel`.
+#'
+#' @return A list containing the fitted model.
 #' @rdname graph_lme
 #' @export
+#' 
 
 graph_lme <- function(formula, graph, 
                 model = list(type = "WhittleMatern", alpha = 1), 

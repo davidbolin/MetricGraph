@@ -114,6 +114,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
+\item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-metric_graph-split_edge}{\code{metric_graph$split_edge()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
@@ -134,7 +135,10 @@ Create a new \code{metric_graph} object
   V = NULL,
   E = NULL,
   longlat = FALSE,
+  merge_intersections = c("end_points", "end_mid", "all_intersections"),
   tolerance = 1e-10,
+  tolerance_intersections = 0,
+  tolerance_overlapping = 0,
   check_connected = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -151,9 +155,20 @@ Create a new \code{metric_graph} object
 \item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given
 in Longitude/Latitude and that distances should be computed in km.}
 
+\item{\code{merge_intersections}}{Which strategy should we use when lines intersect?
+The options are: "end_points", we merge the lines only if the end points intersect;
+"end_mid", we merge lines if the end of one line intersects another line;
+"all_intersections", we merge the lines whenever they intersect. By default
+we have "end_points".}
+
 \item{\code{tolerance}}{vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the
 tolerance is given in km.}
+
+\item{\code{tolerance_intersections}}{tolerance for considering intersections of
+lines according to the \code{merge_intersections} argument. Default = 0.}
+
+\item{\code{tolerance_overlapping}}{tolerance for merging vertices that might seem overlapping.}
 
 \item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
 connected and a warning is given if this is not the case.}
@@ -354,9 +369,16 @@ Gets the spatial points from the data.
 \subsection{Method \code{observation_to_vertex()}}{
 Adds observation locations as vertices in the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-10)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{tolerance}}{parameter in which we merge vertices together. Not intended for non-expert use.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-clear_observations"></a>}}
@@ -555,6 +577,7 @@ plot a metric graph
   X = NULL,
   X_loc = NULL,
   p = NULL,
+  degree = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -591,6 +614,8 @@ the 'plotly' package.}
 
 \item{\code{p}}{existing ggplot or plot_ly object to add the graph to}
 
+\item{\code{degree}}{show the degrees of the vertices?}
+
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
 \if{html}{\out{</div>}}
@@ -615,6 +640,16 @@ graph$plot()
 }
 \if{html}{\out{</div>}}
 
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-plot_connections"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-plot_connections}{}}}
+\subsection{Method \code{plot_connections()}}{
+Plots the connections
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_connections()}\if{html}{\out{</div>}}
 }
 
 }
@@ -682,7 +717,7 @@ either a ggplot or a plot_ly object
 \subsection{Method \code{split_edge()}}{
 function for splitting lines in the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_edge(Ei, t)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_edge(Ei, t, tolerance = 0)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -691,6 +726,8 @@ function for splitting lines in the graph
 \item{\code{Ei}}{index of line to split}
 
 \item{\code{t}}{position on line to split (normalized)}
+
+\item{\code{tolerance}}{tolerance for merging overlapping vertices}
 }
 \if{html}{\out{</div>}}
 }

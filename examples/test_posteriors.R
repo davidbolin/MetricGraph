@@ -24,8 +24,8 @@ obs.loc <- rbind(c(1,0.5),c(2,0.5),c(3,0.5))
 x <- y <- NULL
 for(i in 1:dim(obs.loc)[1]){
   Line <- graph$Lines[obs.loc[i,1],]
-  val_line <- gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
-  Point <- gInterpolate(Line, obs.loc[i,2], normalized=TRUE)
+  val_line <- rgeos::gProject(Line, as(Line, "SpatialPoints"), normalized=TRUE)
+  Point <- rgeos::gInterpolate(Line, obs.loc[i,2], normalized=TRUE)
   x <- c(x, Point@coords[1])
   y <- c(y, Point@coords[2])
 }
