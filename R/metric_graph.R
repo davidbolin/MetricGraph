@@ -124,21 +124,23 @@ metric_graph <-  R6::R6Class("metric_graph",
                         longlat = FALSE,
                         tolerance = list(vertex_vertex = 1e-10,
                                          vertex_line = 1e-10,
-                                         line_line = 0),
+                                         line_line = 0,
+                                         buffer_line_line = 0),
                         check_connected = TRUE) {
 
     private$longlat <- longlat
 
     tolerance_default = list(vertex_vertex = 1e-10,
                              vertex_line = 0,
-                             line_line = 0)
+                             line_line = 0,
+                             buffer_line_line = 0)
 
     for(i in 1:length(tolerance_default)){
       if(!(names(tolerance_default)[i] %in% names(tolerance))){
         tolerance[names(tolerance_default)[i]] <- tolerance_default[i]
       }
     }
-    print(tolerance)
+
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
@@ -170,16 +172,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       intersect_points <- c()
       for(i in 1:ncol(all_combinations)){
           tmp_line1 <- self$lines[all_combinations[1,i]]
-          if (tolerance$vertex_line > 0) {
+          if (tolerance$buffer_line_line > 0) {
             tmp_line1 <- rgeos::gBuffer(tmp_line1,
-                                        width = tolerance$vertex_line)
+                                        width = tolerance$buffer_line_line)
           }
           intersect_tmp <- rgeos::gIntersection(tmp_line1,
                                             self$lines[all_combinations[2,i]])
 
           if (!is.null(intersect_tmp)) {
             intersect_tmp <-coordinates(intersect_tmp)
-            if (tolerance$vertex_line > 0) {
+            if (tolerance$buffer_line_line > 0) {
               intersect_points <- rbind(intersect_points,
                                         intersect_tmp[[1]][[1]])
             } else {
@@ -197,14 +199,17 @@ metric_graph <-  R6::R6Class("metric_graph",
       intersect_points <- intersect_points[!(rows_(intersect_points) %in% rows_(self$V)),]
       rownames(intersect_points) <- NULL
       colnames(intersect_points) <- NULL
-      if(nrow(intersect_points) == 0){
-        intersect_points <- NULL
+      if(!is.null(intersect_points)){
+        if(nrow(matrix(intersect_points,ncol=2)) == 0){
+          intersect_points <- NULL
+        }
       }
+
       #intersect_points <- rbind(intersect_points, self$V)
 
 
       if(!is.null(intersect_points)){
-        PtE_tmp <- private$coordinates_multiple_snaps(XY = intersect_points,
+        PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
                                                   tolerance = tolerance$line_line)
         PtE_tmp <- unique(PtE_tmp)
       } else{
@@ -223,7 +228,8 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$clear_observations()
         }
 
-    } else if(tolerance$vertex_line > 0){
+    }
+    if(tolerance$vertex_line > 0){
           y_tmp <- rep(NA, nrow(self$V))
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
@@ -1878,13 +1884,14 @@ graph_components <-  R6::R6Class("graph_components",
                          ...) {
      graph <- metric_graph$new(lines = lines, V = V, E = E,
                                check_connected = FALSE, ...)
+
      g <- graph(edges = c(t(graph$E)), directed = FALSE)
      igraph::E(g)$weight <- graph$edge_lengths
      components <- igraph::clusters(g, mode="weak")
 
      self$n <- components$no
      if(self$n > 1) {
-       self$graphs <- list()
+       self$graphs <- vector(mode = "list", length = self$n)
        for(k in 1:self$n) {
          vert_ids <- igraph::V(g)[components$membership == k]
          edge_rem <- NULL
@@ -1893,7 +1900,7 @@ graph_components <-  R6::R6Class("graph_components",
              edge_rem <- c(edge_rem, i)
          }
          edge_keep <- setdiff(1:graph$nE, edge_rem)
-         self$graphs[[k]] = metric_graph$new(lines = lines[edge_keep],
+         self$graphs[[k]] = metric_graph$new(V = matrix(graph$V, ncol=2), E = matrix(graph$E[edge_keep,], ncol=2),
                                              check_connected = FALSE, ...)
        }
        self$sizes <- components$csize

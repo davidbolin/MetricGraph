@@ -149,8 +149,8 @@ graph3$plot()
 Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
-                                                           vertex_line = 0.1,
-                                                           line_line = 0.1))
+                                                           vertex_line = 0,
+                                                           line_line = 1e-3))
 graph3$plot()
 ```
 ## Understanding coordinates on graphs
@@ -252,7 +252,7 @@ meters. Let us increase the tolerance and say that any vertices that are at most
 a distance of 50 meters (0.05km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
-                           tolerance = 0.05)
+                           tolerance = list(vertex_vertex = 0.05))
 graphs$plot(vertex_size = 0)
 ```
 

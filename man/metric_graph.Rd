@@ -100,6 +100,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
 \item \href{#method-metric_graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-metric_graph-compute_resdist_PtE}{\code{metric_graph$compute_resdist_PtE()}}
+\item \href{#method-metric_graph-get_degrees}{\code{metric_graph$get_degrees()}}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-compute_laplacian_PtE}{\code{metric_graph$compute_laplacian_PtE()}}
@@ -135,10 +136,8 @@ Create a new \code{metric_graph} object
   V = NULL,
   E = NULL,
   longlat = FALSE,
-  merge_intersections = c("end_points", "end_mid", "all_intersections"),
-  tolerance = 1e-10,
-  tolerance_intersections = 0,
-  tolerance_overlapping = 0,
+  tolerance = list(vertex_vertex = 1e-10, vertex_line = 1e-10, line_line = 0,
+    buffer_line_line = 0),
   check_connected = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -155,23 +154,33 @@ Create a new \code{metric_graph} object
 \item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given
 in Longitude/Latitude and that distances should be computed in km.}
 
+\item{\code{tolerance}}{a list that provides tolerances during the construction of
+the graph:
+\itemize{
+\item \code{vertex_vertex} vertices that are closer than this number are merged
+(default = 1e-10).
+\item \code{vertex_line} if a vertex at the end of one line is closer than this
+number to another line, this vertex is connected to that line
+(default = 1e-10)
+\item \code{line_line} if two lines at some point are closer than this number, a new
+vertex is added at that point and the two lines are connected (default = 0)
+}
+
+If \code{longlat = TRUE}, the tolerances are given in km.}
+
+\item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
+connected and a warning is given if this is not the case.}
+
 \item{\code{merge_intersections}}{Which strategy should we use when lines intersect?
 The options are: "end_points", we merge the lines only if the end points intersect;
 "end_mid", we merge lines if the end of one line intersects another line;
 "all_intersections", we merge the lines whenever they intersect. By default
 we have "end_points".}
 
-\item{\code{tolerance}}{vertices that are closer than this number are merged when
-constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the
-tolerance is given in km.}
-
 \item{\code{tolerance_intersections}}{tolerance for considering intersections of
 lines according to the \code{merge_intersections} argument. Default = 0.}
 
 \item{\code{tolerance_overlapping}}{tolerance for merging vertices that might seem overlapping.}
-
-\item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
-connected and a warning is given if this is not the case.}
 }
 \if{html}{\out{</div>}}
 }
@@ -288,6 +297,16 @@ locations
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_degrees"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_degrees}{}}}
+\subsection{Method \code{get_degrees()}}{
+Gets the degrees of the vertices
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_degrees()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_resdist_mesh"></a>}}
