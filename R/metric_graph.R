@@ -122,18 +122,22 @@ metric_graph <-  R6::R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         longlat = FALSE,
-                        tolerance = list(vertex_vertex = 1e-10,
-                                         vertex_line = 1e-10,
+                        tolerance = list(vertex_vertex = 1e-8,
+                                         vertex_line = 1e-8,
+                                         buffer_vertex_line = 1e-8,
                                          line_line = 0,
                                          buffer_line_line = 0),
                         check_connected = TRUE) {
 
     private$longlat <- longlat
 
-    tolerance_default = list(vertex_vertex = 1e-10,
-                             vertex_line = 0,
+    tolerance_default = list(vertex_vertex = 1e-8,
+                             vertex_line = 1e-8,
+                             buffer_vertex_line = 1e-8,
                              line_line = 0,
                              buffer_line_line = 0)
+
+
 
     for(i in 1:length(tolerance_default)){
       if(!(names(tolerance_default)[i] %in% names(tolerance))){
@@ -224,18 +228,48 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$add_observations(data = data_tmp, edge_number = "edge_number",
                                         distance_on_edge = "distance_on_edge",
                                         normalized = TRUE)
-          self$observation_to_vertex(tolerance = tolerance$line_line)
+          self$observation_to_vertex(tolerance = tolerance$line_line + 1e-15)
+          private$remove_tiny_loops(edge_lengths = 2 * tolerance$line_line + 1e-15)
           self$clear_observations()
         }
 
     }
     if(tolerance$vertex_line > 0){
+        if(tolerance$buffer_vertex_line == 0){
           y_tmp <- rep(NA, nrow(self$V))
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
           self$add_observations(data = data_tmp, data_coords = "euclidean")
           self$observation_to_vertex(tolerance = tolerance$vertex_line)
           self$clear_observations()
+        } else{
+          intersect_points <- c()
+          for(i in 1:self$nV){
+            tmp_point <- SpatialPoints(matrix(self$V[i,], ncol=2))
+            tmp_point <- rgeos::gBuffer(tmp_point,
+                                        width = tolerance$buffer_vertex_line)
+            intersect_tmp <- rgeos::gIntersection(tmp_point,
+                                            self$lines)
+            intersect_tmp <-coordinates(intersect_tmp)
+            intersect_points <- rbind(intersect_points, intersect_tmp[[1]][[1]])
+          }
+            intersect_points <- unique(intersect_points)
+            intersect_points <- as.matrix(intersect_points)
+            rownames(intersect_points) <- NULL
+            colnames(intersect_points) <- NULL
+            PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
+                                              tolerance = tolerance$line_line)
+            PtE_tmp <- unique(PtE_tmp)
+            y_tmp <- rep(NA, nrow((PtE_tmp)))
+            data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
+                                  distance_on_edge = PtE_tmp[,2])
+            self$add_observations(data = data_tmp, edge_number = "edge_number",
+                                          distance_on_edge = "distance_on_edge",
+                                          normalized = TRUE)
+            self$observation_to_vertex(tolerance = tolerance$vertex_line + 1e-15)
+            private$remove_tiny_loops(edge_lengths = 2 * tolerance$vertex_line + 1e-15)
+            self$clear_observations()
+        }
     }
 
     private$initial_graph <- self$clone()
@@ -1811,6 +1845,18 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   remove_vertex_degree2_different_lines = function(){
     
+  },
+
+  # Remove tiny loops created by buffering
+
+  remove_tiny_loops = function(edge_lengths){
+    loops <- sapply(1:self$nE, function(i){
+      self$E[i,1] == self$E[i,2]
+    })
+    loops <- loops * (self$edge_lengths <= edge_lengths + 1e-15)
+    self$E <- self$E[!loops,]
+    self$LtE <- self$LtE[,!loops]
+    self$nE <- self$nE - sum(loops)
   },
 
 

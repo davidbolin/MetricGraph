@@ -142,15 +142,23 @@ graph3$plot()
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first line, so that the two lines there are connected. This can be done by adjusting the `vertex_line` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
-                                                           vertex_line = 0.1))
+                                                           vertex_line = 0.1,
+                                                           buffer_vertex_line = 0.1))
 graph3$plot()
+```
+
+We can see that the vertex at $(0.5,0)$ was indeed merged:
+
+```{r}
+graph3$plot_connections()
 ```
 
 Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
+graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_line = 0,
-                                                           line_line = 1e-3))
+                                                           line_line = 1e-3,
+                                                           buffer_line_line = 0))
 graph3$plot()
 ```
 ## Understanding coordinates on graphs
