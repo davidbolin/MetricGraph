@@ -186,7 +186,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(nrow(intersect_points) == 0){
         intersect_points <- NULL
       }
-      intersect_points <- rbind(intersect_points, self$V)
+
 
       if(!is.null(intersect_points)){
         PtE_tmp <- private$coordinates_multiple_snaps(XY = intersect_points,
@@ -367,6 +367,16 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       R <- R[graph.temp$PtV, graph.temp$PtV]
       return(R)
+  },
+
+  #' @description Gets the degrees of the vertices
+  
+  get_degrees = function(){
+    degrees <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+          degrees[i] <- sum(self$E[,1]==i) + sum(self$E[,2]==i)
+    }
+    return(degrees)
   },
 
   #' @description Computes the resistance metric between the vertices in the
@@ -1579,10 +1589,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(degree) {
         x <- self$V[,1]
         y <- self$V[,2]
-        degrees <- rep(0,self$nV)
-        for(i in 1:self$nV) {
-          degrees[i] <- sum(self$E[,1]==i) + sum(self$E[,2]==i)
-        }
+        degrees <- self$get_degrees()
         p <- p + geom_point(data = data.frame(x = self$V[, 1],
                                               y = self$V[, 2],
                                               degree = degrees),
@@ -1770,6 +1777,21 @@ metric_graph <-  R6::R6Class("metric_graph",
     exact_point <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
     return(cbind(line_E_i, exact_point))
   },
+
+  # Remove vertex of degree 2 whose edges are on the same line
+  # It will not remove the vertex if it is the only vertex of the graph
+
+  remove_vertex_degree2_same_line = function(){
+
+  },
+
+  # Remove vertex of degree 2 whose edges are on different lines
+  # It will not remove the vertex if it is the only vertex of the graph
+
+  remove_vertex_degree2_different_lines = function(){
+    
+  },
+
 
   # Initial graph
 
