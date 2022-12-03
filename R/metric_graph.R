@@ -1612,17 +1612,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       lines <- rbind(lines, c(i, points[1,]), c(i, points[n,]))
     }
 
-    #save all vertices that are more than tolerance distance apart, also
-    #add vertices that are closer than that if they are on the same lines
+    #save all vertices that are more than tolerance distance apart
     dists <- spDists(lines[, 2:3, drop = FALSE], longlat = longlat)
     vertex <- lines[1, , drop = FALSE]
     for (i in 2:dim(lines)[1]) {
       i.min <- which.min(dists[i, 1:(i-1)])
       if (dists[i, i.min] > tolerance) {
         vertex <- rbind(vertex, lines[i, ])
-      } #else if (lines[i, 1] == lines[i.min, 1] && lines[i,]) {
-        #vertex <- rbind(vertex, lines[i, ])
-      #}
+      }
     }
     #lvl = c(line index, vertex number of start, vertex number of end, length])
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
