@@ -602,17 +602,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$PtV <- rep(NA, l)
     self$nE <- nrow(self$E)
     for (i in 1:l) {
-      print("i")
-      print(i)
       e <- as.vector(private$temp_PtE[i, 1])
       t <- as.vector(private$temp_PtE[i, 2])
       l_e <- self$edge_lengths[e]
       if (abs(t) < tolerance) {
         private$temp_PtE[i, 2] <- 0
-        print("nrow")
-        print(nrow(self$E))
-        print("nE")
-        print(self$nE)
         self$PtV[i] <- self$E[e, 1]
       } else if (t > 1 - tolerance) {
         private$temp_PtE[i, 2] <- 1
@@ -1398,7 +1392,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$edge_lengths[Ei] <- t * l_e
         self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
         self$nE <- self$nE + 1
-        print(c(newV, self$E[Ei, 2]))
         self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
         self$E[Ei, 2] <- newV
         self$nV <- dim(self$V)[1]
@@ -1993,7 +1986,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                     line1 <- Lines(list(Line(coords1)), ID = as.character(j))
                     
                     if(closest_coord < nrow(line_coords)){
-                      print((closest_coord+1):nrow(line_coords))
                       coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
                       line2 <- Lines(list(Line(coords2)), ID = as.character(count))
                     } else{
