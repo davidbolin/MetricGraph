@@ -204,7 +204,6 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
       }
 
-      print("A")
       if(!is.null(intersect_points)){
             intersect_points <- unique(intersect_points)
             intersect_points <- as.matrix(intersect_points)
@@ -222,8 +221,6 @@ metric_graph <-  R6::R6Class("metric_graph",
           intersect_points <- NULL
         }
       }
-
-                          print("PtE_tmp")
 
       #intersect_points <- rbind(intersect_points, self$V)
 
@@ -276,12 +273,12 @@ metric_graph <-  R6::R6Class("metric_graph",
             PtE_tmp <- unique(PtE_tmp)
             PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),]
 
-            PtE_tmp_tol <- cbind(PtE_tmp[2:nrow(PtE_tmp),1], diff(PtE_tmp[,2]))
-            PtE_tmp_tol <- cbind(PtE_tmp_tol, self$edge_lengths[PtE_tmp_tol[,1]])
-            PtE_tmp_tol <- abs(PtE_tmp_tol)
-            PtE_tmp_tol[,1] <- PtE_tmp[1:(nrow(PtE_tmp)-1),1]
-            # print(PtE_tmp_tol)
-            PtE_tmp <- PtE_tmp[c(TRUE, (PtE_tmp_tol[,3] * PtE_tmp_tol[,2] > tolerance$vertex_vertex)),]
+            # PtE_tmp_tol <- cbind(PtE_tmp[2:nrow(PtE_tmp),1], diff(PtE_tmp[,2]))
+            # PtE_tmp_tol <- cbind(PtE_tmp_tol, self$edge_lengths[PtE_tmp_tol[,1]])
+            # PtE_tmp_tol <- abs(PtE_tmp_tol)
+            # PtE_tmp_tol[,1] <- PtE_tmp[1:(nrow(PtE_tmp)-1),1]
+            # # print(PtE_tmp_tol)
+            # PtE_tmp <- PtE_tmp[c(TRUE, (PtE_tmp_tol[,3] * PtE_tmp_tol[,2] > tolerance$vertex_vertex)),]
             
             # print(PtE_tmp)
 
@@ -1399,6 +1396,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           private$initial_added_vertex <- c(private$initial_added_vertex, newV)
           private$initial_line_added <- c(private$initial_line_added, LtE.i_new+1)
         }
+
 
         n.p <- length(self$LtE@p)
         if(sum(large)>1){
