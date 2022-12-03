@@ -175,6 +175,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            longlat = longlat)
 
     if (tolerance$line_line > 0) {
+        private$addinfo <- TRUE
 
       all_combinations <- combn(1:length(self$lines), 2)
       intersect_points <- c()
@@ -236,9 +237,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$clear_observations()
         }
 
+    private$split_line_initial()
     }
     if(tolerance$vertex_line > 0){
-        initial_edges <- self$E
         private$addinfo <- TRUE
         if(tolerance$buffer_vertex_line == 0){
           y_tmp <- rep(NA, nrow(self$V))
@@ -262,12 +263,16 @@ metric_graph <-  R6::R6Class("metric_graph",
             intersect_points <- as.matrix(intersect_points)
             rownames(intersect_points) <- NULL
             colnames(intersect_points) <- NULL
+
             PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
                                               tolerance = tolerance$line_line)
+                                           
             PtE_tmp <- unique(PtE_tmp)
+
             y_tmp <- rep(NA, nrow((PtE_tmp)))
             data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
                                   distance_on_edge = PtE_tmp[,2])
+                        
             self$add_observations(data = data_tmp, edge_number = "edge_number",
                                           distance_on_edge = "distance_on_edge",
                                           normalized = TRUE)
@@ -276,6 +281,7 @@ metric_graph <-  R6::R6Class("metric_graph",
             added_vertices <- private$initial_added_vertex
             split_lines <- private$initial_line_added
             new_lines <- list()
+
             count <- 1
             for(j in 1:(length(self$lines))){
               if(j %in% split_lines){
@@ -1863,8 +1869,11 @@ metric_graph <-  R6::R6Class("metric_graph",
                                        normalized=TRUE)
       }
       PtE <- LtE
+
       for (ind in unique(LtE[, 1])) {
+
         Es_ind <- which(self$LtE[ind, ] > 0)
+
         index.p <- which(LtE[, 1] == ind)
         for (j in index.p) {
           E_ind <- which.min(replace(self$ELend[Es_ind],
@@ -1930,6 +1939,85 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$initial_line_added = NULL
     private$addinfo = FALSE
   },
+
+  get_list_coords = function(pos, line1, line2){
+          new_lines <- c()
+          for(i in 1:length(self$lines)){
+            if(i!=pos){
+              line_coords <- coordinates(self$lines[i])[[1]][[1]]
+              new_lines <- c(new_lines, Lines(list(Line(line_coords)), ID = as.character(i)))
+            } else{
+              new_lines <- c(new_lines, line1)
+            }
+          }
+          if(!is.null(line2)){
+            new_lines <- c(new_lines, line2)
+          }
+          return(new_lines)    
+  },
+
+
+  # Split line
+
+  split_line_initial = function(){
+           added_vertices <- private$initial_added_vertex
+            split_lines <- private$initial_line_added
+            new_lines <- list()
+            count <- length(self$lines)+1
+            for(j in 1:(length(self$lines))){
+              if(j %in% split_lines){
+                idx_vert <- which(j == split_lines)
+                  for(i in idx_vert){
+                    line_coords <- coordinates(self$lines[split_lines[i]])[[1]][[1]]
+                    if(nrow(line_coords)> 2){
+                      closest_coord <- which.min(sapply(1:nrow(line_coords), function(j){
+                          (self$V[added_vertices[i],1]-line_coords[j,1])^2 + (self$V[added_vertices[i],2] - line_coords[j,2])^2
+                      }))
+                    } else{
+                      closest_coord <- 1
+                    }
+
+                    coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
+                    line1 <- Lines(list(Line(coords1)), ID = as.character(j))
+                    
+                    if(closest_coord < nrow(line_coords)){
+                      coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
+                      line2 <- Lines(list(Line(coords2)), ID = as.character(count))
+                    } else{
+                      line2 <- NULL
+                    }
+                    self$lines <- SpatialLines(private$get_list_coords(j, line1, line2))
+                    count <- count + 1
+              }
+            } 
+            }
+            # print(self$lines)
+            # print(self$V)
+            # private$line_to_vertex(tolerance = 0,
+            #                longlat = longlat)
+            # self$LtE <- Matrix::sparseMatrix(j = 1:dim(self$E)[1],
+            #                          i = c(1:length(self$lines)),
+            #                          x = rep(1,dim(self$E)[1]),
+            #                          dims = c(dim(self$E)[1],
+            #                                   length(self$lines)))
+            # print(self$LtE)
+            tmp_graph <- metric_graph$new(lines = self$lines,
+                                         tolerance = list(vertex_vertex = 0,
+                                                 vertex_line = 0,
+                                                 line_line = 0))
+            
+             self$lines <- tmp_graph$lines
+             self$LtE <- tmp_graph$LtE
+             self$V <- tmp_graph$V
+             self$E <- tmp_graph$E
+             self$edge_lengths <- tmp_graph$edge_lengths
+             self$EID <- tmp_graph$EID
+             self$ELend <- tmp_graph$ELend
+             self$ELstart <- tmp_graph$ELstart
+
+          self$clear_observations()
+          private$clear_initial_info()
+  },    
 
   # Temp PtE
 
