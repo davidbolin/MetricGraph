@@ -221,7 +221,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       if(!is.null(intersect_points)){
         PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
-                                                  tolerance = tolerance$line_line)
+                                                  tolerance = tolerance$vertex_vertex)
         PtE_tmp <- unique(PtE_tmp)
       } else{
         PtE_tmp <- NULL
@@ -239,9 +239,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$clear_observations()
         }
 
-    private$split_line_initial()
     }
     if(tolerance$vertex_line > 0){
+
         private$addinfo <- TRUE
         if(tolerance$buffer_vertex_line == 0){
           y_tmp <- rep(NA, nrow(self$V))
@@ -280,52 +280,56 @@ metric_graph <-  R6::R6Class("metric_graph",
                                           normalized = TRUE)
             self$observation_to_vertex(tolerance = tolerance$vertex_line + 1e-15)
         }
-            added_vertices <- private$initial_added_vertex
-            split_lines <- private$initial_line_added
-            new_lines <- list()
+          self$clear_observations()
+    }
 
-            count <- 1
-            for(j in 1:(length(self$lines))){
-              if(j %in% split_lines){
-                idx_vert <- which(j == split_lines)
-                  for(i in idx_vert){
-                    line_coords <- coordinates(self$lines[split_lines[i]])[[1]][[1]]
-                    closest_coord <- which.min(sapply(1:nrow(line_coords), function(j){
-                          (self$V[added_vertices[i],1]-line_coords[j,1])^2 + (self$V[added_vertices[i],2] - line_coords[j,2])^2
-                    }))
-                    if(closest_coord < nrow(line_coords)){
-                      coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
-                      coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
-                      new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
-                                        Lines(list(Line(coords2)), ID = as.character(count+1)))
-                      count <- count + 2
-                    } else{
-                      coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
-                      coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[nrow(line_coords),],ncol=2))
-                      new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
-                                        Lines(list(Line(coords2)), ID = as.character(count+1)))
-                      count <- count + 2
-                    }
+    if(private$addinfo){
+            # added_vertices <- private$initial_added_vertex
+            # split_lines <- private$initial_line_added
+            # new_lines <- list()
+
+            # count <- 1
+            # for(j in 1:(length(self$lines))){
+            #   if(j %in% split_lines){
+            #     idx_vert <- which(j == split_lines)
+            #       for(i in idx_vert){
+            #         line_coords <- coordinates(self$lines[split_lines[i]])[[1]][[1]]
+            #         closest_coord <- which.min(sapply(1:nrow(line_coords), function(j){
+            #               (self$V[added_vertices[i],1]-line_coords[j,1])^2 + (self$V[added_vertices[i],2] - line_coords[j,2])^2
+            #         }))
+            #         if(closest_coord < nrow(line_coords)){
+            #           coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
+            #           coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
+            #           new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
+            #                             Lines(list(Line(coords2)), ID = as.character(count+1)))
+            #           count <- count + 2
+            #         } else{
+            #           coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
+            #           coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[nrow(line_coords),],ncol=2))
+            #           new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
+            #                             Lines(list(Line(coords2)), ID = as.character(count+1)))
+            #           count <- count + 2
+            #         }
 
 
-              }
-            } else{
-              line_coords <- coordinates(self$lines[j])[[1]][[1]]
-              new_lines <- c(new_lines, Lines(list(Line(line_coords)), ID = as.character(count)))
-              count <- count + 1
-            }
-            }
-            self$lines <- SpatialLines(new_lines)
-            private$line_to_vertex(tolerance = 0,
-                           longlat = longlat)
+            #   }
+            # } else{
+            #   line_coords <- coordinates(self$lines[j])[[1]][[1]]
+            #   new_lines <- c(new_lines, Lines(list(Line(line_coords)), ID = as.character(count)))
+            #   count <- count + 1
+            # }
+            # }
+            # # self$lines <- SpatialLines(new_lines)
+            # # private$line_to_vertex(tolerance = 0,
+            # #                longlat = longlat)
             # self$LtE <- Matrix::sparseMatrix(j = 1:dim(self$E)[1],
             #                          i = c(1:length(self$lines)),
             #                          x = rep(1,dim(self$E)[1]),
             #                          dims = c(dim(self$E)[1],
             #                                   length(self$lines)))
             # self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-          self$clear_observations()
-          private$clear_initial_info()
+            private$split_line_initial()
+            private$clear_initial_info()
     }
 
     private$initial_graph <- self$clone()
@@ -1997,8 +2001,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                       coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
                       line2 <- Lines(list(Line(coords2)), ID = as.character(count))
                     } else{
-                      coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[ nrow(line_coords),],ncol=2))
-                      line2 <- Lines(list(Line(coords2)), ID = as.character(count))
+                      line2 <- NULL
                     }
                     self$lines <- SpatialLines(private$get_list_coords(j, line1, line2))
                     count <- count + 1
@@ -2016,10 +2019,9 @@ metric_graph <-  R6::R6Class("metric_graph",
             #                                   length(self$lines)))
             # print(self$LtE)
             tmp_graph <- metric_graph$new(lines = self$lines,
-                                         tolerance = list(vertex_vertex = private$tolerance$vertex_vertex,
+                                         tolerance = list(vertex_vertex = 0,
                                                  vertex_line = 0,
                                                  line_line = 0))
-            
              self$lines <- tmp_graph$lines
              self$LtE <- tmp_graph$LtE
              self$V <- tmp_graph$V
