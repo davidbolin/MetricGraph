@@ -40,7 +40,6 @@ graph$plot()
 
 # test line line
 
-#half circle line
 line1 <- Line(rbind(c(1,0),c(2,0)))
 line2 <- Line(rbind(c(1.5,-1),c(1.5,1)))
 theta <- seq(from=pi,to=2*pi,length.out = 50)
@@ -53,10 +52,23 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line4),ID="4")))
 plot(lines)
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.05,
-                                                  vertex_line = 0.05,
-                                                  line_line = 0.15))
+                                                  vertex_line = 0.05))
 graph$plot()
 
+#half circle line
+line1 <- Line(rbind(c(1,0),c(2,0)))
+line2 <- Line(rbind(c(1.5,-1),c(1.5,1)))
+theta <- seq(from=pi,to=2*pi,length.out = 50)
+line3 <- Line(cbind(1.05+sin(theta),cos(theta)))
+line4 <- Line(rbind(c(0,1),c(0,-1)))
+
+lines = SpatialLines(list(Lines(list(line1),ID="1"),
+                          Lines(list(line2),ID="2"),
+                          Lines(list(line3),ID="3"),
+                          Lines(list(line4),ID="4")))
+plot(lines)
+graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.05))
+graph$plot()
 
 # circle line
 line1 <- Line(rbind(c(-0.5,0),c(1,0)))
@@ -68,11 +80,19 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line2),ID="2"),
                           Lines(list(line3),ID="3")))
 plot(lines)
-graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2,
-                                                  vertex_line = 0.2,
-                                                  line_line = 0.2))
+graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
 graph$plot()
 
+
+#circle line intersect
+theta <- seq(from=0,to=2*pi,length.out = 50)
+line1 <- Line(cbind(sin(theta),cos(theta)))
+line2 <- Line(rbind(c(-0.75,1),c(-0.75,-1)))
+lines = SpatialLines(list(Lines(list(line1),ID="1"),
+                          Lines(list(line2),ID="2")))
+plot(lines)
+graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
+graph$plot()
 
 #complicated with multiple circles
 theta <- seq(from=0,to=2*pi,length.out = 50)
@@ -87,5 +107,6 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line4),ID="4"),
                           Lines(list(line5),ID="5")))
 plot(lines)
-graph <- metric_graph$new(lines, tolerance = list(line_line = 0.3))
+graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.1))
 graph$plot()
+

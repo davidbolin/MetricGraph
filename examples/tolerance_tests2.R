@@ -58,21 +58,14 @@ find_line_line_points <- function(graph, tol) {
             p <- matrix(coord_tmp[k,],1,2)
             #add points if they are not close to V or previous points
             if(min(spDists(graph$V, p))>tol) {
-              #if(is.null(points_add)) {
               p_cur <- rbind(p_cur,p)
-                p2 <- snapPointsToLines(SpatialPoints(p),graph$lines[i])
-                points_add <- rbind(points_add, p, coordinates(p2))
-                points_add_PtE <- rbind(points_add_PtE,
-                                        c(i,gProject(graph$lines[i],
-                                                     SpatialPoints(p))),
-                                        c(j,gProject(graph$lines[j],SpatialPoints(p))))
-              #} else if (min(spDists(points_add, p))>tol) {
-                #  p2 <- snapPointsToLines(SpatialPoints(p),graph$lines[i])
-                #points_add <- rbind(points_add, p, coordinates(p2))
-                #points_add_PtE <- rbind(points_add_PtE,
-                #                        c(i,gProject(graph$lines[i],SpatialPoints(p))),
-                #                        c(j,gProject(graph$lines[j],SpatialPoints(p))))
-                #}
+              p2 <- snapPointsToLines(SpatialPoints(p),graph$lines[i])
+              points_add <- rbind(points_add, p, coordinates(p2))
+              points_add_PtE <- rbind(points_add_PtE,
+                                      c(i,gProject(graph$lines[i],
+                                                   SpatialPoints(p))),
+                                      c(j,gProject(graph$lines[j],SpatialPoints(p))))
+
             }
           }
         }
@@ -89,26 +82,21 @@ find_line_line_points <- function(graph, tol) {
             }
             #add points if they are not close to V or previous points
             if(min(spDists(graph$V, p))>tol) {
-               if(gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
+              if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
                 p2 <- snapPointsToLines(SpatialPoints(p),graph$lines[i])
                 points_add <- rbind(points_add, p, coordinates(p2))
                 points_add_PtE <- rbind(points_add_PtE,
                                         c(i,gProject(graph$lines[i],SpatialPoints(p))),
                                         c(j,gProject(graph$lines[j],SpatialPoints(p))))
-                #  } else if (min(spDists(points_add, p))>tol) {
-                #   p2 <- snapPointsToLines(SpatialPoints(p),graph$lines[i])
-                #    points_add <- rbind(points_add, p, coordinates(p2))
-                #   points_add_PtE <- rbind(points_add_PtE,
-                #                           c(i,gProject(graph$lines[i],SpatialPoints(p))),
-                #                           c(j,gProject(graph$lines[j],SpatialPoints(p))))
-                  }
+
+              }
             }
           }
         }
       }
     }
   }
-return(list(points = points_add, PtE = points_add_PtE))
+  return(list(points = points_add, PtE = points_add_PtE))
 }
 
 line1 <- Line(rbind(c(1,0),c(2,0)))
