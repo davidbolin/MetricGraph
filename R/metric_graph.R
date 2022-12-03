@@ -204,8 +204,12 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
       }
 
-      intersect_points <- unique(intersect_points)
-      intersect_points <- as.matrix(intersect_points)
+      print("A")
+      if(!is.null(intersect_points)){
+            intersect_points <- unique(intersect_points)
+            intersect_points <- as.matrix(intersect_points)
+      }
+
 
       rows_ <- function(x){
             paste0(x[,1], x[,2])
@@ -218,6 +222,8 @@ metric_graph <-  R6::R6Class("metric_graph",
           intersect_points <- NULL
         }
       }
+
+                          print("PtE_tmp")
 
       #intersect_points <- rbind(intersect_points, self$V)
 
@@ -2034,7 +2040,8 @@ metric_graph <-  R6::R6Class("metric_graph",
             tmp_graph <- metric_graph$new(lines = self$lines,
                                          tolerance = list(vertex_vertex = 0,
                                                  vertex_line = 0,
-                                                 line_line = 0))
+                                                 line_line = 0),
+                                                 check_connected = FALSE)
              self$lines <- tmp_graph$lines
              self$LtE <- tmp_graph$LtE
              self$V <- tmp_graph$V
