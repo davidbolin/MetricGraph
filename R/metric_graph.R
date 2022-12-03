@@ -149,6 +149,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       tolerance$buffer_vertex_line <- max(tolerance$vertex_line/2 - 1e-10,0)
     }
 
+    private$tolerance <- tolerance
+
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
@@ -294,6 +296,12 @@ metric_graph <-  R6::R6Class("metric_graph",
                     if(closest_coord < nrow(line_coords)){
                       coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
                       coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
+                      new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
+                                        Lines(list(Line(coords2)), ID = as.character(count+1)))
+                      count <- count + 2
+                    } else{
+                      coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
+                      coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[nrow(line_coords),],ncol=2))
                       new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
                                         Lines(list(Line(coords2)), ID = as.character(count+1)))
                       count <- count + 2
@@ -1989,7 +1997,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                       coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
                       line2 <- Lines(list(Line(coords2)), ID = as.character(count))
                     } else{
-                      line2 <- NULL
+                      coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[ nrow(line_coords),],ncol=2))
+                      line2 <- Lines(list(Line(coords2)), ID = as.character(count))
                     }
                     self$lines <- SpatialLines(private$get_list_coords(j, line1, line2))
                     count <- count + 1
@@ -2007,7 +2016,7 @@ metric_graph <-  R6::R6Class("metric_graph",
             #                                   length(self$lines)))
             # print(self$LtE)
             tmp_graph <- metric_graph$new(lines = self$lines,
-                                         tolerance = list(vertex_vertex = 0,
+                                         tolerance = list(vertex_vertex = private$tolerance$vertex_vertex,
                                                  vertex_line = 0,
                                                  line_line = 0))
             
