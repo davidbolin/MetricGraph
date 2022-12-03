@@ -233,20 +233,23 @@ metric_graph <-  R6::R6Class("metric_graph",
                                         distance_on_edge = "distance_on_edge",
                                         normalized = TRUE)
           self$observation_to_vertex(tolerance = tolerance$line_line + 1e-15)
-          # private$remove_tiny_loops(edge_lengths = 2 * tolerance$line_line + 1e-15)
           self$clear_observations()
         }
 
     }
     if(tolerance$vertex_line > 0){
         if(tolerance$buffer_vertex_line == 0){
+          private$addinfo <- TRUE
           y_tmp <- rep(NA, nrow(self$V))
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
           self$add_observations(data = data_tmp, data_coords = "euclidean")
           self$observation_to_vertex(tolerance = tolerance$vertex_line)
           self$clear_observations()
+          private$clear_initial_info()
         } else{
+          private$addinfo <- TRUE
+          initial_edges <- self$E
           intersect_points <- c()
           for(i in 1:self$nV){
             tmp_point <- SpatialPoints(matrix(self$V[i,], ncol=2))
@@ -255,7 +258,8 @@ metric_graph <-  R6::R6Class("metric_graph",
             intersect_tmp <- rgeos::gIntersection(tmp_point,
                                             self$lines)
             intersect_tmp <-coordinates(intersect_tmp)
-            intersect_points <- rbind(intersect_points, intersect_tmp[[1]][[1]])
+            intersect_tmp <- do.call(rbind, intersect_tmp[[1]])
+            intersect_points <- rbind(intersect_points, intersect_tmp)
           }
             intersect_points <- unique(intersect_points)
             intersect_points <- as.matrix(intersect_points)
@@ -271,8 +275,38 @@ metric_graph <-  R6::R6Class("metric_graph",
                                           distance_on_edge = "distance_on_edge",
                                           normalized = TRUE)
             self$observation_to_vertex(tolerance = tolerance$vertex_line + 1e-15)
-            # private$remove_tiny_loops(edge_lengths = 2 * tolerance$vertex_line + 1e-15)
             self$clear_observations()
+            added_vertices <- private$initial_added_vertex
+            split_lines <- private$initial_line_added
+            new_lines <- list()
+            count <- 1
+            for(j in 1:(length(self$lines))){
+              if(j %in% split_lines){
+                idx_vert <- which(j == split_lines)
+                  for(i in idx_vert){
+                    line_coords <- coordinates(self$lines[split_lines[i]])[[1]][[1]]
+                    closest_coord <- which.min(sapply(1:nrow(line_coords), function(j){
+                          (self$V[added_vertices[i],1]-line_coords[j,1])^2 + (self$V[added_vertices[i],2] - line_coords[j,2])^2
+                    }))
+                    coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
+                    coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
+                    new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
+                                      Lines(list(Line(coords2)), ID = as.character(count+1)))
+                    count <- count + 2
+              }
+            } else{
+              line_coords <- coordinates(self$lines[j])[[1]][[1]]
+              new_lines <- c(new_lines, Lines(list(Line(line_coords)), ID = as.character(count)))
+              count <- count + 1
+            }
+            }
+            tmp_graph <- metric_graph$new(lines = SpatialLines(new_lines),
+                                        tolerance = list(vertex_vertex = 0,
+                                                vertex_line = 0,
+                                                line_line = 0))
+            self$lines <- tmp_graph$lines
+            self$LtE <- tmp_graph$LtE
+            private$clear_initial_info()
         }
     }
 
@@ -1319,6 +1353,11 @@ metric_graph <-  R6::R6Class("metric_graph",
         LtE.x_new <- LinesPos[j,2]
         large <- LtE.x[index] > t
 
+        if(private$addinfo){
+          private$initial_added_vertex <- c(private$initial_added_vertex, newV)
+          private$initial_line_added <- c(private$initial_line_added, LtE.i_new+1)
+        }
+
         n.p <- length(self$LtE@p)
         if(sum(large)>1){
           index.rem = index[large]
@@ -1870,25 +1909,27 @@ metric_graph <-  R6::R6Class("metric_graph",
     
   },
 
-  # # Remove tiny loops created by buffering
+  # Vertex added in the initial processing
 
-  # remove_tiny_loops = function(edge_lengths){
-  #   loops <- sapply(1:self$nE, function(i){
-  #     self$E[i,1] == self$E[i,2]
-  #   })
-  #   if(sum(loops) > 0){
-  #     loops <- loops * (self$edge_lengths <= edge_lengths + 1e-15)
-  #     self$E <- self$E[!loops,]
-  #     self$LtE <- self$LtE[,!loops]
-  #     self$nE <- self$nE - sum(loops)
-  #     self$edge_lengths <- self$edge_lengths[!loops]
-  #   }
-  # },
+  initial_added_vertex = NULL,
 
+  # Initial line it was added
+
+  initial_line_added = NULL,
 
   # Initial graph
 
   initial_graph = NULL,
+
+  # should the information be saved when splitting edges?
+
+  addinfo = FALSE,
+
+  clear_initial_info = function(){
+    private$initial_added_vertex = NULL
+    private$initial_line_added = NULL
+    private$addinfo = FALSE
+  },
 
   # Temp PtE
 
