@@ -144,7 +144,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(is.null(tolerance$buffer_line_line)){
       tolerance$buffer_line_line <- max(tolerance$line_line/2 - 1e-10,0)
     }
-  
+
     if(is.null(tolerance$buffer_vertex_line)){
       tolerance$buffer_vertex_line <- max(tolerance$vertex_line/2 - 1e-10,0)
     }
@@ -175,7 +175,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       self$lines <- SpatialLines(lines)
     }
-    self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
     private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = longlat)
 
@@ -279,15 +278,15 @@ metric_graph <-  R6::R6Class("metric_graph",
             # PtE_tmp_tol[,1] <- PtE_tmp[1:(nrow(PtE_tmp)-1),1]
             # # print(PtE_tmp_tol)
             # PtE_tmp <- PtE_tmp[c(TRUE, (PtE_tmp_tol[,3] * PtE_tmp_tol[,2] > tolerance$vertex_vertex)),]
-            
+
             # print(PtE_tmp)
 
             y_tmp <- rep(NA, nrow((PtE_tmp)))
             data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
                                   distance_on_edge = PtE_tmp[,2])
-            
+
             # print(data_tmp)
-                        
+
 
           if(!is.null(PtE_tmp)){
           y_tmp <- rep(NA, nrow((PtE_tmp)))
@@ -501,7 +500,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Gets the degrees of the vertices
-  
+
   get_degrees = function(){
     degrees <- rep(0,self$nV)
     for(i in 1:self$nV) {
@@ -1604,12 +1603,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   line_to_vertex = function(tolerance = 0, longlat = FALSE) {
     lines <- c()
     for(i in 1:length(self$lines)){
-      tmp <- self$lines@lines[[i]]@Lines[[1]]@coords
-      self$lines@lines[[i]]@Lines[[1]]@coords <- tmp
+      #tmp <- self$lines@lines[[i]]@Lines[[1]]@coords
+      #self$lines@lines[[i]]@Lines[[1]]@coords <- tmp
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
-      #lines contain [line index, start point, line length
-      #               line index, end point, line length]
+      #lines contain [line index, start point,
+      #               line index, end point]
       lines <- rbind(lines, c(i, points[1,]), c(i, points[n,]))
     }
 
@@ -1621,12 +1620,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       i.min <- which.min(dists[i, 1:(i-1)])
       if (dists[i, i.min] > tolerance) {
         vertex <- rbind(vertex, lines[i, ])
-      } else if (lines[i, 1] == lines[i.min, 1]) {
-        vertex <- rbind(vertex, lines[i, ])
-      }
+      } #else if (lines[i, 1] == lines[i.min, 1] && lines[i,]) {
+        #vertex <- rbind(vertex, lines[i, ])
+      #}
     }
     #lvl = c(line index, vertex number of start, vertex number of end, length])
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
+    k=1
+    lines_keep_id <- NULL
     for (i in 1:max(lines[, 1])) {
       which.line <- sort(which(lines[, 1] == i))
       line <- lines[which.line, ]
@@ -1641,8 +1642,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       i.e <- dim(self$lines@lines[[i]]@Lines[[1]]@coords)[1]
       self$lines@lines[[i]]@Lines[[1]]@coords[i.e,] <- vertex[ind2, 2:3]
       ll <- LineLength(self$lines@lines[[i]]@Lines[[1]], longlat = longlat)
-      lvl[i,] <- c(i, ind1, ind2, ll)
+      if(ll > tolerance) {
+        lvl[k,] <- c(i, ind1, ind2, ll)
+        k=k+1
+        lines_keep_id <- c(lines_keep_id, i)
+      }
     }
+    lvl <- lvl[1:(k-1),]
+    self$lines <- self$lines[lines_keep_id]
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
@@ -1655,6 +1662,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                               length(self$lines)))
     self$ELend <- rep(1, dim(self$E)[1])
     self$ELstart <- rep(0, dim(self$E)[1])
+    self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
   },
 
   #Compute PtE for mesh given PtE for graph
@@ -1949,7 +1957,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   # It will not remove the vertex if it is the only vertex of the graph
 
   remove_vertex_degree2_different_lines = function(){
-    
+
   },
 
   # Vertex added in the initial processing
@@ -1987,7 +1995,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           if(!is.null(line2)){
             new_lines <- c(new_lines, line2)
           }
-          return(new_lines)    
+          return(new_lines)
   },
 
 
@@ -2013,7 +2021,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
                     coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertices[i],],ncol=2))
                     line1 <- Lines(list(Line(coords1)), ID = as.character(j))
-                    
+
                     if(closest_coord < nrow(line_coords)){
                       coords2 <- rbind(matrix(self$V[added_vertices[i],], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
                       line2 <- Lines(list(Line(coords2)), ID = as.character(count))
@@ -2023,7 +2031,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                     self$lines <- SpatialLines(private$get_list_coords(j, line1, line2))
                     count <- count + 1
               }
-            } 
+            }
             }
             # print(self$lines)
             # print(self$V)
@@ -2051,7 +2059,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
           self$clear_observations()
           private$clear_initial_info()
-  },    
+  },
 
   # Temp PtE
 
