@@ -299,8 +299,13 @@ metric_graph <-  R6::R6Class("metric_graph",
             }
             }
             self$lines <- SpatialLines(new_lines)
-            private$line_to_vertex(tolerance = 0,
-                           longlat = longlat)
+            # private$line_to_vertex(tolerance = 0,
+            #                longlat = longlat)
+            self$LtE <- Matrix::sparseMatrix(j = 1:dim(self$E)[1],
+                                     i = c(1:length(self$lines)),
+                                     x = rep(1,dim(self$E)[1]),
+                                     dims = c(dim(self$E)[1],
+                                              length(self$lines)))
           self$clear_observations()
           private$clear_initial_info()
     }
