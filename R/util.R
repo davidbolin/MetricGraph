@@ -451,7 +451,8 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
           mode_vector <- typeof(new_data[[col_name]])
           tmp <- vector(mode=mode_vector, length = nrow(data_coords))
           is.na(tmp) <- 1:length(tmp)
-           for(i in 1:length(idx_new_entries)){
+          #  for(i in 1:length(idx_new_entries)){
+            for(i in 1:length(new_data[[col_name]])){
                tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
             }
             return(tmp)
