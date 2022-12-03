@@ -447,6 +447,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
+    list_result[["__edge_number"]] <- NULL
+    list_result[["__distance_on_edge"]] <- NULL
+    list_result[["__group"]] <- NULL
     new_data <- lapply(list_result, function(col_name){
           mode_vector <- typeof(new_data[[col_name]])
           tmp <- vector(mode=mode_vector, length = nrow(data_coords))

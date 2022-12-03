@@ -151,6 +151,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     private$tolerance <- tolerance
 
+    PtE_tmp_line_line <- NULL
+    PtE_tmp_line_vertex <- NULL
+
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
@@ -221,24 +224,13 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       if(!is.null(intersect_points)){
         PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
-                                                  tolerance = tolerance$vertex_vertex)
+                                                  tolerance = tolerance$line_line)
         PtE_tmp <- unique(PtE_tmp)
       } else{
         PtE_tmp <- NULL
       }
 
-
-        if(!is.null(PtE_tmp)){
-          y_tmp <- rep(NA, nrow((PtE_tmp)))
-          data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
-                                distance_on_edge = PtE_tmp[,2])
-          self$add_observations(data = data_tmp, edge_number = "edge_number",
-                                        distance_on_edge = "distance_on_edge",
-                                        normalized = TRUE)
-          self$observation_to_vertex(tolerance = tolerance$line_line + 1e-15)
-          self$clear_observations()
-        }
-
+      PtE_tmp_line_line <- PtE_tmp
     }
     if(tolerance$vertex_line > 0){
 
@@ -247,8 +239,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           y_tmp <- rep(NA, nrow(self$V))
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
-          self$add_observations(data = data_tmp, data_coords = "euclidean")
-          self$observation_to_vertex(tolerance = tolerance$vertex_line)
+          PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
+                                              tolerance = tolerance$vertex_line)
+          PtE_tmp_line_vertex <- PtE_tmp
         } else{
           intersect_points <- c()
           for(i in 1:self$nV){
@@ -267,23 +260,43 @@ metric_graph <-  R6::R6Class("metric_graph",
             colnames(intersect_points) <- NULL
 
             PtE_tmp <- private$coordinates_multiple_snaps(XY = matrix(intersect_points,ncol=2),
-                                              tolerance = tolerance$line_line)
-                                           
+                                              tolerance = tolerance$vertex_line)
+            PtE_tmp_line_vertex <- PtE_tmp
+        }
+    }
+
+    if(private$addinfo){
+            PtE_tmp <- rbind(PtE_tmp_line_line, PtE_tmp_line_vertex)
             PtE_tmp <- unique(PtE_tmp)
+            PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),]
+
+            PtE_tmp_tol <- cbind(PtE_tmp[2:nrow(PtE_tmp),1], diff(PtE_tmp[,2]))
+            PtE_tmp_tol <- cbind(PtE_tmp_tol, self$edge_lengths[PtE_tmp_tol[,1]])
+            PtE_tmp_tol <- abs(PtE_tmp_tol)
+            PtE_tmp_tol[,1] <- PtE_tmp[1:(nrow(PtE_tmp)-1),1]
+            # print(PtE_tmp_tol)
+            PtE_tmp <- PtE_tmp[c(TRUE, (PtE_tmp_tol[,3] * PtE_tmp_tol[,2] > tolerance$vertex_vertex)),]
+            
+            # print(PtE_tmp)
 
             y_tmp <- rep(NA, nrow((PtE_tmp)))
             data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
                                   distance_on_edge = PtE_tmp[,2])
+            
+            # print(data_tmp)
                         
-            self$add_observations(data = data_tmp, edge_number = "edge_number",
-                                          distance_on_edge = "distance_on_edge",
-                                          normalized = TRUE)
-            self$observation_to_vertex(tolerance = tolerance$vertex_line + 1e-15)
-        }
-          self$clear_observations()
-    }
 
-    if(private$addinfo){
+          if(!is.null(PtE_tmp)){
+          y_tmp <- rep(NA, nrow((PtE_tmp)))
+          data_tmp = data.frame(y = y_tmp, edge_number = PtE_tmp[,1],
+                                distance_on_edge = PtE_tmp[,2])
+          self$add_observations(data = data_tmp, edge_number = "edge_number",
+                                        distance_on_edge = "distance_on_edge",
+                                        normalized = TRUE)
+          self$observation_to_vertex(tolerance = tolerance$vertex_vertex + 1e-15)
+          self$clear_observations()
+        }
+
             # added_vertices <- private$initial_added_vertex
             # split_lines <- private$initial_line_added
             # new_lines <- list()
