@@ -238,18 +238,15 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     }
     if(tolerance$vertex_line > 0){
+        initial_edges <- self$E
+        private$addinfo <- TRUE
         if(tolerance$buffer_vertex_line == 0){
-          private$addinfo <- TRUE
           y_tmp <- rep(NA, nrow(self$V))
           data_tmp = data.frame(y = y_tmp, coord_x = self$V[,1],
                                 coord_y = self$V[,2])
           self$add_observations(data = data_tmp, data_coords = "euclidean")
           self$observation_to_vertex(tolerance = tolerance$vertex_line)
-          self$clear_observations()
-          private$clear_initial_info()
         } else{
-          private$addinfo <- TRUE
-          initial_edges <- self$E
           intersect_points <- c()
           for(i in 1:self$nV){
             tmp_point <- SpatialPoints(matrix(self$V[i,], ncol=2))
@@ -275,7 +272,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                           distance_on_edge = "distance_on_edge",
                                           normalized = TRUE)
             self$observation_to_vertex(tolerance = tolerance$vertex_line + 1e-15)
-            self$clear_observations()
+        }
             added_vertices <- private$initial_added_vertex
             split_lines <- private$initial_line_added
             new_lines <- list()
@@ -293,6 +290,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                     new_lines <- c(new_lines, Lines(list(Line(coords1)), ID = as.character(count)),
                                       Lines(list(Line(coords2)), ID = as.character(count+1)))
                     count <- count + 2
+
               }
             } else{
               line_coords <- coordinates(self$lines[j])[[1]][[1]]
@@ -300,14 +298,11 @@ metric_graph <-  R6::R6Class("metric_graph",
               count <- count + 1
             }
             }
-            tmp_graph <- metric_graph$new(lines = SpatialLines(new_lines),
-                                        tolerance = list(vertex_vertex = 0,
-                                                vertex_line = 0,
-                                                line_line = 0))
-            self$lines <- tmp_graph$lines
-            self$LtE <- tmp_graph$LtE
-            private$clear_initial_info()
-        }
+            self$lines <- SpatialLines(new_lines)
+            private$line_to_vertex(tolerance = 0,
+                           longlat = longlat)
+          self$clear_observations()
+          private$clear_initial_info()
     }
 
     private$initial_graph <- self$clone()
