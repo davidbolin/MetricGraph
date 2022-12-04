@@ -1535,9 +1535,9 @@ metric_graph <-  R6::R6Class("metric_graph",
         p <- p + geom_point(data = data.frame(x = self$V[, 1],
                                               y = self$V[, 2],
                                               degree = degrees),
-                            mapping = aes(x, y, color = degree),
+                            mapping = aes(x, y, colour = factor(degree)),
                             size= marker_size, ...) +
-    scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+    scale_color_viridis(discrete = TRUE, guide_legend(title = ""))
       } else {
         p <- p + geom_point(data = data.frame(x = self$V[, 1],
                                               y = self$V[, 2]),
