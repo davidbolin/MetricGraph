@@ -105,13 +105,13 @@ add_vertices = function(self, PtE, tolerance = 1e-10) {
   e.u <- unique(PtE[,1])
   for (i in 1:length(e.u)) {
     dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
+    self$split_edge(e.u[i], dists[1], tolerance)
     if(length(dists)>1) {
+      dists_up <- dists
       for(j in 2:length(dists)){
-        dists[j] <- (dists[j] - dists[j-1])/(1 - dists[j-1])
+        dists_up[j] <- (dists[j] - dists[j-1])/(1 - dists[j-1])
+        self$split_edge(self$nE, dists_up[j], tolerance)
       }
-    }
-    for(j in 1:length(dists)){
-      self$split_edge(e.u[i], dists[j], tolerance)
     }
   }
   return(self)
@@ -170,7 +170,7 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
 plot(lines)
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
 graph$plot()
-points_add <- find_line_line_points(graph, tol = 0.05)
+points_add <- find_line_line_points(graph, tol = 0.1)
 PtE <- points_add$PtE
 PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
 graph <- add_vertices(graph, PtE, tolerance = 0.1)
@@ -193,12 +193,30 @@ graph <- add_vertices(graph, PtE, tolerance = 0.1)
 graph$plot(degree=TRUE)
 
 
+#two circles
+theta <- seq(from=0,to=2*pi,length.out = 50)
+line1 <- Line(cbind(sin(theta),cos(theta)))
+line2 <- Line(cbind(2.01+sin(theta),cos(theta)))
+line3 <- Line(rbind(c(-0.75,1),c(-0.75,-1)))
+lines = SpatialLines(list(Lines(list(line1),ID="1"),
+                          Lines(list(line2),ID="2"),
+                          Lines(list(line3),ID="3")))
+plot(lines)
+graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.1))
+graph$plot()
+points_add <- find_line_line_points(graph, tol = 0.1)
+PtE <- points_add$PtE
+PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
+graph <- add_vertices(graph, PtE, tolerance = 0.1)
+graph$plot(degree=TRUE)
+
+
 #complicated with multiple circles
 theta <- seq(from=0,to=2*pi,length.out = 50)
 line1 <- Line(cbind(sin(theta),cos(theta)))
-line2 <- Line(cbind(2.1+sin(theta),cos(theta)))
-line3 <- Line(cbind(4.3+sin(theta),cos(theta)))
-line4 <- Line(rbind(c(3.2,1),c(3.2,-1)))
+line2 <- Line(cbind(2.05+sin(theta),cos(theta)))
+line3 <- Line(cbind(4.15+sin(theta),cos(theta)))
+line4 <- Line(rbind(c(3.1,1),c(3.1,-1)))
 line5 <- Line(rbind(c(-0.75,1),c(-0.75,-1)))
 lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line2),ID="2"),
