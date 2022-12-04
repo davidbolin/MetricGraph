@@ -117,7 +117,6 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
-\item \href{#method-metric_graph-split_edge}{\code{metric_graph$split_edge()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
@@ -136,8 +135,7 @@ Create a new \code{metric_graph} object
   V = NULL,
   E = NULL,
   longlat = FALSE,
-  tolerance = list(vertex_vertex = 1e-10, vertex_line = 1e-10, line_line = 0,
-    buffer_line_line = 0),
+  tolerance = list(vertex_vertex = 1e-07, vertex_line = 1e-07, line_line = 0),
   check_connected = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -158,10 +156,10 @@ in Longitude/Latitude and that distances should be computed in km.}
 the graph:
 \itemize{
 \item \code{vertex_vertex} vertices that are closer than this number are merged
-(default = 1e-10).
+(default = 1e-7).
 \item \code{vertex_line} if a vertex at the end of one line is closer than this
 number to another line, this vertex is connected to that line
-(default = 1e-10)
+(default = 1e-7)
 \item \code{line_line} if two lines at some point are closer than this number, a new
 vertex is added at that point and the two lines are connected (default = 0)
 }
@@ -728,27 +726,6 @@ package 'plotly'.}
 }
 \subsection{Returns}{
 either a ggplot or a plot_ly object
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-split_edge"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-split_edge}{}}}
-\subsection{Method \code{split_edge()}}{
-function for splitting lines in the graph
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$split_edge(Ei, t, tolerance = 0)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{Ei}}{index of line to split}
-
-\item{\code{t}}{position on line to split (normalized)}
-
-\item{\code{tolerance}}{tolerance for merging overlapping vertices}
-}
-\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
