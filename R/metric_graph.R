@@ -1832,9 +1832,11 @@ metric_graph <-  R6::R6Class("metric_graph",
                                                       cbind(integer_id_line, nrow(self$LtE)+1))
 
         integer_id_line <- id_lines_of_interest[min_idx][[1]]
+        line_coords <- self$lines@lines[integer_id_line][[1]]@Lines[[1]]@coords
         closest_coord <- idx_min[min_idx]
-        if(nrow(line_coords) == 2){
-          closest_coord <- 1
+
+        if(closest_coord == nrow(line_coords)){
+          closest_coord <- closest_coord - 1
         }
 
 
@@ -1851,7 +1853,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       times_split <- sum(which(private$split_lines_ids_times[,1] == integer_id_line))
       private$split_lines_ids_times <- rbind(private$split_lines_ids_times, cbind(integer_id_line, 1))
-
 
         coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertex_id,],ncol=2))
                     line1 <- Lines(list(Line(coords1)), ID = id_line)

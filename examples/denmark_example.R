@@ -17,7 +17,12 @@ data <- osmdata_sp(call)
 
 Lines <- SpatialLines(data$osm_lines@lines)
 
+
+start <- Sys.time()
 graph <- metric_graph$new(lines = Lines)
+end <- Sys.time()
+print('Execution Time')
+print(end-start)
 
 #split circular edges (only needed for alpha = 2)
 if(0){
