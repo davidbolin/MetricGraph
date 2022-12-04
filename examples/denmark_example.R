@@ -15,7 +15,7 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway",
 
 data <- osmdata_sp(call)
 
-Lines <- largest_component(SpatialLines(data$osm_lines@lines))
+Lines <- SpatialLines(data$osm_lines@lines)
 
 graph <- metric_graph$new(lines = Lines)
 

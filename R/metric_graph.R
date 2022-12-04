@@ -145,10 +145,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       tolerance$buffer_line_line <- max(tolerance$line_line/2 - 1e-10,0)
     }
 
-    if(is.null(tolerance$buffer_vertex_line)){
-      tolerance$buffer_vertex_line <- max(tolerance$vertex_line/2 - 1e-10,0)
-    }
-
     private$tolerance <- tolerance
 
     PtE_tmp_line_line <- NULL
@@ -1685,14 +1681,22 @@ metric_graph <-  R6::R6Class("metric_graph",
       Spoints <- SpatialPoints(XY)
       coords_line <- c()
       coords_tmp <- c()
-      for(i in 1:length(self$lines)){
-        SP <- snapPointsToLines(Spoints, self$lines[i])
-        idx_tol <- (SP@data[["snap_dist"]] <= tolerance)
-        coords_line <- c(coords_line, SP@data[["nearest_line_id"]][idx_tol])
-        coords_tmp <- rbind(coords_tmp, SP@coords[idx_tol,])
-      }
 
+      within_dist <- gWithinDistance(Spoints, self$lines, dist = tolerance, byid = TRUE)
+
+      for(i in 1:length(self$lines)){
+        select_points <- matrix(XY[within_dist[i,],], ncol=2)
+        if(nrow(select_points) > 0){
+          SP_tmp <- SpatialPoints(select_points)
+          SP <- snapPointsToLines(SP_tmp, self$lines[i])
+          idx_tol <- (SP@data[["snap_dist"]] <= tolerance)
+          coords_line <- c(coords_line, SP@data[["nearest_line_id"]][idx_tol])
+          coords_tmp <- rbind(coords_tmp, SP@coords[idx_tol,])          
+        }
+      }
+      
       Spoints@coords = coords_tmp
+
       LtE = cbind(match(coords_line, self$EID), 0)
 
       for (ind in unique(LtE[, 1])) {
@@ -1701,7 +1705,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                                        normalized=TRUE)
       }
       PtE <- LtE
-
 
       for (ind in unique(LtE[, 1])) {
 
@@ -1849,38 +1852,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       times_split <- sum(which(private$split_lines_ids_times[,1] == integer_id_line))
       private$split_lines_ids_times <- rbind(private$split_lines_ids_times, cbind(integer_id_line, 1))
 
-      # check_orientation of the line
-      orient <- 0
-      for(i in 1:(nrow(line_coords)-1)){
-        orient <- orient + (line_coords[i+1,1] - line_coords[i,1])*(line_coords[i+1,2] + line_coords[i,2])
-      }
-      orient <- orient + (line_coords[1,1] - line_coords[nrow(line_coords),1]) * (line_coords[1,2] + line_coords[nrow(line_coords),2])
-
-
-      if(orient > 0){
-
-      if(closest_coord == nrow(line_coords)){
-          closest_coord <- closest_coord - 1
-      }
 
         coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertex_id,],ncol=2))
                     line1 <- Lines(list(Line(coords1)), ID = id_line)
 
         coords2 <- rbind(matrix(self$V[added_vertex_id,], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
                 line2 <- Lines(list(Line(coords2)), ID = paste0(id_line, "__", as.character(times_split+1)))
-      } else{
-
-        if(closest_coord == 1){
-          closest_coord <- closest_coord + 1
-        }
-
-        coords1 <- rbind(matrix(line_coords[1:(closest_coord-1),],ncol=2),matrix(self$V[added_vertex_id,],ncol=2))
-                    line1 <- Lines(list(Line(coords1)), ID = id_line)
-
-        coords2 <- rbind(matrix(self$V[added_vertex_id,], ncol=2), matrix(line_coords[closest_coord:nrow(line_coords),],ncol=2))
-                line2 <- Lines(list(Line(coords2)), ID = paste0(id_line, "__", as.character(times_split+1)))
-
-      }
 
         self$lines <- SpatialLines(private$get_list_coords(integer_id_line, line1, line2))
 
