@@ -115,8 +115,8 @@ graph2$plot()
 
 ## Tolerances for the merging vertices and lines
 The constructor of the graph has one argument `tolerance` which is used for connecting lines that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
-- `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-10`)
-- `vertex_line` if a vertex at the end of one line is closer than this number to another line, this vertex is connected to that line (the default value is `1e-10`)
+- `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
+- `vertex_line` if a vertex at the end of one line is closer than this number to another line, this vertex is connected to that line (the default value is `1e-7`)
 - `line_line` if two lines at some point are closer than this number, a new
 vertex is added at that point and the two lines are connected (the default value is `0` which means that the option is not used)
 
@@ -157,6 +157,7 @@ graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
                                                            line_line = 0.001))
 graph3$plot(degree = TRUE)
 ```
+
 ## Understanding coordinates on graphs
 
 The locations of the vertices are specified in Euclidean coordinates. However, 
