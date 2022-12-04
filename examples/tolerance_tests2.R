@@ -58,6 +58,7 @@ find_line_line_points <- function(graph, tol) {
             p <- matrix(coord_tmp[k,],1,2)
             #add points if they are not close to V or previous points
             if(min(spDists(graph$V, p))>tol) {
+
               p_cur <- rbind(p_cur,p)
               p2 <- snapPointsToLines(SpatialPoints(p),graph$lines[i])
               points_add <- rbind(points_add, p, coordinates(p2))
@@ -99,6 +100,23 @@ find_line_line_points <- function(graph, tol) {
   return(list(points = points_add, PtE = points_add_PtE))
 }
 
+add_vertices = function(self, PtE, tolerance = 1e-10) {
+
+  e.u <- unique(PtE[,1])
+  for (i in 1:length(e.u)) {
+    dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
+    if(length(dists)>1) {
+      for(j in 2:length(dists)){
+        dists[j] <- (dists[j] - dists[j-1])/(1 - dists[j-1])
+      }
+    }
+    for(j in 1:length(dists)){
+      self$split_edge(e.u[i], dists[j], tolerance)
+    }
+  }
+  return(self)
+}
+
 line1 <- Line(rbind(c(1,0),c(2,0)))
 line2 <- Line(rbind(c(1.5,-1),c(1.5,1)))
 theta <- seq(from=pi,to=2*pi,length.out = 50)
@@ -115,13 +133,11 @@ graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.05,
 graph$plot()
 
 points_add <- find_line_line_points(graph, tol = 0.1)
-data <- data.frame(edge_number = points_add$PtE[,1],
-                   distance_on_edge = points_add$PtE[,2],
-                   y = rep(0,dim(points_add$PtE)[1]))
-graph$add_observations(data = data)
-graph$plot(data = TRUE)
-graph$observation_to_vertex(tolerance = 0.1)
-graph$plot()
+PtE <- points_add$PtE
+PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
+graph <- add_vertices(graph, PtE, tolerance = 0.1)
+graph$plot(degree=TRUE)
+
 #half circle line
 line1 <- Line(rbind(c(1,0),c(2,0)))
 line2 <- Line(rbind(c(1.5,-1),c(1.5,1)))
@@ -136,13 +152,11 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
 plot(lines)
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.05))
 points_add <- find_line_line_points(graph, tol = 0.1)
-data <- data.frame(edge_number = points_add$PtE[,1],
-                   distance_on_edge = points_add$PtE[,2],
-                   y = rep(0,dim(points_add$PtE)[1]))
-graph$add_observations(data = data)
-graph$plot(data = TRUE)
-graph$observation_to_vertex(tolerance = 0.1)
-graph$plot()
+PtE <- points_add$PtE
+PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
+graph <- add_vertices(graph, PtE, tolerance = 0.1)
+graph$plot(degree=TRUE)
+
 
 # circle line
 line1 <- Line(rbind(c(-0.5,0),c(1,0)))
@@ -156,13 +170,10 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
 plot(lines)
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
 graph$plot()
-points_add <- find_line_line_points(graph, tol = 0.2)
-data <- data.frame(edge_number = points_add$PtE[,1],
-                   distance_on_edge = points_add$PtE[,2],
-                   y = rep(0,dim(points_add$PtE)[1]))
-graph$add_observations(data = data)
-graph$plot(data = TRUE)
-graph$observation_to_vertex(tolerance = 0.2)
+points_add <- find_line_line_points(graph, tol = 0.05)
+PtE <- points_add$PtE
+PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
+graph <- add_vertices(graph, PtE, tolerance = 0.1)
 graph$plot(degree=TRUE)
 
 
@@ -176,12 +187,9 @@ plot(lines)
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
 graph$plot()
 points_add <- find_line_line_points(graph, tol = 0.1)
-data <- data.frame(edge_number = points_add$PtE[,1],
-                   distance_on_edge = points_add$PtE[,2],
-                   y = rep(0,dim(points_add$PtE)[1]))
-graph$add_observations(data = data)
-graph$plot(data = TRUE)
-graph$observation_to_vertex(tolerance = 0.2)
+PtE <- points_add$PtE
+PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
+graph <- add_vertices(graph, PtE, tolerance = 0.1)
 graph$plot(degree=TRUE)
 
 
@@ -201,10 +209,7 @@ plot(lines)
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.1))
 graph$plot()
 points_add <- find_line_line_points(graph, tol = 0.2)
-data <- data.frame(edge_number = points_add$PtE[,1],
-                   distance_on_edge = points_add$PtE[,2],
-                   y = rep(0,dim(points_add$PtE)[1]))
-graph$add_observations(data = data)
-graph$plot(data = TRUE)
-graph$observation_to_vertex(tolerance = 0.3)
+PtE <- points_add$PtE
+PtE[,2] <- PtE[,2]/graph$edge_lengths[PtE[,1]]
+graph <- add_vertices(graph, PtE, tolerance = 0.2)
 graph$plot(degree=TRUE)
