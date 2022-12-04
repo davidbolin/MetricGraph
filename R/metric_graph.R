@@ -184,11 +184,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     points_add <- private$find_line_line_points(tol = tolerance$line_line)
     PtE <- points_add$PtE
 
-    
+
     PtE[,2] <- PtE[,2]/self$edge_lengths[PtE[,1]]
 
     filter_tol <- ((PtE[,2] > tolerance$line_line/self$edge_lengths[PtE[,1]]) & (PtE[,2] < 1- tolerance$line_line/self$edge_lengths[PtE[,1]]))
-    
+
     PtE <- PtE[filter_tol,]
 
     if(!is.null(PtE)){
@@ -200,36 +200,33 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(!is.null(PtE)){
       private$add_vertices(PtE, tolerance = tolerance$line_line)
     }
-    
+
 
     if(!is.null(private$initial_added_vertex)){
       for(i in 1:length(private$initial_added_vertex)){
           private$split_line_at_added_vertex(private$initial_line_added[i],
                                             private$initial_added_vertex[i],
-                                            private$initial_edges_added[i,])   
+                                            private$initial_edges_added[i,])
       }
     }
     private$clear_initial_info()
     }
-    
+
     if(tolerance$vertex_line > 0){
         private$addinfo <- TRUE
 
-        
         PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
                                               tolerance = tolerance$vertex_line)
 
-                                    
         edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
-        
+
         filter_tol <- ((PtE_tmp[,2] > tolerance$vertex_line/edge_length_filter) & (PtE_tmp[,2] < 1- tolerance$vertex_line/edge_length_filter))
 
-        PtE_tmp <- PtE_tmp[filter_tol,]
-
+        PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
         PtE_tmp <- unique(PtE_tmp)
-        PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),]
+        PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
 
-        
+
         if(!is.null(PtE_tmp)){
           if(nrow(PtE_tmp) == 0){
             PtE_tmp <- NULL
@@ -244,7 +241,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           for(i in 1:length(private$initial_added_vertex)){
               private$split_line_at_added_vertex(private$initial_line_added[i],
                                                  private$initial_added_vertex[i],
-                                                private$initial_edges_added[i,])   
+                                                private$initial_edges_added[i,])
           }
         }
 
@@ -1828,7 +1825,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         min_idx <- which.min(distances_lines)
 
-        private$conjugate_initial_line <- rbind(private$conjugate_initial_line, 
+        private$conjugate_initial_line <- rbind(private$conjugate_initial_line,
                                                       cbind(integer_id_line, nrow(self$LtE)+1))
 
         integer_id_line <- id_lines_of_interest[min_idx][[1]]
@@ -1872,7 +1869,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         coords2 <- rbind(matrix(self$V[added_vertex_id,], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
                 line2 <- Lines(list(Line(coords2)), ID = paste0(id_line, "__", as.character(times_split+1)))
       } else{
-        
+
         if(closest_coord == 1){
           closest_coord <- closest_coord + 1
         }

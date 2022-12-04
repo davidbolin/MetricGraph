@@ -120,6 +120,7 @@ The constructor of the graph has one argument `tolerance` which is used for conn
 - `line_line` if two lines at some point are closer than this number, a new
 vertex is added at that point and the two lines are connected (the default value is `0` which means that the option is not used)
 
+These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
 following three lines:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
@@ -130,34 +131,31 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line2),ID="2"),
                           Lines(list(line3),ID="3")))
 graph3 <- metric_graph$new(lines = lines)
-graph3$plot()
+graph3$plot(degree = TRUE)
 print(graph3$nV)
 ```
-If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two lines are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
+
+We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three lines are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two lines are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05))
-graph3$plot()
+graph3$plot(degree = TRUE)
 ```
 
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first line, so that the two lines there are connected. This can be done by adjusting the `vertex_line` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
                                                            vertex_line = 0.1))
-graph3$plot()
+graph3$plot(degree = TRUE)
 ```
 
-We can see that the vertex at $(0.5,0)$ was indeed merged:
-
-```{r}
-graph3$plot_connections()
-```
+We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `lines` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. 
 
 Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_line = 0.1,
                                                            line_line = 0.001))
-graph3$plot()
+graph3$plot(degree = TRUE)
 ```
 ## Understanding coordinates on graphs
 

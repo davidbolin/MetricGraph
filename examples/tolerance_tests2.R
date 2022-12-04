@@ -1,6 +1,5 @@
 rm(list=ls())
 library(sp)
-devtools::load_all()
 # test vertex vertex
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0.03),c(0,0.06)))
@@ -20,7 +19,7 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line6),ID="6"),
                           Lines(list(line7),ID="7")))
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
-graph$plot()
+graph$plot(degree=TRUE)
 
 #test line vertex
 
@@ -38,7 +37,7 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line5),ID="5")))
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2,
                                                   vertex_line = 0.2))
-graph$plot()
+graph$plot(degree=TRUE)
 
 # test line line
 
