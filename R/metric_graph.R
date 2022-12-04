@@ -174,6 +174,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = longlat)
 
+
     if (tolerance$line_line > 0) {
     private$addinfo <- TRUE
 
@@ -197,7 +198,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       private$add_vertices(PtE, tolerance = tolerance$line_line)
     }
 
-
     if(!is.null(private$initial_added_vertex)){
       for(i in 1:length(private$initial_added_vertex)){
           private$split_line_at_added_vertex(private$initial_line_added[i],
@@ -207,6 +207,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     private$clear_initial_info()
     }
+
 
     if(tolerance$vertex_line > 0){
         private$addinfo <- TRUE
@@ -229,6 +230,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
         }
 
+
         if(!is.null(PtE_tmp)){
           private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line)
         }
@@ -243,7 +245,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         private$clear_initial_info()
     }
-
 
     private$initial_graph <- self$clone()
     # Cloning again to add the initial graph to the initial graph
@@ -1868,6 +1869,8 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$ELend[added_edges_id[1]] <- 1
         self$ELstart[added_edges_id[2]] <- 0
         self$ELend[added_edges_id[2]] <- 1
+        self$edge_lengths[added_edges_id[1]] <- LineLength(line1@Lines[[1]])
+        self$edge_lengths[added_edges_id[2]] <- LineLength(line2@Lines[[1]])
         self$EID <- c(self$EID, paste0(id_line, "__", as.character(times_split+1)))
   },
 
