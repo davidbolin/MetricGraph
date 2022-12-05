@@ -115,9 +115,10 @@ graph2$plot()
 
 ## Tolerances for the merging vertices and lines
 The constructor of the graph has one argument `tolerance` which is used for connecting lines that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
-- `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
-- `vertex_line` if a vertex at the end of one line is closer than this number to another line, this vertex is connected to that line (the default value is `1e-7`)
-- `line_line` if two lines at some point are closer than this number, a new
+
+* `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
+* `vertex_line` if a vertex at the end of one line is closer than this number to another line, this vertex is connected to that line (the default value is `1e-7`)
+* `line_line` if two lines at some point are closer than this number, a new
 vertex is added at that point and the two lines are connected (the default value is `0` which means that the option is not used)
 
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
@@ -148,8 +149,15 @@ graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
 graph3$plot(degree = TRUE)
 ```
 
-We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `lines` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. 
+We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `lines` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. This modification might take some time for large graphs with many lines, because of this, the `lines` object is by default modified if the graph has less than 100 lines, and otherwise it is not modified. Whether or not it should be modified can be set via the argument `adjust_lines`:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
+                                                           vertex_line = 0.1),
+                           adjust_lines = FALSE)
+graph3$plot(degree = TRUE)
+```
 
+If the `lines` object is not modified, then the graph is correct but the plot might not show the graph as connected even though it is. 
 Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
@@ -193,7 +201,7 @@ should be given in normalized distance or not.
 To illustrate the useage of `metric_graph` on some real data, we use the 
 `osmdata` package to download data from OpenStreetMap. In the following code,
 we extract highways in the city of Copenhagen:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,fig.height = 7, echo=TRUE}
 library(osmdata)
 set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 call <- opq(bbox = c(12.4,55.5,12.65,55.9))
@@ -243,7 +251,7 @@ components in total, and their total edge lengths in km at
 graphs$lengths
 ```
 To plot all of them, we can use the `plot` command of the class:
-```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,fig.height = 7,echo=TRUE}
 graphs$plot(vertex_size = 0)
 ```
 
@@ -253,19 +261,27 @@ as
 ```{r}
 min(graph5$edge_lengths) * 1000
 ```
-meters. Let us increase the tolerance and say that any vertices that are at most
-a distance of 50 meters (0.05km) apart should be merged:
-```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+meters. Let us increase the tolerances so that vertices that are at most
+a distance of 20 meters (0.02km) apart should be merged, and that vertices that
+are withing 20 meters of other lines should be merged with them:
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,fig.height = 7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
-                           tolerance = list(vertex_vertex = 0.05))
+                               tolerance = list(vertex_vertex = 0.02,
+                                                vertex_line = 0.02))
 graphs$plot(vertex_size = 0)
 ```
 
-With this choice, we see that there is one large connected component and a few
-small. If we are interested in only getting the largest component, we can
-extract it as the first element of the `graphs` list (which is ordered by size).
-Alternatively, we can call `graph_components` with the argument 
-`only_largest = TRUE`. 
+With this choice, we see that the graph is connected:
+```{r}
+graphs$n
+```
+However, since the `adjust_vertices` argument by default is `FALSE` for this size
+of graphs, the plot of the graph might look disconnected in places where vertices
+have been merged. We can retrieve the graphas a standard `metric_graph` object to work 
+with in further analysis via the `get_largest` command:
+```{r}
+graph5 <- graphs$get_largest()
+```
 
 # Adding data to the graph 
 
@@ -378,7 +394,7 @@ graph$plot_function(f)
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
 visualization of the function:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,fig.height=7,echo=TRUE}
 graph$plot_function(f, plotly = TRUE)
 ```
 
@@ -390,7 +406,7 @@ edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point
 To illustrate this, let us first construct a set of locations that are evenly 
 spaced over each edge, then convert these to Euclidean coordinates so that we
 can evaluate the function above, and finally plot the result:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,fig.height=7,echo=TRUE}
 n.e <- 30
 PtE <- cbind(rep(1:graph$nE, each = n.e), 
              rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))

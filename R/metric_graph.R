@@ -111,6 +111,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param tolerance_overlapping tolerance for merging vertices that might seem overlapping.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
   #' connected and a warning is given if this is not the case.
+  #' @param adjust_lines Set to `TRUE` to adjust the lines object to match the graph
+  #' connections. This can take some time for large graphs, so by default it is `TRUE`
+  #' for graphs with at most 100 lines, and `FALSE` for larger graphs
+  #' @param verbose Print progress of graph creation
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -125,7 +129,9 @@ metric_graph <-  R6::R6Class("metric_graph",
                         tolerance = list(vertex_vertex = 1e-7,
                                          vertex_line = 1e-7,
                                          line_line = 0),
-                        check_connected = TRUE) {
+                        check_connected = TRUE,
+                        adjust_lines = NULL,
+                        verbose = FALSE) {
 
     private$longlat <- longlat
 
@@ -171,14 +177,40 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       self$lines <- SpatialLines(lines)
     }
-    private$line_to_vertex(tolerance = tolerance$vertex_vertex,
-                           longlat = longlat)
+    if(verbose){
+      message("Setup lines and merge close vertices")
+    }
 
+    t <- system.time(
+      private$line_to_vertex(tolerance = tolerance$vertex_vertex,
+                           longlat = longlat)
+      )
+    if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+    }
+
+    if(is.null(adjust_lines)) {
+      if(length(self$lines) < 100) {
+        adjust_lines = TRUE
+      } else {
+        adjust_lines = FALSE
+      }
+    }
 
     if (tolerance$line_line > 0) {
     private$addinfo <- TRUE
 
-    points_add <- private$find_line_line_points(tol = tolerance$line_line)
+    if(verbose){
+      message("Find line-line intersections")
+    }
+
+    t <- system.time(
+      points_add <- private$find_line_line_points(tol = tolerance$line_line)
+      )
+
+    if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+    }
     PtE <- points_add$PtE
 
 
@@ -189,61 +221,103 @@ metric_graph <-  R6::R6Class("metric_graph",
     PtE <- PtE[filter_tol,]
 
     if(!is.null(PtE)){
-          if(nrow(PtE) == 0){
-            PtE <- NULL
-          }
+      if(nrow(PtE) == 0){
+        PtE <- NULL
+      }
     }
 
     if(!is.null(PtE)){
+      if(verbose){
+        message(sprintf("Add %d new vertices", nrow(PtE)))
+      }
+
+      t <- system.time(
       private$add_vertices(PtE, tolerance = tolerance$line_line)
+      )
+      if(verbose){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
     }
 
-    if(!is.null(private$initial_added_vertex)){
+    if(!is.null(private$initial_added_vertex) && adjust_lines){
+      if(verbose){
+        message(sprintf("Split %d lines", length(private$initial_added_vertex)))
+      }
+
+      t <- system.time(
       for(i in 1:length(private$initial_added_vertex)){
           private$split_line_at_added_vertex(private$initial_line_added[i],
                                             private$initial_added_vertex[i],
                                             private$initial_edges_added[i,])
+      })
+      if(verbose){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
+    } else if (!adjust_lines && verbose) {
+      message("The lines object is not updated, so plots might not be accurate")
     }
     private$clear_initial_info()
     }
 
 
     if(tolerance$vertex_line > 0){
-        private$addinfo <- TRUE
+      private$addinfo <- TRUE
+      if(verbose){
+        message("Snap vertices to close lines")
+      }
 
+      t <- system.time(
         PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
                                               tolerance = tolerance$vertex_line)
+        )
+      if(verbose){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
+      edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
 
-        edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
+      filter_tol <- ((PtE_tmp[,2] > tolerance$vertex_line/edge_length_filter) & (PtE_tmp[,2] < 1- tolerance$vertex_line/edge_length_filter))
 
-        filter_tol <- ((PtE_tmp[,2] > tolerance$vertex_line/edge_length_filter) & (PtE_tmp[,2] < 1- tolerance$vertex_line/edge_length_filter))
+      PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
+      PtE_tmp <- unique(PtE_tmp)
+      PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
 
-        PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
-        PtE_tmp <- unique(PtE_tmp)
-        PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
+      if(!is.null(PtE_tmp)){
+        if(nrow(PtE_tmp) == 0){
+          PtE_tmp <- NULL
+        }
+      }
 
-
-        if(!is.null(PtE_tmp)){
-          if(nrow(PtE_tmp) == 0){
-            PtE_tmp <- NULL
-          }
+      if(!is.null(PtE_tmp)){
+        if(verbose){
+          message(sprintf("Add %d new vertices", nrow(PtE_tmp)))
         }
 
-
-        if(!is.null(PtE_tmp)){
+        t <- system.time(
           private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line)
+          )
+        if(verbose){
+          message(sprintf("time: %.3f s", t[["elapsed"]]))
+        }
+      }
+
+      if(!is.null(private$initial_added_vertex) && adjust_lines){
+        if(verbose){
+          message(sprintf("Split %d lines: ", length(private$initial_added_vertex)))
         }
 
-        if(!is.null(private$initial_added_vertex)){
+        t <- system.time(
           for(i in 1:length(private$initial_added_vertex)){
-              private$split_line_at_added_vertex(private$initial_line_added[i],
-                                                 private$initial_added_vertex[i],
-                                                private$initial_edges_added[i,])
-          }
+            private$split_line_at_added_vertex(private$initial_line_added[i],
+                                               private$initial_added_vertex[i],
+                                               private$initial_edges_added[i,])
+          })
+        if(verbose){
+          message(sprintf("time: %.3f s", t[["elapsed"]]))
         }
-
-        private$clear_initial_info()
+      } else if (!adjust_lines && verbose) {
+        message("The lines object is not updated, so plots might not be accurate")
+      }
+      private$clear_initial_info()
     }
 
     private$initial_graph <- self$clone()
@@ -256,7 +330,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       components <- igraph::clusters(g, mode="weak")
       nc <- components$no
       if(nc>1){
-        warning("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+        message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
       }
     }
 
@@ -1692,10 +1766,10 @@ metric_graph <-  R6::R6Class("metric_graph",
           SP <- snapPointsToLines(SP_tmp, self$lines[i])
           idx_tol <- (SP@data[["snap_dist"]] <= tolerance)
           coords_line <- c(coords_line, SP@data[["nearest_line_id"]][idx_tol])
-          coords_tmp <- rbind(coords_tmp, SP@coords[idx_tol,])          
+          coords_tmp <- rbind(coords_tmp, SP@coords[idx_tol,])
         }
       }
-      
+
       Spoints@coords = coords_tmp
 
       LtE = cbind(match(coords_line, self$EID), 0)
@@ -1809,10 +1883,13 @@ metric_graph <-  R6::R6Class("metric_graph",
           return(new_lines)
   },
 
-  split_line_at_added_vertex = function(integer_id_line, added_vertex_id, added_edges_id){
+  split_line_at_added_vertex = function(integer_id_line,
+                                        added_vertex_id,
+                                        added_edges_id){
 
-      id_conjugate_line <- which(private$conjugate_initial_line[,1] == integer_id_line)
-      id_lines_of_interest <- c(integer_id_line, private$conjugate_initial_line[id_conjugate_line, 2])
+      id_conjugate_line <- which(private$conjugate_initial_line[, 1] == integer_id_line)
+      id_lines_of_interest <- c(integer_id_line,
+                                private$conjugate_initial_line[id_conjugate_line, 2])
 
       distances_lines <- c()
       idx_min <- c()
@@ -1853,15 +1930,23 @@ metric_graph <-  R6::R6Class("metric_graph",
 
 
       times_split <- sum(which(private$split_lines_ids_times[,1] == integer_id_line))
-      private$split_lines_ids_times <- rbind(private$split_lines_ids_times, cbind(integer_id_line, 1))
+      private$split_lines_ids_times <- rbind(private$split_lines_ids_times,
+                                             cbind(integer_id_line, 1))
 
-        coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),matrix(self$V[added_vertex_id,],ncol=2))
+        coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),
+                         matrix(self$V[added_vertex_id,],ncol=2))
                     line1 <- Lines(list(Line(coords1)), ID = id_line)
 
-        coords2 <- rbind(matrix(self$V[added_vertex_id,], ncol=2), matrix(line_coords[(closest_coord+1):nrow(line_coords),],ncol=2))
-                line2 <- Lines(list(Line(coords2)), ID = paste0(id_line, "__", as.character(times_split+1)))
+        coords2 <- rbind(matrix(self$V[added_vertex_id,], ncol=2),
+                         matrix(line_coords[(closest_coord+1):nrow(line_coords),],
+                                ncol=2))
+                line2 <- Lines(list(Line(coords2)),
+                               ID = paste0(id_line, "__",
+                                           as.character(times_split+1)))
 
-        self$lines <- SpatialLines(private$get_list_coords(integer_id_line, line1, line2))
+        self$lines <- SpatialLines(private$get_list_coords(integer_id_line,
+                                                           line1,
+                                                           line2))
 
         self$LtE <- rbind(self$LtE, rep(0, self$nE))
         self$LtE[nrow(self$LtE), added_edges_id[2]] <- 1
