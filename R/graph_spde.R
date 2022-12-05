@@ -775,13 +775,13 @@ inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL,
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
   bru_fit_new <- inlabru::bru(cmp, 
-          data = graph_data_spde(spde____model),
-          options = list(
-            control.mode = list(
-              theta = bru_fit$mode$theta,
-              fixed = TRUE
-            )
-          ))
+          data = graph_data_spde(spde____model))#,
+          # options = list(
+          #   control.mode = list(
+          #     theta = bru_fit$mode$theta,
+          #     fixed = TRUE
+          #   )
+          # ))
   fitted_values <- bru_fit_new$summary.fitted.values
   
 idx_prd <- which(is.na(graph_data_spde(spde____model)[[resp]]))

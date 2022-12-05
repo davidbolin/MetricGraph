@@ -313,9 +313,7 @@ Now, we use the `graph_stack()` function and fit the model:
 ```{r}
 data_stk_prd <- inla.stack.data(stk_dat_prd)
 
-spde_fit_prd <- inla(f_s_prd, data = data_stk_prd,
-              control.mode = list(theta = spde_fit$mode$theta,
-                            fixed = TRUE))
+spde_fit_prd <- inla(f_s_prd, data = data_stk_prd)
 ```
 
 We will now extract the means at the prediction locations:

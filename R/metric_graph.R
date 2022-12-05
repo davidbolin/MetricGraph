@@ -2076,7 +2076,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   points_add <- NULL
   points_add_PtE <- NULL
-  for(i in 1:(length(lines)-1)) {
+  for(i in 1:(length(self$lines)-1)) {
     #lines within tol of line i
     inds <- i+which(as.vector(dists[i, (i+1):length(self$lines)]))
     if(length(inds)>0) {
@@ -2085,22 +2085,27 @@ metric_graph <-  R6::R6Class("metric_graph",
         intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
         p_cur <- NULL
         if(!is.null(intersect_tmp)) {
-          coord_tmp <- coordinates(intersect_tmp)
-          for(k in 1:length(intersect_tmp)) {
-            p <- matrix(coord_tmp[k,],1,2)
-            #add points if they are not close to V or previous points
-            if(min(spDists(self$V, p))>tol) {
-
-              p_cur <- rbind(p_cur,p)
-              p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
-              points_add <- rbind(points_add, p, coordinates(p2))
-              points_add_PtE <- rbind(points_add_PtE,
-                                      c(i,gProject(self$lines[i],
-                                                   SpatialPoints(p))),
-                                      c(j,gProject(self$lines[j],SpatialPoints(p))))
-
-            }
+          if("SpatialPoints"%in%is(intersect_tmp)){
+            coord_tmp <- coordinates(intersect_tmp)
+          } else if ("SpatialLines"%in%is(intersect_tmp)){
+            coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
+            coord_tmp <- matrix(coordinates(coord_tmp),1,2)
           }
+            for(k in 1:length(intersect_tmp)) {
+              p <- matrix(coord_tmp[k,],1,2)
+              #add points if they are not close to V or previous points
+              if(min(spDists(self$V, p))>tol) {
+
+                p_cur <- rbind(p_cur,p)
+                p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
+                points_add <- rbind(points_add, p, coordinates(p2))
+                points_add_PtE <- rbind(points_add_PtE,
+                                        c(i,gProject(self$lines[i],
+                                                     SpatialPoints(p))),
+                                        c(j,gProject(self$lines[j],SpatialPoints(p))))
+
+              }
+            }
         }
         #now check if there are intersections with buffer
         tmp_line <- gBuffer(self$lines[i], width = tol)
