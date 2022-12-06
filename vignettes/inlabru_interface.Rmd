@@ -388,11 +388,7 @@ cmp_prd <- y ~ -1 + Intercept(1) + field(NULL,
 Now, we fit the model:
 ```{r}
 spde_bru_fit_prd <-
-    bru(cmp_prd, data=graph_data_spde(spde_model_bru_prd),
-      options = list(
-        control.mode = list(theta = spde_bru_fit$mode$theta,
-                          fixed = TRUE)
-      ))
+    bru(cmp_prd, data=graph_data_spde(spde_model_bru_prd))
 ```
 
 We will now extract the means at the prediction locations:
