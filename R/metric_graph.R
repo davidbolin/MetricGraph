@@ -925,7 +925,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
-    self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
+    if(!is.null(self$mesh$PtE)) {
+      self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
+    } else {
+      self$mesh$V <- rbind(self$mesh$V)
+    }
+
 
   },
 
