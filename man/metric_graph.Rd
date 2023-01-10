@@ -136,7 +136,9 @@ Create a new \code{metric_graph} object
   E = NULL,
   longlat = FALSE,
   tolerance = list(vertex_vertex = 1e-07, vertex_line = 1e-07, line_line = 0),
-  check_connected = TRUE
+  check_connected = TRUE,
+  adjust_lines = NULL,
+  verbose = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -168,6 +170,12 @@ If \code{longlat = TRUE}, the tolerances are given in km.}
 
 \item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
 connected and a warning is given if this is not the case.}
+
+\item{\code{adjust_lines}}{Set to \code{TRUE} to adjust the lines object to match the graph
+connections. This can take some time for large graphs, so by default it is \code{TRUE}
+for graphs with at most 100 lines, and \code{FALSE} for larger graphs}
+
+\item{\code{verbose}}{Print progress of graph creation}
 
 \item{\code{merge_intersections}}{Which strategy should we use when lines intersect?
 The options are: "end_points", we merge the lines only if the end points intersect;

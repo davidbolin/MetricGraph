@@ -160,7 +160,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
-      self$lines = lines
+      if(class(lines) == "SpatialLines") {
+        self$lines = lines
+      } else if (class(lines) == "SpatialLinesDataFrame") {
+        self$lines = SpatialLines(lines@lines)
+      } else {
+        stop("lines should be of class SpatialLines or SpatialLinesDataFrame")
+      }
+
     } else {
       if(is.null(V) || is.null(E)){
         stop("You must supply lines or V and E")
@@ -1509,6 +1516,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         lines_keep_id <- c(lines_keep_id, i)
       }
     }
+
     lvl <- lvl[1:(k-1),]
     self$lines <- self$lines[lines_keep_id]
     self$V <- vertex[, 2:3]
@@ -1635,7 +1643,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
                           size = data_size, ...) +
-        scale_colour_gradientn(colours = viridis(100), guide_legend(title = "Degree"))
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
     if (mesh) {
