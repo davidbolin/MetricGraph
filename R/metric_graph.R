@@ -725,7 +725,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     ## convert everything to PtE
       if(!is.null(Spoints)){
         PtE <- self$coordinates(XY = Spoints@coords)
-        XY_new <- self$coordinates(PtE = PtE)
+        XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
         norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
         if(norm_XY > tolerance){
           warning("There was at least one point whose location is far from the graph,
@@ -740,7 +740,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           } else if(data_coords == "euclidean"){
             point_coords <- cbind(data[[coord_x]], data[[coord_y]])
             PtE <- self$coordinates(XY = point_coords)
-            XY_new <- self$coordinates(PtE = PtE)
+            XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
             norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
             if(norm_XY > tolerance){
               warning("There was at least one point whose location is far from the graph,
@@ -780,7 +780,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
-    spatial_points <- self$coordinates(PtE = PtE)
+    spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
     self$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
     self$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
   },

@@ -767,7 +767,7 @@ inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL,
   } 
 
 
-  graph_tmp$add_observations(data = data_pred)
+  graph_tmp$add_observations(data = data_pred, normalized = TRUE)
   graph_tmp$observation_to_vertex()
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
