@@ -653,17 +653,22 @@ consider the same data that was generated above, where the number of replicates 
 For this implementation we will use the `rspde_model_rep` object.
 
 We can now create the component, passing the vector with the indices of the replicates
-as the `replicate` argument:
+as the `replicate` argument. For the `replicate` argument we use the function
+`graph_repl_spde()` to extract the vector of replicates, where we set choose `__all` as the
+replicates, since we want all replicates.
 ```{r}
   cmp_rep <-
     y ~ -1 + Intercept(1) + field(loc, model = rspde_model_rep,
-                                    replicate = "__group")
+                              replicate = graph_repl_spde(rspde_model_rep, "__all"))
 ```
-Now, we are ready to fit the model:
+Now, we are ready to fit the model. Observe that we set the `repl` argument to `__all` since we will use all replicates and the `loc` argument
+to `loc`, which is the name we gave to the locations.
 ```{r}
   rspde_bru_fit_rep <-
     bru(cmp_rep,
-        data=graph_data_spde(rspde_model_rep, loc = "loc"),
+        data=graph_data_spde(rspde_model_rep, 
+                         repl = "__all",
+                         loc = "loc"),
       options=list(
       family = "gaussian",
       inla.mode = "experimental")
