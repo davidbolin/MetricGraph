@@ -160,7 +160,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
-      self$lines = lines
+      if(class(lines) == "SpatialLines") {
+        self$lines = lines
+      } else if (class(lines) == "SpatialLinesDataFrame") {
+        self$lines = SpatialLines(lines@lines)
+      } else {
+        stop("lines should be of class SpatialLines or SpatialLinesDataFrame")
+      }
+
     } else {
       if(is.null(V) || is.null(E)){
         stop("You must supply lines or V and E")
@@ -718,7 +725,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     ## convert everything to PtE
       if(!is.null(Spoints)){
         PtE <- self$coordinates(XY = Spoints@coords)
-        XY_new <- self$coordinates(PtE = PtE)
+        XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
         norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
         if(norm_XY > tolerance){
           warning("There was at least one point whose location is far from the graph,
@@ -733,7 +740,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           } else if(data_coords == "euclidean"){
             point_coords <- cbind(data[[coord_x]], data[[coord_y]])
             PtE <- self$coordinates(XY = point_coords)
-            XY_new <- self$coordinates(PtE = PtE)
+            XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
             norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
             if(norm_XY > tolerance){
               warning("There was at least one point whose location is far from the graph,
@@ -773,7 +780,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
-    spatial_points <- self$coordinates(PtE = PtE)
+    spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
     self$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
     self$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
   },
@@ -918,7 +925,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
-    self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
+    if(!is.null(self$mesh$PtE)) {
+      self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
+    } else {
+      self$mesh$V <- rbind(self$mesh$V)
+    }
+
 
   },
 
@@ -1509,6 +1521,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         lines_keep_id <- c(lines_keep_id, i)
       }
     }
+
     lvl <- lvl[1:(k-1),]
     self$lines <- self$lines[lines_keep_id]
     self$V <- vertex[, 2:3]
@@ -1635,7 +1648,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
                           size = data_size, ...) +
-        scale_colour_gradientn(colours = viridis(100), guide_legend(title = "Degree"))
+        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
     if (mesh) {

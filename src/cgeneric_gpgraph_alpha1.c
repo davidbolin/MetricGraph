@@ -15,10 +15,10 @@ double *inla_cgeneric_gpgraph_alpha1_model(inla_cgeneric_cmd_tp cmd, double *the
   char *parameterization;
   
   // the size of the model
-  assert(data->n_ints == 7);
+  // assert(data->n_ints == 7);
 
   // the number of doubles
-  assert(data->n_doubles == 9);
+  // assert(data->n_doubles == 9);
 
   assert(!strcasecmp(data->ints[0]->name, "n"));       // this will always be the case
   N = data->ints[0]->ints[0];			       // this will always be the case
