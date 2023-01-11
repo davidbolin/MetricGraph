@@ -537,10 +537,10 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
 
 idx_not_all_NA <- function(data_list){
      data_list[["__edge_number"]] <- NULL
-     data_list[["distance_on_edge"]] <- NULL
-     data_list[["coord_x"]] <- NULL
-     data_list[["coord_y"]] <- NULL
-     data_list[["group"]] <- NULL
+     data_list[["__distance_on_edge"]] <- NULL
+     data_list[["__coord_x"]] <- NULL
+     data_list[["__coord_y"]] <- NULL
+     data_list[["__group"]] <- NULL
      data_names <- names(data_list)
      n_data <- length(data_list[[data_names[1]]])
      idx_non_na <- logical(n_data)
@@ -548,7 +548,7 @@ idx_not_all_NA <- function(data_list){
         na_idx <- lapply(data_list, function(dat){
           return(is.na(dat[i]))
         })
-        idx_non_na[i] <- !all(is.na(na_idx))
+        idx_non_na[i] <- !all(unlist(na_idx))
      }
      return(idx_non_na)
 }

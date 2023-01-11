@@ -282,6 +282,15 @@ We begin by defining the model by using the `rspde.metric_graph()` function.
 This function contains the same arguments as the function
 `rspde.matern()`. We refer the reader to the  [R-INLA implementation of the rational SPDE approach](https://davidbolin.github.io/rSPDE/articles/rspde_inla.html) vignette for further details.
 
+We begin by adding the observations to the graph:
+
+```{r}
+graph$add_observations(data = data.frame(y=Y, 
+                          edge_number = obs.loc[,1], 
+                          distance_on_edge = obs.loc[,2]), 
+                          normalized = TRUE)
+```
+
 Let us create the model object:
 ```{r, message=FALSE}
   library(INLA)
@@ -295,7 +304,7 @@ the same functions as for the rational SPDE approach, namely,
 `rspde.make.A()` and `rspde.make.index()`, supplying the 
 graph object as the mesh argument. Here we create the `A` matrix:
 ```{r}
-  Abar <- rspde.make.A(graph, loc=obs.loc)
+  Abar <- rspde.make.A(graph)
 ```
 
 Now, let us create the index object:
@@ -312,7 +321,7 @@ So, first we create the formula object:
 Now we create the `inla.stack` object:
 ```{r}
   stk.dat <- inla.stack(
-    data = list(y = Y), A = Abar, tag = "est",
+    data = graph_data_spde(rspde_model), A = Abar, tag = "est",
     effects =
       c(
         rspde.index,
@@ -375,6 +384,15 @@ We will do kriging on the mesh locations:
   pred_loc <- graph$mesh$VtE
 ```
 
+Let us now add the observations for prediction:
+
+```{r}
+graph$add_observations(data = data.frame(y=rep(NA,nrow(pred_loc)), 
+                                edge_number = pred_loc[,1], 
+                                distance_on_edge = pred_loc[,2]), 
+                                normalized = TRUE)
+```
+
 Let us compute the `A` matrix at the prediction locations:
 
 ```{r}
@@ -382,12 +400,13 @@ Let us compute the `A` matrix at the prediction locations:
 ```
 
 Let us build the prediction stack and gather it with the estimation
-stack:
+stack. To this end, we set the argument `only_pred` to `TRUE`, in which it will return the `data.frame` containing the 
+`NA` data.
 ```{r}
   ef.prd <- 
     c(rspde.index, list(Intercept = 1))
   stk.prd <- inla.stack(
-    data = list(y = NA),
+    data = graph_data_spde(rspde_model, only_pred=TRUE),
     A = Abar_prd, tag = "prd",
     effects = ef.prd
   )
@@ -424,24 +443,50 @@ we will use the `plot_function()` graph method.
 
 ## Using `R-INLA` implementation to fit models with replicates
 
+Let us begin by cloning the graph and clearing the observations on the cloned graph:
+
+```{r}
+graph_rep <- graph$clone()
+graph_rep$clear_observations()
+```
+
+We will now add the data with replicates to the graph:
+
+```{r}
+graph_rep$add_observations(data = data.frame(y=as.vector(Y.rep), 
+                          edge_number = rep(obs.loc[,1], n.rep), 
+                          distance_on_edge = rep(obs.loc[,2], n.rep),
+                          repl = rep(1:n.rep, each = n.obs)), 
+                          group = "repl",
+                          normalized = TRUE)
+```
+
 To fit the model with replicates we need to create the corresponding `A` matrix and
 `index` object:
 ```{r}
 Abar.rep <- rspde.make.A(
-  mesh = graph, loc = obs.loc, index = rep(1:200, times = n.rep),
-  repl = rep(1:n.rep, each = 200)
+  mesh = graph_rep, index = rep(1:n.obs, times = n.rep),
+  repl = rep(1:n.rep, each = n.obs)
 )
 
 mesh.index.rep <- rspde.make.index(
-  name = "field", mesh = graph,
+  name = "field", mesh = graph_rep,
   n.repl = n.rep
 )
 ```
 
-Let us now create the corresponding `inla.stack` object:
+Similarly, let us create a new `rspde` model object:
+
+```{r}
+rspde_model_rep <- rspde.metric_graph(graph_rep)
+```
+
+Let us now create the corresponding `inla.stack` object, where we set the `repl` argument
+in the function `graph_data_spde` to `__all` since we want to use all replicates:
 ```{r}
 st.dat.rep <- inla.stack(
-  data = list(y = as.vector(Y.rep), loc=obs.loc),
+  data = graph_data_spde(rspde_model_rep,
+                            repl = "__all"),
   A = Abar.rep,
   effects = mesh.index.rep
 )
@@ -453,7 +498,7 @@ gave the name argument `field`, when creating the index, we need to pass
 ```{r}
 f.rep <-
   y ~ -1 + f(field,
-    model = rspde_model,
+    model = rspde_model_rep,
     replicate = field.repl
   )
 ```
@@ -512,25 +557,32 @@ indices nor `inla.stack` objects. Therefore, we suggest
 the reader to use this implementation when using our
 implementation to fit real data.
 
-We first load the `inlabru` package, and create the `data`
-object containing the response variable `y` and the observation
-locations:
-```{r, message=FALSE}
-    library(inlabru)
-    data_list <- list(y=Y, loc = obs.loc)
-```
-Now we create the component (which is `inlabru`'s formula-like object).
-Observe that we are using the `rspde_model` object created
-with the `rspde.metric_graph()` function.
+Let us clear the graph, since it contains `NA` observations we used for prediction, add the observations again,
+and create a new `rSPDE` model object:
 ```{r}
-    cmp <-
-    y ~ -1 + Intercept(1) + field(loc, model = rspde_model)
+graph$clear_observations()
+graph$add_observations(data = data.frame(y=Y, 
+                          edge_number = obs.loc[,1], 
+                          distance_on_edge = obs.loc[,2]), 
+                          normalized = TRUE)
+rspde_model <- rspde.metric_graph(graph)
 ```
-Now, we can directly fit the model:
+Let us now load the `inlabru` package and create the component (which is `inlabru`'s formula-like object). Since we are using the data from the graph,
+`inlabru` will also obtain the locations from the graph, thus, there is no need to provide the locations. However, we need a name for the locations 
+for using inlabru's `predict` method. Therefore, we can choose any name for the location that is not a name being used in the graph's data. In our
+case we will use the name `loc`:
+```{r}
+    library(inlabru)
+    cmp <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                          model = rspde_model)
+```
+Now, we can directly fit the model, where we pass the name of the location variable as the `loc` argument of the
+`graph_data_spde()` function:
 ```{r}
   rspde_bru_fit <-
     bru(cmp,
-        data=data_list,
+        data=graph_data_spde(rspde_model, loc = "loc"),
       options=list(
       family = "gaussian",
       inla.mode = "experimental")

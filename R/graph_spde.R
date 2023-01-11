@@ -265,23 +265,38 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
 #'
-#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function or
+#' an `rspde_metric_graph` object built with the `rspde.metric_graph()` function from the `rSPDE` package.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
+#' @param only_pred Should only return the `data.frame` to the prediction data?
+#' @param loc Character with the name of the location variable to be used in `inlabru`'s prediction.
 #' @return The observation matrix
 #' @export
 
-graph_data_spde <- function (graph_spde, repl = NULL){
-  if(is.null(repl)){
-    groups <- graph_spde$graph_spde$data[["__group"]]
-    repl <- groups[1]
-    return(select_group(graph_spde$graph_spde$data, repl))
-  } else if(repl[1] == "__all") {
-    return(graph_spde$graph_spde$data)
-  } else {
-    return(select_group(graph_spde$graph_spde$data, repl))
+graph_data_spde <- function (graph_spde, repl = NULL, 
+                                only_pred = FALSE,
+                                loc = NULL){
+  graph_tmp <- graph_spde$graph_spde$clone()
+  if(only_pred){
+    idx_allNA <- !idx_not_all_NA(graph_tmp$data)
+    graph_tmp$data <- lapply(graph_tmp$data, function(dat){return(dat[idx_allNA])})
   }
+
+  if(is.null(repl)){
+    groups <- graph_tmp$data[["__group"]]
+    repl <- groups[1]
+    ret <- select_group(graph_tmp$data, repl)
+  } else if(repl[1] == "__all") {
+    ret <- graph_tmp$data
+  } else {
+    ret <- select_group(graph_tmp$data, repl)
+  }
+  if(!is.null(loc)){
+    ret[[loc]] <- graph_tmp$get_PtE()
+  }
+  return(ret)
 }
 
 
