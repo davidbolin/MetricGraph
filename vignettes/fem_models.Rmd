@@ -650,35 +650,20 @@ we will use the `plot_function()` graph method:
 We can also use our `inlabru` implementation to fit models with replicates. We will
 consider the same data that was generated above, where the number of replicates is 30.
 
-We begin by creating the data list containing the responses and the locations:
-```{r}
-   n.rep <- 30
-   obs.loc.rep <- obs.loc
-   for(i in 2:n.rep){
-    obs.loc.rep <- rbind(obs.loc.rep, obs.loc)
-   }
+For this implementation we will use the `rspde_model_rep` object.
 
-   data_list_rep <- list(y = as.vector(Y.rep),
-                            loc = obs.loc.rep)
-```
-Observe that the response, `y`, needs to be a vector.
-
-Let us now create the vector indexing the replicates:
-```{r}  
-  repl <- rep(1:n.rep, each=200)
-```
 We can now create the component, passing the vector with the indices of the replicates
 as the `replicate` argument:
 ```{r}
   cmp_rep <-
-    y ~ -1 + Intercept(1) + field(loc, model = rspde_model,
-                                    replicate = repl)
+    y ~ -1 + Intercept(1) + field(loc, model = rspde_model_rep,
+                                    replicate = "__group")
 ```
 Now, we are ready to fit the model:
 ```{r}
   rspde_bru_fit_rep <-
     bru(cmp_rep,
-        data=data_list_rep,
+        data=graph_data_spde(rspde_model_rep, loc = "loc"),
       options=list(
       family = "gaussian",
       inla.mode = "experimental")

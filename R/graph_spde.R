@@ -294,7 +294,8 @@ graph_data_spde <- function (graph_spde, repl = NULL,
     ret <- select_group(graph_tmp$data, repl)
   }
   if(!is.null(loc)){
-    ret[[loc]] <- graph_tmp$get_PtE()
+    ret[[loc]] <- cbind(graph_tmp$data[["__edge_number"]],
+                          graph_tmp$data[["__distance_on_edge"]])
   }
   return(ret)
 }
