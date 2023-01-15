@@ -259,27 +259,13 @@ graph_bru$plot(mesh=TRUE)
 ```
 
 The positions we want are the mesh positions, which
-are given in `graph_bru$mesh$PtE`.
-
+can be obtained by using the `get_mesh_locations()` method.
+We also set `bru=TRUE` and `loc="loc"` to obtain a `data_list` suitable to be used with `inlabru`.
 ```{r}
-PtE_prd <- graph_bru$mesh$PtE
+data_list <- graph_bru$get_mesh_locations(bru = TRUE,
+                                            loc = "loc")
 ```
 
-To use the `inlabru_predict()` function, we need to pass
-the previous model object, the previous fitted model, the component
-and a data, through the argument 
-`data_pred`, with `NA` on the response variables, containing the
-prediction locations, along with other covariates used in the
-model. If the model has no covariates, one can simply 
-pass the locations. The locations can be either Euclidean coordinates, 
-given by the argument `XY`, or relative positions on the
-edge, given by the `PtE` argument.
-
-Now, we simply call the `inlabru_predict()` function with
-the previous component, the previous model object,
-the previous fitted model and the locations:
-
-```{r}
 data_list <- list(loc = PtE_prd)
 ```
 
@@ -292,23 +278,16 @@ field_pred <- predict(spde_model_bru,
                                 normalized = TRUE)
 ```
 
-Now, we can get the mean values:
-
-```{r}
-m_prd_bru <- fitted_values$mean
-```
-
-To improve visualization, we will plot the posterior means
-using the `plot_function()` method:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru$plot_function(X = m_prd_bru, vertex_size = 0)
-```
-
 Finally, we can plot the predictions together with
 the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
-p <- graph_bru$plot_function(X = m_prd_bru, vertex_size = 0) 
-graph_bru$plot(data=TRUE, vertex_size = 0, edge_width = 0, p = p, data_size = 2)
+plot(field_pred)
+```
+
+We can also obtain a 3d plot by setting `plotly` to `TRUE`:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+plot(field_pred, plotly = TRUE)
 ```
 
 ## Fitting `inlabru` models with replicates

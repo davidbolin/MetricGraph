@@ -4,7 +4,7 @@
 \alias{plot.graph_bru_pred}
 \title{Plot of predicted values with inlabru}
 \usage{
-\method{plot}{graph_bru_pred}(x, y = NULL, ...)
+\method{plot}{graph_bru_pred}(x, y = NULL, vertex_size = 0, ...)
 }
 \arguments{
 \item{x}{a predicted object obtained with the \code{predict} method.}

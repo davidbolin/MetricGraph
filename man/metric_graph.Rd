@@ -107,6 +107,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
 \item \href{#method-metric_graph-get_Spoints}{\code{metric_graph$get_Spoints()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
+\item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
@@ -401,6 +402,26 @@ Adds observation locations as vertices in the graph
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{tolerance}}{parameter in which we merge vertices together. Not intended for non-expert use.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_mesh_locations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_mesh_locations}{}}}
+\subsection{Method \code{get_mesh_locations()}}{
+Returns a list or a matrix with the mesh locations
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = "loc")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{bru}}{logical. Should an \code{inlabru}-friendly list be returned?}
+
+\item{\code{loc}}{character. If \code{bru} is set to \code{TRUE}, the name of the location variable.
+The default name is 'loc'.}
 }
 \if{html}{\out{</div>}}
 }

@@ -652,6 +652,29 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
 
+  #' @description Returns a list or a matrix with the mesh locations
+  #' @param bru logical. Should an `inlabru`-friendly list be returned?
+  #' @param loc character. If `bru` is set to `TRUE`, the name of the location variable.
+  #' The default name is 'loc'.
+  #' 
+  
+  get_mesh_locations = function(bru = FALSE, loc = NULL){
+    if(is.null(self$mesh)){
+      stop("There is no mesh!")
+    }
+
+    if(!bru){
+      return(self$mesh$VtE)
+    } else{
+      if(is.null(loc)){
+        stop("If bru is TRUE, then the loc argument must be provided!")
+      }
+      data_list <- list()
+      data_list[[loc]] <- self$mesh$VtE
+      return(data_list)
+    }
+  },
+
   #' @description Clear all observations from the object
   clear_observations = function() {
     self$data <- NULL
