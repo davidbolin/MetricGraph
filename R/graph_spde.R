@@ -833,6 +833,9 @@ predict.inla_metric_graph_spde <- function(object,
                                         graph_tmp$data[["__coord_y"]]) 
   tmp_list <- lapply(1:nrow(tmp_list), function(i){tmp_list[i,]})
 
+  pred_PtE <- cbind(graph_tmp$data[["__edge_number"]],
+                          graph_tmp$data[["__distance_on_edge"]])
+
   # Adding the original data
 
   graph_tmp$add_observations(data = original_data,
@@ -869,6 +872,26 @@ predict.inla_metric_graph_spde <- function(object,
                     exclude = exclude,
                     drop = drop,
                     ...)
-  class(pred) <- c("graph_bru_pred", class(pred))
-  return(pred)                    
+  pred <- cbind(pred, pred_PtE)
+  pred_list <- list()
+  pred_list[["pred"]] <- pred
+  pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
+  
+  class(pred_list) <- "graph_bru_pred"
+  return(pred_list)                    
+}
+
+
+#' @name plot.graph_bru_pred
+#' @title Plot of predicted values with inlabru
+#' @description Auxiliar function to obtain plots of the predictions of the field
+#' using inlabru.
+#' @param x a predicted object obtained with the `predict` method.
+#' @param y not used.
+#' @param ... additional parameters to be passed to the plot function.
+#' @export 
+
+plot.graph_bru_pred <- function(x, y = NULL, ...){
+  m_prd_bru <- x$mean
+
 }
