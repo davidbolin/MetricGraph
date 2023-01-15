@@ -872,9 +872,9 @@ predict.inla_metric_graph_spde <- function(object,
                     exclude = exclude,
                     drop = drop,
                     ...)
-  pred <- cbind(pred, pred_PtE)
   pred_list <- list()
   pred_list[["pred"]] <- pred
+  pred_list[["PtE_pred"]] <- pred_PtE
   pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
   
   class(pred_list) <- "graph_bru_pred"
@@ -891,7 +891,10 @@ predict.inla_metric_graph_spde <- function(object,
 #' @param ... additional parameters to be passed to the plot function.
 #' @export 
 
-plot.graph_bru_pred <- function(x, y = NULL, ...){
-  m_prd_bru <- x$mean
-
+plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
+  m_prd_bru <- x$pred$mean
+  PtE_prd <- x$PtE_pred
+  p <- x$initial_graph$plot_function(X = cbind(PtE_prd, m_prd_bru),
+                                      vertex_size = vertex_size, ...)
+  p
 }

@@ -6,6 +6,7 @@
 \usage{
 \method{predict}{inla_metric_graph_spde}(
   object,
+  cmp,
   bru_fit,
   data = NULL,
   formula = NULL,
@@ -23,6 +24,8 @@
 }
 \arguments{
 \item{object}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function.}
+
+\item{cmp}{The \code{inlabru} component used to fit the model.}
 
 \item{bru_fit}{A fitted model using \code{inlabru} or \code{inla}.}
 
