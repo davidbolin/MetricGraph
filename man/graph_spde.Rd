@@ -30,19 +30,24 @@ graph_spde(
 \item{start_range}{Starting value for range parameter.}
 
 \item{prior_range}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation on the log scale. Will not be used if prior.kappa is non-null.}
+\code{sdlog}, that is, the mean and standard deviation of the range parameter on the log scale. Will not be used if prior.kappa is non-null.}
 
 \item{start_kappa}{Starting value for kappa.}
 
 \item{start_sigma}{Starting value for sigma.}
 
 \item{prior_kappa}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation on the log scale.}
+\code{sdlog}, that is, the mean and standard deviation of kappa on the log scale.}
 
 \item{prior_sigma}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation on the log scale.}
+\code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.}
 
 \item{debug}{Should debug be displayed?}
+
+\item{start_tau}{Starting value for tau.}
+
+\item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
+\code{sdlog}, that is, the mean and standard deviation of the tau parameter on the log scale.}
 }
 \value{
 An inla object.

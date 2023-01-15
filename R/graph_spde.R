@@ -9,15 +9,18 @@
 #' @param alpha The order of the SPDE.
 #' @param stationary_endpoints Which vertices of degree 1 should contain stationary boundary conditions?
 #' @param parameterization Which parameterization to be used? The options are 'matern' (sigma and range) and 'spde' (sigma and kappa).
+#' @param start_sigma Starting value for sigma.
+#' @param prior_sigma a `list` containing the elements `meanlog` and
+#' `sdlog`, that is, the mean and standard deviation of sigma on the log scale.
 #' @param start_range Starting value for range parameter.
 #' @param prior_range a `list` containing the elements `meanlog` and
-#' `sdlog`, that is, the mean and standard deviation on the log scale. Will not be used if prior.kappa is non-null.
+#' `sdlog`, that is, the mean and standard deviation of the range parameter on the log scale. Will not be used if prior.kappa is non-null.
+#' @param start_tau Starting value for tau.
+#' @param prior_tau a `list` containing the elements `meanlog` and
+#' `sdlog`, that is, the mean and standard deviation of the tau parameter on the log scale.
 #' @param start_kappa Starting value for kappa.
-#' @param start_sigma Starting value for sigma.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
-#' `sdlog`, that is, the mean and standard deviation on the log scale.
-#' @param prior_sigma a `list` containing the elements `meanlog` and
-#' `sdlog`, that is, the mean and standard deviation on the log scale.
+#' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
 #' @param debug Should debug be displayed?
 #'
 #' @return An inla object.
@@ -610,21 +613,18 @@ summary.metric_graph_spde_result <- function(object,
 #' @param \dots Arguments passed on to other methods
 #' @rdname bru_mapper.inla_metric_graph_spde
 #' @rawNamespace if (getRversion() >= "3.6.0") {
-#'   S3method(inlabru::bru_mapper, inla_metric_graph_spde)
 #'   S3method(inlabru::bru_get_mapper, inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_n, bru_mapper_inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_values, bru_mapper_inla_metric_graph_spde)
 #'   S3method(inlabru::ibm_jacobian, bru_mapper_inla_metric_graph_spde)
 #' }
 #'
-bru_mapper.inla_metric_graph_spde <- function(model,...) {
-  mapper <- list(model = model)
-  # Note 1: From inlabru > 2.5.3, use bru_mapper_define instead.
-  # Note 2: bru_mapper.default is not exported from inlabru, so
-  # must call the generic bru_mapper()
-  inlabru::bru_mapper(mapper, new_class = "bru_mapper_inla_metric_graph_spde")
-}
 
+bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
+  mapper <- list(model = model)
+  inlabru::bru_mapper_define(mapper, new_class = "bru_mapper_inla_metric_graph_spde")
+}
+ 
 #' @param mapper A `bru_mapper.inla_metric_graph_spde` object
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
@@ -640,32 +640,37 @@ ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   model <- mapper[["model"]]
-  if(is.null(input)){
-    return(model$graph_spde$A())
-  } else if(input[1] == "__all"){
-    return(model$graph_spde$A(group="__all"))
-  } else{
-    A_list <- list()
-    for(repl_ in unique(input)){
-      graph_tmp <- model$graph_spde$get_initial_graph()
-      data_tmp <- graph_data_spde(model, 
-            repl=repl_)
-      graph_tmp$add_observations(data = data_tmp,
-                    coord_x = "__coord_x",
-                    coord_y = "__coord_y",
-                    data_coords = "euclidean")
-      graph_tmp$observation_to_vertex()
-      A_list <- c(A_list, graph_tmp$A(group=repl_))
-    }
-    A <- do.call(rbind, A_list)
-    return(A)
-  }
+  # if(is.null(input)){
+  #   return(model$graph_spde$A())
+  # } else if(input[1] == "__all"){
+  #   return(model$graph_spde$A(group="__all"))
+  # } else{
+  #   A_list <- list()
+  #   for(repl_ in unique(input)){
+  #     graph_tmp <- model$graph_spde$get_initial_graph()
+  #     data_tmp <- graph_data_spde(model, 
+  #           repl=repl_)
+  #     graph_tmp$add_observations(data = data_tmp,
+  #                   coord_x = "__coord_x",
+  #                   coord_y = "__coord_y",
+  #                   data_coords = "euclidean")
+  #     graph_tmp$observation_to_vertex()
+  #     A_list <- c(A_list, graph_tmp$A(group=repl_))
+  #   }
+  #   A <- do.call(rbind, A_list)
+  #   return(A)
+  # }
+  pte_tmp <- model$graph_spde$get_PtE()
+  input_list <- lapply(1:nrow(input), function(i){input[i,]})
+  pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
+  idx_tmp <- match(input_list, pte_tmp_list)
+  graph_tmp <- model$graph_spde$clone()
+  graph_tmp$observation_to_vertex()
+  A_tmp <- graph_tmp$A()
+  return(A_tmp[idx_tmp,])
 }
 
-#' @rdname bru_mapper.inla_metric_graph_spde
-bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
- inlabru::bru_mapper(model)
-}
+
 
 
 

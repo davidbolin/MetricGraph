@@ -177,7 +177,7 @@ replicates to use. If there is no replicates, we
 supply `NULL`.
 ```{r}
 cmp <-
-    y ~ -1 + Intercept(1) + field(NULL,
+    y ~ -1 + Intercept(1) + field(loc,
                     model = spde_model_bru)
 ```
 
@@ -185,7 +185,7 @@ Now, we directly fit the model:
 
 ```{r}
 spde_bru_fit <-
-    bru(cmp, data=graph_data_spde(spde_model_bru))
+    bru(cmp, data=graph_data_spde(spde_model_bru, loc = "loc"))
 ```
 
 Let us now obtain the estimates in the original scale
@@ -494,7 +494,7 @@ We created a helper function, namely
 ```{r}
 repl <- bru_graph_rep(c(1,3,5,7,9), spde_model_bru_rep)
 cmp_rep <-
-    y ~ -1 + Intercept(1) + field(repl, 
+    y ~ -1 + Intercept(1) + field(loc, 
                         model = spde_model_bru_rep,
                         replicate = repl)
 ```
@@ -505,7 +505,7 @@ to the replicates we want inside the
 ```{r}
 spde_bru_fit_rep <-
     bru(cmp_rep,
-        data=graph_data_spde(spde_model_bru_rep, 
+        data=graph_data_spde(spde_model_bru_rep, loc = "loc",
         repl=c(1,3,5,7,9)))
 ```
 
@@ -543,7 +543,7 @@ function to `__all`.
 ```{r}
 repl <- bru_graph_rep("__all", spde_model_bru_rep)
 cmp_rep <-
-    y ~ -1 + Intercept(1) + field(repl, 
+    y ~ -1 + Intercept(1) + field(loc, 
                         model = spde_model_bru_rep,
                         replicate = repl)
 ```
@@ -555,6 +555,7 @@ to "__all" inside the
 spde_bru_fit_rep <-
     bru(cmp_rep,
         data=graph_data_spde(spde_model_bru_rep, 
+        loc = "loc",
         repl="__all"))
 ```
 
