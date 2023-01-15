@@ -670,7 +670,9 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop("If bru is TRUE, then the loc argument must be provided!")
       }
       data_list <- list()
-      data_list[[loc]] <- self$mesh$VtE
+      tmp_VtE <- self$mesh$VtE
+      tmp_VtE[,2] <- tmp_VtE[,2] * self$edge_lengths[tmp_VtE[, 1]]
+      data_list[[loc]] <- tmp_VtE
       return(data_list)
     }
   },

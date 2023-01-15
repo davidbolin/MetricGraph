@@ -266,14 +266,19 @@ data_list <- graph_bru$get_mesh_locations(bru = TRUE,
                                             loc = "loc")
 ```
 
+We can now obtain the predictions by using the `predict()` method. Observe
+that our `predict()` method for graph models is a bit different from
+`inlabru`'s standard `predict()` method. Indeed, the first argument is
+the model created with the `graph_spde()` function, the second is
+`inlabru`'s component, and the remaining is as done with the standard `predict()`
+method in `inlabru`.
 
 ```{r}
 field_pred <- predict(spde_model_bru, 
                                 cmp,
                                 spde_bru_fit, 
                                 data = data_list,
-                                formula = ~field,
-                                normalized = TRUE)
+                                formula = ~field)
 ```
 
 Finally, we can plot the predictions together with
