@@ -628,10 +628,11 @@ It is very easy to do kriging with the `inlabru` implementation.
 We simply need to provide the prediction locations to the
 `predict()` method.
 
-In this example we will use the mesh locations:
+In this example we will use the mesh locations. To this end we will
+use the `get_mesh_locations()` method. We also set `bru=TRUE` and `loc="loc"` to obtain a data list suitable to be used with `inlabru`.
 ```{r}
-  pred_loc <- graph$mesh$VtE
-  data_prd_list <- list(loc = pred_loc)
+  data_prd_list <- graph$get_mesh_locations(bru = TRUE,
+                                            loc = "loc")
 ```
 Now, we can simply provide these locations to the `predict` method
 along with the fitted object `rspde_bru_fit`:

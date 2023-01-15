@@ -260,14 +260,12 @@ graph_bru$plot(mesh=TRUE)
 
 The positions we want are the mesh positions, which
 can be obtained by using the `get_mesh_locations()` method.
-We also set `bru=TRUE` and `loc="loc"` to obtain a `data_list` suitable to be used with `inlabru`.
+We also set `bru=TRUE` and `loc="loc"` to obtain a data list suitable to be used with `inlabru`.
 ```{r}
 data_list <- graph_bru$get_mesh_locations(bru = TRUE,
                                             loc = "loc")
 ```
 
-data_list <- list(loc = PtE_prd)
-```
 
 ```{r}
 field_pred <- predict(spde_model_bru, 
