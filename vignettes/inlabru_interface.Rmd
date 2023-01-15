@@ -280,122 +280,22 @@ the previous component, the previous model object,
 the previous fitted model and the locations:
 
 ```{r}
-fitted_values <- inlabru_predict(spde_model_bru, 
+data_list <- list(loc = PtE_prd)
+```
+
+```{r}
+field_pred <- predict(spde_model_bru, 
+                                cmp,
                                 spde_bru_fit, 
-                                cmp, 
-                                PtE = PtE_prd)
+                                data = data_list,
+                                formula = ~field,
+                                normalized = TRUE)
 ```
 
 Now, we can get the mean values:
 
 ```{r}
 m_prd_bru <- fitted_values$mean
-```
-
-To improve visualization, we will plot the posterior means
-using the `plot_function()` method:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-graph_bru$plot_function(X = m_prd_bru, vertex_size = 0)
-```
-
-Finally, we can plot the predictions together with
-the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
-p <- graph_bru$plot_function(X = m_prd_bru, vertex_size = 0) 
-graph_bru$plot(data=TRUE, vertex_size = 0, edge_width = 0, p = p, data_size = 2)
-```
-
-## Kriging by adding new observation locations to the fitted graph
-
-We will now illustrate the manual approach, which is very similar 
-to `R-INLA`'s implementation. However, it is much simpler 
-since it does not require the user to handle 
-observation matrices, indices nor on stack objects.
-
-Therefore, in the same manner as in `R-INLA`'s
-implementation, we have two approaches to do 
-kriging with our `inlabru`
-implementation of Whittle-Matérn fields on metric graphs.
-
-* In the first we add a second set of `NA` add_observations
-at the locations in which we want to do kriging to the 
-graph in which we fitted the model. Then, fit a new model,
-and obtain the posterior mean at the desired locations.
-Observe that on this method, if we use the
-`add_PtE_observations()` method, we will need to provide the locations
-in which we want to predict in terms of the positions of
-the new graph, which contains the observed set of 
-observations as vertices.
-
-* In the second method we add the locations in which we
-want to predict together with the observations and 
-observed locations. In this method we provide the locations we
-want to predict in terms of the same base graph, as the
-observations are not vertices of the base graph.
-
-We will do kriging at an evenly spaced mesh across
-the metric graph.
-
-Let us begin by obtaining an evenly spaced mesh with respect to the base
-graph:
-
-```{r}
-obs_per_edge_prd <- 50
-graph_bru$build_mesh(n = obs_per_edge_prd)
-```
-
-We will now add the observations on the mesh
-locations to the graph we fitted the
-`R-INLA` model. To this end we will use the
-`add_mesh_observations()` method. We will enter the response variables
-as `NA`. We can get the number of mesh nodes by counting 
-the number of rows of the `mesh$PtE` attribute.
-
-```{r}
-n_obs_mesh <- nrow(graph_bru$mesh$PtE)
-y_prd <- rep(NA, n_obs_mesh)
-df_mesh <- data.frame(y = y_prd)
-graph_bru$add_mesh_observations(data = df_mesh)
-```
-
-We will now fit a new model with `inlabru` with this new
-graph that contains the prediction locations. To this end,
-we create a new model object with the `graph_spde()` function:
-
-```{r}
-spde_model_bru_prd <- graph_spde(graph_bru)
-```
-
-We will create a new vector of response variables,
-concatenating `y` to `y_prd`. We will also
-concatenate the observation and prediction
-locations vertically. Then, create 
-a new data list
-```{r}
-y_cmp <- c(y, y_prd)
-
-data_list_prd <- list(y = y_cmp, loc = graph_bru$PtE)
-```
-
-Now, let us create a new
-`inlabru` component:
-
-```{r}
-cmp_prd <- y ~ -1 + Intercept(1) + field(NULL, 
-                            model = spde_model_bru_prd)
-```
-
-Now, we fit the model:
-```{r}
-spde_bru_fit_prd <-
-    bru(cmp_prd, data=graph_data_spde(spde_model_bru_prd))
-```
-
-We will now extract the means at the prediction locations:
-```{r}
-idx_prd <- which(is.na(graph_data_spde(spde_model_bru_prd)[["y"]]))
-
-m_prd_bru <- spde_bru_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
 
 To improve visualization, we will plot the posterior means

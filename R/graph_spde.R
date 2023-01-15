@@ -640,33 +640,11 @@ ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   model <- mapper[["model"]]
-  # if(is.null(input)){
-  #   return(model$graph_spde$A())
-  # } else if(input[1] == "__all"){
-  #   return(model$graph_spde$A(group="__all"))
-  # } else{
-  #   A_list <- list()
-  #   for(repl_ in unique(input)){
-  #     graph_tmp <- model$graph_spde$get_initial_graph()
-  #     data_tmp <- graph_data_spde(model, 
-  #           repl=repl_)
-  #     graph_tmp$add_observations(data = data_tmp,
-  #                   coord_x = "__coord_x",
-  #                   coord_y = "__coord_y",
-  #                   data_coords = "euclidean")
-  #     graph_tmp$observation_to_vertex()
-  #     A_list <- c(A_list, graph_tmp$A(group=repl_))
-  #   }
-  #   A <- do.call(rbind, A_list)
-  #   return(A)
-  # }
   pte_tmp <- model$graph_spde$get_PtE()
   input_list <- lapply(1:nrow(input), function(i){input[i,]})
   pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
   idx_tmp <- match(input_list, pte_tmp_list)
-  graph_tmp <- model$graph_spde$clone()
-  graph_tmp$observation_to_vertex()
-  A_tmp <- graph_tmp$A()
+  A_tmp <- model$graph_spde$A()
   return(A_tmp[idx_tmp,])
 }
 
@@ -773,66 +751,124 @@ bru_graph_rep <- function(repl, graph_spde){
   return(rep(repl, each = length_resp ))
 }
 
-
-#' @name inlabru_predict
-#' @title Kriging with inlabru
+#' @name predict.inla_metric_graph_spde
+#' @title Predict method for inlabru fits on Metric Graphs
 #' @description Auxiliar function to obtain predictions of the field
 #' using inlabru.
-#' @param bru_model  An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param object An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param cmp The `inlabru` component used to fit the model.
 #' @param bru_fit A fitted model using `inlabru` or `inla`.
-#' @param cmp An inlabru component.
-#' @param XY Euclidean coordinates of the prediction locations.
-#' @param PtE Relative positions on the edge to obtain predictions.
-#' @param data_pred A data.frame containing the prediction locations along with the response variables (with NA if they are missing).
+#' @param data A data.frame of covariates needed for the prediction. The locations must be normalized PtE.
+#' @param formula A formula where the right hand side defines an R expression to evaluate for each generated sample. If NULL, the latent and hyperparameter states are returned as named list elements. See Details for more information.
+#' @param data_coords It decides which coordinate system to use. If `PtE`, the user must provide the locations
+#' as a data frame with the first column being the edge number and 
+#' the second column as the distance on edge, otherwise if `euclidean`, the user must provide 
+#' a data frame with the first column being the `x` Euclidean coordinates and the second column
+#' being the `y` Euclidean coordinates.
+#' @param  normalized if `TRUE`, then the distances in distance on edge are assumed to be normalized to (0,1). Default FALSE. Will not be 
+#' used if `data_coords` is `euclidean`.
+#' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
+#' @param seed Random number generator seed passed on to inla.posterior.sample
+#' @param probs	A numeric vector of probabilities with values in ⁠[0, 1]⁠, passed to stats::quantile
+#' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
+#' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
+#' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
+#' @param drop logical; If keep=FALSE, data is a Spatial*DataFrame, and the prediciton summary has the same number of rows as data, then the output is a Spatial*DataFrame object. Default FALSE.
+#' @param... Additional arguments passed on to inla.posterior.sample
 #' @return A list with predictions.
 #' @export
 
-inlabru_predict <- function(bru_model, bru_fit, cmp, XY = NULL, PtE = NULL,
-                            data_pred = NULL){
-  if(is.null(XY) && is.null(PtE) && is.null(data_pred)){
-    stop("No location to predict was provided!")
-  }
-  graph_tmp <- bru_model$graph_spde$get_initial_graph()
-  repl <- unique(bru_model$graph_spde$data[["__group"]])
+predict.inla_metric_graph_spde <- function(object,
+                                           cmp,
+                                           bru_fit, 
+                                           data = NULL,
+                                           formula = NULL,
+                                           data_coords = c("PtE", "euclidean"),
+                                           normalized = FALSE,
+                                           n.samples = 100,
+                                           seed = 0L,
+                                           probs = c(0.025, 0.5, 0.975),
+                                           num.threads = NULL,
+                                           include = NULL,
+                                           exclude = NULL,
+                                           drop = FALSE,
+                                           ...){
+  data_coords <- data_coords[[1]]
+  if(!(data_coords %in% c("PtE", "euclidean"))){
+    stop("data_coords must be either 'PtE' or 'euclidean'!")
+  }                                            
+  graph_tmp <- object$graph_spde$get_initial_graph()
+  name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
+  original_data <- object$graph_spde$data
+  original_data[["__edge_number"]] <- NULL
+  original_data[["__distance_on_edge"]] <- NULL
 
-  data_tmp <- graph_data_spde(bru_model, 
-            repl=repl[1])
-  graph_tmp$add_observations(data = data_tmp,
+  new_data <- data
+  new_data[[name_locations]] <- NULL
+  n_locations <- nrow(data[[name_locations]])
+  names_columns <- names(original_data)
+  names_columns <- setdiff(names_columns, c("__group", "__coord_x",
+                                            "__coord_y", "__edge_number",
+                                            "__distance_on_edge"))
+  for(name_column in names_columns){
+    new_data[[name_column]] <- rep(NA, n_locations)
+  }
+  if(data_coords == "PtE"){
+    new_data[["__edge_number"]] <- data[[name_locations]][,1]
+    new_data[["__distance_on_edge"]] <- data[[name_locations]][,2]
+  } else{
+    new_data[["__coord_x"]] <- data[[name_locations]][,1]
+    new_data[["__coord_y"]] <- data[[name_locations]][,2]    
+  }
+
+  graph_tmp$add_observations(data = new_data,
+                  edge_number = "__edge_number",
+                  distance_on_edge = "__distance_on_edge",
+                  coord_x = "__coord_x",
+                  coord_y = "__coord_y",
+                  data_coords = data_coords,
+                  normalized = normalized)
+
+  tmp_list <- cbind(graph_tmp$data[["__coord_x"]],
+                                        graph_tmp$data[["__coord_y"]]) 
+  tmp_list <- lapply(1:nrow(tmp_list), function(i){tmp_list[i,]})
+
+  # Adding the original data
+
+  graph_tmp$add_observations(data = original_data,
                     coord_x = "__coord_x",
                     coord_y = "__coord_y",
                     data_coords = "euclidean")
-
-  if(is.null(data_pred)){
-    if(!is.null(XY)){
-      PtE <- graph_tmp$coordinates(XY = XY)
-    }
-    resp <- as.character(cmp[2])
-    data_pred <- list()
-    data_pred[[resp]] <- rep(NA, nrow(PtE))
-    data_pred[["edge_number"]] <- PtE[,1]
-    data_pred[["distance_on_edge"]] <- PtE[,2]
-  } 
-
-
-  graph_tmp$add_observations(data = data_pred, normalized = TRUE)
+  
   graph_tmp$observation_to_vertex()
+
+  tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
+                                        graph_tmp$data[["__coord_y"]]) 
+  tmp_list2 <- lapply(1:nrow(tmp_list2), function(i){tmp_list2[i,]})
+  idx_list <- match(tmp_list, tmp_list2)
+
+  new_data_list <- data
+  new_data_list[[name_locations]] <- cbind(graph_tmp$data[["__edge_number"]][idx_list],
+                                              graph_tmp$data[["__distance_on_edge"]][idx_list])
+
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
-  name_model <- deparse(substitute(bru_model))
+  name_model <- deparse(substitute(object))
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
   bru_fit_new <- inlabru::bru(cmp, 
-          data = graph_data_spde(spde____model))#,
-          # options = list(
-          #   control.mode = list(
-          #     theta = bru_fit$mode$theta,
-          #     fixed = TRUE
-          #   )
-          # ))
-  fitted_values <- bru_fit_new$summary.fitted.values
-  
-idx_prd <- which(is.na(graph_data_spde(spde____model)[[resp]]))
-return(fitted_values[idx_prd,])
+          data = graph_data_spde(spde____model, loc = name_locations))
+  pred <- predict(object = bru_fit_new,
+                    data = new_data_list,
+                    formula = formula,
+                    n.samples = n.samples,
+                    seed = seed,
+                    probs = probs,
+                    num.threads = num.threads,
+                    include = include,
+                    exclude = exclude,
+                    drop = drop,
+                    ...)
+  class(pred) <- c("graph_bru_pred", class(pred))
+  return(pred)                    
 }
-
-
