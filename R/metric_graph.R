@@ -656,9 +656,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param bru logical. Should an `inlabru`-friendly list be returned?
   #' @param loc character. If `bru` is set to `TRUE`, the name of the location variable.
   #' The default name is 'loc'.
+  #' @param normalized if TRUE, then the distances in `distance_on_edge` are
+  #' assumed to be normalized to (0,1). Default TRUE. 
   #' 
   
-  get_mesh_locations = function(bru = FALSE, loc = NULL){
+  get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE){
     if(is.null(self$mesh)){
       stop("There is no mesh!")
     }
@@ -671,7 +673,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       data_list <- list()
       tmp_VtE <- self$mesh$VtE
-      tmp_VtE[,2] <- tmp_VtE[,2] * self$edge_lengths[tmp_VtE[, 1]]
+      if(!normalized){
+        tmp_VtE[,2] <- tmp_VtE[,2] * self$edge_lengths[tmp_VtE[, 1]]
+      }
       data_list[[loc]] <- tmp_VtE
       return(data_list)
     }

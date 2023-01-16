@@ -412,7 +412,7 @@ Adds observation locations as vertices in the graph
 \subsection{Method \code{get_mesh_locations()}}{
 Returns a list or a matrix with the mesh locations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -422,6 +422,9 @@ Returns a list or a matrix with the mesh locations
 
 \item{\code{loc}}{character. If \code{bru} is set to \code{TRUE}, the name of the location variable.
 The default name is 'loc'.}
+
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
+assumed to be normalized to (0,1). Default TRUE.}
 }
 \if{html}{\out{</div>}}
 }

@@ -11,7 +11,7 @@
   data = NULL,
   formula = NULL,
   data_coords = c("PtE", "euclidean"),
-  normalized = FALSE,
+  normalized = TRUE,
   n.samples = 100,
   seed = 0L,
   probs = c(0.025, 0.5, 0.975),
@@ -39,7 +39,7 @@ the second column as the distance on edge, otherwise if \code{euclidean}, the us
 a data frame with the first column being the \code{x} Euclidean coordinates and the second column
 being the \code{y} Euclidean coordinates.}
 
-\item{normalized}{if \code{TRUE}, then the distances in distance on edge are assumed to be normalized to (0,1). Default FALSE. Will not be
+\item{normalized}{if \code{TRUE}, then the distances in distance on edge are assumed to be normalized to (0,1). Default TRUE. Will not be
 used if \code{data_coords} is \code{euclidean}.}
 
 \item{n.samples}{Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.}

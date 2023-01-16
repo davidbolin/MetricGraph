@@ -782,7 +782,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' the second column as the distance on edge, otherwise if `euclidean`, the user must provide 
 #' a data frame with the first column being the `x` Euclidean coordinates and the second column
 #' being the `y` Euclidean coordinates.
-#' @param  normalized if `TRUE`, then the distances in distance on edge are assumed to be normalized to (0,1). Default FALSE. Will not be 
+#' @param  normalized if `TRUE`, then the distances in distance on edge are assumed to be normalized to (0,1). Default TRUE. Will not be 
 #' used if `data_coords` is `euclidean`.
 #' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
 #' @param seed Random number generator seed passed on to inla.posterior.sample
@@ -801,7 +801,7 @@ predict.inla_metric_graph_spde <- function(object,
                                            data = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
-                                           normalized = FALSE,
+                                           normalized = TRUE,
                                            n.samples = 100,
                                            seed = 0L,
                                            probs = c(0.025, 0.5, 0.975),
