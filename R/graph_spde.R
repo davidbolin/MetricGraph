@@ -916,3 +916,83 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
                                       vertex_size = vertex_size, ...)
   p
 }
+
+#' @name predict.rspde_metric_graph
+#' @title Predict method for inlabru fits on Metric Graphs for rSPDE models
+#' @description Auxiliar function to obtain predictions of the field
+#' using inlabru and rSPDE.
+#' @param object An `rspde_metric_graph` object built with the `rspde.metric_graph()` function.
+#' @param cmp The `inlabru` component used to fit the model.
+#' @param bru_fit A fitted model using `inlabru` or `inla`.
+#' @param data A data.frame of covariates needed for the prediction. The locations must be normalized PtE.
+#' @param formula A formula where the right hand side defines an R expression to evaluate for each generated sample. If NULL, the latent and hyperparameter states are returned as named list elements. See Details for more information.
+#' @param data_coords It decides which coordinate system to use. If `PtE`, the user must provide the locations
+#' as a data frame with the first column being the edge number and 
+#' the second column as the distance on edge, otherwise if `euclidean`, the user must provide 
+#' a data frame with the first column being the `x` Euclidean coordinates and the second column
+#' being the `y` Euclidean coordinates.
+#' @param  normalized if `TRUE`, then the distances in distance on edge are assumed to be normalized to (0,1). Default TRUE. Will not be 
+#' used if `data_coords` is `euclidean`.
+#' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
+#' @param seed Random number generator seed passed on to inla.posterior.sample
+#' @param probs	A numeric vector of probabilities with values in `⁠[0, 1]`⁠, passed to stats::quantile
+#' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
+#' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
+#' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
+#' @param drop logical; If keep=FALSE, data is a Spatial*DataFrame, and the prediciton summary has the same number of rows as data, then the output is a Spatial*DataFrame object. Default FALSE.
+#' @param... Additional arguments passed on to inla.posterior.sample
+#' @return A list with predictions.
+#' @export
+
+predict.rspde_metric_graph <- function(object,
+                                           cmp,
+                                           bru_fit, 
+                                           data = NULL,
+                                           formula = NULL,
+                                           data_coords = c("PtE", "euclidean"),
+                                           normalized = TRUE,
+                                           n.samples = 100,
+                                           seed = 0L,
+                                           probs = c(0.025, 0.5, 0.975),
+                                           num.threads = NULL,
+                                           include = NULL,
+                                           exclude = NULL,
+                                           drop = FALSE,
+                                           ...){
+  data_coords <- data_coords[[1]]
+  if(!(data_coords %in% c("PtE", "euclidean"))){
+    stop("data_coords must be either 'PtE' or 'euclidean'!")
+  }                                            
+  graph_tmp <- object$graph_spde$get_initial_graph()
+  name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
+
+  if(data_coords == "PtE"){
+    if(normalized){
+      pred_PtE <- data[[name_locations]]
+    } else{
+      pred_PtE <- data[[name_locations]]
+      pred_PtE[,2] <- pred_PtE[,2]/graph_tmp$edge_lengths[pred_PtE[, 1]]
+    }
+  } else{
+    pred_PtE <- graph_tmp$coordinates(XY = data[[name_locations]])
+  }
+
+  pred <- predict(object = bru_fit,
+                    data = data,
+                    formula = formula,
+                    n.samples = n.samples,
+                    seed = seed,
+                    probs = probs,
+                    num.threads = num.threads,
+                    include = include,
+                    exclude = exclude,
+                    drop = drop,
+                    ...)
+  pred_list <- list()
+  pred_list[["pred"]] <- pred
+  pred_list[["PtE_pred"]] <- pred_PtE
+  pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
+  
+  class(pred_list) <- "graph_bru_pred"
+  return(pred_list)                    
+}

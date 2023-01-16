@@ -637,13 +637,13 @@ use the `get_mesh_locations()` method. We also set `bru=TRUE` and `loc="loc"` to
 Now, we can simply provide these locations to the `predict` method
 along with the fitted object `rspde_bru_fit`:
 ```{r}
-  field_pred <- predict(rspde_bru_fit, data=data_prd_list, ~field)
+  field_pred <- predict(rspde_model, cmp, rspde_bru_fit, data=data_prd_list, ~field)
 ```
 
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function(field_pred$mean, plotly = TRUE)  
+  plot(field_pred, plotly = TRUE)  
 ```
 
 ## Using inlabru to fit models with replicates
