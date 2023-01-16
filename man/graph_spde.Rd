@@ -43,11 +43,6 @@ graph_spde(
 \code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.}
 
 \item{debug}{Should debug be displayed?}
-
-\item{start_tau}{Starting value for tau.}
-
-\item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation of the tau parameter on the log scale.}
 }
 \value{
 An inla object.
@@ -56,4 +51,24 @@ An inla object.
 This function creates an inla object that can be used
 in \code{INLA} or \code{inlabru} to fit Whittle-Matérn fields
 on metric graphs.
+}
+\details{
+This function is used to construct a Matern SPDE model on a metric graph. The latent field
+\eqn{u} is the solution of the SPDE
+\deqn{(\kappa^2 - \Delta)^\alpha u = \sigma W,} where \eqn{W} is the Gaussian white noise
+on the metric graph. This model implements exactly
+the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite element approximation
+for general \eqn{\alpha} we refer the reader to the \code{rSPDE} package and to the
+Whittle--Matérn fields with general smoothness vignette.
+
+We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}}, which
+can be interpreted as a range parameter.
+
+Let \eqn{\kappa_0} and \eqn{\sigma_0} be the starting values for \eqn{\kappa} and
+\eqn{\sigma}, we write \eqn{\sigma = \exp\{\theta_1\}} and \eqn{\kappa = \exp\{\theta_2\}}.
+We assume priors on \eqn{\theta_1} and \eqn{\theta_2} to be normally distributed
+with mean, respectively, \eqn{\log(\sigma_0)} and \eqn{\log(\kappa_0)}, and variance 10.
+Similarly, if we let \eqn{\rho_0} be the starting value for \eqn{\rho}, then
+we write \eqn{\rho = \exp\{\theta_2\}} and assume a normal prior for \eqn{\theta_2},
+with mean \eqn{\log(\rho_0)} and variance 10.
 }

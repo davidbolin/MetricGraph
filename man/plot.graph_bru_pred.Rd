@@ -11,6 +11,8 @@
 
 \item{y}{not used.}
 
+\item{vertex_size}{size of the vertices.}
+
 \item{...}{additional parameters to be passed to the plot function.}
 }
 \description{

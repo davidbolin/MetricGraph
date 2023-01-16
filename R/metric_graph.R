@@ -160,9 +160,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
-      if(class(lines) == "SpatialLines") {
+      if(inherits(lines,"SpatialLines")) {
         self$lines = lines
-      } else if (class(lines) == "SpatialLinesDataFrame") {
+      } else if (inherits(lines,"SpatialLinesDataFrame")) {
         self$lines = SpatialLines(lines@lines)
       } else {
         stop("lines should be of class SpatialLines or SpatialLinesDataFrame")
@@ -2150,7 +2150,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
         if(!is.null(intersect_tmp)) {
           for(k in 1:length(intersect_tmp)) {
-            if(class(intersect_tmp) == "SpatialLines") {
+            if(inherits(intersect_tmp, "SpatialLines")) {
               coord_tmp <-gInterpolate(intersect_tmp[k], d=0.5, normalized = TRUE)
               p <- matrix(coordinates(coord_tmp),1,2)
             } else {

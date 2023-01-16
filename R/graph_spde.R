@@ -15,15 +15,32 @@
 #' @param start_range Starting value for range parameter.
 #' @param prior_range a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of the range parameter on the log scale. Will not be used if prior.kappa is non-null.
-#' @param start_tau Starting value for tau.
-#' @param prior_tau a `list` containing the elements `meanlog` and
-#' `sdlog`, that is, the mean and standard deviation of the tau parameter on the log scale.
 #' @param start_kappa Starting value for kappa.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
 #' @param debug Should debug be displayed?
 #'
 #' @return An inla object.
+#' @details 
+#' This function is used to construct a Matern SPDE model on a metric graph. The latent field 
+#' \eqn{u} is the solution of the SPDE
+#' \deqn{(\kappa^2 - \Delta)^\alpha u = \sigma W,} where \eqn{W} is the Gaussian white noise
+#' on the metric graph. This model implements exactly
+#'  the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite element approximation
+#' for general \eqn{\alpha} we refer the reader to the `rSPDE` package and to the
+#' Whittle--Matérn fields with general smoothness vignette.
+#' 
+#' We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}}, which
+#' can be interpreted as a range parameter. 
+#' 
+#' Let \eqn{\kappa_0} and \eqn{\sigma_0} be the starting values for \eqn{\kappa} and 
+#' \eqn{\sigma}, we write \eqn{\sigma = \exp\{\theta_1\}} and \eqn{\kappa = \exp\{\theta_2\}}.
+#' We assume priors on \eqn{\theta_1} and \eqn{\theta_2} to be normally distributed
+#' with mean, respectively, \eqn{\log(\sigma_0)} and \eqn{\log(\kappa_0)}, and variance 10.
+#' Similarly, if we let \eqn{\rho_0} be the starting value for \eqn{\rho}, then
+#' we write \eqn{\rho = \exp\{\theta_2\}} and assume a normal prior for \eqn{\theta_2},
+#' with mean \eqn{\log(\rho_0)} and variance 10.
+#' 
 #' @export
 graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
  parameterization = c("matern", "spde"),
@@ -769,7 +786,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' used if `data_coords` is `euclidean`.
 #' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
 #' @param seed Random number generator seed passed on to inla.posterior.sample
-#' @param probs	A numeric vector of probabilities with values in ⁠[0, 1]⁠, passed to stats::quantile
+#' @param probs	A numeric vector of probabilities with values in `⁠[0, 1]`⁠, passed to stats::quantile
 #' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
 #' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
 #' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
@@ -888,6 +905,7 @@ predict.inla_metric_graph_spde <- function(object,
 #' using inlabru.
 #' @param x a predicted object obtained with the `predict` method.
 #' @param y not used.
+#' @param vertex_size size of the vertices.
 #' @param ... additional parameters to be passed to the plot function.
 #' @export 
 

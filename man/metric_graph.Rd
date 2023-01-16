@@ -412,7 +412,7 @@ Adds observation locations as vertices in the graph
 \subsection{Method \code{get_mesh_locations()}}{
 Returns a list or a matrix with the mesh locations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = "loc")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
