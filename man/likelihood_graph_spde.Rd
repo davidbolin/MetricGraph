@@ -7,8 +7,8 @@
 likelihood_graph_spde(
   graph,
   alpha = 1,
-  X_cov,
-  y,
+  covariates = FALSE,
+  data_name,
   log_scale = TRUE,
   maximize = FALSE,
   version = 1,
@@ -20,22 +20,28 @@ likelihood_graph_spde(
 
 \item{alpha}{Order of the SPDE, should be either 1 or 2.}
 
-\item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
+\item{covariates}{OBSOLETE}
 
-\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
+\item{data_name}{Name of the response variable}
+
+\item{log_scale}{Should the parameters \code{theta} of the returning function be
+given in log scale?}
+
+\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so
+one can directly apply it to the \code{optim} function.}
 
 \item{version}{if 1, the likelihood is computed by integrating out}
-
-\item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
-covariates included by the method \code{add_covariates()}.}
 }
 \value{
-The log-likelihood function, which is returned as a function with parameter 'theta'.
+The log-likelihood function, which is returned as a function with
+parameter 'theta'.
 The parameter \code{theta} must be supplied as
 the vector \code{c(sigma_e, sigma, kappa)}.
 
-If \code{covariates} is \code{TRUE}, then the parameter \code{theta} must be supplied as the vector \code{c(sigma_e, sigma, kappa, beta[1], ..., beta[p])},
-where \verb{beta[1],...,beta[p]} are the coefficients and \code{p} is the number of covariates.
+If \code{covariates} is \code{TRUE}, then the parameter \code{theta} must be supplied as the
+vector \code{c(sigma_e, sigma, kappa, beta[1], ..., beta[p])},
+where \verb{beta[1],...,beta[p]} are the coefficients and \code{p} is the number of
+covariates.
 }
 \description{
 Function factory for likelihood evaluation for the metric graph SPDE model

@@ -291,13 +291,16 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param model type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
 #' are supported
 #' @param data Should the data be used to obtain improved starting values?
-#' @param column_data The column of `graph$data` that contains the response variable.
+#' @param data_name The name of the response variable in `graph$data`.
 #' @param manual_data A vector (or matrix) of response variables.
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
-graph_starting_values <- function(graph, model = NULL, data=TRUE, column_data=NULL,
-manual_data = NULL){
+graph_starting_values <- function(graph,
+                                  model = NULL,
+                                  data = TRUE,
+                                  data_name = NULL,
+                                  manual_data = NULL){
 
   check_graph(graph)
 
@@ -305,11 +308,11 @@ manual_data = NULL){
     if(is.null(graph$data)) {
       stop("No data provided, if you want the version without data set the 'data' argument to FALSE!")
     }
-    if(is.null(column_data) && is.null(manual_data)){
+    if(is.null(data_name) && is.null(manual_data)){
       stop("If data is true, you must either supply the column data or manual data.")
     }
-    if(!is.null(column_data)){
-      y <- graph$data[, column_data]
+    if(!is.null(data_name)){
+      y <- graph$data[[data_name]]
     }
     if(!is.null(manual_data)){
       y <- manual_data

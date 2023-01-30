@@ -2,22 +2,32 @@
 #'
 #' @param graph metric_graph object
 #' @param alpha Order of the SPDE, should be either 1 or 2.
-#' @param covariates Logical. If `TRUE`, the model will be considered with covariates. It requires `graph` to have
-#' covariates included by the method `add_covariates()`.
-#' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
+#' @param data_name Name of the response variable
+#' @param covariates OBSOLETE
+#' @param log_scale Should the parameters `theta` of the returning function be
+#' given in log scale?
 #' @param version if 1, the likelihood is computed by integrating out
-#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
-#' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
+#' @param maximize If `FALSE` the function will return minus the likelihood, so
+#' one can directly apply it to the `optim` function.
+#' @return The log-likelihood function, which is returned as a function with
+#' parameter 'theta'.
 #' The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
-#' 
-#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
-#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
+#'
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the
+#' vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
+#' covariates.
 #' @export
 
-likelihood_graph_spde <- function(graph, alpha = 1, 
-X_cov, y, log_scale = TRUE, maximize = FALSE, version = 1,
-repl=NULL) {
+likelihood_graph_spde <- function(graph,
+                                  alpha = 1,
+                                  covariates = FALSE,
+                                  data_name,
+                                  log_scale = TRUE,
+                                  maximize = FALSE,
+                                  version = 1,
+                                  repl=NULL) {
 
   check <- check_graph(graph)
 
@@ -36,9 +46,9 @@ repl=NULL) {
       switch(alpha,
       "1" = {
         if(version == 1){
-          loglik_val <- likelihood_alpha1(theta_spde, graph, covariates)
+          loglik_val <- likelihood_alpha1(theta_spde, graph, data_name, covariates)
         } else if(version == 2){
-          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl) 
+          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl)
         } else{
           stop("Version should be either 1 or 2!")
         }
@@ -84,7 +94,7 @@ likelihood_alpha2 <- function(theta, graph, covariates) {
   n.o <- nrow(graph$y)
 
   det_R_count <- NULL
-  
+
   for(repl_y in 1:ncol(graph$y)){
       loglik <- loglik + det_R
       Qpmu <- rep(0, 4 * nrow(graph$E))
@@ -284,8 +294,8 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl) {
       n.o <- length(y_)
       Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
       R.p <- chol(Q.p)
-      
- 
+
+
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
       v <- y_
@@ -307,8 +317,10 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl) {
 #' Log-likelihood calculation for alpha=1 model
 #' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
+#' @param data_name name of the response variable
+#' @param covariates OBSOLETE
 #' @noRd
-likelihood_alpha1 <- function(theta, graph, covariates) {
+likelihood_alpha1 <- function(theta, graph, data_name, covariates) {
   sigma_e <- theta[1]
   #build Q
 
@@ -324,40 +336,40 @@ likelihood_alpha1 <- function(theta, graph, covariates) {
   det_R <- Matrix::determinant(R)$modulus[1]
 
   #build BSIGMAB
-
-  obs.edges <- unique(graph$PtE[, 1])
+  PtE <- graph$get_PtE()
+  obs.edges <- unique(PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
   loglik <- 0
 
   det_R_count <- NULL
-  n.o <- nrow(graph$y)
-
-  for(repl_y in 1:ncol(graph$y)){
+  n.o <- length(graph$data[[data_name]])
+  u_repl <- unique(graph$data[["__group"]])
+  for(repl_y in 1:length(u_repl)){
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- rep(0, nrow(graph$V))
     for (e in obs.edges) {
-      obs.id <- graph$PtE[,1] == e
-      y_i <- graph$y[obs.id, repl_y]
+      obs.id <- PtE[,1] == e
+      y_i <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
+      y_i <- y_i[obs.id]
 
-        if(covariates){
+        if(covariates){ #obsolete
           n_cov <- ncol(graph$covariates[[1]])
-        if(length(graph$covariates)==1){
+          if(length(graph$covariates)==1){
           X_cov <- graph$covariates[[1]]
-        } else if(length(graph$covariates) == ncol(graph$y)){
-          X_cov <- graph$covariates[[repl_y]]
-        } else{
-          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-        }
-
+          } else if(length(graph$covariates) == ncol(graph$data[[data_name]])){
+            X_cov <- graph$covariates[[repl_y]]
+          } else{
+            stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+          }
         X_cov <- X_cov[obs.id,]
         y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
       }
 
       l <- graph$edge_lengths[e]
-      D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
+      D_matrix <- as.matrix(dist(c(0, l, l*PtE[obs.id, 2])))
       S <- r_1(D_matrix, kappa = theta[3], sigma = theta[2])
 
       #covariance update see Art p.17
@@ -391,9 +403,11 @@ likelihood_alpha1 <- function(theta, graph, covariates) {
     }
 
     if(is.null(det_R_count)){
-        i_ <- c(Q.list$i, i_[1:count])
-        j_ <- c(Q.list$j, j_[1:count])
-        x_ <- c(Q.list$x, x_[1:count])
+      i_ <- c(Q.list$i, i_[1:count])
+      j_ <- c(Q.list$j, j_[1:count])
+      x_ <- c(Q.list$x, x_[1:count])
+
+
         Qp <- Matrix::sparseMatrix(i = i_,
                              j = j_,
                              x = x_,
@@ -406,7 +420,8 @@ likelihood_alpha1 <- function(theta, graph, covariates) {
 
     loglik <- loglik - det_R_count
 
-    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Qpmu,system = "P"),
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Qpmu,
+                                                          system = "P"),
                                    system = "L")))
 
     loglik <- loglik + 0.5  * t(v) %*% v - 0.5 * n.o * log(2*pi)
@@ -436,10 +451,10 @@ likelihood_alpha1 <- function(theta, graph, covariates) {
 #'
 #' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e` and the vector
 #' `theta[2:(q+1)]` is the input of `cov_function`, where `q` is the number of parameters of the covariance function.
-#' 
+#'
 #' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])`,
-#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates. 
-#' 
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
+#'
 #' For the remaining models, if `covariates` is `TRUE`, then `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
@@ -558,7 +573,7 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
           }
 
           loglik_val <- loglik_val + as.double(-sum(log(diag(R))) - 0.5*t(v)%*%solve(Sigma_non_na,v) -
-                         length(v)*log(2*pi)/2)        
+                         length(v)*log(2*pi)/2)
       }
 
       if(maximize){
@@ -582,7 +597,7 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
 #' The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, sigma, kappa)`.
-#' 
+#'
 #' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export

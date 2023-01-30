@@ -160,10 +160,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
-      if(inherits(lines,"SpatialLines")) {
-        self$lines = lines
-      } else if (inherits(lines,"SpatialLinesDataFrame")) {
+      if (inherits(lines,"SpatialLinesDataFrame")) {
         self$lines = SpatialLines(lines@lines)
+      } else if (inherits(lines,"SpatialLines")) {
+        self$lines = lines
       } else {
         stop("lines should be of class SpatialLines or SpatialLinesDataFrame")
       }
@@ -657,9 +657,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param loc character. If `bru` is set to `TRUE`, the name of the location variable.
   #' The default name is 'loc'.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
-  #' assumed to be normalized to (0,1). Default TRUE. 
-  #' 
-  
+  #' assumed to be normalized to (0,1). Default TRUE.
+  #'
+
   get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE){
     if(is.null(self$mesh)){
       stop("There is no mesh!")
@@ -985,6 +985,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$mesh$G[v1,v2] <- self$mesh$G[v1, v2] - 1 / self$mesh$h_e[e]
       self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
     }
+    self$mesh$weights <- rowSums(self$mesh$C)
   },
 
   #' @description Computes observation matrix for mesh

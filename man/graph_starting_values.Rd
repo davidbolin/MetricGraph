@@ -8,7 +8,7 @@ graph_starting_values(
   graph,
   model = NULL,
   data = TRUE,
-  column_data = NULL,
+  data_name = NULL,
   manual_data = NULL
 )
 }
@@ -20,7 +20,7 @@ are supported}
 
 \item{data}{Should the data be used to obtain improved starting values?}
 
-\item{column_data}{The column of \code{graph$data} that contains the response variable.}
+\item{data_name}{The name of the response variable in \code{graph$data}.}
 
 \item{manual_data}{A vector (or matrix) of response variables.}
 }

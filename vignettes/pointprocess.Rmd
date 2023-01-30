@@ -1,0 +1,122 @@
+---
+  title: "Whittle--Matérn fields with general smoothness"
+author: "David Bolin, Alexandre B. Simas"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Whittle--Matérn fields with general smoothness}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+references:
+  - id: xiong22
+title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
+author:
+  - family: Xiong
+given: Zhen
+- family: Simas
+given: Alexandre B.
+- family: Bolin
+given: David
+container-title: arXiv:2209.04670
+type: preprint
+issued:
+  year: 2022
+- id: graph_fem
+title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
+author:
+  - family: Bolin
+given: David
+- family: Kovács
+given: Mihály
+- family: Kumar
+given: Vivek
+- family: Simas
+given: Alexandre B.
+container-title: arXiv:??
+  type: preprint
+issued:
+  year: 2022
+---
+
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+```
+
+## Introduction
+
+In this vignette we will introduce how to work with log-Gaussian Cox processes
+based on Whittle--Matérn fields on metric graphs. To simplify the integration
+with `R-INLA` and `inlabru` hese models are implemented using finite element 
+approximations. 
+
+For further details on the construction of metric graphs, see
+[Working with metric graphs](metric_graphs.html)
+
+## Constructing the graph and the mesh
+We begin by loading the `rSPDE` and `MetricGraph` packages:
+
+```{r, message=FALSE, warning=FALSE}
+library(rSPDE)
+library(MetricGraph)
+```
+
+As an example, we consider the following metric graph
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+line4 <- Line(rbind(c(0,0),c(-1,0)))
+line5 <- Line(rbind(c(-1,0),c(-1,1)))
+Lines = SpatialLines(list(Lines(list(line1),ID="1"),
+                          Lines(list(line2),ID="2"),
+                          Lines(list(line3),ID="3"),
+                          Lines(list(line4),ID="4"),
+                          Lines(list(line5),ID="5")))
+graph <- metric_graph$new(lines = Lines)
+graph$plot()
+```
+
+To construct a FEM approximation of a Whittle--Matérn field,
+we must first construct a mesh on the graph.
+```{r}
+graph$build_mesh(h = 0.01)
+graph$plot(mesh=TRUE)
+```
+
+The next step is to build the mass and stiffness matrices for the FEM basis.
+```{r}
+  graph$compute_fem()
+```
+
+We are now ready to specify the and sample from a log-Gaussian Cox process model
+with intensity $\lambda = \exp(u)$ where $u$ is a Gaussian Whittle--Matérn field specified by
+$$
+(\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
+$$
+For this we can use the function `graph_lgcp` as follows:
+```{r}
+  tau <- 1
+  kappa <- 0.2
+  alpha <- 1
+  lgcp_sample <- graph_lgcp(intercept = 1, kappa = kappa, tau = tau, alpha = 1, graph = graph)
+```
+The object returned by the function is a list with the simulated Gaussian process and the points on the graph. We can plot the simulated intensity function as
+```{r, message=FALSE}
+graph$plot_function(exp(lgcp_sample$u), vertex_size = 0)
+```
+To plot the points, we can add them to the graph and then plot:
+```{r}
+graph$add_observations(data = data.frame(y=rep(0,length(lgcp_sample$edge_loc)),
+                                         edge_number = lgcp_sample$edge_number,
+                                         distance_on_edge = lgcp_sample$edge_loc),
+                       normalized = TRUE)
+graph$plot(vertex_size = 0, data = "y")
+```
+
+
+
+
+
+## References
