@@ -1,44 +1,63 @@
 ---
-  title: "Whittle--Matérn fields with general smoothness"
-author: "David Bolin, Alexandre B. Simas"
+title: "Log-Gaussian Cox processes on metric graphs"
+author: "David Bolin, Alexandre B. Simas, Jonas Wallin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Whittle--Matérn fields with general smoothness}
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{Log-Gaussian Cox processes on metric graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 references:
-  - id: xiong22
-title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
-author:
+- id: xiong22
+  title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
+  author:
   - family: Xiong
-given: Zhen
-- family: Simas
-given: Alexandre B.
-- family: Bolin
-given: David
-container-title: arXiv:2209.04670
-type: preprint
-issued:
+    given: Zhen
+  - family: Simas
+    given: Alexandre B.
+  - family: Bolin
+    given: David
+  container-title: arXiv:2209.04670
+  type: preprint
+  issued:
   year: 2022
 - id: graph_fem
-title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
-author:
+  title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
+  author:
   - family: Bolin
-given: David
-- family: Kovács
-given: Mihály
-- family: Kumar
-given: Vivek
-- family: Simas
-given: Alexandre B.
-container-title: arXiv:??
+    given: David
+  - family: Kovács
+    given: Mihály
+  - family: Kumar
+    given: Vivek
+  - family: Simas
+    given: Alexandre B.
+  container-title: arXiv:??
   type: preprint
-issued:
+  issued:
   year: 2022
+- id: lgcp
+  title: "Going off grid: Computationally efficient inference for log-Gaussian Cox processes"
+  author:
+  - family: Simpson
+    given: Daniel
+  - family: Illian
+    given: Janine
+  - family: Lindgren
+    given: Finn
+  - family: S\orbye
+    given: Sigrunn
+  - family: Rue
+    given: Håvard
+  container-title: Biometrika
+  type: article
+  issue: 103
+  pages: 49-70
+  issued:
+  year: 2016
 ---
 
-  ```{r setup, include=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 set.seed(1)
 ```
@@ -80,7 +99,7 @@ graph$plot()
 
 To construct a FEM approximation of a Whittle--Matérn field,
 we must first construct a mesh on the graph.
-```{r}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$build_mesh(h = 0.01)
 graph$plot(mesh=TRUE)
 ```
@@ -97,18 +116,19 @@ $$
 $$
 For this we can use the function `graph_lgcp` as follows:
 ```{r}
-  tau <- 1
-  kappa <- 0.2
-  alpha <- 1
-  lgcp_sample <- graph_lgcp(intercept = 1, kappa = kappa, tau = tau, alpha = 1, graph = graph)
+  sigma <- 1
+  range <- 0.7
+  alpha <- 2
+  lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma, range = range, alpha = alpha, graph = graph)
 ```
 The object returned by the function is a list with the simulated Gaussian process and the points on the graph. We can plot the simulated intensity function as
-```{r, message=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$plot_function(exp(lgcp_sample$u), vertex_size = 0)
 ```
+
 To plot the points, we can add them to the graph and then plot:
-```{r}
-graph$add_observations(data = data.frame(y=rep(0,length(lgcp_sample$edge_loc)),
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)),
                                          edge_number = lgcp_sample$edge_number,
                                          distance_on_edge = lgcp_sample$edge_loc),
                        normalized = TRUE)
@@ -116,7 +136,136 @@ graph$plot(vertex_size = 0, data = "y")
 ```
 
 
+## Fitting LGCP models in R-INLA
 
 
+# `R-INLA` implementation
+
+We are now in a position to fit the model with our `R-INLA` implementation. 
+When working with log-Gaussian Cox processes, the likelihood has a term 
+$\int_\Gamma \exp(u(s)) ds$ that needs to be handled separately. 
+This is done by using the mid-point rule as suggested for SPDE models by [@lgcp](https://academic.oup.com/biomet/article/103/1/49/2389990)
+where we approximate 
+$$
+\int_\Gamma \exp(u(s)) ds \approx \sum_{i=1}^p \widetilde{a}_i \exp\left(u(\widetilde{s}_i)\right).
+$$
+Using the fact that $u(s) = \sum_{j=1}^n \varphi(s) u_i$ from the FEM approximation, 
+we can write the integral as $\widetilde{\alpha}^T\exp(\widetilde{A}u)$ where
+$\widetilde{A}_{ij} = \varphi_j(\widetilde{s}_i)$ and $\widetilde{a}$ is a vector
+with integration weights. These quantities can be obtained as
+```{r}
+Atilde <- graph$mesh_A(graph$mesh$VtE)
+atilde <- graph$mesh$weights
+```
+The weights are used as exposure terms in the Poisson likelihiood in R-INLA. Because 
+of this, the easiest way to construct the model is to add the integration points 
+as zero observations in the graph, with corresponding exposure weights. We also 
+need to add the exposure terms (which are zero) for the actual observation locations:
+```{r}
+#clear the previous data in the graph
+graph$clear_observations()
+
+#Add the data together with the exposure terms
+graph$add_observations(data = data.frame(y = rep(1,length(lgcp_sample$edge_loc)),
+                                         e = rep(0,length(lgcp_sample$edge_loc)),
+                                         edge_number = lgcp_sample$edge_number,
+                                         distance_on_edge = lgcp_sample$edge_loc),
+                       normalized = TRUE)
+
+#Add integration points
+graph$add_observations(data = data.frame(y = rep(0,length(atilde)),
+                                         e = atilde,
+                                         edge_number = graph$mesh$VtE[,1],
+                                         distance_on_edge = graph$mesh$VtE[,2]),
+                       normalized = TRUE)
+
+```
+We now load the `R-INLA` package and create the `inla` model object with the
+`graph_spde` function. By default we have `alpha=1`. 
+
+```{r}
+library(INLA)
+rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
+```
+
+Next, we create the index object and the A matrix:
+
+```{r}
+spde_index <- rspde.make.index(name="field", mesh=graph, nu = alpha - 1/2)
+A <- rspde.make.A(mesh = graph, nu = alpha - 1/2)
+```
+
+Next, we create the `inla.stack` object with the `inla.stack()` function. 
+At this stage, it is important that the data has been added to the `graph` since
+it is supplied to the stack by using the `graph_spde_data()` function. 
+
+```{r}
+stk <- inla.stack(data = graph_data_spde(rspde_model), 
+                  A = A, 
+                  effects = c(spde_index, list(Intercept = 1)))
+```
+
+We can now fit the model using `R-INLA`:
+
+```{r}
+spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model), 
+                 family = "poisson", data = inla.stack.data(stk),
+                 control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
+                 E = inla.stack.data(stk)$e)
+```
+
+Let us now obtain the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+      
+```{r}
+spde_result <- rspde.result(spde_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_df <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, range),
+    mean = c(
+      spde_result$summary.std.dev$mean,
+      spde_result$summary.range$mean
+    ),
+    mode = c(
+      spde_result$summary.std.dev$mode,
+      spde_result$summary.range$mode
+    )
+  )
+  print(result_df)
+```
+
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+  posterior_df_fit <- gg_df(spde_result)
+
+  library(ggplot2)
+
+  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+Finally, we can plot the estimated field $u$:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+n.obs <- length(graph$data$y)
+n.field <- dim(graph$mesh$VtE)[1]
+u_posterior <- spde_fit$summary.linear.predictor$mean[(n.obs+1):(n.obs+n.field)]
+graph$plot_function(u_posterior, vertex_size = 0)
+```
+
+This can be compared with the field that was used to generate the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+graph$plot_function(lgcp_sample$u, vertex_size = 0)
+```
 
 ## References

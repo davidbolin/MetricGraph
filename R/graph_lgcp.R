@@ -1,12 +1,12 @@
 #' Simulation of log-Gaussian Cox process on metric graph
 #' @param intercept mean value of the Gaussian process
-#' @param kappa range parameter kappa
-#' @param tau variance parameter
+#' @param sigma parameter for marginal standard deviations
+#' @param range parameter for practical correlation range
 #' @param alpha smoothness parameter (1 or 2)
 #' @param graph metric_graph object
 #' @return List with Gaussian process sample and simulated points
 #' @export
-graph_lgcp <- function(intercept = 0, kappa, tau, alpha, graph) {
+graph_lgcp <- function(intercept = 0, sigma, range, alpha, graph) {
 
   if(is.null(graph$mesh)) {
     stop("No mesh provided")
@@ -15,18 +15,19 @@ graph_lgcp <- function(intercept = 0, kappa, tau, alpha, graph) {
   if(is.null(graph$mesh$C)) {
     graph$compute_fem()
   }
-
+  nu <- alpha - 1/2
+  kappa <- sqrt(8*nu)/range
+  tau <- sqrt(gamma(nu)/(gamma(alpha)*sqrt(4*pi)*kappa^(2*nu)*sigma^2))
   C <- Diagonal(dim(graph$mesh$C)[1], rowSums(graph$mesh$C))
   L <- kappa^2*C + graph$mesh$G
 
   if(alpha == 1) {
-    Q <- L
+    Q <- tau^2*L
   } else if(alpha == 2) {
-    Q <- L%*%solve(C, L)
+    Q <- tau^2*L%*%solve(C, L)
   } else {
     stop("not implemented yet")
   }
-
   R <- chol(Q)
   u <- intercept + solve(R, rnorm(dim(Q)[1]))
 
@@ -46,8 +47,11 @@ graph_lgcp <- function(intercept = 0, kappa, tau, alpha, graph) {
   lambda_loc <- exp(graph$mesh_A(points)%*%u)
   p_loc <- as.double(lambda_loc/lambda_max)
   ind_keep <- runif(N) < p_loc
-  points <- points[ind_keep,]
+  edge_numbers <- edge_loc <- NULL
+  if (length(ind_keep) > 0) {
+    edge_numbers <- points[ind_keep,1]
+    edge_loc <- points[ind_keep,2]
+  }
 
-  return(list(u = u, edge_numbers = points[,1],
-              edge_loc = points[,2]))
+  return(list(u = u, edge_numbers = edge_numbers,  edge_loc = edge_loc))
 }
