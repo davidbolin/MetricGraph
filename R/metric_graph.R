@@ -90,11 +90,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param E m x 2 matrix where each row represents an edge
   #' @param longlat If TRUE, then it is assumed that the coordinates are given
   #' in Longitude/Latitude and that distances should be computed in km.
-  #' @param merge_intersections Which strategy should we use when lines intersect?
-  #' The options are: "end_points", we merge the lines only if the end points intersect;
-  #' "end_mid", we merge lines if the end of one line intersects another line;
-  #' "all_intersections", we merge the lines whenever they intersect. By default
-  #' we have "end_points".
   #' @param tolerance a list that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` vertices that are closer than this number are merged
@@ -106,9 +101,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' vertex is added at that point and the two lines are connected (default = 0)
   #'
   #' If `longlat = TRUE`, the tolerances are given in km.
-  #' @param tolerance_intersections tolerance for considering intersections of
-  #' lines according to the `merge_intersections` argument. Default = 0.
-  #' @param tolerance_overlapping tolerance for merging vertices that might seem overlapping.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
   #' connected and a warning is given if this is not the case.
   #' @param adjust_lines Set to `TRUE` to adjust the lines object to match the graph
@@ -156,6 +148,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     PtE_tmp_line_line <- NULL
     PtE_tmp_line_vertex <- NULL
 
+    if(is.null(lines) && is.null(V) && is.null(E)) {
+      lines <- logo_lines()
+      #tolerance <- list(vertex_vertex = 1e-3,
+      #                  vertex_line = 1e-2,
+      #                  line_line = 1e-3)
+    }
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")

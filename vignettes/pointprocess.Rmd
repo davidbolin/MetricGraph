@@ -66,34 +66,21 @@ set.seed(1)
 
 In this vignette we will introduce how to work with log-Gaussian Cox processes
 based on Whittle--Matérn fields on metric graphs. To simplify the integration
-with `R-INLA` and `inlabru` hese models are implemented using finite element 
-approximations. 
-
-For further details on the construction of metric graphs, see
-[Working with metric graphs](metric_graphs.html)
+with `R-INLA` and `inlabru` hese models are constructed using finite element 
+approximations as implemented in the `rSPDE` package. 
 
 ## Constructing the graph and the mesh
-We begin by loading the `rSPDE` and `MetricGraph` packages:
+We begin by loading the `rSPDE`, `MetricGraph` and `INLA` packages:
 
 ```{r, message=FALSE, warning=FALSE}
 library(rSPDE)
 library(MetricGraph)
+library(INLA)
 ```
 
-As an example, we consider the following metric graph
+As an example, we consider the default graph in the package:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-library(sp)
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
-line4 <- Line(rbind(c(0,0),c(-1,0)))
-line5 <- Line(rbind(c(-1,0),c(-1,1)))
-Lines = SpatialLines(list(Lines(list(line1),ID="1"),
-                          Lines(list(line2),ID="2"),
-                          Lines(list(line3),ID="3"),
-                          Lines(list(line4),ID="4"),
-                          Lines(list(line5),ID="5")))
-graph <- metric_graph$new(lines = Lines)
+graph <- metric_graph$new()
 graph$plot()
 ```
 
@@ -110,7 +97,8 @@ The next step is to build the mass and stiffness matrices for the FEM basis.
 ```
 
 We are now ready to specify the and sample from a log-Gaussian Cox process model
-with intensity $\lambda = \exp(u)$ where $u$ is a Gaussian Whittle--Matérn field specified by
+with intensity $\lambda = \exp(\beta + u)$ where $\beta$ is an intercept and 
+$u$ is a Gaussian Whittle--Matérn field specified by
 $$
 (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
 $$
@@ -119,14 +107,16 @@ For this we can use the function `graph_lgcp` as follows:
   sigma <- 1
   range <- 0.7
   alpha <- 2
-  lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma, range = range, alpha = alpha, graph = graph)
+  lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma,
+                            range = range, alpha = alpha,
+                            graph = graph)
 ```
 The object returned by the function is a list with the simulated Gaussian process and the points on the graph. We can plot the simulated intensity function as
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$plot_function(exp(lgcp_sample$u), vertex_size = 0)
 ```
 
-To plot the points, we can add them to the graph and then plot:
+To plot the simulated points, we can add them to the graph and then plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
 graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)),
                                          edge_number = lgcp_sample$edge_number,
@@ -180,22 +170,22 @@ graph$add_observations(data = data.frame(y = rep(0,length(atilde)),
                        normalized = TRUE)
 
 ```
-We now load the `R-INLA` package and create the `inla` model object with the
-`graph_spde` function. By default we have `alpha=1`. 
+We now create the `inla` model object with the
+`graph_spde` function. For simplicity, we assume that $\alpha$ is known and fixed
+to the true value in the model.  
 
 ```{r}
-library(INLA)
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 ```
 
-Next, we create the index object and the A matrix:
+Next, we create the index object and the observation matrix:
 
 ```{r}
 spde_index <- rspde.make.index(name="field", mesh=graph, nu = alpha - 1/2)
 A <- rspde.make.A(mesh = graph, nu = alpha - 1/2)
 ```
 
-Next, we create the `inla.stack` object with the `inla.stack()` function. 
+We now create the `inla.stack` object with the `inla.stack()` function. 
 At this stage, it is important that the data has been added to the `graph` since
 it is supplied to the stack by using the `graph_spde_data()` function. 
 
@@ -214,7 +204,7 @@ spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model),
                  E = inla.stack.data(stk)$e)
 ```
 
-Let us now obtain the estimates in the original scale
+Let us extract the estimates in the original scale
 by using the `spde_metric_graph_result()` function, then
 taking a `summary()`:
       
