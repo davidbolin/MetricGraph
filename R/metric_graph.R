@@ -106,6 +106,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param adjust_lines Set to `TRUE` to adjust the lines object to match the graph
   #' connections. This can take some time for large graphs, so by default it is `TRUE`
   #' for graphs with at most 100 lines, and `FALSE` for larger graphs
+  #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
+  #' initialization. Default is `FALSE`.
   #' @param verbose Print progress of graph creation
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
@@ -123,6 +125,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                          line_line = 0),
                         check_connected = TRUE,
                         adjust_lines = NULL,
+                        remove_deg2 = FALSE,
                         verbose = FALSE) {
 
     private$longlat <- longlat
@@ -182,6 +185,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       self$lines <- SpatialLines(lines)
     }
+    if (remove_deg2) {
+      if (verbose) {
+        message("Remove degree 2 vertices")
+      }
+      lines_update <- private$merge.lines(self$lines, longlat = longlat,
+                                  tolerance = tolerance,
+                                  adjust_lines = adjust_lines)
+      self$lines <- lines_update
+    }
+
     if(verbose){
       message("Setup lines and merge close vertices")
     }
@@ -1869,6 +1882,44 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   remove_vertex_degree2_different_lines = function(){
 
+  },
+
+  # utility function to merge lines connected by degree 2 vertices
+  merge.lines = function(lines, longlat = FALSE,
+                          tolerance = NULL,
+                          adjust_lines = NULL) {
+   graph <- metric_graph$new(lines = lines,
+                             longlat = longlat,
+                             tolerance = tolerance,
+                             adjust_lines = adjust_lines)
+   while(sum(graph$get_degrees()==2)>0) {
+     lines_new <- private$remove.first.deg2(graph)
+     graph <- metric_graph$new(lines = lines_new, longlat = longlat,
+                               tolerance = tolerance, adjust_lines = adjust_lines)
+   }
+    return(graph$lines)
+  },
+
+  remove.first.deg2 = function(graph) {
+    ind <- which(graph$get_degrees()==2)[1]
+    e1 <- which(graph$E[,2]==ind)
+    e2 <- which(graph$E[,1]==ind)
+    e_rem <- c(e1,e2)
+    line_keep <- lines[-e_rem]
+
+    line_merge <- list()
+    coords <- graph$lines@lines[[e1]]@Lines[[1]]@coords
+    tmp <- graph$lines@lines[[e2]]@Lines[[1]]@coords
+    diff_start <- as.matrix(coords[dim(coords)[1],] - tmp[1,])
+    diff_end <- as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],])
+    if(norm(diff_start) < norm(diff_end)) {
+      coords <- rbind(coords, tmp)
+    } else {
+      coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+    }
+    line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",i))
+
+    return(SpatialLines(c(line_keep@lines, line_merge)))
   },
 
   # Vertex added in the initial processing
