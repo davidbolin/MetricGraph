@@ -108,6 +108,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' for graphs with at most 100 lines, and `FALSE` for larger graphs
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
+  #' @param remove_circles All circlular edges with a length smaller than this number
+  #' are removed. The default is 0.
   #' @param verbose Print progress of graph creation
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
@@ -126,6 +128,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         check_connected = TRUE,
                         adjust_lines = NULL,
                         remove_deg2 = FALSE,
+                        remove_circles = 0,
                         verbose = FALSE) {
 
     private$longlat <- longlat
@@ -184,15 +187,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                             ID = id)
       }
       self$lines <- SpatialLines(lines)
-    }
-    if (remove_deg2) {
-      if (verbose) {
-        message("Remove degree 2 vertices")
-      }
-      lines_update <- private$merge.lines(self$lines, longlat = longlat,
-                                  tolerance = tolerance,
-                                  adjust_lines = adjust_lines)
-      self$lines <- lines_update
     }
 
     if(verbose){
@@ -336,6 +330,21 @@ metric_graph <-  R6::R6Class("metric_graph",
         message("The lines object is not updated, so plots might not be accurate")
       }
       private$clear_initial_info()
+    }
+
+    private$remove_duplicate_edges(remove_circles)
+    private$remove_circles(remove_circles)
+
+    if (remove_deg2) {
+      if (verbose) {
+        message("Remove degree 2 vertices")
+      }
+      t <- system.time(
+      private$merge.all.deg2()
+      )
+      if(verbose){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
     }
 
     private$initial_graph <- self$clone()
@@ -1870,56 +1879,151 @@ metric_graph <-  R6::R6Class("metric_graph",
     # return(cbind(line_E_i, exact_point))
   },
 
-  # Remove vertex of degree 2 whose edges are on the same line
-  # It will not remove the vertex if it is the only vertex of the graph
-
-  remove_vertex_degree2_same_line = function(){
-
+  remove_duplicate_edges = function(threshold) {
+    ind.short <- which(self$edge_lengths < threshold)
+    if(length(ind.short)>0) {
+      E.short <- self$E[ind.short,]
+      ind.rm <- NULL
+      for(i in 1:(length(ind.short)-1)){
+        E.curr <- E.short[i,, drop=FALSE]
+        E.check <- E.short[(i+1):length(ind.short),, drop = FALSE]
+        diff1 <- t(matrix(E.curr, 2, dim(E.check)[1])) - E.check
+        diff2 <- t(matrix(E.curr, 2, dim(E.check)[1])) - cbind(E.check[,2], E.check[,1])
+        ind.rm <- c(ind.rm, which(rowSums(diff1^2)==0), which(rowSums(diff2^2)==0))
+      }
+      ind <- ind.short[unique(ind.rm)]
+      self$lines <- self$lines[-ind]
+      self$E <- self$E[-ind,]
+      self$EID <- self$EID[-ind]
+      self$edge_lengths <- self$edge_lengths[-ind]
+      self$ELend <- self$ELend[-ind]
+      self$ELstart <- self$ELstart[-ind]
+      self$nE <- self$nE - length(ind)
+      self$LtE <- self$LtE[-ind,-ind]
+    }
   },
+  # utility function to remove small circles
+  remove_circles = function(threshold) {
+    if(threshold > 0) {
+      loop.ind <- which(self$E[,1] == self$E[,2])
+      if(length(loop.ind)>0) {
+        loop.size <- self$edge_lengths[loop.ind]
+        ind <- loop.ind[loop.size < threshold]
+        if(length(ind)>0) {
+          v.loop <- self$E[ind,1]
+          v.degrees <- self$get_degrees()[v.loop]
 
-  # Remove vertex of degree 2 whose edges are on different lines
-  # It will not remove the vertex if it is the only vertex of the graph
+          ind.rem <- v.loop[v.degrees == 2]
+          ind.keep <- v.loop[v.degrees > 2]
 
-  remove_vertex_degree2_different_lines = function(){
+          if(length(ind.rem)>0) {
+            self$V <- self$V[-ind.rem,]
+            self$nV <- self$nV - length(ind.rem)
+            i.sort <- sort(ind.rem, decreasing = TRUE)
+            for(i in i.sort) {
+              self$E[self$E >= i] <- self$E[self$E >= i] - 1
+            }
+          }
 
+          self$lines <- self$lines[-ind]
+          self$E <- self$E[-ind,]
+          self$EID <- self$EID[-ind]
+          self$edge_lengths <- self$edge_lengths[-ind]
+          self$ELend <- self$ELend[-ind]
+          self$ELstart <- self$ELstart[-ind]
+          self$nE <- self$nE - length(ind)
+          self$LtE <- self$LtE[-ind,-ind]
+        }
+      }
+    }
   },
 
   # utility function to merge lines connected by degree 2 vertices
-  merge.lines = function(lines, longlat = FALSE,
-                          tolerance = NULL,
-                          adjust_lines = NULL) {
-   graph <- metric_graph$new(lines = lines,
-                             longlat = longlat,
-                             tolerance = tolerance,
-                             adjust_lines = adjust_lines)
-   while(sum(graph$get_degrees()==2)>0) {
-     lines_new <- private$remove.first.deg2(graph)
-     graph <- metric_graph$new(lines = lines_new, longlat = longlat,
-                               tolerance = tolerance, adjust_lines = adjust_lines)
+  merge.all.deg2 = function() {
+   while(sum(self$get_degrees()==2)>0) {
+     private$remove.first.deg2()
    }
-    return(graph$lines)
   },
 
-  remove.first.deg2 = function(graph) {
-    ind <- which(graph$get_degrees()==2)[1]
-    e1 <- which(graph$E[,2]==ind)
-    e2 <- which(graph$E[,1]==ind)
-    e_rem <- c(e1,e2)
-    line_keep <- lines[-e_rem]
+  remove.first.deg2 = function() {
+    ind <- which(self$get_degrees()==2)
+    if(length(ind)>0) {
+      ind <- ind[j]
+      e1 <- which(self$E[,2]==ind)
+      e2 <- which(self$E[,1]==ind)
+      e_rem <- sort(c(e1,e2))
+      v1 <- setdiff(self$E[e_rem[1],],ind)
+      v2 <- setdiff(self$E[e_rem[2],],ind)
+      if(v1 > ind) {
+        v1 <- v1-1
+      }
+      if(v2 > ind) {
+        v2 <- v2 - 1
+      }
 
-    line_merge <- list()
-    coords <- graph$lines@lines[[e1]]@Lines[[1]]@coords
-    tmp <- graph$lines@lines[[e2]]@Lines[[1]]@coords
-    diff_start <- as.matrix(coords[dim(coords)[1],] - tmp[1,])
-    diff_end <- as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],])
-    if(norm(diff_start) < norm(diff_end)) {
-      coords <- rbind(coords, tmp)
-    } else {
-      coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+      line_keep1 <- line_keep2 <- NULL
+      if(e_rem[1]>1) {
+        line_keep1 <- self$lines[1:(e_rem[1]-1)]
+      }
+
+      line_keep2 <- self$lines[setdiff((e_rem[1]+1):length(self$lines),e_rem[2])]
+
+
+      line_merge <- list()
+      coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords
+      tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords
+      diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
+      diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
+      diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
+      diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
+      diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
+      if(which.min(diffs) == 1) {
+        coords <- rbind(coords[rev(1:dim(coords)[1]),], tmp)
+        E_new <- c(v2,v1)
+      } else if(which.min(diffs)==2){
+        coords <- rbind(tmp,coords)
+        E_new <- c(v2,v1)
+      } else if(which.min(diffs)==3) {
+        coords <- rbind(coords, tmp)
+        E_new <- c(v1,v2)
+      } else {
+        coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+        E_new <- c(v1,v2)
+      }
+      line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
+
+      if(!is.null(line_keep1) && !is.null(line_keep2)) {
+        line_new <- SpatialLines(c(line_keep1@lines, line_merge, line_keep2@lines))
+      } else if (is.null(line_keep1)) {
+        line_new <- SpatialLines(c(line_merge, line_keep2@lines))
+      } else if (is.null(line_keep2)) {
+        line_new <- SpatialLines(c(line_keep1@lines, line_merge))
+      } else {
+        line_new <- SpatialLines(c(line_merge))
+      }
+      for(i in 1:length(line_new)) {
+        slot(line_new@lines[[i]],"ID") <- sprintf("%d",i)
+      }
+
+      #update lines
+      self$lines <- line_new
+
+      #update vertices
+      self$V <- self$V[-ind,]
+      self$nV <- self$nV - 1
+
+      #update edges
+      self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
+      self$E <- self$E[-e_rem[2],]
+      self$E[e_rem[1],] <- E_new
+      self$EID <- self$EID[-ind]
+      self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
+      self$edge_lengths <- self$edge_lengths[-e_rem[2]]
+      self$ELend <- self$ELend[-e_rem[2]]
+      self$ELstart <- self$ELstart[-e_rem[2]]
+      self$nE <- self$nE - 1
+      self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
     }
-    line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",i))
-
-    return(SpatialLines(c(line_keep@lines, line_merge)))
   },
 
   # Vertex added in the initial processing
@@ -2160,8 +2264,6 @@ metric_graph <-  R6::R6Class("metric_graph",
     } else{
       return(NULL)
     }
-
-
   },
 
   find_line_line_points = function(tol) {

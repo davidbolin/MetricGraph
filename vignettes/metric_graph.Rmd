@@ -295,7 +295,7 @@ obs <- c(1,2,3,4)
 df_graph <- data.frame(y = obs, edge_number = obs.loc[,1], 
                         distance_on_edge = obs.loc[,2])
 graph$add_observations(data = df_graph)
-graph$plot(data = "y")
+graph$plot(data = "y", data_size = 2)
 ```
 
 In certain situations, it might be easier to specify the relative distances on 
