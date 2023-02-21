@@ -148,7 +148,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(is.null(tolerance$buffer_line_line)){
       tolerance$buffer_line_line <- max(tolerance$line_line/2 - 1e-10,0)
     }
-
+    max_tol <- max(c(tolerance$vertex_vertex, tolerance$vertex_line, tolerance$line_line))
     private$tolerance <- tolerance
 
     PtE_tmp_line_line <- NULL
@@ -225,10 +225,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     PtE <- points_add$PtE
 
-
     PtE[,2] <- PtE[,2]/self$edge_lengths[PtE[,1]]
 
-    filter_tol <- ((PtE[,2] > tolerance$line_line/self$edge_lengths[PtE[,1]]) & (PtE[,2] < 1- tolerance$line_line/self$edge_lengths[PtE[,1]]))
+    filter_tol <- ((PtE[,2] > max_tol/self$edge_lengths[PtE[,1]]) & (PtE[,2] < 1- max_tol/self$edge_lengths[PtE[,1]]))
 
     PtE <- PtE[filter_tol,]
 
@@ -287,7 +286,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
 
-      filter_tol <- ((PtE_tmp[,2] > tolerance$vertex_line/edge_length_filter) & (PtE_tmp[,2] < 1- tolerance$vertex_line/edge_length_filter))
+      filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) & (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
 
       PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
       PtE_tmp <- unique(PtE_tmp)
@@ -323,6 +322,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                                private$initial_added_vertex[i],
                                                private$initial_edges_added[i,])
           })
+
         if(verbose){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
         }
@@ -331,8 +331,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       private$clear_initial_info()
     }
-
-    private$remove_duplicate_edges(remove_circles)
+    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat)
     private$remove_circles(remove_circles)
 
     if (remove_deg2) {
@@ -1879,29 +1878,37 @@ metric_graph <-  R6::R6Class("metric_graph",
     # return(cbind(line_E_i, exact_point))
   },
 
-  remove_duplicate_edges = function(threshold) {
-    ind.short <- which(self$edge_lengths < threshold)
-    if(length(ind.short)>0) {
-      E.short <- self$E[ind.short,]
-      ind.rm <- NULL
-      for(i in 1:(length(ind.short)-1)){
-        E.curr <- E.short[i,, drop=FALSE]
-        E.check <- E.short[(i+1):length(ind.short),, drop = FALSE]
-        diff1 <- t(matrix(E.curr, 2, dim(E.check)[1])) - E.check
-        diff2 <- t(matrix(E.curr, 2, dim(E.check)[1])) - cbind(E.check[,2], E.check[,1])
-        ind.rm <- c(ind.rm, which(rowSums(diff1^2)==0), which(rowSums(diff2^2)==0))
+  #utility function to merge close vertices
+  merge_close_vertices = function(tolerance, longlat) {
+    if(tolerance > 0) {
+      dists <- spDists(self$V, longlat = longlat)
+      v.merge <- NULL
+      k <- 0
+      for (i in 2:self$nV) {
+        i.min <- which.min(dists[i, 1:(i-1)])
+        if (dists[i, i.min] < tolerance) {
+          k <- k + 1
+          v.merge <- rbind(v.merge, sort(c(i, i.min)))
+        }
       }
-      ind <- ind.short[unique(ind.rm)]
-      self$lines <- self$lines[-ind]
-      self$E <- self$E[-ind,]
-      self$EID <- self$EID[-ind]
-      self$edge_lengths <- self$edge_lengths[-ind]
-      self$ELend <- self$ELend[-ind]
-      self$ELstart <- self$ELstart[-ind]
-      self$nE <- self$nE - length(ind)
-      self$LtE <- self$LtE[-ind,-ind]
+      if(k>0){
+        for( j in 1:k) {
+          v.keep <- v.merge[1,1]
+          v.rem <- v.merge[1,2]
+          if(j < k) {
+            v.merge <- v.merge[-1,,drop = FALSE]
+            v.merge[v.merge == v.rem] <- v.keep
+            v.merge[v.merge > v.rem] <- v.merge[v.merge > v.rem] - 1
+          }
+          self$V <- self$V[-v.rem,]
+          self$nV <- self$nV - 1
+          self$E[self$E == v.rem] <- v.keep
+          self$E[self$E > v.rem] <- self$E[self$E > v.rem] - 1
+        }
+      }
     }
   },
+
   # utility function to remove small circles
   remove_circles = function(threshold) {
     if(threshold > 0) {
@@ -1948,7 +1955,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   remove.first.deg2 = function() {
     ind <- which(self$get_degrees()==2)
     if(length(ind)>0) {
-      ind <- ind[j]
+      ind <- ind[1]
       e1 <- which(self$E[,2]==ind)
       e2 <- which(self$E[,1]==ind)
       e_rem <- sort(c(e1,e2))
