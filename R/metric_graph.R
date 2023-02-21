@@ -109,7 +109,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
   #' @param remove_circles All circlular edges with a length smaller than this number
-  #' are removed. The default is 0.
+  #' are removed. The default is the `vertex_vertex` tolerance.
   #' @param verbose Print progress of graph creation
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
@@ -128,7 +128,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         check_connected = TRUE,
                         adjust_lines = NULL,
                         remove_deg2 = FALSE,
-                        remove_circles = 0,
+                        remove_circles = TRUE,
                         verbose = FALSE) {
 
     private$longlat <- longlat
@@ -333,7 +333,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       private$clear_initial_info()
     }
     private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat)
-    private$remove_circles(remove_circles)
+    if(is.logical(remove_circles)){
+      private$remove_circles(tolerance$vertex_vertex)
+    } else {
+      private$remove_circles(remove_circles)
+    }
+
 
     if (remove_deg2) {
       if (verbose) {
@@ -1572,7 +1577,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
 
-    lvl <- lvl[1:(k-1),]
+    lvl <- lvl[1:(k-1),,drop = FALSE]
     self$lines <- self$lines[lines_keep_id]
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
@@ -1987,16 +1992,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
       if(which.min(diffs) == 1) {
         coords <- rbind(coords[rev(1:dim(coords)[1]),], tmp)
-        E_new <- c(v2,v1)
+        E_new <- matrix(c(v2,v1),1,2)
       } else if(which.min(diffs)==2){
         coords <- rbind(tmp,coords)
-        E_new <- c(v2,v1)
+        E_new <- matrix(c(v2,v1),1,2)
       } else if(which.min(diffs)==3) {
         coords <- rbind(coords, tmp)
-        E_new <- c(v1,v2)
+        E_new <- matrix(c(v1,v2),1,2)
       } else {
         coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
-        E_new <- c(v1,v2)
+        E_new <- matrix(c(v1,v2),1,2)
       }
       line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
 
@@ -2022,7 +2027,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       #update edges
       self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
-      self$E <- self$E[-e_rem[2],]
+      self$E <- self$E[-e_rem[2],,drop=FALSE]
       self$E[e_rem[1],] <- E_new
       self$EID <- self$EID[-ind]
       self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
@@ -2094,7 +2099,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       id_conjugate_line <- which(private$conjugate_initial_line[, 1] == integer_id_line)
       id_lines_of_interest <- c(integer_id_line,
                                 private$conjugate_initial_line[id_conjugate_line, 2])
-   
+
 
       distances_lines <- c()
       idx_min <- c()
@@ -2115,7 +2120,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         tmp_dist <- sapply(1:nrow(line_coords), function(j){
               (self$V[added_vertex_id,1]-line_coords[j,1])^2 + (self$V[added_vertex_id,2] - line_coords[j,2])^2
           })
-        idx_tmp <-  which.min(tmp_dist)     
+        idx_tmp <-  which.min(tmp_dist)
 
         closest_coord <- idx_tmp
 

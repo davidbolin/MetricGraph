@@ -166,6 +166,17 @@ graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
 graph3$plot(degree = TRUE)
 ```
 
+Now, the structure of the metric graph does not change if we add or remove vertices of degree 2. 
+Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
+This can be done by setting the `remove_deg2` argument while creating the graph:
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
+                                                           vertex_line = 0.1,
+                                                           line_line = 0.001),
+                           remove_deg2 = TRUE)
+graph3$plot(degree = TRUE)
+```
+
 ## Understanding coordinates on graphs
 
 The locations of the vertices are specified in Euclidean coordinates. However, 
