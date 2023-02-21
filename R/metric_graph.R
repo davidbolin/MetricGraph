@@ -1577,7 +1577,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
 
-    lvl <- lvl[1:(k-1),]
+    lvl <- lvl[1:(k-1),,drop = FALSE]
     self$lines <- self$lines[lines_keep_id]
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
@@ -1992,16 +1992,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
       if(which.min(diffs) == 1) {
         coords <- rbind(coords[rev(1:dim(coords)[1]),], tmp)
-        E_new <- c(v2,v1)
+        E_new <- matrix(c(v2,v1),1,2)
       } else if(which.min(diffs)==2){
         coords <- rbind(tmp,coords)
-        E_new <- c(v2,v1)
+        E_new <- matrix(c(v2,v1),1,2)
       } else if(which.min(diffs)==3) {
         coords <- rbind(coords, tmp)
-        E_new <- c(v1,v2)
+        E_new <- matrix(c(v1,v2),1,2)
       } else {
         coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
-        E_new <- c(v1,v2)
+        E_new <- matrix(c(v1,v2),1,2)
       }
       line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
 
@@ -2027,7 +2027,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       #update edges
       self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
-      self$E <- self$E[-e_rem[2],]
+      self$E <- self$E[-e_rem[2],,drop=FALSE]
       self$E[e_rem[1],] <- E_new
       self$EID <- self$EID[-ind]
       self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
