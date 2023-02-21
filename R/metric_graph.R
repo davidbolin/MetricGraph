@@ -109,7 +109,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
   #' @param remove_circles All circlular edges with a length smaller than this number
-  #' are removed. The default is 0.
+  #' are removed. The default is the `vertex_vertex` tolerance.
   #' @param verbose Print progress of graph creation
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
@@ -128,7 +128,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         check_connected = TRUE,
                         adjust_lines = NULL,
                         remove_deg2 = FALSE,
-                        remove_circles = 0,
+                        remove_circles = TRUE,
                         verbose = FALSE) {
 
     private$longlat <- longlat
@@ -333,7 +333,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       private$clear_initial_info()
     }
     private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat)
-    private$remove_circles(remove_circles)
+    if(is.logical(remove_circles)){
+      private$remove_circles(tolerance$vertex_vertex)
+    } else {
+      private$remove_circles(remove_circles)
+    }
+
 
     if (remove_deg2) {
       if (verbose) {
@@ -2094,14 +2099,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       id_conjugate_line <- which(private$conjugate_initial_line[, 1] == integer_id_line)
       id_lines_of_interest <- c(integer_id_line,
                                 private$conjugate_initial_line[id_conjugate_line, 2])
-   
+
 
       distances_lines <- c()
       idx_min <- c()
       for(id_ in id_lines_of_interest){
           line <- self$lines@lines[id_]
-          print(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)))
-          print(line)
           tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
           distances_lines <- c(distances_lines, tmp_dist)
         }
@@ -2117,7 +2120,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         tmp_dist <- sapply(1:nrow(line_coords), function(j){
               (self$V[added_vertex_id,1]-line_coords[j,1])^2 + (self$V[added_vertex_id,2] - line_coords[j,2])^2
           })
-        idx_tmp <-  which.min(tmp_dist)     
+        idx_tmp <-  which.min(tmp_dist)
 
         closest_coord <- idx_tmp
 
