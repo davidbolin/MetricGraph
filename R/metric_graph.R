@@ -257,6 +257,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       t <- system.time(
       for(i in 1:length(private$initial_added_vertex)){
+
           private$split_line_at_added_vertex(private$initial_line_added[i],
                                             private$initial_added_vertex[i],
                                             private$initial_edges_added[i,])
@@ -2037,7 +2038,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   initial_added_vertex = NULL,
 
-  # Initial line it was added
+  # Initial lines added
 
   initial_line_added = NULL,
 
@@ -2093,18 +2094,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       id_conjugate_line <- which(private$conjugate_initial_line[, 1] == integer_id_line)
       id_lines_of_interest <- c(integer_id_line,
                                 private$conjugate_initial_line[id_conjugate_line, 2])
+   
 
       distances_lines <- c()
       idx_min <- c()
       for(id_ in id_lines_of_interest){
           line <- self$lines@lines[id_]
-          line_coords <- line[[1]]@Lines[[1]]@coords
-          tmp_dist <- sapply(1:nrow(line_coords), function(j){
-              (self$V[added_vertex_id,1]-line_coords[j,1])^2 + (self$V[added_vertex_id,2] - line_coords[j,2])^2
-            })
-          idx_tmp <-  which.min(tmp_dist)
-          idx_min <- c(idx_min, idx_tmp)
-          distances_lines <- c(distances_lines, tmp_dist[idx_tmp])
+          print(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)))
+          print(line)
+          tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
+          distances_lines <- c(distances_lines, tmp_dist)
         }
 
         min_idx <- which.min(distances_lines)
@@ -2114,7 +2113,13 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         integer_id_line <- id_lines_of_interest[min_idx][[1]]
         line_coords <- self$lines@lines[integer_id_line][[1]]@Lines[[1]]@coords
-        closest_coord <- idx_min[min_idx]
+
+        tmp_dist <- sapply(1:nrow(line_coords), function(j){
+              (self$V[added_vertex_id,1]-line_coords[j,1])^2 + (self$V[added_vertex_id,2] - line_coords[j,2])^2
+          })
+        idx_tmp <-  which.min(tmp_dist)     
+
+        closest_coord <- idx_tmp
 
         if(closest_coord == nrow(line_coords)){
           closest_coord <- closest_coord - 1

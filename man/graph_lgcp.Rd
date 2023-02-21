@@ -4,12 +4,14 @@
 \alias{graph_lgcp}
 \title{Simulation of log-Gaussian Cox process on metric graph}
 \usage{
-graph_lgcp(kappa, tau, alpha, graph)
+graph_lgcp(intercept = 0, sigma, range, alpha, graph)
 }
 \arguments{
-\item{kappa}{range parameter kappa}
+\item{intercept}{mean value of the Gaussian process}
 
-\item{tau}{variance parameter}
+\item{sigma}{parameter for marginal standard deviations}
+
+\item{range}{parameter for practical correlation range}
 
 \item{alpha}{smoothness parameter (1 or 2)}
 

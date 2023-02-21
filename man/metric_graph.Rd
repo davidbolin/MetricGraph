@@ -139,6 +139,8 @@ Create a new \code{metric_graph} object
   tolerance = list(vertex_vertex = 1e-07, vertex_line = 1e-07, line_line = 0),
   check_connected = TRUE,
   adjust_lines = NULL,
+  remove_deg2 = FALSE,
+  remove_circles = 0,
   verbose = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -176,18 +178,13 @@ connected and a warning is given if this is not the case.}
 connections. This can take some time for large graphs, so by default it is \code{TRUE}
 for graphs with at most 100 lines, and \code{FALSE} for larger graphs}
 
+\item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
+initialization. Default is \code{FALSE}.}
+
+\item{\code{remove_circles}}{All circlular edges with a length smaller than this number
+are removed. The default is 0.}
+
 \item{\code{verbose}}{Print progress of graph creation}
-
-\item{\code{merge_intersections}}{Which strategy should we use when lines intersect?
-The options are: "end_points", we merge the lines only if the end points intersect;
-"end_mid", we merge lines if the end of one line intersects another line;
-"all_intersections", we merge the lines whenever they intersect. By default
-we have "end_points".}
-
-\item{\code{tolerance_intersections}}{tolerance for considering intersections of
-lines according to the \code{merge_intersections} argument. Default = 0.}
-
-\item{\code{tolerance_overlapping}}{tolerance for merging vertices that might seem overlapping.}
 }
 \if{html}{\out{</div>}}
 }
