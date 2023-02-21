@@ -2100,8 +2100,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       idx_min <- c()
       for(id_ in id_lines_of_interest){
           line <- self$lines@lines[id_]
-          print(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)))
-          print(line)
           tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
           distances_lines <- c(distances_lines, tmp_dist)
         }
