@@ -2158,13 +2158,16 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$lines <- SpatialLines(private$get_list_coords(integer_id_line,
                                                            line1,
                                                            line2))
+
         self$LtE <- rbind(self$LtE, rep(0, self$nE))
         self$LtE[nrow(self$LtE), added_edges_id[2]] <- 1
         if(length(id_conjugate_line) == 0){
-            self$LtE[integer_id_line, added_edges_id[2]] <- 0
+          id_original_line <- integer_id_line
         } else{
-            self$LtE[id_conjugate_line, added_edges_id[2]] <- 0
+          id_original_line <- private$conjugate_initial_line[id_conjugate_line, 1]
         }
+
+        self$LtE[id_original_line, added_edges_id[2]] <- 0
         self$ELend[added_edges_id[1]] <- 1
         self$ELstart[added_edges_id[2]] <- 0
         self$ELend[added_edges_id[2]] <- 1
