@@ -596,6 +596,14 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(Laplacian)
   },
 
+  #' @description Removes vertices of degree 2 of the graph.
+  
+  prune_vertices = function(){
+   while(sum(self$get_degrees()==2)>0) {
+     private$remove.first.deg2()
+   }
+  },
+
   #' @description Gets PtE from the data
 
   get_PtE = function() {
