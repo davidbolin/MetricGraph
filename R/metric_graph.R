@@ -1974,52 +1974,60 @@ metric_graph <-  R6::R6Class("metric_graph",
         v2 <- v2 - 1
       }
 
-      line_keep1 <- line_keep2 <- NULL
-      if(e_rem[1]>1) {
-        line_keep1 <- self$lines[1:(e_rem[1]-1)]
+      e_remidx <- which(self$LtE[,e_rem[2]] == 1)
+
+      if(e_remidx == e_rem[2]){
+                line_keep1 <- line_keep2 <- NULL
+                if(e_rem[1]>1) {
+                  line_keep1 <- self$lines[1:(e_rem[1]-1)]
+                }
+
+                line_keep2 <- self$lines[setdiff((e_rem[1]+1):length(self$lines),e_rem[2])]
+
+                line_merge <- list()
+                coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords
+                tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords
+                diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
+                diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
+                diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
+                diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
+                diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
+                if(which.min(diffs) == 1) {
+                  coords <- rbind(coords[rev(1:dim(coords)[1]),], tmp)
+                  E_new <- matrix(c(v2,v1),1,2)
+                } else if(which.min(diffs)==2){
+                  coords <- rbind(tmp,coords)
+                  E_new <- matrix(c(v2,v1),1,2)
+                } else if(which.min(diffs)==3) {
+                  coords <- rbind(coords, tmp)
+                  E_new <- matrix(c(v1,v2),1,2)
+                } else {
+                  coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+                  E_new <- matrix(c(v1,v2),1,2)
+                }
+                line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
+
+                if(!is.null(line_keep1) && !is.null(line_keep2)) {
+                  line_new <- SpatialLines(c(line_keep1@lines, line_merge, line_keep2@lines))
+                } else if (is.null(line_keep1)) {
+                  line_new <- SpatialLines(c(line_merge, line_keep2@lines))
+                } else if (is.null(line_keep2)) {
+                  line_new <- SpatialLines(c(line_keep1@lines, line_merge))
+                } else {
+                  line_new <- SpatialLines(c(line_merge))
+                }
+                for(i in 1:length(line_new)) {
+                  slot(line_new@lines[[i]],"ID") <- sprintf("%d",i)
+                }
+
+                #update lines
+                self$lines <- line_new
+                self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+      } else{
+                E_new <- matrix(c(self$E[e1,1], self$E[e2,2]),1,2)
+                e_remidx <- which(self$LtE[,e_rem[2]] == 1)
+                self$LtE <- self$LtE[-e_remidx,-e_rem[2]]
       }
-
-      line_keep2 <- self$lines[setdiff((e_rem[1]+1):length(self$lines),e_rem[2])]
-
-
-      line_merge <- list()
-      coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords
-      tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords
-      diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
-      diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
-      diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
-      diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
-      diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
-      if(which.min(diffs) == 1) {
-        coords <- rbind(coords[rev(1:dim(coords)[1]),], tmp)
-        E_new <- matrix(c(v2,v1),1,2)
-      } else if(which.min(diffs)==2){
-        coords <- rbind(tmp,coords)
-        E_new <- matrix(c(v2,v1),1,2)
-      } else if(which.min(diffs)==3) {
-        coords <- rbind(coords, tmp)
-        E_new <- matrix(c(v1,v2),1,2)
-      } else {
-        coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
-        E_new <- matrix(c(v1,v2),1,2)
-      }
-      line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
-
-      if(!is.null(line_keep1) && !is.null(line_keep2)) {
-        line_new <- SpatialLines(c(line_keep1@lines, line_merge, line_keep2@lines))
-      } else if (is.null(line_keep1)) {
-        line_new <- SpatialLines(c(line_merge, line_keep2@lines))
-      } else if (is.null(line_keep2)) {
-        line_new <- SpatialLines(c(line_keep1@lines, line_merge))
-      } else {
-        line_new <- SpatialLines(c(line_merge))
-      }
-      for(i in 1:length(line_new)) {
-        slot(line_new@lines[[i]],"ID") <- sprintf("%d",i)
-      }
-
-      #update lines
-      self$lines <- line_new
 
       #update vertices
       self$V <- self$V[-ind,]
@@ -2035,7 +2043,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$ELend <- self$ELend[-e_rem[2]]
       self$ELstart <- self$ELstart[-e_rem[2]]
       self$nE <- self$nE - 1
-      self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
     }
   },
 
