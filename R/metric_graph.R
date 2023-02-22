@@ -2026,7 +2026,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       } else{
                 E_new <- matrix(c(self$E[e1,1], self$E[e2,2]),1,2)
                 e_remidx <- which(self$LtE[,e_rem[2]] == 1)
-                self$LtE <- self$LtE[-e_remidx,-e_rem[2]]
+                self$LtE <- self$LtE[,-e_rem[2]]
       }
 
       #update vertices
