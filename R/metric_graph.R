@@ -2024,8 +2024,15 @@ metric_graph <-  R6::R6Class("metric_graph",
                 self$lines <- line_new
                 self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
       } else{
-                E_new <- matrix(c(self$E[e1,1], self$E[e2,2]),1,2)
-                e_remidx <- which(self$LtE[,e_rem[2]] == 1)
+                E_new1 <- self$E[e1,1]
+                E_new2 <- self$E[e2,2]
+                if(E_new1 > ind){
+                  E_new1 <- E_new1 - 1
+                }
+                if(E_new2 > ind){
+                  E_new2 <- E_new2 -1
+                }
+                E_new <- matrix(c(E_new1, E_new2),1,2)
                 self$LtE <- self$LtE[,-e_rem[2]]
       }
 
