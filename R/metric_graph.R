@@ -1409,10 +1409,9 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
-  #' @description plot continuous function on the graph
-  #' @param X Either an m x 3 matrix with (edge number, position on
-  #' curve (in length), value) or a vector with values for the function
-  #' evaluated at the mesh in the graph
+  #' @description plot a movies of a continuous function evolving on the graph
+  #' @param X A m x T matrix where the ith column represents the function at the
+  #' ith time, evaluated at the mesh locations.
   #' @param plotly if TRUE, then plot is shown in 3D. This option requires the
   #' package 'plotly'.
   #' @param vertex_size (for both 2d and 3d plots) size of the vertices
@@ -1421,7 +1420,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param edge_color for 3D plot, color of edges
   #' @param line_width for 3D plot, line width of the function curve.
   #' @param line_color color of the function curve
-  #' @param p previous plot in which the new plot should be added.
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return either a ggplot or a plot_ly object
   plot_movie = function(X,
