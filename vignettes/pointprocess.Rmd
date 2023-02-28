@@ -1,5 +1,5 @@
 ---
-title: "Whittle--Matérn fields with general smoothness"
+title: "Log-Gaussian Cox processes on metric graphs"
 author: "David Bolin, Alexandre B. Simas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette

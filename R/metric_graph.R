@@ -597,7 +597,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Removes vertices of degree 2 of the graph.
-  
+
   prune_vertices = function(){
    while(sum(self$get_degrees()==2)>0) {
      private$remove.first.deg2()
@@ -997,12 +997,16 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description build mass and stiffness matrices for given mesh object
+  #' @details The function builds: The matrix `C` which is the mass matrix with
+  #' elements \eqn{<\phi_i, \phi_j>}, the matrix `G` which is the stiffness
+  #' matrix with elements \eqn{<d\phi_i, d\phi_j>}, the matrix `B` with elements
+  #' \eqn{<d\phi_i, \phi_j>}, and the vector with weights \eqn{<\phi_i, 1>}.
   compute_fem = function() {
     if (is.null(self$mesh)) {
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    self$mesh$G <- self$mesh$C <- Matrix(0,nrow=nV,ncol=nV)
+    self$mesh$G <- self$mesh$C <- self$mesh$B <- Matrix(0,nrow=nV,ncol=nV)
 
     for (e in 1:dim(self$mesh$E)[1]) {
       v1 <- self$mesh$E[e, 1]
@@ -1017,6 +1021,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$mesh$G[v2,v2] <- self$mesh$G[v2, v2] + 1 / self$mesh$h_e[e]
       self$mesh$G[v1,v2] <- self$mesh$G[v1, v2] - 1 / self$mesh$h_e[e]
       self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
+
+      self$mesh$B[v1,v1] <- self$mesh$B[v1, v1] - 0.5
+      self$mesh$B[v1,v2] <- self$mesh$B[v1, v2] - 0.5
+      self$mesh$B[v2,v2] <- self$mesh$B[v2, v2] + 0.5
+      self$mesh$B[v2,v1] <- self$mesh$B[v2, v1] + 0.5
     }
     self$mesh$weights <- rowSums(self$mesh$C)
   },
@@ -1089,6 +1098,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' (edge, normalized distance on edge)
   #' @param p existing ggplot or plot_ly object to add the graph to
   #' @param degree show the degrees of the vertices?
+  #' @param direction show the direction of the edges?
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return a plot_ly or or ggplot object
   #' @examples
@@ -1117,6 +1127,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                   X_loc = NULL,
                   p = NULL,
                   degree = FALSE,
+                  direction = FALSE,
                   ...) {
     if(!is.null(data) && is.null(self$data)){
       stop("The graph does not contain data.")
@@ -1138,6 +1149,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            X_loc = X_loc,
                            p = p,
                            degree = degree,
+                           direction = direction,
                            ...)
     } else {
       requireNamespace("plotly")
@@ -1192,6 +1204,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            support_width = 0.5,
                            support_color = "gray",
                            p = NULL,
+                           movie = FALSE,
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
@@ -1199,7 +1212,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     mesh <- FALSE
 
-    if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1) {
+    if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1 || movie) {
       mesh <- TRUE
     }
 
@@ -1376,6 +1389,174 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
+    }
+    return(p)
+  },
+
+  #' @description plot continuous function on the graph
+  #' @param X Either an m x 3 matrix with (edge number, position on
+  #' curve (in length), value) or a vector with values for the function
+  #' evaluated at the mesh in the graph
+  #' @param plotly if TRUE, then plot is shown in 3D. This option requires the
+  #' package 'plotly'.
+  #' @param vertex_size (for both 2d and 3d plots) size of the vertices
+  #' @param vertex_color color of vertices
+  #' @param edge_width width for edges
+  #' @param edge_color for 3D plot, color of edges
+  #' @param line_width for 3D plot, line width of the function curve.
+  #' @param line_color color of the function curve
+  #' @param support_width for 3D plot, width of support lines
+  #' @param support_color for 3D plot, color of support lines
+  #' @param p previous plot in which the new plot should be added.
+  #' @param ... additional arguments for ggplot or plot_ly
+  #' @return either a ggplot or a plot_ly object
+  plot_movie = function(X,
+                        plotly = TRUE,
+                        vertex_size = 5,vertex_color = "black",
+                        edge_width = 1,
+                        edge_color = 'black',
+                        line_width = NULL,
+                        line_color = 'rgb(0,0,200)',
+                        support_width = 0.5,
+                        support_color = "gray",
+                           ...){
+    if (is.null(line_width)) {
+      line_width = edge_width
+    }
+
+
+    if (is.null(self$mesh)) {
+      stop("X is a vector but no mesh provided")
+    }
+
+    if (is.null(self$mesh$PtE)) {
+      PtE_dim <- 0
+    } else {
+      PtE_dim <- dim(self$mesh$PtE)[1]
+    }
+
+    if (length(X) == PtE_dim) {
+      X <- c(rep(NA, dim(self$V)[1]), X)
+    }
+
+    if (dim(X)[1] != dim(self$V)[1] + PtE_dim) {
+      stop("X does not have the correct size")
+    }
+
+
+    n.v <- dim(self$V)[1]
+    XV <- X[1:n.v,]
+
+    x.loc <- y.loc <- z.loc <- i.loc <- f.loc <-  NULL
+    kk = 1
+    for(f in 1:dim(X)[2]){
+      for (i in 1:self$nE) {
+        Vs <- self$E[i, 1]
+        Ve <- self$E[i, 2]
+
+        ind <- self$mesh$PtE[, 1] == i
+
+        if (sum(ind)==0) {
+          vals <- rbind(c(0, XV[Vs,f]),
+                        c(1, XV[Ve,f]))
+
+        } else {
+          vals <- rbind(c(0, XV[Vs,f]),
+                        cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
+                        c(1, XV[Ve,f]))
+
+        }
+        index <- (self$LtE@p[i] + 1) : (self$LtE@p[i + 1])
+        LinesPos <- cbind(self$LtE@i[index] + 1,
+                         self$LtE@x[index])
+        LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
+        for (j in 1:length(index)) {
+          if (j==1) {
+            index_j <- vals[, 1] <= LinesPos[j, 2]
+          } else {
+            index_j <- (vals[, 1] <= LinesPos[j, 2]) &
+              (vals[, 1] > LinesPos[j - 1, 2])
+          }
+          if (sum(index_j) == 0)
+            next
+          rel.pos = vals[index_j, 1]
+          if (j == 1) {
+            rel.pos <- rel.pos / LinesPos[j, 2]
+          } else {
+            rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
+              (LinesPos[j, 2] - LinesPos[j - 1, 2])
+          }
+          if (j == dim(LinesPos)[1])
+            rel.pos = self$ELend[i] * rel.pos
+          if (j==1)
+            rel.pos = rel.pos + self$ELstart[i]
+
+          data.to.plot <- cbind(rel.pos,vals[index_j, 2])
+          Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
+
+          data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
+                                             drop = FALSE]
+          p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
+                                                                  drop = FALSE],
+                                    normalized = TRUE)
+          coords <-p2@coords
+          x.loc <- c(x.loc, coords[, 1])
+          y.loc <- c(y.loc, coords[, 2])
+          z.loc <- c(z.loc, data.to.plot.order[, 2])
+          i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
+          f.loc <- c(f.loc, rep(f, length(coords[, 1])))
+          kk = kk+1
+        }
+      }
+    }
+    data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc, f = f.loc)
+
+    if(plotly){
+      requireNamespace("plotly")
+      x <- y <- ei <- NULL
+      for (i in 1:self$nE) {
+        xi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 1]
+        yi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 2]
+        ii <- rep(i,length(xi))
+        x <- c(x, xi)
+        y <- c(y, yi)
+        ei <- c(ei, ii)
+      }
+      frames <- dim(X)[2]
+      data.graph <- data.frame(x = rep(x, frames),
+                               y = rep(y, frames),
+                               z = rep(rep(0,length(x)), frames),
+                               i = rep(ei, frames),
+                               f = rep(1:frames, each = length(x)))
+
+      p <- plotly::plot_ly(data=data.graph, x = ~y, y = ~x, z = ~z,frame = ~f)
+      p <- plotly::add_trace(p, data = data.graph, x = ~y, y = ~x, z = ~z,
+                             frame = ~f,
+                             mode = "lines", type = "scatter3d",
+                             line = list(width = line_width,
+                                         color = edge_color),
+                             split = ~i, showlegend = FALSE)
+
+      p <- plotly::add_trace(p, data = data, x = ~y, y = ~x, z = ~z,
+                             frame = ~f,
+                             mode = "lines", type = "scatter3d",
+                             line = list(width = line_width,
+                                         color = line_color),
+                             split = ~i, showlegend = FALSE, ...)
+      if(support_width > 0) {
+        data.mesh <- data.frame(x = rep(c(x.loc, x.loc), frames),
+                                y = rep(c(y.loc, y.loc), frames),
+                                z = rep(c(rep(0, length(z.loc)), z.loc), frames),
+                                i = rep(rep(1:length(z.loc), 2), frames),
+                                f = rep(1:frames, each = length(c(x.loc, x.loc))))
+        p <- plotly::add_trace(p, data = data.mesh, x = ~y, y = ~x, z = ~z,
+                               mode = "lines", type = "scatter3d",
+                               line = list(width = support_width,
+                                           color = support_color),
+                               split = ~i, showlegend = FALSE)
+      }
+    } else {
+      stop("not implemented")
     }
     return(p)
   },
@@ -1656,6 +1837,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                      X_loc = NULL,
                      p = NULL,
                      degree = FALSE,
+                     direction = FALSE,
                      ...){
     xyl <- c()
 
@@ -1664,19 +1846,30 @@ metric_graph <-  R6::R6Class("metric_graph",
     xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
 
     if(is.null(p)){
-      p <- ggplot() + geom_path(data = data.frame(x = xyl[, 1],
-                                                  y = xyl[, 2],
-                                                  grp = xyl[, 3]),
-                                mapping = aes(x = x, y = y, group = grp),
-                                linewidth = line_width,
-                                colour = edge_color, ...)
+        p <- ggplot() + geom_path(data = data.frame(x = xyl[, 1],
+                                                    y = xyl[, 2],
+                                                    grp = xyl[, 3]),
+                                  mapping = aes(x = x, y = y, group = grp),
+                                  linewidth = line_width,
+                                  colour = edge_color,
+                                  ...)
     } else {
-      p <- p + geom_path(data = data.frame(x = xyl[, 1],
-                                           y = xyl[,2],
-                                           grp = xyl[,3]),
-                         mapping = aes(x = x, y = y, group = grp),
-                         linewidth = line_width,
-                         colour = edge_color, ...)
+        p <- p + geom_path(data = data.frame(x = xyl[, 1],
+                                             y = xyl[,2],
+                                             grp = xyl[,3]),
+                           mapping = aes(x = x, y = y, group = grp),
+                           linewidth = line_width,
+                           colour = edge_color, ...)
+    }
+    if(direction) {
+      mid.l <- self$coordinates(PtE = cbind(1:self$nE, rep(0.49,self$nE)))
+      mid.u <- self$coordinates(PtE = cbind(1:self$nE, rep(0.5,self$nE)))
+      p <- p + geom_path(data = data.frame(x = c(mid.l[,1], mid.u[,1]),
+                                           y = c(mid.l[, 2], mid.u[,2]),
+                                           edge = c(1:self$nE,1:self$nE)),
+                          mapping = aes(x = x, y = y, group = edge),
+                         arrow = arrow(),
+                          size= marker_size/2, ...)
     }
     if (marker_size > 0) {
       if(degree) {
@@ -1689,6 +1882,25 @@ metric_graph <-  R6::R6Class("metric_graph",
                             mapping = aes(x, y, colour = factor(degree)),
                             size= marker_size, ...) +
     scale_color_viridis(discrete = TRUE, guide_legend(title = ""))
+      } else if (direction) {
+        degrees <- self$get_degrees()
+        start.deg <- end.deg <- rep(0,self$nV)
+        for(i in 1:self$nV) {
+          start.deg[i] <- sum(self$E[,1]==i)
+          end.deg[i] <- sum(self$E[,2]==i)
+        }
+        problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+        p <- p + geom_point(data = data.frame(x = self$V[problematic, 1],
+                                              y = self$V[problematic, 2]),
+                            mapping = aes(x, y),
+                            colour = "red",
+                            size= marker_size, ...)
+        p <- p + geom_point(data = data.frame(x = self$V[!problematic, 1],
+                                              y = self$V[!problematic, 2]),
+                            mapping = aes(x, y),
+                            colour = "green",
+                            size= marker_size, ...)
+
       } else {
         p <- p + geom_point(data = data.frame(x = self$V[, 1],
                                               y = self$V[, 2]),
@@ -1696,7 +1908,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                             colour = vertex_color,
                             size= marker_size, ...)
       }
-
     }
     if (!is.null(data)) {
       x <- y <- NULL
@@ -1767,17 +1978,17 @@ metric_graph <-  R6::R6Class("metric_graph",
       data.plot <- data.frame(x = x, y = y, z = rep(0,length(x)), i = ei)
 
     if(is.null(p)) {
-      p <- plotly::plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z)
+      p <- plotly::plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z,...)
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
                            line = list(width = line_width,
-                                       color = edge_color, ...),
+                                       color = edge_color),
                            split = ~i, showlegend = FALSE)
     } else {
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
                            line = list(width = line_width,
-                                       color = edge_color, ...),
+                                       color = edge_color),
                            split = ~i, showlegend = FALSE)
     }
 
@@ -1788,7 +1999,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       p <- plotly::add_trace(p, data = data.plot2, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
-                                         color = vertex_color, ...))
+                                         color = vertex_color))
     }
 
     if (!is.null(data)) {
