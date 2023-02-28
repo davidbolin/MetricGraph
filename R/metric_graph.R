@@ -1405,8 +1405,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param edge_color for 3D plot, color of edges
   #' @param line_width for 3D plot, line width of the function curve.
   #' @param line_color color of the function curve
-  #' @param support_width for 3D plot, width of support lines
-  #' @param support_color for 3D plot, color of support lines
   #' @param p previous plot in which the new plot should be added.
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return either a ggplot or a plot_ly object
@@ -1417,8 +1415,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                         edge_color = 'black',
                         line_width = NULL,
                         line_color = 'rgb(0,0,200)',
-                        support_width = 0.5,
-                        support_color = "gray",
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
@@ -1449,64 +1445,63 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     x.loc <- y.loc <- z.loc <- i.loc <- f.loc <-  NULL
     kk = 1
-    for(f in 1:dim(X)[2]){
-      for (i in 1:self$nE) {
-        Vs <- self$E[i, 1]
-        Ve <- self$E[i, 2]
+    frames <- dim(X)[2]
+    for (i in 1:self$nE) {
+      Vs <- self$E[i, 1]
+      Ve <- self$E[i, 2]
 
-        ind <- self$mesh$PtE[, 1] == i
+      ind <- self$mesh$PtE[, 1] == i
 
-        if (sum(ind)==0) {
-          vals <- rbind(c(0, XV[Vs,f]),
-                        c(1, XV[Ve,f]))
+      if (sum(ind)==0) {
+        vals <- rbind(c(0, XV[Vs,]),
+                      c(1, XV[Ve,]))
 
+      } else {
+        vals <- rbind(c(0, XV[Vs,]),
+                      cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind),]),
+                      c(1, XV[Ve,]))
+
+      }
+      index <- (self$LtE@p[i] + 1) : (self$LtE@p[i + 1])
+      LinesPos <- cbind(self$LtE@i[index] + 1,
+                       self$LtE@x[index])
+      LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
+      for (j in 1:length(index)) {
+        if (j==1) {
+          index_j <- vals[, 1] <= LinesPos[j, 2]
         } else {
-          vals <- rbind(c(0, XV[Vs,f]),
-                        cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
-                        c(1, XV[Ve,f]))
-
+          index_j <- (vals[, 1] <= LinesPos[j, 2]) &
+            (vals[, 1] > LinesPos[j - 1, 2])
         }
-        index <- (self$LtE@p[i] + 1) : (self$LtE@p[i + 1])
-        LinesPos <- cbind(self$LtE@i[index] + 1,
-                         self$LtE@x[index])
-        LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
-        for (j in 1:length(index)) {
-          if (j==1) {
-            index_j <- vals[, 1] <= LinesPos[j, 2]
-          } else {
-            index_j <- (vals[, 1] <= LinesPos[j, 2]) &
-              (vals[, 1] > LinesPos[j - 1, 2])
-          }
-          if (sum(index_j) == 0)
-            next
-          rel.pos = vals[index_j, 1]
-          if (j == 1) {
-            rel.pos <- rel.pos / LinesPos[j, 2]
-          } else {
-            rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
-              (LinesPos[j, 2] - LinesPos[j - 1, 2])
-          }
-          if (j == dim(LinesPos)[1])
-            rel.pos = self$ELend[i] * rel.pos
-          if (j==1)
-            rel.pos = rel.pos + self$ELstart[i]
-
-          data.to.plot <- cbind(rel.pos,vals[index_j, 2])
-          Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
-
-          data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
-                                             drop = FALSE]
-          p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
-                                                                  drop = FALSE],
-                                    normalized = TRUE)
-          coords <-p2@coords
-          x.loc <- c(x.loc, coords[, 1])
-          y.loc <- c(y.loc, coords[, 2])
-          z.loc <- c(z.loc, data.to.plot.order[, 2])
-          i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
-          f.loc <- c(f.loc, rep(f, length(coords[, 1])))
-          kk = kk+1
+        if (sum(index_j) == 0)
+          next
+        rel.pos = vals[index_j, 1]
+        if (j == 1) {
+          rel.pos <- rel.pos / LinesPos[j, 2]
+        } else {
+          rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
+            (LinesPos[j, 2] - LinesPos[j - 1, 2])
         }
+        if (j == dim(LinesPos)[1])
+          rel.pos = self$ELend[i] * rel.pos
+        if (j==1)
+          rel.pos = rel.pos + self$ELstart[i]
+
+        data.to.plot <- cbind(rel.pos,vals[index_j, 2:(frames+1)])
+        Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
+
+        data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
+                                           drop = FALSE]
+        p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
+                                                                drop = FALSE],
+                                  normalized = TRUE)
+        coords <-p2@coords
+        x.loc <- c(x.loc, rep(coords[, 1], frames))
+        y.loc <- c(y.loc, rep(coords[, 2], frames))
+        z.loc <- c(z.loc, c(data.to.plot.order[, 2:(frames+1)]))
+        i.loc <- c(i.loc, rep(rep(kk, length(coords[, 1])), frames))
+        f.loc <- c(f.loc, rep(1:frames, each = length(coords[, 1])))
+        kk = kk+1
       }
     }
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc, f = f.loc)
@@ -1543,18 +1538,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                              line = list(width = line_width,
                                          color = line_color),
                              split = ~i, showlegend = FALSE, ...)
-      if(support_width > 0) {
-        data.mesh <- data.frame(x = rep(c(x.loc, x.loc), frames),
-                                y = rep(c(y.loc, y.loc), frames),
-                                z = rep(c(rep(0, length(z.loc)), z.loc), frames),
-                                i = rep(rep(1:length(z.loc), 2), frames),
-                                f = rep(1:frames, each = length(c(x.loc, x.loc))))
-        p <- plotly::add_trace(p, data = data.mesh, x = ~y, y = ~x, z = ~z,
-                               mode = "lines", type = "scatter3d",
-                               line = list(width = support_width,
-                                           color = support_color),
-                               split = ~i, showlegend = FALSE)
-      }
     } else {
       stop("not implemented")
     }
