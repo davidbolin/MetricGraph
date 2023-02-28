@@ -1,7 +1,9 @@
 library(sp)
 library(Matrix)
 library(MetricGraph)
+library(htmlwidgets)
 
+save.plot <- FALSE
 
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -34,7 +36,7 @@ vars <- diag(solve(Q))
 graph$plot_function(r,plotly = TRUE)
 
 kappa <- 1
-rho <- -100
+rho <- -500
 sigma <- 100
 dt <- 0.25*h^2
 I <- Diagonal(n,1)
@@ -49,4 +51,9 @@ U[,1] <- u0
 for(i in 1:(T-1)){
   U[,i+1] <- as.vector((I - dt*L)%*%U[,i] + dt*sigma*rnorm(n, sd = h))
 }
-graph$plot_movie(U[,seq(from=1,to=10000,by=1000)])
+fig <- graph$plot_movie(U[,seq(from=1,to=10000,by=1000)])
+if(save.plot){
+  htmlwidgets::saveWidget(fig, file = "spacetime.HTML", selfcontained = TRUE)
+}
+
+
