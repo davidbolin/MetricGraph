@@ -104,6 +104,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-compute_laplacian_PtE}{\code{metric_graph$compute_laplacian_PtE()}}
+\item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
 \item \href{#method-metric_graph-get_Spoints}{\code{metric_graph$get_Spoints()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
@@ -118,6 +119,7 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
+\item \href{#method-metric_graph-plot_movie}{\code{metric_graph$plot_movie()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
 \item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
@@ -140,7 +142,7 @@ Create a new \code{metric_graph} object
   check_connected = TRUE,
   adjust_lines = NULL,
   remove_deg2 = FALSE,
-  remove_circles = 0,
+  remove_circles = TRUE,
   verbose = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -182,7 +184,7 @@ for graphs with at most 100 lines, and \code{FALSE} for larger graphs}
 initialization. Default is \code{FALSE}.}
 
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
-are removed. The default is 0.}
+are removed. The default is the \code{vertex_vertex} tolerance.}
 
 \item{\code{verbose}}{Print progress of graph creation}
 }
@@ -365,6 +367,16 @@ Computes the weigthed graph Laplacian for the graph
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-prune_vertices"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-prune_vertices}{}}}
+\subsection{Method \code{prune_vertices()}}{
+Removes vertices of degree 2 of the graph.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_PtE"></a>}}
@@ -570,6 +582,13 @@ build mass and stiffness matrices for given mesh object
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem()}\if{html}{\out{</div>}}
 }
 
+\subsection{Details}{
+The function builds: The matrix \code{C} which is the mass matrix with
+elements \eqn{<\phi_i, \phi_j>}, the matrix \code{G} which is the stiffness
+matrix with elements \eqn{<d\phi_i, d\phi_j>}, the matrix \code{B} with elements
+\eqn{<d\phi_i, \phi_j>}, and the vector with weights \eqn{<\phi_i, 1>}.
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-mesh_A"></a>}}
@@ -624,6 +643,7 @@ plot a metric graph
   X_loc = NULL,
   p = NULL,
   degree = FALSE,
+  direction = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -661,6 +681,8 @@ the 'plotly' package.}
 \item{\code{p}}{existing ggplot or plot_ly object to add the graph to}
 
 \item{\code{degree}}{show the degrees of the vertices?}
+
+\item{\code{direction}}{show the direction of the edges?}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 }
@@ -717,6 +739,7 @@ plot continuous function on the graph
   support_width = 0.5,
   support_color = "gray",
   p = NULL,
+  movie = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -750,6 +773,63 @@ package 'plotly'.}
 \item{\code{p}}{previous plot in which the new plot should be added.}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+either a ggplot or a plot_ly object
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-plot_movie"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-plot_movie}{}}}
+\subsection{Method \code{plot_movie()}}{
+plot continuous function on the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_movie(
+  X,
+  plotly = TRUE,
+  vertex_size = 5,
+  vertex_color = "black",
+  edge_width = 1,
+  edge_color = "black",
+  line_width = NULL,
+  line_color = "rgb(0,0,200)",
+  support_width = 0.5,
+  support_color = "gray",
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
+curve (in length), value) or a vector with values for the function
+evaluated at the mesh in the graph}
+
+\item{\code{plotly}}{if TRUE, then plot is shown in 3D. This option requires the
+package 'plotly'.}
+
+\item{\code{vertex_size}}{(for both 2d and 3d plots) size of the vertices}
+
+\item{\code{vertex_color}}{color of vertices}
+
+\item{\code{edge_width}}{width for edges}
+
+\item{\code{edge_color}}{for 3D plot, color of edges}
+
+\item{\code{line_width}}{for 3D plot, line width of the function curve.}
+
+\item{\code{line_color}}{color of the function curve}
+
+\item{\code{support_width}}{for 3D plot, width of support lines}
+
+\item{\code{support_color}}{for 3D plot, color of support lines}
+
+\item{\code{...}}{additional arguments for ggplot or plot_ly}
+
+\item{\code{p}}{previous plot in which the new plot should be added.}
 }
 \if{html}{\out{</div>}}
 }
