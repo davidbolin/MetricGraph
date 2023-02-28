@@ -44,12 +44,12 @@ set.seed(1)
 ```
 
 ## Introduction
-
+        
 In this vignette we will introduce how to work with log-Gaussian Cox processes
 based on Whittle--Matérn fields on metric graphs. To simplify the integration
 with `R-INLA` and `inlabru` hese models are constructed using finite element 
 approximations as implemented in the `rSPDE` package. 
-
+   
 ## Constructing the graph and the mesh
 We begin by loading the `rSPDE`, `MetricGraph` and `INLA` packages:
 
@@ -61,7 +61,7 @@ library(INLA)
 
 As an example, we consider the default graph in the package:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE, warning=FALSE}
 graph <- metric_graph$new(tolerance = list(vertex_vertex = 1e-1, vertex_line = 1e-3, line_line = 1e-3),
                           remove_deg2 = TRUE)
 graph$plot()
@@ -88,7 +88,7 @@ $$
 For this we can use the function `graph_lgcp` as follows:
 ```{r}
   sigma <- 0.5
-  range <- 1
+  range <- 1.5
   alpha <- 2
   lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma,
                             range = range, alpha = alpha,

@@ -602,6 +602,22 @@ metric_graph <-  R6::R6Class("metric_graph",
    while(sum(self$get_degrees()==2)>0) {
      private$remove.first.deg2()
    }
+   if(!is.null(self$data)){
+      x_coord <- self$data[["__coord_x"]]
+      y_coord <- self$data[["__coord_y"]]
+      new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
+      group_vec <- self$data[["__group"]]
+      self$data[["__edge_number"]] <- new_PtE[,1]
+      self$data[["__distance_on_edge"]] <- new_PtE[,2]
+      order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
+      self$data <- lapply(self$data, function(dat){dat[order_idx]})
+   }
+
+   if(!is.null(self$mesh)){
+    max_h <- max(self$mesh$h_e)
+    self$mesh <- NULL
+    self$build_mesh(h = max_h)
+   }
   },
 
   #' @description Gets PtE from the data
