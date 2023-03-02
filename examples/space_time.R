@@ -71,42 +71,22 @@ cat(max(ct)/max(c4))
 
 
 ###########
-kappa <- 20
-rho <- 1
-n <- dim(graph$mesh$C)[1]
-C <- graph$mesh$C
-h <- rowSums(C)
-C <- Diagonal(h,n = n)
-L <- graph$mesh$G + kappa^2*C + rho*graph$mesh$B
-Q <- t(L)%*%solve(C, L)
-
-A <- graph$mesh_A(matrix(c(1,0.5),1,2))
-
-r <- solve(Q,t(A))
-vars <- diag(solve(Q))
-graph$plot_function(r,plotly = TRUE)
-
-kappa <- 0.01
+kappa <- 10
 rho <- 0
-sigma <- 1000
-dt <- 0.005
+sigma <- 1.0
+dt <- 0.01
 n <- dim(graph$mesh$C)[1]
-I <- Diagonal(n,1)
-C <- graph$mesh$C
-h <- rowSums(C)
-C <- Diagonal(h,n = n)
-L <- graph$mesh$G + kappa^2*C + rho*graph$mesh$B
-
+R <- chol(graph$mesh$C)
+L <- graph$mesh$G + kappa^2*graph$mesh$C + rho*graph$mesh$B
 
 u0 <- rep(0,n)
-u0[1] <- 0
+u0[1] <- 1
 T <- 20
 U <- matrix(0,nrow=n,ncol = T)
 U[,1] <- u0
 
 for(i in 1:(T-1)){
-  noise <- dt*sigma*rnorm(n, sd = h)
-  U[,i+1] <- as.vector(solve((C + dt*L), C%*%U[,i] + noise))
+  U[,i+1] <- as.vector(solve((C + dt*L), C%*%U[,i] + sqrt(dt)*sigma*R%*%rnorm(n)))
 }
 fig <- graph$plot_movie(U)
 fig
