@@ -2,7 +2,7 @@ library(sp)
 library(Matrix)
 library(MetricGraph)
 library(htmlwidgets)
-
+library(plotly)
 
 plot.covariances <- function(graph,Q=NULL,L,C,Ls,Cs, t.ind, s.ind,t.shift=0,t) {
   n <- dim(Cs)[1]
@@ -29,15 +29,17 @@ plot.covariances <- function(graph,Q=NULL,L,C,Ls,Cs, t.ind, s.ind,t.shift=0,t) {
   for(i in 1:length(t.ind)) {
     v <- rep(0,N)
     v[(t.ind[i]-1)*n+s.ind] <- 1
-    ind <- ((t.ind[i]-t.shift-1)*n+1):((t.ind[i]-t.shift)*n)
     if(is.null(Q)){
       tmp <- solve(L,C%*%solve(t(L),v))
     } else {
       tmp <- solve(Q,v)
     }
-    c <- tmp[ind]
     ct[i,] <- tmp[time.index]
-    p <- graph$plot_function(as.vector(c), plotly = TRUE, p = p, support_width = 0, line_color = cols[i])
+    for(j in 1:length(t.shift)) {
+      ind <- ((t.ind[i]-t.shift[j]-1)*n+1):((t.ind[i]-t.shift[j])*n)
+      c <- tmp[ind]
+      p <- graph$plot_function(as.vector(c), plotly = TRUE, p = p, support_width = 0, line_color = cols[i])
+    }
   }
   cat(max(c.spatial)/max(c))
   df <- data.frame(t=rep(t,length(t.ind)),y=c(t(ct)), i=rep(1:length(t.ind), each=length(t)))
@@ -91,7 +93,7 @@ make.Q.direct <- function(graph,t,kappa, rho, kappa.t) {
   Cd <- Diagonal(rowSums(C),n=n)
   L <- kappa^2*C + G
   Q <- kappa.t^2*kronecker(Gt, Cd) +  kronecker(Ct, L%*%solve(Cd,L))
-  Q <- Q + rho^2*kronecker(Ct,G) -2*kappa.t*rho*kronecker(Bt,B)
+  Q <- Q + rho^2*kronecker(Ct,G) -kappa.t*rho*(kronecker(Bt,t(B))+kronecker(t(Bt),B))
   return(Q)
 }
 
@@ -99,14 +101,14 @@ nt = 400
 T = 2#h^2*nt*20
 t <- seq(from=0, to = T, length.out = nt)
 kappa <- 10
-rho <- -10
+rho <- -20
 kappa.t <- 30
 sigma <- 1
 n <- dim(graph$mesh$C)[1]
 Q <- make.Q.direct(graph,t,kappa,rho,kappa.t)
 L0 <- graph$mesh$G + kappa^2*Diagonal(rowSums(graph$mesh$C),n=n)
 plot.covariances(graph,Q = Q/sigma^2,Ls = L0,Cs = sigma^2*L0/(2*kappa.t),
-                 t.ind = c(nt/2), s.ind = 50,t.shift = 0,t = t)
+                 t.ind = c(nt/2), s.ind = 50,t.shift = 10,t = t)
 
 #symmetric implementation
 make.Q.sym <- function(L,C,t,kappa.t) {
