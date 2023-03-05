@@ -38,7 +38,7 @@ plot.covariances <- function(graph,Q=NULL,L,C,Ls,Cs, t.ind, s.ind,t.shift=0,t) {
     for(j in 1:length(t.shift)) {
       ind <- ((t.ind[i]-t.shift[j]-1)*n+1):((t.ind[i]-t.shift[j])*n)
       c <- tmp[ind]
-      p <- graph$plot_function(as.vector(c), plotly = TRUE, p = p, support_width = 0, line_color = cols[i])
+      p <- graph$plot_function(as.vector(c), plotly = TRUE, p = p, support_width = 0, line_color = cols[j])
     }
   }
   cat(max(c.spatial)/max(c))
@@ -56,8 +56,8 @@ plot.covariances <- function(graph,Q=NULL,L,C,Ls,Cs, t.ind, s.ind,t.shift=0,t) {
 save.plot <- FALSE
 
 line1 <- Line(rbind(c(1,0),c(0,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,0),c(0,-1)))
+line2 <- Line(rbind(c(0,1),c(0,0)))
+line3 <- Line(rbind(c(0,-1),c(0,0)))
 line4 <- Line(rbind(c(0,1),c(1,0)))
 lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line2),ID="2"),
@@ -97,18 +97,18 @@ make.Q.direct <- function(graph,t,kappa, rho, kappa.t) {
   return(Q)
 }
 
-nt = 400
-T = 2#h^2*nt*20
+nt = 250
+T = 1#h^2*nt*20
 t <- seq(from=0, to = T, length.out = nt)
-kappa <- 10
-rho <- -20
-kappa.t <- 30
+kappa <- 20
+rho <- 50
+kappa.t <- 10
 sigma <- 1
 n <- dim(graph$mesh$C)[1]
 Q <- make.Q.direct(graph,t,kappa,rho,kappa.t)
 L0 <- graph$mesh$G + kappa^2*Diagonal(rowSums(graph$mesh$C),n=n)
 plot.covariances(graph,Q = Q/sigma^2,Ls = L0,Cs = sigma^2*L0/(2*kappa.t),
-                 t.ind = c(nt/2), s.ind = 50,t.shift = 10,t = t)
+                 t.ind = c(nt/2), s.ind = 50,t.shift = c(0),t = t)
 
 #symmetric implementation
 make.Q.sym <- function(L,C,t,kappa.t) {
