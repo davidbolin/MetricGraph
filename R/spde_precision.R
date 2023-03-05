@@ -264,3 +264,81 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
                 dims=c(4 * graph$nE, 4 * graph$nE)))
   }
 }
+
+
+#' The precision matrix for all vertices in the alpha=1 case
+#' @param theta - sigma, kappa
+#' @param graph metric_graph object
+#' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
+#' boundary conditions and BC=1 gives stationary boundary conditions
+#' @param w ([0,1]) how two weight the top edge
+#' @param build (bool) if TRUE return the precision matrix otherwise return
+#' a list(i,j,x, nv)
+#' @return Precision matrix or list
+#' @export
+Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
+
+  #TODO: fix BC=1 problem
+  kappa <- theta[2]
+  sigma <- theta[1]
+  i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
+  count <- 0
+  for(i in 1:graph$nE){
+    l_e <- graph$edge_lengths[i]
+    c1 <- exp(-kappa*l_e)
+    c2 <- c1^2
+    one_m_c2 = 1-c2
+    c_1_upper = w + c2/one_m_c2
+    c_1_lower = (1-w) + c2/one_m_c2
+    c_2 = -c1/one_m_c2
+
+    if (graph$E[i, 1] != graph$E[i, 2]) {
+
+      i_[count + 1] <- graph$E[i, 1]
+      j_[count + 1] <- graph$E[i, 1]
+      x_[count + 1] <- c_1_upper
+
+      i_[count + 2] <- graph$E[i, 2]
+      j_[count + 2] <- graph$E[i, 2]
+      x_[count + 2] <- c_1_lower
+
+
+      i_[count + 3] <- graph$E[i, 1]
+      j_[count + 3] <- graph$E[i, 2]
+      x_[count + 3] <- c_2
+
+      i_[count + 4] <- graph$E[i, 2]
+      j_[count + 4] <- graph$E[i, 1]
+      x_[count + 4] <- c_2
+      count <- count + 4
+    }else{
+      i_[count + 1] <- graph$E[i, 1]
+      j_[count + 1] <- graph$E[i, 1]
+      x_[count + 1] <- tanh(0.5 * kappa * l_e)
+      count <- count + 1
+    }
+  }
+  if(BC == 1){
+    #does this work for circle?
+    i.table <- table(i_[1:count])
+    index = as.integer(names(which(i.table < 3)))
+    i_ <- c(i_[1:count], index)
+    j_ <- c(j_[1:count], index)
+    x_ <- c(x_[1:count], rep(0.5, length(index)))
+    count <- count + length(index)
+  }
+  if(build){
+    Q <- Matrix::sparseMatrix(i = i_[1:count],
+                              j = j_[1:count],
+                              x = (2 * kappa / sigma^2) * x_[1:count],
+                              dims = c(graph$nV, graph$nV))
+
+
+    return(Q)
+  } else {
+    return(list(i = i_[1:count],
+                j = j_[1:count],
+                x = (2 * kappa / sigma^2) * x_[1:count],
+                dims = c(graph$nV, graph$nV)))
+  }
+}

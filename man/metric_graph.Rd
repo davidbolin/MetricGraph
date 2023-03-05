@@ -795,8 +795,6 @@ plot continuous function on the graph
   edge_color = "black",
   line_width = NULL,
   line_color = "rgb(0,0,200)",
-  support_width = 0.5,
-  support_color = "gray",
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -822,10 +820,6 @@ package 'plotly'.}
 \item{\code{line_width}}{for 3D plot, line width of the function curve.}
 
 \item{\code{line_color}}{color of the function curve}
-
-\item{\code{support_width}}{for 3D plot, width of support lines}
-
-\item{\code{support_color}}{for 3D plot, color of support lines}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
 

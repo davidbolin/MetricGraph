@@ -3,41 +3,35 @@ library(Matrix)
 library(MetricGraph)
 
 
-line1 <- Line(rbind(c(0,0),c(1,0)))
+line1 <- Line(rbind(c(0,-4),c(1,0)))
 line2 <- Line(rbind(c(1,0),c(1,1)))
-lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2")))
+line3 <- Line(rbind(c(1,1),c(2,1)))
+lines = sp::SpatialLines(list(Lines(list(line1),ID="1")))
 
 graph <- metric_graph$new(lines = lines)
 graph$plot(direction = TRUE)
-graph$build_mesh(h = 0.01)
+graph$build_mesh(h = 0.05)
 graph$compute_fem()
 
+
+
+###########
 kappa <- 10
-rho <- 1
+rho <- 0.1
+sigma <- 1.0
+dt <- 0.01
 n <- dim(graph$mesh$C)[1]
-C <- graph$mesh$C
-C <- Diagonal(rowSums(C),n = n)
-L <- graph$mesh$G + kappa^2*C + rho*graph$mesh$B
-Q <- t(L)%*%solve(C, L)
-
-A <- graph$mesh_A(matrix(c(1,0.5),1,2))
-
-r <- solve(Q,t(A))
-vars <- diag(solve(Q))
-graph$plot_function(r,plotly = TRUE)
-
-dt <- 0.1
-I <- Diagonal(n,1)
+R <- chol(graph$mesh$C)
+L <- graph$mesh$G + kappa^2*graph$mesh$C + rho*graph$mesh$B
 
 u0 <- rep(0,n)
 u0[1] <- 1
-T <- 10
+T <- 20
 U <- matrix(0,nrow=n,ncol = T)
 U[,1] <- u0
 
 for(i in 1:(T-1)){
-  U[,i+1] <- as.vector((I - dt*L)%*%U[,i] )
+  U[,i+1] <- as.vector(solve((graph$mesh$C + dt*L), graph$mesh$C%*%U[,i] + sqrt(dt)*sigma*R%*%rnorm(n)))
 }
-
-graph$plot_movie(U)
+fig <- graph$plot_movie(U)
+fig
