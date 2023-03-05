@@ -3,6 +3,54 @@ library(Matrix)
 library(MetricGraph)
 library(htmlwidgets)
 
+
+plot.covariances <- function(graph,Q=NULL,L,C,Ls,Cs, t.ind, s.ind,t.shift=0,t) {
+  n <- dim(Cs)[1]
+  if(is.null(Q)) {
+    N <- dim(L)[1]
+  } else {
+    N <- dim(Q)[1]
+  }
+  T <- N/n
+  if(length(t.ind)>4)
+    stop("max 4 curves allowed")
+  if(s.ind > n)
+    stop("too large space index")
+  if(max(t.ind)>T-1)
+    stop("too large time index")
+
+  cols <- c("green", "cyan","blue","red")[(4-length(t.ind)+1):4]
+
+  v <- rep(0,dim(Ls)[1]); v[s.ind] <- 1
+  c.spatial <- solve(Ls,Cs%*%solve(t(Ls),v))
+  p <- graph$plot_function(as.vector(c.spatial), plotly = TRUE, support_width = 1, line_color = "black")
+  time.index <- n*(0:(T-1)) + s.ind
+  ct <- matrix(0,nrow = length(t.ind),ncol = T)
+  for(i in 1:length(t.ind)) {
+    v <- rep(0,N)
+    v[(t.ind[i]-1)*n+s.ind] <- 1
+    ind <- ((t.ind[i]-t.shift-1)*n+1):((t.ind[i]-t.shift)*n)
+    if(is.null(Q)){
+      tmp <- solve(L,C%*%solve(t(L),v))
+    } else {
+      tmp <- solve(Q,v)
+    }
+    c <- tmp[ind]
+    ct[i,] <- tmp[time.index]
+    p <- graph$plot_function(as.vector(c), plotly = TRUE, p = p, support_width = 0, line_color = cols[i])
+  }
+  cat(max(c.spatial)/max(c))
+  df <- data.frame(t=rep(t,length(t.ind)),y=c(t(ct)), i=rep(1:length(t.ind), each=length(t)))
+  pt <- plot_ly(df, x = ~t, y = ~y, split = ~i, type = 'scatter', mode = 'lines')
+  fig <- subplot(p,pt) %>% layout(title = "Covariances",
+                                  scene = list(domain=list(x=c(0,0.5),y=c(0,1))),
+                                  scene2 = list(domain=list(x=c(0.5,1),y=c(0,1))))
+  fig$x$layout <- fig$x$layout[grep('NA', names(fig$x$layout), invert = TRUE)]
+  print(fig)
+}
+
+
+
 save.plot <- FALSE
 
 line1 <- Line(rbind(c(1,0),c(0,0)))
@@ -20,51 +68,113 @@ h = 0.01
 graph$build_mesh(h = h)
 graph$compute_fem()
 
-make.Q <- function(L0,L,dt,C, T) {
+
+#precision operator discretization
+make.Q.direct <- function(graph,t,kappa, rho, kappa.t) {
+  G <- graph$mesh$G
+  C <- graph$mesh$C
+  B <- graph$mesh$B
+  n <- dim(C)[1]
+  nt <- length(t)
+  d <- c(Inf, diff(t))
+  dm1 <- c(d[2:nt], Inf)
+  Gt <- -bandSparse(n = nt, m = nt, k = c(-1, 0, 1),
+                    diagonals = cbind(1 / dm1, -(1 / dm1 + 1 / d), 1 / dm1))
+  Ct <- bandSparse(n = nt, m = nt, k = c(-1, 0, 1),
+                   diagonals = cbind(dm1 / 6, (dm1 + d) / 3, c(d[2:nt],Inf) / 6))
+  Ct[1, 1:2] <- c(d[2], d[2] / 2) / 3
+  Ct[nt, (nt - 1):nt] <- c(d[nt] / 2, d[nt]) / 3
+  Bt <- bandSparse(n = nt, m = nt, k = c(-1, 0, 1),
+                    diagonals = cbind(rep(0.5,nt), rep(0,nt), rep(-0.5,nt)))
+  Bt[1,1] = -0.5
+  Bt[nt,nt] = 0.5
+  Cd <- Diagonal(rowSums(C),n=n)
+  L <- kappa^2*C + G
+  Q <- kappa.t^2*kronecker(Gt, Cd) +  kronecker(Ct, L%*%solve(Cd,L))
+  Q <- Q + rho^2*kronecker(Ct,G) -2*kappa.t*rho*kronecker(Bt,B)
+  return(Q)
+}
+
+nt = 400
+T = 2#h^2*nt*20
+t <- seq(from=0, to = T, length.out = nt)
+kappa <- 10
+rho <- -10
+kappa.t <- 30
+sigma <- 1
+n <- dim(graph$mesh$C)[1]
+Q <- make.Q.direct(graph,t,kappa,rho,kappa.t)
+L0 <- graph$mesh$G + kappa^2*Diagonal(rowSums(graph$mesh$C),n=n)
+plot.covariances(graph,Q = Q/sigma^2,Ls = L0,Cs = sigma^2*L0/(2*kappa.t),
+                 t.ind = c(nt/2), s.ind = 50,t.shift = 0,t = t)
+
+#symmetric implementation
+make.Q.sym <- function(L,C,t,kappa.t) {
+  n <- dim(C)[1]
+  nt <- length(t)
+  d <- c(Inf, diff(t))
+  dm1 <- c(d[2:nt], Inf)
+  Gt <- -bandSparse(n = nt, m = nt, k = c(-1, 0, 1),
+    diagonals = cbind(1 / dm1, -(1 / dm1 + 1 / d), 1 / dm1))
+  Ct <- bandSparse(n = nt, m = nt, k = c(-1, 0, 1),
+    diagonals = cbind(dm1 / 6, (dm1 + d) / 3, c(d[2:nt],Inf) / 6))
+  Ct[1, 1:2] <- c(d[2], d[2] / 2) / 3
+  Ct[nt, (nt - 1):nt] <- c(d[nt] / 2, d[nt]) / 3
+  Qt <- kappa.t^2*Gt+Ct
+  Qt[1,1] <- Qt[1,1] + kappa.t
+  Qt[nt,nt] <- Qt[nt,nt] + kappa.t
+  C <- Diagonal(rowSums(graph$mesh$C),n=n)
+  Q <- kronecker(Qt, L)
+}
+sigma <- 1
+kappa.t <- 0.05
+Q <- make.Q.sym(L, graph$mesh$C, t, kappa.t)
+
+plot.covariances(graph,Q = Q/sigma^2,Ls = L,Cs = sigma^2*L/(2*kappa.t),
+                 t.ind = c(nt/2,nt-2), s.ind = 50,t.shift = 0,t = t)
+
+
+make.Q.euler <- function(L0,L,C, t,kappa.t) {
+  dt <- t[2] - t[1]
+  T <- length(t)
   n <- dim(L)[1]
-  Lbar = C + dt*L
+  Lbar = kappa.t*C + dt*L
   CC = kronecker(Diagonal(n=T), dt*C)
   LL <- Matrix(0,nrow = T*n, ncol = T*n)
   LL[1:n,1:n] <- L0
+  CC[1:n,1:n] <- C
   for(t in 1:(T-1)) {
     LL[(t*n+1):((t+1)*n),(t*n+1):((t+1)*n)] <- Lbar
-    LL[(t*n+1):((t+1)*n),((t-1)*n+1):(t*n)] <- -C
+    LL[(t*n+1):((t+1)*n),((t-1)*n+1):(t*n)] <- -kappa.t*C
   }
   return(list(L = LL, C = CC))
 }
 
-kappa <- 15
-rho <- 0
-sigma <- 75
-dt <- 0.2
-n <- dim(graph$mesh$C)[1]
-L <- graph$mesh$G + kappa^2*graph$mesh$C + rho*graph$mesh$B
-L0 <- graph$mesh$C
-T = 200
-Q <- make.Q(L0, L, dt, graph$mesh$C, T)
+Q <- make.Q.euler(L0, L, graph$mesh$C, t,kappa.t)
+plot.covariances(graph,L = Q$L,C = sigma^2*Q$C, Ls = L,Cs = 4*sigma^2*L/(kappa*sqrt(kappa.t)),
+                 t.ind = c(nt/2,nt-2), s.ind = 25,t.shift = 0,t = t)
 
-k <- 50
-v1 <- rep(0,dim(Q$L)[1]); v1[k] <- 1
-v2 <- rep(0,dim(Q$L)[1]); v2[n+k] <- 1
-v3 <- rep(0,dim(Q$L)[1]); v3[floor(T/2)*n+k] <- 1
-v4 <- rep(0,dim(Q$L)[1]); v4[(T-1)*n+k] <- 1
 
-c1 <- sigma^2*solve(Q$L,Q$C%*%solve(t(Q$L),v1))[1:n]
-c2 <- sigma^2*solve(Q$L,Q$C%*%solve(t(Q$L),v2))[(n+1):(2*n)]
-c3 <- sigma^2*solve(Q$L,Q$C%*%solve(t(Q$L),v3))[(floor(T/2)*n+1):((floor(T/2)+1)*n)]
-c4 <- sigma^2*solve(Q$L,Q$C%*%solve(t(Q$L),v4))[((T-1)*n+1):(T*n)]
 
-L <- graph$mesh$G + kappa^2*graph$mesh$C + rho*graph$mesh$B
 
-v1 <- rep(0,dim(L)[1]); v1[k] <- 1
-ct <- sigma^2*solve(L,graph$mesh$C%*%solve(t(L),v1))/dt
-p <- graph$plot_function(as.vector(c1), plotly = TRUE, support_width = 0, line_color = "red")
-p <- graph$plot_function(as.vector(c2), plotly = TRUE, p = p, support_width = 0, line_color = "green")
-p <- graph$plot_function(as.vector(c3), plotly = TRUE, support_width = 0, line_color = "blue", line_width = 2)
-p <- graph$plot_function(as.vector(c4), plotly = TRUE, p = p,support_width = 0, line_color = "gray", line_width = 2)
-p <- graph$plot_function(as.vector(ct*max(c4)/max(ct)), plotly = TRUE, p = p, support_width = 1, line_color = "black")
-p
-cat(max(ct)/max(c4))
+make.Q.petrov <- function(L0,L,C, t,kappa.t) {
+  n <- dim(C)[1]
+  h <- diff(t)
+  nt <- length(h)
+  Gt = as(bandSparse(n=nt,m=nt+1,k=c(0,1),diagonals=cbind(-rep(1,nt), rep(1,nt))),"dgCMatrix")
+  Ct <- as(bandSparse(n=nt,m=nt+1,k=c(0,1),diagonals=cbind(0.5*h, 0.5*h)),"dgCMatrix")
+  Ct0 = sparseMatrix(i=1:(nt+1),j=1:(nt+1),x=c(h,0) + c(0,h),dims = c(nt+1,nt+1))
+  LL <- -kappa.t*kronecker(Gt,C) + kronecker(Ct,L)
+  CC <- kronecker(Ct0, C)
+  return(list(L = LL, C = CC))
+}
+
+Q <- make.Q.petrov(L0, L, Diagonal(rowSums(graph$mesh$C),n=dim(graph$mesh$C)[1]), t,kappa.t)
+Q <- Q$L%*%solve(Q$C, t(Q$L))
+plot.covariances(graph,Q = Q,Ls = L,Cs = 4*sigma^2*L/(kappa*sqrt(kappa.t)),
+                 t.ind = c(nt/2,nt-2), s.ind = 50,t.shift = 0,t = t[-1])
+
+
 
 
 
@@ -93,6 +203,7 @@ fig
 if(save.plot){
   htmlwidgets::saveWidget(fig, file = "spacetime.HTML", selfcontained = TRUE)
 }
+
 
 
 
