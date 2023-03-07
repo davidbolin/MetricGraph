@@ -90,25 +90,28 @@ make.Q.direct <- function(graph,t,kappa, rho, kappa.t) {
                     diagonals = cbind(rep(0.5,nt), rep(0,nt), rep(-0.5,nt)))
   Bt[1,1] = -0.5
   Bt[nt,nt] = 0.5
+  B0 <- Diagonal(n=nt,0)
+  B0[1,1] <- B0[nt,nt] <- 0
+  #B0[1,2] <- B0[nt,nt-1] <- -1
   Cd <- Diagonal(rowSums(C),n=n)
   L <- kappa^2*C + G
-  Q <- kappa.t^2*kronecker(Gt, Cd) +  kronecker(Ct, L%*%solve(Cd,L))
-  Q <- Q + rho^2*kronecker(Ct,G) -kappa.t*rho*(kronecker(Bt,t(B))+kronecker(t(Bt),B))
+  Q <- kappa.t^2*kronecker(Gt+kappa.t^(-1)*B0, Cd) +  kronecker(Ct+kappa.t^(-1)*B0, L%*%solve(Cd,L))
+  Q <- Q + rho^2*kronecker(Ct+kappa.t^(-1)*B0,G) -kappa.t*rho*(kronecker(Bt,t(B))+kronecker(t(Bt),B))
   return(Q)
 }
 
-nt = 250
-T = 1#h^2*nt*20
+nt = 100
+T = 0.1#h^2*nt*20
 t <- seq(from=0, to = T, length.out = nt)
 kappa <- 20
-rho <- 50
-kappa.t <- 10
-sigma <- 1
+rho <- 0
+kappa.t <- 1
+sigma <- 50
 n <- dim(graph$mesh$C)[1]
 Q <- make.Q.direct(graph,t,kappa,rho,kappa.t)
 L0 <- graph$mesh$G + kappa^2*Diagonal(rowSums(graph$mesh$C),n=n)
 plot.covariances(graph,Q = Q/sigma^2,Ls = L0,Cs = sigma^2*L0/(2*kappa.t),
-                 t.ind = c(nt/2), s.ind = 50,t.shift = c(0),t = t)
+                 t.ind = c(1,2,nt/2), s.ind = 50,t.shift = c(0),t = t)
 
 #symmetric implementation
 make.Q.sym <- function(L,C,t,kappa.t) {
