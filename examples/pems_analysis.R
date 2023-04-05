@@ -41,6 +41,7 @@ res <- optim(log(theta.alpha2), loglik_alpha2)
 theta.alpha2 <- exp(res$par)
 like.alpha2<- -res$value
 
+graph$buildC(2,TRUE)
 loglik_alpha2_BC <- likelihood_graph_spde(graph, alpha = 2,data_name="y", BC=0)
 res <- optim(log(theta.alpha2), loglik_alpha2_BC)
 theta.alpha2_BC <- exp(res$par)
@@ -62,7 +63,7 @@ like.alpha1_BC<- -res$value
 
 # Fit isotropic model
 graph$compute_resdist()
-theta.exp <- graph_starting_values(graph, model = "isoExp")
+theta.exp <- graph_starting_values(graph, model = "isoExp",data_name="y" )
 
 loglik_isoExp <- likelihood_graph_covariance(graph, model = "isoCov",
                                              cov_function = exp_covariance)
