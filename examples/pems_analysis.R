@@ -1,10 +1,12 @@
+rm(list=ls())
+library(MetricGraph)
+
 library('sf')
 library(xtable)
 library(scales)
 library(gridExtra)
 library(ggmap)
 
-rm(list = ls())
 
 show.plot=FALSE
 set.seed(1)
@@ -23,22 +25,40 @@ graph <-  metric_graph$new(lines = as_Spatial(Lines), longlat = TRUE)
 #convert PtE to relative distances and add observations
 edge_length_m <- EtV[,4]
 PtE[,2] = PtE[,2]/edge_length_m[PtE[,1]]
-graph$add_PtE_observations(Y - mean(Y),as.matrix(PtE), normalized = TRUE)
+
+data.PtE <- data.frame(y = Y - mean(Y),
+                      edge_number = PtE[,1],
+                      distance_on_edge = PtE[,2])
+graph$add_observations(data = data.PtE,
+                            normalized = TRUE)
+
+
+#fit alpha = 2 model
+graph$buildC(2)
+theta.alpha2 <- graph_starting_values(graph, model = "alpha2",data_name="y")
+loglik_alpha2 <- likelihood_graph_spde(graph, alpha = 2,data_name="y")
+res <- optim(log(theta.alpha2), loglik_alpha2)
+theta.alpha2 <- exp(res$par)
+like.alpha2<- -res$value
+
+loglik_alpha2_BC <- likelihood_graph_spde(graph, alpha = 2,data_name="y", BC=0)
+res <- optim(log(theta.alpha2), loglik_alpha2_BC)
+theta.alpha2_BC <- exp(res$par)
+like.alpha2_BC<- -res$value
+
 
 # Fit alpha=1 model
-theta.alpha1 <- graph_starting_values(graph, model = "alpha1")
-loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1)
+theta.alpha1 <- graph_starting_values(graph, model = "alpha1",data_name="y")
+loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1, data_name="y")
 res <- optim(log(theta.alpha1), loglik_alpha1)
 theta.alpha1 <- exp(res$par)
 like.alpha1<- -res$value
 
-#fit alpha = 2 model
-graph$buildC(2)
-theta.alpha2 <- graph_starting_values(graph, model = "alpha2")
-loglik_alpha2 <- likelihood_graph_spde(graph, alpha = 2)
-res <- optim(log(theta.alpha2), loglik_alpha2)
-theta.alpha2 <- exp(res$par)
-like.alpha2<- -res$value
+loglik_alpha1_BC <- likelihood_graph_spde(graph, alpha = 1, data_name="y", BC=0)
+res <- optim(log(theta.alpha1), loglik_alpha1_BC)
+theta.alpha1_BC <- exp(res$par)
+like.alpha1_BC<- -res$value
+
 
 # Fit isotropic model
 graph$compute_resdist()
@@ -68,7 +88,7 @@ like.GL2 <- -res$value
 
 #cross validation
 K <- 5 #number of groups in cross validation
-n.y <- length(graph$y)
+n.y <- length(graph$data[['y']])
 n.g <- floor(n.y/K)
 ind <- rep(1:K,n.g+1)[1:n.y]
 ind <- ind[sample(1:n.y,n.y)]

@@ -9,6 +9,8 @@
 #' @param version if 1, the likelihood is computed by integrating out
 #' @param maximize If `FALSE` the function will return minus the likelihood, so
 #' one can directly apply it to the `optim` function.
+#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
+#'        1 is making the boundary condition stationary
 #' @return The log-likelihood function, which is returned as a function with
 #' parameter 'theta'.
 #' The parameter `theta` must be supplied as
@@ -27,7 +29,8 @@ likelihood_graph_spde <- function(graph,
                                   log_scale = TRUE,
                                   maximize = FALSE,
                                   version = 1,
-                                  repl=NULL) {
+                                  repl=NULL,
+                                  BC = 1) {
 
   check <- check_graph(graph)
 
@@ -46,15 +49,15 @@ likelihood_graph_spde <- function(graph,
       switch(alpha,
       "1" = {
         if(version == 1){
-          loglik_val <- likelihood_alpha1(theta_spde, graph, data_name, covariates)
+          loglik_val <- likelihood_alpha1(theta_spde, graph, data_name, covariates,BC=BC)
         } else if(version == 2){
-          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl)
+          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl,BC=BC)
         } else{
           stop("Version should be either 1 or 2!")
         }
       },
       "2" = {
-        loglik_val <- likelihood_alpha2(theta_spde, graph, covariates)
+        loglik_val <- likelihood_alpha2(theta_spde, graph, data_name, covariates, BC=BC)
       }
       )
       if(maximize){
@@ -65,11 +68,16 @@ likelihood_graph_spde <- function(graph,
   }
 }
 
+
+
 #' Computes the log likelihood function fo theta for the graph object
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph  metric_graph object
+#' @param data_name name of the response variable
+#' @parma BC. which boundary condition to use (0,1)
+#' @param covariates OBSOLETE
 #' @noRd
-likelihood_alpha2 <- function(theta, graph, covariates) {
+likelihood_alpha2 <- function(theta, graph, data_name,  BC, covariates=FALSE) {
   if(is.null(graph$C)){
     graph$buildC(2)
   }
@@ -82,31 +90,31 @@ likelihood_alpha2 <- function(theta, graph, covariates) {
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const, ]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
-                      alpha = 2, graph = graph)
+                      alpha = 2, graph = graph, BC=BC)
   R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
                         LDL = FALSE, perm = TRUE)
 
-
-  obs.edges <- unique(graph$PtE[, 1])
+  PtE <- graph$get_PtE()
+  obs.edges <- unique(PtE[, 1])
 
   loglik <- 0
   det_R <- Matrix::determinant(R)$modulus[1]
-  n.o <- nrow(graph$y)
-
+  n.o <- length(graph$data[[data_name]])
+  u_repl <- unique(graph$data[["__group"]])
   det_R_count <- NULL
-
-  for(repl_y in 1:ncol(graph$y)){
+  y <- graph$data[[data_name]]
+  for(repl_y in 1:u_repl){
       loglik <- loglik + det_R
       Qpmu <- rep(0, 4 * nrow(graph$E))
-
+      y_rep <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
       #build BSIGMAB
 
       i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
       count <- 0
       for (e in obs.edges) {
-        obs.id <- graph$PtE[,1] == e
-        y_i <- graph$y[obs.id, repl_y]
+        obs.id <- PtE[,1] == e
 
+        y_i <- y_rep[obs.id]
         if(covariates){
           n_cov <- ncol(graph$covariates[[1]])
         if(length(graph$covariates)==1){
@@ -122,7 +130,7 @@ likelihood_alpha2 <- function(theta, graph, covariates) {
         }
 
         l <- graph$edge_lengths[e]
-        t <- c(0, l, l*graph$PtE[obs.id, 2])
+        t <- c(0, l, l*PtE[obs.id, 2])
 
         D <- outer (t, t, `-`)
         S <- matrix(0, length(t) + 2, length(t) + 2)
@@ -270,14 +278,14 @@ likelihood_alpha2 <- function(theta, graph, covariates) {
 #' the vertices.
 #' @return The log-likelihood
 #' @noRd
-likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl) {
+likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC) {
   if(is.null(repl)){
     repl <- 1:length(y)
   }
   sigma_e <- theta[1]
   #build Q
   Q <- spde_precision(kappa = theta[3], sigma = theta[2],
-                      alpha = 1, graph = graph)
+                      alpha = 1, graph = graph, BC=BC)
   if(is.null(graph$PtV)){
     stop("No observation at the vertices! Run observation_to_vertex().")
   }
@@ -319,13 +327,14 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl) {
 #' @param graph metric_graph object
 #' @param data_name name of the response variable
 #' @param covariates OBSOLETE
+#' @param BC. - which boundary condition to use (0,1)
 #' @noRd
-likelihood_alpha1 <- function(theta, graph, data_name, covariates) {
+likelihood_alpha1 <- function(theta, graph, data_name, covariates, BC) {
   sigma_e <- theta[1]
   #build Q
 
   Q.list <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 1,
-                           graph = graph, build = FALSE)
+                           graph = graph, build = FALSE,BC=BC)
 
   Qp <- Matrix::sparseMatrix(i = Q.list$i,
                              j = Q.list$j,

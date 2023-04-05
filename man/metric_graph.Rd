@@ -784,7 +784,7 @@ either a ggplot or a plot_ly object
 \if{html}{\out{<a id="method-metric_graph-plot_movie"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-plot_movie}{}}}
 \subsection{Method \code{plot_movie()}}{
-plot continuous function on the graph
+plot a movies of a continuous function evolving on the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_movie(
   X,
@@ -802,9 +802,8 @@ plot continuous function on the graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
-curve (in length), value) or a vector with values for the function
-evaluated at the mesh in the graph}
+\item{\code{X}}{A m x T matrix where the ith column represents the function at the
+ith time, evaluated at the mesh locations.}
 
 \item{\code{plotly}}{if TRUE, then plot is shown in 3D. This option requires the
 package 'plotly'.}
@@ -822,8 +821,6 @@ package 'plotly'.}
 \item{\code{line_color}}{color of the function curve}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
-
-\item{\code{p}}{previous plot in which the new plot should be added.}
 }
 \if{html}{\out{</div>}}
 }

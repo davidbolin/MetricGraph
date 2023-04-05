@@ -12,7 +12,8 @@ likelihood_graph_spde(
   log_scale = TRUE,
   maximize = FALSE,
   version = 1,
-  repl = NULL
+  repl = NULL,
+  BC = 1
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ given in log scale?}
 one can directly apply it to the \code{optim} function.}
 
 \item{version}{if 1, the likelihood is computed by integrating out}
+
+\item{BC}{which boundary condition to use (0,1) 0 is no adjustment on boundary point
+1 is making the boundary condition stationary}
 }
 \value{
 The log-likelihood function, which is returned as a function with
