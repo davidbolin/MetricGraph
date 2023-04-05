@@ -467,7 +467,13 @@ likelihood_alpha1 <- function(theta, graph, data_name, covariates, BC) {
 #' For the remaining models, if `covariates` is `TRUE`, then `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
-likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = NULL, covariates = FALSE, log_scale = TRUE, maximize = FALSE) {
+likelihood_graph_covariance <- function(graph,
+                                        model = "alpha1",
+                                        data_name,
+                                        cov_function = NULL,
+                                        covariates = FALSE,
+                                        log_scale = TRUE,
+                                        maximize = FALSE) {
 
   # check <- check_graph(graph)
 
@@ -556,27 +562,27 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
         if(is.null(graph$res_dist)){
           stop("You must first compute the resistance metric for the observations")
         }
-        Sigma <- as.matrix(cov_function(graph$res_dist, theta_cov))
+        Sigma <- as.matrix(cov_function(graph$res_dist[[1]], theta_cov))
       })
 
       diag(Sigma) <- diag(Sigma) + sigma_e^2
 
 
       loglik_val <- 0
-      for(i in 1:ncol(graph$y)){
-          na_obs <- is.na(graph$y[, i])
-          Sigma_non_na <- Sigma[!na_obs, !na_obs]
+      u_repl <- unique(graph$data[["__group"]])
+      for(repl_y in 1:u_repl){
+          Sigma_non_na <- Sigma#[!na_obs, !na_obs]
           R <- chol(Sigma_non_na)
-          v <- graph$y[!na_obs, i]
+          v <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
           if(covariates){
-          n_cov <- ncol(graph$covariates[[1]])
-          if(length(graph$covariates)==1){
-            X_cov <- graph$covariates[[1]]
-          } else if(length(graph$covariates) == ncol(graph$y)){
-            X_cov <- graph$covariates[[i]]
-          } else{
+            n_cov <- ncol(graph$covariates[[1]])
+            if(length(graph$covariates)==1){
+              X_cov <- graph$covariates[[1]]
+            } else if(length(graph$covariates) == ncol(graph$y)){
+              X_cov <- graph$covariates[[i]]
+            } else{
             stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-          }
+            }
               X_cov <- X_cov[!na_obs,]
               v <- v - X_cov %*% theta_covariates
           }
@@ -611,7 +617,7 @@ likelihood_graph_covariance <- function(graph, model = "alpha1", cov_function = 
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
 
-likelihood_graph_laplacian <- function(graph, alpha, covariates = FALSE, log_scale = TRUE, maximize = FALSE) {
+likelihood_graph_laplacian <- function(graph, alpha, data_name, covariates = FALSE, log_scale = TRUE, maximize = FALSE) {
 
   check <- check_graph(graph)
 
@@ -644,7 +650,7 @@ likelihood_graph_laplacian <- function(graph, alpha, covariates = FALSE, log_sca
           kappa <- theta[3]
         }
 
-    K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+    K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[1]] #DOES NOT WORK WITH REPLICATES
     Q <- K
     if (alpha>1) {
       for (k in 2:alpha) {
@@ -656,15 +662,15 @@ likelihood_graph_laplacian <- function(graph, alpha, covariates = FALSE, log_sca
     R <- chol(Q)
     l <- 0
 
-    for(i in 1:ncol(graph$y)){
-      na_obs <- is.na(graph$y[, i])
-      y_ <- graph$y[!na_obs, i]
-      n.o <- length(y_)
-      Q.p <- Q  + t(graph$A()[!na_obs,]) %*% graph$A()[!na_obs,]/sigma_e^2
+
+    u_repl <- unique(graph$data[["__group"]])
+    for(repl_y in 1:u_repl){
+      v <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
+      n.o <- length(v)
+      Q.p <- Q  + t(graph$A()) %*% (graph$A()/sigma_e^2)
       R.p <- chol(Q.p)
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
-      v <- y_
       if(covariates){
         n_cov <- ncol(graph$covariates[[1]])
         if(length(graph$covariates)==1){
@@ -679,8 +685,8 @@ likelihood_graph_laplacian <- function(graph, alpha, covariates = FALSE, log_sca
         v <- v - X_cov %*% theta[4:(3+n_cov)]
       }
 
-      mu.p <- solve(Q.p,as.vector(t(graph$A()[!na_obs,]) %*% v / sigma_e^2))
-      v <- v - graph$A()[!na_obs,]%*%mu.p
+      mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% v / sigma_e^2))
+      v <- v - graph$A()%*%mu.p
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }
     if(maximize){

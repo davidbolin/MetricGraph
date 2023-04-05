@@ -7,6 +7,7 @@
 likelihood_graph_covariance(
   graph,
   model = "alpha1",
+  data_name,
   cov_function = NULL,
   covariates = FALSE,
   log_scale = TRUE,

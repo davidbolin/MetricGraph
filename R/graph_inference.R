@@ -41,10 +41,10 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
-    K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
+    K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
     Q <- K %*% K / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
@@ -77,8 +77,10 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 #' @export
 posterior_crossvalidation_covariance <- function(theta,
                                                  graph,
+                                                 data_name,
                                                  model = "alpha1",
-                                                 ind = NULL)
+                                                 ind = NULL,
+                                                 BC=1)
 {
   check <- check_graph(graph)
 
@@ -95,20 +97,23 @@ posterior_crossvalidation_covariance <- function(theta,
     Q <- Qalpha1(c(sigma, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
+
+    graph$buildC(2,BC==0)
     n.c <- 1:length(graph$CoB$S)
-    Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
+    Q <- Qalpha2(c(sigma, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
       solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
-    index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
-      (3 * (graph$PtE[, 2] != 0))
+    PtE = graph$get_PtE()
+    index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
+      (3 * (PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2 # DOES NOT WORK FOR REPLICATES
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
-    K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
+    K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]] # DOES NOT WORK FOR REPLICATES
     Q <- K %*% K / sigma^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
@@ -121,21 +126,21 @@ posterior_crossvalidation_covariance <- function(theta,
   diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
 
   if(is.null(ind)){
-    ind <- 1:length(graph$y)
+    ind <- 1:length(graph$data[[data_name]])
   }
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$y))
-  mae <- rmse <- rep(0, length(graph$y))
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$data[[data_name]]))
+  mae <- rmse <- rep(0, length(graph$data[[data_name]]))
   for (j in 1:length(unique(ind))) {
     i <- which(ind == j)
-    mu.p[i] <-Sigma[i, -i] %*% solve(Sigma.o[-i, -i], graph$y[-i])
+    mu.p[i] <-Sigma[i, -i] %*% solve(Sigma.o[-i, -i], graph$data[[data_name]][-i])
     Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                         Sigma.o[-i, i])
     var.p[i] <- diag(Sigma.p)
-    logscore[i] <- LS(graph$y[i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(graph$y[i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(graph$y[i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(graph$y[i] - mu.p[i])
-    rmse[i] <- (graph$y[i] - mu.p[i])^2
+    logscore[i] <- LS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph$data[[data_name]][i] - mu.p[i])
+    rmse[i] <- (graph$data[[data_name]][i] - mu.p[i])^2
   }
   return(list(mu = mu.p,
               var = var.p,
@@ -143,7 +148,7 @@ posterior_crossvalidation_covariance <- function(theta,
               crps = -mean(crps),
               scrps = -mean(scrps),
               mae = mean(mae),
-              rmse = mean(rmse)))
+              rmse = sqrt(mean(rmse))))
 }
 
 
@@ -151,6 +156,7 @@ posterior_crossvalidation_covariance <- function(theta,
 #'
 #' @param theta Estimated model parameters (sigma_e, sigma, kappa)
 #' @param graph metric graph object
+#' @param data_name
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
@@ -165,8 +171,10 @@ posterior_crossvalidation_covariance <- function(theta,
 #' @export
 posterior_crossvalidation <- function(theta,
                                       graph,
+                                      data_name,
                                       model = "alpha1",
-                                      ind = NULL)
+                                      ind = NULL,
+                                      BC = 1)
 {
   check <- check_graph(graph)
   if(is.null(graph$PtV)){
@@ -178,7 +186,8 @@ posterior_crossvalidation <- function(theta,
 
   #setup matrices for prediction
   if(model == "isoExp"){
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist))
+    graph$compute_resdist()
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
@@ -188,18 +197,19 @@ posterior_crossvalidation <- function(theta,
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
       solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
-    index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
-      (3 * (graph$PtE[, 2] != 0))
+    PtE = graph$get_PtE()
+    index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
+      (3 * (PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if (model %in% c("alpha1", "GL1", "GL2")) {
     if(model == "alpha1"){
-      Q <- Qalpha1(c(sigma, kappa), graph)
+      Q <- Qalpha1(c(sigma, kappa), graph, BC = BC)
     } else if(model == "GL1"){
-      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian) / sigma^2
+      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) / sigma^2
     } else if (model == "GL2") {
-      K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian)
+      K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
       Q <- K %*% K / sigma^2
     }
     A <- graph$A()
@@ -209,16 +219,16 @@ posterior_crossvalidation <- function(theta,
   }
 
   if(is.null(ind)){
-    ind <- 1:length(graph$y)
+    ind <- 1:length(graph$data[[data_name]])
   }
 
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$y))
-  mae <- rmse <- rep(0, length(graph$y))
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$data[[data_name]]))
+  mae <- rmse <- rep(0, length(graph$data[[data_name]]))
 
   for (j in 1:length(unique(ind))) {
     i <- which(ind == j)
     if(model == "isoExp" || model == "alpha2"){
-      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], graph$y[-i])
+      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], graph$data[[data_name]][-i])
       Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                           Sigma.o[-i, i])
       var.p[i] <- diag(Sigma.p)
@@ -226,16 +236,16 @@ posterior_crossvalidation <- function(theta,
       A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
       Q.p <- Q + t(A) %*% A / sigma_e^2
       mu.p[i] <- solve(Q.p,
-                       as.vector(t(A) %*% graph$y[-i] / sigma_e^2))[graph$PtV[i]]
+                       as.vector(t(A) %*% graph$data[[data_name]][-i] / sigma_e^2))[graph$PtV[i]]
       v <- rep(0,dim(Q.p)[1])
       v[graph$PtV[i]] <- 1
       var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
     }
-    logscore[i] <- LS(graph$y[i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(graph$y[i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(graph$y[i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(graph$y[i] - mu.p[i])
-    rmse[i] <- (graph$y[i] - mu.p[i])^2
+    logscore[i] <- LS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph$data[[data_name]][i] - mu.p[i])
+    rmse[i] <- (graph$data[[data_name]][i] - mu.p[i])^2
   }
   return(list(mu = mu.p,
               var = var.p,
@@ -243,7 +253,7 @@ posterior_crossvalidation <- function(theta,
               crps = -mean(crps),
               scrps = -mean(scrps),
               mae = mean(mae),
-              rmse = mean(rmse)))
+              rmse = sqrt(mean(rmse))))
 }
 
 

@@ -7,6 +7,7 @@
 likelihood_graph_laplacian(
   graph,
   alpha,
+  data_name,
   covariates = FALSE,
   log_scale = TRUE,
   maximize = FALSE
