@@ -7,8 +7,10 @@
 posterior_crossvalidation_covariance(
   theta,
   graph,
+  data_name,
   model = "alpha1",
-  ind = NULL
+  ind = NULL,
+  BC = 1
 )
 }
 \arguments{

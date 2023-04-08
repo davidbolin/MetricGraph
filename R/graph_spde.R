@@ -18,6 +18,12 @@
 #' @param start_kappa Starting value for kappa.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
+#' @param shared_lib Which shared lib to use for the cgeneric implementation? 
+#' If "detect", it will check if the shared lib exists locally, in which case it will 
+#' use it. Otherwise it will use INLA's shared library.
+#' If "INLA", it will use the shared lib from INLA's installation. If 'MetricGraph', then
+#' it will use the local installation (does not work if your installation is from CRAN).
+#' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
 #'
 #' @return An inla object.
@@ -47,7 +53,9 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
  start_range = NULL, prior_range = NULL,
  start_kappa = NULL, start_sigma = NULL,
  prior_kappa = NULL,
- prior_sigma = NULL, debug = FALSE){
+ prior_sigma = NULL, 
+ shared_lib = "detect",
+ debug = FALSE){
 
   graph_spde <- graph_object$clone()
 
@@ -208,13 +216,39 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     start_theta <- start_lkappa
     prior_theta <- prior_kappa
   }
-
-  gpgraph_lib <- system.file('shared', package='MetricGraph')
   
+  ### Location of object files
+
+  gpgraph_lib <- shared_lib
+
+  if(shared_lib == "INLA"){
+    gpgraph_lib <- INLA::inla.external.lib('rSPDE')
+  } else if(shared_lib == "MetricGraph"){
+    gpgraph_lib <- system.file('shared', package='MetricGraph')
+    if(Sys.info()['sysname']=='Windows') {
+		gpgraph_lib <- paste0(gpgraph_lib, "/gpgraph_cgeneric_models.dll")
+            } else {
+		gpgraph_lib <- paste0(gpgraph_lib, "/gpgraph_cgeneric_models.so")
+            }
+  } else if(shared_lib == "detect"){
+    gpgraph_lib_local <- system.file('shared', package='MetricGraph')
+    if(Sys.info()['sysname']=='Windows') {
+		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/gpgraph_cgeneric_models.dll")
+            } else {
+		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/gpgraph_cgeneric_models.so")
+            }
+    if(file.exists(gpgraph_lib_local)){
+      gpgraph_lib <- gpgraph_lib_local
+    } else{
+      gpgraph_lib <- INLA::inla.external.lib('rSPDE')
+    }
+  }
+
+
   model <- do.call(
         'inla.cgeneric.define',
         list(model="inla_cgeneric_gpgraph_alpha1_model",
-            shlib=paste0(gpgraph_lib, '/gpgraph_cgeneric_models.so'),
+            shlib=gpgraph_lib,
             n=as.integer(n.v), debug=debug,
             prec_graph_i = as.integer(i_),
             prec_graph_j = as.integer(j_),

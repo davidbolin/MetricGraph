@@ -6,6 +6,7 @@ all : $(sources:.c=.o) so
 
 %.o : %.c
 	@echo gnerating $@
+	test -f ${R_LIBRARY_DIR}/INLA/include/cgeneric.h || test -f cgeneric.h || wget -O cgeneric.h https://raw.githubusercontent.com/hrue/r-inla/devel/inlaprog/src/cgeneric.h
 	gcc -c -O3 -Wall -Wextra -fpic -I$(toInclude)  $^ -o $@
 
 so : $(sources:.c=.o)
@@ -14,5 +15,6 @@ so : $(sources:.c=.o)
 	
 clean :
 	rm -f *.o
+	rm -f cgeneric.h
 
 .PHONY: all clean

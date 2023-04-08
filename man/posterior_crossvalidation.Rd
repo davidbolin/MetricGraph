@@ -4,7 +4,14 @@
 \alias{posterior_crossvalidation}
 \title{Prediction for models assuming observations at vertices}
 \usage{
-posterior_crossvalidation(theta, graph, model = "alpha1", ind = NULL)
+posterior_crossvalidation(
+  theta,
+  graph,
+  data_name,
+  model = "alpha1",
+  ind = NULL,
+  BC = 1
+)
 }
 \arguments{
 \item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}

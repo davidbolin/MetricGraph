@@ -1,10 +1,12 @@
+rm(list=ls())
+library(MetricGraph)
+
 library('sf')
 library(xtable)
 library(scales)
 library(gridExtra)
 library(ggmap)
 
-rm(list = ls())
 
 show.plot=FALSE
 set.seed(1)
@@ -23,29 +25,49 @@ graph <-  metric_graph$new(lines = as_Spatial(Lines), longlat = TRUE)
 #convert PtE to relative distances and add observations
 edge_length_m <- EtV[,4]
 PtE[,2] = PtE[,2]/edge_length_m[PtE[,1]]
-graph$add_PtE_observations(Y - mean(Y),as.matrix(PtE), normalized = TRUE)
 
-# Fit alpha=1 model
-theta.alpha1 <- graph_starting_values(graph, model = "alpha1")
-loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1)
-res <- optim(log(theta.alpha1), loglik_alpha1)
-theta.alpha1 <- exp(res$par)
-like.alpha1<- -res$value
+data.PtE <- data.frame(y = Y - mean(Y),
+                      edge_number = PtE[,1],
+                      distance_on_edge = PtE[,2])
+graph$add_observations(data = data.PtE,
+                            normalized = TRUE)
+
 
 #fit alpha = 2 model
 graph$buildC(2)
-theta.alpha2 <- graph_starting_values(graph, model = "alpha2")
-loglik_alpha2 <- likelihood_graph_spde(graph, alpha = 2)
+theta.alpha2 <- graph_starting_values(graph, model = "alpha2",data_name="y")
+loglik_alpha2 <- likelihood_graph_spde(graph, alpha = 2,data_name="y")
 res <- optim(log(theta.alpha2), loglik_alpha2)
 theta.alpha2 <- exp(res$par)
 like.alpha2<- -res$value
 
+graph$buildC(2,TRUE)
+loglik_alpha2_BC <- likelihood_graph_spde(graph, alpha = 2,data_name="y", BC=0)
+res <- optim(log(theta.alpha2), loglik_alpha2_BC)
+theta.alpha2_BC <- exp(res$par)
+like.alpha2_BC<- -res$value
+
+
+# Fit alpha=1 model
+theta.alpha1 <- graph_starting_values(graph, model = "alpha1",data_name="y")
+loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1, data_name="y")
+res <- optim(log(theta.alpha1), loglik_alpha1)
+theta.alpha1 <- exp(res$par)
+like.alpha1<- -res$value
+
+loglik_alpha1_BC <- likelihood_graph_spde(graph, alpha = 1, data_name="y", BC=0)
+res <- optim(log(theta.alpha1), loglik_alpha1_BC)
+theta.alpha1_BC <- exp(res$par)
+like.alpha1_BC<- -res$value
+
+
 # Fit isotropic model
 graph$compute_resdist()
-theta.exp <- graph_starting_values(graph, model = "isoExp")
+theta.exp <- graph_starting_values(graph, model = "isoExp",data_name="y" )
 
 loglik_isoExp <- likelihood_graph_covariance(graph, model = "isoCov",
-                                             cov_function = exp_covariance)
+                                             cov_function = exp_covariance,
+                                             data_name="y" )
 res.exp <- optim(log(theta.exp), loglik_isoExp)
 theta.exp <- exp(res.exp$par)
 like.exp <- -res.exp$value
@@ -53,48 +75,52 @@ like.exp <- -res.exp$value
 # Fit graph Laplace model
 graph$observation_to_vertex()
 graph$compute_laplacian()
-theta.GL1 <- graph_starting_values(graph, model = "GL1")
-loglik_GL1 <- likelihood_graph_laplacian(graph, alpha = 1)
+theta.GL1 <- graph_starting_values(graph, model = "GL1",data_name="y")
+loglik_GL1 <- likelihood_graph_laplacian(graph, alpha = 1, data_name="y")
 res <- optim(log(theta.GL1), loglik_GL1)
 theta.GL1 <- exp(res$par)
 like.GL1 <- -res$value
 
 # Fit graph Laplace model 2
-theta.GL2 <- graph_starting_values(graph, model = "GL2")
-loglik_GL2 <- likelihood_graph_laplacian(graph, alpha = 2)
+theta.GL2 <- graph_starting_values(graph, model = "GL2",data_name="y")
+loglik_GL2 <- likelihood_graph_laplacian(graph, alpha = 2, data_name="y")
 res <- optim(log(theta.GL2), loglik_GL2)
 theta.GL2 <- exp(res$par)
 like.GL2 <- -res$value
 
 #cross validation
 K <- 5 #number of groups in cross validation
-n.y <- length(graph$y)
+n.y <- length(graph$data[['y']])
 n.g <- floor(n.y/K)
 ind <- rep(1:K,n.g+1)[1:n.y]
 ind <- ind[sample(1:n.y,n.y)]
 
-cv.exp <- posterior_crossvalidation(theta.exp, graph,
+cv.exp <- posterior_crossvalidation(theta.exp, graph, data_name = "y",
                                     model = "isoExp", ind = ind)
-cv.alpha1 <- posterior_crossvalidation(theta.alpha1, graph,
-                                       model = "alpha1", ind = ind)
-cv.GL1 <- posterior_crossvalidation(theta.GL1, graph, model ="GL1", ind = ind)
-cv.GL2 <- posterior_crossvalidation(theta.GL2, graph, model ="GL2", ind = ind)
+cv.alpha1NBC <- posterior_crossvalidation(theta.alpha1_BC, graph, data_name = "y",
+                                       model = "alpha1", ind = ind,BC=0)
+cv.alpha1 <- posterior_crossvalidation(theta.alpha1, graph, data_name = "y",
+                                       model = "alpha1", ind = ind,BC=1)
+cv.GL1 <- posterior_crossvalidation(theta.GL1, graph, model ="GL1", ind = ind, data_name="y")
+cv.GL2 <- posterior_crossvalidation(theta.GL2, graph, model ="GL2", ind = ind, data_name="y")
 cv.alpha2 <- posterior_crossvalidation_covariance(theta.alpha2, graph,
-                                                  model = "alpha2", ind = ind)
-result <- data.frame(RMSE  = sqrt(c(cv.exp$rmse, cv.alpha1$rmse, cv.GL1$rmse,
-                                    cv.GL2$rmse, cv.alpha2$rmse)),
-                     MAE   = c(cv.exp$mae, cv.alpha1$mae, cv.GL1$mae,
-                               cv.GL2$mae, cv.alpha2$mae),
-                     LS    = c(cv.exp$logscore, cv.alpha1$logscore,
+                                                  model = "alpha2", ind = ind, data_name="y")
+cv.alpha2NBC <- posterior_crossvalidation_covariance(theta.alpha2_BC, graph,
+                                                  model = "alpha2", ind = ind, data_name="y",BC=0)
+result <- data.frame(RMSE  = (c(cv.exp$rmse, cv.alpha1$rmse,cv.alpha1NBC$rmse, cv.GL1$rmse,
+                                    cv.GL2$rmse, cv.alpha2$rmse, cv.alpha2NBC$rmse)),
+                     MAE   = c(cv.exp$mae, cv.alpha1$mae, cv.alpha1NBC$mae, cv.GL1$mae,
+                               cv.GL2$mae, cv.alpha2$mae, cv.alpha2NBC$mae),
+                     LS    = c(cv.exp$logscore, cv.alpha1$logscore, cv.alpha1NBC$logscore,
                                 cv.GL1$logscore, cv.GL2$logscore,
-                                cv.alpha2$logscore),
-                     CRPS  = c(cv.exp$crps, cv.alpha1$crps, cv.GL1$crps,
-                                cv.GL2$crps, cv.alpha2$crps),
-                     SCRPS = c(cv.exp$scrps, cv.alpha1$scrps, cv.GL1$scrps,
-                                cv.GL2$scrps, cv.alpha2$scrps),
-                     nlike = -c(like.exp, like.alpha1, like.GL1, like.GL2,
-                                like.alpha2),
-                     row.names = c("isoExp","alpha1","GL1", "GL2","alpha2"))
+                                cv.alpha2$logscore, cv.alpha2NBC$logscore),
+                     CRPS  = c(cv.exp$crps, cv.alpha1$crps,cv.alpha1NBC$crps, cv.GL1$crps,
+                                cv.GL2$crps, cv.alpha2$crps, cv.alpha2NBC$crps),
+                     SCRPS = c(cv.exp$scrps, cv.alpha1$scrps,cv.alpha1NBC$scrps, cv.GL1$scrps,
+                                cv.GL2$scrps, cv.alpha2$scrps, cv.alpha2NBC$scrps),
+                     nlike = -c(like.exp, like.alpha1,like.alpha1_BC, like.GL1, like.GL2,
+                                like.alpha2, like.alpha2_BC),
+                     row.names = c("isoExp","alpha1","alpha1 noBC","GL1", "GL2","alpha2","alpha2 noBC"))
 print(result, digits = 3)
 
 #print(xtable(result))

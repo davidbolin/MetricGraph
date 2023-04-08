@@ -361,7 +361,7 @@ graph_starting_values <- function(graph,
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
 
     if(data){
-      Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+      Q <- start_kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
       v <- rep(0,graph$nV)
       v[1] <- 1
       s2 <- solve(Q,v)[1]
@@ -378,7 +378,7 @@ graph_starting_values <- function(graph,
     k <- sqrt(8 * 0.5) / prior.range.nominal
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
     if(data){
-      Q <- start_kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian
+      Q <- start_kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
       v <- rep(0,graph$nV)
       v[1] <- 1
       s2 <- solve(Q %*% Q,v)[1]
