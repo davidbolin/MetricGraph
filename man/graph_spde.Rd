@@ -15,6 +15,7 @@ graph_spde(
   start_sigma = NULL,
   prior_kappa = NULL,
   prior_sigma = NULL,
+  shared_lib = "detect",
   debug = FALSE
 )
 }
@@ -41,6 +42,13 @@ graph_spde(
 
 \item{prior_sigma}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.}
+
+\item{shared_lib}{Which shared lib to use for the cgeneric implementation?
+If "detect", it will check if the shared lib exists locally, in which case it will
+use it. Otherwise it will use INLA's shared library.
+If "INLA", it will use the shared lib from INLA's installation. If 'MetricGraph', then
+it will use the local installation (does not work if your installation is from CRAN).
+Otherwise, you can directly supply the path of the .so (or .dll) file.}
 
 \item{debug}{Should debug be displayed?}
 }

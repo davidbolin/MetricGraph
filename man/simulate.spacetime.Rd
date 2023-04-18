@@ -4,7 +4,7 @@
 \alias{simulate.spacetime}
 \title{Simulatation with starting value u0}
 \usage{
-\method{simulate}{spacetime}(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0)
+\method{simulate}{spacetime}(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0)
 }
 \arguments{
 \item{graph}{metric_graph object}

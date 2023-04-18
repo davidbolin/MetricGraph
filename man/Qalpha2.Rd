@@ -4,7 +4,7 @@
 \alias{Qalpha2}
 \title{The precision matrix for all vertices in the alpha=2 case}
 \usage{
-Qalpha2(theta, graph, BC = 1, build = TRUE)
+Qalpha2(theta, graph, w = 0.5, BC = 1, build = TRUE)
 }
 \arguments{
 \item{theta}{\itemize{
@@ -12,6 +12,8 @@ Qalpha2(theta, graph, BC = 1, build = TRUE)
 }}
 
 \item{graph}{metric_graph object}
+
+\item{w}{(\link{0,1}) how two weight the top edge}
 
 \item{BC}{boundary conditions for degree=1 vertices. BC =0 gives Neumann
 boundary conditions and BC=1 gives stationary boundary conditions}

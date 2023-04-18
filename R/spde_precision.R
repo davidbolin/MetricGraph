@@ -103,6 +103,7 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 #' The precision matrix for all vertices in the alpha=2 case
 #' @param theta - sigma, kappa
 #' @param graph metric_graph object
+#' @param w ([0,1]) how two weight the top edge
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 gives stationary boundary conditions
 #' @param build (bool) if TRUE return the precision matrix otherwise return
@@ -111,8 +112,9 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 #' derivatives. The ordering of the variables is acording to graph$E, where for
 #' each edge there are four random variables: processes and derivate for
 #' lower and upper edge end points
+#' @export
 #' @return Precision matrix or list
-Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
+Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
   kappa <- theta[2]
   sigma <- theta[1]
@@ -125,8 +127,9 @@ Qalpha2 <- function(theta, graph, BC = 1, build = TRUE) {
                    -r_2(0, kappa = kappa, sigma = sigma, deriv = 2)), 2, 2)
   R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
                   cbind(matrix(0, 2, 2), R_00))
-  Ajd <- -0.5 * solve(rbind(cbind(R_00, matrix(0, 2, 2)),
-                            cbind(matrix(0, 2, 2), R_00)))
+  R00i <- solve(R_00)
+  Ajd <- -1 * rbind(cbind(w * R00i, matrix(0, 2, 2)),
+                      cbind(matrix(0, 2, 2), (1-w)*R00i))
   for (i in 1:graph$nE) {
 
     l_e <- graph$edge_lengths[i]
