@@ -293,19 +293,32 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param data Should the data be used to obtain improved starting values?
 #' @param data_name The name of the response variable in `graph$data`.
 #' @param manual_data A vector (or matrix) of response variables.
+#' @param range_par Should an initial value for range parameter be returned instead of for kappa?
+#' @param nu Should an initial value for nu be returned?
+#' @param like_format Should the starting values be returned with sigma.e as the last element? This is the format for the likelihood constructor from the rSPDE package.
+#' @param log_scale Should the initial values be returned in log scale?
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
 graph_starting_values <- function(graph,
-                                  model = NULL,
+                                  model = c("alpha1", "alpha2", "isoExp", "GL1", "GL2"),
                                   data = TRUE,
                                   data_name = NULL,
-                                  manual_data = NULL){
+                                  range_par = FALSE,
+                                  nu = FALSE,
+                                  manual_data = NULL,
+                                  like_format = FALSE,
+                                  log_scale = FALSE){
 
   check_graph(graph)
 
+  model <- model[[1]]
+  if((!model%in%c("alpha1", "alpha2", "isoExp", "GL1", "GL2"))){
+    stop("The model should be one of 'alpha1', 'alpha2', 'isoExp',
+      'GL1' or 'GL2'!")
+  }
   if(data){
-    if(is.null(graph$data)) {
+    if(is.null(graph$data) && is.null(manual_data)) {
       stop("No data provided, if you want the version without data set the 'data' argument to FALSE!")
     }
     if(is.null(data_name) && is.null(manual_data)){
@@ -390,7 +403,45 @@ graph_starting_values <- function(graph,
   } else {
     stop("wrong model choice")
   }
-  return(c(0.1 * data_std, start_sigma, start_kappa))
+  if(like_format){
+      if(!nu){
+        out_vec <- start_sigma
+      } else{
+        out_vec <- 1
+      }
+
+      if(range_par){
+        out_vec <- c(out_vec, prior.range.nominal)
+      } else{
+        out_vec <- c(out_vec, start_kappa)
+      }
+      if(nu){
+        out_vec <- c(out_vec,1)
+      }
+      out_vec <- c(out_vec, 0.1 * data_std)
+  } else{
+      if(!nu){
+        out_vec <- c(0.1 * data_std,start_sigma)
+      } else{
+        out_vec <- c(0.1 * data_std,1)
+      }
+    
+      if(range_par){
+        out_vec <- c(out_vec, prior.range.nominal)
+      } else{
+        out_vec <- c(out_vec, start_kappa)
+      }
+
+      if(nu){
+        out_vec <- c(out_vec,1)
+      }
+  }
+
+  if(log_scale){
+    out_vec <- log(out_vec)
+  }
+
+  return(out_vec)
 }
 
 

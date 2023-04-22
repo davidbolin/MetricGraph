@@ -100,7 +100,11 @@ the mesh. As can be seen in the plot, the mesh is very coarse, so let's reduce t
 
 The next step is to build the mass and stiffness matrices for the FEM basis.
 ```{r}
+start <- Sys.time()
   graph$compute_fem()
+end <- Sys.time()
+print('Execution Time')
+print(end-start)
 ```
 
 We are now ready to specify the model
@@ -110,13 +114,14 @@ $$
 for the Whittle--Matérn field $u$. For this, we use the `matern.operators` function from 
 the `rSPDE` package:
 ```{r} 
-  sigma <- 1
-  r <- 0.2
+  sigma <- 1.3
+  r <- 0.2 # range
   nu <- 0.9
   rspde.order <- 2
   kappa <- sqrt(8 * nu) / r
   op <- matern.operators(C= graph$mesh$C, G = graph$mesh$G, d = 1, 
-                         nu = nu, kappa = kappa, sigma = sigma, m = rspde.order)
+                         nu = nu, kappa = kappa, sigma = sigma, 
+                         m = rspde.order)
 ```
 As can be seen in the code, we specify $\kappa$ via the practical correlation range
 $\sqrt{8\nu}/\kappa$. Also, the model is not parametrized by $\tau, \alpha$ but instead by 
@@ -171,7 +176,8 @@ Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the ration
 
 ## Using the model for inference
 
-There is built-in support for computing log-likelihood functions and performing kriging prediction in the `rSPDE` package which we can use for the graph model. To illustrate this, we use the simulation to create some noisy observations of the process. 
+There is built-in support for computing log-likelihood functions and performing kriging prediction in the `rSPDE` package which we can use for the graph model. To illustrate this, we 
+use the simulation to create some noisy observations of the process. 
 We generate the observations as $Y_i = u(s_i) + \varepsilon_i$, where $\varepsilon_i \sim N(0,\sigma_e^2)$ is Gaussian measurement noise. 
 ```{r}
     sigma.e <- 0.1
@@ -184,22 +190,21 @@ the loglikelihood function parametrized using the logarithm of each
 parameter to avoid constrained optimization.
 
 ```{r}
-    mlik <- rSPDE.construct.matern.loglike(op, Y=Y, A=A)
+    mlik <- rSPDE.construct.matern.loglike(op, Y=Y, A=A, parameterization = "matern")
 ```
 
 We now set some suitable initial values for the optimization and fit the 
 model using `optim`.
 
 ```{r, message=FALSE, warning=FALSE}
-  theta0 <- c(log(sqrt(var(as.vector(Y)))),
-              log(10),
-              log(1),
-              log(0.1 * sqrt(var(as.vector(Y)))))
+  theta0 <- graph_starting_values(graph, range_par = TRUE,
+                                    nu = TRUE, like_format = TRUE,
+                                    manual_data = Y, log = TRUE)
 
   theta <- optim(theta0, mlik, method = "L-BFGS-B")
     
   print(data.frame(sigma = c(sigma, exp(theta$par[1])), 
-                   kappa = c(kappa, exp(theta$par[2])),
+                   range = c(r, exp(theta$par[2])),
                    nu = c(nu, exp(theta$par[3])),
                    sigma.e = c(sigma.e, exp(theta$par[4])),
                    row.names = c("Truth", "Estimates")))
@@ -257,17 +262,16 @@ The `rSPDE.matern.loglike()` function automatically identifies the replicates
 from the fact that $Y$ is a matrix with more than one column.
 
 ```{r, message=FALSE, warning=FALSE}
-  theta0 <- c(log(sqrt(var(as.vector(Y)))),
-              log(10),
-              log(1),
-              log(0.1 * sqrt(var(as.vector(Y)))))
+  theta0 <- graph_starting_values(graph, range_par = TRUE,
+                                    nu = TRUE, like_format = TRUE,
+                                    manual_data = Y.rep, log = TRUE)
 
-    mlik <- rSPDE.construct.matern.loglike(op_cov, Y=Y.rep, A=A)
+    mlik <- rSPDE.construct.matern.loglike(op_cov, Y=Y.rep, A=A, parameterization = "matern")
 
     theta <- optim(theta0, mlik, method = "L-BFGS-B")
     
     print(data.frame(sigma = c(sigma, exp(theta$par[1])),
-                     kappa = c(kappa, exp(theta$par[2])),
+                     range = c(r, exp(theta$par[2])),
                      nu = c(nu, exp(theta$par[3])),
                      sigma.e = c(sigma.e, exp(theta$par[4])),
                      row.names = c("Truth", "Estimates")))

@@ -1022,27 +1022,32 @@ metric_graph <-  R6::R6Class("metric_graph",
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    self$mesh$G <- self$mesh$C <- self$mesh$B <- Matrix(0,nrow=nV,ncol=nV)
+    # self$mesh$G <- self$mesh$C <- self$mesh$B <- Matrix(0,nrow=nV,ncol=nV)
 
-    for (e in 1:dim(self$mesh$E)[1]) {
-      v1 <- self$mesh$E[e, 1]
-      v2 <- self$mesh$E[e, 2]
+    # for (e in 1:dim(self$mesh$E)[1]) {
+    #   v1 <- self$mesh$E[e, 1]
+    #   v2 <- self$mesh$E[e, 2]
 
-      self$mesh$C[v1,v1] <- self$mesh$C[v1, v1] + self$mesh$h_e[e]/3
-      self$mesh$C[v2,v2] <- self$mesh$C[v2, v2] + self$mesh$h_e[e]/3
-      self$mesh$C[v1,v2] <- self$mesh$C[v1, v2] + self$mesh$h_e[e]/6
-      self$mesh$C[v2,v1] <- self$mesh$C[v2, v1] + self$mesh$h_e[e]/6
+    #   self$mesh$C[v1,v1] <- self$mesh$C[v1, v1] + self$mesh$h_e[e]/3
+    #   self$mesh$C[v2,v2] <- self$mesh$C[v2, v2] + self$mesh$h_e[e]/3
+    #   self$mesh$C[v1,v2] <- self$mesh$C[v1, v2] + self$mesh$h_e[e]/6
+    #   self$mesh$C[v2,v1] <- self$mesh$C[v2, v1] + self$mesh$h_e[e]/6
 
-      self$mesh$G[v1,v1] <- self$mesh$G[v1, v1] + 1 / self$mesh$h_e[e]
-      self$mesh$G[v2,v2] <- self$mesh$G[v2, v2] + 1 / self$mesh$h_e[e]
-      self$mesh$G[v1,v2] <- self$mesh$G[v1, v2] - 1 / self$mesh$h_e[e]
-      self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
+    #   self$mesh$G[v1,v1] <- self$mesh$G[v1, v1] + 1 / self$mesh$h_e[e]
+    #   self$mesh$G[v2,v2] <- self$mesh$G[v2, v2] + 1 / self$mesh$h_e[e]
+    #   self$mesh$G[v1,v2] <- self$mesh$G[v1, v2] - 1 / self$mesh$h_e[e]
+    #   self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
 
-      self$mesh$B[v1,v1] <- self$mesh$B[v1, v1] - 0.5
-      self$mesh$B[v1,v2] <- self$mesh$B[v1, v2] - 0.5
-      self$mesh$B[v2,v2] <- self$mesh$B[v2, v2] + 0.5
-      self$mesh$B[v2,v1] <- self$mesh$B[v2, v1] + 0.5
-    }
+    #   self$mesh$B[v1,v1] <- self$mesh$B[v1, v1] - 0.5
+    #   self$mesh$B[v1,v2] <- self$mesh$B[v1, v2] - 0.5
+    #   self$mesh$B[v2,v2] <- self$mesh$B[v2, v2] + 0.5
+    #   self$mesh$B[v2,v1] <- self$mesh$B[v2, v1] + 0.5
+    # }
+    fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV)
+    self$mesh$C <- fem_temp$C
+    self$mesh$G <- fem_temp$G
+    self$mesh$B <- fem_temp$B
+
     self$mesh$weights <- rowSums(self$mesh$C)
   },
 

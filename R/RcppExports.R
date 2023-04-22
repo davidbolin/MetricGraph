@@ -25,3 +25,15 @@ c_basis2 <- function(A, eps_limit = 1e-10) {
     .Call(`_MetricGraph_c_basis2`, A, eps_limit)
 }
 
+#' @name assemble_fem
+#' @title Construction of FEM matrices
+#' @description Function used to construct FEM matrices on metric graphs.
+#' @param E [nx2 matrix] Matrix of edges
+#' @param h_e [n vector] Vector of h's
+#' @param nV [int] Number of vertices
+#' @noRd
+#'
+assemble_fem <- function(E, h_e, nV) {
+    .Call(`_MetricGraph_assemble_fem`, E, h_e, nV)
+}
+
