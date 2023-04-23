@@ -2612,9 +2612,13 @@ metric_graph <-  R6::R6Class("metric_graph",
             }
         }
         #now check if there are intersections with buffer
-        tmp_line <- gBuffer(self$lines[i], width = tol)
+        # tmp_line <- gBuffer(self$lines[i], width = tol)
+        lines_tmp_sf <- sf::st_as_sf(self$lines[i])
+        lines2_tmp_sf <- sf::st_as_sf(self$lines[j])
+        tmp_line <- sf::st_buffer(lines_tmp_sf, dist = tol)
         # intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
-        intersect_tmp <- intersection2(tmp_line, self$lines[j])
+        # intersect_tmp <- intersection2(tmp_line, self$lines[j])
+        intersect_tmp <- intersection3(tmp_line, lines2_tmp_sf)
         if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
           intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
         }
