@@ -892,3 +892,10 @@ intersection2 <- function(lines1, lines2){
   inter_lines <- unique(inter_lines)
   return(inter_lines)
 }
+
+#' @noRd 
+
+interpolate2 <- function(lines, pos, normalized = FALSE){
+    lines <- lines@lines[[1]]@Lines[[1]]@coords
+    return(interpolate2_aux(lines, pos, normalized))
+}

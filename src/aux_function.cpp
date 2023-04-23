@@ -155,3 +155,53 @@ Eigen::VectorXd projectVecLine(Eigen::MatrixXd lines, Eigen::MatrixXd points, in
     }
     return(out_vec);
 }
+
+//' @name interpolate2
+//' @title Finds the point with respect to a distance along the line
+//' @description Finds the point with respect to a distance along the line
+//' @param lines [nx2 matrix] Matrix of the points of the lines
+//' @param pos [k vector] vector of positions.
+//' @param normalized [int] 0 means not normalized, 1 means normalized
+//' @noRd
+//'
+// [[Rcpp::export]]
+
+Eigen::MatrixXd interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int normalized = 0){
+    int size_return = pos.size();
+    int i,j;
+    Eigen::MatrixXd out_mat(size_return,2);
+    Eigen::VectorXd dist_vec(lines.rows());
+    dist_vec(0) = 0;
+    for(i=0; i<lines.rows()-1; i++){
+        Eigen::VectorXd p0 = lines.row(i);
+        Eigen::VectorXd v = lines.row(i+1) - lines.row(i);
+        dist_vec(i+1) = dist_vec(i) + v.norm();
+    }  
+    dist_vec = dist_vec/dist_vec(lines.rows()-1);
+    Eigen::VectorXd pos_rel;
+    if(normalized != 0){
+        pos_rel = pos;
+    } else{
+        pos_rel = pos/dist_vec(lines.rows()-1);
+    }
+
+    for(i=0; i< pos.size(); i++){
+        int tmp_ind = -1;
+        if(pos_rel(i) < 0){
+            pos_rel(i) = 0;
+        } else if(pos_rel(i)>1){
+            pos_rel(i) = 1;
+        }
+        for(j=0; j<dist_vec.size()-1; j++){
+            if(pos_rel(i) >= dist_vec(j) && pos_rel(i) <= dist_vec(j+1)){
+                tmp_ind = j;
+            }
+        }
+
+        double dist_pos = (pos_rel(i) - dist_vec(tmp_ind))/(dist_vec(tmp_ind+1)-dist_vec(tmp_ind)); 
+
+        out_mat.row(i) = lines.row(tmp_ind) + (lines.row(tmp_ind+1) - lines.row(tmp_ind))*dist_pos;
+    }
+
+    return(out_mat);
+}

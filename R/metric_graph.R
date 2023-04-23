@@ -1371,10 +1371,13 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
-        p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
-                                                                drop = FALSE],
-                                  normalized = TRUE)
-        coords <-p2@coords
+                                    
+        
+        # p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
+        #                                                         drop = FALSE],
+        #                           normalized = TRUE)
+        # coords <-p2@coords
+        coords <- interpolate2(Line_edge, pos = data.to.plot.order[, 1, drop = TRUE], normalized = TRUE)
         x.loc <- c(x.loc, coords[, 1])
         y.loc <- c(y.loc, coords[, 2])
         z.loc <- c(z.loc, data.to.plot.order[, 2])
@@ -1525,10 +1528,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
-        p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
-                                                                drop = FALSE],
-                                  normalized = TRUE)
-        coords <-p2@coords
+        # p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
+        #                                                         drop = FALSE],
+        #                           normalized = TRUE)
+        # coords <-p2@coords
+        coords <- interpolate2(Line_edge, pos = data.to.plot.order[, 1, drop = TRUE], normalized = TRUE)
         x.loc <- c(x.loc, rep(coords[, 1], frames))
         y.loc <- c(y.loc, rep(coords[, 2], frames))
         z.loc <- c(z.loc, c(data.to.plot.order[, 2:(frames+1)]))
@@ -1697,7 +1701,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       LT <- private$edge_pos_to_line_pos2(PtE[, 1], PtE[, 2])
       for (i in 1:dim(PtE)[1]) {
-        Points[i,] <- rgeos::gInterpolate(self$lines[LT[i, 1], ] ,LT[i, 2], normalized = TRUE)@coords
+        # Points[i,] <- rgeos::gInterpolate(self$lines[LT[i, 1], ] ,LT[i, 2], normalized = TRUE)@coords
+        Points[i,] <- interpolate2(self$lines[LT[i, 1], ] , pos = LT[i, 2], normalized = TRUE)
       }
       return(Points)
     } else {
@@ -2470,7 +2475,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     Line <- self$lines[LinesPos[j,1], ]
-    val_line <- rgeos::gInterpolate(Line, t_mod, normalized = TRUE)@coords
+    # val_line <- rgeos::gInterpolate(Line, t_mod, normalized = TRUE)@coords
+     val_line <- interpolate2(Line, pos = t_mod, normalized = TRUE)
 
     closest_vertex <- which.min(sapply(1:nrow(self$V), function(i){
       (self$V[i,1]-val_line[1])^2 + (self$V[i,2] - val_line[2])^2
@@ -2579,7 +2585,8 @@ metric_graph <-  R6::R6Class("metric_graph",
           # } else if ("SpatialLines"%in%is(intersect_tmp)){
           } else if ( ("LINESTRING"%in%sf::st_geometry_type(intersect_tmp)) || ("MULTILINESTRING"%in%sf::st_geometry_type(intersect_tmp))){
             intersect_tmp <- sf::as_Spatial(intersect_tmp$geom)
-            coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
+            # coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
+            coord_tmp <- interpolate2(intersect_tmp, pos=0.5, normalized = TRUE)
             coord_tmp <- matrix(coordinates(coord_tmp),1,2)
           }
 
@@ -2618,7 +2625,8 @@ metric_graph <-  R6::R6Class("metric_graph",
             # for(k in 1:nrow(coord_tmp)){
             for(k in 1:length(intersect_tmp)) {
             if(inherits(intersect_tmp, "SpatialLines")) {
-              coord_tmp <-gInterpolate(intersect_tmp[k], d=0.5, normalized = TRUE)
+              # coord_tmp <-gInterpolate(intersect_tmp[k], d=0.5, normalized = TRUE)
+              coord_tmp <- interpolate2(intersect_tmp[k], pos=0.5, normalized = TRUE)
               p <- matrix(coordinates(coord_tmp),1,2)
             } else {
               p <- matrix(coordinates(intersect_tmp[k]),1,2)

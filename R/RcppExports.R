@@ -65,3 +65,15 @@ projectVecLine <- function(lines, points, normalized = 0L) {
     .Call(`_MetricGraph_projectVecLine`, lines, points, normalized)
 }
 
+#' @name interpolate2
+#' @title Finds the point with respect to a distance along the line
+#' @description Finds the point with respect to a distance along the line
+#' @param lines [nx2 matrix] Matrix of the points of the lines
+#' @param pos [k vector] vector of positions.
+#' @param normalized [int] 0 means not normalized, 1 means normalized
+#' @noRd
+#'
+interpolate2_aux <- function(lines, pos, normalized = 0L) {
+    .Call(`_MetricGraph_interpolate2_aux`, lines, pos, normalized)
+}
+
