@@ -36,10 +36,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// projectVecLine
+Eigen::VectorXd projectVecLine(Eigen::MatrixXd lines, Eigen::MatrixXd points, int normalized);
+RcppExport SEXP _MetricGraph_projectVecLine(SEXP linesSEXP, SEXP pointsSEXP, SEXP normalizedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type lines(linesSEXP);
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type points(pointsSEXP);
+    Rcpp::traits::input_parameter< int >::type normalized(normalizedSEXP);
+    rcpp_result_gen = Rcpp::wrap(projectVecLine(lines, points, normalized));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
     {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 3},
+    {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},
     {NULL, NULL, 0}
 };
 

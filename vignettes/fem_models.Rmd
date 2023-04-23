@@ -95,16 +95,12 @@ we must first construct a mesh on the graph.
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in
 the mesh. As can be seen in the plot, the mesh is very coarse, so let's reduce the value of `h` and rebuild the mesh:
 ```{r}
-  graph$build_mesh(h = 0.01)
+graph$build_mesh(h = 0.01)
 ```
 
 The next step is to build the mass and stiffness matrices for the FEM basis.
 ```{r}
-start <- Sys.time()
-  graph$compute_fem()
-end <- Sys.time()
-print('Execution Time')
-print(end-start)
+graph$compute_fem()
 ```
 
 We are now ready to specify the model

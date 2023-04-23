@@ -82,6 +82,8 @@ locations}
 
 \item{\code{lines}}{the lines in the graph}
 
+\item{\code{sf_lines}}{in sf format}
+
 \item{\code{geo_dist}}{geodesic distances between the vertices in the graph}
 
 \item{\code{res_dist}}{resistance distances between the observation locations}

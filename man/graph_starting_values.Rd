@@ -6,10 +6,14 @@
 \usage{
 graph_starting_values(
   graph,
-  model = NULL,
+  model = c("alpha1", "alpha2", "isoExp", "GL1", "GL2"),
   data = TRUE,
   data_name = NULL,
-  manual_data = NULL
+  range_par = FALSE,
+  nu = FALSE,
+  manual_data = NULL,
+  like_format = FALSE,
+  log_scale = FALSE
 )
 }
 \arguments{
@@ -22,7 +26,15 @@ are supported}
 
 \item{data_name}{The name of the response variable in \code{graph$data}.}
 
+\item{range_par}{Should an initial value for range parameter be returned instead of for kappa?}
+
+\item{nu}{Should an initial value for nu be returned?}
+
 \item{manual_data}{A vector (or matrix) of response variables.}
+
+\item{like_format}{Should the starting values be returned with sigma.e as the last element? This is the format for the likelihood constructor from the rSPDE package.}
+
+\item{log_scale}{Should the initial values be returned in log scale?}
 }
 \value{
 A vector, \code{c(start_sigma_e, start_sigma, start_kappa)}

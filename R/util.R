@@ -861,3 +861,10 @@ nearestPointOnSegment <- function(s, p){
     result
 }
 
+#' @noRd 
+
+projectVecLine2 <- function(lines, points, normalized = FALSE){
+  lines <- lines@lines[[1]]@Lines[[1]]@coords
+  points <- points@coords
+  return(projectVecLine(lines, points, normalized))
+}

@@ -25,6 +25,22 @@ c_basis2 <- function(A, eps_limit = 1e-10) {
     .Call(`_MetricGraph_c_basis2`, A, eps_limit)
 }
 
+#' @name proj_vec
+#' @noRd
+NULL
+
+#' @name proj_vec2
+#' @noRd
+NULL
+
+#' @name proj_vec
+#' @noRd
+NULL
+
+#' @name proj_vec_line
+#' @noRd
+NULL
+
 #' @name assemble_fem
 #' @title Construction of FEM matrices
 #' @description Function used to construct FEM matrices on metric graphs.
@@ -35,5 +51,17 @@ c_basis2 <- function(A, eps_limit = 1e-10) {
 #'
 assemble_fem <- function(E, h_e, nV) {
     .Call(`_MetricGraph_assemble_fem`, E, h_e, nV)
+}
+
+#' @name projectVecLine
+#' @title Projects SpatialPoints into SpatialLines
+#' @description Obtain the coordinates of the projection of points into lines.
+#' @param lines [nx2 matrix] Matrix of the points of the lines
+#' @param points [nx2 matrix] Matrix of the points
+#' @param normalized [int] 0 means not normalized, 1 means normalized
+#' @noRd
+#'
+projectVecLine <- function(lines, points, normalized = 0L) {
+    .Call(`_MetricGraph_projectVecLine`, lines, points, normalized)
 }
 
