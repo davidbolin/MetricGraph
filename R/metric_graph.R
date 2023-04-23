@@ -2554,16 +2554,26 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(length(inds)>0) {
       for(j in inds) {
         #first check if there are intersections
-        intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
+        # intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
+        intersect_tmp <- intersection2(self$lines[i], self$lines[j])
         p_cur <- NULL
-        if(!is.null(intersect_tmp)) {
-          if("SpatialPoints"%in%is(intersect_tmp)){
-            coord_tmp <- coordinates(intersect_tmp)
-          } else if ("SpatialLines"%in%is(intersect_tmp)){
+        # if(!is.null(intersect_tmp)) {
+        if(nrow(st_coordinates(intersect_tmp))>0){
+          # if("SpatialPoints"%in%is(intersect_tmp)){
+          if("POINT"%in%sf::st_geometry_type(intersect_tmp)){
+            # coord_tmp <- coordinates(intersect_tmp)
+            coord_tmp <- sf::st_coordinates(intersect_tmp)
+          # } else if ("SpatialLines"%in%is(intersect_tmp)){
+          } else if ( ("LINESTRING"%in%sf::st_geometry_type(intersect_tmp)) || ("MULTILINESTRING"%in%sf::st_geometry_type(intersect_tmp))){
+            intersect_tmp <- as_Spatial(intersect_tmp)
             coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
             coord_tmp <- matrix(coordinates(coord_tmp),1,2)
           }
-            for(k in 1:length(intersect_tmp)) {
+            # for(k in 1:length(intersect_tmp)) {
+              tmp_inter <-rgeos::gIntersection(self$lines[i], self$lines[j])
+              print(length(tmp_inter))
+              print(nrow(coord_tmp))
+            for(k in 1:nrow(coord_tmp)){
               p <- matrix(coord_tmp[k,],1,2)
               #add points if they are not close to V or previous points
               if(min(spDists(self$V, p))>tol) {
@@ -2585,9 +2595,13 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         #now check if there are intersections with buffer
         tmp_line <- gBuffer(self$lines[i], width = tol)
-        intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
-        if(!is.null(intersect_tmp)) {
-          for(k in 1:length(intersect_tmp)) {
+        # intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
+        intersect_tmp <- intersection2(tmp_line, self$lines[j])
+        # if(!is.null(intersect_tmp)) {
+        if(nrow(st_coordinates(intersect_tmp))>0){
+            # for(k in 1:length(intersect_tmp)) {
+            intersect_tmp <- as_Spatial(intersect_tmp)
+            for(k in 1:nrow(coord_tmp)){
             if(inherits(intersect_tmp, "SpatialLines")) {
               coord_tmp <-gInterpolate(intersect_tmp[k], d=0.5, normalized = TRUE)
               p <- matrix(coordinates(coord_tmp),1,2)

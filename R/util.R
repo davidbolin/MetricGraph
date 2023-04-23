@@ -882,3 +882,13 @@ distance2 <- function(points, lines, byid=FALSE){
     return(min(dist_result))
   }
 }
+
+#' @noRd 
+
+intersection2 <- function(lines1, lines2){
+  lines1_sf <- sf::st_as_sf(lines1)
+  lines2_sf <- sf::st_as_sf(lines2)
+  inter_lines <- sf::st_intersection(lines1_sf, lines2_sf)
+  inter_lines <- unique(inter_lines)
+  return(inter_lines)
+}
