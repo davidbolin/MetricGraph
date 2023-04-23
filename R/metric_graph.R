@@ -245,9 +245,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         message(sprintf("Add %d new vertices", nrow(PtE)))
       }
 
+      PtE <- na.omit(PtE)
+
       t <- system.time(
       private$add_vertices(PtE, tolerance = tolerance$line_line)
       )
+
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
@@ -265,6 +268,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                             private$initial_added_vertex[i],
                                             private$initial_edges_added[i,])
       })
+
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
@@ -273,7 +277,6 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     private$clear_initial_info()
     }
-
 
     if(tolerance$vertex_line > 0){
       private$addinfo <- TRUE
@@ -307,15 +310,19 @@ metric_graph <-  R6::R6Class("metric_graph",
           message(sprintf("Add %d new vertices", nrow(PtE_tmp)))
         }
 
+        PtE_tmp <- na.omit(PtE_tmp)
+
         t <- system.time(
           private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line)
           )
+
         if(verbose){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
         }
       }
 
       if(!is.null(private$initial_added_vertex) && adjust_lines){
+
         if(verbose){
           message(sprintf("Split %d lines: ", length(private$initial_added_vertex)))
         }
@@ -2556,28 +2563,32 @@ metric_graph <-  R6::R6Class("metric_graph",
         #first check if there are intersections
         # intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
         intersect_tmp <- intersection2(self$lines[i], self$lines[j])
+
+        if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
+          intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
+          tmp_inter <- 1
+        }
         p_cur <- NULL
         # if(!is.null(intersect_tmp)) {
-        if(nrow(st_coordinates(intersect_tmp))>0){
+        if(nrow(sf::st_coordinates(intersect_tmp))>0){
           # if("SpatialPoints"%in%is(intersect_tmp)){
-          if("POINT"%in%sf::st_geometry_type(intersect_tmp)){
+          if( ("POINT"%in%sf::st_geometry_type(intersect_tmp))||("MULTIPOINT"%in%sf::st_geometry_type(intersect_tmp))){
             # coord_tmp <- coordinates(intersect_tmp)
             coord_tmp <- sf::st_coordinates(intersect_tmp)
+            coord_tmp <- coord_tmp[,1:2]
           # } else if ("SpatialLines"%in%is(intersect_tmp)){
           } else if ( ("LINESTRING"%in%sf::st_geometry_type(intersect_tmp)) || ("MULTILINESTRING"%in%sf::st_geometry_type(intersect_tmp))){
-            intersect_tmp <- as_Spatial(intersect_tmp)
+            intersect_tmp <- sf::as_Spatial(intersect_tmp$geom)
             coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
             coord_tmp <- matrix(coordinates(coord_tmp),1,2)
           }
+
             # for(k in 1:length(intersect_tmp)) {
-              tmp_inter <-rgeos::gIntersection(self$lines[i], self$lines[j])
-              print(length(tmp_inter))
-              print(nrow(coord_tmp))
+            coord_tmp <- matrix(coord_tmp, ncol=2)
             for(k in 1:nrow(coord_tmp)){
               p <- matrix(coord_tmp[k,],1,2)
               #add points if they are not close to V or previous points
               if(min(spDists(self$V, p))>tol) {
-
                 p_cur <- rbind(p_cur,p)
                 p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
                 points_add <- rbind(points_add, p, coordinates(p2))
@@ -2597,11 +2608,15 @@ metric_graph <-  R6::R6Class("metric_graph",
         tmp_line <- gBuffer(self$lines[i], width = tol)
         # intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
         intersect_tmp <- intersection2(tmp_line, self$lines[j])
+        if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
+          intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
+        }
         # if(!is.null(intersect_tmp)) {
-        if(nrow(st_coordinates(intersect_tmp))>0){
+        if(nrow(sf::st_coordinates(intersect_tmp))>0){
             # for(k in 1:length(intersect_tmp)) {
-            intersect_tmp <- as_Spatial(intersect_tmp)
-            for(k in 1:nrow(coord_tmp)){
+            intersect_tmp <- sf::as_Spatial(intersect_tmp$geom)
+            # for(k in 1:nrow(coord_tmp)){
+            for(k in 1:length(intersect_tmp)) {
             if(inherits(intersect_tmp, "SpatialLines")) {
               coord_tmp <-gInterpolate(intersect_tmp[k], d=0.5, normalized = TRUE)
               p <- matrix(coordinates(coord_tmp),1,2)
@@ -2628,6 +2643,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
   }
+  p_add <<- points_add
+  p_pte <<- points_add_PtE
+  ret_tmp <<- list(points = points_add, PtE = points_add_PtE)
   return(list(points = points_add, PtE = points_add_PtE))
 },
 
