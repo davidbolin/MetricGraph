@@ -2359,7 +2359,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       idx_min <- c()
       for(id_ in id_lines_of_interest){
           line <- self$lines@lines[id_]
-          tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
+          # tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
+          tmp_dist <- distance2(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))          
           distances_lines <- c(distances_lines, tmp_dist)
         }
 
@@ -2595,7 +2596,8 @@ metric_graph <-  R6::R6Class("metric_graph",
             }
             #add points if they are not close to V or previous points
             if(min(spDists(self$V, p))>tol) {
-              if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
+              # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
+              if(is.null(p_cur) || distance2(SpatialPoints(p_cur), intersect_tmp[k])>tol) {                
                 p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
                 points_add <- rbind(points_add, p, coordinates(p2))
                 # points_add_PtE <- rbind(points_add_PtE,

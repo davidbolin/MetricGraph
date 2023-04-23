@@ -781,8 +781,8 @@ snapPointsToLines <- function( points, lines, maxDist=NA, withAttrs=TRUE, idFiel
     if (is(points, "SpatialPoints") && withAttrs==TRUE)
         stop("A SpatialPoints object has no attributes! Please set withAttrs as FALSE.")
 
-    d = rgeos::gDistance(points, lines, byid=TRUE)
-
+    # d = rgeos::gDistance(points, lines, byid=TRUE)
+    d = distance2(points, lines, byid=TRUE)
     if(!is.na(maxDist)){
       distToLine <- apply(d, 2, min, na.rm = TRUE)
       validPoints <- distToLine <= maxDist  # indicates which points are within maxDist of a line
@@ -867,4 +867,18 @@ projectVecLine2 <- function(lines, points, normalized = FALSE){
   lines <- lines@lines[[1]]@Lines[[1]]@coords
   points <- points@coords
   return(projectVecLine(lines, points, normalized))
+}
+
+#' @noRd 
+
+distance2 <- function(points, lines, byid=FALSE){
+  rownames(points@coords) <- 1:nrow(points@coords)
+  points_sf <- sf::st_as_sf(points)
+  lines_sf <- sf::st_as_sf(lines)
+  dist_result <- sf::st_distance(points_sf, lines_sf)
+  if(byid){
+    return(matrix(apply(dist_result,1,min),nrow=1))
+  } else{
+    return(min(dist_result))
+  }
 }
