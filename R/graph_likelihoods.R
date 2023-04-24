@@ -273,18 +273,32 @@ likelihood_alpha2 <- function(theta, graph, data_name,  BC, covariates=FALSE) {
 #'
 #' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
-#' @param covariates logical. Should covariates be included?
+#' @param X_cov matrix of covariates
+#' @param y response vector
+#' @param repl replicates to be considered
+#' @param BC boundary conditions
+#' @param parameterization parameterization to be used.
 #' @details This function computes the likelihood without integrating out
 #' the vertices.
 #' @return The log-likelihood
 #' @noRd
-likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC) {
+likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterization) {
+
+  repl_vec <- graph[["data"]][["__group"]]
+  
   if(is.null(repl)){
-    repl <- 1:length(y)
+    repl <- unique(repl_vec)
   }
-  sigma_e <- theta[1]
+
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  sigma_e <- exp(theta[1])
   #build Q
-  Q <- spde_precision(kappa = theta[3], sigma = theta[2],
+  Q <- spde_precision(kappa = kappa, sigma = exp(theta[2]),
                       alpha = 1, graph = graph, BC=BC)
   if(is.null(graph$PtV)){
     stop("No observation at the vertices! Run observation_to_vertex().")
@@ -295,8 +309,13 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC) {
 
   for(i in repl){
       A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
-      y_tmp <- as.vector(y[[i]])
-      X_cov_tmp <- X_cov[[i]]
+      ind_tmp <- (repl_vec %in% i)
+      y_tmp <- y[ind_tmp]
+      if(ncol(X_cov) == 0){
+        X_cov_tmp <- 0
+      } else {
+        X_cov_tmp <- X_cov[ind_tmp,,drop=FALSE]
+      }
       na_obs <- is.na(y_tmp)
       y_ <- y_tmp[!na_obs]
       n.o <- length(y_)
@@ -308,9 +327,15 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC) {
 
       v <- y_
       n_cov <- ncol(X_cov_tmp)
-      X_cov_tmp <- X_cov_tmp[!na_obs,]
+      if(ncol(X_cov) == 0){
+        X_cov_tmp <- 0
+      } else{
+        X_cov_tmp <- X_cov_tmp[!na_obs,,drop=FALSE]
+      }
 
-      v <- v - X_cov_tmp %*% theta[4:(3+n_cov)]
+      if(ncol(X_cov) != 0){
+        v <- v - X_cov_tmp %*% theta[4:(3+n_cov)]
+      }
 
       mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
       v <- v - A[!na_obs,]%*%mu.p
@@ -326,14 +351,28 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC) {
 #' @param theta (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
 #' @param data_name name of the response variable
-#' @param covariates OBSOLETE
+#' @param repl 
+#' @param X_cov matrix of covariates
 #' @param BC. - which boundary condition to use (0,1)
 #' @noRd
-likelihood_alpha1 <- function(theta, graph, data_name, covariates, BC) {
-  sigma_e <- theta[1]
+likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
+                             X_cov = NULL, repl, BC, parameterization) {
+  sigma_e <- exp(theta[1])
   #build Q
 
-  Q.list <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 1,
+  repl_vec <- graph[["data"]][["__group"]]
+
+  if(is.null(repl)){
+    repl <- unique(repl_vec)
+  }
+
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  Q.list <- spde_precision(kappa = kappa, sigma = exp(theta[2]), alpha = 1,
                            graph = graph, build = FALSE,BC=BC)
 
   Qp <- Matrix::sparseMatrix(i = Q.list$i,
@@ -350,36 +389,63 @@ likelihood_alpha1 <- function(theta, graph, data_name, covariates, BC) {
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
+  if(is.null(repl)){
+    u_repl <- unique(graph$data[["__group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ind_repl <- (graph$data[["__group"]] %in% u_repl)
+
   loglik <- 0
 
   det_R_count <- NULL
-  n.o <- length(graph$data[[data_name]])
-  u_repl <- unique(graph$data[["__group"]])
+  if(is.null(manual_y)){
+    y_resp <- graph$data[[data_name]]
+  } else if(is.null(data_name)){
+    y_resp <- manual_y
+  } else{
+    stop("Either data_name or manual_y must be not NULL")
+  }
+  n.o <- sum(ind_repl)
+
   for(repl_y in 1:length(u_repl)){
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- rep(0, nrow(graph$V))
     for (e in obs.edges) {
+      ind_repl <- graph$data[["__group"]] == u_repl[repl_y]
       obs.id <- PtE[,1] == e
-      y_i <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
+      y_i <- y_resp[ind_repl]
       y_i <- y_i[obs.id]
 
-        if(covariates){ #obsolete
-          n_cov <- ncol(graph$covariates[[1]])
-          if(length(graph$covariates)==1){
-          X_cov <- graph$covariates[[1]]
-          } else if(length(graph$covariates) == ncol(graph$data[[data_name]])){
-            X_cov <- graph$covariates[[repl_y]]
-          } else{
-            stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+      #   if(covariates){ #obsolete
+      #     n_cov <- ncol(graph$covariates[[1]])
+      #     if(length(graph$covariates)==1){
+      #     X_cov <- graph$covariates[[1]]
+      #     } else if(length(graph$covariates) == ncol(graph$data[[data_name]])){
+      #       X_cov <- graph$covariates[[repl_y]]
+      #     } else{
+      #       stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+      #     }
+      #   X_cov <- X_cov[obs.id,]
+      #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
+      # }
+
+      if(!is.null(X_cov)){ 
+          n_cov <- ncol(X_cov)
+          if(n_cov == 0){
+            X_cov_repl <- 0
+          } else{ 
+            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y],]
+            X_cov_repl <- X_cov_repl[obs.id,]
+            y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
           }
-        X_cov <- X_cov[obs.id,]
-        y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
       }
 
       l <- graph$edge_lengths[e]
       D_matrix <- as.matrix(dist(c(0, l, l*PtE[obs.id, 2])))
-      S <- r_1(D_matrix, kappa = theta[3], sigma = theta[2])
+      S <- r_1(D_matrix, kappa = kappa, sigma = exp(theta[2]))
 
       #covariance update see Art p.17
       E.ind <- c(1:2)
