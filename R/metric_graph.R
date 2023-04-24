@@ -74,9 +74,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field lines the lines in the graph
   lines = NULL,
 
-  #' @field sf_lines in sf format
-  sf_lines = NULL,
-
   #' @field geo_dist geodesic distances between the vertices in the graph
   geo_dist = NULL,
 
@@ -365,10 +362,6 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$initial_graph <- self$clone()
     # Cloning again to add the initial graph to the initial graph
     private$initial_graph <- self$clone()
-
-    # Saving the sf lines
-
-    self$sf_lines <- sf::st_as_sf(self$lines)
 
     # Checking if graph is connected
     if (check_connected) {
@@ -1805,8 +1798,6 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$ELend <- rep(1, dim(self$E)[1])
     self$ELstart <- rep(0, dim(self$E)[1])
     self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-    # Saving lines as sf
-    self$sf_lines <- sf::st_as_sf(self$lines)
   },
 
   #Compute PtE for mesh given PtE for graph
@@ -2069,8 +2060,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       Spoints <- SpatialPoints(XY)
       coords_line <- c()
       coords_tmp <- c()
+      Spoints_sf <- sf::st_as_sf(Spoints)
+      lines_sf <- sf::st_as_sf(self$lines)
 
-      within_dist <- gWithinDistance(Spoints, self$lines, dist = tolerance, byid = TRUE)
+      # within_dist <- gWithinDistance(Spoints, self$lines, dist = tolerance, byid = TRUE)
+      within_dist <- t(as.matrix(sf::st_is_within_distance(Spoints_sf, lines_sf, dist = tolerance)))
+
 
       for(i in 1:length(self$lines)){
         select_points <- matrix(XY[within_dist[i,],], ncol=2)
@@ -2194,8 +2189,6 @@ metric_graph <-  R6::R6Class("metric_graph",
           self$ELstart <- self$ELstart[-ind]
           self$nE <- self$nE - length(ind)
           self$LtE <- self$LtE[-ind,-ind]
-          # Saving lines in sf
-          self$sf_lines <- sf::st_as_sf(self$lines)
         }
       }
     }
@@ -2300,8 +2293,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$ELend <- self$ELend[-e_rem[2]]
       self$ELstart <- self$ELstart[-e_rem[2]]
       self$nE <- self$nE - 1
-      # Saving lines in sf
-      self$sf_lines <- sf::st_as_sf(self$lines)
     }
   },
 
@@ -2441,8 +2432,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$edge_lengths[added_edges_id[1]] <- LineLength(line1@Lines[[1]])
         self$edge_lengths[added_edges_id[2]] <- LineLength(line2@Lines[[1]])
         self$EID <- c(self$EID, paste0(id_line, "__", as.character(times_split+1)))
-        # Saving the lines as sf
-        self$sf_lines <- sf::st_as_sf(self$lines)
   },
 
   # @description function for splitting lines in the graph
@@ -2558,7 +2547,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   find_line_line_points = function(tol) {
-  dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
+  lines_sf <- sf::st_as_sf(self$lines)
+  # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
+  dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
   points_add_PtE <- NULL
   for(i in 1:(length(self$lines)-1)) {
