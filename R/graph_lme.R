@@ -33,8 +33,6 @@ graph_lme <- function(formula, graph,
                 starting_values_latent = NULL,
                 parameterization_latent = c("matern", "spde"),
                 BC = 1, 
-                parallel = FALSE,
-                parallel_controls = list(n_cores = parallel::detectCores() - 1),
                 optim_controls = list()) {
   model_type <- model[["type"]]
   model_type <- tolower(model_type)
@@ -55,7 +53,7 @@ graph_lme <- function(formula, graph,
 
   if(model_type%in% c("whittlematern", "graphlaplacian")){
     if(is.null(model[["alpha"]])){
-      stop("If the model is 'WhittleMatern' or 'graphLaplacian', then 'alpha' should be provided!")
+      model[["alpha"]] <- 1
     }
     if(!(model[["alpha"]]%in%c(1,2))){
       stop("alpha should be either 1 or 2.")
@@ -64,7 +62,7 @@ graph_lme <- function(formula, graph,
 
   if(model_type =="whittlematern"){
       if(is.null(model[["version"]])){
-        stop("If model is 'whittlematern', then version should be provided.")
+        model[["version"]] <- 1
       }
       if(!(model[["version"]]%in%c(1,2))){
         stop("version should be either 1 or 2.")
@@ -170,6 +168,11 @@ graph_lme <- function(formula, graph,
                              X_cov = X_cov, repl = repl, BC = BC, parameterization = parameterization_latent))
         }
       }
+    } else{
+      likelihood <- function(theta){
+          return(-likelihood_alpha2(theta = theta, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
+                             X_cov = X_cov, repl = repl, BC = BC, parameterization = parameterization_latent))
+        }
     }
   }
 
@@ -178,6 +181,7 @@ graph_lme <- function(formula, graph,
   #           X_cov = X_cov, y = y_graph, version = version,
   #           repl = repl)
 
+  
   res <- optim(start_values, 
                 likelihood, method = optim_method,
                 control = optim_controls)

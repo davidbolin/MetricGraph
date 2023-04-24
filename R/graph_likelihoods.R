@@ -77,13 +77,44 @@ likelihood_graph_spde <- function(graph,
 #' @param BC which boundary condition to use (0,1)
 #' @param covariates OBSOLETE
 #' @noRd
-likelihood_alpha2 <- function(theta, graph, data_name,  BC, covariates=FALSE) {
+likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
+                             X_cov = NULL, repl, BC, parameterization) {
   if(is.null(graph$C)){
     graph$buildC(2)
   }
-  sigma_e <- theta[1]
-  sigma <- theta[2]
-  kappa <- theta[3]
+
+  repl_vec <- graph[["data"]][["__group"]]
+
+  if(is.null(repl)){
+    repl <- unique(repl_vec)
+  }
+
+  sigma_e <- exp(theta[1])
+  sigma <- exp(theta[2])
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  if(is.null(repl)){
+    u_repl <- unique(graph$data[["__group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ind_repl <- (graph$data[["__group"]] %in% u_repl)
+
+  if(is.null(manual_y)){
+    y <- graph$data[[data_name]]
+  } else if(is.null(data_name)){
+    y <- manual_y
+  } else{
+    stop("Either data_name or manual_y must be not NULL")
+  }
+
+  n.o <- sum(ind_repl)
+
   #build Q
 
   n_const <- length(graph$CoB$S)
@@ -99,14 +130,19 @@ likelihood_alpha2 <- function(theta, graph, data_name,  BC, covariates=FALSE) {
 
   loglik <- 0
   det_R <- Matrix::determinant(R)$modulus[1]
-  n.o <- length(graph$data[[data_name]])
-  u_repl <- unique(graph$data[["__group"]])
+  # n.o <- length(graph$data[[data_name]])
+  # u_repl <- unique(graph$data[["__group"]])
   det_R_count <- NULL
-  y <- graph$data[[data_name]]
+
+  # y <- graph$data[[data_name]]
+
+
+
   for(repl_y in 1:u_repl){
       loglik <- loglik + det_R
       Qpmu <- rep(0, 4 * nrow(graph$E))
-      y_rep <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
+      # y_rep <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
+      y_rep <- y[graph$data[["__group"]] == u_repl[repl_y]]      
       #build BSIGMAB
 
       i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
@@ -115,19 +151,29 @@ likelihood_alpha2 <- function(theta, graph, data_name,  BC, covariates=FALSE) {
         obs.id <- PtE[,1] == e
 
         y_i <- y_rep[obs.id]
-        if(covariates){
-          n_cov <- ncol(graph$covariates[[1]])
-        if(length(graph$covariates)==1){
-          X_cov <- graph$covariates[[1]]
-        } else if(length(graph$covariates) == ncol(graph$y)){
-          X_cov <- graph$covariates[[repl_y]]
-        } else{
-          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-        }
+        # if(covariates){
+        #   n_cov <- ncol(graph$covariates[[1]])
+        # if(length(graph$covariates)==1){
+        #   X_cov <- graph$covariates[[1]]
+        # } else if(length(graph$covariates) == ncol(graph$y)){
+        #   X_cov <- graph$covariates[[repl_y]]
+        # } else{
+        #   stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+        # }
+        #           X_cov <- X_cov[obs.id,]
+        #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
+        # }
 
-          X_cov <- X_cov[obs.id,]
-          y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
-        }
+      if(!is.null(X_cov)){ 
+          n_cov <- ncol(X_cov)
+          if(n_cov == 0){
+            X_cov_repl <- 0
+          } else{ 
+            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov_repl[obs.id, ,drop = FALSE]
+            y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
+          }
+      }
 
         l <- graph$edge_lengths[e]
         t <- c(0, l, l*PtE[obs.id, 2])
@@ -437,8 +483,8 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{ 
-            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y],]
-            X_cov_repl <- X_cov_repl[obs.id,]
+            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov_repl[obs.id, ,drop = FALSE]
             y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
           }
       }
