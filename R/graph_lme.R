@@ -259,6 +259,7 @@ graph_lme <- function(formula, graph,
   object$latent_model <- model
   object$loglike <- -res$value
   object$BC <- BC
+  object$niter <- res$counts
   if(model_matrix){
     object$model_matrix <- cbind(y_graph, X_cov)
   }
@@ -281,8 +282,6 @@ graph_lme <- function(formula, graph,
 #' @export 
 
 print.graph_lme <- function(x, ...) {
-  nfixed <- length(x$coeff$fixed_effects)
-  nrandom <- length(x$coeff$random_effects)
   #
   model_type <- tolower(x$latent_model$type)
   call_name <- switch(model_type,
@@ -307,4 +306,112 @@ print.graph_lme <- function(x, ...) {
   cat("\n")
   cat(paste0("Measurement error:", "\n"))
   print(x$coeff$measurement_error)
+}
+
+
+#' @name summary.graph_lme
+#' @title Summary Method for \code{graph_lme} Objects.
+#' @description Function providing a summary of results related to metric graph mixed effects regression models.
+#' @param object an object of class "graph_lme" containing results from the fitted model.
+#' @param ... not used.
+#' @return An object of class \code{summary_graph_lme} containing several
+#' informations of a *graph_lme* object.
+#' @method summary graph_lme
+#' @export
+summary.graph_lme <- function(object, ...) {
+  ans <- list()
+
+  nfixed <- length(object$coeff$fixed_effects)
+  nrandom <- length(object$coeff$random_effects)
+  model_type <- tolower(object$latent_model$type)
+  call_name <- switch(model_type,
+                      "whittlematern" = {paste0("Latent model - Whittle-Matern with alpha = ",object$latent_model$alpha)},
+                      "graphlaplacian" = {paste0("Latent model - graph Laplacian SPDE with alpha = ",object$latent_model$alpha)},
+                      "isocov" = {"Covariance-based model"}
+  )
+
+  coeff_fixed <- object$coeff$fixed_effects
+  coeff_random <- object$coeff$random_effects#
+  coeff_meas <- object$coeff$measurement_error
+
+  SEr_fixed <- object$std_errors$std_fixed
+  SEr_random <- object$std_errors$std_random
+  SEr_meas <- object$std_errors$std_meas
+
+  coeff <- c(coeff_fixed, coeff_random, coeff_meas)
+  SEr <- c(SEr_fixed,SEr_random, SEr_meas)
+
+  tab <- cbind(coeff, SEr, coeff / SEr, 2 * stats::pnorm(-abs(coeff / SEr)))
+  colnames(tab) <- c("Estimate", "Std.error", "z-value", "Pr(>|z|)")
+  rownames(tab) <- names(coeff)
+  tab <- list(fixed_effects = tab[seq.int(length.out = nfixed), , drop = FALSE], random_effects = tab[seq.int(length.out = nrandom) + nfixed, , drop = FALSE], 
+  meas_error = tab[seq.int(length.out = 1) + nfixed+nrandom, , drop = FALSE])
+
+  ans$coefficients <- tab
+
+  ans$call_name <- call_name
+
+  ans$call <- object$call
+
+  ans$loglike <- object$loglike
+
+  ans$niter <- object$niter
+
+  class(ans) <- "summary_graph_lme"
+  ans
+}
+
+#' @name print.summary_graph_lme
+#' @title Print Method for \code{summary_graph_lme} Objects
+#' @description Provides a brief description of results related to metric graph mixed effects regression models.
+#' @param x object of class "summary_graph_lme" containing results of summary method applied to a fitted model.
+#' @param ... further arguments passed to or from other methods.
+#' @return Called for its side effects.
+#' @noRd
+#' @method print summary_graph_lme
+#' @export
+print.summary_graph_lme <- function(x, ...) {
+  tab <- x$coefficients
+
+  #
+  digits <- max(3, getOption("digits") - 3)
+  #
+
+  call_name <- x$call_name
+
+  cat("\n")
+  cat(call_name)
+
+  cat("\n\n")
+  cat("Call:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
+      "\n\n", sep = "")
+
+
+  #
+  #
+  if (NROW(tab$fixed_effects)) {
+    cat(paste0("\nFixed effects:\n"))
+    stats::printCoefmat(tab[["fixed_effects"]], digits = digits, signif.legend = FALSE)
+  } else {
+    message("\nNo coefficients modeling the fixed effects. \n")
+  }
+  #
+  if (NROW(tab$random_effects)) {
+    cat(paste0("\nRandom effects:\n"))
+    stats::printCoefmat(tab[["random_effects"]][,1:3], digits = digits, signif.legend = FALSE)
+  } else {
+    message("\nNo coefficients modeling the random effects. \n")
+  }
+  #
+  cat(paste0("\nMeasurement error:\n"))
+    stats::printCoefmat(tab[["meas_error"]][1,1:3,drop = FALSE], digits = digits, signif.legend = FALSE)
+  #
+  if (getOption("show.signif.stars")) {
+    cat("---\nSignif. codes: ", "0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1", "\n\n")
+  }
+  #
+
+  cat("Log-Likelihood: ", x$loglike,"\n")
+
+  cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
 }
