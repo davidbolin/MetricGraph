@@ -7,10 +7,11 @@
 likelihood_graph_laplacian(
   graph,
   alpha,
-  data_name,
-  covariates = FALSE,
-  log_scale = TRUE,
-  maximize = FALSE
+  y_graph,
+  repl,
+  X_cov = NULL,
+  maximize = FALSE,
+  parameterization
 )
 }
 \arguments{
@@ -18,12 +19,12 @@ likelihood_graph_laplacian(
 
 \item{alpha}{integer greater or equal to 1. Order of the equation.}
 
+\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
+
 \item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
 covariates included by the method \code{add_covariates()}.}
 
 \item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
-
-\item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
 }
 \value{
 The log-likelihood function, which is returned as a function with parameter 'theta'.

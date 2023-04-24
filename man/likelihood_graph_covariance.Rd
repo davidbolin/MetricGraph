@@ -7,9 +7,10 @@
 likelihood_graph_covariance(
   graph,
   model = "alpha1",
-  data_name,
+  y_graph,
   cov_function = NULL,
-  covariates = FALSE,
+  X_cov = NULL,
+  repl,
   log_scale = TRUE,
   maximize = FALSE
 )
@@ -26,12 +27,12 @@ model with isotropic covariance.}
 of \verb{(h, theta_cov)}, where \code{h} is a vector, or matrix, containing the distances to evaluate the covariance function at, and
 \code{theta_cov} is the vector of parameters of the covariance function \code{cov_function}.}
 
-\item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
-covariates included by the method \code{add_covariates()}.}
-
 \item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
 
 \item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
+
+\item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
+covariates included by the method \code{add_covariates()}.}
 }
 \value{
 The log-likelihood function, which is returned as a function with parameter 'theta'.

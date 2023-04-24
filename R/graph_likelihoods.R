@@ -578,12 +578,12 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #'
 #' For the remaining models, if `covariates` is `TRUE`, then `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
-#' @export
 likelihood_graph_covariance <- function(graph,
                                         model = "alpha1",
-                                        data_name,
+                                        y_graph,
                                         cov_function = NULL,
-                                        covariates = FALSE,
+                                        X_cov = NULL,
+                                        repl,
                                         log_scale = TRUE,
                                         maximize = FALSE) {
 
@@ -596,8 +596,8 @@ likelihood_graph_covariance <- function(graph,
   loglik <- function(theta){
       if(model == "isoCov"){
         if(log_scale){
-          if(covariates){
-            n_cov <- ncol(graph$covariates[[1]])
+          if(!is.null(X_cov)){
+            n_cov <- ncol(X_cov)
           } else{
             n_cov <- 0
           }
@@ -619,8 +619,8 @@ likelihood_graph_covariance <- function(graph,
         }
       }
 
-      if(covariates){
-        n_cov <- ncol(graph$covariates[[1]])
+      if(!is.null(X_cov)){
+        n_cov <- ncol(X_cov)
         theta_covariates <- theta[(length(theta)-n_cov+1):length(theta)]
       }
 
@@ -672,7 +672,7 @@ likelihood_graph_covariance <- function(graph,
         }
 
         if(is.null(graph$res_dist)){
-          stop("You must first compute the resistance metric for the observations")
+          graph$compute_resdist()
         }
         Sigma <- as.matrix(cov_function(graph$res_dist[[1]], theta_cov))
       })
@@ -681,23 +681,43 @@ likelihood_graph_covariance <- function(graph,
 
 
       loglik_val <- 0
-      u_repl <- unique(graph$data[["__group"]])
+
+      repl_vec <- graph[["data"]][["__group"]]
+
+      if(is.null(repl)){
+        u_repl <- unique(graph$data[["__group"]])
+      } else{
+        u_repl <- unique(repl)
+      }
+
+
       for(repl_y in 1:u_repl){
           Sigma_non_na <- Sigma#[!na_obs, !na_obs]
           R <- chol(Sigma_non_na)
-          v <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
-          if(covariates){
-            n_cov <- ncol(graph$covariates[[1]])
-            if(length(graph$covariates)==1){
-              X_cov <- graph$covariates[[1]]
-            } else if(length(graph$covariates) == ncol(graph$y)){
-              X_cov <- graph$covariates[[i]]
-            } else{
-            stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-            }
-              X_cov <- X_cov[!na_obs,]
-              v <- v - X_cov %*% theta_covariates
+          v <- y_graph[graph$data[["__group"]] == u_repl[repl_y]]
+          # if(covariates){
+          #   n_cov <- ncol(graph$covariates[[1]])
+          #   if(length(graph$covariates)==1){
+          #     X_cov <- graph$covariates[[1]]
+          #   } else if(length(graph$covariates) == ncol(graph$y)){
+          #     X_cov <- graph$covariates[[i]]
+          #   } else{
+          #   stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+          #   }
+          #     X_cov <- X_cov[!na_obs,]
+          #     v <- v - X_cov %*% theta_covariates
+          # }
+
+          if(!is.null(X_cov)){ 
+              n_cov <- ncol(X_cov)
+              if(n_cov == 0){
+                X_cov_repl <- 0
+              } else{ 
+                X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+                v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+              }
           }
+
 
           loglik_val <- loglik_val + as.double(-sum(log(diag(R))) - 0.5*t(v)%*%solve(Sigma_non_na,v) -
                          length(v)*log(2*pi)/2)
@@ -729,7 +749,8 @@ likelihood_graph_covariance <- function(graph,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @export
 
-likelihood_graph_laplacian <- function(graph, alpha, data_name, covariates = FALSE, log_scale = TRUE, maximize = FALSE) {
+likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
+              X_cov = NULL, maximize = FALSE, parameterization) {
 
   check <- check_graph(graph)
 
@@ -745,22 +766,32 @@ likelihood_graph_laplacian <- function(graph, alpha, data_name, covariates = FAL
     graph$compute_laplacian()
   }
 
-  if(covariates){
-    if(is.null(graph$covariates)){
-      stop("If 'covariates' is set to TRUE, the graph must have covariates!")
-    }
-  }
+  # if(covariates){
+  #   if(is.null(graph$covariates)){
+  #     stop("If 'covariates' is set to TRUE, the graph must have covariates!")
+  #   }
+  # }
 
   loglik <- function(theta){
-        if(log_scale){
-          sigma_e <- exp(theta[1])
-          sigma <- exp(theta[2])
-          kappa <- exp(theta[3])
-        } else{
-          sigma_e <- theta[1]
-          sigma <- theta[2]
-          kappa <- theta[3]
-        }
+    repl_vec <- graph[["data"]][["__group"]]
+
+    if(is.null(repl)){
+      u_repl <- unique(graph$data[["__group"]])
+    } else{
+      u_repl <- unique(repl)
+    }
+
+
+    sigma_e <- exp(theta[1])
+    sigma <- exp(theta[2])
+    if(parameterization == "matern"){
+      kappa = sqrt(8 * 0.5) / exp(theta[3])
+    } else{
+      kappa = exp(theta[3])
+    }
+
+    y_resp <- y_graph
+
 
     K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[1]] #DOES NOT WORK WITH REPLICATES
     Q <- K
@@ -777,24 +808,34 @@ likelihood_graph_laplacian <- function(graph, alpha, data_name, covariates = FAL
 
     u_repl <- unique(graph$data[["__group"]])
     for(repl_y in 1:u_repl){
-      v <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
+      v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
       n.o <- length(v)
       Q.p <- Q  + t(graph$A()) %*% (graph$A()/sigma_e^2)
       R.p <- chol(Q.p)
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
-      if(covariates){
-        n_cov <- ncol(graph$covariates[[1]])
-        if(length(graph$covariates)==1){
-          X_cov <- graph$covariates[[1]]
-        } else if(length(graph$covariates) == ncol(graph$y)){
-          X_cov <- graph$covariates[[i]]
-        } else{
-          stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-        }
+      # if(covariates){
+      #   n_cov <- ncol(graph$covariates[[1]])
+      #   if(length(graph$covariates)==1){
+      #     X_cov <- graph$covariates[[1]]
+      #   } else if(length(graph$covariates) == ncol(graph$y)){
+      #     X_cov <- graph$covariates[[i]]
+      #   } else{
+      #     stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
+      #   }
 
-        X_cov <- X_cov[!na_obs,]
-        v <- v - X_cov %*% theta[4:(3+n_cov)]
+      #   X_cov <- X_cov[!na_obs,]
+      #   v <- v - X_cov %*% theta[4:(3+n_cov)]
+      # }
+
+      if(!is.null(X_cov)){ 
+          n_cov <- ncol(X_cov)
+          if(n_cov == 0){
+            X_cov_repl <- 0
+          } else{ 
+            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+          }
       }
 
       mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% v / sigma_e^2))

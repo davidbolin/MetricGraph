@@ -7,11 +7,14 @@
 graph_lme(
   formula,
   graph,
-  model = list(type = "WhittleMatern", alpha = 1),
+  model = list(type = "WhittleMatern", alpha = 1, version = 1),
   repl = NULL,
   optim_method = "L-BFGS-B",
-  parallel = FALSE,
-  parallel_controls = list(n_cores = parallel::detectCores() - 1),
+  starting_values_latent = NULL,
+  start_sigma_e = NULL,
+  parameterization_latent = c("matern", "spde"),
+  BC = 1,
+  model_matrix = TRUE,
   optim_controls = list()
 )
 }
@@ -21,19 +24,26 @@ graph_lme(
 \item{graph}{A \code{metric_graph} object.}
 
 \item{model}{The random effects model that will be used. A list containing the elements \code{type}, which can be
-\code{Whittle-Matern}, \code{graph-Laplacian} or \code{isoCov}. For \code{Whittle-Matern} and \code{graph-Laplacian} models, the list
-must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
-contain a parameter \code{cov_function}, containing the covariance function (which is \code{exp_covariance}, the
-exponential covariance, by default). Finally, for \code{Whittle-Matern} models, there is an additional parameter
+\code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}. For \code{Whittle-Matern} and \code{graph-Laplacian} models, the list must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
+contain a parameter \code{cov_function}, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the \code{cov_function} argument. The default is 'exp_covariance', the
+exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for \code{Whittle-Matern} models, there is an additional parameter
 \code{version}, which can be either 1 or 2, to tell which version of the likelihood should be used (version is 1 by default).}
 
-\item{repl}{A vector containing the replicates.}
+\item{repl}{vector or list containing which replicates to consider in the model.
+If \code{NULL} all replicates will be considered.}
 
 \item{optim_method}{The method to be used with \code{optim} function.}
 
-\item{parallel}{Logical. Should optimParallel be used instead of optim?}
+\item{starting_values_latent}{A vector containing the starting values for the latent model. If the latent model is \code{WhittleMatern} or \code{graphLaplacian}, then the starting values should be provided as a vector of the form c(sigma,kappa) or c(sigma,range) depending on the parameterization. If the model is \code{isoCov}, then the starting values should be provided as a vector containing the parameters of the covariance function.}
 
-\item{parallel_controls}{A list containing the parallel controls.}
+\item{start_sigma_e}{Starting value for the standard deviation of the measurament error.}
+
+\item{parameterization_latent}{The parameterization for \code{WhittleMatern} and \code{graphLaplacian} models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.}
+
+\item{BC}{For \code{WhittleMatern} models. Which boundary condition to use (0,1) 0 is no adjustment on boundary point
+1 is making the boundary condition stationary.}
+
+\item{model_matrix}{logical indicating whether the model matrix should be returned as component of the returned value.}
 
 \item{optim_controls}{Additional controls to be passed to \code{optim} or \code{optimParallel}.}
 }
