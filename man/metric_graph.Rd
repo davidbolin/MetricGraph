@@ -82,8 +82,6 @@ locations}
 
 \item{\code{lines}}{the lines in the graph}
 
-\item{\code{sf_lines}}{in sf format}
-
 \item{\code{geo_dist}}{geodesic distances between the vertices in the graph}
 
 \item{\code{res_dist}}{resistance distances between the observation locations}
@@ -741,7 +739,6 @@ plot continuous function on the graph
   support_width = 0.5,
   support_color = "gray",
   p = NULL,
-  movie = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -775,6 +772,8 @@ package 'plotly'.}
 \item{\code{p}}{previous plot in which the new plot should be added.}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
+
+\item{\code{movie}}{}
 }
 \if{html}{\out{</div>}}
 }

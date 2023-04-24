@@ -1219,6 +1219,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param support_width for 3D plot, width of support lines
   #' @param support_color for 3D plot, color of support lines
   #' @param p previous plot in which the new plot should be added.
+  #' @param movie 
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return either a ggplot or a plot_ly object
   plot_function = function(X,
@@ -1232,7 +1233,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            support_width = 0.5,
                            support_color = "gray",
                            p = NULL,
-                           movie = FALSE,
+                          #  movie = FALSE,
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
@@ -1240,7 +1241,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     mesh <- FALSE
 
-    if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1 || movie) {
+    # if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1 || movie) {
+    #   mesh <- TRUE
+    # }
+
+    if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1) {
       mesh <- TRUE
     }
 
@@ -1439,7 +1444,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @return either a ggplot or a plot_ly object
   plot_movie = function(X,
                         plotly = TRUE,
-                        vertex_size = 5,vertex_color = "black",
+                        vertex_size = 5,
+                        vertex_color = "black",
                         edge_width = 1,
                         edge_color = 'black',
                         line_width = NULL,
@@ -2697,7 +2703,7 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 #' Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
 #'                            Lines(list(line2), ID = "2"),
 #'                            Lines(list(line3), ID = "3")))
-#' graphs <- graph_components(Lines)
+#' graphs <- graph_components$new(Lines)
 #' graphs$plot()
 #' @export
 graph_components <-  R6::R6Class("graph_components",

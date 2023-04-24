@@ -2,7 +2,7 @@
 % Please edit documentation in R/space_time.R
 \name{plot.spacetime.covariances}
 \alias{plot.spacetime.covariances}
-\title{Plots of marginal spatial and temporal covariances of spacetime model}
+\title{Function for plotting space-time covariances}
 \usage{
 \method{plot}{spacetime.covariances}(graph, Q, Qs = NULL, t.ind, s.ind, t.shift = 0, show.temporal = FALSE, t)
 }

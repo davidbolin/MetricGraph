@@ -2,7 +2,7 @@
 % Please edit documentation in R/space_time.R
 \name{make.Q.spacetime}
 \alias{make.Q.spacetime}
-\title{The precision matrix for all vertices for space-time field}
+\title{Space-time precision operator discretization}
 \usage{
 make.Q.spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma)
 }

@@ -20,7 +20,7 @@ line3 <- Line(rbind(c(1, 1), c(2, 1)))
 Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
                            Lines(list(line2), ID = "2"),
                            Lines(list(line3), ID = "3")))
-graphs <- graph_components(Lines)
+graphs <- graph_components$new(Lines)
 graphs$plot()
 }
 \section{Public fields}{

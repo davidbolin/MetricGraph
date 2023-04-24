@@ -2,7 +2,7 @@
 % Please edit documentation in R/space_time.R
 \name{make.Q.euler}
 \alias{make.Q.euler}
-\title{The precision matrix for all vertices for space-time field}
+\title{Space-time precision operator Euler discretization}
 \usage{
 make.Q.euler(graph, t, kappa, rho, gamma, alpha, beta, sigma, theta = 1)
 }

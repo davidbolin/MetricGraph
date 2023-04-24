@@ -28,7 +28,7 @@
 #' @importFrom rSPDE matern.covariance gg_df
 #' @importFrom methods is slot
 #' @export gg_df
-#' @importFrom stats predict approx dist dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms
+#' @importFrom stats predict approx dist dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif
 #' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates SpatialLines LineLength spDists
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete
 #' @importFrom igraph E E<-
@@ -36,5 +36,6 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom parallel detectCores
 #' @importFrom optimParallel optimParallel
+#' @importFrom graphics layout
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

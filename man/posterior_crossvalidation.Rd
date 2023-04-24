@@ -18,6 +18,8 @@ posterior_crossvalidation(
 
 \item{graph}{metric graph object}
 
+\item{data_name}{name of the data}
+
 \item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 model based on the graph Laplacian with smoothness 2, and "isoExp" gives a

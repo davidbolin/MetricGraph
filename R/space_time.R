@@ -1,4 +1,5 @@
 #Internal function to assemble operator matrix
+#' @noRd 
 make.L <- function(n,kappa,C,G) {
   L0 <- G + kappa^2*C
   Ci <- Diagonal(1/rowSums(C),n=dim(C)[1])
@@ -16,6 +17,7 @@ make.L <- function(n,kappa,C,G) {
 }
 
 #Internal function to assemble stiffness matrix
+#' @noRd
 make.G <- function(n,C,G) {
   Ci <- Diagonal(1/rowSums(C),n=dim(C)[1])
   if(n==0) {
@@ -31,8 +33,10 @@ make.G <- function(n,C,G) {
   return(Gk)
 }
 
-#space-time precision operator discretization
+#' Space-time precision operator discretization
+#' 
 #' The precision matrix for all vertices for space-time field
+#' 
 #' @param graph metric_graph object
 #' @param t vector of time points
 #' @param kappa range parameter kappa
@@ -90,8 +94,10 @@ make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
   return(Q/sigma^2)
 }
 
-#space-time precision operator Euler discretization
+#' Space-time precision operator Euler discretization
+#' 
 #' The precision matrix for all vertices for space-time field
+#' 
 #' @param graph metric_graph object
 #' @param t vector of time points
 #' @param kappa range parameter kappa
@@ -139,8 +145,10 @@ make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
   return(list(L = LL, C = CC, C.inv = C.inv))
 }
 
-#space-time simulation based on implicit Euler discretization in time
-#' Simulatation with starting value u0
+#' space-time simulation based on implicit Euler discretization in time
+#' 
+#' Simulation with starting value u0
+#' 
 #' @param graph metric_graph object
 #' @param t vector of time points
 #' @param kappa range parameter kappa
@@ -149,7 +157,7 @@ make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 #' @param alpha smoothness parameter (integer) for spatial operator
 #' @param beta smoothness parameter (integer) for Q-Wiener process
 #' @param sigma variance parameter
-#' @param u0
+#' @param u0 starting value
 #' @return Precision matrix
 #' @export
 simulate.spacetime <- function(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0) {
@@ -180,8 +188,10 @@ simulate.spacetime <- function(graph, t, kappa, rho, gamma, alpha, beta, sigma, 
   return(U)
 }
 
-#Function for plotting space-time covariances
+#' Function for plotting space-time covariances
+#' 
 #' Plots of marginal spatial and temporal covariances of spacetime model
+#' 
 #' @param graph metric_graph object
 #' @param Q space-time precision matrix
 #' @param Qs Spatial precision matrix as reference

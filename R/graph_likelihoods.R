@@ -74,7 +74,7 @@ likelihood_graph_spde <- function(graph,
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph  metric_graph object
 #' @param data_name name of the response variable
-#' @parma BC. which boundary condition to use (0,1)
+#' @param BC which boundary condition to use (0,1)
 #' @param covariates OBSOLETE
 #' @noRd
 likelihood_alpha2 <- function(theta, graph, data_name,  BC, covariates=FALSE) {

@@ -156,7 +156,7 @@ posterior_crossvalidation_covariance <- function(theta,
 #'
 #' @param theta Estimated model parameters (sigma_e, sigma, kappa)
 #' @param graph metric graph object
-#' @param data_name
+#' @param data_name name of the data
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a

@@ -2,7 +2,7 @@
 % Please edit documentation in R/space_time.R
 \name{simulate.spacetime}
 \alias{simulate.spacetime}
-\title{Simulatation with starting value u0}
+\title{space-time simulation based on implicit Euler discretization in time}
 \usage{
 \method{simulate}{spacetime}(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0)
 }
@@ -22,10 +22,12 @@
 \item{beta}{smoothness parameter (integer) for Q-Wiener process}
 
 \item{sigma}{variance parameter}
+
+\item{u0}{starting value}
 }
 \value{
 Precision matrix
 }
 \description{
-Simulatation with starting value u0
+Simulation with starting value u0
 }
