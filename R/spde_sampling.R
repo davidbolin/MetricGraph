@@ -60,7 +60,6 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
   if (!posterior) {
     if (alpha == 1) {
         if(method == "conditional"){
-          message("When using conditional method, the sampled data is given in the original order.")
               Q <- spde_precision(kappa = kappa, sigma = sigma,
                                   alpha = 1, graph = graph, BC=BC)
               R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
@@ -94,9 +93,9 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
                 u <- c(u, samp[,2])
               }
     } else if(method == "Q"){
-      message("When using conditional method, the sampled data is given in the order from the graph.")
         if(type == "manual"){
           graph_tmp <- graph$get_initial_graph()
+          order_PtE <- order(PtE[,1], PtE[,2])
           n_obs_add <- nrow(PtE)
           y_tmp <- rep(NA, n_obs_add)
           if(max(PtE[,2])>1){
@@ -107,11 +106,8 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           graph_tmp$add_observations(data = df_graph, normalized=TRUE)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
-          # graph_model <- graph_spde(graph_tmp, parameterization = "spde", start_kappa = kappa, start_sigma = sigma)
-          # Q_tmp2 <- INLA::inla.cgeneric.q(graph_model)$Q
-          
-          # print(sum((Q_tmp2-Q_tmp)^2))
           Q_tmp <- graph_tmp$A() %*% Q_tmp %*% t(graph_tmp$A())
+          Q_tmp[order_PtE, order_PtE] <- Q_tmp
         } else if(type == "obs"){
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
         } else if(type == "mesh"){
