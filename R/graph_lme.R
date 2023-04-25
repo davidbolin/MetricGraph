@@ -260,9 +260,12 @@ graph_lme <- function(formula, graph,
   object$loglike <- -res$value
   object$BC <- BC
   object$niter <- res$counts
+  object$response <- y_term
+  object$covariates <- cov_term
   if(model_matrix){
     object$model_matrix <- cbind(y_graph, X_cov)
   }
+  object$graph <- graph$clone()
 
 
   class(object) <- "graph_lme"
@@ -384,7 +387,7 @@ print.summary_graph_lme <- function(x, ...) {
 
   cat("\n\n")
   cat("Call:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
-      "\n\n", sep = "")
+      "\n", sep = "")
 
 
   #
@@ -414,4 +417,175 @@ print.summary_graph_lme <- function(x, ...) {
   cat("Log-Likelihood: ", x$loglike,"\n")
 
   cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
+}
+
+
+
+#' @name predict.graph_lme
+#' @title Prediction of a fractional SPDE using the covariance-based
+#' rational SPDE approximation
+#' @description The function is used for computing kriging predictions based
+#' on data \eqn{Y_i = u(s_i) + \epsilon_i}, where \eqn{\epsilon}{\epsilon}
+#' is mean-zero Gaussian measurement noise and \eqn{u(s)}{u(s)} is defined by
+#' a fractional SPDE \eqn{(\kappa^2 I - \Delta)^{\alpha/2} (\tau u(s)) = W},
+#' where \eqn{W}{W} is Gaussian white noise and \eqn{\alpha = \nu + d/2},
+#' where \eqn{d} is the dimension of the domain.
+#' @param object The covariance-based rational SPDE approximation,
+#' computed using [matern.operators()]
+#' @param data A `data.frame` or a `list` containing the covariates, the edge number and the distance on edge
+#' for the locations to obtain the prediction.
+#' @param repl Which replicates to obtain the prediction. If `NULL` predictions will be obtained for all replicates. Default is `NULL`.
+#' @param compute_variances Set to also TRUE to compute the kriging variances.
+#' @param posterior_samples If `TRUE`, posterior samples will be returned.
+#' @param n_samples Number of samples to be returned. Will only be used if `sampling` is `TRUE`.
+#' @param only_latent Should the posterior samples be only given to the laten model?
+#' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
+#' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
+#' @param normalized Are the distances on edges normalized?
+#' @param ... Not used.
+#' @export
+#' @method predict graph_lme
+
+predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FALSE, posterior_samples = FALSE,
+                               n_samples = 100, only_latent = FALSE, edge_number = "edge_number",
+                               distance_on_edge = "distance_on_edge", normalized = FALSE,
+                               ...) {
+
+  out <- list()
+
+  coeff_fixed <- object$coeff$fixed_effects
+  coeff_random <- object$coeff$random_effects
+  coeff_meas <- object$coeff$measurement_error
+
+  graph_bkp <- object$graph$clone()
+
+  n_prd <- length(data[[edge_number]])
+
+  data[[as.character(object$response)]] <- rep(NA, length(n_prd))
+  data[["__dummy_var"]] <- rep(0, length(n_prd))
+
+  graph_bkp$add_observations(data = data, edge_number = edge_number, distance_on_edge = distance_on_edge, normalized = normalized)
+
+  n <- length(graph_bkp$data[["__group"]])
+
+  X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$data)
+
+  if(all(dim(X_cov_pred) == c(0,1))){
+    X_cov_pred <- matrix(1, nrow = n, ncol=1)
+  }
+
+  if(ncol(X_cov_pred) > 0){
+    mu <- X_cov_pred %*% coeff_fixed
+  } else{
+    mu <- 0
+  }
+
+  Y <- graph_bkp$data[[as.character(object$response)]] - mu
+
+  idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]])
+
+  idx_obs <- !is.na(graph_bkp$data[[as.character(object$response)]])
+
+  model_type <- object$latent_model
+
+  sigma.e <- coeff_meas[[1]]
+
+  Q.e <- Diagonal(n) / sigma.e^2
+
+  ## construct Q
+
+  if(tolower(model_type$type) == "whittlematern"){
+    sigma <- object$coeff$random_effects[1]
+    if(object$parameterization_latent == "spde"){
+      kappa <- object$coeff$random_effects[2]
+    } else{
+      kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
+    }
+
+      if(model_type$alpha == 1){
+          graph_bkp$observation_to_vertex()
+          Q <- spde_precision(kappa = kappa, sigma = sigma,
+                            alpha = 1, graph = graph_bkp)
+
+          Q <- graph_bkp$A() %*% Q %*% t(graph_bkp$A())
+      } else{
+        PtE <- graph_bkp$get_PtE()
+        n.c <- 1:length(graph$CoB$S)
+        Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
+                            graph = graph_bkp, BC = 1)
+        Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
+        Qtilde <- Qtilde[-n.c,-n.c]
+        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+          (graph_bkp$CoB$T[-n.c,])
+        index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+          3.0 * (abs(PtE[, 2]) > 1e-14)
+        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+        Q <- solve(Sigma)
+      }
+
+  } else if(tolower(model_type$type) == "graphlaplacian"){
+    sigma <- object$random_effects[1]
+    graph_bkp$observation_to_vertex()
+    if(object$parameterization_latent == "spde"){
+      kappa <- object$coeff$random_effects[2]
+    } else{
+      kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
+    }
+      if(model_type$alpha == 1){
+        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian) / sigma^2
+      } else{
+        Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian
+        Q <- Q %*% Q / sigma^2
+      }
+
+  } else if(tolower(model_type$type) == "isocov"){
+      if(is.character(model_type$cov_function)){
+        if(model_type$cov_function == "alpha1"){
+
+        } else if(model_type$cov_function == "alpha2"){
+
+        } else if(model_type$cov_function == "GL1"){
+
+        } else if(model_type$cov_function == "GL2"){
+
+        } else if(model_type$cov_function == "exp_covariance"){
+
+        } 
+      } else{
+
+      }
+  }
+  ## compute Q_x|y
+  Q_xgiveny <- Q.e + Q
+
+  ##
+  post_Cov <- solve(Q_xgiveny)
+  cov_Obs <- post_Cov[idx_obs, idx_obs]
+  cov_loc <- post_Cov[idx_prd, idx_obs]
+
+  mu_krig <- cov_loc %*% solve(cov_Obs, (Y[idx_obs] - mu[idx_obs]))
+  
+  mu_krig <- mu[idx_prd] + mu_krig
+  out$mean <- as.vector(mu_krig)
+
+  if (compute_variances) {
+    out$variance <- diag(post_Cov[idx_prd,idx_prd])
+  }
+
+
+  if(posterior_samples){
+    post_cov <- post_Cov[idx_prd,idx_prd]
+    mean_tmp <- out$mean
+    Z <- rnorm(dim(post_cov)[1] * n_samples)
+    dim(Z) <- c(dim(post_cov)[1], n_samples)
+    LQ <- chol(forceSymmetric(post_cov))
+    X <- LQ %*% Z
+    X <- X + mean_tmp
+    if(!only_latent){
+      X <- X + matrix(rnorm(n_samples * length(mean_tmp), sd = sigma.e), nrow = length(mean_tmp))
+    }
+    out$samples <- X
+  }
+
+  return(out)
 }

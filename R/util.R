@@ -573,7 +573,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
         }
         if(length(idx_old_entries)>0){
           for(i in 1:length(idx_old_entries)){
-            tmp[[idx_old_entries[i]]] <- old_data[[col_name]][[i]]
+            if(!is.null(old_data[[col_name]][[i]])){
+              tmp[[idx_old_entries[i]]] <- old_data[[col_name]][[i]]
+            }
           }
         }
         return(tmp)
@@ -906,4 +908,17 @@ intersection3 <- function(lines1_sf, lines2_sf){
 interpolate2 <- function(lines, pos, normalized = FALSE){
     lines <- lines@lines[[1]]@Lines[[1]]@coords
     return(interpolate2_aux(lines, pos, normalized))
+}
+
+#' @noRd 
+
+make_Aprd <- function(graph, edge_number, distance_on_edge){
+  X_loc <- cbind(edge_number, distance_on_edge)
+  order_X <- order(X_loc[,1], X_loc[,2])
+  X_loc <- X_loc[order_X,]
+  edge_n <- sort(unique(edge_number))
+  idx_tmp <- (graph$data[["__edge_number"]] == edge_n[1])
+  mesh_tmp <- graph$data[["__distance_on_edge"]][idx_tmp]
+  loc <- (X_loc[X_loc[,1] == edge_n[1], 2])
+  A_prd <- rSPDE::rSPDE.A1d(mesh_tmp, )
 }

@@ -640,7 +640,7 @@ likelihood_graph_covariance <- function(graph,
 
       },
       alpha2 = {
-
+        PtE <- graph$get_PtE()
         n.c <- 1:length(graph$CoB$S)
         Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
                             graph = graph, BC = 1)
@@ -648,8 +648,8 @@ likelihood_graph_covariance <- function(graph,
         Qtilde <- Qtilde[-n.c,-n.c]
         Sigma.overdetermined  = t(graph$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
           (graph$CoB$T[-n.c,])
-        index.obs <- 4 * (graph$PtE[,1] - 1) + 1.0 * (abs(graph$PtE[, 2]) < 1e-14) +
-          3.0 * (abs(graph$PtE[, 2]) > 1e-14)
+        index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+          3.0 * (abs(PtE[, 2]) > 1e-14)
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
       }, GL1 = {
