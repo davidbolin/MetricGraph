@@ -425,16 +425,8 @@ print.summary_graph_lme <- function(x, ...) {
 
 
 #' @name predict.graph_lme
-#' @title Prediction of a fractional SPDE using the covariance-based
-#' rational SPDE approximation
-#' @description The function is used for computing kriging predictions based
-#' on data \eqn{Y_i = u(s_i) + \epsilon_i}, where \eqn{\epsilon}{\epsilon}
-#' is mean-zero Gaussian measurement noise and \eqn{u(s)}{u(s)} is defined by
-#' a fractional SPDE \eqn{(\kappa^2 I - \Delta)^{\alpha/2} (\tau u(s)) = W},
-#' where \eqn{W}{W} is Gaussian white noise and \eqn{\alpha = \nu + d/2},
-#' where \eqn{d} is the dimension of the domain.
-#' @param object The covariance-based rational SPDE approximation,
-#' computed using [matern.operators()]
+#' @title Prediction of a mixed effects regression model on a metric graph.
+#' @param object The fitted object with the `graph_lme()` function 
 #' @param data A `data.frame` or a `list` containing the covariates, the edge number and the distance on edge
 #' for the locations to obtain the prediction.
 #' @param repl Which replicates to obtain the prediction. If `NULL` predictions will be obtained for all replicates. Default is `NULL`.
