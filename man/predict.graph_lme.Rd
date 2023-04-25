@@ -9,7 +9,7 @@ rational SPDE approximation}
   object,
   data,
   repl = NULL,
-  compute.variances = FALSE,
+  compute_variances = FALSE,
   posterior_samples = FALSE,
   n_samples = 100,
   only_latent = FALSE,
@@ -28,7 +28,7 @@ for the locations to obtain the prediction.}
 
 \item{repl}{Which replicates to obtain the prediction. If \code{NULL} predictions will be obtained for all replicates. Default is \code{NULL}.}
 
-\item{compute.variances}{Set to also TRUE to compute the kriging variances.}
+\item{compute_variances}{Set to also TRUE to compute the kriging variances.}
 
 \item{posterior_samples}{If \code{TRUE}, posterior samples will be returned.}
 

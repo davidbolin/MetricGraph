@@ -144,6 +144,7 @@ graph_lme <- function(formula, graph,
     } else{
       if(model[["cov_function"]] == "exp_covariance"){
           model_start <- "isoExp"
+          par_names <- c("sigma", "kappa")
       } else if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
         model_start <- model[["cov_function"]]
       } else{
@@ -160,6 +161,7 @@ graph_lme <- function(formula, graph,
                     range_par = range_par)
   } else {
     start_values <- c(log(0.1*sd(y_graph),log(starting_values_latent)))
+    par_names <- names(starting_values_latent)
   }
 
   if(!is.null(start_sigma_e)){
@@ -201,6 +203,7 @@ graph_lme <- function(formula, graph,
   } else{
     if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
+      par_names <- c("sigma", "kappa")
     } else{
       model_cov <- "isoCov"
       if(model[["cov_function"]] == "exp_covariance"){
@@ -484,13 +487,14 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]])
 
+  edge_nb <- graph_bkp$data[["__edge_number"]][idx_prd]
+  dist_ed <- graph_bkp$data[["__distance_on_edge"]][idx_prd]
+
   idx_obs <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
   model_type <- object$latent_model
 
   sigma.e <- coeff_meas[[1]]
-
-  Q.e <- Diagonal(n) / sigma.e^2
 
   ## construct Q
 
@@ -506,14 +510,12 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
           graph_bkp$observation_to_vertex()
           Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph_bkp)
-
-          Q <- graph_bkp$A() %*% Q %*% t(graph_bkp$A())
       } else{
         PtE <- graph_bkp$get_PtE()
-        n.c <- 1:length(graph$CoB$S)
+        n.c <- 1:length(graph_bkp$CoB$S)
         Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
                             graph = graph_bkp, BC = 1)
-        Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
+        Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
         Qtilde <- Qtilde[-n.c,-n.c]
         Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
           (graph_bkp$CoB$T[-n.c,])
@@ -524,46 +526,81 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
       }
 
   } else if(tolower(model_type$type) == "graphlaplacian"){
-    sigma <- object$random_effects[1]
+    sigma <- object$coeff$random_effects[1]
     graph_bkp$observation_to_vertex()
+    graph_bkp$compute_laplacian()
     if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
     } else{
       kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
     }
       if(model_type$alpha == 1){
-        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian) / sigma^2
+        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
+        print(dim(Q))
       } else{
-        Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian
+        Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- Q %*% Q / sigma^2
       }
 
   } else if(tolower(model_type$type) == "isocov"){
       if(is.character(model_type$cov_function)){
+        sigma <- object$coeff$random_effects[1]
+        kappa <- object$coeff$random_effects[2]
         if(model_type$cov_function == "alpha1"){
-
+          graph_bkp$observation_to_vertex()
+          Q <- spde_precision(kappa = kappa, sigma = sigma,
+                            alpha = 1, graph = graph_bkp)
         } else if(model_type$cov_function == "alpha2"){
-
+          PtE <- graph_bkp$get_PtE()
+          n.c <- 1:length(graph_bkp$CoB$S)
+          Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
+                              graph = graph_bkp, BC = 1)
+          Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
+          Qtilde <- Qtilde[-n.c,-n.c]
+          Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+            (graph_bkp$CoB$T[-n.c,])
+          index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+            3.0 * (abs(PtE[, 2]) > 1e-14)
+          Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+          Q <- solve(Sigma)
         } else if(model_type$cov_function == "GL1"){
-
+              graph_bkp$observation_to_vertex()
+              graph_bkp$compute_laplacian()        
+              Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
         } else if(model_type$cov_function == "GL2"){
-
+              graph_bkp$observation_to_vertex()
+              graph_bkp$compute_laplacian()
+              Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
+              Q <- Q %*% Q / sigma^2
         } else if(model_type$cov_function == "exp_covariance"){
-
+                  if(is.null(graph$res_dist)){
+                    graph$compute_resdist()
+                  }
+                  Sigma <- as.matrix(exp_covariance(graph$res_dist[[1]], c(sigma,kappa)))
+                  Q <- solve(Sigma)
         } 
       } else{
-
+        if(is.null(graph_bkp$res_dist)){
+          graph_bkp$compute_resdist()
+        }
+        cov_function <- model_type$cov_function
+        Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[1]], coeff_random))
+        Q <- solve(Sigma)
       }
   }
+
+  Q.e <- Diagonal(dim(Q)[1]) / sigma.e^2
   ## compute Q_x|y
   Q_xgiveny <- Q.e + Q
-
+  
+  gap <- dim(Q)[1] - n
   ##
   post_Cov <- solve(Q_xgiveny)
+  post_Cov <- post_Cov[(gap+1):dim(Q)[1], (gap+1):dim(Q)[1]]
   cov_Obs <- post_Cov[idx_obs, idx_obs]
   cov_loc <- post_Cov[idx_prd, idx_obs]
 
-  mu_krig <- cov_loc %*% solve(cov_Obs, (Y[idx_obs] - mu[idx_obs]))
+  mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
   
   mu_krig <- mu[idx_prd] + mu_krig
   out$mean <- as.vector(mu_krig)
@@ -571,6 +608,9 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
   if (compute_variances) {
     out$variance <- diag(post_Cov[idx_prd,idx_prd])
   }
+
+    out$edge_number <- edge_nb
+  out$distance_on_edge <- dist_ed
 
 
   if(posterior_samples){

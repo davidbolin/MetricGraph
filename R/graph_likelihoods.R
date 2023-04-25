@@ -653,13 +653,11 @@ likelihood_graph_covariance <- function(graph,
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
       }, GL1 = {
-
-        Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian) / sigma^2
+        Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
-
       }, GL2 = {
 
-        Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian
+        Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
         Q <- Q %*% Q / sigma^2
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
@@ -692,7 +690,10 @@ likelihood_graph_covariance <- function(graph,
 
 
       for(repl_y in 1:u_repl){
-          Sigma_non_na <- Sigma#[!na_obs, !na_obs]
+          ind_tmp <- (repl_vec %in% repl_y)
+          y_tmp <- y_graph[ind_tmp]
+          na_obs <- is.na(y_tmp)
+          Sigma_non_na <- Sigma[!na_obs, !na_obs]
           R <- chol(Sigma_non_na)
           v <- y_graph[graph$data[["__group"]] == u_repl[repl_y]]
           # if(covariates){

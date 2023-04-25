@@ -160,6 +160,15 @@ graph_bru$add_observations(data = df_graph, normalized=TRUE)
 graph_bru$plot(data="y")
 ```
 
+```{r}
+res <- graph_lme(y ~ cov_1 + cov_2, graph = graph_bru, model = list(type = "isocov", cov_function = "exp_covariance"))
+```
+
+```{r}
+data_tmp <- df_graph[round(200*runif(30)+1),]
+predict(res, data_tmp, compute_var = TRUE, posterior_sample = FALSE, normalized = TRUE)
+```
+
 Now, we load `INLA` and `inlabru` packages. We will also
 need to create the `inla` model object with the
 `graph_spde` function. By default we have
