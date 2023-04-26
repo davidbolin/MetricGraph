@@ -140,7 +140,21 @@ The `graph` object now contains all important features of the graph, such as the
 ```{r}
 range(graph$edge_lengths) * 1000
 ```
-Here, we see that some edges are very short, and one might want to merge such vertices in the construction of the graph. This can be done by setting the parameter `tolerance` to some desired value of the minimum distance between vertices. 
+Here, we see that some edges are very short, and one might want to merge such vertices in the construction of the graph. This can be done by setting the parameter `tolerance` to some desired value of the minimum distance between vertices. Let
+us merge some vertices:
+
+```{r}
+graph <- metric_graph$new(graph$lines, tolerance = list(vertex_vertex = 5/10000, 
+                                                        vertex_line = 5/10000,
+                                                        line_line = 5/10000))
+```
+
+We will also remove the vertices of degree 2 by using the `prune_vertices()` method:
+
+```{r}
+graph$prune_vertices()
+graph$plot()
+```
 
 ## Understanding coordinates on graphs
 The locations of the vertices are specified in Euclidean coordinates. However, 
@@ -249,7 +263,7 @@ r <- 0.15 # range parameter
 kappa <- sqrt(8*0.5)/r
 sigma_e <- 0.1
 
-n.obs <- 10000
+n.obs <- 500
 obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 
 # The graph has very small edges, so we will use the 
@@ -267,7 +281,7 @@ graph$plot(data = "u", vertex_size = 0)
 We can also sample the field at the mesh on the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
-                 graph = graph, type = "mesh")
+                 graph = graph, type = "mesh", method = "Q")
 graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
 ```
 
@@ -296,6 +310,7 @@ Let us create such observations, clear the current data in the graph, and finall
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 # The graph has very small edges, so we will use the 
 # Q method to improve numerical stability
+
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
                  graph = graph, PtE = obs.loc, method = "Q")
 
@@ -349,10 +364,23 @@ print(results)
 ```
 Given these estimated parameters, we can now do kriging to estimate the 
 field at locations in the graph. As an example, we now estimate the field 
-on the regular mesh that we previously constructed. 
+on the regular mesh that we previously constructed. First, we obtain the covariates
+on the mesh locations.
+
+```{r}
+lonlat_mesh <- unique(graph$coordinates(PtE = graph$mesh$VtE))
+scaled_lonlat_mesh <- scale(lonlat_mesh, 
+                            center = attr(scaled_lonlat, "scaled:center"),
+                            attr(scaled_lonlat, "scaled:scale"))
+data_mesh_pred <- data.frame(lon = scaled_lonlat_mesh[,1],
+                              lat = scaled_lonlat_mesh[,2],
+                              edge_number = graph$mesh$VtE[,1],
+                              distance_on_edge = graph$mesh$VtE[,2])
+```
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-u_est <- predict(res, mesh=TRUE, only_latent=TRUE)
+pred <- predict(res, data=data_mesh_pred, normalized=TRUE)
+u_est <- pred$mean
 graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
 ```
 

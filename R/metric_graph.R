@@ -625,6 +625,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$mesh <- NULL
     self$build_mesh(h = max_h)
    }
+   private$pruned <- TRUE
   },
 
   #' @description Gets PtE from the data
@@ -1611,7 +1612,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Get a copy of the initial graph
   get_initial_graph = function() {
-    return(private$initial_graph$clone())
+    tmp_graph <- private$initial_graph$clone()
+    if(private$pruned){
+      tmp_graph$prune_vertices()
+   }
+    return(tmp_graph)
   },
 
   #' @description Get the observation/prediction matrix A
@@ -2329,6 +2334,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   # Conjugate_line
 
   conjugate_initial_line = NULL,
+
+  # pruned 
+
+  pruned = FALSE,
 
   # Split lines
 

@@ -97,6 +97,7 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           graph_tmp <- graph$get_initial_graph()
           order_PtE <- order(PtE[,1], PtE[,2])
           n_obs_add <- nrow(PtE)
+          n_obs_tmp <- n_obs_add
           y_tmp <- rep(NA, n_obs_add)
           if(max(PtE[,2])>1){
             stop("You should provide normalized locations!")
@@ -106,17 +107,25 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           graph_tmp$add_observations(data = df_graph, normalized=TRUE)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
-          Q_tmp <- graph_tmp$A() %*% Q_tmp %*% t(graph_tmp$A())
-          Q_tmp[order_PtE, order_PtE] <- Q_tmp
         } else if(type == "obs"){
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
+          n_obs_tmp <- length(graph$data[["__group"]])
+          order_PtE <- 1:n_obs_tmp
         } else if(type == "mesh"){
           graph_tmp <- graph$get_initial_graph()
           n_obs_mesh <- nrow(graph$mesh$PtE)
           y_tmp <- rep(NA, n_obs_mesh)
-          graph_tmp$add_PtE_observations(y=y_tmp, PtE = graph$mesh$PtE, normalized=TRUE)
+          df_graph <- data.frame(y = y_tmp, edge_number = graph$mesh$PtE[,1],
+                      distance_on_edge = graph$mesh$PtE[,2])
+          graph_tmp$add_observations(data = df_graph, normalized=TRUE)
+          print("V antes")
+          print(graph_tmp$V)
           graph_tmp$observation_to_vertex()
+          print("V depois")
+          print(graph_tmp$V)
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
+          n_obs_tmp <- dim(Q_tmp)[1]
+          order_PtE <- 1:n_obs_tmp
         }
 
           sizeQ <- nrow(Q_tmp)
@@ -124,7 +133,9 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           dim(Z) <- c(sizeQ, nsim)
           LQ <- chol(forceSymmetric(Q_tmp))
           u <- solve(LQ, Z)
-          u <- as.vector(u)
+          gap <- sizeQ - n_obs_tmp
+          u <- as.vector(u[(gap+1):sizeQ])
+          u[order_PtE] <- u
 
     } else{
       stop("Method should be either 'conditional' or 'Q'!")

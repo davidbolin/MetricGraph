@@ -513,6 +513,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   ##
 
   X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$data)
+  
   if(all(dim(X_cov_pred) == c(0,1))){
     X_cov_pred <- matrix(1, nrow = n, ncol=1)
   }
@@ -547,8 +548,12 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
       if(model_type$alpha == 1){
           graph_bkp$observation_to_vertex()
+            print(nrow(graph_bkp$V))
+            print(graph_bkp$nV)
           Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph_bkp)
+          print("bla")
+          print(dim(Q))
       } else{
         PtE <- graph_bkp$get_PtE()
         n.c <- 1:length(graph_bkp$CoB$S)
@@ -654,8 +659,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
 
-    cov_Obs <- post_Cov[idx_obs, idx_obs]
     cov_loc <- post_Cov[idx_prd, idx_obs]
+    cov_Obs <- post_Cov[idx_obs, idx_obs]
 
     # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
 
