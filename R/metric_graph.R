@@ -847,7 +847,15 @@ metric_graph <-  R6::R6Class("metric_graph",
                    coordinates!"))
        }})
 
-    n_group <- length(unique(group_vector))
+    if(!is.null(self$data[["__group"]])){
+      group_vals <- unique(self$data[["__group"]])
+      group_vals <- unique(union(group_vals, group_vector))
+    } else{
+      group_vals <- unique(group_vector)
+    }
+
+    # n_group <- length(unique(group_vector))
+    n_group <- length(group_vals)
     n_group <- ifelse(n_group == 0, 1, n_group)
 
     data[[edge_number]] <- NULL

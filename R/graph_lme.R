@@ -310,10 +310,14 @@ print.graph_lme <- function(x, ...) {
   cat("\n\n")
   cat("Call:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
       "\n\n", sep = "")
-  cat(paste0("Coefficients modeling the fixed effects:", "\n"))
-  print(coeff_fixed)
+  cat(paste0("Fixed effects:", "\n"))
+  if(!is.null(coeff_fixed)){
+    print(coeff_fixed)
+  } else{
+    message("No fixed effects")
+  }
   cat("\n")
-  cat(paste0("Coefficients modeling the random effects:", "\n"))
+  cat(paste0("Random effects:", "\n"))
   print(coeff_random)
   cat("\n")
   cat(paste0("Measurement error:", "\n"))
@@ -616,7 +620,6 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   for(repl_y in u_repl){
     idx_repl <- graph_bkp$data[["__group"]] == repl_y
-    print(repl_y)
     idx_obs <- idx_obs_full[idx_repl]
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]

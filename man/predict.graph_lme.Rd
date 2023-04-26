@@ -15,6 +15,7 @@
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
   normalized = FALSE,
+  return_as_list = FALSE,
   ...
 )
 }
@@ -39,6 +40,8 @@ for the locations to obtain the prediction.}
 \item{distance_on_edge}{Name of the variable that contains the distance on edge, the default is \code{distance_on_edge}.}
 
 \item{normalized}{Are the distances on edges normalized?}
+
+\item{return_as_list}{Should the means of the predictions and the posterior samples be returned as a list, with each replicate being an element?}
 
 \item{...}{Not used.}
 }

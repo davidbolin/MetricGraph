@@ -330,6 +330,8 @@ u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
                  alpha = alpha_rep,
                  graph = graph_bru, PtE = obs_loc,
                  nsim = n_repl)
+
+cov_1 <- rexp(200, )
 ```
 
 Let us now generate the observed responses, which we will
