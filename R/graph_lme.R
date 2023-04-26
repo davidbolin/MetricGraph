@@ -548,12 +548,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
       if(model_type$alpha == 1){
           graph_bkp$observation_to_vertex()
-            print(nrow(graph_bkp$V))
-            print(graph_bkp$nV)
           Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph_bkp)
-          print("bla")
-          print(dim(Q))
       } else{
         PtE <- graph_bkp$get_PtE()
         n.c <- 1:length(graph_bkp$CoB$S)
@@ -640,9 +636,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   gap <- dim(Q)[1] - n
   ##
   post_Cov <- solve(Q_xgiveny)
+
   post_Cov <- post_Cov[(gap+1):dim(Q)[1], (gap+1):dim(Q)[1]]
 
-  idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
+  # idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
+  idx_obs_full <- !is.na(Y)
 
   if(!return_as_list){
     out$distance_on_edge <- rep(dist_ed,length(u_repl))
@@ -655,12 +653,18 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       out$edge_number[[repl_y]] <- edge_nb
     }
     idx_repl <- graph_bkp$data[["__group"]] == repl_y
+
     idx_obs <- idx_obs_full[idx_repl]
+
+    print(Y)
+
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
 
     cov_loc <- post_Cov[idx_prd, idx_obs]
     cov_Obs <- post_Cov[idx_obs, idx_obs]
+
+    print(y_repl)
 
     # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
 

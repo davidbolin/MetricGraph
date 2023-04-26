@@ -656,7 +656,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Adds observation locations as vertices in the graph
   #' @param tolerance parameter in which we merge vertices together. Not intended for non-expert use.
-  observation_to_vertex = function(tolerance = 1e-10) {
+  observation_to_vertex = function(tolerance = 1e-15) {
     if(tolerance <= 0 || tolerance >=1){
       stop("tolerance should be between 0 and 1.")
     }
@@ -1025,6 +1025,18 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$mesh$V <- rbind(self$mesh$V)
     }
 
+    # Getting rid of duplicated locations (might happen on situations with very small edges)
+    idx_V <- which(!duplicated(self$mesh$V))
+    n_temp <- nrow(self$mesh$PtE)
+    gap_tmp <- nrow(self$mesh$VtE) - n_temp
+    idx_PtE <- which(!duplicated(self$mesh$V[(gap_tmp+1):nrow(self$mesh$V),]))
+    self$mesh$V <- self$mesh$V[idx_V,]
+    self$mesh$VtE <- self$mesh$VtE[idx_V,]
+    self$mesh$E <- self$mesh$E[idx_V,]
+    self$mesh$h_e <- self$mesh$h_e[idx_V]
+    self$mesh$PtE <- self$mesh$PtE[idx_PtE, ]
+    self$mesh$ind <- self$mesh$ind[idx_V]
+    self$mesh$n_e <- self$mesh$n_e[idx_V]
 
   },
 
@@ -1273,8 +1285,11 @@ metric_graph <-  R6::R6Class("metric_graph",
         X <- c(rep(NA, dim(self$V)[1]), X)
       }
 
-      if (length(X) != dim(self$V)[1] + PtE_dim) {
-        stop("X does not have the correct size")
+      # if (length(X) != dim(self$V)[1] + PtE_dim) {
+      #   stop("X does not have the correct size")
+      # }
+      if (length(X) != dim(unique(self$mesh$V))[1]) {
+        stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, " and ", dim(unique(self$mesh$V))[1],")"))
       }
     }
 
@@ -1479,8 +1494,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       X <- c(rep(NA, dim(self$V)[1]), X)
     }
 
-    if (dim(X)[1] != dim(self$V)[1] + PtE_dim) {
-      stop("X does not have the correct size")
+    # if (dim(X)[1] != dim(self$V)[1] + PtE_dim) {
+    #   stop("X does not have the correct size")
+    # }
+
+    if (dim(X)[1] != dim(unique(self$mesh$V))[1]) {
+      stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, " and ", dim(unique(self$mesh$V))[1],")"))
     }
 
 

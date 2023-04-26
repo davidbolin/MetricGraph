@@ -144,9 +144,9 @@ Here, we see that some edges are very short, and one might want to merge such ve
 us merge some vertices:
 
 ```{r}
-graph <- metric_graph$new(graph$lines, tolerance = list(vertex_vertex = 5/10000, 
-                                                        vertex_line = 5/10000,
-                                                        line_line = 5/10000))
+# graph <- metric_graph$new(graph$lines, tolerance = list(vertex_vertex = 5/10000, 
+#                                                         vertex_line = 5/10000,
+#                                                         line_line = 5/10000))
 ```
 
 We will also remove the vertices of degree 2 by using the `prune_vertices()` method:
@@ -263,7 +263,7 @@ r <- 0.15 # range parameter
 kappa <- sqrt(8*0.5)/r
 sigma_e <- 0.1
 
-n.obs <- 500
+n.obs <- 1000
 obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 
 # The graph has very small edges, so we will use the 
@@ -368,7 +368,7 @@ on the regular mesh that we previously constructed. First, we obtain the covaria
 on the mesh locations.
 
 ```{r}
-lonlat_mesh <- unique(graph$coordinates(PtE = graph$mesh$VtE))
+lonlat_mesh <- graph$coordinates(PtE = graph$mesh$VtE)
 scaled_lonlat_mesh <- scale(lonlat_mesh, 
                             center = attr(scaled_lonlat, "scaled:center"),
                             attr(scaled_lonlat, "scaled:scale"))
