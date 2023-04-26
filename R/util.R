@@ -574,7 +574,11 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
 
         if(length(idx_new_entries)>0){
           for(i in 1:length(idx_new_entries)){
-            tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
+            if(!is.null(new_data[[col_name]][[i]])){
+              tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
+            } else{
+              tmp[[idx_new_entries[i]]] <- rep(NA, length(idx_new_entries[i]))
+            }
           }
         }
         if(length(idx_old_entries)>0){

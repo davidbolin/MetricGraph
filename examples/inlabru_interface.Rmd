@@ -98,7 +98,7 @@ Let us add 50 random locations in each edge where we will
 have observations:
 
 ```{r}
-obs_per_edge <- 50
+obs_per_edge <- 200
 obs_loc <- NULL
 for(i in 1:(graph_bru$nE)) {
   obs_loc <- rbind(obs_loc,
@@ -119,7 +119,7 @@ kappa <- sqrt(8 * nu) / r
 
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph_bru, PtE = obs_loc)
-graph_bru$plot(X = u, X_loc = obs_loc)
+# graph_bru$plot(X = u, X_loc = obs_loc)
 ```
 
 Let us now generate the observed responses, which we will
@@ -130,7 +130,7 @@ metric graph.
 n_obs <- length(u)
 sigma.e <- 0.1
 
-X_cov <- cbind(rexp(200), runif(200))
+X_cov <- cbind(rexp(200*4), runif(200*4))
 
 y <- 2 + X_cov%*%c(-1,1) + u + sigma.e * rnorm(n_obs)
 # graph_bru$plot(X = y, X_loc = obs_loc)
@@ -161,7 +161,7 @@ graph_bru$plot(data="y")
 ```
 
 ```{r}
-res <- graph_lme(y ~ cov_1 + cov_2, graph = graph_bru, model = list(type = "isocov", cov_function = "exp_covariance"))
+res <- graph_lme(y ~ cov_1 + cov_2, graph = graph_bru)
 ```
 
 ```{r}

@@ -439,11 +439,13 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param object The fitted object with the `graph_lme()` function 
 #' @param data A `data.frame` or a `list` containing the covariates, the edge number and the distance on edge
 #' for the locations to obtain the prediction.
+#' @param mesh Obtain predictions for mesh nodes? The graph must have a mesh, and either `only_latent` is set to TRUE or the model does not have covariates.
+#' @param mesh_h If the graph does not have a mesh, one will be created with this value of 'h'.
 #' @param repl Which replicates to obtain the prediction. If `NULL` predictions will be obtained for all replicates. Default is `NULL`.
 #' @param compute_variances Set to also TRUE to compute the kriging variances.
 #' @param posterior_samples If `TRUE`, posterior samples will be returned.
 #' @param n_samples Number of samples to be returned. Will only be used if `sampling` is `TRUE`.
-#' @param only_latent Should the posterior samples be only given to the laten model?
+#' @param only_latent Should the posterior samples and predictions be only given to the latent model?
 #' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
 #' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
 #' @param normalized Are the distances on edges normalized?
@@ -452,10 +454,16 @@ print.summary_graph_lme <- function(x, ...) {
 #' @export
 #' @method predict graph_lme
 
-predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FALSE, posterior_samples = FALSE,
+predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, repl = NULL, compute_variances = FALSE, posterior_samples = FALSE,
                                n_samples = 100, only_latent = FALSE, edge_number = "edge_number",
                                distance_on_edge = "distance_on_edge", normalized = FALSE, return_as_list = FALSE,
                                ...) {
+
+  if(is.null(data)){
+    if(!mesh){
+      stop("If 'mesh' is false, you should supply data!")
+    }
+  }
 
   out <- list()
 
@@ -465,16 +473,33 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   graph_bkp <- object$graph$clone()
 
-  n_prd <- length(data[[edge_number]])
-
-  data[[as.character(object$response)]] <- rep(NA, length(n_prd))
-  data[["__dummy_var"]] <- rep(0, length(n_prd))
+  X_cov_initial <- stats::model.matrix(object$covariates, graph_bkp$data)
+  if(ncol(X_cov_initial) > 0){
+    if(mesh){
+      stop("In the presence of covariates, you should provide the data, including the covariates at the prediction locations. If you only want predictions for the latent model, set 'only_latent' to TRUE.")
+    }
+  }
+  
+  if(!mesh){
+    n_prd <- length(data[[edge_number]])
+    data[[as.character(object$response)]] <- rep(NA, n_prd)
+    data[["__dummy_var"]] <- rep(0, n_prd)
+  } else{
+    if(is.null(graph_bkp$mesh)){
+      graph_bkp$build_mesh(h = mesh_h)
+    }
+    data <- list()
+    n_prd <- nrow(graph_bkp$mesh$PtE)
+    data[[as.character(object$response)]] <- rep(NA, n_prd)
+    data[["__dummy_var"]] <- rep(0, n_prd)
+    data[[edge_number]] <- graph_bkp$mesh$PtE[,1]
+    data[[distance_on_edge]] <- graph_bkp$mesh$PtE[,2]
+    normalized <- TRUE
+  }
 
   graph_bkp$add_observations(data = data, edge_number = edge_number, distance_on_edge = distance_on_edge, normalized = normalized)
 
   n <- sum(graph_bkp$data[["__group"]] == graph_bkp$data[["__group"]][1])
-
-  X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$data)
 
   ## 
   repl_vec <- graph_bkp[["data"]][["__group"]]
@@ -487,10 +512,10 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   ##
 
+  X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$data)
   if(all(dim(X_cov_pred) == c(0,1))){
     X_cov_pred <- matrix(1, nrow = n, ncol=1)
   }
-
   if(ncol(X_cov_pred) > 0){
     mu <- X_cov_pred %*% coeff_fixed
   } else{
@@ -663,6 +688,8 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
       X <- X + mean_tmp
       if(!only_latent){
         X <- X + matrix(rnorm(n_samples * length(mean_tmp), sd = sigma.e), nrow = length(mean_tmp))
+      } else{
+        X <- X - as.vector(mu_fe[idx_prd, , drop=FALSE])
       }
       if(!return_as_list){
         out$samples <- rbind(out$samples, X)

@@ -6,7 +6,9 @@
 \usage{
 \method{predict}{graph_lme}(
   object,
-  data,
+  data = NULL,
+  mesh = FALSE,
+  mesh_h = 0.01,
   repl = NULL,
   compute_variances = FALSE,
   posterior_samples = FALSE,
@@ -25,6 +27,10 @@
 \item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge number and the distance on edge
 for the locations to obtain the prediction.}
 
+\item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh, and either \code{only_latent} is set to TRUE or the model does not have covariates.}
+
+\item{mesh_h}{If the graph does not have a mesh, one will be created with this value of 'h'.}
+
 \item{repl}{Which replicates to obtain the prediction. If \code{NULL} predictions will be obtained for all replicates. Default is \code{NULL}.}
 
 \item{compute_variances}{Set to also TRUE to compute the kriging variances.}
@@ -33,7 +39,7 @@ for the locations to obtain the prediction.}
 
 \item{n_samples}{Number of samples to be returned. Will only be used if \code{sampling} is \code{TRUE}.}
 
-\item{only_latent}{Should the posterior samples be only given to the laten model?}
+\item{only_latent}{Should the posterior samples and predictions be only given to the latent model?}
 
 \item{edge_number}{Name of the variable that contains the edge number, the default is \code{edge_number}.}
 
