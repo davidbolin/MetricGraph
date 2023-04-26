@@ -289,7 +289,7 @@ field_pred <- predict(spde_model_bru,
                                 cmp,
                                 spde_bru_fit, 
                                 data = data_list,
-                                formula = ~field)
+                                formula = ~Intercept + field)
 ```
 
 Finally, we can plot the predictions together with

@@ -113,10 +113,10 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
           order_PtE <- 1:n_obs_tmp
         } else if(type == "mesh"){
           graph_tmp <- graph$get_initial_graph()
-          n_obs_mesh <- nrow(graph$mesh$VtE)
+          n_obs_mesh <- nrow(graph$mesh$PtE)
           y_tmp <- rep(NA, n_obs_mesh)
-          df_graph <- data.frame(y = y_tmp, edge_number = graph$mesh$VtE[,1],
-                      distance_on_edge = graph$mesh$VtE[,2])
+          df_graph <- data.frame(y = y_tmp, edge_number = graph$mesh$PtE[,1],
+                      distance_on_edge = graph$mesh$PtE[,2])
           graph_tmp$add_observations(data = df_graph, normalized=TRUE)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)

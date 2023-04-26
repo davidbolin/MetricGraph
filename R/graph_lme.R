@@ -450,13 +450,14 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
 #' @param normalized Are the distances on edges normalized?
 #' @param return_as_list Should the means of the predictions and the posterior samples be returned as a list, with each replicate being an element?
+#' @param return_original_order Should the results be return in the original (input) order or in the order inside the graph?
 #' @param ... Not used.
 #' @export
 #' @method predict graph_lme
 
 predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, repl = NULL, compute_variances = FALSE, posterior_samples = FALSE,
                                n_samples = 100, only_latent = FALSE, edge_number = "edge_number",
-                               distance_on_edge = "distance_on_edge", normalized = FALSE, return_as_list = FALSE,
+                               distance_on_edge = "distance_on_edge", normalized = FALSE, return_as_list = FALSE, return_original_order = TRUE,
                                ...) {
 
   if(is.null(data)){
@@ -495,6 +496,10 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     data[[edge_number]] <- graph_bkp$mesh$PtE[,1]
     data[[distance_on_edge]] <- graph_bkp$mesh$PtE[,2]
     normalized <- TRUE
+  }
+
+  if(return_original_order){
+    ord_idx <- order(data[[edge_number]], data[[distance_on_edge]])
   }
 
   graph_bkp$add_observations(data = data, edge_number = edge_number, distance_on_edge = distance_on_edge, normalized = normalized)
@@ -656,34 +661,43 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
     idx_obs <- idx_obs_full[idx_repl]
 
-    print(Y)
-
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
 
     cov_loc <- post_Cov[idx_prd, idx_obs]
     cov_Obs <- post_Cov[idx_obs, idx_obs]
 
-    print(y_repl)
-
     # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
 
     mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
 
-    mu_fe <- mu[idx_repl, , drop = FALSE]
 
-    mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig
+
+    if(!only_latent){
+      mu_fe <- mu[idx_repl, , drop = FALSE]
+      mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig
+    } 
+
+    mean_tmp <- as.vector(mu_krig)
+    var_tmp <- diag(post_Cov[idx_prd,idx_prd])
+
+    if(return_original_order){
+      mean_tmp[ord_idx] <- mean_tmp
+      var_tmp[ord_idx] <- var_tmp
+    }
+    
+
     
     if(!return_as_list){
-      out$mean <- c(out$mean, as.vector(mu_krig))
+      out$mean <- c(out$mean, mean_tmp)
       out$repl <- c(out$repl, rep(repl_y,n_prd))
       if (compute_variances) {
-        out$variance <- c(out$variance, diag(post_Cov[idx_prd,idx_prd]))
+        out$variance <- c(out$variance, var_tmp)
       }
     } else{
-      out$mean[[repl_y]] <- as.vector(mu_krig)
+      out$mean[[repl_y]] <- mean_tmp
       if (compute_variances) {
-        out$variance[[repl_y]] <- diag(post_Cov[idx_prd,idx_prd])
+        out$variance[[repl_y]] <- var_tmp
       }
     }
 
@@ -700,6 +714,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       } else{
         X <- X - as.vector(mu_fe[idx_prd, , drop=FALSE])
       }
+
+      if(return_original_order){
+        X[ord_idx,] <- X
+      }
+
       if(!return_as_list){
         out$samples <- rbind(out$samples, X)
       } else{

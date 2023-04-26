@@ -363,7 +363,7 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
 print(results)
 ```
 Given these estimated parameters, we can now do kriging to estimate the 
-field at locations in the graph. As an example, we now estimate the field 
+field at locations in the graph. As an example, we now obtain predictions 
 on the regular mesh that we previously constructed. First, we obtain the covariates
 on the mesh locations.
 
@@ -382,13 +382,6 @@ data_mesh_pred <- data.frame(lon = scaled_lonlat_mesh[,1],
 pred <- predict(res, data=data_mesh_pred, normalized=TRUE)
 u_est <- pred$mean
 graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
-```
-
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-u_est <- spde_posterior_mean(c(sigma_e_est, sigma_est, kappa_est),
-                             graph, alpha = 1, type = "mesh")
-
-
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
