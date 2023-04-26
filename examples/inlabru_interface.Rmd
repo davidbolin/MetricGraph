@@ -357,6 +357,13 @@ graph_bru$add_observations(data = dl_rep_graph, normalized=TRUE,
                                     group = "repl")
 ```
 
+
+```{r}
+res <- graph_lme(y ~ -1, graph = graph_bru)
+```
+
+
+
 By definition the `plot()` method plots the first replicate.
 We can select the other replicates with the `group` argument.
 See the [Working with metric graphs](metric_graphs.html)

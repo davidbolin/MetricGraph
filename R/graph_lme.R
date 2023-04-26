@@ -238,6 +238,8 @@ graph_lme <- function(formula, graph,
   if(n_fixed > 0){
     coeff_fixed <- coeff[(2+n_random):length(coeff)]
     std_fixed <- std_err[(2+n_random):length(coeff)]
+  } else{
+    std_fixed <- NULL
   }
   coeff_random <- coeff[2:(1+n_random)]
   std_random <- std_err[2:(1+n_random)]
@@ -266,7 +268,11 @@ graph_lme <- function(formula, graph,
   object$response <- y_term
   object$covariates <- cov_term
   if(model_matrix){
-    object$model_matrix <- cbind(y_graph, X_cov)
+    if(ncol(X_cov)>0){
+      object$model_matrix <- cbind(y_graph, X_cov)
+    } else{
+      object$model_matrix <- y_graph
+    }
   }
   object$graph <- graph$clone()
 
@@ -437,13 +443,14 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
 #' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
 #' @param normalized Are the distances on edges normalized?
+#' @param return_as_list Should the means of the predictions and the posterior samples be returned as a list, with each replicate being an element?
 #' @param ... Not used.
 #' @export
 #' @method predict graph_lme
 
 predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FALSE, posterior_samples = FALSE,
                                n_samples = 100, only_latent = FALSE, edge_number = "edge_number",
-                               distance_on_edge = "distance_on_edge", normalized = FALSE,
+                               distance_on_edge = "distance_on_edge", normalized = FALSE, return_as_list = FALSE,
                                ...) {
 
   out <- list()
@@ -461,9 +468,21 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   graph_bkp$add_observations(data = data, edge_number = edge_number, distance_on_edge = distance_on_edge, normalized = normalized)
 
-  n <- length(graph_bkp$data[["__group"]])
+  n <- sum(graph_bkp$data[["__group"]] == graph_bkp$data[["__group"]][1])
 
   X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$data)
+
+  ## 
+  repl_vec <- graph_bkp[["data"]][["__group"]]
+
+  if(is.null(repl)){
+    u_repl <- unique(graph_bkp$data[["__group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ##
+
 
   if(all(dim(X_cov_pred) == c(0,1))){
     X_cov_pred <- matrix(1, nrow = n, ncol=1)
@@ -472,21 +491,21 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
   if(ncol(X_cov_pred) > 0){
     mu <- X_cov_pred %*% coeff_fixed
   } else{
-    mu <- 0
+    mu <- rep(0, n)
   }
 
   Y <- graph_bkp$data[[as.character(object$response)]] - mu
 
-  idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]])
-
-  edge_nb <- graph_bkp$data[["__edge_number"]][idx_prd]
-  dist_ed <- graph_bkp$data[["__distance_on_edge"]][idx_prd]
-
-  idx_obs <- !is.na(graph_bkp$data[[as.character(object$response)]])
-
   model_type <- object$latent_model
 
   sigma.e <- coeff_meas[[1]]
+
+  idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]][1:n])
+
+  n_prd <- sum(idx_prd)
+
+  edge_nb <- graph_bkp$data[["__edge_number"]][1:n][idx_prd]
+  dist_ed <- graph_bkp$data[["__distance_on_edge"]][1:n][idx_prd]
 
   ## construct Q
 
@@ -528,7 +547,6 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
     }
       if(model_type$alpha == 1){
         Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
-        print(dim(Q))
       } else{
         Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- Q %*% Q / sigma^2
@@ -582,41 +600,66 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
   }
 
   Q.e <- Diagonal(dim(Q)[1]) / sigma.e^2
+
   ## compute Q_x|y
   Q_xgiveny <- Q.e + Q
-  
+
   gap <- dim(Q)[1] - n
   ##
   post_Cov <- solve(Q_xgiveny)
   post_Cov <- post_Cov[(gap+1):dim(Q)[1], (gap+1):dim(Q)[1]]
-  cov_Obs <- post_Cov[idx_obs, idx_obs]
-  cov_loc <- post_Cov[idx_prd, idx_obs]
 
-  mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
-  
-  mu_krig <- mu[idx_prd] + mu_krig
-  out$mean <- as.vector(mu_krig)
+  idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
-  if (compute_variances) {
-    out$variance <- diag(post_Cov[idx_prd,idx_prd])
-  }
-
-    out$edge_number <- edge_nb
+  out$edge_number <- edge_nb
   out$distance_on_edge <- dist_ed
 
+  for(repl_y in u_repl){
+    idx_repl <- graph_bkp$data[["__group"]] == repl_y
+    print(repl_y)
+    idx_obs <- idx_obs_full[idx_repl]
+    y_repl <- Y[idx_repl]
+    y_repl <- y_repl[idx_obs]
 
-  if(posterior_samples){
-    post_cov <- post_Cov[idx_prd,idx_prd]
-    mean_tmp <- out$mean
-    Z <- rnorm(dim(post_cov)[1] * n_samples)
-    dim(Z) <- c(dim(post_cov)[1], n_samples)
-    LQ <- chol(forceSymmetric(post_cov))
-    X <- LQ %*% Z
-    X <- X + mean_tmp
-    if(!only_latent){
-      X <- X + matrix(rnorm(n_samples * length(mean_tmp), sd = sigma.e), nrow = length(mean_tmp))
+    cov_Obs <- post_Cov[idx_obs, idx_obs]
+    cov_loc <- post_Cov[idx_prd, idx_obs]
+
+    # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
+
+    mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
+
+    mu_krig <- mu[idx_prd] + mu_krig
+    
+    if(!return_as_list){
+      out$mean <- c(out$mean, as.vector(mu_krig))
+      out$repl <- c(out$repl, rep(repl_y,n_prd))
+      if (compute_variances) {
+        out$variance <- c(out$variance, diag(post_Cov[idx_prd,idx_prd]))
+      }
+    } else{
+      out$mean[[repl_y]] <- as.vector(mu_krig)
+      if (compute_variances) {
+        out$variance[[repl_y]] <- diag(post_Cov[idx_prd,idx_prd])
+      }
     }
-    out$samples <- X
+
+    if(posterior_samples){
+      post_cov <- post_Cov[idx_prd,idx_prd]
+      mean_tmp <- as.vector(mu_krig)
+      Z <- rnorm(dim(post_cov)[1] * n_samples)
+      dim(Z) <- c(dim(post_cov)[1], n_samples)
+      LQ <- chol(forceSymmetric(post_cov))
+      X <- LQ %*% Z
+      X <- X + mean_tmp
+      if(!only_latent){
+        X <- X + matrix(rnorm(n_samples * length(mean_tmp), sd = sigma.e), nrow = length(mean_tmp))
+      }
+      if(!return_as_list){
+        out$samples <- rbind(out$samples, X)
+      } else{
+        out$samples[[repl_y]] <- X
+      }
+    }
   }
 
   return(out)

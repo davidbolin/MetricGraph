@@ -475,6 +475,12 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
 
   if (is.null(group_vector)) {
       group_vector <- rep(1, length(PtE[,1]))
+  } 
+
+  if(is.null(old_data)){
+      group_val <- unique(group_vector)
+  } else{
+      group_val <- unique(old_data[["__group"]])
   }
 
   if (is.null(old_data)) {
@@ -484,7 +490,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
 
     data_coords_tmp <- data_coords
-    group_val <- unique(group_vector)
+    # group_val <- unique(group_vector)
     n_group <- length(group_val)
     data_coords[["group"]] <- group_val[[1]]
     if (n_group>1) {
@@ -532,7 +538,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
 
     data_coords_tmp <- data_coords
-    group_val <- unique(group_vector)
+    # group_val <- unique(group_vector)
     n_group <- length(group_val)
     data_coords[["group"]] <- group_val[[1]]
     if (n_group>1) {

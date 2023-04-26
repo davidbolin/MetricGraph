@@ -2,8 +2,7 @@
 % Please edit documentation in R/graph_lme.R
 \name{predict.graph_lme}
 \alias{predict.graph_lme}
-\title{Prediction of a fractional SPDE using the covariance-based
-rational SPDE approximation}
+\title{Prediction of a mixed effects regression model on a metric graph.}
 \usage{
 \method{predict}{graph_lme}(
   object,
@@ -20,8 +19,7 @@ rational SPDE approximation}
 )
 }
 \arguments{
-\item{object}{The covariance-based rational SPDE approximation,
-computed using \code{\link[=matern.operators]{matern.operators()}}}
+\item{object}{The fitted object with the \code{graph_lme()} function}
 
 \item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge number and the distance on edge
 for the locations to obtain the prediction.}
@@ -45,10 +43,5 @@ for the locations to obtain the prediction.}
 \item{...}{Not used.}
 }
 \description{
-The function is used for computing kriging predictions based
-on data \eqn{Y_i = u(s_i) + \epsilon_i}, where \eqn{\epsilon}{\epsilon}
-is mean-zero Gaussian measurement noise and \eqn{u(s)}{u(s)} is defined by
-a fractional SPDE \eqn{(\kappa^2 I - \Delta)^{\alpha/2} (\tau u(s)) = W},
-where \eqn{W}{W} is Gaussian white noise and \eqn{\alpha = \nu + d/2},
-where \eqn{d} is the dimension of the domain.
+Prediction of a mixed effects regression model on a metric graph.
 }

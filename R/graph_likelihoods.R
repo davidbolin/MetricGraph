@@ -138,7 +138,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
 
 
-  for(repl_y in 1:u_repl){
+  for(repl_y in 1:length(u_repl)){
       loglik <- loglik + det_R
       Qpmu <- rep(0, 4 * nrow(graph$E))
       # y_rep <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
@@ -689,7 +689,7 @@ likelihood_graph_covariance <- function(graph,
       }
 
 
-      for(repl_y in 1:u_repl){
+      for(repl_y in 1:length(u_repl)){
           ind_tmp <- (repl_vec %in% repl_y)
           y_tmp <- y_graph[ind_tmp]
           na_obs <- is.na(y_tmp)
@@ -808,7 +808,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
 
     u_repl <- unique(graph$data[["__group"]])
-    for(repl_y in 1:u_repl){
+    for(repl_y in 1:length(u_repl)){
       v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
       n.o <- length(v)
       Q.p <- Q  + t(graph$A()) %*% (graph$A()/sigma_e^2)
