@@ -487,7 +487,6 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   ##
 
-
   if(all(dim(X_cov_pred) == c(0,1))){
     X_cov_pred <- matrix(1, nrow = n, ncol=1)
   }
@@ -495,7 +494,7 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
   if(ncol(X_cov_pred) > 0){
     mu <- X_cov_pred %*% coeff_fixed
   } else{
-    mu <- rep(0, n)
+    mu <- matrix(0, nrow = n, ncol=1)
   }
 
   Y <- graph_bkp$data[[as.character(object$response)]] - mu
@@ -615,10 +614,16 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
   idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
-  out$edge_number <- edge_nb
-  out$distance_on_edge <- dist_ed
+  if(!return_as_list){
+    out$distance_on_edge <- rep(dist_ed,length(u_repl))
+    out$edge_number <- rep(edge_nb,length(u_repl))
+  }
 
   for(repl_y in u_repl){
+    if(return_as_list){
+      out$distance_on_edge[[repl_y]] <- dist_ed
+      out$edge_number[[repl_y]] <- edge_nb
+    }
     idx_repl <- graph_bkp$data[["__group"]] == repl_y
     idx_obs <- idx_obs_full[idx_repl]
     y_repl <- Y[idx_repl]
@@ -631,7 +636,9 @@ predict.graph_lme <- function(object, data, repl = NULL, compute_variances = FAL
 
     mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
 
-    mu_krig <- mu[idx_prd] + mu_krig
+    mu_fe <- mu[idx_repl, , drop = FALSE]
+
+    mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig
     
     if(!return_as_list){
       out$mean <- c(out$mean, as.vector(mu_krig))
