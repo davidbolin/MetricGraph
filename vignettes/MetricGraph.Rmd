@@ -263,7 +263,7 @@ r <- 0.15 # range parameter
 kappa <- sqrt(8*0.5)/r
 sigma_e <- 0.1
 
-n.obs <- 1000
+n.obs <- 200
 obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 
 # The graph has very small edges, so we will use the 
@@ -378,8 +378,19 @@ data_mesh_pred <- data.frame(lon = scaled_lonlat_mesh[,1],
                               distance_on_edge = graph$mesh$VtE[,2])
 ```
 
+
+Now, we can compute the predictions for $y$:
+
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-pred <- predict(res, data=data_mesh_pred, normalized=TRUE)
+pred <- predict(res, data=data_mesh_pred, normalized=TRUE, only_latent=TRUE)
+y_est <- pred$mean
+graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
+```
+
+We can obtain estimates for the latent field by setting `only_latent` to `TRUE`:
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+pred <- predict(res, data=data_mesh_pred, normalized=TRUE, only_latent=TRUE)
 u_est <- pred$mean
 graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
 ```
@@ -413,20 +424,16 @@ built in support for this, and we can obtain the distances between the observati
 graph$compute_resdist()
 ```
 
-We fit the model to the data by using `optim` in combination with the  function `likelihood_graph_covariance()` which implements, among other models, Gaussian processes with isotropic exponential covariance functions. 
+<!-- We fit the model to the data by using `optim` in combination with the  function `likelihood_graph_covariance()` which implements, among other models, Gaussian processes with isotropic exponential covariance functions. 
 Similarly to the `likelihood_graph_spde()` function, `likelihood_graph_covariance()` is also a function
 factory.  By default `likelihood_graph_covariance()` returns a function of the parameters given in log-scale and returns minus the log-likelihood,
 so one can directly apply it to the `optim` function. Let us create the likelihood function and 
-find the maximum:
+find the maximum: -->
 ```{r}
-loglik_isoExp <- likelihood_graph_covariance(graph, 
-                                      model = "isoCov", 
-                                      cov_function = exp_covariance)
-res.exp <- optim(log(theta0), loglik_isoExp)
-theta.exp <- exp(res.exp$par)
-sigma_e_est <- theta.exp[1]
-sigma_est <- theta.exp[2]
-kappa_est <- theta.exp[3]
+res_exp <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "isoCov"))
+sigma_e_est <- res_exp$coeff$measurement_error
+sigma_est <- res_exp$coeff$random_effects[1]
+kappa_est <- res_exp$coeff$random_effects[2]
 results <- data.frame(sigma_e = c(sigma_e_est),
                       sigma = c(sigma_est),
                       kappa = c(kappa_est),
@@ -438,21 +445,30 @@ Let us now compute the posterior mean for the field at the observation
 locations and plot the residuals between the data and the field
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-u_est_exp <- posterior_mean_covariance(theta.exp, graph, model = "isoExp")
-graph$plot(X = u_est_exp - graph$y, X_loc = graph$PtE, vertex_size = 0)
+u_est_exp <- predict(res, data = data, normalized = TRUE, only_latent = TRUE)
+graph$plot(X = u_est_exp$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
-To perform kriging prediction to other locations, one can use the `compute_resdist()` function with an argument that is the matrix of the observation locations and prediction locations, and then use the standard formulat for the conditional expectation of a multivariate normal. For example, suppose that we want to predict the value of the process at the midpoint of the first edge in the graph:
-```{r}
-locs <- rbind(c(1,0.5), graph$PtE)
-D <- graph$compute_resdist(locs, normalized = TRUE)
-Sigma <- exp_covariance(D, theta.exp[2:3])
-Sigma.o <- Sigma[-1,-1]
-diag(Sigma.o) <- diag(Sigma.o) + theta.exp[1]^2
+To perform kriging prediction to other locations, one can use the 
 
-mu.p <- Sigma[1,-1]%*%solve(Sigma.o, graph$y)
-var.p <- Sigma[1,1] - Sigma[1,-1]%*%solve(Sigma.o, Sigma[-1,1])
-print(c(mu.p, sqrt(var.p)))
+<!-- `compute_resdist()` function with an argument that is the matrix of the observation locations and prediction locations, and then use the standard formula for the conditional expectation of a multivariate normal. For example, suppose that we want to predict the value of the process at the midpoint of the first edge in the graph: -->
+
+```{r}
+# locs <- rbind(c(1,0.5), graph$PtE)
+# D <- graph$compute_resdist(locs, normalized = TRUE)
+# Sigma <- exp_covariance(D, theta.exp[2:3])
+# Sigma.o <- Sigma[-1,-1]
+# diag(Sigma.o) <- diag(Sigma.o) + theta.exp[1]^2
+
+# mu.p <- Sigma[1,-1]%*%solve(Sigma.o, graph$y)
+# var.p <- Sigma[1,1] - Sigma[1,-1]%*%solve(Sigma.o, Sigma[-1,1])
+# print(c(mu.p, sqrt(var.p)))
+```
+```{r}
+pred_exp <- predict(res_exp, data = data_mesh_pred, 
+                    normalized=TRUE, only_latent = TRUE)
+u_est_exp <- pred_exp$mean
+graph$plot_function(u_est_exp, vertex_size = 0, edge_width = 0.5)
 ```
 
 ## Models based on the Graph Laplacian
@@ -474,28 +490,38 @@ Thus, to define these models, the only "difficult" thing is to compute the
 graph Laplacian. The (weighted) graph Laplacian, where the weights are specified
 by the edge lengths can be computed by the function `compute_laplacian()` in the
 `metric_graph` object. Suppose that we want to model the data that we defined
-above with this model. The first thing we then need to do is to add all observation locations as vertices in the graph (since the model is only defined in vertices), and then compute the graph Laplacian on this extended graph. We first clone the original graph and then add the observation locations as vertices in the new graph, so that we have the original graph stored. 
+above with this model. 
+
+<!-- The first thing we then need to do is to add all observation locations as vertices in the graph (since the model is only defined in vertices), and then compute the graph Laplacian on this extended graph. We first clone the original graph and then add the observation locations as vertices in the new graph, so that we have the original graph stored.  -->
+
+
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
-graph_extended <- graph$clone()
-graph_extended$observation_to_vertex()
-graph_extended$compute_laplacian()
+# graph_extended <- graph$clone()
+# graph_extended$observation_to_vertex()
+# graph_extended$compute_laplacian()
 ```
 
 We can then fit the model to data similarly to how we fit the previous models, with the help of the function factory `likelihood_graph_laplacian()`:
 ```{r}
-loglik_GL1 <- likelihood_graph_laplacian(graph_extended, 
-                                          alpha = 1)
-res <- optim(log(theta0), loglik_GL1)
-theta.exp <- exp(res$par)
-sigma_e_est <- theta.exp[1]
-sigma_est <- theta.exp[2]
-kappa_est <- theta.exp[3]
+# loglik_GL1 <- likelihood_graph_laplacian(graph_extended, 
+#                                           alpha = 1)
+# res <- optim(log(theta0), loglik_GL1)
+# theta.exp <- exp(res$par)
+
+res_GL <- graph_lme(y ~ lon + lat, graph = graph, parameterization = "spde",
+                        model = list(type = "graphLaplacian")) #default alpha = 1
+
+sigma_e_est <- res_GL$coeff$measurement_error
+sigma_est <- res_GL$coeff$random_effects[1]
+kappa_est <- res_GL$coeff$random_effects[2]
 results <- data.frame(sigma_e = c(sigma_e_est),
                       sigma = c(sigma_est),
                       kappa = c(kappa_est),
                       row.names = c("Estimate"))
 print(results)
 ```
+
+<!-- (Create warning when predicting outside of the data) -->
 
 
 # The `inlabru` interface

@@ -404,7 +404,7 @@ Gets the spatial points from the data.
 \subsection{Method \code{observation_to_vertex()}}{
 Adds observation locations as vertices in the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-10)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

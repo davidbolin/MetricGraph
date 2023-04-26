@@ -226,7 +226,7 @@ graph_lme <- function(formula, graph,
 
   observed_fisher <- res$hessian
   inv_fisher <- tryCatch(solve(observed_fisher), error = function(e) matrix(NA,
-                                                                        nrow(observed_fisher, col(observed_fisher))))
+                                                                        nrow(observed_fisher), ncol(observed_fisher)))
 
   n_fixed <- ncol(X_cov)
   coeff_meas <- coeff[1]
