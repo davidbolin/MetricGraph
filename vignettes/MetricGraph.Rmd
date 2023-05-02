@@ -518,7 +518,30 @@ y_est_GL <- pred_GL_y$mean
 graph$plot_function(y_est_GL, vertex_size = 0, edge_width = 0.5)
 ```
 
+Let us now refit the model with all the locations we want to obtain predictions. Let us create a new 
+data set with all the original locations and all the locations we want to obtain predictions (with `y=NA`
+at the locations we want to obtain predictions):
+```{r}
+data_mesh_temp <- data_mesh_pred
+data_mesh_temp[["y"]] <- rep(NA, nrow(data_mesh_pred))
 
+new_data <- merge(data, data_mesh_temp, all = TRUE)
+```
+
+Let us clone the graph and add the new data:
+
+```{r}
+graph_pred <- graph$clone()
+graph_pred$clear_observations()
+graph_pred$add_observations(data = new_data, normalized = TRUE)
+```
+
+Let us now fit the model with all data:
+
+```{r}
+res_gl_pred <- graph_lme(y ~ lon + lat, graph = graph_pred, model = list(type = "GraphLaplacian"))
+summary(res_gl_pred)
+```
 
 
 # The `inlabru` interface

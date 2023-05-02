@@ -349,12 +349,14 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   if(is.null(graph$PtV)){
     stop("No observation at the vertices! Run observation_to_vertex().")
   }
-  R <- chol(Q)
+
+  # R <- chol(Q)
+  R <- Matrix::chol(Q)
 
   l <- 0
 
   for(i in repl){
-      A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV, ]
+      A <- Matrix::Diagonal(graph$nV)[graph$PtV, ]
       ind_tmp <- (repl_vec %in% i)
       y_tmp <- y[ind_tmp]
       if(ncol(X_cov) == 0){
@@ -363,31 +365,30 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
         X_cov_tmp <- X_cov[ind_tmp,,drop=FALSE]
       }
       na_obs <- is.na(y_tmp)
+      
       y_ <- y_tmp[!na_obs]
       n.o <- length(y_)
       Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
-      R.p <- chol(Q.p)
-
+      R.p <- Matrix::chol(Q.p)
 
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
       v <- y_
-      n_cov <- ncol(X_cov_tmp)
-      if(ncol(X_cov) == 0){
-        X_cov_tmp <- 0
-      } else{
-        X_cov_tmp <- X_cov_tmp[!na_obs,,drop=FALSE]
-      }
 
       if(ncol(X_cov) != 0){
-        v <- v - X_cov_tmp %*% theta[4:(3+n_cov)]
+        X_cov_tmp <- X_cov_tmp[!na_obs, ]
+        v <- v - X_cov_tmp %*% theta[4:(3+ncol(X_cov))]
       }
 
       mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
+
+      tmp_v <<- A[!na_obs,]%*%mu.p
+
       v <- v - A[!na_obs,]%*%mu.p
 
       l <- l - 0.5*(t(mu.p) %*% Q %*% mu.p + t(v) %*% v / sigma_e^2) -
         0.5 * n.o * log(2*pi)
+
   }
 
   return(as.double(l))
@@ -464,6 +465,12 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       obs.id <- PtE[,1] == e
       y_i <- y_resp[ind_repl]
       y_i <- y_i[obs.id]
+      idx_na <- is.na(y_i)
+      y_i <- y_i[!idx_na]
+
+      if(sum(!idx_na) == 0){
+        next
+      }
 
       #   if(covariates){ #obsolete
       #     n_cov <- ncol(graph$covariates[[1]])
@@ -484,18 +491,25 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
             X_cov_repl <- 0
           } else{ 
             X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
-            X_cov_repl <- X_cov_repl[obs.id, ,drop = FALSE]
+            X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
+            X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
             y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
           }
       }
 
       l <- graph$edge_lengths[e]
-      D_matrix <- as.matrix(dist(c(0, l, l*PtE[obs.id, 2])))
+
+      PtE_temp <- PtE[obs.id, 2]
+      PtE_temp <- PtE_temp[!idx_na]
+
+      D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
+
       S <- r_1(D_matrix, kappa = kappa, sigma = exp(theta[2]))
 
       #covariance update see Art p.17
       E.ind <- c(1:2)
       Obs.ind <- -E.ind
+    
       Bt <- solve(S[E.ind, E.ind, drop = FALSE], S[E.ind, Obs.ind, drop = FALSE])
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
@@ -521,6 +535,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
       loglik <- loglik - 0.5 * t(y_i) %*% solve(Sigma_i, y_i)
       loglik <- loglik - sum(log(diag(R)))
+
     }
 
     if(is.null(det_R_count)){

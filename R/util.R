@@ -326,9 +326,11 @@ graph_starting_values <- function(graph,
     }
     if(!is.null(data_name)){
       y <- graph$data[[data_name]]
+      y <- na.omit(y)
     }
     if(!is.null(manual_data)){
       y <- manual_data
+      y <- na.omit(y)
     }
     data_std <- sqrt(var(as.vector(y)))
   } else{
