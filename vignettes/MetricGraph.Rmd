@@ -552,6 +552,22 @@ pred_u_GL_full <- predict(res_gl_pred, data = data, normalized = TRUE, only_late
 graph$plot(X = pred_u_GL_full$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
+Let us now obtain predictions at the desired locations:
+
+```{r, fig.align = "center",fig.width=7,echo=TRUE}
+pred_GL_full <- predict(res_gl_pred, data = data_mesh_pred, 
+                    normalized=TRUE, only_latent = TRUE)
+u_est_GL_full <- pred_GL_full$mean
+graph$plot_function(u_est_GL_full, vertex_size = 0, edge_width = 0.5)
+```
+and here the correct way of obtaining predictions of the observed data at the desired locations: 
+```{r, fig.align = "center",fig.width=7,echo=TRUE}
+pred_GL_y_full <- predict(res_gl_pred, data = data_mesh_pred, 
+                    normalized=TRUE, only_latent = FALSE)
+y_est_GL_full <- pred_GL_y_full$mean
+graph$plot_function(y_est_GL_full, vertex_size = 0, edge_width = 0.5)
+```
+
 
 # The `inlabru` interface
 In this vignette we will present our `inlabru`
@@ -563,70 +579,105 @@ We will use the same graph and data as before. The `inlabru` implementation requ
 `graph_spde` function. By default we have `alpha=1`. 
 
 ```{r, message=FALSE}
-# library(INLA)
-# library(inlabru)
-# spde_model <- graph_spde(graph_extended)
-```
-The next step is to create the data list containing
-the reponse variables and the `PtE` attribute:
-```{r}
-# data_list <- list(y = y, loc = graph_extended$PtE)
+library(INLA)
+library(inlabru)
+spde_model <- graph_spde(graph)
 ```
 
-Now, we create `inlabru`'s component, which is a  formula-like object:
+Recall that the data is already on the graph object (from the previous models above). Now, we create `inlabru`'s component, which is a  formula-like object:
 ```{r}
-# cmp <- y ~ -1 + field(loc, model = spde_model)
+cmp <- y ~ lon + lat + field(loc, model = spde_model)
 ```
 
 This formula is very simple since we are not assuming mean zero, so that we do not need an intercept, and we do not have any other covariates or model components. However, the setup is exactly  the same for more complicated models, with the only exception that we would have more terms in the formla. Now, we directly fit the model:
 
 ```{r}
-# spde_bru_fit <- bru(cmp, data=data_list)
+spde_bru_fit <- bru(cmp, data=graph_data_spde(spde_model, loc = "loc"))
 ```
 
 The advantage / difference between the estimates we obtain here and those above is that the `bru` function does full Bayesian inference (assuming priors for the model parameters). We used the default priors when creating the `graph_spde` model (see the help text for that function). The advantage now is that we do not only obtain point estimates but entire posterior distributions for the parameters. To view the estimates we can use the `spde_metric_graph_result()` function, then
 taking a `summary()`:
 
 ```{r}
-# spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
-#                     "field", spde_model)
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+                    "field", spde_model)
 
-# summary(spde_bru_result)
+summary(spde_bru_result)
 ```
 
 Here we are showing the estimate of the practical correlation range ($2/\kappa$) instead of $\kappa$ since that is easier to interpret. We now compare the means of the estimated values with the true values:
 
 ```{r}
-  # result_df_bru <- data.frame(
-  #   parameter = c("std.dev", "range"),
-  #   true = c(sigma, 2 / kappa),
-  #   mean = c(
-  #     spde_bru_result$summary.sigma$mean,
-  #     spde_bru_result$summary.range$mean
-  #   ),
-  #   mode = c(
-  #     spde_bru_result$summary.sigma$mode,
-  #     spde_bru_result$summary.range$mode
-  #   )
-  # )
-  # print(result_df_bru)
+  result_df_bru <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, 2 / kappa),
+    mean = c(
+      spde_bru_result$summary.sigma$mean,
+      spde_bru_result$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result$summary.sigma$mode,
+      spde_bru_result$summary.range$mode
+    )
+  )
+  print(result_df_bru)
 ```
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
-  # posterior_df_bru_fit <- gg_df(spde_bru_result)
+  posterior_df_bru_fit <- gg_df(spde_bru_result)
 
-  # library(ggplot2)
+  library(ggplot2)
 
-  # ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
-  # facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
 ```
 
 
 ## Kriging with the `inlabru` implementation
 
-There are two approaches to do kriging with our `inlabru` implementation of Whittle-Matérn fields on metric graphs. The simplest is to just add the locations where we want the predictions before fitting the model, and letting the data at those locations be `NA`. Again, since the Whittle--Matérn fields are invariant to the addition of vertices of degree two, this will not change the model. However, it will make the estimation slower since we need to work with a larger graph in `inlabru`. The second alternative, which is faster but also more complicated, is to do the fit without the prediction locations, and then add them at a second stage. We now illustrate how to do this. 
+
+Unfortunately, our `inlabru` implementation is not 
+compatible with `inlabru`'s `predict()` method. This has
+to do with the nature of the metric graph's object.
+
+To this end, we have provided a different `predict()` method.
+We will now show
+how to do kriging with the help of this function. 
+
+We begin by creating a data list
+with the positions we want the predictions. In this case,
+we will want the predictions on a mesh.
+
+The positions we want are the mesh positions, which
+can be obtained by using the `get_mesh_locations()` method.
+We also set `bru=TRUE` and `loc="loc"` to obtain a data list suitable to be used with `inlabru`.
+```{r}
+data_list <- graph$get_mesh_locations(bru = TRUE,
+                                            loc = "loc")
+```
+
+We can now obtain the predictions by using the `predict()` method. Observe
+that our `predict()` method for graph models is a bit different from
+`inlabru`'s standard `predict()` method. Indeed, the first argument is
+the model created with the `graph_spde()` function, the second is
+`inlabru`'s component, and the remaining is as done with the standard `predict()`
+method in `inlabru`.
+
+```{r}
+field_pred <- predict(spde_model, 
+                                cmp,
+                                spde_bru_fit, 
+                                data = data_list,
+                                formula = ~field)
+```
+
+Finally, we can plot the predictions together with
+the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+plot(field_pred)
+```
 
 
 ## An example with real data and replicates

@@ -235,10 +235,9 @@ Unfortunately, our `inlabru` implementation is not
 compatible with `inlabru`'s `predict()` method. This has
 to do with the nature of the metric graph's object.
 
-To this end, we have provided a helper function, namely
-the `inlabru_predict()` function. We will first show
-how to do kriging with the help of this function. Then,
-we will show how to do it manually.
+To this end, we have provided a different `predict()` method.
+We will now show
+how to do kriging with the help of this function. 
 
 We begin by creating a data list
 with the positions we want the predictions. In this case,
