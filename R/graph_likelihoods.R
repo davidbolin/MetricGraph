@@ -734,6 +734,7 @@ likelihood_graph_covariance <- function(graph,
               }
           }
 
+          v <- v[!na_obs]
 
           loglik_val <- loglik_val + as.double(-sum(log(diag(R))) - 0.5*t(v)%*%solve(Sigma_non_na,v) -
                          length(v)*log(2*pi)/2)

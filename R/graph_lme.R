@@ -189,8 +189,6 @@ graph_lme <- function(formula, graph,
               X_cov = X_cov, y = y_graph, repl = repl, BC = BC, parameterization = parameterization_latent))
         }
       } else {
-        likelihood_alpha1(theta = start_values, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = repl, BC = BC, parameterization = parameterization_latent)
         likelihood <- function(theta){
           return(-likelihood_alpha1(theta = theta, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
                              X_cov = X_cov, repl = repl, BC = BC, parameterization = parameterization_latent))
