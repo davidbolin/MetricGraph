@@ -10,7 +10,7 @@
 #' `WhittleMatern`, `graphLaplacian` or `isoCov`. For `Whittle-Matern` and `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
 #' contain a parameter `cov_function`, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the `cov_function` argument. The default is 'exp_covariance', the
 #' exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for `Whittle-Matern` models, there is an additional parameter
-#' `version`, which can be either 1 or 2, to tell which version of the likelihood should be used (version is 1 by default).
+#' `version`, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default. 
 #' @param repl vector or list containing which replicates to consider in the model.
 #' If `NULL` all replicates will be considered.
 #' @param optim_method The method to be used with `optim` function.
@@ -633,19 +633,18 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       }
   }
 
-  Q.e <- Diagonal(dim(Q)[1]) / sigma.e^2
-
-  ## compute Q_x|y
-  Q_xgiveny <- Q.e + Q
+  Q.e <- Diagonal(sum(idx_prd)) / sigma.e^2
 
   gap <- dim(Q)[1] - n
-  ##
-  post_Cov <- solve(Q_xgiveny)
+  
+  ## compute Q_x|y
+  A <- Matrix::Diagonal(dim(Q)[1])[(gap+1):dim(Q)[1], ]
+  
+  idx_obs_full <- as.vector(!is.na(Y))
 
-  post_Cov <- post_Cov[(gap+1):dim(Q)[1], (gap+1):dim(Q)[1]]
-
+  Q_xgiveny <- t(A[idx_obs_full,]) %*% A[idx_obs_full,]/sigma_e^2 + Q
+  
   # idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
-  idx_obs_full <- !is.na(Y)
 
   if(!return_as_list){
     out$distance_on_edge <- rep(dist_ed,length(u_repl))
@@ -664,14 +663,15 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
 
-    cov_loc <- post_Cov[idx_prd, idx_obs]
-    cov_Obs <- post_Cov[idx_obs, idx_obs]
+    # cov_loc <- post_Cov[idx_prd, idx_obs]
+    # cov_Obs <- post_Cov[idx_obs, idx_obs]
 
     # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
 
-    mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
+    mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
 
-
+    mu_krig <- mu_krig[(gap+1):length(mu_krig)]
+    mu_krig <- mu_krig[idx_prd]
 
     if(!only_latent){
       mu_fe <- mu[idx_repl, , drop = FALSE]
@@ -679,25 +679,34 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     } 
 
     mean_tmp <- as.vector(mu_krig)
-    var_tmp <- diag(post_Cov[idx_prd,idx_prd])
 
     if(return_original_order){
       mean_tmp[ord_idx] <- mean_tmp
-      var_tmp[ord_idx] <- var_tmp
+      # var_tmp[ord_idx] <- var_tmp
     }
-    
-
-    
+        
     if(!return_as_list){
       out$mean <- c(out$mean, mean_tmp)
       out$repl <- c(out$repl, rep(repl_y,n_prd))
-      if (compute_variances) {
-        out$variance <- c(out$variance, var_tmp)
-      }
     } else{
       out$mean[[repl_y]] <- mean_tmp
-      if (compute_variances) {
-        out$variance[[repl_y]] <- var_tmp
+    }
+
+    if (compute_variances) {
+        post_cov <- solve(Q_xgiveny)
+        var_tmp <- diag(post_cov)
+        var_tmp <- var_tmp[(gap+1):length(var_tmp)]
+        var_tmp <- var_tmp[idx_prd]
+      if(return_original_order){
+        var_tmp[ord_idx] <- var_tmp
+      }
+      if(!return_as_list){
+        out$variance <- rep(var_tmp, length(u_repl))
+      }
+      else {
+          for(repl_y in u_repl){
+            out$variance[[repl_y]] <- var_tmp
+          }
       }
     }
 

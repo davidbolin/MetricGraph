@@ -27,7 +27,7 @@ graph_lme(
 \code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}. For \code{Whittle-Matern} and \code{graph-Laplacian} models, the list must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
 contain a parameter \code{cov_function}, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the \code{cov_function} argument. The default is 'exp_covariance', the
 exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for \code{Whittle-Matern} models, there is an additional parameter
-\code{version}, which can be either 1 or 2, to tell which version of the likelihood should be used (version is 1 by default).}
+\code{version}, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default.}
 
 \item{repl}{vector or list containing which replicates to consider in the model.
 If \code{NULL} all replicates will be considered.}

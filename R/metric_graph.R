@@ -990,6 +990,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                       VtE = NULL)
 
     self$mesh$V <- self$V
+
     for (i in 1:(dim(self$LtE)[2])) {
       if (is.null(n)) {
         #remove boundary points
@@ -1029,12 +1030,16 @@ metric_graph <-  R6::R6Class("metric_graph",
     idx_V <- which(!duplicated(self$mesh$V))
     n_temp <- nrow(self$mesh$PtE)
     gap_tmp <- nrow(self$mesh$VtE) - n_temp
-    idx_PtE <- which(!duplicated(self$mesh$V[(gap_tmp+1):nrow(self$mesh$V),]))
+    if(!is.null(self$mesh$PtE)){
+      ind_tmp <- (gap_tmp+1):nrow(self$mesh$V)
+      ind_tmp <- !duplicated(self$mesh$V[,])
+      idx_PtE <- which(ind_tmp)
+      self$mesh$PtE <- self$mesh$PtE[idx_PtE, ]
+    }
     self$mesh$V <- self$mesh$V[idx_V,]
     self$mesh$VtE <- self$mesh$VtE[idx_V,]
     self$mesh$E <- self$mesh$E[idx_V,]
     self$mesh$h_e <- self$mesh$h_e[idx_V]
-    self$mesh$PtE <- self$mesh$PtE[idx_PtE, ]
     self$mesh$ind <- self$mesh$ind[idx_V]
     self$mesh$n_e <- self$mesh$n_e[idx_V]
 
