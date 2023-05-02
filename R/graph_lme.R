@@ -100,9 +100,12 @@ graph_lme <- function(formula, graph,
     stop("No data found in the graph. Please, add observations before fitting the model.")
   }
 
+  nV_orig <- NULL
+
   if(model_type %in% c("graphlaplacian", "isocov")){
     graph_bkp <- graph$clone()
     graph_bkp$observation_to_vertex()
+    nV_orig <- graph_bkp$nV
     data <- graph_bkp$data
   } else if((model_type == "whittlematern") && (model[["alpha"]] == 1) && (model[["version"]]==2)){
     graph_bkp <- graph$clone()
@@ -267,6 +270,7 @@ graph_lme <- function(formula, graph,
   object$niter <- res$counts
   object$response <- y_term
   object$covariates <- cov_term
+  object$nV_orig <- nV_orig
   if(model_matrix){
     if(ncol(X_cov)>0){
       object$model_matrix <- cbind(y_graph, X_cov)
@@ -572,7 +576,12 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   } else if(tolower(model_type$type) == "graphlaplacian"){
     sigma <- object$coeff$random_effects[1]
+    #nV before 
+    nV_temp <- object$nV_orig
     graph_bkp$observation_to_vertex()
+    if(graph_bkp$nV > nV_temp){
+      warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+    }
     graph_bkp$compute_laplacian()
     if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
@@ -608,32 +617,37 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
           Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
           Q <- solve(Sigma)
         } else if(model_type$cov_function == "GL1"){
+              #nV before 
+              nV_temp <- object$nV_orig
               graph_bkp$observation_to_vertex()
+              if(graph_bkp$nV > nV_temp){
+                warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+              }
               graph_bkp$compute_laplacian()        
               Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
         } else if(model_type$cov_function == "GL2"){
+              #nV before 
+              nV_temp <- object$nV_orig
               graph_bkp$observation_to_vertex()
+              if(graph_bkp$nV > nV_temp){
+                warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+              }
               graph_bkp$compute_laplacian()
               Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
               Q <- Q %*% Q / sigma^2
         } else if(model_type$cov_function == "exp_covariance"){
-                  if(is.null(graph$res_dist)){
-                    graph$compute_resdist()
-                  }
-                  Sigma <- as.matrix(exp_covariance(graph$res_dist[[1]], c(sigma,kappa)))
+                  graph_bkp$compute_resdist(full = TRUE)
+                  Sigma <- as.matrix(exp_covariance(graph_bkp$res_dist[[1]], c(sigma,kappa)))
                   Q <- solve(Sigma)
         } 
       } else{
-        if(is.null(graph_bkp$res_dist)){
-          graph_bkp$compute_resdist()
-        }
+        graph_bkp$compute_resdist(full = TRUE)
         cov_function <- model_type$cov_function
         Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[1]], coeff_random))
         Q <- solve(Sigma)
       }
   }
 
-  Q.e <- Diagonal(sum(idx_prd)) / sigma.e^2
 
   gap <- dim(Q)[1] - n
   

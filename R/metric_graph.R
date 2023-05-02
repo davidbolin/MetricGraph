@@ -1032,7 +1032,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     gap_tmp <- nrow(self$mesh$VtE) - n_temp
     if(!is.null(self$mesh$PtE)){
       ind_tmp <- (gap_tmp+1):nrow(self$mesh$V)
-      ind_tmp <- !duplicated(self$mesh$V[,])
+      ind_tmp <- !duplicated(self$mesh$V[ind_tmp,])
       idx_PtE <- which(ind_tmp)
       self$mesh$PtE <- self$mesh$PtE[idx_PtE, ]
     }
