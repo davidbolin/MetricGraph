@@ -696,6 +696,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
     self$data <- lapply(self$data, function(dat){ dat[index_order]})
 
+    self$PtV <- self$PtV[index_order]
+
     private$temp_PtE <- NULL
 
     if (!is.null(self$geo_dist)) {

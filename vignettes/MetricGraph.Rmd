@@ -368,7 +368,7 @@ on the mesh locations.
 
 
 
-Now, we can compute the predictions for $y$. First, let us compute the posterior mean for the field at the observation locations and plot the residuals between the data and the field
+Now, we can compute the predictions for $y$. First, let us compute the posterior mean for the field at the observation locations and plot the residuals between the posterior means and the field:
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 pred_u <- predict(res, data = data, normalized = TRUE, only_latent = TRUE)
@@ -442,7 +442,7 @@ summary(res_exp)
 ```
 
 Let us now compute the posterior mean for the field at the observation 
-locations and plot the residuals between the data and the field:
+locations and plot the residuals between the field and the posterior means of the field:
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 u_est_exp <- predict(res_exp, data = data, normalized = TRUE, only_latent = TRUE)
@@ -495,7 +495,7 @@ res_gl <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "GraphLapl
 summary(res_gl)
 ```
 
-We can now obtain prediction at the observed locations by using the `predict()` method. Let us compute the posterior mean for the field at the observation locations and plot the residuals between the data and the field:
+We can now obtain prediction at the observed locations by using the `predict()` method. Let us compute the posterior mean for the field at the observation locations and plot the residuals between the field and the posterior means of the field:
 
 ```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
 pred_u_GL <- predict(res_gl, data = data, normalized = TRUE, only_latent = TRUE)
@@ -541,6 +541,15 @@ Let us now fit the model with all data:
 ```{r}
 res_gl_pred <- graph_lme(y ~ lon + lat, graph = graph_pred, model = list(type = "GraphLaplacian"))
 summary(res_gl_pred)
+```
+
+One should compare the estimates with the ones obtained in the model without the prediction locations.
+
+Let us first compute the residual between the latent field and the posterior means at the observation locations:
+
+```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+pred_u_GL_full <- predict(res_gl_pred, data = data, normalized = TRUE, only_latent = TRUE)
+graph$plot(X = pred_u_GL_full$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
 

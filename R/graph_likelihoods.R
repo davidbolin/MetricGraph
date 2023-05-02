@@ -354,11 +354,12 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   R <- Matrix::chol(Q)
 
   l <- 0
-
+  
   for(i in repl){
       A <- Matrix::Diagonal(graph$nV)[graph$PtV, ]
       ind_tmp <- (repl_vec %in% i)
       y_tmp <- y[ind_tmp]
+      y
       if(ncol(X_cov) == 0){
         X_cov_tmp <- 0
       } else {
@@ -381,8 +382,6 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
       }
 
       mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
-
-      tmp_v <<- A[!na_obs,]%*%mu.p
 
       v <- v - A[!na_obs,]%*%mu.p
 
@@ -779,9 +778,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     stop("alpha must be positive!")
   }
 
-  if(is.null(graph$Laplacian)) {
-    graph$compute_laplacian()
-  }
+  graph$compute_laplacian(full = TRUE)
 
   # if(covariates){
   #   if(is.null(graph$covariates)){
@@ -821,13 +818,16 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
     R <- chol(Q)
     l <- 0
-
+    A <- graph$A(group = "__all")
 
     u_repl <- unique(graph$data[["__group"]])
     for(repl_y in 1:length(u_repl)){
       v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
+      na.obs <- is.na(v)
+      A.repl <- A[!na.obs, ]
+      v <- v[!na.obs]
       n.o <- length(v)
-      Q.p <- Q  + t(graph$A()) %*% (graph$A()/sigma_e^2)
+      Q.p <- Q  + t(A.repl) %*% A.repl/sigma_e^2
       R.p <- chol(Q.p)
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
@@ -851,12 +851,13 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
             X_cov_repl <- 0
           } else{ 
             X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov_repl[!na.obs, ]
             v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
           }
       }
 
-      mu.p <- solve(Q.p,as.vector(t(graph$A()) %*% v / sigma_e^2))
-      v <- v - graph$A()%*%mu.p
+      mu.p <- solve(Q.p,as.vector(t(A.repl) %*% v / sigma_e^2))
+      v <- v - A.repl%*%mu.p
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }
     if(maximize){
