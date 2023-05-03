@@ -386,6 +386,8 @@ data_mesh_pred <- data.frame(lon = scaled_lonlat_mesh[,1],
                               lat = scaled_lonlat_mesh[,2],
                               edge_number = graph$mesh$VtE[,1],
                               distance_on_edge = graph$mesh$VtE[,2])
+# Let us remove duplicated vertices (that were created due to being too close)
+data_mesh_pred <- data_mesh_pred[!duplicated(graph$mesh$V),]
 ```
 
 Now, let us obtain the predictions. We can obtain estimates for the latent field by setting `only_latent` to `TRUE`:
