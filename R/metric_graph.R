@@ -1003,7 +1003,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if (self$mesh$n_e[i] > 0) {
         d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
         d.e <- d.e[2:(1+self$mesh$n_e[i])]
-
+        
         self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
                                                     d.e))
 
@@ -1028,22 +1028,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$mesh$V <- rbind(self$mesh$V)
     }
 
-    # Getting rid of duplicated locations (might happen on situations with very small edges)
-    idx_V <- which(!duplicated(self$mesh$V))
-    n_temp <- nrow(self$mesh$PtE)
-    gap_tmp <- nrow(self$mesh$VtE) - n_temp
-    if(!is.null(self$mesh$PtE)){
-      ind_tmp <- (gap_tmp+1):nrow(self$mesh$V)
-      ind_tmp <- !duplicated(self$mesh$V[ind_tmp,])
-      idx_PtE <- which(ind_tmp)
-      self$mesh$PtE <- self$mesh$PtE[idx_PtE, ]
-    }
-    self$mesh$V <- self$mesh$V[idx_V,]
-    self$mesh$VtE <- self$mesh$VtE[idx_V,]
-    self$mesh$E <- self$mesh$E[idx_V,]
-    self$mesh$h_e <- self$mesh$h_e[idx_V]
-    self$mesh$ind <- self$mesh$ind[idx_V]
-    self$mesh$n_e <- self$mesh$n_e[idx_V]
+    # if(sum(duplicated(self$mesh$V)) > 0){
+    #   n_dup <- sum(duplicated(self$mesh$V))
+    #   dup_idx <- which(duplicated(self$mesh$V))
+    #   self$mesh$V[dup_idx,] <- self$mesh$V[dup_idx,] + matrix(runif(2*n_dup)*1e-10,nrow = n_dup, ncol=2)
+    # }
 
   },
 
@@ -1295,10 +1284,20 @@ metric_graph <-  R6::R6Class("metric_graph",
       # if (length(X) != dim(self$V)[1] + PtE_dim) {
       #   stop("X does not have the correct size")
       # }
-      if (length(X) != dim(unique(self$mesh$V))[1]) {
-        stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, " and ", dim(unique(self$mesh$V))[1],")"))
+      if (length(X) != dim(unique(self$mesh$V))[1] && length(X) != dim(self$mesh$V)[1]) {
+        stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, dim(self$mesh$V)[1], " and ", dim(unique(self$mesh$V))[1],")"))
+      }
+
+      if(dim(unique(self$mesh$V))[1] != dim(self$mesh$V)[1]){
+        if(length(X) == dim(unique(self$mesh$V))[1]){
+          X_temp <-  rep(NA, dim(self$mesh$V)[1])
+          X_temp[which(!duplicated(self$mesh$V))] <- X
+          X <- X_temp
+        }
       }
     }
+
+
 
     if (mesh) {
       n.v <- dim(self$V)[1]
