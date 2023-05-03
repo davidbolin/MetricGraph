@@ -547,6 +547,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   ## construct Q
 
+  graph_bkp$observation_to_vertex()
+
   if(tolower(model_type$type) == "whittlematern"){
     sigma <- object$coeff$random_effects[1]
     if(object$parameterization_latent == "spde"){
@@ -556,7 +558,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     }
 
       if(model_type$alpha == 1){
-          graph_bkp$observation_to_vertex()
           Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph_bkp)
       } else{
@@ -578,7 +579,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     sigma <- object$coeff$random_effects[1]
     #nV before 
     nV_temp <- object$nV_orig
-    graph_bkp$observation_to_vertex()
+    # graph_bkp$observation_to_vertex()
     if(graph_bkp$nV > nV_temp){
       warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
     }
@@ -600,7 +601,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
         sigma <- object$coeff$random_effects[1]
         kappa <- object$coeff$random_effects[2]
         if(model_type$cov_function == "alpha1"){
-          graph_bkp$observation_to_vertex()
+          # graph_bkp$observation_to_vertex()
           Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph_bkp)
         } else if(model_type$cov_function == "alpha2"){
@@ -619,7 +620,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
         } else if(model_type$cov_function == "GL1"){
               #nV before 
               nV_temp <- object$nV_orig
-              graph_bkp$observation_to_vertex()
+              # graph_bkp$observation_to_vertex()
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
@@ -628,18 +629,20 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
         } else if(model_type$cov_function == "GL2"){
               #nV before 
               nV_temp <- object$nV_orig
-              graph_bkp$observation_to_vertex()
+              # graph_bkp$observation_to_vertex()
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
               graph_bkp$compute_laplacian()
               Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
               Q <- Q %*% Q / sigma^2
-        } else if(model_type$cov_function == "exp_covariance"){
-                  graph_bkp$compute_resdist(full = TRUE)
-                  Sigma <- as.matrix(exp_covariance(graph_bkp$res_dist[[1]], c(sigma,kappa)))
-                  Q <- solve(Sigma)
-        } 
+        # } else if(model_type$cov_function == "exp_covariance"){
+        #           print("Here 1")
+        #           graph_bkp$compute_resdist(full = TRUE)
+        #           Sigma <- as.matrix(exp_covariance(graph_bkp$res_dist[[1]], c(sigma,kappa)))
+        #           Q <- solve(Sigma)
+        # } 
+        }
       } else{
         graph_bkp$compute_resdist(full = TRUE)
         cov_function <- model_type$cov_function
@@ -649,10 +652,15 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   }
 
 
-  gap <- dim(Q)[1] - n
+  # gap <- dim(Q)[1] - n
   
   ## compute Q_x|y
-  A <- Matrix::Diagonal(dim(Q)[1])[(gap+1):dim(Q)[1], ]
+  # A <- Matrix::Diagonal(dim(Q)[1])[(gap+1):dim(Q)[1], ]
+  if(tolower(model_type$type) == "isocov"){
+    A <- Matrix::Diagonal(dim(Q)[1])
+  } else{
+    A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
+  }
   
   idx_obs_full <- as.vector(!is.na(Y))
 
@@ -684,8 +692,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
     mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
 
-    mu_krig <- mu_krig[(gap+1):length(mu_krig)]
-    mu_krig <- mu_krig[idx_prd]
+    # mu_krig <- mu_krig[(gap+1):length(mu_krig)]
+    mu_krig <- A[idx_prd,] %*% mu_krig
 
     if(!only_latent){
       mu_fe <- mu[idx_repl, , drop = FALSE]
@@ -707,10 +715,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     }
 
     if (compute_variances) {
-        post_cov <- solve(Q_xgiveny)
+        post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
         var_tmp <- diag(post_cov)
-        var_tmp <- var_tmp[(gap+1):length(var_tmp)]
-        var_tmp <- var_tmp[idx_prd]
       if(return_original_order){
         var_tmp[ord_idx] <- var_tmp
       }
@@ -725,7 +731,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     }
 
     if(posterior_samples){
-      post_cov <- post_Cov[idx_prd,idx_prd]
       mean_tmp <- as.vector(mu_krig)
       Z <- rnorm(dim(post_cov)[1] * n_samples)
       dim(Z) <- c(dim(post_cov)[1], n_samples)
@@ -752,3 +757,5 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   return(out)
 }
+
+

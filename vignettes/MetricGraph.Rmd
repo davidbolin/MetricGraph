@@ -586,7 +586,7 @@ spde_model <- graph_spde(graph)
 
 Recall that the data is already on the graph object (from the previous models above). Now, we create `inlabru`'s component, which is a  formula-like object:
 ```{r}
-cmp <- y ~ lon + lat + field(loc, model = spde_model)
+cmp <- y ~ Intercept(1) + lon + lat + field(loc, model = spde_model)
 ```
 
 This formula is very simple since we are not assuming mean zero, so that we do not need an intercept, and we do not have any other covariates or model components. However, the setup is exactly  the same for more complicated models, with the only exception that we would have more terms in the formla. Now, we directly fit the model:
@@ -650,12 +650,10 @@ We begin by creating a data list
 with the positions we want the predictions. In this case,
 we will want the predictions on a mesh.
 
-The positions we want are the mesh positions, which
-can be obtained by using the `get_mesh_locations()` method.
-We also set `bru=TRUE` and `loc="loc"` to obtain a data list suitable to be used with `inlabru`.
+The positions we want are the mesh positions, which we have in the `data.frame` for the previous models.
+The function `graph_bru_process_data()` helps us into converting that `data.frame` to an `inlabru` friendly format for dealing with metric graphs:
 ```{r}
-data_list <- graph$get_mesh_locations(bru = TRUE,
-                                            loc = "loc")
+data_list <- graph_bru_process_data(data_mesh_pred, loc = "loc")
 ```
 
 We can now obtain the predictions by using the `predict()` method. Observe
@@ -670,7 +668,7 @@ field_pred <- predict(spde_model,
                                 cmp,
                                 spde_bru_fit, 
                                 data = data_list,
-                                formula = ~field)
+                                formula = ~ field)
 ```
 
 Finally, we can plot the predictions together with

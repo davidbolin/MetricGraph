@@ -266,6 +266,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
             prior_sigma_sdlog = prior_sigma$sdlog,
             parameterization = parameterization))
 model$graph_spde <- graph_spde
+model$data_PtE <- graph_object$get_PtE()
 model$parameterization <- parameterization
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
@@ -849,10 +850,17 @@ predict.inla_metric_graph_spde <- function(object,
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }                                            
   graph_tmp <- object$graph_spde$get_initial_graph()
+  # graph_tmp <- object$graph_spde$clone()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
   original_data <- object$graph_spde$data
-  original_data[["__edge_number"]] <- NULL
-  original_data[["__distance_on_edge"]] <- NULL
+  original_data[["__edge_number"]] <- object$data_PtE[,1]
+  original_data[["__distance_on_edge"]] <- object$data_PtE[,2]
+
+  graph_tmp$add_observations(data = original_data,
+                  edge_number = "__edge_number",
+                  distance_on_edge = "__distance_on_edge",
+                  data_coords = "PtE",
+                  normalized = TRUE)
 
   new_data <- data
   new_data[[name_locations]] <- NULL
@@ -861,9 +869,9 @@ predict.inla_metric_graph_spde <- function(object,
   names_columns <- setdiff(names_columns, c("__group", "__coord_x",
                                             "__coord_y", "__edge_number",
                                             "__distance_on_edge"))
-  for(name_column in names_columns){
-    new_data[[name_column]] <- rep(NA, n_locations)
-  }
+  # for(name_column in names_columns){
+  #   new_data[[name_column]] <- rep(NA, n_locations)
+  # }
   if(data_coords == "PtE"){
     new_data[["__edge_number"]] <- data[[name_locations]][,1]
     new_data[["__distance_on_edge"]] <- data[[name_locations]][,2]
@@ -871,6 +879,11 @@ predict.inla_metric_graph_spde <- function(object,
     new_data[["__coord_x"]] <- data[[name_locations]][,1]
     new_data[["__coord_y"]] <- data[[name_locations]][,2]    
   }
+
+  new_data[["__dummy_var"]] <- rep(0,length(new_data[["__edge_number"]]))
+
+
+  idx_ord <- order(data[[name_locations]][,1], data[[name_locations]][,2])
 
   graph_tmp$add_observations(data = new_data,
                   edge_number = "__edge_number",
@@ -880,30 +893,46 @@ predict.inla_metric_graph_spde <- function(object,
                   data_coords = data_coords,
                   normalized = normalized)
 
-  tmp_list <- cbind(graph_tmp$data[["__coord_x"]],
-                                        graph_tmp$data[["__coord_y"]]) 
-  tmp_list <- lapply(1:nrow(tmp_list), function(i){tmp_list[i,]})
+  graph_tmp2 <- object$graph_spde$get_initial_graph()
 
-  pred_PtE <- cbind(graph_tmp$data[["__edge_number"]],
-                          graph_tmp$data[["__distance_on_edge"]])
+  graph_tmp2$add_observations(data = new_data,
+                  edge_number = "__edge_number",
+                  distance_on_edge = "__distance_on_edge",
+                  coord_x = "__coord_x",
+                  coord_y = "__coord_y",
+                  data_coords = data_coords,
+                  normalized = normalized)
+
+  pred_PtE <- cbind(graph_tmp2$data[["__edge_number"]],
+                          graph_tmp2$data[["__distance_on_edge"]])
+
+  rm(graph_tmp2)
 
   # Adding the original data
 
-  graph_tmp$add_observations(data = original_data,
-                    coord_x = "__coord_x",
-                    coord_y = "__coord_y",
-                    data_coords = "euclidean")
+  # graph_tmp$add_observations(data = original_data,
+  #                   coord_x = "__coord_x",
+  #                   coord_y = "__coord_y",
+  #                   data_coords = "euclidean")
   
   graph_tmp$observation_to_vertex()
 
-  tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
-                                        graph_tmp$data[["__coord_y"]]) 
-  tmp_list2 <- lapply(1:nrow(tmp_list2), function(i){tmp_list2[i,]})
-  idx_list <- match(tmp_list, tmp_list2)
+  # tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
+  #                                       graph_tmp$data[["__coord_y"]]) 
+  # tmp_list2 <- lapply(1:nrow(tmp_list2), function(i){tmp_list2[i,]})
+  # idx_list <- match(tmp_list, tmp_list2)
 
-  new_data_list <- data
-  new_data_list[[name_locations]] <- cbind(graph_tmp$data[["__edge_number"]][idx_list],
-                                              graph_tmp$data[["__distance_on_edge"]][idx_list])
+  new_data_list <- graph_tmp$data
+
+  idx_list <- !is.na(new_data_list[["__dummy_var"]])
+
+  new_data_list <- lapply(new_data_list, function(dat){dat[idx_list]})
+
+  # new_data_list[[name_locations]] <- cbind(graph_tmp$data[["__edge_number"]][idx_list],
+  #                                             graph_tmp$data[["__distance_on_edge"]][idx_list])
+
+  new_data_list[[name_locations]] <- cbind(new_data_list[["__edge_number"]],
+                                              new_data_list[["__distance_on_edge"]])
 
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
@@ -927,6 +956,9 @@ predict.inla_metric_graph_spde <- function(object,
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
   pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
+  pred_list[["new_model"]] <- spde____model
+  pred_list[["new_fit"]] <- bru_fit_new
+  pred_list[["new_graph"]] <- graph_tmp
   
   class(pred_list) <- "graph_bru_pred"
   return(pred_list)                    
@@ -1030,3 +1062,22 @@ predict.rspde_metric_graph <- function(object,
   class(pred_list) <- "graph_bru_pred"
   return(pred_list)                    
 }
+
+
+#' @name graph_bru_process_data
+#' @title Prepare data frames or data lists to be used with inlabru in metric graphs
+#' @param data A `data.frame` or a `list` containing the covariates, the edge number and the distance on edge
+#' for the locations to obtain the prediction.
+#' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
+#' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
+#' @export
+
+graph_bru_process_data <- function(data, edge_number = "edge_number",
+                                        distance_on_edge = "distance_on_edge",
+                                        loc = "loc"){
+
+                                        data[[loc]] <- cbind(data[[edge_number]], data[[distance_on_edge]])
+                                        data[[edge_number]] <- NULL
+                                        data[[distance_on_edge]] <- NULL
+                                        return(data)
+                                        }
