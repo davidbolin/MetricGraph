@@ -880,10 +880,7 @@ predict.inla_metric_graph_spde <- function(object,
     new_data[["__coord_y"]] <- data[[name_locations]][,2]    
   }
 
-  new_data[["__dummy_var"]] <- rep(0,length(new_data[["__edge_number"]]))
-
-
-  idx_ord <- order(data[[name_locations]][,1], data[[name_locations]][,2])
+  new_data[["__dummy_var"]] <- 1:length(new_data[["__edge_number"]])
 
   graph_tmp$add_observations(data = new_data,
                   edge_number = "__edge_number",
@@ -893,20 +890,14 @@ predict.inla_metric_graph_spde <- function(object,
                   data_coords = data_coords,
                   normalized = normalized)
 
-  graph_tmp2 <- object$graph_spde$get_initial_graph()
+  dummy1 <- graph_tmp$data[["__dummy_var"]]            
 
-  graph_tmp2$add_observations(data = new_data,
-                  edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge",
-                  coord_x = "__coord_x",
-                  coord_y = "__coord_y",
-                  data_coords = data_coords,
-                  normalized = normalized)
+  graph_tmp$data[["__dummy_var2"]] <- 1:length(graph_tmp$data[["__dummy_var"]])
 
-  pred_PtE <- cbind(graph_tmp2$data[["__edge_number"]],
-                          graph_tmp2$data[["__distance_on_edge"]])
+  pred_PtE <- cbind(graph_tmp$data[["__edge_number"]],
+                          graph_tmp$data[["__distance_on_edge"]])
 
-  rm(graph_tmp2)
+  # pred_PtE <- pred_PtE[!is.na(dummy1),]
 
   # Adding the original data
 
@@ -928,11 +919,13 @@ predict.inla_metric_graph_spde <- function(object,
 
   new_data_list <- lapply(new_data_list, function(dat){dat[idx_list]})
 
+  pred_PtE <- pred_PtE[graph_tmp$data[["__dummy_var2"]],][idx_list,]
+
   # new_data_list[[name_locations]] <- cbind(graph_tmp$data[["__edge_number"]][idx_list],
   #                                             graph_tmp$data[["__distance_on_edge"]][idx_list])
 
   new_data_list[[name_locations]] <- cbind(new_data_list[["__edge_number"]],
-                                              new_data_list[["__distance_on_edge"]])
+                                              new_data_list[["__distance_on_edge"]])                                   
 
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
@@ -956,9 +949,9 @@ predict.inla_metric_graph_spde <- function(object,
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
   pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
-  pred_list[["new_model"]] <- spde____model
-  pred_list[["new_fit"]] <- bru_fit_new
-  pred_list[["new_graph"]] <- graph_tmp
+  # pred_list[["new_model"]] <- spde____model
+  # pred_list[["new_fit"]] <- bru_fit_new
+  # pred_list[["new_graph"]] <- graph_tmp
   
   class(pred_list) <- "graph_bru_pred"
   return(pred_list)                    

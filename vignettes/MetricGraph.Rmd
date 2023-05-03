@@ -671,12 +671,25 @@ field_pred <- predict(spde_model,
                                 formula = ~ field)
 ```
 
-Finally, we can plot the predictions together with
-the data:
+Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
 plot(field_pred)
 ```
 
+Finally, let us plot predictions of the observed data at the mesh locations:
+
+```{r}
+obs_pred <- predict(spde_model, 
+                                cmp,
+                                spde_bru_fit, 
+                                data = data_list,
+                                formula = ~ Intercept + lat + lon + field)
+```
+
+Let us plot the predictions:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+plot(obs_pred)
+```
 
 ## An example with real data and replicates
 
