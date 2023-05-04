@@ -1003,7 +1003,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if (self$mesh$n_e[i] > 0) {
         d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
         d.e <- d.e[2:(1+self$mesh$n_e[i])]
-        
+
         self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
                                                     d.e))
 
@@ -1236,7 +1236,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param support_width for 3D plot, width of support lines
   #' @param support_color for 3D plot, color of support lines
   #' @param p previous plot in which the new plot should be added.
-  #' @param movie 
+  #' @param movie
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return either a ggplot or a plot_ly object
   plot_function = function(X,
@@ -1399,8 +1399,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
-                                    
-        
+
+
         # p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
         #                                                         drop = FALSE],
         #                           normalized = TRUE)
@@ -1757,7 +1757,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         #                                normalized=TRUE)
         LtE[index.p,2]=projectVecLine2(self$lines[ind,], Spoints[index.p,],
                                        normalized=TRUE)
-                        
+
       }
       PtE <- LtE
       for (ind in unique(LtE[, 1])) {
@@ -2360,7 +2360,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   conjugate_initial_line = NULL,
 
-  # pruned 
+  # pruned
 
   pruned = FALSE,
 
@@ -2411,7 +2411,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       for(id_ in id_lines_of_interest){
           line <- self$lines@lines[id_]
           # tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
-          tmp_dist <- distance2(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))          
+          tmp_dist <- distance2(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
           distances_lines <- c(distances_lines, tmp_dist)
         }
 
@@ -2677,7 +2677,7 @@ metric_graph <-  R6::R6Class("metric_graph",
             #add points if they are not close to V or previous points
             if(min(spDists(self$V, p))>tol) {
               # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
-              if(is.null(p_cur) || distance2(SpatialPoints(p_cur), intersect_tmp[k])>tol) {                
+              if(is.null(p_cur) || distance2(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
                 p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
                 points_add <- rbind(points_add, p, coordinates(p2))
                 # points_add_PtE <- rbind(points_add_PtE,
@@ -2799,7 +2799,10 @@ graph_components <-  R6::R6Class("graph_components",
              edge_rem <- c(edge_rem, i)
          }
          edge_keep <- setdiff(1:graph$nE, edge_rem)
-         self$graphs[[k]] = metric_graph$new(V = matrix(graph$V, ncol=2), E = matrix(graph$E[edge_keep,], ncol=2),
+         ind_keep <- rep(0,graph$nE)
+         ind_keep[edge_keep] <- 1
+         ind_keep <- graph$LtE%*%ind_keep
+         self$graphs[[k]] = metric_graph$new(lines = graph$lines[which(ind_keep!=0)],
                                              check_connected = FALSE, ...)
        }
        self$sizes <- components$csize
