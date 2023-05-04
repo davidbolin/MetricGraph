@@ -4,7 +4,7 @@
 
 Basic statistical tasks such as likelihood evaluation and prediction is implemented for these Gaussian fields in `MetricGraph`. Further, the package also contains interfaces to [R-INLA][ref5] and [inlabru][ref6] that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
 
-We refer to the package homepage for detailed tutorials on all different aspects of the package.
+We refer to the [package homepage][ref7] for detailed tutorials on all different aspects of the package.
 
 
 # References #
@@ -101,4 +101,5 @@ git flow hotfix finish hotfix_branch_name
 [ref4]: https://arxiv.org/abs/2304.10372 "Statistical inference for Gaussian Whittle-Matérn fields on metric graphs"
 [ref5]: https://r-inla.org "INLA homepage"
 [ref6]: https://sites.google.com/inlabru.org/inlabru "inlabru homepage"
+[ref7]: https://davidbolin.github.io/MetricGraph/ "MetricGraph homepage"
 
