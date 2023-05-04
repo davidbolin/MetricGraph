@@ -419,18 +419,52 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' graph
   #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
-  compute_geodist_PtE = function(PtE, normalized = TRUE){
+  #' @param include_vertices Should the original vertices be included in the distance matrix?
+  compute_geodist_PtE = function(PtE, normalized = TRUE, include_vertices = TRUE){
       graph.temp <- self$clone()
       graph.temp$clear_observations()
       df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                             edge_number = PtE[,1],
                             distance_on_edge = PtE[,2])
+      if(sum(duplicated(df_temp))>0){
+        warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
+        df_temp <- unique(df_temp)
+      }
+
+      graph.temp$build_mesh(h = 1000)
+
+      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$E),1],
+                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$E),2])
+
+      df_temp$included <- TRUE
+      temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+                              
+      df_temp$included <- NULL
+
+      df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+
+      df_temp2$included <- NULL
+
+      df_temp <- rbind(df_temp2, df_temp)
+      
+      df_temp[["__dummy"]] <- 1:nrow(df_temp)
+
       graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized)
+                                     normalized = normalized)                                   
       graph.temp$observation_to_vertex()
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
-      return(distances(g))
+      geodist_temp <- distances(g)
+
+      #Ordering in the points instead of vertices:
+      geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
+      
+      #Ordering back in the input order
+      geodist_temp[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- geodist_temp
+      if(!include_vertices){
+        geodist_temp <- geodist_temp[(self$nV+1):nrow(geodist_temp), (self$nV+1):nrow(geodist_temp)]
+      }
+      return(geodist_temp)
   },
 
   #' @description Computes shortest path distances between the vertices in the
@@ -486,6 +520,13 @@ metric_graph <-  R6::R6Class("metric_graph",
       df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                             edge_number = PtE[,1],
                             distance_on_edge = PtE[,2])
+
+      if(sum(duplicated(df_temp))>0){
+        warning("Duplicated locations were found when computing resdist. The returned values are given for unique locations.")
+        df_temp <- unique(df_temp)
+      }
+      orig_order <- order(df_temp[["edge_number"]], df_temp[["distance_on_edge"]])    
+
       graph.temp$add_observations(data = df_temp,
                                      normalized = normalized)
         graph.temp$observation_to_vertex()
@@ -508,6 +549,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         t(rep(1, graph.temp$nV)) %x% diag(Li)
 
       R <- R[graph.temp$PtV, graph.temp$PtV]
+      R[orig_order, orig_order] <- R
       return(R)
   },
 
@@ -584,14 +626,34 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Computes the weigthed graph Laplacian for the graph
   #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
-  compute_laplacian_PtE = function(PtE, normalized = TRUE) {
+  #' @param include_vertices Should the original vertices be included in the Laplacian matrix?
+  compute_laplacian_PtE = function(PtE, normalized = TRUE, include_vertices = TRUE) {
 
     graph.tmp <- self$clone()
     graph.tmp$clear_observations()
-    df_tmp <- data.frame(y = rep(0, dim(PtE)[1]),
+    df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                          edge_number = PtE[,1],
-                         distance_on_edge = PtE[,2])
-    graph.tmp$add_observations(data = df_tmp, normalized = normalized)
+                         distance_on_edge = PtE[,2])                        
+    if(sum(duplicated(df_temp))>0){
+      warning("Duplicated locations were found when computing the laplacian. The returned values are given for unique locations.")
+      df_temp <- unique(df_temp)
+    }
+
+    graph.tmp$build_mesh(h = 1000)
+
+    df_temp2 <- data.frame(y = 0, edge_number = graph.tmp$mesh$VtE[1:nrow(self$E),1],
+                                  distance_on_edge = graph.tmp$mesh$VtE[1:nrow(self$E),2])
+    df_temp$included <- TRUE
+    temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+                            
+    df_temp$included <- NULL
+    df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+    df_temp2$included <- NULL
+    df_temp <- rbind(df_temp2, df_temp)
+    
+    df_temp[["__dummy"]] <- 1:nrow(df_temp)
+
+    graph.tmp$add_observations(data = df_temp, normalized = normalized)
     graph.tmp$observation_to_vertex()
     Wmat <- Matrix(0,graph.tmp$nV,graph.tmp$nV)
     for (i in 1:self$nE) {
@@ -600,6 +662,21 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     Laplacian <- Matrix::Diagonal(graph.tmp$nV,
                                   as.vector(Matrix::rowSums(Wmat))) - Wmat
+
+    print(graph.tmp$PtV)
+
+    # Order in terms of the observations instead of in terms of the vertices
+    Laplacian <- Laplacian[graph.tmp$PtV, graph.tmp$PtV]
+
+    print(graph.tmp$data[["__dummy"]])
+
+    # Order back to the input order
+    Laplacian[graph.tmp$data[["__dummy"]], graph.tmp$data[["__dummy"]]] <- Laplacian
+
+    if(!include_vertices){
+      Laplacian <- Laplacian[(self$nV+1):nrow(Laplacian), (self$nV+1):nrow(Laplacian)]
+    }
+
     return(Laplacian)
   },
 
@@ -1285,7 +1362,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       #   stop("X does not have the correct size")
       # }
       if (length(X) != dim(unique(self$mesh$V))[1] && length(X) != dim(self$mesh$V)[1]) {
-        stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, dim(self$mesh$V)[1], " and ", dim(unique(self$mesh$V))[1],")"))
+        stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim," ", dim(self$mesh$V)[1], " and ", dim(unique(self$mesh$V))[1],")"))
       }
 
       if(dim(unique(self$mesh$V))[1] != dim(self$mesh$V)[1]){

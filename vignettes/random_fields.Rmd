@@ -30,10 +30,10 @@ references:
     given: Alexandre B.
   - family: Wallin
     given: Jonas
-  container-title: arXiv:??
+  container-title: arXiv:2304.10372
   type: preprint
   issued:
-    year: 2022
+    year: 2023
 - id: Anderes2020
   title: "Isotropic covariance functions on graphs and their edges"
   author:
@@ -82,7 +82,7 @@ library(MetricGraph)
 
 In this vignette we will introduce how to work with Gaussian random fields on
 metric graphs. The main models are the Whittle--Matérn fields introduced in 
-[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372). 
 
 The package also has support for isotropic Gaussian processes, and in particular
 Gaussian processes with isotropic exponential covariance functions as introduced
@@ -213,9 +213,8 @@ kappa <- 10
 sigma <- 2
 sigma_e <- 0.1
 alpha <- 1
-theta <-  c(sigma_e, sigma, kappa)
 
-n.obs.per.edge <- 10
+n.obs.per.edge <- 75
 PtE <- NULL
 for(i in 1:graph$nE){
   #add locations sampled at random to each edge
@@ -227,31 +226,30 @@ u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
 
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
-graph$add_PtE_observations(y,PtE, normalized = TRUE)
-graph$plot(data = TRUE)
+df_data <- data.frame(y = y, edge_number = PtE[,1],
+                        distance_on_edge = PtE[,2])
+
+graph$clear_observations() # Removing previous observations
+graph$add_observations(data = df_data, normalized = TRUE)
+graph$plot(data = "y")
 ```
 
-We can now use the `likelihood_graph_spde` function to evaluate the 
-log-likelihood function for this data based on a Whittle--Matérn field 
-model for $u$. This function is actually a function factory and returns
-the loglikehood function as a function of the parameter `theta`,
-which is given in the order `(sigma.e, sigma, kappa)`. By default,
-this function gives the parameters in log scale and returns minus 
-the value of the log-likelihood so one can directly supply it to the `optim` function.
-Assuming that $\alpha=1$, we optimize this likelihood using 
-`optim` as follows:
+We can now use the `graph_lme()` function to fit the above model. By default a Whittle-Mat\'ern field with $\alpha=1$ will be chosen
+to fit. We will choose `parameterization_latent` as `"spde"` to obtain the estimated values for `kappa` and `sigma`. By default it
+provides estimated values for the range parameter and `sigma`.
 
 ```{r}
-sigma_e_start <- 0.2
-sigma_start <- 2
-kappa_start <- 10
+res <- graph_lme(y ~ -1, graph = graph, parameterization_latent = "spde")
 
-theta0 <- c(sigma_e_start, sigma_start, kappa_start) 
-loglik_alpha1 <- likelihood_graph_spde(graph, alpha = 1)
-res <- optim(log(theta0), loglik_alpha1)
-sigma_e_est <- exp(res$par[1])
-sigma_est <- exp(res$par[2])
-kappa_est <- exp(res$par[3])
+summary(res)
+```
+
+Let us now compare with the true values:
+
+```{r}
+sigma_e_est <- res$coeff$measurement_error
+sigma_est <- res$coeff$random_effects[1]
+kappa_est <- res$coeff$random_effects[2]
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
                       kappa = c(kappa, kappa_est),
@@ -262,10 +260,9 @@ Given these estimated parameters, we can now do kriging to estimate the
 field at locations in the graph. As an example, we now estimate the field 
 on the regular mesh that we previously constructed. 
 ```{r}
-u_est <- spde_posterior_mean(c(sigma_e_est, sigma_est, kappa_est),
-                             graph, alpha = 1, type = "mesh")
+u_est <- predict(res, mesh=TRUE)
 
-graph$plot_function(u_est, plotly = TRUE)
+graph$plot_function(u_est$mean, plotly = TRUE)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -318,7 +315,7 @@ Because of the similarities between these two covairance functions, we recomend
 using the Whittle--Matérn since it has Markov properties which makes inference
 much faster if that is used. Further, that covariance is well-defined for any
 compact metric graph, whereas the isotropic exponential is only guaranteed to be
-positive definite if the graph has Euclidean edges. See [@BSW2022b](??) for 
+positive definite if the graph has Euclidean edges. See [@BSW2022b](https://arxiv.org/abs/2304.10372) for 
 further comparisons. 
 
 However, let us now illustrate how we can fit this covariance to data. We first
@@ -328,43 +325,38 @@ finally construct the data to add to the metric graph:
 
 ```{r}
 graph$clear_observations()
-sigma <-2 
+sigma <-1.5
 kappa <- 20
-n.obs.per.edge <- 50
+sigma_e <- 0.1
+n.obs.per.edge <- 240
+
 PtE <- NULL
 for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
-D <- graph$compute_resdist(PtE, normalized = TRUE)
-Sigma <- sigma^2*exp(-kappa*D)
-u <- t(chol(Sigma))%*%rnorm(n.obs.per.edge * graph$nE)
+D <- graph$compute_resdist_PtE(PtE, normalized = TRUE)
+# Sigma <- sigma^2*exp(-kappa*D)
+Sigma <- as.matrix(exp_covariance(D, c(sigma, kappa)))
+u <- t(chol(forceSymmetric(Sigma)))%*%rnorm(n.obs.per.edge * graph$nE)
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
-graph$add_PtE_observations(y, PtE, normalized=TRUE)
-graph$plot(data = TRUE)
+df_isocov <- data.frame(y = as.vector(y), edge_number = PtE[,1],
+                        distance_on_edge = PtE[,2])
+
+graph$add_observations(data = df_isocov, normalized=TRUE)
+graph$plot(data = "y")
 ```
 
-We can now fit the model to the data by using `optim` in combination with the 
-function `likelihood_graph_covariance()` which implements, among other models,
-Gaussian processes with isotropic exponential covariance functions. To use this
-we first need to compute the resistance metric: 
+We can now fit the model with the `graph_lme()` function. We need the model to `list(type="isoCov")`, by default the exponential covariance
+will be used.
 ```{r}
-graph$compute_resdist()
-```
-Similarly to the `likelihood_graph_spde()` function, `likelihood_graph_covariance()` is also a function
-factory. 
-By default `likelihood_graph_covariance()` returns a function of the parameters given in log-scale and returns minus the log-likelihood,
-so one can directly apply it to the `optim` function. Let us create the likelihood function and 
-find the maximum:
-```{r}
-loglik_isoExp <- likelihood_graph_covariance(graph, 
-                                      model = "isoCov", 
-                                      cov_function = exp_covariance)
-res.exp <- optim(log(theta0), loglik_isoExp)
-theta.exp <- exp(res.exp$par)
-sigma_e_est <- theta.exp[1]
-sigma_est <- theta.exp[2]
-kappa_est <- theta.exp[3]
+res_exp <- graph_lme(y ~ -1, graph = graph, model = list(type = "isoCov"))
+summary(res_exp)
+
+sigma_e_est <- res_exp$coeff$measurement_error
+sigma_est <- res_exp$coeff$random_effects[1]
+kappa_est <- res_exp$coeff$random_effects[2]
+
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
                       kappa = c(kappa, kappa_est),
@@ -376,8 +368,8 @@ Let us now compute the posterior mean for the field at the observation
 locations:
 
 ```{r}
-u_est_exp <- posterior_mean_covariance(theta.exp, graph, model = "isoExp")
-graph$plot(X = u_est_exp, X_loc = graph$PtE)
+u_est_exp <- predict(res_exp, df_isocov, normalized = TRUE)
+graph$plot(X = u_est_exp$mean, X_loc = PtE)
 ```
 
 
@@ -399,32 +391,47 @@ $$
 Thus, to define these models, the only ``difficult'' thing is to compute the 
 graph Laplacian. The (weighted) graph Laplacian, where the weights are specified
 by the edge lengths can be computed by the function `compute_laplacian()` in the
-`metric_graph` object. Suppose that we want to model the data that we defined
-above through the isotropic exponential covariance with this model. The first
-thing we then need to do is to add all observation locations as vertices in the
-graph (since the model is only defined in vertices). This can be done as 
-follows:
+`metric_graph` object. We first generate some random locations, and then we compute
+the Laplacian on these locations:
 ```{r}
-graph$observation_to_vertex()
-graph$plot(data = TRUE)
+n.obs.per.edge <- 75
+PtE <- NULL
+for(i in 1:graph$nE){
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+}
+
+GL <- graph$compute_laplacian_PtE(PtE = PtE, normalized = TRUE)
 ```
 
-Now, to work with these models, we first precompute the graph Laplacian of this
-extended graph:
+Let us now generate the data for a graph Laplacian model with $\alpha=1$:
+
 ```{r}
-graph$compute_laplacian()
+sigma <- 1
+kappa <- 10
+sigma_e <- 0.1
+
+Q <- (kappa^2 * Matrix::Diagonal(nrow(GL)) + GL) / sigma^2
+LQ <- chol(forceSymmetric(Q))
+u <- solve(LQ, rnorm(nrow(Q)))[(graph$nV + 1):nrow(GL)] # The first nV values are on the original vertices
+y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+
+df_GL <- data.frame(y = as.vector(y), edge_number = PtE[,1],
+                        distance_on_edge = PtE[,2])
+
+graph$clear_observations()
+graph$add_observations(data = df_GL, normalized=TRUE)
+graph$plot(data = "y")
 ```
 
 We can then fit the model to data similarly to how we fit the previous models, with the help
-of the function factory `likelihood_graph_laplacian()`:
+of the function `graph_lme()`:
 ```{r}
-loglik_GL1 <- likelihood_graph_laplacian(graph, 
-                                          alpha = 1)
-res <- optim(log(theta0), loglik_GL1)
-theta.exp <- exp(res$par)
-sigma_e_est <- theta.exp[1]
-sigma_est <- theta.exp[2]
-kappa_est <- theta.exp[3]
+res_GL <- graph_lme(y ~ -1, graph = graph, model = list(type = "graphLaplacian"))
+
+sigma_e_est <- res_GL$coeff$measurement_error
+sigma_est <- res_GL$coeff$random_effects[1]
+kappa_est <- res_GL$coeff$random_effects[2]
+
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
                       kappa = c(kappa, kappa_est),

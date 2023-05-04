@@ -145,18 +145,23 @@ graph_lme <- function(formula, graph,
         model_start <- "GL2"
       }
     } else{
-      if(model[["cov_function"]] == "exp_covariance"){
+      graph_bkp$res_dist <- NULL
+      if(is.character(model[["cov_function"]])){
+        if(model[["cov_function"]] == "exp_covariance"){
           model_start <- "isoExp"
           par_names <- c("sigma", "kappa")
-      } else if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
-        model_start <- model[["cov_function"]]
+        } else if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
+          model_start <- model[["cov_function"]]
+        } 
       } else{
         stop("For 'isoCov' models with a non-exponential covariance, that are not 'alpha1', 'alpha2', 'GL1' or 'GL2', you should provide the starting values!")
       }
     }
 
-
-      range_par <- ifelse(parameterization_latent == "matern",TRUE,FALSE)
+      range_par <- FALSE
+      if(model_type == "whittlematern"){
+        range_par <- ifelse(parameterization_latent == "matern",TRUE,FALSE)
+      }
       start_values <- graph_starting_values(graph = graph_bkp,
                     model = model_start, 
                     manual_data = unlist(y_graph),
@@ -202,7 +207,7 @@ graph_lme <- function(formula, graph,
     }
   } else if (model_type == "graphlaplacian"){
       likelihood <- likelihood_graph_laplacian(graph = graph_bkp, alpha = model[["alpha"]], y_graph = y_graph, 
-              X_cov = X_cov, maximize = FALSE, repl=repl, parameterization = parameterization_latent)
+              X_cov = X_cov, maximize = FALSE, repl=repl, parameterization = "spde")
   } else{
     if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
@@ -484,6 +489,18 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       stop("In the presence of covariates, you should provide the data, including the covariates at the prediction locations. If you only want predictions for the latent model, set 'only_latent' to TRUE.")
     }
   }
+
+
+  if(sum(duplicated(cbind(data["edge_number"], data["distance_on_edge"]))) > 0){
+    warning("There are duplicated locations for prediction, we will try to process the data to extract the unique locations,
+    along with the corresponding covariates.")
+    cov_names <- attr(object$covariates,"term.labels")
+    data <- data[c(edge_number,distance_on_edge,cov_names)]
+    data <- unique(data) 
+    if(sum(duplicated(cbind(data["edge_number"], data["distance_on_edge"]))) > 0){
+      stop("Data processing failed, please provide a data with unique locations.")
+    }
+  }
   
   if(!mesh){
     n_prd <- length(data[[edge_number]])
@@ -494,11 +511,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       graph_bkp$build_mesh(h = mesh_h)
     }
     data <- list()
-    n_prd <- nrow(graph_bkp$mesh$PtE)
+    n_prd <- nrow(graph_bkp$mesh$VtE)
     data[[as.character(object$response)]] <- rep(NA, n_prd)
     data[["__dummy_var"]] <- rep(0, n_prd)
-    data[[edge_number]] <- graph_bkp$mesh$PtE[,1]
-    data[[distance_on_edge]] <- graph_bkp$mesh$PtE[,2]
+    data[[edge_number]] <- graph_bkp$mesh$VtE[,1]
+    data[[distance_on_edge]] <- graph_bkp$mesh$VtE[,2]
     normalized <- TRUE
   }
 
@@ -651,7 +668,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       }
   }
 
-
   # gap <- dim(Q)[1] - n
   
   ## compute Q_x|y
@@ -661,10 +677,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   } else{
     A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
   }
-  
-  idx_obs_full <- as.vector(!is.na(Y))
 
-  Q_xgiveny <- t(A[idx_obs_full,]) %*% A[idx_obs_full,]/sigma_e^2 + Q
+  idx_obs_full <- as.vector(!is.na(Y))
   
   # idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
@@ -684,6 +698,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
+
+    Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
 
     # cov_loc <- post_Cov[idx_prd, idx_obs]
     # cov_Obs <- post_Cov[idx_obs, idx_obs]

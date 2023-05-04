@@ -330,6 +330,8 @@ lonlat <- graph$coordinates(PtE = obs.loc)
 scaled_lonlat <- scale(lonlat)
 y <- beta0 + beta1 * scaled_lonlat[, 1] + beta2 * scaled_lonlat[, 2] + u + sigma_e*rnorm(n.obs)
 
+y <- u + sigma_e*rnorm(n.obs)
+
 data <- data.frame(edge_number = obs.loc[, 1],
                    distance_on_edge = obs.loc[, 2],
                    lon = scaled_lonlat[, 1],
@@ -693,7 +695,7 @@ Let us plot the predictions:
 plot(obs_pred)
 ```
 
-## An example with real data and replicates
+## An example with replicates
 
 # References {-}
 

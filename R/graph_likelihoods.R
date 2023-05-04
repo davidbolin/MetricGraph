@@ -608,18 +608,18 @@ likelihood_graph_covariance <- function(graph,
   }
 
   loglik <- function(theta){
+      if(!is.null(X_cov)){
+            n_cov <- ncol(X_cov)
+      } else{
+            n_cov <- 0
+      }
       if(model == "isoCov"){
         if(log_scale){
-          if(!is.null(X_cov)){
-            n_cov <- ncol(X_cov)
-          } else{
-            n_cov <- 0
-          }
           sigma_e <- exp(theta[1])
           theta_cov <- exp(theta[2:(length(theta)-n_cov)])
         } else{
           sigma_e <- theta[1]
-          theta_cov <- theta[2:length(theta)]
+          theta_cov <- theta[2:(length(theta)-n_cov)]
         }
       } else{
         if(log_scale){
@@ -634,7 +634,6 @@ likelihood_graph_covariance <- function(graph,
       }
 
       if(!is.null(X_cov)){
-        n_cov <- ncol(X_cov)
         theta_covariates <- theta[(length(theta)-n_cov+1):length(theta)]
       }
 
@@ -684,13 +683,13 @@ likelihood_graph_covariance <- function(graph,
         }
 
         if(is.null(graph$res_dist)){
-          graph$compute_resdist()
+          graph$compute_resdist(full = TRUE)
         }
+
         Sigma <- as.matrix(cov_function(graph$res_dist[[1]], theta_cov))
       })
 
       diag(Sigma) <- diag(Sigma) + sigma_e^2
-
 
       loglik_val <- 0
 
