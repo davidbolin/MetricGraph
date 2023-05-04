@@ -2,9 +2,9 @@
 
 `MetricGraph` is an R package used for working with data and random fields on metric graphs, such as street or river networks. The main functionality is contained in the `metric_graph` class, which is used for specifying metric graphs, adding data to them, visualization, and other basic functions that are needed for working with data and random fields on metric graphs. The package also implements various Gaussian fields on metric graphs, and in particular the Whittle--Matérn fields introduced in the references below. 
 
-Basic statistical tasks such as likelihood evaluation and prediction is implemented for these Gaussian fields in `MetricGraph`. Further, the package also contains interfaces to [R-INLA][ref5] and [inlabru][ref6] that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
+Basic statistical tasks such as likelihood evaluation and prediction is implemented for these Gaussian fields in `MetricGraph`. Further, the package also contains interfaces to [R-INLA][ref5] and [inlabru][ref6] that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle-Matérn fields on metric graphs. 
 
-We refer to the package homepage for detailed tutorials on all different aspects of the package.
+We refer to the [package homepage][ref7] for detailed tutorials on all different aspects of the package.
 
 
 # References #
@@ -20,11 +20,11 @@ D. Bolin, A. Simas, J. Wallin (2023) [Statistical inference for Gaussian Whittle
 # Installation instructions #
 The latest stable version can be installed by using the command
 ```r
-remotes::install_github("davidbolin/rspde", ref = "stable")
+remotes::install_github("davidbolin/metricgraph", ref = "stable")
 ```
 in R. The development version can be installed using the command
 ```r
-remotes::install_github("davidbolin/rspde", ref = "devel")
+remotes::install_github("davidbolin/metricgraph", ref = "devel")
 ```
 
 # Repository branch workflows #
@@ -101,4 +101,5 @@ git flow hotfix finish hotfix_branch_name
 [ref4]: https://arxiv.org/abs/2304.10372 "Statistical inference for Gaussian Whittle-Matérn fields on metric graphs"
 [ref5]: https://r-inla.org "INLA homepage"
 [ref6]: https://sites.google.com/inlabru.org/inlabru "inlabru homepage"
+[ref7]: https://davidbolin.github.io/MetricGraph/ "MetricGraph homepage"
 
