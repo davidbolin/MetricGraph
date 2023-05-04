@@ -1,6 +1,5 @@
 citHeader("To cite MetricGraph in publications use the first of the following
-references to cite the package and the second to cite the Whittle--Matérn models
-          (for example if you use graph_spde in INLA or inlabru)")
+references to cite the package. If you use the Whittle--Matérn models (for example if you use graph_spde in INLA or inlabru), please cite references 2,4 and 5, and if you use the fractional Whittle--Matérn models with FEM approximations, please cite reference 3.")
 
 bibentry( bibtype = "Manual",
           title = "MetricGraph: Random fields on metric graphs",
@@ -33,3 +32,57 @@ bibentry(bibtype = "Article",
          journal = "arXiv preprint arXiv:2205.06163",
          doi = "10.48550/arXiv.2205.06163"
 )
+
+bibentry(bibtype = "Article",
+         title  = "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs",
+         author = c(person(given = "David",
+                           family = "Bolin",
+                           email = "davidbolin@gmail.com"),
+                    person(given = "Mihály",
+                           family = "Kovács",
+                           email = "mihaly@chalmers.se"),
+                    person(given = "Vivek",
+                           family = "Kumar",
+                           email = "vivekmsc118@gmail.com"),
+                    person(given = "Alexandre B.",
+                           family = "Simas",
+                           email = "alexandre.simas@kaust.edu.sa")),
+         year = "2023",
+         journal = "arXiv preprint arXiv:2302.03995",
+         doi = "10.48550/arXiv:2302.03995"
+)
+
+
+bibentry(bibtype = "Article",
+         title  = "Markov properties of Gaussian random fields on compact metric graphs",
+         author = c(person(given = "David",
+                           family = "Bolin",
+                           email = "davidbolin@gmail.com"),
+                    person(given = "Alexandre B.",
+                           family = "Simas",
+                           email = "alexandre.simas@kaust.edu.sa"),
+                    person("Jonas", "Wallin",
+                           email = "jonas.wallin81@gmail.com",
+                           role = "aut")),
+         year = "2023",
+         journal = "arXiv preprint arXiv:2304.03190",
+         doi = "10.48550/arXiv:2304.03190"
+)
+
+bibentry(bibtype = "Article",
+         title  = "Statistical inference for Gaussian Whittle-Matérn fields on metric graphs",
+         author = c(person(given = "David",
+                           family = "Bolin",
+                           email = "davidbolin@gmail.com"),
+                    person(given = "Alexandre B.",
+                           family = "Simas",
+                           email = "alexandre.simas@kaust.edu.sa"),
+                    person("Jonas", "Wallin",
+                           email = "jonas.wallin81@gmail.com",
+                           role = "aut")),
+         year = "2023",
+         journal = "arXiv preprint arXiv:2304.10372",
+         doi = "10.48550/arXiv:2304.10372"
+)
+
+
