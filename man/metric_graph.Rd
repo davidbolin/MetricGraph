@@ -235,7 +235,11 @@ for. If \code{NULL}, it will be computed for all groups.}
 Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist_PtE(
+  PtE,
+  normalized = TRUE,
+  include_vertices = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -244,6 +248,8 @@ graph
 \item{\code{PtE}}{points to compute the metric for.}
 
 \item{\code{normalized}}{are the locations in PtE in normalized distance?}
+
+\item{\code{include_vertices}}{Should the original vertices be included in the distance matrix?}
 }
 \if{html}{\out{</div>}}
 }
@@ -355,7 +361,11 @@ Laplacian for. If \code{NULL}, it will be computed for all groups.}
 \subsection{Method \code{compute_laplacian_PtE()}}{
 Computes the weigthed graph Laplacian for the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian_PtE(
+  PtE,
+  normalized = TRUE,
+  include_vertices = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -364,6 +374,8 @@ Computes the weigthed graph Laplacian for the graph
 \item{\code{PtE}}{points to compute the metric for.}
 
 \item{\code{normalized}}{are the locations in PtE in normalized distance?}
+
+\item{\code{include_vertices}}{Should the original vertices be included in the Laplacian matrix?}
 }
 \if{html}{\out{</div>}}
 }
@@ -772,8 +784,6 @@ package 'plotly'.}
 \item{\code{p}}{previous plot in which the new plot should be added.}
 
 \item{\code{...}}{additional arguments for ggplot or plot_ly}
-
-\item{\code{movie}}{}
 }
 \if{html}{\out{</div>}}
 }

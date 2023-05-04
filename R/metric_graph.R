@@ -1313,7 +1313,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param support_width for 3D plot, width of support lines
   #' @param support_color for 3D plot, color of support lines
   #' @param p previous plot in which the new plot should be added.
-  #' @param movie
   #' @param ... additional arguments for ggplot or plot_ly
   #' @return either a ggplot or a plot_ly object
   plot_function = function(X,
@@ -1918,7 +1917,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                               length(self$lines)))
     self$ELend <- rep(1, dim(self$E)[1])
     self$ELstart <- rep(0, dim(self$E)[1])
-    self$EID = sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
+    self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
   },
 
   #Compute PtE for mesh given PtE for graph
@@ -2386,6 +2385,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
                 #update lines
                 self$lines <- line_new
+                self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
                 self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
       } else{
                 E_new1 <- self$E[e1,1]
