@@ -20,11 +20,11 @@ D. Bolin, A. Simas, J. Wallin (2023) [Statistical inference for Gaussian Whittle
 # Installation instructions #
 The latest stable version can be installed by using the command
 ```r
-remotes::install_github("davidbolin/rspde", ref = "stable")
+remotes::install_github("davidbolin/metricgraph", ref = "stable")
 ```
 in R. The development version can be installed using the command
 ```r
-remotes::install_github("davidbolin/rspde", ref = "devel")
+remotes::install_github("davidbolin/metricgraph", ref = "devel")
 ```
 
 # Repository branch workflows #
