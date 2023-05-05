@@ -208,7 +208,7 @@ graph_lme <- function(formula, graph,
   } else if (model_type == "graphlaplacian"){
       likelihood <- likelihood_graph_laplacian(graph = graph_bkp, alpha = model[["alpha"]], y_graph = y_graph, 
               X_cov = X_cov, maximize = FALSE, repl=repl, parameterization = "spde")
-  } else{
+  } else if (is.character(model[["cov_function"]])) {
     if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
       par_names <- c("sigma", "kappa")
@@ -216,9 +216,15 @@ graph_lme <- function(formula, graph,
       model_cov <- "isoCov"
       if(model[["cov_function"]] == "exp_covariance"){
         model[["cov_function"]] <- exp_covariance
+        model[["cov_function_name"]] <- "exp_covariance"
       }
     }
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov, y_graph = y_graph,
+                                                cov_function = model[["cov_function"]],
+                                                X_cov = X_cov, repl = repl)
+  } else{
+    model[["cov_function_name"]] <- "other"
+      likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov, y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
                                                 X_cov = X_cov, repl = repl)
   }

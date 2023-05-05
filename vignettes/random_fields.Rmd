@@ -512,55 +512,33 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
                  graph = graph, PtE = PtE)
 
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
-graph$add_PtE_observations(y,PtE, normalized = TRUE)
+df_cv <- data.frame(y = y, edge_number = PtE[,1],
+                      distance_on_edge = PtE[,2])
+
+graph$add_observations(data=df_cv, normalized = TRUE)
 graph$plot(data = TRUE)
 ```
 
 We now fit the different models to this data: 
 ```{r}
-theta0 <- theta
 #alpha = 1 model
-loglik_alpha1 <- likelihood_graph_spde(graph,
-                                        alpha = 1)
-res <- optim(log(theta0), loglik_alpha1)
-theta.alpha1 <- exp(res$par)
+fit_alpha1 <- graph_lme(y ~ -1, graph=graph)
 
 #alpha = 2 model
-graph$buildC(2)
-loglik_alpha2 <- likelihood_graph_spde(graph,
-                                        alpha = 2)
-res <- optim(log(theta0), loglik_alpha2)
-theta.alpha2 <- exp(res$par)
+fit_alpha2 <- graph_lme(y ~ -1, graph=graph, model = list(type = "WhittleMatern", alpha = 2))
 
 #Isotropic exponential
-graph$compute_resdist()
-loglik_isoExp <- likelihood_graph_covariance(graph,
-                                              model = "isoCov",
-                                              cov_function = exp_covariance)
-res <- optim(log(theta0), loglik_isoExp)
-theta.exp <- exp(res$par)
+fit_isoexp <- graph_lme(y ~ -1, graph=graph, model = list(type = "isoCov"))
 
 #Graph Laplacian 
-graph$observation_to_vertex()
-graph$compute_laplacian()
+fit_GL1 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", alpha = 1))
 
-loglik_GL1 <- likelihood_graph_laplacian(graph, 
-                                          alpha = 1)
-
-res <- optim(log(theta0), loglik_GL1)
-
-theta.GL1 <- exp(res$par)
-
-loglik_GL2 <- likelihood_graph_laplacian(graph, 
-                                          alpha = 2)
-
-res <- optim(log(theta0), loglik_GL2)
-theta.GL2 <- exp(res$par)
+fit_GL2 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", alpha = 2))
 ```
 
 Finally, we use the function `posterior_crossvalidation` to perform 
@@ -568,11 +546,11 @@ leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
 ```{r}
-cv.alpha1 <- posterior_crossvalidation(theta.alpha1, graph, model = "alpha1")
-cv.alpha2 <- posterior_crossvalidation(theta.alpha2, graph, model = "alpha2")
-cv.exp <- posterior_crossvalidation(theta.exp, graph, model = "isoExp")
-cv.GL1 <- posterior_crossvalidation(theta.GL1, graph, model = "GL1")
-cv.GL2 <- posterior_crossvalidation(theta.GL2, graph, model = "GL2")
+cv.alpha1 <- posterior_crossvalidation(fit_alpha1)
+cv.alpha2 <- posterior_crossvalidation(fit_alpha2)
+cv.exp <- posterior_crossvalidation(fit_isoexp)
+cv.GL1 <- posterior_crossvalidation(fit_GL1)
+cv.GL2 <- posterior_crossvalidation(fit_GL2)
 results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                                cv.GL1$rmse, cv.GL2$rmse),
                       mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,
@@ -588,11 +566,11 @@ results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                                     "GL1", "GL2"))
 round(1000*results)
 
-cv.alpha1 <- posterior_crossvalidation_covariance(theta.alpha1, graph, model = "alpha1")
-cv.alpha2 <- posterior_crossvalidation_covariance(theta.alpha2, graph, model = "alpha2")
-cv.exp <- posterior_crossvalidation_covariance(theta.exp, graph, model = "isoExp")
-cv.GL1 <- posterior_crossvalidation_covariance(theta.GL1, graph, model = "GL1")
-cv.GL2 <- posterior_crossvalidation_covariance(theta.GL2, graph, model = "GL2")
+cv.alpha1 <- posterior_crossvalidation_covariance(fit_alpha1)
+cv.alpha2 <- posterior_crossvalidation_covariance(fit_alpha2)
+cv.exp <- posterior_crossvalidation_covariance(fit_isoexp)
+cv.GL1 <- posterior_crossvalidation_covariance(fit_GL1)
+cv.GL2 <- posterior_crossvalidation_covariance(fit_GL2)
 results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                                cv.GL1$rmse, cv.GL2$rmse),
                       mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,

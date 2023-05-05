@@ -4,30 +4,10 @@
 \alias{posterior_crossvalidation}
 \title{Prediction for models assuming observations at vertices}
 \usage{
-posterior_crossvalidation(
-  theta,
-  graph,
-  data_name,
-  model = "alpha1",
-  ind = NULL,
-  BC = 1
-)
+posterior_crossvalidation(object)
 }
 \arguments{
-\item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
-
-\item{graph}{metric graph object}
-
-\item{data_name}{name of the data}
-
-\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
-the model based on the graph Laplacian with smoothness 1, "GL2" gives the
-model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
-model with isotropic exponential covariance}
-
-\item{ind}{Indices for cross validation. It should be a vector of the same
-length as the data, with integer values representing each group in the
-cross-validation. If NULL, leave-one-out cross validation is performed.}
+\item{object}{A fitted model using the \code{graph_lme()} function.}
 }
 \value{
 Vector with the posterior expectations and variances as well as

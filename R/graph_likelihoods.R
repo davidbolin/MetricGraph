@@ -92,7 +92,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   sigma_e <- exp(theta[1])
   sigma <- exp(theta[2])
   if(parameterization == "matern"){
-    kappa = sqrt(8 * 0.5) / exp(theta[3])
+    kappa = sqrt(8 * 1.5) / exp(theta[3])
   } else{
     kappa = exp(theta[3])
   }
@@ -798,7 +798,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     sigma_e <- exp(theta[1])
     sigma <- exp(theta[2])
     if(parameterization == "matern"){
-      kappa = sqrt(8 * 0.5) / exp(theta[3])
+      kappa = sqrt(8 * (alpha-0.5)) / exp(theta[3])
     } else{
       kappa = exp(theta[3])
     }
