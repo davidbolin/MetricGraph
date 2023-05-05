@@ -337,7 +337,7 @@ for(i in 1:graph$nE){
 D <- graph$compute_resdist_PtE(PtE, normalized = TRUE)
 # Sigma <- sigma^2*exp(-kappa*D)
 Sigma <- as.matrix(exp_covariance(D, c(sigma, kappa)))
-u <- t(chol(forceSymmetric(Sigma)))%*%rnorm(n.obs.per.edge * graph$nE)
+u <- t(chol(Matrix::forceSymmetric(Sigma)))%*%rnorm(n.obs.per.edge * graph$nE)
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 
 df_isocov <- data.frame(y = as.vector(y), edge_number = PtE[,1],
@@ -399,6 +399,12 @@ PtE <- NULL
 for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
+## Removing problematic locations (locations very close) to improve numerical stability
+prob_points <- which(abs(diff(PtE[,2])) < 1e-3)
+prob_points <- c(prob_points, which(PtE[,2] < 1e-3))
+prob_points <- c(prob_points, which(PtE[,2] > 1 - 1e-3))
+
+PtE <- PtE[!(1:nrow(PtE)%in%prob_points),]
 
 GL <- graph$compute_laplacian_PtE(PtE = PtE, normalized = TRUE)
 ```
@@ -406,14 +412,16 @@ GL <- graph$compute_laplacian_PtE(PtE = PtE, normalized = TRUE)
 Let us now generate the data for a graph Laplacian model with $\alpha=1$:
 
 ```{r}
+library(Matrix)
+
 sigma <- 1
 kappa <- 10
 sigma_e <- 0.1
 
-Q <- (kappa^2 * Matrix::Diagonal(nrow(GL)) + GL) / sigma^2
+Q <- (kappa^2 * Diagonal(nrow(GL)) + GL) / sigma^2
 LQ <- chol(forceSymmetric(Q))
 u <- solve(LQ, rnorm(nrow(Q)))[(graph$nV + 1):nrow(GL)] # The first nV values are on the original vertices
-y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
+y <- u + sigma_e*rnorm(length(u))
 
 df_GL <- data.frame(y = as.vector(y), edge_number = PtE[,1],
                         distance_on_edge = PtE[,2])

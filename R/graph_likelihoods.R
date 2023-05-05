@@ -805,22 +805,22 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
     y_resp <- y_graph
 
-
-    K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[1]] #DOES NOT WORK WITH REPLICATES
-    Q <- K
-    if (alpha>1) {
-      for (k in 2:alpha) {
-        Q <- Q %*% K
-      }
-    }
-    Q <- Q / sigma^2
-
-    R <- chol(Q)
     l <- 0
     A <- graph$A(group = "__all")
 
     u_repl <- unique(graph$data[["__group"]])
     for(repl_y in 1:length(u_repl)){
+      K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]] 
+      Q <- K
+      if (alpha>1) {
+        for (k in 2:alpha) {
+          Q <- Q %*% K
+        }
+      }
+      Q <- Q / sigma^2
+
+      R <- chol(Q)
+
       v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
       na.obs <- is.na(v)
       A.repl <- A[!na.obs, ]

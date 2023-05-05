@@ -330,8 +330,6 @@ lonlat <- graph$coordinates(PtE = obs.loc)
 scaled_lonlat <- scale(lonlat)
 y <- beta0 + beta1 * scaled_lonlat[, 1] + beta2 * scaled_lonlat[, 2] + u + sigma_e*rnorm(n.obs)
 
-y <- u + sigma_e*rnorm(n.obs)
-
 data <- data.frame(edge_number = obs.loc[, 1],
                    distance_on_edge = obs.loc[, 2],
                    lon = scaled_lonlat[, 1],
@@ -339,6 +337,7 @@ data <- data.frame(edge_number = obs.loc[, 1],
                    y = y)
 
 graph$clear_observations()
+graph$plot(X = y, X_loc = obs.loc, vertex_size = 0)
 graph$add_observations(data = data, normalized = TRUE)
 ```
 

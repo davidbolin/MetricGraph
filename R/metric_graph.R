@@ -433,8 +433,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       graph.temp$build_mesh(h = 1000)
 
-      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$E),1],
-                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$E),2])
+      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
       df_temp$included <- TRUE
       temp_merge <- merge(df_temp, df_temp2, all = TRUE)
@@ -455,9 +455,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
       geodist_temp <- distances(g)
-
-      #Ordering in the points instead of vertices:
-      geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
       
       #Ordering back in the input order
       geodist_temp[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- geodist_temp
@@ -489,7 +486,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       obs <- FALSE
     }
     if(!obs){
-      PtE <- self$coordinates(XY = self$V)
+      graph.temp <- self$clone()
+      graph.temp$build_mesh(h=1000)
+      
+      PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
+      rm(graph.temp)
       self$res_dist[["__vertices"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE)
     } else if(full){
@@ -601,8 +602,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       obs <- FALSE
     }
     if(!obs){
-      PtE <- self$coordinates(XY = self$V)
-      self$res_dist[["__vertices"]] <- self$compute_laplacian_PtE(PtE,
+      graph.temp <- self$clone()
+      graph.temp$build_mesh(h=1000)
+      
+      PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
+      rm(graph.temp)
+      self$Laplacian[["__vertices"]] <- self$compute_laplacian_PtE(PtE,
                                                             normalized = TRUE)
     } else if(full){
       PtE <- self$get_PtE()
@@ -629,8 +634,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param include_vertices Should the original vertices be included in the Laplacian matrix?
   compute_laplacian_PtE = function(PtE, normalized = TRUE, include_vertices = TRUE) {
 
-    graph.tmp <- self$clone()
-    graph.tmp$clear_observations()
+    graph.temp <- self$clone()
+    graph.temp$clear_observations()
     df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                          edge_number = PtE[,1],
                          distance_on_edge = PtE[,2])                        
@@ -639,10 +644,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       df_temp <- unique(df_temp)
     }
 
-    graph.tmp$build_mesh(h = 1000)
+    graph.temp$build_mesh(h = 1000)
 
-    df_temp2 <- data.frame(y = 0, edge_number = graph.tmp$mesh$VtE[1:nrow(self$E),1],
-                                  distance_on_edge = graph.tmp$mesh$VtE[1:nrow(self$E),2])
+    df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
     df_temp$included <- TRUE
     temp_merge <- merge(df_temp, df_temp2, all = TRUE)
                             
@@ -653,25 +658,19 @@ metric_graph <-  R6::R6Class("metric_graph",
     
     df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
-    graph.tmp$add_observations(data = df_temp, normalized = normalized)
-    graph.tmp$observation_to_vertex()
-    Wmat <- Matrix(0,graph.tmp$nV,graph.tmp$nV)
-    for (i in 1:self$nE) {
-      Wmat[graph.tmp$E[i, 1], graph.tmp$E[i, 2]] <- 1 / graph.tmp$edge_lengths[i]
-      Wmat[graph.tmp$E[i, 2], graph.tmp$E[i, 1]] <- 1 / graph.tmp$edge_lengths[i]
+    graph.temp$add_observations(data = df_temp, normalized = normalized)
+    graph.temp$observation_to_vertex()
+    Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
+    
+    for (i in 1:graph.temp$nE) {
+      Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1 / graph.temp$edge_lengths[i]
+      Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1 / graph.temp$edge_lengths[i]
     }
-    Laplacian <- Matrix::Diagonal(graph.tmp$nV,
+    Laplacian <- Matrix::Diagonal(graph.temp$nV,
                                   as.vector(Matrix::rowSums(Wmat))) - Wmat
 
-    print(graph.tmp$PtV)
-
-    # Order in terms of the observations instead of in terms of the vertices
-    Laplacian <- Laplacian[graph.tmp$PtV, graph.tmp$PtV]
-
-    print(graph.tmp$data[["__dummy"]])
-
     # Order back to the input order
-    Laplacian[graph.tmp$data[["__dummy"]], graph.tmp$data[["__dummy"]]] <- Laplacian
+    Laplacian[graph.temp$data[["__dummy"]], graph.temp$data[["__dummy"]]] <- Laplacian
 
     if(!include_vertices){
       Laplacian <- Laplacian[(self$nV+1):nrow(Laplacian), (self$nV+1):nrow(Laplacian)]
