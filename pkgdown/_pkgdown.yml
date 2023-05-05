@@ -46,6 +46,7 @@ reference:
   - title: MetricGraph package
     contents: 
     - MetricGraph
+    - logo_lines
   - title: Metric graph constructor
     contents:
     - metric_graph
@@ -58,42 +59,48 @@ reference:
     - gg_df.metric_graph_spde_result
     - graph_spde_make_A
     - graph_spde_make_index
-    - graph_stack
+    - graph_data_spde
+    - graph_repl_spde
   - title: inlabru and SPDE approach on metric graphs
     contents:
     - bru_mapper.inla_metric_graph_spde
+    - predict.inla_metric_graph_spde
+    - predict.rspde_metric_graph
+    - plot.graph_bru_pred
+    - bru_graph_rep
+    - graph_bru_process_data
+  - title: Linear mixed-effects models
+    contents:
+    - graph_lme
+    - predict.graph_lme
+    - summary.graph_lme
+    - posterior_crossvalidation
+    - posterior_crossvalidation_covariance     
+    - graph_starting_values
+  - title: Log-Cox Gaussian processes
+    contents:
+    - graph_lgcp
+  - title: Space-time models
+    contents:
+    - simulate.spacetime
+    - plot.spacetime.covariances
+    - make.Q.euler
+    - make.Q.spacetime
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
   - title: Posterior tools
     contents:
     - spde_posterior_mean
-    - posterior_crossvalidation
-    - posterior_crossvalidation_covariance
-    - posterior_mean_covariance
-  - title: Likelihood functions
-    contents:
-    - likelihood_graph_spde
-    - likelihood_alpha1
-    - likelihood_alpha1_v2
-    - likelihood_alpha2
-    - likelihood_graph_covariance
-    - likelihood_graph_laplacian
+    - posterior_crossvalidation_manual
+    - posterior_crossvalidation_covariance_manual    
+    - posterior_mean_covariance   
   - title: Precision matrices
     contents:
     - spde_precision
-    - precision_exp_line
-    - Qalpha1
-    - Qalpha2
   - title: Covariance functions
     contents:
-    - covariance_alpha1
-    - covariance_alpha1_mesh
-    - covariance_alpha2
-    - covariance_alpha2_mesh
-    - matern_derivative
-    - matern_neumann_free
-    - matern_neumann_free2
-    - precision_exp_line 
-    - r_1
-    - r_1_circle
+    - exp_covariance
+  - title: Datasets
+    contents:
+    - pems

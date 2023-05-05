@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_inference.R
 \name{posterior_crossvalidation}
 \alias{posterior_crossvalidation}
-\title{Prediction for models assuming observations at vertices}
+\title{Prediction for models assuming observations at vertices for graph_lme models}
 \usage{
 posterior_crossvalidation(object)
 }
@@ -16,5 +16,5 @@ negatively oriented proper scoring rules: log-score, CRPS, and scaled
 CRPS.
 }
 \description{
-Prediction for models assuming observations at vertices
+Prediction for models assuming observations at vertices for graph_lme models
 }

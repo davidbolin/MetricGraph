@@ -24,7 +24,7 @@ check_graph <- function(graph)
 #' @param nu the smoothness parameter
 #' @param L interval length
 #' @param deriv a vector containing the order of the derivatives
-#' @export
+#' @noRd
 matern_neumann_free <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0)){
 
     if(nu==3/2){
@@ -59,7 +59,7 @@ matern_neumann_free <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0
 #' @param nu     shape param
 #' @param L      interval length
 #' @param deriv  derivative order s, t
-#' @export
+#' @noRd
 matern_neumann_free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv = c(0,0)){
 
     if(nu==3/2){
@@ -103,7 +103,7 @@ matern_neumann_free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv =
 #' @param deriv order of derivative
 #'
 #' @return covariance function
-#' @export
+#' @noRd
 matern_derivative <- function(h, kappa, nu, sigma,deriv=1)
 {
   if(deriv==1){

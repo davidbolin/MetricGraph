@@ -2,36 +2,18 @@
 % Please edit documentation in R/graph_inference.R
 \name{posterior_crossvalidation_covariance}
 \alias{posterior_crossvalidation_covariance}
-\title{Prediction for models assuming observations at vertices}
+\title{Prediction for models assuming observations at vertices for graph_lme models}
 \usage{
-posterior_crossvalidation_covariance(
-  theta,
-  graph,
-  data_name,
-  model = "alpha1",
-  ind = NULL,
-  BC = 1
-)
+posterior_crossvalidation_covariance(object)
 }
 \arguments{
-\item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
-
-\item{graph}{metric graph object}
-
-\item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
-the model based on the graph Laplacian with smoothness 1, "GL2" gives the
-model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
-model with isotropic exponential covariance}
-
-\item{ind}{Indices for cross validation. It should be a vector of the same
-length as the data, with integer values representing each group in the
-cross-validation. If NULL, leave-one-out cross validation is performed.}
+\item{object}{A fitted model using the \code{graph_lme()} function.}
 }
 \value{
 Vector with all predictions
 }
 \description{
-Prediction for models assuming observations at vertices
+Prediction for models assuming observations at vertices for graph_lme models
 }
 \details{
 This function does not use sparsity for any model.

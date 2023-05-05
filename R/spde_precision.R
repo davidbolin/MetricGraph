@@ -34,6 +34,7 @@ spde_precision <- function(kappa, sigma, alpha, graph, BC = 1, build = TRUE) {
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list
+#' @noRd
 Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 
   kappa <- theta[2]
@@ -112,8 +113,8 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 #' derivatives. The ordering of the variables is acording to graph$E, where for
 #' each edge there are four random variables: processes and derivate for
 #' lower and upper edge end points
-#' @export
 #' @return Precision matrix or list
+#' @noRd
 Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
   kappa <- theta[2]
@@ -278,7 +279,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list
-#' @export
+#' @noRd
 Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
 
   #TODO: fix BC=1 problem

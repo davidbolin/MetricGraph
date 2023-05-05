@@ -3,6 +3,7 @@
 #' @param D vector or matrix with distances
 #' @param kappa parameter kappa
 #' @param sigma parameter sigma
+#' @noRd
 r_1 <- function(D, kappa, sigma) {
   return((sigma^2 / (2 * kappa)) * exp(-kappa * abs(D)))
 }
@@ -13,6 +14,7 @@ r_1 <- function(D, kappa, sigma) {
 #' @param l_e circle perimeter
 #' @param kappa parameter kappa
 #' @param sigma parameter sigma
+#' @noRd
 r_1_circle <- function(t, l_e, kappa, sigma) {
 
   c <- sigma^2 / (2 * kappa * sinh(kappa *l_e/2))
@@ -43,7 +45,7 @@ r_1_circle <- function(t, l_e, kappa, sigma) {
 #' @param sigma parameter sigma
 #' @param t (n x 1) position on the line
 #' @param t_sorted (bool)
-#' @export
+#' @noRd
 precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 
   l_t <- length(t)
@@ -112,7 +114,7 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 #' lower edge `[,3]` covariance
 #' @param scale scale the covariance by 2*kappa so that sigma corresponds to
 #' the marginal standard deviation (default FALSE)
-#' @export
+#' @noRd
 covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
                               scale = FALSE){
 
@@ -186,7 +188,7 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
 #' @param scale scale the covariance by 2*kappa so that sigma corresponds to
 #' the marginal standard deviation (default FALSE)
 #' @return vector with covariance values (order Vertex of Graph then mesh$PtE)
-#' @export
+#' @noRd
 covariance_alpha1_mesh <- function(P, kappa, sigma, graph, scale = FALSE) {
 
   check <- check_graph(graph)

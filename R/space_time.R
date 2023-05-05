@@ -107,6 +107,8 @@ make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 #' @param beta smoothness parameter (integer) for Q-Wiener process
 #' @return Precision matrix
 #' @export
+
+
 make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 
   G <- graph$mesh$G

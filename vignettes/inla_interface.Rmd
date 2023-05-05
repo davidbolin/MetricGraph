@@ -193,8 +193,7 @@ stk_dat <- inla.stack(data = graph_data_spde(spde_model),
     ))
 ```
 
-Now, we use the `graph_stack()` function that behaves in 
-an analogous manner to the `inla.stack.data()` function:
+Now, we use the `inla.stack.data()` function:
 ```{r}
 data_stk <- inla.stack.data(stk_dat)
 ```
@@ -309,7 +308,7 @@ stk_dat_prd <- inla.stack(data = graph_data_spde(spde_model_prd),
     ))
 ```
 
-Now, we use the `graph_stack()` function and fit the model:
+Now, we use the `inla.stack.data()` function and fit the model:
 ```{r}
 data_stk_prd <- inla.stack.data(stk_dat_prd)
 

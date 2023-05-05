@@ -31,7 +31,7 @@ r_2 <- function(D, kappa, sigma, deriv = 0){
 #' @param  n.p number of points to compute the covariance on each edge
 #' @return C (n.p*numer of edges x 3) `[,1]` edge number `[,2]` distance from
 #' lower edge `[,3]` covariance
-#' @export
+#' @noRd
 covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 
   check <- check_graph(graph)
@@ -140,7 +140,7 @@ covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 #' @param sigma parameter sigma
 #' @param  graph metric_graph object
 #' @return a vector with covariance values
-#' @export
+#' @noRd
 covariance_alpha2_mesh <- function(P, kappa, sigma, graph){
 
   check <- check_graph(graph)
