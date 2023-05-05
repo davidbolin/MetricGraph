@@ -546,7 +546,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   temp_merge[["included"]] <- NULL
 
   data <- merge(temp_merge, data)
-
   
   rm(temp_merge)
   rm(data_prd_temp)
@@ -594,7 +593,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   sigma.e <- coeff_meas[[1]]
 
-  idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]][1:n])
+  if(!is.null(graph_bkp$data[["__dummy_var"]])){
+      idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]][1:n])
+  } else {
+      idx_prd <- !is.na(graph_bkp$data[["X__dummy_var"]][1:n])
+  }
 
   n_prd <- sum(idx_prd)
 
@@ -697,7 +700,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
               Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
               Q <- Q %*% Q / sigma^2
         # } else if(model_type$cov_function == "exp_covariance"){
-        #           print("Here 1")
         #           graph_bkp$compute_resdist(full = TRUE)
         #           Sigma <- as.matrix(exp_covariance(graph_bkp$res_dist[[1]], c(sigma,kappa)))
         #           Q <- solve(Sigma)
@@ -753,6 +755,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     # cov_Obs <- post_Cov[idx_obs, idx_obs]
 
     # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
+
+    # Observe that the "fixed-effects" mean has been subtracted from y_repl 
 
     mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
 
