@@ -30,10 +30,10 @@ references:
     given: Alexandre B.
   - family: Wallin
     given: Jonas
-  container-title: arXiv:??
+  container-title: arXiv:2304.10372
   type: preprint
   issued:
-  year: 2022
+  year: 2023
 - id: Anderes2020
   title: "Isotropic covariance functions on graphs and their edges"
   author:
@@ -81,7 +81,7 @@ library(MetricGraph)
 
 In this vignette we will introduce how to work with Gaussian random fields on
 metric graphs. The main models are the Whittle--Matérn fields introduced in 
-[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372). 
 
 The package also has support for isotropic Gaussian processes, and in particular
 Gaussian processes with isotropic exponential covariance functions as introduced
@@ -313,7 +313,7 @@ Because of the similarities between these two covairance functions, we recomend
 using the Whittle--Matérn since it has Markov properties which makes inference
 much faster if that is used. Further, that covariance is well-defined for any
 compact metric graph, whereas the isotropic exponential is only guaranteed to be
-positive definite if the graph has Euclidean edges. See [@BSW2022b](??) for 
+positive definite if the graph has Euclidean edges. See [@BSW2022b](https://arxiv.org/abs/2304.10372) for 
 further comparisons. 
 
 However, let us now illustrate how we can fit this covariance to data. We first

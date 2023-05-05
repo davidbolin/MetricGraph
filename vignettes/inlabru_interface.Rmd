@@ -30,10 +30,10 @@ references:
     given: Alexandre B.
   - family: Wallin
     given: Jonas
-  container-title: arXiv:??
+  container-title: arXiv:2304.10372
   type: preprint
   issued:
-    year: 2022
+    year: 2023
 ---
 
 ```{r setup, include=FALSE}
@@ -47,7 +47,7 @@ library(MetricGraph)
 In this vignette we will present our `inlabru`
 interface to Whittle--Matérn fields. The underlying theory
 for this approach is provided in 
-[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??). 
+[@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372). 
 
 For an introduction to the `metric_graph` class, please see 
 the [Working with metric graphs](metric_graph.html) vignette.

@@ -32,10 +32,10 @@ references:
     given: Alexandre B.
   - family: Wallin
     given: Jonas
-  container-title: arXiv:??
+  container-title: arXiv:2304.10372
   type: preprint
   issued:
-    year: 2022
+    year: 2023
 - id: Anderes2020
   title: "Isotropic covariance functions on graphs and their edges"
   author:
@@ -90,7 +90,7 @@ The `R` package `MetricGraph` contains functions for working with data and
 random fields on compact metric graphs. The main functionality is contained in 
 the `metric_graph` class, which is used for specifying metric graphs, adding data to them, visualization, and other basic functions that are needed for working with data and random fields on metric graphs. The package also implements three types
 of Gaussian processes on metric graphs: The Whittle--Matérn fields introduced 
-by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](??), Gaussian
+by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), Gaussian
 processes with isotropic covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Gaussian models based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
 Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` (REF, package available from [http://R-INLA.
@@ -428,7 +428,7 @@ This covariance is very similar to that of the
 Whittle--Mat\'ern fields with $\alpha = 1$. Between the two, we recommend
 using the Whittle--Matérn model since it has Markov properties which makes inference much faster. Further, that covariance is well-defined for any
 compact metric graph, whereas the isotropic exponential is only guaranteed to be
-positive definite if the graph has Euclidean edges. See [@BSW2022b](??) for 
+positive definite if the graph has Euclidean edges. See [@BSW2022b](https://arxiv.org/abs/2304.10372) for 
 further comparisons. 
 
 However, let us now illustrate how to use it for the data that we generated above. To work with the covariance function, the only cumbersome thing is to compute the metric. The `metric_graph` class has 

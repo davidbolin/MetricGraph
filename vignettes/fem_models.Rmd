@@ -32,10 +32,10 @@ references:
     given: Vivek
   - family: Simas
     given: Alexandre B.
-  container-title: arXiv:??
+  container-title: arXiv:2302.03995
   type: preprint
   issued:
-    year: 2022
+    year: 2023
 ---
 
 ```{r setup, include=FALSE}
@@ -47,9 +47,9 @@ references:
 
 In this vignette we will introduce how to fit Whittle--Matérn fields with
 general smoothness based on finite element and rational approximations.
-The theory for this approach is provided in [@graph_fem](??) and
+The theory for this approach is provided in [@graph_fem](https://arxiv.org/abs/2302.03995) and
 [@xiong22](https://arxiv.org/abs/2209.04670).
-For the implementation, make use of the `rSPDE` package for the rational approximations.
+For the implementation, we make use of the [`rSPDE` package](https://davidbolin.github.io/rSPDE/) for the rational approximations.
 
 These models are thus implemented using finite element approximations. Such
 approximations are not needed in for integer smoothness parameters, and for 

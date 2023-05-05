@@ -4,7 +4,7 @@
 
 Basic statistical tasks such as likelihood evaluation and prediction is implemented for these Gaussian fields in `MetricGraph`. Further, the package also contains interfaces to [R-INLA][ref5] and [inlabru][ref6] that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle-Matérn fields on metric graphs. 
 
-We refer to the [package homepage][ref7] for detailed tutorials on all different aspects of the package.
+To get started with the package, please go to the [MetricGraph: Random Fields on Metric Graphs](articles/MetricGraph.html) vignette. For more comprehensive examples, please see the vignettes in the `vignettes` tab. 
 
 
 # References #
