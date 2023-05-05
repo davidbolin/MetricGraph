@@ -510,7 +510,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   
   if(!mesh){
     n_prd <- length(data[[edge_number]])
-    data[[as.character(object$response)]] <- rep(NA, n_prd)
     data[["__dummy_var"]] <- rep(0, n_prd)
   } else{
     if(is.null(graph_bkp$mesh)){
@@ -518,7 +517,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     }
     data <- list()
     n_prd <- nrow(graph_bkp$mesh$VtE)
-    data[[as.character(object$response)]] <- rep(NA, n_prd)
     data[["__dummy_var"]] <- rep(0, n_prd)
     data[[edge_number]] <- graph_bkp$mesh$VtE[,1]
     data[[distance_on_edge]] <- graph_bkp$mesh$VtE[,2]
@@ -529,7 +527,42 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     ord_idx <- order(data[[edge_number]], data[[distance_on_edge]])
   }
 
-  graph_bkp$add_observations(data = data, edge_number = edge_number, distance_on_edge = distance_on_edge, normalized = normalized)
+  data_graph_temp <- list()
+  idx_group1 <-  graph_bkp$data[["__group"]] == graph_bkp$data[["__group"]][1]
+  data_graph_temp[[edge_number]] <- graph_bkp$data[["__edge_number"]][idx_group1]
+  data_graph_temp[[distance_on_edge]] <- graph_bkp$data[["__distance_on_edge"]][idx_group1]
+  data_graph_temp[[as.character(object$response)]] <- graph_bkp$data[[as.character(object$response)]][idx_group1]
+  data_graph_temp <- as.data.frame(data_graph_temp)
+
+  data_prd_temp <- list()
+  data_prd_temp[[edge_number]] <- data[[edge_number]]
+  data_prd_temp[[distance_on_edge]] <- data[[distance_on_edge]]
+  data_prd_temp[["included"]] <- TRUE
+
+  temp_merge <- merge(data_prd_temp, data_graph_temp, all = TRUE)
+
+  temp_merge <- temp_merge[!is.na(temp_merge[["included"]]),]
+
+  temp_merge[["included"]] <- NULL
+
+  data <- merge(temp_merge, data)
+
+  
+  rm(temp_merge)
+  rm(data_prd_temp)
+  rm(data_graph_temp)
+
+  old_data <- graph_bkp$data
+
+  data[["__group"]] <- old_data[["__group"]][1]
+
+  graph_bkp$clear_observations()
+
+  graph_bkp$add_observations(data = data, edge_number = edge_number, distance_on_edge = distance_on_edge, normalized = normalized, group = "__group")
+
+  graph_bkp$add_observations(data = old_data, edge_number = "__edge_number", distance_on_edge = "__distance_on_edge", group = "__group", normalized = TRUE)
+
+  graph_bkp$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$data[["__edge_number"]])
 
   n <- sum(graph_bkp$data[["__group"]] == graph_bkp$data[["__group"]][1])
 
@@ -547,12 +580,12 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$data)
   
   if(all(dim(X_cov_pred) == c(0,1))){
-    X_cov_pred <- matrix(1, nrow = n, ncol=1)
+    X_cov_pred <- matrix(1, nrow = length(graph_bkp$data[["__group"]]), ncol=1)
   }
   if(ncol(X_cov_pred) > 0){
     mu <- X_cov_pred %*% coeff_fixed
   } else{
-    mu <- matrix(0, nrow = n, ncol=1)
+    mu <- matrix(0, nrow = length(graph_bkp$data[["__group"]]), ncol=1)
   }
 
   Y <- graph_bkp$data[[as.character(object$response)]] - mu
@@ -571,6 +604,10 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   ## construct Q
 
   graph_bkp$observation_to_vertex()
+
+  # graph_bkp$data <- lapply(graph_bkp$data, function(dat){dat_temp <- dat
+  #                       dat_temp[graph_bkp$data[["__dummy_ord_var"]]] <- dat
+  #                                       return(dat_temp)})
 
   if(tolower(model_type$type) == "whittlematern"){
     sigma <- object$coeff$random_effects[1]
@@ -688,6 +725,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   
   # idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
+  if(return_original_order){
+          dist_ed[ord_idx] <- dist_ed
+          edge_nb[ord_idx] <- edge_nb
+  }
+
   if(!return_as_list){
     out$distance_on_edge <- rep(dist_ed,length(u_repl))
     out$edge_number <- rep(edge_nb,length(u_repl))
@@ -739,6 +781,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     if (compute_variances) {
         post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
         var_tmp <- diag(post_cov)
+        var_tmp[graph_bkp$data[["__dummy_ord_var"]]] <- var_tmp
+
       if(return_original_order){
         var_tmp[ord_idx] <- var_tmp
       }

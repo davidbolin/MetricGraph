@@ -703,7 +703,7 @@ likelihood_graph_covariance <- function(graph,
 
 
       for(repl_y in 1:length(u_repl)){
-          ind_tmp <- (repl_vec %in% repl_y)
+          ind_tmp <- (repl_vec %in% u_repl[repl_y])
           y_tmp <- y_graph[ind_tmp]
           na_obs <- is.na(y_tmp)
           Sigma_non_na <- Sigma[!na_obs, !na_obs]

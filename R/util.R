@@ -476,13 +476,17 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
   new_data[["__distance_on_edge"]] <- PtE[,2]
 
   if (is.null(group_vector)) {
+    if(!is.null(old_data)){
+      group_vector <- rep(old_data[["__group"]][1], length(PtE[,1]))
+    } else{
       group_vector <- rep(1, length(PtE[,1]))
+    }
   } 
 
   if(is.null(old_data)){
       group_val <- unique(group_vector)
-  } else{
-      group_val <- unique(old_data[["__group"]])
+  } else {
+      group_val <- unique(union(old_data[["__group"]], group_vector))
   }
 
   if (is.null(old_data)) {

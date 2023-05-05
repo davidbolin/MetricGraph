@@ -616,8 +616,10 @@ and sample the process. Let us sample from a Whitlle--Matérn process on the met
 `alpha=1`. We will consider 20 replicates. To this end, we will set `nsim=20`:
 
 ```{r}
+library(tidyr)
+
 kappa <- 10
-sigma <- 20
+sigma <- 2
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
 
@@ -640,32 +642,27 @@ df_graph <- data.frame(y=y, edge_number = PtE[,1],
 
 df_graph <- pivot_longer(df_graph, cols = `y.1`:`y.20`, names_to = "repl", values_to = "y")
 
-graph$add_observations(data = df_graph, normalized = TRUE, replicates="repl")
+graph$add_observations(data = df_graph, normalized = TRUE, group="repl")
 ```
 
 To plot the first replicate, we can simply call `graph$plot(data=TRUE)`. To plot another replicate, we set the 
-argument `repl` to the index of the replicate we want to plot. Let us plot the first and second replicates:
+argument `group` to the index of the replicate we want to plot. Let us plot the first and second replicates:
 
 ```{r}
 graph$plot(data="y")
-graph$plot(data="y", repl="y.2")
-graph$plot(data="y", repl=2)
+graph$plot(data="y", group="y.2")
+graph$plot(data="y", group=2)
 ```
 
-To fit the model, we simply proceed in an identical manner as for the case without replicates. In this case, 
-we will use the function factory `likelihood_graph_spde()`:
+To fit the model, we simply proceed in an identical manner as for the case without replicates by using the `graph_lme()` function:
 
 ```{r}
-sigma_e_start <- 0.2
-sigma_start <- 2
-kappa_start <- 10
+fit_repl <- graph_lme(y ~ -1, graph = graph, parameterization = "spde")
 
-theta0 <- c(sigma_e_start, sigma_start, kappa_start) 
-loglik_alpha1_repl <- likelihood_graph_spde(graph, alpha = 1)
-res <- optim(log(theta0), loglik_alpha1_repl)
-sigma_e_est <- exp(res$par[1])
-sigma_est <- exp(res$par[2])
-kappa_est <- exp(res$par[3])
+sigma_e_est <- fit_repl$coeff$measurement_error
+sigma_est <- fit_repl$coeff$random_effects[1]
+kappa_est <- fit_repl$coeff$random_effects[2]
+
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
                       kappa = c(kappa, kappa_est),
@@ -673,37 +670,39 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
 print(results)
 ```
 
-Let us now sample from a Whitlle--Matérn process with
-`alpha=2` at the same locations. We will also consider 20 replicates:
-
+Let us now fit a model with isotropic exponential covariance on the same data:
 ```{r}
-u_alpha2 <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
-                 graph = graph, PtE = PtE, nsim = n_repl)
+fit_repl_isoexp <- graph_lme(y ~ -1, graph = graph,
+                            model = list(type = "isoCov"))
 
-y_alpha2 <- u_alpha2 + sigma_e*matrix(rnorm(n.obs.per.edge * graph$nE * n_repl), ncol = n_repl)
-```
+sigma_e_est <- fit_repl_isoexp$coeff$measurement_error
+sigma_est <- fit_repl_isoexp$coeff$random_effects[1]
+kappa_est <- fit_repl_isoexp$coeff$random_effects[2]
 
-We will now clear the observations and add the new ones:
-
-```{r}
-graph$clear_observations()
-graph$add_PtE_observations(y_alpha2,PtE, normalized = TRUE)
-```
-
-We can now estimate the parameters:
-
-```{r}
-
-loglik_alpha2_repl <- likelihood_graph_spde(graph, alpha = 2)
-res <- optim(log(theta0), loglik_alpha2_repl)
-sigma_e_est <- exp(res$par[1])
-sigma_est <- exp(res$par[2])
-kappa_est <- exp(res$par[3])
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
                       kappa = c(kappa, kappa_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
+```
+
+To do kriging, we proceed in an identical way, by providing a `data.frame` with the locations we want to obtain predictions. 
+
+Let us obtain predictions for the observation locations. By setting `return_as_list` to `TRUE`
+we obtain a list of predictions, in which each element consists of predictions for the corresponding 
+replicate.
+
+```{r}
+df_pred <-  data.frame(edge_number = PtE[,1],
+                      distance_on_edge = PtE[,2])
+
+pred_alpha1 <- predict(fit_repl, data = df_pred, normalized = TRUE, return_as_list = TRUE)
+```
+
+Let us now plot the predictions of the first replicate:
+
+```{r}
+graph$plot(X = pred_alpha1$mean[[1]], X_loc = df_pred)
 ```
 
 # A model with covariates
