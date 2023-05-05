@@ -70,7 +70,7 @@ We begin by loading the `rSPDE` and `MetricGraph` packages:
 ```
 
 As an example, we consider the following metric graph
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
   library(sp)
   line1 <- Line(rbind(c(0,0),c(1,0)))
   line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -367,7 +367,7 @@ Let us compare with the true values:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
   posterior_df_fit <- gg_df(result_fit)
 
   library(ggplot2)
@@ -540,7 +540,7 @@ Let us compare with the true values of the parameters:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
   posterior_df_fit_rep <- gg_df(result_fit_rep)
 
   ggplot(posterior_df_fit_rep) + geom_line(aes(x = x, y = y)) + 
@@ -615,7 +615,7 @@ Let us compare with the true values of the parameters:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
   posterior_df_bru_fit <- gg_df(result_bru_fit)
 
   ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
@@ -702,7 +702,7 @@ Let us compare with the true values of the parameters:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
   posterior_df_bru_fit_rep <- gg_df(result_bru_fit_rep)
 
   ggplot(posterior_df_bru_fit_rep) + geom_line(aes(x = x, y = y)) + 

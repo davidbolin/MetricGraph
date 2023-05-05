@@ -53,7 +53,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
 ```
 We can now create the graph based on the `Lines` object as follows
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph <- metric_graph$new(lines = Lines)
 graph$plot()
 ```
@@ -62,7 +62,7 @@ The plot function that was used to create the plot above has various parameters
 to set the sizes and colors of the vertices and edges, and it has a `plotly`
 argument to visualize the graph in 3D. For this to work, the `plotly` library
 must be installed.
-```{r, message=FALSE, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
 ```
@@ -106,7 +106,7 @@ graph$geo_dist
 The second option it to construct the graph using two matrices `V` and `E` that
 specify the locations (in Euclidean space) of the vertices and the edges. In this
 case, it is assumed that the graph only has straight lines:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1))
 E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 1))
 graph2 <- metric_graph$new(V = V, E = E)
@@ -124,7 +124,7 @@ vertex is added at that point and the two lines are connected (the default value
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
 following three lines:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0.03),c(0,1)))
 line3 <- Line(rbind(c(-1,1),c(0.5,0.03)))
@@ -137,20 +137,20 @@ print(graph3$nV)
 ```
 
 We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three lines are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two lines are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first line, so that the two lines there are connected. This can be done by adjusting the `vertex_line` tolerance: 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
                                                            vertex_line = 0.1))
 graph3$plot(degree = TRUE)
 ```
 
 We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `lines` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. This modification might take some time for large graphs with many lines, because of this, the `lines` object is by default modified if the graph has less than 100 lines, and otherwise it is not modified. Whether or not it should be modified can be set via the argument `adjust_lines`:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
                                                            vertex_line = 0.1),
                            adjust_lines = FALSE)
@@ -159,7 +159,7 @@ graph3$plot(degree = TRUE)
 
 If the `lines` object is not modified, then the graph is correct but the plot might not show the graph as connected even though it is. 
 Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_line = 0.1,
                                                            line_line = 0.001))
@@ -169,7 +169,7 @@ graph3$plot(degree = TRUE)
 Now, the structure of the metric graph does not change if we add or remove vertices of degree 2. 
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_line = 0.1,
                                                            line_line = 0.001),
@@ -212,7 +212,7 @@ should be given in normalized distance or not.
 To illustrate the useage of `metric_graph` on some real data, we use the 
 `osmdata` package to download data from OpenStreetMap. In the following code,
 we extract highways in the city of Copenhagen:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,fig.height = 7, echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE}
 library(osmdata)
 set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 call <- opq(bbox = c(12.4,55.5,12.65,55.9))
@@ -262,7 +262,7 @@ components in total, and their total edge lengths in km at
 graphs$lengths
 ```
 To plot all of them, we can use the `plot` command of the class:
-```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,fig.height = 7,echo=TRUE}
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
 graphs$plot(vertex_size = 0)
 ```
 
@@ -275,7 +275,7 @@ min(graph5$edge_lengths) * 1000
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 20 meters (0.02km) apart should be merged, and that vertices that
 are withing 20 meters of other lines should be merged with them:
-```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.width=7,fig.height = 7,echo=TRUE}
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
                                tolerance = list(vertex_vertex = 0.02,
                                                 vertex_line = 0.02))
@@ -300,7 +300,7 @@ Given that we have constructed the metric graph, we can now add data to it.
 As an example, let us consider the first graph again and suppose that we have 
 observations at a distance 0.5 from the start of each edge. One way of specifying
 this is as follows 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 obs.loc <- cbind(1:4, rep(0.5, 4))
 obs <- c(1,2,3,4)
 df_graph <- data.frame(y = obs, edge_number = obs.loc[,1], 
@@ -314,7 +314,7 @@ the edges, so that 0 represents the start and 1 the end of the edge (instead of
 the edge length). To do so, we can simply specify `normalized = TRUE` when adding 
 the observations. For example, let us add one more observation at the midpoint 
 of the fourth edge:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 obs.loc <- matrix(c(4, 0.5),1,2)
 obs <- c(5)
 df_new <- data.frame(y=obs, edge_number = obs.loc[,1], 
@@ -326,7 +326,7 @@ graph$plot(data = "y")
 An alternative method is to specify the observations as spatial points objects,
 where the locations are given in Euclidean coordinates. In this case the
 observations are added to the closes location on the graph:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 obs.loc <- rbind(c(0.7, 0), c(0, 0.2))
 obs <- c(6,7)
 points <- SpatialPointsDataFrame(coords = obs.loc,
@@ -358,13 +358,13 @@ If `NA` is given in some variable, this indicates that this specific variable is
 not measured at that location and group. We can now plot the individual
 variables by specifying their names in the  plot function together with the
 group number that we want to see. By default the first group is shown. 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$plot(data = "y", group = 2)
 ```
 
 In some cases, we might want to add the observation locations as vertices 
 in the graph. This can be done as follows: 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$observation_to_vertex()
 graph$plot(data = "x", group = 1)
 ```
@@ -378,7 +378,7 @@ When working with data on metric graphs, one often wants to display functions
 on the graph. The best way to visualize functions on the graph is to evaluate
 them on a fine mesh over the graph and then use `plot_function`. To illustrate
 this procedure, let us consider the following graph:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1), c(-1, 1), c(-1, 0), c(0, -1))
 E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),
            c(5, 6), c(6, 1), c(4, 1),c(1, 7))
@@ -396,7 +396,7 @@ the mesh. As can be seen in the plot, the mesh is very coarse, so let's reduce t
 Suppose now that we want to display the function $f(x, y) = x^2 - y^2$ on this
 graph. We then first evaluate it on the vertices of the mesh and then use the 
 function `plot_function` to display it:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 x <- graph$mesh$V[, 1]
 y <- graph$mesh$V[, 2]
 f <- x^2 - y^2
@@ -405,7 +405,7 @@ graph$plot_function(f)
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
 visualization of the function:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,fig.height=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
 graph$plot_function(f, plotly = TRUE)
 ```
 
@@ -417,7 +417,7 @@ edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point
 To illustrate this, let us first construct a set of locations that are evenly 
 spaced over each edge, then convert these to Euclidean coordinates so that we
 can evaluate the function above, and finally plot the result:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,fig.height=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
 n.e <- 30
 PtE <- cbind(rep(1:graph$nE, each = n.e), 
              rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))

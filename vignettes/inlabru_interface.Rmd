@@ -110,7 +110,7 @@ for(i in 1:(graph_bru$nE)) {
 We will now sample in these observation locations
 and plot the latent field:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 sigma <- 2
 alpha <- 1
 nu <- alpha - 0.5
@@ -126,7 +126,7 @@ Let us now generate the observed responses, which we will
 call `y`. We will also plot the observed responses on the
 metric graph.
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 n_obs <- length(u)
 sigma.e <- 0.1
 
@@ -149,7 +149,7 @@ We are now in a position to fit the model with our
 we need to add the observations to the graph, which we 
 will do with the `add_observations()` method. 
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 # Creating the data frame
 df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
                       distance_on_edge = obs_loc[,2])
@@ -220,7 +220,7 @@ the true values:
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
   posterior_df_bru_fit <- gg_df(spde_bru_result)
 
   library(ggplot2)
@@ -253,7 +253,7 @@ graph_bru$build_mesh(n = obs_per_edge_prd)
 
 Let us plot the resulting graph:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 graph_bru$plot(mesh=TRUE)
 ```
 
@@ -282,13 +282,13 @@ field_pred <- predict(spde_model_bru,
 
 Finally, we can plot the predictions together with
 the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 plot(field_pred)
 ```
 
 We can also obtain a 3d plot by setting `plotly` to `TRUE`:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 plot(field_pred, plotly = TRUE)
 ```
 
@@ -323,7 +323,7 @@ u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
 Let us now generate the observed responses, which we will
 call `y_rep`.
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 n_obs_rep <- nrow(u_rep)
 sigma_e <- 0.1
 
@@ -334,7 +334,7 @@ y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
 
 We can now add the the observations by setting the `group`
 argument to `repl`:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 dl_rep_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
                                           edge_number = obs_loc[,1],
                                           distance_on_edge = obs_loc[,2],

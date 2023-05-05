@@ -101,6 +101,10 @@ reference:
   - title: Covariance functions
     contents:
     - exp_covariance
+    - covariance_alpha1
+    - covariance_alpha2
+    - covariance_alpha1_mesh
+    - covariance_alpha2_mesh
   - title: Datasets
     contents:
     - pems

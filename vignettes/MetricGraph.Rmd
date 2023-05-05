@@ -123,14 +123,14 @@ lines <- SpatialLines(data$osm_lines@lines)
 ```
 
 We can now create the metric graph as follows. In the command we set the argument `longlat = TRUE` since the coordinates of the vertices are given in Longitude and Latitude.
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph <- metric_graph$new(lines, longlat = TRUE)
 graph$plot(vertex_size = 0.5)
 ```
 
 We can note the warning that the graph is not connected, so let us create a 
 `graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graphs <- graph_components$new(lines = lines, longlat = TRUE)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
@@ -143,7 +143,7 @@ range(graph$edge_lengths) * 1000
 
 We will also remove the vertices of degree 2 by using the `prune_vertices()` method:
 
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 graph$prune_vertices()
 graph$plot()
 ```
@@ -176,7 +176,7 @@ should be given in normalized distance or not.
 
 Given that we have constructed the metric graph, we can now add data to it. 
 As an example, let us sample some locations on edges at random and add data to them in the graph: 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 n.obs <- 10
 data <- data.frame(edge_number = sample(1:graph$nE, n.obs),
                    distance_on_edge = runif(n.obs),
@@ -186,7 +186,7 @@ graph$plot(data = "y", vertex_size = 0)
 ```
 
 One should note here that one needs to specify `normalized = TRUE` in the function to specify that the locations are in normalized distance on the edges. If this command is not set, the distances are interpreted as not being normalized. The `add_observations()` function accepts multiple types of inputs. One scenario that can be common in applications is to have the data as `SpatialPoints` objects, and one can then add the observations as a `SpatialPointsDataFrame`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPointsDataFrame` object which we add to the graph:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
 obs.lonlat <- graph$coordinates(PtE = obs.loc, normalized = TRUE)
 obs <- rnorm(n.obs)
@@ -205,7 +205,7 @@ When working with data on metric graphs, one often wants to display functions
 on the graph. The best way to visualize functions on the graph is to evaluate
 them on a fine mesh over the graph and then use `plot_function`. To illustrate
 this procedure, let us construct a mesh on the graph:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$build_mesh(h = 100/1000)
 graph$plot(mesh=TRUE)
 ```
@@ -216,7 +216,7 @@ In the command `build_mesh`, the argument `h` decides the largest spacing betwee
 ```
 
 Suppose now that we want to display the function $f(s) = \text{Longitude}(s) - \text{Latitude}(s)$ on this graph. We then first evaluate it on the vertices of the mesh and then use the  function `plot_function` to display it:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 lon <- graph$mesh$V[, 1]
 lat <- graph$mesh$V[, 2]
 f <- lon - lat
@@ -249,7 +249,7 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 
 As an example, let us simulate the field $u$ on the graph using $\alpha = 1$. 
 To do so, we again draw some locations at random, then sample the field at these locations and plot the result
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 sigma <- 1.3
 r <- 0.15 # range parameter
 kappa <- sqrt(8*0.5)/r
@@ -271,7 +271,7 @@ graph$plot(data = "u", vertex_size = 0)
 ```
 
 We can also sample the field at the mesh on the graph as follows:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
                  graph = graph, type = "mesh", method = "Q")
 graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
@@ -280,7 +280,7 @@ graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
 To visualize the correlation structure of the field, we can compute and plot
 the covariances between some point and all other points in the graph as follows:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 C <- covariance_alpha1_mesh(c(200, 0.1), kappa = kappa, sigma = sigma, 
                             graph = graph)
 graph$plot_function(C, vertex_size = 0, edge_width = 0.5)
@@ -299,7 +299,7 @@ where $s_i\in \Gamma$ are observation locations, lon and lat are the longitude a
 $\varepsilon_i$ are independent centered Gaussian variables $N(0,\sigma_e^2)$ representing measurement noise. 
 
 Let us create such observations, clear the current data in the graph, and finally add the data on the graph:
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 # The graph has very small edges, so we will use the 
 # Q method to improve numerical stability
 
@@ -371,7 +371,7 @@ on the mesh locations.
 
 Now, we can compute the predictions for $y$. First, let us compute the posterior mean for the field at the observation locations and plot the residuals between the posterior means and the field:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred_u <- predict(res, data = data, normalized = TRUE, only_latent = TRUE)
 graph$plot(X = pred_u$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
@@ -393,7 +393,7 @@ data_mesh_pred <- data_mesh_pred[!duplicated(graph$mesh$V),]
 
 Now, let us obtain the predictions. We can obtain estimates for the latent field by setting `only_latent` to `TRUE`:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred <- predict(res, data=data_mesh_pred, normalized=TRUE, only_latent=TRUE)
 u_est <- pred$mean
 graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
@@ -402,7 +402,7 @@ graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
 Finally, let us obtain predictions for the observed values on the mesh. In this case we set
 `only_latent` to `FALSE`:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred_y <- predict(res, data=data_mesh_pred, normalized=TRUE, only_latent=FALSE)
 y_est <- pred_y$mean
 graph$plot_function(y_est, vertex_size = 0, edge_width = 0.5)
@@ -447,7 +447,7 @@ summary(res_exp)
 Let us now compute the posterior mean for the field at the observation 
 locations and plot the residuals between the field and the posterior means of the field:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 u_est_exp <- predict(res_exp, data = data, normalized = TRUE, only_latent = TRUE)
 graph$plot(X = u_est_exp$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
@@ -455,7 +455,7 @@ graph$plot(X = u_est_exp$mean - u, X_loc = data[,1:2], vertex_size = 0)
 To perform kriging prediction to other locations, one can use the `predict()` method along with a `data.frame` containing the locations in which one wants to obtain predictions and the corresponding covariate values at these locations. In this example we will use the `data_mesh_pred` from the previous example.
 We start by obtaining predictions for the latent model:
 
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 pred_exp <- predict(res_exp, data = data_mesh_pred, 
                     normalized=TRUE, only_latent = TRUE)
 u_est_exp <- pred_exp$mean
@@ -464,7 +464,7 @@ graph$plot_function(u_est_exp, vertex_size = 0, edge_width = 0.5)
 
 Finally, let us estimated the observed values at the mesh locations:
 
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 pred_exp_y <- predict(res_exp, data = data_mesh_pred, 
                     normalized=TRUE, only_latent = FALSE)
 y_est_exp <- pred_exp_y$mean
@@ -500,21 +500,21 @@ summary(res_gl)
 
 We can now obtain prediction at the observed locations by using the `predict()` method. Let us compute the posterior mean for the field at the observation locations and plot the residuals between the field and the posterior means of the field:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred_u_GL <- predict(res_gl, data = data, normalized = TRUE, only_latent = TRUE)
 graph$plot(X = pred_u_GL$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
 Now, if we do predictions outside of the observation locations on a graph Laplacian model, we need to modify the graph. This modifies the model in its entirety. Thus, we need to refit the model with all the observation locations we want to do predictions. However, if we use the `predict()` method with observations outside of the observation locations, the `predict()` will return predictions together with a `warning` that one should refit the model to obtain proper predictions:
 
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 pred_GL <- predict(res_gl, data = data_mesh_pred, 
                     normalized=TRUE, only_latent = TRUE)
 u_est_GL <- pred_GL$mean
 graph$plot_function(u_est_GL, vertex_size = 0, edge_width = 0.5)
 ```
 and here the (incorrect way of obtaining) predictions of the observed data:
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 pred_GL_y <- predict(res_gl, data = data_mesh_pred, 
                     normalized=TRUE, only_latent = FALSE)
 y_est_GL <- pred_GL_y$mean
@@ -550,21 +550,21 @@ One should compare the estimates with the ones obtained in the model without the
 
 Let us first compute the residual between the latent field and the posterior means at the observation locations:
 
-```{r, fig.show='hold',fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred_u_GL_full <- predict(res_gl_pred, data = data, normalized = TRUE, only_latent = TRUE)
 graph$plot(X = pred_u_GL_full$mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
 Let us now obtain predictions at the desired locations:
 
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 pred_GL_full <- predict(res_gl_pred, data = data_mesh_pred, 
                     normalized=TRUE, only_latent = TRUE)
 u_est_GL_full <- pred_GL_full$mean
 graph$plot_function(u_est_GL_full, vertex_size = 0, edge_width = 0.5)
 ```
 and here the correct way of obtaining predictions of the observed data at the desired locations: 
-```{r, fig.align = "center",fig.width=7,echo=TRUE}
+```{r, fig.align = "center",echo=TRUE}
 pred_GL_y_full <- predict(res_gl_pred, data = data_mesh_pred, 
                     normalized=TRUE, only_latent = FALSE)
 y_est_GL_full <- pred_GL_y_full$mean
@@ -628,7 +628,7 @@ Here we are showing the estimate of the practical correlation range ($2/\kappa$)
 
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
   posterior_df_bru_fit <- gg_df(spde_bru_result)
 
   library(ggplot2)
@@ -675,7 +675,7 @@ field_pred <- predict(spde_model,
 ```
 
 Let us plot the predictions of the latent field:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 plot(field_pred)
 ```
 
@@ -690,7 +690,7 @@ obs_pred <- predict(spde_model,
 ```
 
 Let us plot the predictions:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, fig.width=7, warning=FALSE, message=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 plot(obs_pred)
 ```
 
