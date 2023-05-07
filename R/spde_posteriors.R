@@ -132,11 +132,14 @@ posterior_mean_obs_alpha1 <- function(theta,
 #' @param graph metric_graph object
 #' @param leave.edge.out compute the expectation of the graph if the
 #' @param type Set to 'obs' for computation at observation locations, or to
-#' 'mesh' for computation at mesh locations.
+#' 'PtE' for computation at PtE locations.
 #' @noRd
 posterior_mean_obs_alpha2 <- function(theta,
-                                      graph,
-                                      type = "obs",
+                                      graph, #df_prd with residual and PtE
+                                      resp, #resp must be in the graph's internal order
+                                      PtE_resp,
+                                      PtE_pred,
+                                      type = "PtE",
                                       leave.edge.out = FALSE) {
 
   if(type == "obs" && leave.edge.out) {
@@ -145,17 +148,27 @@ posterior_mean_obs_alpha2 <- function(theta,
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
+  
+  if(is.null(PtE_resp)){
+    PtE <- graph$get_PtE()
+  }
+  if(is.null(resp)){
+    resp <- graph$data$y
+  }
 
   if(leave.edge.out == FALSE)
-    E.post <- posterior_mean_alpha2(theta, graph)
+    E.post <- posterior_mean_alpha2(theta = theta, graph = graph, resp = resp, PtE_resp = PtE_resp)
 
-  y_hat <- rep(0, length(graph$y))
+  y_hat <- rep(0, length(resp))
+
   if (type == "obs") {
-    y_hat <- rep(0, length(graph$y))
-    obs.edges <- unique(graph$PtE[,1])
+    y_hat <- rep(0, length(resp))
+    obs.edges <- unique(PtE_resp[,1])
   }  else {
-    y_hat <- rep(0, dim(graph$mesh$PtE)[1])
-    obs.edges <- unique(graph$mesh$PtE[,1])
+    # y_hat <- rep(0, dim(graph$mesh$PtE)[1])
+    # obs.edges <- unique(graph$mesh$PtE[,1])
+    y_hat <- rep(0, dim(PtE_pred)[1])
+    obs.edges <- unique(PtE_pred[,1])
   }
 
   for(e in obs.edges){
@@ -163,9 +176,9 @@ posterior_mean_obs_alpha2 <- function(theta,
     if(leave.edge.out == TRUE)
       E.post <- posterior_mean_alpha2(theta, graph, rem.edge = e)
 
-    obs.id <- which(graph$PtE[, 1] == e)
-    obs.loc <- graph$PtE[obs.id, 2]
-    y_i <- graph$y[obs.id]
+    obs.id <- which(PtE_resp[, 1] == e)
+    obs.loc <- PtE_resp[obs.id, 2]
+    y_i <- resp[obs.id]
     l <- graph$edge_lengths[e]
 
     if(type == "obs") {
@@ -199,8 +212,11 @@ posterior_mean_obs_alpha2 <- function(theta,
                                                          y_i - y_hat[obs.id])
       }
     } else {
-      pred.id <- graph$mesh$PtE[, 1] == e
-      pred.loc <- graph$mesh$PtE[pred.id, 2]
+      # pred.id <- graph$mesh$PtE[, 1] == e
+      # pred.loc <- graph$mesh$PtE[pred.id, 2]
+
+      pred.id <- PtE_pred[, 1] == e
+      pred.loc <- PtE_pred[pred.id, 2]
 
       t <- c(0,l,l*obs.loc, l*pred.loc)
       D <- outer (t, t, `-`)
@@ -222,7 +238,9 @@ posterior_mean_obs_alpha2 <- function(theta,
       Bt_p <- solve(S[E.ind, E.ind],S[E.ind, Pred.ind])
 
       u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
-      y_hat[pred.id] <- t(Bt_p) %*% u_e
+      u_e_tmp <- t(Bt_p) %*% u_e
+      u_e_tmp <- u_e_tmp[,1]
+      y_hat[pred.id] <- u_e_tmp
 
       if (leave.edge.out == FALSE && length(obs.loc)>0) {
         Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
@@ -230,16 +248,22 @@ posterior_mean_obs_alpha2 <- function(theta,
           S[Obs.ind, E.ind, drop = FALSE] %*% Bt
         diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
         Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
+        Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
+        u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
+        y_hat_obs <- t(Bt) %*% u_e
         y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
-                                                                 y_i - y_hat[obs.id])
+                                                                #  y_i - y_hat[obs.id])
+                                                                y_i - y_hat_obs)
       }
     }
   }
   if(type == "obs"){
     return(y_hat)
   } else {
-    E.p <- E.post[seq(from=1, by = 2, to = dim(E.post)[1])]
-    return(c(E.p[which(!duplicated(c(t(graph$E))))],y_hat))
+    # E.p <- E.post[seq(from=1, by = 2, to = dim(E.post)[1])]
+    # return(c(E.p[which(!duplicated(c(t(graph$E))))],y_hat))
+    # return(c(E.p[c(t(graph$E))],y_hat))
+    return(y_hat)
   }
 }
 
@@ -322,11 +346,16 @@ posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
 #' @param theta parameters (sigma_e, sigma, kappa)
 #' @param graph metric_graph object
 #' @noRd
-posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
+posterior_mean_alpha2 <- function(theta, graph, resp, PtE_resp, rem.edge = NULL) {
 
   sigma_e <- theta[1]
   sigma <- theta[2]
   kappa <- theta[3]
+  if(is.null(PtE_resp)){
+    PtE_resp <- graph$get_PtE()
+  }
+
+  PtE <- PtE_resp
 
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
@@ -336,17 +365,18 @@ posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
 
   #build BSIGMAB
   Qpmu <- rep(0, 4 * graph$nE)
-  obs.edges <- unique(graph$PtE[, 1])
+  obs.edges <- unique(PtE[, 1])
   if(is.logical(rem.edge) == FALSE)
     obs.edges <- setdiff(obs.edges, rem.edge)
 
   i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
   count <- 0
+
   for (e in obs.edges) {
-    obs.id <- graph$PtE[, 1] == e
-    y_i <- graph$y[obs.id]
+    obs.id <- PtE[, 1] == e
+    y_i <- resp[obs.id]
     l <- graph$edge_lengths[e]
-    t <- c(0, l, l * graph$PtE[obs.id, 2])
+    t <- c(0, l, l * PtE[obs.id, 2])
 
     D <- outer (t, t, `-`)
     S <- matrix(0, length(t) + 2, length(t) + 2)
@@ -461,6 +491,7 @@ posterior_mean_alpha2 <- function(theta, graph, rem.edge = NULL) {
   i_ <- i_[1:count]
   j_ <- j_[1:count]
   x_ <- x_[1:count]
+  
   BtSB <- Matrix::sparseMatrix(i = i_,
                                j = j_,
                                x = x_,

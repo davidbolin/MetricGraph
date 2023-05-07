@@ -126,36 +126,41 @@ test_that("test likelihood",{
                                           l_e = graph$edge_lengths[i],
                                           nt = nt),i))
   }
-  X[,2] <- X[,2] + sigma_e*rnorm(nt)
+  X[,2] <- X[,2] + sigma_e*rnorm(2*nt)
+  
+  df_test <- data.frame(y = X[,2], edge_number = X[,3], distance_on_edge = X[,1])
 
-  graph$add_PtE_observations(y = X[,2], PtE = X[,c(3, 1)])
+  graph$add_observations(data = df_test, normalized = FALSE)
   graph$buildC(2, FALSE)
 
   #standard likelihood
-  lik <- likelihood_graph_spde(graph = graph, alpha = 2, log_scale = FALSE)
-  lik <- lik(theta)
-  graph2 <- graph
+  lik <- -likelihood_alpha2(theta = theta, graph = graph, data_name = "y", 
+                             X_cov = NULL, repl = NULL, BC = 1, parameterization = "spde")
+  
+  graph2 <- graph$clone()
   graph2$observation_to_vertex()
   graph2$buildC(2, FALSE)
 
   #covariance likelihood
+
   lik2 <-likelihood_graph_covariance(graph = graph2,
-                                     model = "alpha2",
-                                     log_scale = FALSE)
-  lik2 <- lik2(theta)
+                                     model = "alpha2", repl = NULL, y_graph = graph2$data[["y"]],
+                                     log_scale = FALSE, X_cov = NULL)
+  lik2 <- lik2(exp(theta))
   #likelihood with extended graph
-  lik3 <- likelihood_graph_spde(graph = graph, alpha = 2, log_scale = FALSE)
-  lik3 <- lik3(theta)
+  lik3 <- -likelihood_alpha2(theta = theta, graph = graph2, data_name = "y", 
+                             X_cov = NULL, repl = NULL, BC = 1, parameterization = "spde")
+
   expect_equal(as.matrix(lik), as.matrix(lik2), tolerance = 1e-10)
   expect_equal(as.matrix(lik), as.matrix(lik3), tolerance = 1e-10)
 })
 
 test_that("test posterior mean",{
   set.seed(13)
-  nt <- 40
+  nt <- 90
   kappa <- 0.3
   sigma_e <- 0.1
-  sigma   <- 1
+  sigma   <- 2
   theta <-  c(sigma_e,sigma,kappa)
   line2 <- Line(rbind(c(30, 80), c(140, 80)))
   line1 <- Line(rbind(c(30, 00), c(30, 80)))
@@ -181,33 +186,46 @@ test_that("test posterior mean",{
                                           l_e = graph$edge_lengths[i],
                                           nt = nt),i))
   }
-  X[,2] <- X[,2] + sigma_e*rnorm(nt)
+  X <- X[-nt,] # There is a repeated location, let us remove it
+  X[,2] <- X[,2] + rnorm(nrow(X), sd = sigma_e)
 
-  graph$add_PtE_observations(y = X[,2], PtE = X[,c(3, 1)])
-  graph$buildC(2, FALSE)
+  df_temp <- data.frame(y = X[,2], edge_number = X[,3], distance_on_edge = X[,1])
+
+  graph$add_observations(data = df_temp, normalized = FALSE)
 
   #test posterior at observation locations
-  pm <- spde_posterior_mean(theta, alpha = 2, type = "obs", graph = graph)
+  res <- graph_lme(y ~ -1, graph=graph, model="alpha2", parameterization = "spde")
+  pm <- predict(res, data = df_temp)$mean
 
-  graph2 <- graph
+  kappa_est <- res$coeff$random_effects[2]
+  sigma_est <- res$coeff$random_effects[1]
+  theta_est <- c(res$coeff$measurement_error, sigma_est, kappa_est)
+
+  graph2 <- graph$clone()
   graph2$observation_to_vertex()
   graph2$buildC(2, FALSE)
   n.o <- length(graph2$y)
   n.v <- dim(graph2$V)[1]
   n.c <- 1:length(graph2$CoB$S)
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa_est, sigma = sigma_est,
                       alpha = 2, graph = graph2, BC = 1)
   Qtilde <- (graph2$CoB$T) %*% Q %*% t(graph2$CoB$T)
   Qtilde <- Qtilde[-n.c,-n.c]
   Sigma.overdetermined  = t(graph2$CoB$T[-n.c, ]) %*%
     solve(Qtilde) %*% (graph2$CoB$T[-n.c, ])
-  index.obs <- 4*(graph2$PtE[, 1] - 1) +
-    (1 * (abs(graph2$PtE[, 2]) < 1e-14)) +
-    (3 * (abs(graph2$PtE[, 2]) > 1e-14))
+  PtE <- graph2$get_PtE()
+  index.obs <- 4*(PtE[, 1] - 1) +
+    (1 * (abs(PtE[, 2]) < 1e-14)) +
+    (3 * (abs(PtE[, 2]) > 1e-14))
   Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   Sigma.Y <- Sigma
-  diag(Sigma.Y) <- diag(Sigma.Y) + theta[1]^2
-  pm2 <- Sigma %*% solve(Sigma.Y, graph$y)
+  diag(Sigma.Y) <- diag(Sigma.Y) + theta_est[1]^2
+  pm2 <- Sigma %*% solve(Sigma.Y, graph2$data$y)
 
-  expect_equal(as.matrix(pm), as.matrix(pm2), tolerance = 1e-10)
+  pm2 <- as.vector(pm2)
+
+  ord1 <- order(graph$data[["__coord_x"]], graph$data[["__coord_y"]])
+  ord2 <- order(graph2$data[["__coord_x"]], graph2$data[["__coord_y"]])
+
+  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-15)
 })
