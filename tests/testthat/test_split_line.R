@@ -11,9 +11,7 @@ Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="4")))
 graph <- metric_graph$new(lines = Lines)
 
-graph$plot()
-
-graph$split_edge(1,0.5)
+graph$.__enclos_env__$private$split_edge(1,0.5)
 
 #graph$LtE
 graph$plot()
@@ -21,7 +19,7 @@ PtE <- cbind(c(1,2),c(0.2,0.8))
 df_graph <- data.frame(y = c(1,2), edge_number = PtE[,1],
                         distance_on_edge=PtE[,2])
 graph$add_observations(data = df_graph)
-graph$split_edge(1,0.5)
+graph$.__enclos_env__$private$split_edge(1,0.5)
 graph$plot(data="y")
 
 xc = c(-0.15,-0.51, 0.35,0.45)
