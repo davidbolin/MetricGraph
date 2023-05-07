@@ -234,12 +234,11 @@ graph$add_observations(data = df_data, normalized = TRUE)
 graph$plot(data = "y")
 ```
 
-We can now use the `graph_lme()` function to fit the above model. By default a Whittle-Mat\'ern field with $\alpha=1$ will be chosen
-to fit. We will choose `parameterization_latent` as `"spde"` to obtain the estimated values for `kappa` and `sigma`. By default it
+We can now use the `graph_lme()` function to fit the above model. By default a linear regression model is chosen. Since we want to fit a model with a latent model given by a Whittle-Mat\'ern field with $\alpha=1$, we should set the `model` argument to either `'alpha1'` or to `list(model = 'WhittleMatern', alpha = 1)` (the first is more convenient but less decriptive). We will choose `parameterization_latent` as `"spde"` to obtain the estimated values for `kappa` and `sigma`. By default it
 provides estimated values for the range parameter and `sigma`.
 
 ```{r}
-res <- graph_lme(y ~ -1, graph = graph, parameterization_latent = "spde")
+res <- graph_lme(y ~ -1, graph = graph, model = 'alpha1', parameterization_latent = "spde")
 
 summary(res)
 ```
@@ -507,7 +506,7 @@ graph$plot(data = TRUE)
 We now fit the different models to this data: 
 ```{r}
 #alpha = 1 model
-fit_alpha1 <- graph_lme(y ~ -1, graph=graph)
+fit_alpha1 <- graph_lme(y ~ -1, graph=graph, model = list(type = "WhittleMatern", alpha = 1))
 
 #alpha = 2 model
 fit_alpha2 <- graph_lme(y ~ -1, graph=graph, model = list(type = "WhittleMatern", alpha = 2))
@@ -637,7 +636,7 @@ graph$plot(data="y", group=2)
 To fit the model, we simply proceed in an identical manner as for the case without replicates by using the `graph_lme()` function:
 
 ```{r}
-fit_repl <- graph_lme(y ~ -1, graph = graph, parameterization = "spde")
+fit_repl <- graph_lme(y ~ -1, graph = graph, model = "alpha1", parameterization = "spde")
 
 sigma_e_est <- fit_repl$coeff$measurement_error
 sigma_est <- fit_repl$coeff$random_effects[1]
@@ -736,7 +735,7 @@ graph$add_observations(data=df_graph, normalized = TRUE)
 Let us now estimate the parameters using the `graph_lme()` function:
 
 ```{r}
-fit_cov <- graph_lme(y ~ x1, graph = graph, parameterization_latent = "spde")
+fit_cov <- graph_lme(y ~ x1, graph = graph, model = "alpha1", parameterization_latent = "spde")
 sigma_e_est <- fit_cov$coeff$measurement_error
 sigma_est <- fit_cov$coeff$random_effects[1]
 kappa_est <- fit_cov$coeff$random_effects[2]
@@ -824,7 +823,7 @@ graph$add_observations(data = df_graph, normalized = TRUE, group = "repl")
 Let us now estimate the parameters with the `graph_lme()` function:
 
 ```{r}
-fit_cov_repl <- graph_lme(y ~ x1, graph = graph, parameterization_latent = "spde")
+fit_cov_repl <- graph_lme(y ~ x1, graph = graph, model = "alpha1", parameterization_latent = "spde")
 sigma_e_est <- fit_cov_repl$coeff$measurement_error
 sigma_est <- fit_cov_repl$coeff$random_effects[1]
 kappa_est <- fit_cov_repl$coeff$random_effects[2]

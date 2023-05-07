@@ -71,6 +71,38 @@ references:
   pages: 2593-2601
   issued: 
     year: 2021
+- id: LindgrenRue2015
+  title: Bayesian Spatial Modelling with R-INLA.
+  author:
+  - family: Lindgren
+    given: Finn
+  - family: Rue
+    given: Haavard
+  container-title: Journal of Statistical Software
+  type: article
+  issue: 63
+  pages: 1-25
+  issued:
+    year: 2015
+- id: inlabru2019
+  title: inlabru an R package for Bayesian spatial modelling from ecological survey data
+  author:
+  - family: Bachl
+    given: Fabian E.
+  - family: Lindgren
+    given: Finn
+  - family: Borchers
+    given: David L.
+  - family: Illian
+    given: Janine B.
+  container-title: Methods in Ecology and Evolution
+  type: article
+  issue: 10
+  pages: 760-766
+  issued:
+    year: 2019
+
+  
 ---
 
 ```{r setup, include=FALSE}
@@ -93,8 +125,8 @@ of Gaussian processes on metric graphs: The Whittle--Matérn fields introduced
 by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), Gaussian
 processes with isotropic covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Gaussian models based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
-Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` (REF, package available from [http://R-INLA.
-org/download/](http://R-INLA.org/download/) and `inlabru` (REF) that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
+Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` [@LindgrenRue2015](https://www.jstatsoft.org/article/view/v063i19), package available from [http://R-INLA.
+org/download/](http://R-INLA.org/download/) and `inlabru` [@inlabru2019](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.13168) that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
 
 The package is available to install from the Comprehensive R Archive
 Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository [https://github.com/davidbolin/MetricGraph](https://github.com/davidbolin/MetricGraph). The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage. 
@@ -291,6 +323,8 @@ To obtain a field with differentiable sample paths, we can change to $\alpha=2$ 
 
 ### Inference
 
+In the following examples we will consider models without replicates. Please, see the [Gaussian random fields on metric graphs](random_fields.html) vignette for examples with replicates.
+
 Suppose that we have data of the form 
 $$
 y_i = \beta_1\text{lon}(s_i) +  \beta_1\text{lat}(s_i) +  u(s_i) + \varepsilon_i, \quad i=1,\ldots,n
@@ -341,8 +375,24 @@ graph$plot(X = y, X_loc = obs.loc, vertex_size = 0)
 graph$add_observations(data = data, normalized = TRUE)
 ```
 
+Our goal now is to fit a linear mixed-effects model on this data assuming a Whittle-Mat\'ern latent model with $\alpha=1$. To this end, we can use the `graph_lme()` function. 
+
+If we do not specify the model, it will fit a linear regression model. So, let us first fit a simple linear regression model to illustrate: 
+
 ```{r}
-res <- graph_lme(y ~ lon + lat, graph = graph)
+res_lm <- graph_lme(y ~ lon + lat, graph = graph)
+```
+
+We can get the summary:
+
+```{r}
+summary(res_lm)
+```
+
+Let us now fit the linear mixed-effects model with a Whittle-Mat\'ern latent model with $\alpha=1$. To this end, we can either specify the `model` argument as `'alpha1'` or as the following list: `list(type = 'WhittleMatern', alpha = 1)`. The list makes it easier to understand which model is being chosen as a random effect, however, it makes it longer, and less convenient, to write. Let us use the simplified form:
+
+```{r}
+res <- graph_lme(y ~ lon + lat, graph = graph, model = 'alpha1')
 ```
 
 Let us get the summary of the result:
@@ -437,7 +487,7 @@ built in support for this, and we can obtain the distances between the observati
 graph$compute_resdist()
 ```
 
-However, if the goal is to fit a model using this covariance function, there is no need for the user to compute it. It is done internally when one uses the `graph_lme()` function. We need to set the `model` argument in `graph_lme()` as a list with type `"isoCov"` (there is no need to add additional arguments, as the exponential covariance is the default). Let us fit a linear regression model with a random effect given by a Gaussian field with an isotropic exponential covariance function:
+However, if the goal is to fit a model using this covariance function, there is no need for the user to compute it. It is done internally when one uses the `graph_lme()` function. We need to set the `model` argument in `graph_lme()` as a list with type `"isoCov"` (there is no need to add additional arguments, as the exponential covariance is the default). Let us fit a linear regression model with a random effect given by a Gaussian field with an isotropic exponential covariance function (alternatively, one can also write `model = 'isoExp'`):
 
 ```{r}
 res_exp <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "isoCov"))
@@ -491,7 +541,7 @@ graph Laplacian. The (weighted) graph Laplacian, where the weights are specified
 by the edge lengths can be computed by the function `compute_laplacian()` in the
 `metric_graph` object. Suppose that we want to fit the data that we defined
 above with this model. We can use the `graph_lme()` function. Also, observe that there is no need to 
-use the `compute_laplacian()` function, as it is done internally. We now set the `model` argument as a list with the `type` being `"GraphLaplacian"`:
+use the `compute_laplacian()` function, as it is done internally. We now set the `model` argument as a list with the `type` being `"GraphLaplacian"` (alternatively, one can also write `model = 'GL1'`) to obtain a graph Laplacian model with `alpha=1`:
 
 ```{r}
 res_gl <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "GraphLaplacian"))
@@ -693,8 +743,6 @@ Let us plot the predictions:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 plot(obs_pred)
 ```
-
-## An example with replicates
 
 # References {-}
 

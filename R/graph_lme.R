@@ -6,8 +6,9 @@
 #'
 #' @param formula Formula object describing the relation between the response variables and the fixed effects.
 #' @param graph A `metric_graph` object.
-#' @param model The random effects model that will be used. A list containing the elements `type`, which can be
-#' `WhittleMatern`, `graphLaplacian` or `isoCov`. For `Whittle-Matern` and `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
+#' @param model The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \eq{\alpha}=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eq{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`. 
+#' `linearModel` corresponds to a linear model without random effects.
+#' For `Whittle-Matern` and `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
 #' contain a parameter `cov_function`, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the `cov_function` argument. The default is 'exp_covariance', the
 #' exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for `Whittle-Matern` models, there is an additional parameter
 #' `version`, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default. 
@@ -27,7 +28,7 @@
 #' 
 
 graph_lme <- function(formula, graph, 
-                model = list(type = "WhittleMatern", alpha = 1, version = 1), 
+                model = list(type = "linearModel"), 
                 repl = NULL,
                 optim_method = "L-BFGS-B", 
                 starting_values_latent = NULL,
@@ -36,6 +37,26 @@ graph_lme <- function(formula, graph,
                 BC = 1, 
                 model_matrix = TRUE,
                 optim_controls = list()) {
+
+  if(!is.list(model)){
+    if(!is.character(model)){
+      stop("The 'model' argument must be either a list or a character (string).")
+    }
+    model <- model[[1]]
+    model <- tolower(model)
+    if(!(model%in% c("lm", "alpha1", "alpha2", "isoexp", "gl1", "gl2"))){
+      stop("If model is a character (string), the options are 'lm', 'alpha1', 'alpha2', 'isoExp', 'GL1', 'GL2'.")
+    }
+    model <- switch(model,
+            "lm" = list(type = "linearModel"),
+            "alpha1" = list(type = "WhittleMatern", alpha = 1, version = 1),
+            "alpha2" = list(type = "WhittleMatern", alpha = 2),
+            "isoexp" = list(type = "isoCov"),
+            "gl1" = list(type = "graphLaplacian", alpha = 1),
+            "gl2" = list(type = "graphLaplacian", alpha = 2)
+            )
+  }
+
   model_type <- model[["type"]]
   model_type <- tolower(model_type)
 
@@ -49,8 +70,8 @@ graph_lme <- function(formula, graph,
     stop("The possible values for 'BC' are 0 and 1!")
   }
 
-  if(!(model_type%in% c("whittlematern", "graphlaplacian", "isocov"))){
-    stop("The possible models are 'WhittleMatern', 'graphLaplacian', 'isoCov')!")
+  if(!(model_type%in% c("whittlematern", "graphlaplacian", "isocov", "linearmodel"))){
+    stop("The possible models are 'linearModel', 'WhittleMatern', 'graphLaplacian', 'isoCov')!")
   }
 
   if(model_type%in% c("whittlematern", "graphlaplacian")){
@@ -144,7 +165,7 @@ graph_lme <- function(formula, graph,
       } else{
         model_start <- "GL2"
       }
-    } else{
+    } else if(model_type == "isocov"){
       graph_bkp$res_dist <- NULL
       if(is.character(model[["cov_function"]])){
         if(model[["cov_function"]] == "exp_covariance"){
@@ -156,8 +177,9 @@ graph_lme <- function(formula, graph,
       } else{
         stop("For 'isoCov' models with a non-exponential covariance, that are not 'alpha1', 'alpha2', 'GL1' or 'GL2', you should provide the starting values!")
       }
-    }
+    } 
 
+    if(model_type != "linearmodel"){
       range_par <- FALSE
       if(model_type == "whittlematern"){
         range_par <- ifelse(parameterization_latent == "matern",TRUE,FALSE)
@@ -167,16 +189,19 @@ graph_lme <- function(formula, graph,
                     manual_data = unlist(y_graph),
                     log_scale = TRUE,
                     range_par = range_par)
-  } else {
+    }
+  } else if(model_type != "linearmodel") {
     start_values <- c(log(0.1*sd(y_graph),log(starting_values_latent)))
     par_names <- names(starting_values_latent)
-  }
 
-  if(!is.null(start_sigma_e)){
+    if(!is.null(start_sigma_e)){
         start_values[1] <- log(start_sigma_e)
+    }
   }
 
-  if(ncol(X_cov)>0){
+
+
+  if(ncol(X_cov)>0 && model_type != "linearmodel"){
     names_tmp <- colnames(X_cov)
     data_tmp <- cbind(y_graph, X_cov)
     data_tmp <- na.omit(data_tmp)
@@ -208,7 +233,9 @@ graph_lme <- function(formula, graph,
   } else if (model_type == "graphlaplacian"){
       likelihood <- likelihood_graph_laplacian(graph = graph_bkp, alpha = model[["alpha"]], y_graph = y_graph, 
               X_cov = X_cov, maximize = FALSE, repl=repl, parameterization = "spde")
-  } else if (is.character(model[["cov_function"]])) {
+  } else if(model_type == "isocov") {
+  
+  if (is.character(model[["cov_function"]])) {
     if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
       par_names <- c("sigma", "kappa")
@@ -222,12 +249,16 @@ graph_lme <- function(formula, graph,
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov, y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
                                                 X_cov = X_cov, repl = repl)
-  } else{
+    } else{
     model[["cov_function_name"]] <- "other"
       likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov, y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
                                                 X_cov = X_cov, repl = repl)
-  }
+    }
+    }
+
+    
+  if(model_type != "linearmodel"){
 
   res <- optim(start_values, 
                 likelihood, method = optim_method,
@@ -238,16 +269,25 @@ graph_lme <- function(formula, graph,
   coeff <- exp(c(res$par[1:3]))
   coeff <- c(coeff, res$par[-c(1:3)])
 
+  loglik <- -res$value
+
+  n_fixed <- ncol(X_cov)
+  n_random <- length(coeff) - n_fixed - 1  
+
   observed_fisher <- res$hessian
   inv_fisher <- tryCatch(solve(observed_fisher), error = function(e) matrix(NA,
                                                                         nrow(observed_fisher), ncol(observed_fisher)))
+  std_err <- sqrt(diag(inv_fisher))
 
-  n_fixed <- ncol(X_cov)
+  coeff_random <- coeff[2:(1+n_random)]
+  std_random <- std_err[2:(1+n_random)]
+  names(coeff_random) <- par_names
+
   coeff_meas <- coeff[1]
   names(coeff_meas) <- "std. dev"
-  std_err <- sqrt(diag(inv_fisher))
+
   std_meas <- std_err[1]
-  n_random <- length(coeff) - n_fixed - 1
+
   coeff_fixed <- NULL
   if(n_fixed > 0){
     coeff_fixed <- coeff[(2+n_random):length(coeff)]
@@ -255,9 +295,34 @@ graph_lme <- function(formula, graph,
   } else{
     std_fixed <- NULL
   }
-  coeff_random <- coeff[2:(1+n_random)]
-  std_random <- std_err[2:(1+n_random)]
-  names(coeff_random) <- par_names
+
+  } else{
+    coeff_random <- NULL
+    std_random <- NULL
+
+    if(ncol(X_cov) == 0){
+      stop("The model does not have either random nor fixed effects.")
+    }
+
+    names_tmp <- colnames(X_cov)
+    data_tmp <- cbind(y_graph, X_cov)
+    data_tmp <- na.omit(data_tmp)
+    res <- lm(data_tmp[,1] ~ data_tmp[,-1] - 1)
+    coeff_fixed <- res$coeff
+    names(coeff_fixed) <- names_tmp
+    sm_temp <- summary(res)
+    std_fixed <- sm_temp$coefficients
+    rownames(std_fixed) <- names_tmp
+    coeff_meas <- sm_temp$sigma
+    names(coeff_meas) <- "std. dev"
+    std_meas <- NULL
+    loglik <- logLik(res)[[1]]
+
+  }
+
+  if(is.null(coeff_fixed) && is.null(coeff_random)){
+    stop("The model does not have either random nor fixed effects.")
+  }
 
 
 
@@ -266,7 +331,6 @@ graph_lme <- function(formula, graph,
   fixed_effects = coeff_fixed, random_effects = coeff_random)
   object$std_errors <- list(std_meas = std_meas,
         std_fixed = std_fixed, std_random = std_random) 
-  object$loglik <- - res$value
   object$call <- call_graph_lme
   object$terms <- list(fixed_effects = X_cov)
   object$response <- list(y = y_graph)
@@ -276,7 +340,7 @@ graph_lme <- function(formula, graph,
   object$repl <- repl
   object$optim_controls <- optim_controls
   object$latent_model <- model
-  object$loglike <- -res$value
+  object$loglik <- loglik
   object$BC <- BC
   object$niter <- res$counts
   object$response <- y_term
@@ -297,6 +361,20 @@ graph_lme <- function(formula, graph,
 
 }
 
+#' @name logLik.graph_lme
+#' @title log-likelihood for \code{graph_lme} Objects
+#' @description Gives the log-likelihood for a fitted mixed effects model on metric graphs.
+#' @param x object of class "graph_lme" containing results from the fitted model.
+#' @param ... further arguments passed to or from other methods.
+#' @return log-likelihood at the fitted coefficients.
+#' @noRd
+#' @method logLik graph_lme
+#' @export 
+
+logLik.graph_lme <- function(object, ...){
+  return(object$loglik)
+}
+
 
 #' @name print.graph_lme
 #' @title Print Method for \code{graph_lme} Objects
@@ -314,7 +392,8 @@ print.graph_lme <- function(x, ...) {
   call_name <- switch(model_type,
                       "whittlematern" = {paste0("Latent model - Whittle-Matern with alpha = ",x$latent_model$alpha)},
                       "graphlaplacian" = {paste0("Latent model - graph Laplacian SPDE with alpha = ",x$latent_model$alpha)},
-                      "isocov" = {"Covariance-based model"}
+                      "isocov" = {"Covariance-based model"},
+                      "linearmodel" = {"Linear regression model"}
   )
 
   coeff_fixed <- x$coeff$fixed_effects
@@ -333,7 +412,11 @@ print.graph_lme <- function(x, ...) {
   }
   cat("\n")
   cat(paste0("Random effects:", "\n"))
-  print(coeff_random)
+  if(!is.null(coeff_random)){
+    print(coeff_random)
+  } else{
+    message("No random effects")
+  }
   cat("\n")
   cat(paste0("Measurement error:", "\n"))
   print(x$coeff$measurement_error)
@@ -358,7 +441,8 @@ summary.graph_lme <- function(object, ...) {
   call_name <- switch(model_type,
                       "whittlematern" = {paste0("Latent model - Whittle-Matern with alpha = ",object$latent_model$alpha)},
                       "graphlaplacian" = {paste0("Latent model - graph Laplacian SPDE with alpha = ",object$latent_model$alpha)},
-                      "isocov" = {"Covariance-based model"}
+                      "isocov" = {"Covariance-based model"},
+                      "linearmodel" = {"Linear regression model"}
   )
 
   coeff_fixed <- object$coeff$fixed_effects
@@ -372,19 +456,28 @@ summary.graph_lme <- function(object, ...) {
   coeff <- c(coeff_fixed, coeff_random, coeff_meas)
   SEr <- c(SEr_fixed,SEr_random, SEr_meas)
 
-  tab <- cbind(coeff, SEr, coeff / SEr, 2 * stats::pnorm(-abs(coeff / SEr)))
-  colnames(tab) <- c("Estimate", "Std.error", "z-value", "Pr(>|z|)")
-  rownames(tab) <- names(coeff)
-  tab <- list(fixed_effects = tab[seq.int(length.out = nfixed), , drop = FALSE], random_effects = tab[seq.int(length.out = nrandom) + nfixed, , drop = FALSE], 
-  meas_error = tab[seq.int(length.out = 1) + nfixed+nrandom, , drop = FALSE])
+  if(model_type != "linearmodel"){
+    tab <- cbind(coeff, SEr, coeff / SEr, 2 * stats::pnorm(-abs(coeff / SEr)))
+    colnames(tab) <- c("Estimate", "Std.error", "z-value", "Pr(>|z|)")
+    rownames(tab) <- names(coeff)
+    tab <- list(fixed_effects = tab[seq.int(length.out = nfixed), , drop = FALSE], random_effects = tab[seq.int(length.out = nrandom) + nfixed, , drop = FALSE], 
+    meas_error = tab[seq.int(length.out = 1) + nfixed+nrandom, , drop = FALSE])
+  } else{
+    tab <- list(fixed_effects = SEr_fixed, coeff_meas = coeff_meas)
+  }
+
+
+
 
   ans$coefficients <- tab
+
+  ans$model_type <- model_type
 
   ans$call_name <- call_name
 
   ans$call <- object$call
 
-  ans$loglike <- object$loglike
+  ans$loglik <- object$loglik
 
   ans$niter <- object$niter
 
@@ -419,32 +512,44 @@ print.summary_graph_lme <- function(x, ...) {
 
 
   #
+  model_type <- tolower(x$model_type)
   #
-  if (NROW(tab$fixed_effects)) {
-    cat(paste0("\nFixed effects:\n"))
-    stats::printCoefmat(tab[["fixed_effects"]], digits = digits, signif.legend = FALSE)
-  } else {
-    message("\nNo coefficients modeling the fixed effects. \n")
+  if(model_type != "linearmodel"){
+      if (NROW(tab$fixed_effects)) {
+        cat(paste0("\nFixed effects:\n"))
+        stats::printCoefmat(tab[["fixed_effects"]], digits = digits, signif.legend = FALSE)
+      } else {
+        message("\nNo fixed effects. \n")
+      }
+      #
+      if (NROW(tab$random_effects)) {
+        cat(paste0("\nRandom effects:\n"))
+        stats::printCoefmat(tab[["random_effects"]][,1:3], digits = digits, signif.legend = FALSE)
+      } else {
+        message("\nNo random effects. \n")
+      }
+      #
+      cat(paste0("\nMeasurement error:\n"))
+        stats::printCoefmat(tab[["meas_error"]][1,1:3,drop = FALSE], digits = digits, signif.legend = FALSE)
+  } else{
+        cat(paste0("\nFixed effects:\n"))
+        stats::printCoefmat(tab[["fixed_effects"]], digits = digits, signif.legend = FALSE)
+
+        message("\nNo random effects. \n")
+        cat(paste0("\nMeasurement error:\n"))
+        print(tab$coeff_meas)
+
   }
-  #
-  if (NROW(tab$random_effects)) {
-    cat(paste0("\nRandom effects:\n"))
-    stats::printCoefmat(tab[["random_effects"]][,1:3], digits = digits, signif.legend = FALSE)
-  } else {
-    message("\nNo coefficients modeling the random effects. \n")
-  }
-  #
-  cat(paste0("\nMeasurement error:\n"))
-    stats::printCoefmat(tab[["meas_error"]][1,1:3,drop = FALSE], digits = digits, signif.legend = FALSE)
   #
   if (getOption("show.signif.stars")) {
     cat("---\nSignif. codes: ", "0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1", "\n\n")
   }
   #
 
-  cat("Log-Likelihood: ", x$loglike,"\n")
-
-  cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
+  cat("Log-Likelihood: ", x$loglik,"\n")
+  if(model_type != "linearmodel"){
+    cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
+  }
 }
 
 

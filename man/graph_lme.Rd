@@ -7,7 +7,7 @@
 graph_lme(
   formula,
   graph,
-  model = list(type = "WhittleMatern", alpha = 1, version = 1),
+  model = list(type = "linearModel"),
   repl = NULL,
   optim_method = "L-BFGS-B",
   starting_values_latent = NULL,
@@ -23,8 +23,9 @@ graph_lme(
 
 \item{graph}{A \code{metric_graph} object.}
 
-\item{model}{The random effects model that will be used. A list containing the elements \code{type}, which can be
-\code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}. For \code{Whittle-Matern} and \code{graph-Laplacian} models, the list must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
+\item{model}{The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \eq{\alpha}=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eq{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements \code{type}, which can be \code{linearModel}, \code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}.
+\code{linearModel} corresponds to a linear model without random effects.
+For \code{Whittle-Matern} and \code{graph-Laplacian} models, the list must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
 contain a parameter \code{cov_function}, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the \code{cov_function} argument. The default is 'exp_covariance', the
 exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for \code{Whittle-Matern} models, there is an additional parameter
 \code{version}, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default.}
