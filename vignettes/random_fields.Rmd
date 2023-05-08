@@ -492,7 +492,7 @@ for(i in 1:graph$nE){
 }
 
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
-                 graph = graph, PtE = PtE)
+                 graph = graph, PtE = PtE, method = "Q")
 
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
 

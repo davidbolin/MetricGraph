@@ -521,6 +521,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' locations
   #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
+  #' @param include_vertices Should the original vertices be included in the Laplacian matrix?
   compute_resdist_PtE = function(PtE, normalized = TRUE, include_vertices = FALSE) {
       graph.temp <- self$clone()
       graph.temp$clear_observations()
@@ -665,7 +666,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Computes the weigthed graph Laplacian for the graph
   #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
-  #' @param include_vertices Should the original vertices be included in the Laplacian matrix?
+
   compute_laplacian_PtE = function(PtE, normalized = TRUE) {
 
     graph.temp <- self$clone()

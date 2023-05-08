@@ -297,7 +297,11 @@ for. If \code{NULL}, it will be computed for all groups.}
 Computes the resistance distance between the observation
 locations
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_PtE(
+  PtE,
+  normalized = TRUE,
+  include_vertices = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -306,6 +310,8 @@ locations
 \item{\code{PtE}}{points to compute the metric for.}
 
 \item{\code{normalized}}{are the locations in PtE in normalized distance?}
+
+\item{\code{include_vertices}}{Should the original vertices be included in the Laplacian matrix?}
 }
 \if{html}{\out{</div>}}
 }
@@ -361,11 +367,7 @@ Laplacian for. If \code{NULL}, it will be computed for all groups.}
 \subsection{Method \code{compute_laplacian_PtE()}}{
 Computes the weigthed graph Laplacian for the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian_PtE(
-  PtE,
-  normalized = TRUE,
-  include_vertices = TRUE
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -374,8 +376,6 @@ Computes the weigthed graph Laplacian for the graph
 \item{\code{PtE}}{points to compute the metric for.}
 
 \item{\code{normalized}}{are the locations in PtE in normalized distance?}
-
-\item{\code{include_vertices}}{Should the original vertices be included in the Laplacian matrix?}
 }
 \if{html}{\out{</div>}}
 }

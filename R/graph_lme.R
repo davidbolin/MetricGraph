@@ -826,7 +826,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
         graph_bkp$compute_resdist(full = TRUE)
         cov_function <- model_type$cov_function
         Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[1]], coeff_random))
-        Q <- solve(Sigma)
       }
   }
 
@@ -890,15 +889,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
 
-    if(!cond_wm){
+    if(!cond_wm && !cond_isocov){
         Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
-    
-        # cov_loc <- post_Cov[idx_prd, idx_obs]
-        # cov_Obs <- post_Cov[idx_obs, idx_obs]
-    
-        # mu_krig <- cov_loc %*%  solve(cov_Obs, Y[idx_obs])
-    
-        # Observe that the "fixed-effects" mean has been subtracted from y_repl 
     
         mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
     
@@ -909,7 +901,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
           mu_fe <- mu[idx_repl, , drop = FALSE]
           mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig
         } 
-    } else{
+    } else if (cond_wm){
 
       PtE_obs <- PtE_full[idx_obs,]
       cond_alpha2 <- FALSE
@@ -936,25 +928,47 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
         if(!only_latent){
           mu_fe <- mu[idx_repl, , drop = FALSE]
           mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig[ord_idx]
-        } 
+        } else{
+            mu_krig <- mu_krig[ord_idx]
+          }   
       } else{
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,sigma,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]], data_prd_temp[[distance_on_edge]]))
+                        # PtE_pred = cbind(edge_nb, dist_ed))
           if(!only_latent){
             mu_fe <- mu[idx_repl, , drop = FALSE]
             mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig[ord_idx]
-          }                         
+          } else{
+            mu_krig <- mu_krig[ord_idx]
+          }                        
       }
+    } else { 
+        Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[1]], coeff_random))
+
+        cov_loc <- Sigma[idx_prd, idx_obs]
+        cov_Obs <- Sigma[idx_obs, idx_obs]
+        
+        # Observe that the "fixed-effects" mean has been subtracted from y_repl 
+    
+        mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
+
+        if(!only_latent){
+            mu_fe <- mu[idx_repl, , drop = FALSE]
+            mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig
+          } else{
+            mu_krig <- mu_krig
+          }
+    
     }
 
 
     mean_tmp <- as.vector(mu_krig)
 
     if(return_original_order){
-      mean_tmp[ord_idx] <- mean_tmp
+        mean_tmp[ord_idx] <- mean_tmp
       # var_tmp[ord_idx] <- var_tmp
-    }
+    } 
         
     if(!return_as_list){
       out$mean <- c(out$mean, mean_tmp)
