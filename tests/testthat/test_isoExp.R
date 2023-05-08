@@ -18,7 +18,7 @@ test_that("Test resistance metric", {
   v[PtE[,1]==2] <- v[PtE[,1]==2] + 1
   y <- 1:dim(PtE)[1]
 
-  D <- graph$compute_resdist(PtE)
+  D <- graph$compute_resdist_PtE(PtE)
   distances <- as.matrix(dist(v))
   dimnames(distances) <- NULL
   expect_equal(as.vector(D), as.vector(distances), tolerance = 1e-10)

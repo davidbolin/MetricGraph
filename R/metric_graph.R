@@ -455,7 +455,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
       geodist_temp <- distances(g)
-      
+      geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
       #Ordering back in the input order
       geodist_temp[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- geodist_temp
       if(!include_vertices){
@@ -504,9 +504,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       for(grp in group){
         data_grp <- select_group(self$data, grp)
         idx_notna <- idx_not_all_NA(data_grp)
+        if(sum(idx_notna) == 0){
+          stop("There are no non-NA observations.")
+        }
         PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
                      data_grp[["__distance_on_edge"]][idx_notna])
-        self$res_dist[[grp]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
+        self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
       }
     }
   },
