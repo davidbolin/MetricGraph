@@ -18,7 +18,7 @@ covariance_alpha1(P, kappa, sigma, graph, n.p = 50, scale = FALSE)
 
 \item{n.p}{number of points to compute the covariance on each edge}
 
-\item{scale}{scale the covariance by 2*kappa so that sigma corresponds to
+\item{scale}{scale the covariance by \code{2*kappa} so that sigma corresponds to
 the marginal standard deviation (default FALSE)}
 }
 \value{

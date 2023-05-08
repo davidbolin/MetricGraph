@@ -46,7 +46,7 @@ used if \code{data_coords} is \code{euclidean}.}
 
 \item{seed}{Random number generator seed passed on to inla.posterior.sample}
 
-\item{probs}{A numeric vector of probabilities with values in \verb{⁠[0, 1]}⁠, passed to stats::quantile}
+\item{probs}{A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile.}
 
 \item{num.threads}{Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"}
 
@@ -54,7 +54,7 @@ used if \code{data_coords} is \code{euclidean}.}
 
 \item{exclude}{Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)}
 
-\item{drop}{logical; If keep=FALSE, data is a Spatial\emph{DataFrame, and the prediciton summary has the same number of rows as data, then the output is a Spatial}DataFrame object. Default FALSE.}
+\item{drop}{logical; If keep=FALSE, data is a SpatialDataFrame, and the prediciton summary has the same number of rows as data, then the output is a SpatialDataFrame object. Default FALSE.}
 
 \item{...}{Additional arguments passed on to inla.posterior.sample}
 }

@@ -16,7 +16,7 @@ covariance_alpha1_mesh(P, kappa, sigma, graph, scale = FALSE)
 
 \item{graph}{metric_graph object}
 
-\item{scale}{scale the covariance by 2*kappa so that sigma corresponds to
+\item{scale}{scale the covariance by \code{2*kappa} so that sigma corresponds to
 the marginal standard deviation (default FALSE)}
 }
 \value{
