@@ -634,9 +634,8 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     normalized <- TRUE
   }
 
-  if(return_original_order){
     ord_idx <- order(data[[edge_number]], data[[distance_on_edge]])
-  }
+  
 
   if(!is.null(data[[as.character(object$response)]])){
     data[[as.character(object$response)]] <- NULL
@@ -877,6 +876,49 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     PtE_pred <- PtE_full[idx_prd,]
   }
 
+  cond_alpha2 <- FALSE
+  cond_alpha1 <- FALSE
+  if(cond_aux1){
+    if(model_type$alpha == 2){
+      cond_alpha2 <- TRUE
+    } else {
+      cond_alpha1 <- TRUE
+    }
+  }
+  if(cond_aux2){
+    if(model_type$cov_function == "alpha2"){
+      cond_alpha2 <- TRUE
+    } else{
+      cond_alpha1 <- TRUE
+    }
+  }
+
+  if(compute_variances || posterior_samples){
+    if(cond_wm){
+      graph_bkp2 <- graph_bkp$clone()
+      graph_bkp2$observation_to_vertex()
+      if(cond_alpha1){
+        Q <- spde_precision(kappa = kappa, sigma = sigma,
+                          alpha = 1, graph = graph_bkp2)
+      } else{
+        PtE <- graph_bkp2$get_PtE()
+        n.c <- 1:length(graph_bkp2$CoB$S)
+        Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
+                            graph = graph_bkp2, BC = BC)
+        Qtilde <- (graph_bkp2$CoB$T) %*% Q %*% t(graph_bkp2$CoB$T)
+        Qtilde <- Qtilde[-n.c,-n.c]
+        Sigma.overdetermined  = t(graph_bkp2$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+          (graph_bkp2$CoB$T[-n.c,])
+        index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+          3.0 * (abs(PtE[, 2]) > 1e-14)
+        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+        Q <- solve(Sigma)
+      }
+      A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp2$PtV, ]
+      rm(graph_bkp2)
+    }
+  }
+
 
   for(repl_y in u_repl){
     if(return_as_list){
@@ -905,22 +947,6 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     } else if (cond_wm){
 
       PtE_obs <- PtE_full[idx_obs,]
-      cond_alpha2 <- FALSE
-      cond_alpha1 <- FALSE
-      if(cond_aux1){
-        if(model_type$alpha == 2){
-          cond_alpha2 <- TRUE
-        } else {
-          cond_alpha1 <- TRUE
-        }
-      }
-      if(cond_aux2){
-        if(model_type$cov_function == "alpha2"){
-          cond_alpha2 <- TRUE
-        } else{
-          cond_alpha1 <- TRUE
-        }
-      }
 
       if(cond_alpha2){
           mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,sigma,kappa),
@@ -978,10 +1004,22 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       out$mean[[repl_y]] <- mean_tmp
     }
 
+    if(compute_variances || posterior_samples){
+      if(cond_wm){
+            Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
+      } 
+    }
+
     if (compute_variances) {
+      if(!cond_isocov){
         post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
-        var_tmp <- diag(post_cov)
-        var_tmp[graph_bkp$data[["__dummy_ord_var"]]] <- var_tmp
+        var_tmp <- max(diag(post_cov),0)
+      } else{
+        var_tmp <- diag(Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs])))
+        var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors
+      }
+
+        # var_tmp[graph_bkp$data[["__dummy_ord_var"]]] <- var_tmp
 
       if(return_original_order){
         var_tmp[ord_idx] <- var_tmp
@@ -998,6 +1036,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
     if(posterior_samples){
       mean_tmp <- as.vector(mu_krig)
+      if(cond_isocov){
+        post_cov <- Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs], t(Sigma[idx_prd,  idx_obs]))
+      } else{
+        post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
+      }
       Z <- rnorm(dim(post_cov)[1] * n_samples)
       dim(Z) <- c(dim(post_cov)[1], n_samples)
       LQ <- chol(forceSymmetric(post_cov))

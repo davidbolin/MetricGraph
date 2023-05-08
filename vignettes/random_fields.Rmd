@@ -260,7 +260,7 @@ field at locations in the graph. As an example, we now estimate the field
 on the regular mesh that we previously constructed. 
 ```{r}
 u_est <- predict(res, data.frame(edge_number = graph$mesh$VtE[,1],
-                        distance_on_edge = graph$mesh$VtE[,2]))
+                        distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
 
 graph$plot_function(u_est$mean, plotly = TRUE)
 ```
@@ -328,7 +328,7 @@ graph$clear_observations()
 sigma <-1.5
 kappa <- 20
 sigma_e <- 0.1
-n.obs.per.edge <- 240
+n.obs.per.edge <- 50
 
 PtE <- NULL
 for(i in 1:graph$nE){
