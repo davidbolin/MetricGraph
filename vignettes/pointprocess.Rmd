@@ -36,6 +36,19 @@ references:
   type: preprint
   issued:
   year: 2023
+- id: BSW2023PPST
+  title: "Log-Cox Gaussian processes and space-time models on compact metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: In preparation
+  type: preprint
+  issued:
+    year: 2023
 ---
 
 ```{r setup, include=FALSE}
@@ -48,7 +61,7 @@ set.seed(1)
 In this vignette we will introduce how to work with log-Gaussian Cox processes
 based on Whittle--Matérn fields on metric graphs. To simplify the integration
 with `R-INLA` and `inlabru` hese models are constructed using finite element 
-approximations as implemented in the `rSPDE` package. 
+approximations as implemented in the `rSPDE` package.  The theoretical details will be given in the forthcoming article [@BSW2023PPST].
    
 ## Constructing the graph and the mesh
 We begin by loading the `rSPDE`, `MetricGraph` and `INLA` packages:
