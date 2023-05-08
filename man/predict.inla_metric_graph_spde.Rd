@@ -46,7 +46,7 @@ used if \code{data_coords} is \code{euclidean}.}
 
 \item{seed}{Random number generator seed passed on to inla.posterior.sample}
 
-\item{probs}{A numeric vector of probabilities with values in \link{0,1} passed to stats::quantile}
+\item{probs}{A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile}
 
 \item{num.threads}{Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"}
 

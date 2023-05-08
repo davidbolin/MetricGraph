@@ -821,7 +821,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' used if `data_coords` is `euclidean`.
 #' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
 #' @param seed Random number generator seed passed on to inla.posterior.sample
-#' @param probs	A numeric vector of probabilities with values in [0,1] passed to stats::quantile
+#' @param probs	A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile
 #' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
 #' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
 #' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
