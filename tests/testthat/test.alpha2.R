@@ -94,7 +94,54 @@ test_that("test agrement precision matrix and article method", {
   R_adj <- R_node + R00R0l %*% Adj %*% R00R0l
   testthat::expect_equal(c(Sigma.2), c(R_adj), tol = 1e-9)
 })
+# test cov
+test_that("test agrement nueman of the adjusted", {
+  set.seed(1)
+  kappa <- 0.1* runif(1) + 1
+  sigma <- runif(1) + 1
+  c <- 1 / (4 * kappa^3)
+  l_e <- runif(1) + 0.5
+  x_ <- c(0, l_e)
+  eps <- 1e-4
 
+  D <- outer(x_, x_, "-")
+  r_00 <- MetricGraph:::r_2(D, sigma = sigma, kappa = kappa)
+  r_01 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 1)
+  r_11 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 2)
+  # order by node not derivative
+  R_00 <- matrix(c(r_00[1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
+  R_01 <- matrix(c(r_00[2], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
+  R_node <- rbind(cbind(R_00, R_01), cbind(t(R_01), R_00))
+  Q_adj = solve(R_node) - 0.5 * solve(rbind(cbind(R_00, matrix(0, 2, 2)),
+                                            cbind(matrix(0, 2, 2), R_00)))
+
+  Adj <- solve(rbind(cbind(R_00, -R_01), cbind(-t(R_01), R_00)))
+  R00R0l <-rbind(cbind(R_00, R_01), cbind(t(R_01), R_00))
+  R_adj <- R_node + R00R0l %*% Adj %*% R00R0l
+  t <- sum(x_)/2
+  D2 <- (outer(c(x_,t), c(x_,t), "-"))
+  r_00_ <- MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa)
+  r_01_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 1)
+  r_11_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 2)
+  R_t0 <- matrix(c(r_00_[1,3], r_01_[1,3], r_01_[3,1], r_11_[3,1]),2,2)
+  R_t1 <- matrix(c(r_00_[2,3], r_01_[2,3], r_01_[3,2], r_11_[3,2]),2,2)
+  R_corr <- cbind(R_t0,R_t1)
+  R_t <- R_t0 + cbind(R_00, R_01)%*%Adj %*% t(R_corr)
+  x_[0] <- 0
+  t_eps <- eps
+  D2 <- (outer(c(x_,t_eps), c(x_,t_eps), "-"))
+  r_00_ <- MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa)
+  r_01_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 1)
+  r_11_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 2)
+  R_eps0 <- matrix(c(r_00_[1,3], r_01_[1,3], r_01_[3,1], r_11_[3,1]),2,2)
+  R_eps1 <- matrix(c(r_00_[2,3], r_01_[2,3], r_01_[3,2], r_11_[3,2]),2,2)
+  R_corr_eps <- cbind(R_eps0,R_eps1)
+  R_00_e <- matrix(c(r_00_[1,1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
+  R_01_e <- matrix(c(r_00_[2,1], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
+
+  R_t2 <- R_t0 + cbind(R_00_e, R_01_e)%*%Adj %*% t(R_corr)
+  (R_t-R_adj[1:2,1:2])/eps
+})
 test_that("test likelihood",{
   set.seed(13)
   nt <- 40
