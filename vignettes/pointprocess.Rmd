@@ -4,7 +4,7 @@ author: "David Bolin, Alexandre B. Simas"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Whittle--Matérn fields with general smoothness}
+  %\VignetteIndexEntry{Log-Gaussian Cox processes on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:

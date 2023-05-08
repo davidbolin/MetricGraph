@@ -101,8 +101,28 @@ references:
   pages: 760-766
   issued:
     year: 2019
-
-  
+- id: sppackage
+  title: Applied spatial data analysis with R
+  author:
+  - family: Bivand
+    given: Roger S.
+  - family: Pebesma
+    given: Edzer
+  - family: Gomez-Rubio
+    given: Virgilio
+  publisher: Springer, NY
+  type: book
+  issued:
+    year: 2013
+- id: plotlypackage
+  title: Interactive Web-Based Data Visualization with R, plotly, and shiny
+  author:
+  - family: Sievert
+    given: Carson
+  publisher: Chapman and Hall/CRC
+  type: book
+  issued:
+    year: 2020
 ---
 
 ```{r setup, include=FALSE}
@@ -139,7 +159,7 @@ The following sections describe the main functionality of the package and summar
 A compact metric graph $\Gamma$ consists of a set of finitely many vertices $\mathcal{V}=\{v_i\}$ and a finite set $\mathcal{E}=\{e_j\}$ of edges connecting the vertices. Each edge $e$ is defined by a pair of vertices $(v_i,v_k)$ and a finite length $l_e \in (0,\infty)$. An edge in the graph is a curve parametrized by arc-length, and a location $s\in \Gamma$ is a position on an edge, and can thus be represented as a touple $(e,t)$ where $t\in[0,l_e]$. 
 
 ## Basic constructions 	
-A metric graph is represented in the `MetricGraph` package through the class `metric_graph`. An object of this class can be constructed in two ways. The first is to specify the vertex matrix `V` and the edge matrix `E`, and it is then assumed that all edges are straight lines. The second, more flexible, option is to specify the object from a `SpatialLines` object using the `sp` package (REF). 
+A metric graph is represented in the `MetricGraph` package through the class `metric_graph`. An object of this class can be constructed in two ways. The first is to specify the vertex matrix `V` and the edge matrix `E`, and it is then assumed that all edges are straight lines. The second, more flexible, option is to specify the object from a `SpatialLines` object using the `sp` package [@sppackage]. 
 
 To illustrate this, we use the `osmdata` package to download data from OpenStreetMap. In the following code, we extract the streets on the campus of 
 King Abdullah University of Science and Technology (KAUST) as a `SpatialLines` object:
@@ -256,7 +276,7 @@ graph$plot_function(f, vertex_size = 0, edge_width = 0.5)
 ```
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
-visualization of the function by using the `plotly` (REF) package. 
+visualization of the function by using the `plotly` [@plotlypackage] package. 
 When the first argument of `plot_function` is a vector, the function assumes that 
 the values in the vector are the values of the function evaluated at the vertices
 of the mesh. As an alternative, one can also provide the first argument as a 
