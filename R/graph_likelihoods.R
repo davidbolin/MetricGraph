@@ -852,7 +852,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
             X_cov_repl <- 0
           } else{ 
             X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
-            X_cov_repl <- X_cov_repl[!na.obs, ]
+            X_cov_repl <- X_cov_repl[!na.obs, , drop = FALSE]
             v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
           }
       }
