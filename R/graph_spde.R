@@ -245,8 +245,8 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   }
 
 
-  model <- do.call(
-        'inla.cgeneric.define',
+  model <- 
+        do.call(eval(parse(text='INLA::inla.cgeneric.define')),
         list(model="inla_cgeneric_gpgraph_alpha1_model",
             shlib=gpgraph_lib,
             n=as.integer(n.v), debug=debug,

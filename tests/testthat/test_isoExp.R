@@ -10,8 +10,8 @@ test_that("Test resistance metric", {
 
 
   PtE <- cbind(c(1,1,
-                 2,2,2),c(0.2, 0.1,
-                          0.9, 0.2, 0.4))
+                 2,2,2,1),c(0.2, 0.1,
+                          0.9, 0.2, 0.4,0))
 
   reo <- order(PtE[, 1],PtE[, 2])
   v <- PtE[,2]
@@ -22,14 +22,16 @@ test_that("Test resistance metric", {
   distances <- as.matrix(dist(v))
   dimnames(distances) <- NULL
   expect_equal(as.vector(D), as.vector(distances), tolerance = 1e-10)
+  
+    df_test <- data.frame(y = y, edge_number = PtE[,1], distance_on_edge = PtE[,2])
 
-  graph$add_PtE_observations(y,PtE, normalized = TRUE)
+  graph$add_observations(data = df_test, normalized = TRUE)
   graph$compute_resdist()
-  D1 <- graph$res_dist
-  expect_equal(as.vector(D1), as.vector(distances), tolerance = 1e-10)
+  D1 <- graph$res_dist[[1]]
+  expect_equal(as.vector(D1), as.vector(distances[reo,reo]), tolerance = 1e-10)
 
   theta <- c(1, 2, 3)
-  lik1 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale=FALSE, maximize = TRUE)
+  lik1 <- likelihood_graph_covariance(graph, model = "isoCov", y_graph = graph$data$y, repl=NULL, cov_function = exp_covariance, log_scale=FALSE, maximize = TRUE)
   lik1 <- lik1(theta)
 
   Sigma <- theta[2]^2 * exp(-theta[3]*distances)
@@ -40,19 +42,20 @@ test_that("Test resistance metric", {
 
 
   graph$observation_to_vertex()
-  lik2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
+  lik2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, y_graph = graph$data$y, repl=NULL, log_scale = FALSE, maximize = TRUE)
   lik2 <- lik2(theta)
 
   PtE.order <- PtE[reo, ]
   y.order <- y[reo]
   graph <- metric_graph$new(lines = Lines)
-  graph$add_PtE_observations(y.order,PtE.order, normalized = TRUE)
+  df_temp <- data.frame(y = y.order, edge_number = PtE.order[,1], distance_on_edge = PtE.order[,2])
+  graph$add_observations(data=df_temp, normalized = TRUE)
   graph$compute_resdist()
-  lik3 <- likelihood_graph_covariance(graph,  model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
+  lik3 <- likelihood_graph_covariance(graph,  model = "isoCov", repl = NULL, y = graph$data$y, cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
   lik3 <- lik3(theta)
 
   graph$observation_to_vertex()
-  lik4 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
+  lik4 <- likelihood_graph_covariance(graph, model = "isoCov", repl = NULL, y_graph = graph$data$y, cov_function = exp_covariance, log_scale = FALSE, maximize = TRUE)
   lik4 <- lik4(theta)
 
   expect_equal(lik.true, lik1, tolerance = 1e-10)

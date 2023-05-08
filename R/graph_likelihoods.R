@@ -592,7 +592,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #'
 #' For the remaining models, if `covariates` is `TRUE`, then `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
-#' @noRd
+#' @export
 likelihood_graph_covariance <- function(graph,
                                         model = "alpha1",
                                         y_graph,

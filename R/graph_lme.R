@@ -619,7 +619,9 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     n_prd <- length(data[[edge_number]])
     data[["__dummy_var"]] <- rep(0, n_prd)
     # Convert data to normalized
-    data[[distance_on_edge]] <- data[[distance_on_edge]] / graph_bkp$edge_lengths[data[[edge_number]]]
+    if(!normalized){
+      data[[distance_on_edge]] <- data[[distance_on_edge]] / graph_bkp$edge_lengths[data[[edge_number]]]
+    }
   } else{
     if(is.null(graph_bkp$mesh)){
       graph_bkp$build_mesh(h = mesh_h)
@@ -936,7 +938,13 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
           mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig[ord_idx]
         } 
       } else{
-
+          mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,sigma,kappa),
+                        graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
+                        PtE_pred = cbind(data_prd_temp[[edge_number]], data_prd_temp[[distance_on_edge]]))
+          if(!only_latent){
+            mu_fe <- mu[idx_repl, , drop = FALSE]
+            mu_krig <- mu_fe[idx_prd, , drop=FALSE] + mu_krig[ord_idx]
+          }                         
       }
     }
 

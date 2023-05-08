@@ -443,6 +443,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
 
+      nV_new <- sum(is.na(temp_merge["included"]))
+
       df_temp2$included <- NULL
 
       df_temp <- rbind(df_temp2, df_temp)
@@ -459,7 +461,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       #Ordering back in the input order
       geodist_temp[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- geodist_temp
       if(!include_vertices){
-        geodist_temp <- geodist_temp[(self$nV+1):nrow(geodist_temp), (self$nV+1):nrow(geodist_temp)]
+        # geodist_temp <- geodist_temp[(self$nV+1):nrow(geodist_temp), (self$nV+1):nrow(geodist_temp)]
+        geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp), (nV_new+1):nrow(geodist_temp)]
       }
       return(geodist_temp)
   },
@@ -518,28 +521,51 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' locations
   #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
-  compute_resdist_PtE = function(PtE, normalized = TRUE) {
+  compute_resdist_PtE = function(PtE, normalized = TRUE, include_vertices = FALSE) {
       graph.temp <- self$clone()
       graph.temp$clear_observations()
       df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                             edge_number = PtE[,1],
                             distance_on_edge = PtE[,2])
-
       if(sum(duplicated(df_temp))>0){
-        warning("Duplicated locations were found when computing resdist. The returned values are given for unique locations.")
+        warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
         df_temp <- unique(df_temp)
       }
-      orig_order <- order(df_temp[["edge_number"]], df_temp[["distance_on_edge"]])    
+
+      graph.temp$build_mesh(h = 1000)
+
+      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
+
+      df_temp$included <- TRUE
+      temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+                              
+      df_temp$included <- NULL
+
+      df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+
+      nV_new <- sum(is.na(temp_merge["included"]))
+
+      df_temp2$included <- NULL
+
+      df_temp <- rbind(df_temp2, df_temp)
+      
+      df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
       graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized)
+                                     normalized = normalized)     
+
         graph.temp$observation_to_vertex()
         graph.temp$compute_geodist(full=TRUE)
+        geodist_temp <- graph.temp$geo_dist[["__complete"]]
+        geodist_temp[graph.temp$PtV, graph.temp$PtV] <- geodist_temp
 
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
-        tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1],
-                                                        graph.temp$E[i, 2]]
+        # tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1],
+        #                                                 graph.temp$E[i, 2]]
+        tmp <- -1 / geodist_temp[graph.temp$E[i, 1],
+                                                         graph.temp$E[i, 2]]
         L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
         L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
       }
@@ -553,7 +579,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         t(rep(1, graph.temp$nV)) %x% diag(Li)
 
       R <- R[graph.temp$PtV, graph.temp$PtV]
-      R[orig_order, orig_order] <- R
+      R[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- R
+
+      if(!include_vertices){
+        R <- R[(nV_new+1):nrow(R), (nV_new+1):nrow(R)]
+      }
+
       return(R)
   },
 
@@ -635,7 +666,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param PtE points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
   #' @param include_vertices Should the original vertices be included in the Laplacian matrix?
-  compute_laplacian_PtE = function(PtE, normalized = TRUE, include_vertices = TRUE) {
+  compute_laplacian_PtE = function(PtE, normalized = TRUE) {
 
     graph.temp <- self$clone()
     graph.temp$clear_observations()
@@ -658,6 +689,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
     df_temp2$included <- NULL
     df_temp <- rbind(df_temp2, df_temp)
+
+    nV_new <- sum(is.na(temp_merge["included"]))
     
     df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
@@ -672,12 +705,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     Laplacian <- Matrix::Diagonal(graph.temp$nV,
                                   as.vector(Matrix::rowSums(Wmat))) - Wmat
 
+    # Reordering from vertices to points
+    Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
     # Order back to the input order
     Laplacian[graph.temp$data[["__dummy"]], graph.temp$data[["__dummy"]]] <- Laplacian
 
-    if(!include_vertices){
-      Laplacian <- Laplacian[(self$nV+1):nrow(Laplacian), (self$nV+1):nrow(Laplacian)]
-    }
+    attr(Laplacian, "nV_idx") <- nV_new
 
     return(Laplacian)
   },

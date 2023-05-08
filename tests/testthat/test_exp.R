@@ -48,16 +48,19 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
                    alpha = 1, graph = graph, PtE = PtE)
 
   y <- u + sigma_e*rnorm(nt)
-  graph$add_PtE_observations(y = y, PtE = PtE, normalized = TRUE)
+
+  df_temp <- data.frame(y = y, edge_number = PtE[,1], distance_on_edge = PtE[,2])
+  graph$add_observations(data=df_temp, normalized = TRUE)
   theta <-  c(sigma_e, kappa, sigma)
-  lik <- likelihood_graph_spde(graph, alpha = 1, version = 1, log_scale = FALSE)
-  lik <- lik(theta)
+  lik <- likelihood_alpha1(theta = theta, graph = graph, data_name = "y", 
+                             X_cov = NULL , repl = NULL, BC = 1, parameterization = "spde")
 
   graph$observation_to_vertex()
-  lik.v2 <- likelihood_graph_spde(graph, alpha = 1, version = 2, log_scale = FALSE)
-  lik.v2 <- lik.v2(theta)
+  lik.v2 <- likelihood_alpha1_v2(theta = theta, graph = graph, 
+              X_cov = matrix(ncol=0,nrow=0), y = graph$data$y, repl = NULL, BC = 1, 
+              parameterization = "spde")
 
-  lik.cov <- likelihood_graph_covariance(graph, model = "alpha1", log_scale = FALSE)
+  lik.cov <- likelihood_graph_covariance(graph, model = "alpha1", log_scale = TRUE, y_graph = graph$data$y, repl = NULL, X_cov = NULL, maximize = TRUE)
   lik.cov <- lik.cov(theta)
 
   #version 1
@@ -68,15 +71,15 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
 })
 
 test_that("Test posterior mean", {
-  nt <- 10
-  kappa <- 0.1
+  nt <- 100
+  kappa <- 20
   sigma_e <- 0.2
   sigma   <- 2
-  line1 <- Line(rbind(c(30, 80), c(120, 80)))
-  line2 <- Line(rbind(c(30, 00), c(30, 80)))
+  line1 <- sp::Line(rbind(c(30, 80), c(120, 80)))
+  line2 <- sp::Line(rbind(c(30, 00), c(30, 80)))
 
-  graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line1), ID = "1"),
-                                                   Lines(list(line2), ID = "2")
+  graph <-  metric_graph$new(sp::SpatialLines(list(sp::Lines(list(line1), ID = "1"),
+                                                   sp::Lines(list(line2), ID = "2")
   )))
   PtE <- rbind(cbind(rep(1,nt/2),
                      seq(from = 0,to =1, length.out = nt/2 + 1)[1:(nt/2)]),
@@ -84,21 +87,31 @@ test_that("Test posterior mean", {
                      seq(from = 0,to =1, length.out = nt/2 + 1)[1:(nt/2)]))
 
   u <- sample_spde(kappa = kappa, sigma = sigma,
-                   alpha = 1, graph = graph, PtE = PtE)
+                   alpha = 1, graph = graph, PtE = PtE, method = "Q")
 
 
   y <- u + sigma_e*rnorm(nt)
-  graph$add_PtE_observations(y = y, PtE = PtE)
-  theta <-  c(sigma_e, sigma, kappa)
-  pm <- spde_posterior_mean(theta, alpha = 1, type = "obs", graph = graph)
+  df_temp <- data.frame(y = y, edge_number = PtE[,1], distance_on_edge = PtE[,2])
+  graph$add_observations(data = df_temp, normalized = TRUE)
+
+  #test posterior at observation locations
+  res <- graph_lme(y ~ -1, graph=graph, model="alpha1", parameterization = "spde")
+  pm <- predict(res, data = df_temp, normalized=TRUE)$mean
+
+  kappa_est <- res$coeff$random_effects[2]
+  sigma_est <- res$coeff$random_effects[1]
+  theta_est <- c(res$coeff$measurement_error, sigma_est, kappa_est)
 
   graph$observation_to_vertex()
 
-  Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 1, graph = graph)
+  Q <- spde_precision(kappa = kappa_est, sigma = sigma_est, alpha = 1, graph = graph)
   Sigma <- solve(Q)[graph$PtV, graph$PtV]
   Sigma.obs <- Sigma
-  diag(Sigma.obs) <- diag(Sigma.obs) + sigma_e^2
-  pm2 <- Sigma %*% solve(Sigma.obs, graph$y)
+  diag(Sigma.obs) <- diag(Sigma.obs) + theta_est[1]^2
+  pm2 <- Sigma %*% solve(Sigma.obs, graph$data$y)
 
-  expect_equal(as.vector(pm),as.vector(pm2), tolerance=1e-10)
+  expect_equal(sum((sort(pm)-sort(pm2))^2), 0, tolerance=1e-10)
+
+  expect_equal(sum((pm - df_temp$y)^2), sum((pm2 - graph$data$y)^2), tolerance = 1e-10)
+
 })

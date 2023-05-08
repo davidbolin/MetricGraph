@@ -50,7 +50,10 @@ spde_posterior_mean <- function(theta,
 #' @noRd
 posterior_mean_obs_alpha1 <- function(theta,
                                       graph,
-                                      type = "obs",
+                                      resp, #resp must be in the graph's internal order
+                                      PtE_resp,
+                                      PtE_pred,
+                                      type = "PtE",
                                       leave.edge.out = FALSE) {
 
   sigma_e <- theta[1]
@@ -60,26 +63,27 @@ posterior_mean_obs_alpha1 <- function(theta,
   Qp <- spde_precision(sigma= theta[2], kappa = theta[3],
                        alpha = 1, graph = graph)
   if(leave.edge.out == FALSE)
-    V.post <- posterior_mean_alpha1(theta, graph)
+    V.post <- posterior_mean_alpha1(theta = theta, graph = graph, resp = resp, PtE_resp = PtE_resp)
 
 
   Qpmu <- rep(0, nrow(graph$V))
   if(type == "obs") {
-    y_hat <- rep(0, length(graph$y))
-    obs.edges <- unique(graph$PtE[,1])
+    # y_hat <- rep(0, length(graph$y))
+    y_hat <- rep(0, length(resp))
+    obs.edges <- unique(PtE_resp[,1])
   }  else {
-    y_hat <- rep(0, dim(graph$mesh$PtE)[1])
-    obs.edges <- unique(graph$mesh$PtE[,1])
+    y_hat <- rep(0, dim(PtE_pred)[1])
+    obs.edges <- unique(PtE_pred[,1])
   }
 
 
   for (e in obs.edges) {
     if(leave.edge.out == TRUE)
-      V.post <- posterior_mean_alpha1(theta, graph, rem.edge = e)
+      V.post <- posterior_mean_alpha1(theta = theta, graph = graph, rem.edge = e, resp = resp, PtE_resp = PtE_resp)
 
-    obs.id <- which(graph$PtE[,1] == e)
-    obs.loc <- graph$PtE[obs.id,2]
-    y_i <- graph$y[obs.id]
+    obs.id <- which(PtE_resp[,1] == e)
+    obs.loc <- PtE_resp[obs.id,2]
+    y_i <- resp[obs.id]
     l <- graph$edge_lengths[e]
     if (type == "obs") {
       D <- as.matrix(dist(c(0,l, l*obs.loc)))
@@ -99,8 +103,8 @@ posterior_mean_obs_alpha1 <- function(theta,
                                                            y_i-y_hat[obs.id])
       }
     } else {
-      pred.id <- graph$mesh$PtE[, 1] == e
-      pred.loc <- graph$mesh$PtE[pred.id,2]
+      pred.id <- PtE_pred[, 1] == e
+      pred.loc <- PtE_pred[pred.id,2]
       D <- as.matrix(dist(c(0,l, l*obs.loc, l*pred.loc)))
       S <- r_1(D,kappa = kappa, sigma = sigma)
       E.ind <- c(1:2)
@@ -114,8 +118,10 @@ posterior_mean_obs_alpha1 <- function(theta,
         Sigma_noise <- S[Obs.ind, Obs.ind] - S[Obs.ind, E.ind] %*% Bt
         diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
         Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
+        y_hat_obs <- t(Bt) %*% V.post[graph$E[e, ]]
+
         y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
-                                                           y_i-y_hat[obs.id])
+                                                           y_i-y_hat_obs)
       }
     }
 
@@ -123,7 +129,8 @@ posterior_mean_obs_alpha1 <- function(theta,
   if(type == "obs"){
     return(y_hat)
   } else {
-    return(c(V.post,y_hat))
+    # return(c(V.post,y_hat))
+    return(y_hat)
   }
 }
 
@@ -135,7 +142,7 @@ posterior_mean_obs_alpha1 <- function(theta,
 #' 'PtE' for computation at PtE locations.
 #' @noRd
 posterior_mean_obs_alpha2 <- function(theta,
-                                      graph, #df_prd with residual and PtE
+                                      graph,
                                       resp, #resp must be in the graph's internal order
                                       PtE_resp,
                                       PtE_pred,
@@ -273,7 +280,7 @@ posterior_mean_obs_alpha2 <- function(theta,
 #' @param graph - metric_graph object
 #' @param rem.edge  - remove edge
 #' @noRd
-posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
+posterior_mean_alpha1 <- function(theta, graph, resp, PtE_resp, rem.edge = FALSE) {
 
   sigma_e <- theta[1]
   sigma <- theta[2]
@@ -284,16 +291,20 @@ posterior_mean_alpha1 <- function(theta, graph, rem.edge = FALSE) {
   #build BSIGMAB
   Qpmu <- rep(0, graph$nV)
 
-  obs.edges <- unique(graph$PtE[,1])
+  # obs.edges <- unique(graph$PtE[,1])
+  obs.edges <- unique(PtE_resp[,1])
   if(is.logical(rem.edge) == FALSE)
     obs.edges <- setdiff(obs.edges, rem.edge)
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
   count <- 0
   for (e in obs.edges) {
-    obs.id <- graph$PtE[,1] == e
-    y_i <- graph$y[obs.id]
+    # obs.id <- graph$PtE[,1] == e
+    obs.id <- PtE_resp[,1] == e
+    # y_i <- graph$y[obs.id]
+    y_i <- resp[obs.id]
     l <- graph$edge_lengths[e]
-    D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
+    # D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
+    D_matrix <- as.matrix(dist(c(0, l, l*PtE_resp[obs.id, 2])))
     S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
 
     #covariance update see Art p.17

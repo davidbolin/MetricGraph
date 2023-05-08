@@ -397,7 +397,7 @@ the Laplacian on these locations:
 n.obs.per.edge <- 100
 PtE <- NULL
 for(i in 1:graph$nE){
-  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
+  PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), sort(runif(n.obs.per.edge))))
 }
 ## Removing problematic locations (locations very close) to improve numerical stability
 prob_points <- which(abs(diff(PtE[,2])) < 1e-3)
@@ -420,7 +420,7 @@ sigma_e <- 0.1
 
 Q <- (kappa^2 * Diagonal(nrow(GL)) + GL) / sigma^2
 LQ <- chol(forceSymmetric(Q))
-u <- solve(LQ, rnorm(nrow(Q)))[(graph$nV + 1):nrow(GL)] # The first nV values are on the original vertices
+u <- solve(LQ, rnorm(nrow(Q)))[(attr(GL, "nV_idx") + 1):nrow(GL)] # The first attr(GL, "nV_idx") values are on the original vertices
 y <- u + sigma_e*rnorm(length(u))
 
 df_GL <- data.frame(y = as.vector(y), edge_number = PtE[,1],
