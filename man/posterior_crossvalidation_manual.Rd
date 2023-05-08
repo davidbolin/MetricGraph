@@ -28,6 +28,9 @@ model with isotropic exponential covariance}
 \item{ind}{Indices for cross validation. It should be a vector of the same
 length as the data, with integer values representing each group in the
 cross-validation. If NULL, leave-one-out cross validation is performed.}
+
+\item{BC}{which boundary condition to use (0,1) 0 is no adjustment on boundary point
+1 is making the boundary condition stationary}
 }
 \value{
 Vector with the posterior expectations and variances as well as

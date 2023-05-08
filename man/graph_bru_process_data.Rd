@@ -18,6 +18,8 @@ for the locations to obtain the prediction.}
 \item{edge_number}{Name of the variable that contains the edge number, the default is \code{edge_number}.}
 
 \item{distance_on_edge}{Name of the variable that contains the distance on edge, the default is \code{distance_on_edge}.}
+
+\item{loc}{character. Name of the locations to be used in \code{inlabru}'s component.}
 }
 \description{
 Prepare data frames or data lists to be used with inlabru in metric graphs

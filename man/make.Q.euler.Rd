@@ -20,6 +20,10 @@ make.Q.euler(graph, t, kappa, rho, gamma, alpha, beta, sigma, theta = 1)
 \item{alpha}{smoothness parameter (integer) for spatial operator}
 
 \item{beta}{smoothness parameter (integer) for Q-Wiener process}
+
+\item{sigma}{variance parameter}
+
+\item{theta}{parameter theta}
 }
 \value{
 Precision matrix

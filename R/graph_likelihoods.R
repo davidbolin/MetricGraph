@@ -1,72 +1,72 @@
-#' Function factory for likelihood evaluation for the metric graph SPDE model
-#'
-#' @param graph metric_graph object
-#' @param alpha Order of the SPDE, should be either 1 or 2.
-#' @param data_name Name of the response variable
-#' @param covariates OBSOLETE
-#' @param log_scale Should the parameters `theta` of the returning function be
-#' given in log scale?
-#' @param version if 1, the likelihood is computed by integrating out
-#' @param maximize If `FALSE` the function will return minus the likelihood, so
-#' one can directly apply it to the `optim` function.
-#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
-#'        1 is making the boundary condition stationary
-#' @return The log-likelihood function, which is returned as a function with
-#' parameter 'theta'.
-#' The parameter `theta` must be supplied as
-#' the vector `c(sigma_e, sigma, kappa)`.
-#'
-#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the
-#' vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
-#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
-#' covariates.
-#' @noRd
+# #' Function factory for likelihood evaluation for the metric graph SPDE model
+# #'
+# #' @param graph metric_graph object
+# #' @param alpha Order of the SPDE, should be either 1 or 2.
+# #' @param data_name Name of the response variable
+# #' @param covariates OBSOLETE
+# #' @param log_scale Should the parameters `theta` of the returning function be
+# #' given in log scale?
+# #' @param version if 1, the likelihood is computed by integrating out
+# #' @param maximize If `FALSE` the function will return minus the likelihood, so
+# #' one can directly apply it to the `optim` function.
+# #' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
+# #'        1 is making the boundary condition stationary
+# #' @return The log-likelihood function, which is returned as a function with
+# #' parameter 'theta'.
+# #' The parameter `theta` must be supplied as
+# #' the vector `c(sigma_e, sigma, kappa)`.
+# #'
+# #' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the
+# #' vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+# #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
+# #' covariates.
+# #' @noRd
 
-likelihood_graph_spde <- function(graph,
-                                  alpha = 1,
-                                  covariates = FALSE,
-                                  data_name,
-                                  log_scale = TRUE,
-                                  maximize = FALSE,
-                                  version = 1,
-                                  repl=NULL,
-                                  BC = 1) {
+# likelihood_graph_spde <- function(graph,
+#                                   alpha = 1,
+#                                   covariates = FALSE,
+#                                   data_name,
+#                                   log_scale = TRUE,
+#                                   maximize = FALSE,
+#                                   version = 1,
+#                                   repl=NULL,
+#                                   BC = 1) {
 
-  check <- check_graph(graph)
+#   check <- check_graph(graph)
 
-  if(!(alpha%in%c(1,2))){
-    stop("alpha must be either 1 or 2!")
-  }
+#   if(!(alpha%in%c(1,2))){
+#     stop("alpha must be either 1 or 2!")
+#   }
 
-  loglik <- function(theta){
-        if(log_scale){
-          theta_spde <- exp(theta[1:3])
-          theta_spde <- c(theta_spde, theta[-c(1:3)])
-        } else{
-          theta_spde <- theta
-        }
+#   loglik <- function(theta){
+#         if(log_scale){
+#           theta_spde <- exp(theta[1:3])
+#           theta_spde <- c(theta_spde, theta[-c(1:3)])
+#         } else{
+#           theta_spde <- theta
+#         }
 
-      switch(alpha,
-      "1" = {
-        if(version == 1){
-          loglik_val <- likelihood_alpha1(theta_spde, graph, data_name, covariates,BC=BC)
-        } else if(version == 2){
-          loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl,BC=BC)
-        } else{
-          stop("Version should be either 1 or 2!")
-        }
-      },
-      "2" = {
-        loglik_val <- likelihood_alpha2(theta_spde, graph, data_name, covariates, BC=BC)
-      }
-      )
-      if(maximize){
-        return(loglik_val)
-      } else{
-        return(-loglik_val)
-      }
-  }
-}
+#       switch(alpha,
+#       "1" = {
+#         if(version == 1){
+#           loglik_val <- likelihood_alpha1(theta_spde, graph, data_name, covariates,BC=BC)
+#         } else if(version == 2){
+#           loglik_val <- likelihood_alpha1_v2(theta_spde, graph, X_cov, y, repl,BC=BC)
+#         } else{
+#           stop("Version should be either 1 or 2!")
+#         }
+#       },
+#       "2" = {
+#         loglik_val <- likelihood_alpha2(theta_spde, graph, data_name, covariates, BC=BC)
+#       }
+#       )
+#       if(maximize){
+#         return(loglik_val)
+#       } else{
+#         return(-loglik_val)
+#       }
+#   }
+# }
 
 
 
@@ -576,8 +576,9 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' @param cov_function The covariance function to be used in case 'model' is chosen as 'isoCov'. `cov_function` must be a function
 #' of `(h, theta_cov)`, where `h` is a vector, or matrix, containing the distances to evaluate the covariance function at, and
 #' `theta_cov` is the vector of parameters of the covariance function `cov_function`.
-#' @param covariates Logical. If `TRUE`, the model will be considered with covariates. It requires `graph` to have
-#' covariates included by the method `add_covariates()`.
+#' @param y_graph Response vector given in the same order as the internal locations from the graph.
+#' @param X_cov Matrix with covariates. The order must be the same as the internal order from the graph.
+#' @param repl Vector with the replicates to be considered. If `NULL` all replicates will be considered.
 #' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.

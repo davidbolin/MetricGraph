@@ -23,16 +23,19 @@ the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 model based on the graph Laplacian with smoothness 2, and "isoCov" gives a
 model with isotropic covariance.}
 
+\item{y_graph}{Response vector given in the same order as the internal locations from the graph.}
+
 \item{cov_function}{The covariance function to be used in case 'model' is chosen as 'isoCov'. \code{cov_function} must be a function
 of \verb{(h, theta_cov)}, where \code{h} is a vector, or matrix, containing the distances to evaluate the covariance function at, and
 \code{theta_cov} is the vector of parameters of the covariance function \code{cov_function}.}
 
+\item{X_cov}{Matrix with covariates. The order must be the same as the internal order from the graph.}
+
+\item{repl}{Vector with the replicates to be considered. If \code{NULL} all replicates will be considered.}
+
 \item{log_scale}{Should the parameters \code{theta} of the returning function be given in log scale?}
 
 \item{maximize}{If \code{FALSE} the function will return minus the likelihood, so one can directly apply it to the \code{optim} function.}
-
-\item{covariates}{Logical. If \code{TRUE}, the model will be considered with covariates. It requires \code{graph} to have
-covariates included by the method \code{add_covariates()}.}
 }
 \value{
 The log-likelihood function, which is returned as a function with parameter 'theta'.

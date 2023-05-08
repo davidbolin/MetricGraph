@@ -6,7 +6,7 @@
 #'
 #' @param formula Formula object describing the relation between the response variables and the fixed effects.
 #' @param graph A `metric_graph` object.
-#' @param model The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \eq{\alpha}=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eq{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`. 
+#' @param model The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \eqn{\alpha}=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`. 
 #' `linearModel` corresponds to a linear model without random effects.
 #' For `Whittle-Matern` and `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
 #' contain a parameter `cov_function`, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the `cov_function` argument. The default is 'exp_covariance', the
@@ -707,6 +707,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   model_type <- object$latent_model
 
   sigma.e <- coeff_meas[[1]]
+  sigma_e <- sigma.e
 
   if(!is.null(graph_bkp$data[["__dummy_var"]])){
       idx_prd <- !is.na(graph_bkp$data[["__dummy_var"]][1:n])

@@ -1061,6 +1061,7 @@ predict.rspde_metric_graph <- function(object,
 #' @title Prepare data frames or data lists to be used with inlabru in metric graphs
 #' @param data A `data.frame` or a `list` containing the covariates, the edge number and the distance on edge
 #' for the locations to obtain the prediction.
+#' @param loc character. Name of the locations to be used in `inlabru`'s component.
 #' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
 #' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
 #' @export

@@ -68,9 +68,12 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
 #' model with isotropic exponential covariance
+#' @param data_name Name of the column of the response variable.
 #' @param ind Indices for cross validation. It should be a vector of the same
 #' length as the data, with integer values representing each group in the
 #' cross-validation. If NULL, leave-one-out cross validation is performed.
+#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
+#'        1 is making the boundary condition stationary 
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with all predictions
@@ -164,6 +167,8 @@ posterior_crossvalidation_covariance_manual <- function(theta,
 #' @param ind Indices for cross validation. It should be a vector of the same
 #' length as the data, with integer values representing each group in the
 #' cross-validation. If NULL, leave-one-out cross validation is performed.
+#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
+#'        1 is making the boundary condition stationary 
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
@@ -505,7 +510,7 @@ posterior_crossvalidation_covariance <- function(object)
   diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
 
   if(is.null(ind)){
-    ind <- 1:length(graph$data[[data_name]])
+    ind <- 1:length(y_graph)
   }
   mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(y_graph))
   mae <- rmse <- rep(0, length(y_graph))

@@ -18,6 +18,8 @@ posterior_crossvalidation_covariance_manual(
 
 \item{graph}{metric graph object}
 
+\item{data_name}{Name of the column of the response variable.}
+
 \item{model}{Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
@@ -26,6 +28,9 @@ model with isotropic exponential covariance}
 \item{ind}{Indices for cross validation. It should be a vector of the same
 length as the data, with integer values representing each group in the
 cross-validation. If NULL, leave-one-out cross validation is performed.}
+
+\item{BC}{which boundary condition to use (0,1) 0 is no adjustment on boundary point
+1 is making the boundary condition stationary}
 }
 \value{
 Vector with all predictions

@@ -101,6 +101,8 @@ make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 #' @param graph metric_graph object
 #' @param t vector of time points
 #' @param kappa range parameter kappa
+#' @param sigma variance parameter
+#' @param theta parameter theta
 #' @param rho drift parameter
 #' @param gamma temporal range parameter
 #' @param alpha smoothness parameter (integer) for spatial operator
@@ -117,7 +119,7 @@ make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 
   dt <- t[2] - t[1]
   T <- length(t)
-  n <- dim(L)[1]
+  n <- dim(C)[1]
   if(alpha == 0) {
     Lalpha <- C
   } else if (alpha == 1) {
@@ -160,9 +162,11 @@ make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 #' @param beta smoothness parameter (integer) for Q-Wiener process
 #' @param sigma variance parameter
 #' @param u0 starting value
+#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
+#'        1 is making the boundary condition stationary 
 #' @return Precision matrix
 #' @export
-simulate.spacetime <- function(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0) {
+simulate_spacetime <- function(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0) {
   n <- length(u0)
   Cd <- Diagonal(rowSums(graph$mesh$C),n=n)
   Cd[1:graph$nV] <- (graph$get_degrees()==1)*BC
@@ -204,7 +208,7 @@ simulate.spacetime <- function(graph, t, kappa, rho, gamma, alpha, beta, sigma, 
 #' @param show.temporal Plot the marginal temporal covariances?
 #' @param t vector with the time points for which Q is computed
 #' @export
-plot.spacetime.covariances <- function(graph,
+plot_spacetime_covariances <- function(graph,
                                        Q,
                                        Qs = NULL,
                                        t.ind,
@@ -270,8 +274,8 @@ plot.spacetime.covariances <- function(graph,
   }
   if(show.temporal){
     df <- data.frame(t=rep(t,length(t.ind)),y=c(t(ct)), i=rep(1:length(t.ind), each=length(t)))
-    pt <- plot_ly(df, x = ~t, y = ~y, split = ~i, type = 'scatter', mode = 'lines')
-    fig <- subplot(p,pt) %>% layout(title = "Covariances",
+    pt <- plotly::plot_ly(df, x = ~t, y = ~y, split = ~i, type = 'scatter', mode = 'lines')
+    fig <- plotly::layout(plotly::subplot(p,pt), title = "Covariances",
                                     scene = list(domain=list(x=c(0,0.5),y=c(0,1))),
                                     scene2 = list(domain=list(x=c(0.5,1),y=c(0,1))))
     fig$x$layout <- fig$x$layout[grep('NA', names(fig$x$layout), invert = TRUE)]
