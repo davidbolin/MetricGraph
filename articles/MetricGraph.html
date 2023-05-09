@@ -131,11 +131,9 @@ from <a href="http://R-INLA.org/download/" class="external-link">http://R-INLA.
 org/download/</a> and <code>inlabru</code> <a href="https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.13168" class="external-link"><span class="citation">Bachl et al. (2019)</span></a> that facilitates using
 those packages for full Bayesian inference of general Latent Gaussian
 Models (LGMs) that includes Whittle–Matérn fields on metric graphs.</p>
-<p>The package is available to install from the Comprehensive R Archive
-Network (CRAN) at . A development version of the package is available
-via the repository <a href="https://github.com/davidbolin/MetricGraph" class="external-link">https://github.com/davidbolin/MetricGraph</a>.
-The development version is updated more frequently, and can easily be
-installed directly in R as described on the repository homepage.</p>
+<!-- The package is available to install from the Comprehensive R Archive
+Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository [https://github.com/davidbolin/MetricGraph](https://github.com/davidbolin/MetricGraph). The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage.  -->
+<p>The package is available to install via the repository <a href="https://github.com/davidbolin/MetricGraph" class="external-link">https://github.com/davidbolin/MetricGraph</a>.</p>
 <p>The following sections describe the main functionality of the package
 and summarizes some of the required theory. Section 2 introduces metric
 graphs and the <code>metric_graph</code> class, Section 3 shows how to
@@ -886,9 +884,9 @@ parameters. To view the estimates we can use the
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.006850 0.1372920   1.751350 2.001940   2.290330 1.991970</span></span>
-<span><span class="co">## range 0.184233 0.0330666   0.128104 0.181211   0.257584 0.174951</span></span></code></pre>
+<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 2.00669 0.1372390   1.751330 2.001760   2.290100 1.991630</span></span>
+<span><span class="co">## range 0.18424 0.0330468   0.128136 0.181232   0.257544 0.174975</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -907,9 +905,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 2.0068511 1.9919734</span></span>
-<span><span class="co">## 2     range  0.2 0.1842331 0.1749508</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 2.006688 1.9916300</span></span>
+<span><span class="co">## 2     range  0.2 0.184240 0.1749753</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
