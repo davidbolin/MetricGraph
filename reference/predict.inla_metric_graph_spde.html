@@ -86,6 +86,7 @@ using inlabru.</p>
 <span>  n.samples <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span><span class="op">)</span>,</span>
+<span>  return_original_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  num.threads <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  include <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -139,6 +140,10 @@ used if <code>data_coords</code> is <code>euclidean</code>.</p></dd>
 
 <dt>probs</dt>
 <dd><p>A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile</p></dd>
+
+
+<dt>return_original_order</dt>
+<dd><p>Should the predictions be returned in the original order?</p></dd>
 
 
 <dt>num.threads</dt>
