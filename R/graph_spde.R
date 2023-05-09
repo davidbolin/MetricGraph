@@ -822,6 +822,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
 #' @param seed Random number generator seed passed on to inla.posterior.sample
 #' @param probs	A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile
+#' @param return_original_order Should the predictions be returned in the original order?
 #' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
 #' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
 #' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
@@ -840,6 +841,7 @@ predict.inla_metric_graph_spde <- function(object,
                                            n.samples = 100,
                                            seed = 0L,
                                            probs = c(0.025, 0.5, 0.975),
+                                           return_original_order = TRUE,                                           
                                            num.threads = NULL,
                                            include = NULL,
                                            exclude = NULL,
@@ -948,6 +950,11 @@ predict.inla_metric_graph_spde <- function(object,
   pred_list <- list()
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
+  if(return_original_order){
+    ord <- graph_tmp$data[["__dummy_var"]][idx_list]
+    pred_list[["pred"]][ord,] <- pred
+    pred_list[["PtE_pred"]][ord,] <- pred_PtE
+  }
   pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
   # pred_list[["new_model"]] <- spde____model
   # pred_list[["new_fit"]] <- bru_fit_new
