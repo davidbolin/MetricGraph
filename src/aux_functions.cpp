@@ -127,7 +127,7 @@ double proj_vec_line(Eigen::MatrixXd line, Eigen::VectorXd point, int normalized
     dist_return = dist_vec(min_index+1);
   }
   if(dist_return < 0){
-    dist_return <- 0;
+    dist_return = 0;
   }
   if(normalized != 0){
     dist_return = dist_return/dist_vec(line.rows()-1);

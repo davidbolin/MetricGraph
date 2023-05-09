@@ -55,15 +55,13 @@ jobs:
           pkgs <- installed.packages()[, "Package"]
           sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}
-
-      - name: Remove source files
+      - name: Installing rSPDE
         run: |
-          rm -rf src/
-        shell: bash
-
+          install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
+          remotes::install_github("davidbolin/rSPDE")
+        shell: Rscript {0}        
       - uses: r-lib/actions/check-r-package@v2
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
         with:
-          build_args: 'c("--no-manual", "--no-build-vignettes")'
-          args: 'c("--no-manual", "--ignore-vignettes", "--as-cran")'
+          args: 'c("--no-manual", "--as-cran")'
