@@ -148,8 +148,10 @@ processes with isotropic covariance functions [@Anderes2020](https://projecteucl
 Basic statistical tasks such as likelihood evaluation and prediction is implemented for these three types of models in `MetricGraph`. Further, the package also contains interfaces to `R-INLA` [@LindgrenRue2015](https://www.jstatsoft.org/article/view/v063i19), package available from [http://R-INLA.
 org/download/](http://R-INLA.org/download/) and `inlabru` [@inlabru2019](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.13168) that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle--Matérn fields on metric graphs. 
 
-The package is available to install from the Comprehensive R Archive
-Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository [https://github.com/davidbolin/MetricGraph](https://github.com/davidbolin/MetricGraph). The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage. 
+<!-- The package is available to install from the Comprehensive R Archive
+Network (CRAN) at \url{https://CRAN.R-project.org/package=MetricGraph}. A development version of the package is available via the repository [https://github.com/davidbolin/MetricGraph](https://github.com/davidbolin/MetricGraph). The development version is updated more frequently, and can easily be installed directly in R as described on the repository homepage.  -->
+
+The package is available to install via the repository [https://github.com/davidbolin/MetricGraph](https://github.com/davidbolin/MetricGraph).
 
 The following sections describe the main functionality of the package and summarizes some of the required theory. Section 2 introduces metric graphs and the `metric_graph` class, Section 3 shows how to work with random fields on metric graphs, and Section 4 introduces the `inlabru` interface of the package through an application to real data. For a complete introduction to the functionality of the package, we refer to the Vignettes available on the package homepage [https://davidbolin.github.io/MetricGraph/](https://davidbolin.github.io/MetricGraph/). In particular, that contains an introduction to the `INLA` interface, the implementation of Whittle--Matérn fields with general smoothness, and further details and examples for all methods in the package. 
 
