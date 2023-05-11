@@ -21,7 +21,11 @@
 #' @param BC For `WhittleMatern` models. Which boundary condition to use (0,1) 0 is no adjustment on boundary point
 #'        1 is making the boundary condition stationary.
 #' @param model_matrix logical indicating whether the model matrix should be returned as component of the returned value.
+#' @param parallel logical. Indicating whether to use optimParallel or not.
+#' @param n_cores Number of cores to be used if parallel is true.
 #' @param optim_controls Additional controls to be passed to `optim` or `optimParallel`.
+#' @param improve_hessian Should a more precise estimate of the hessian be obtained? Turning on might increase the overall time.
+#' @param hessian_args List of controls to be used if `improve_hessian` is `TRUE`. The list can contain the arguments to be passed to the `method.args` argument in the `hessian` function. See the help of the `hessian` function in `numDeriv` package for details. Observet that it only accepts the "Richardson" method for now, the method "complex" is not supported. 
 #' @return A list containing the fitted model.
 #' @rdname graph_lme
 #' @export
@@ -36,7 +40,11 @@ graph_lme <- function(formula, graph,
                 parameterization_latent = c("matern", "spde"),
                 BC = 1, 
                 model_matrix = TRUE,
-                optim_controls = list()) {
+                parallel = FALSE,
+                n_cores = parallel::detectCores()-1,
+                optim_controls = list(),
+                improve_hessian = FALSE,
+                hessian_args = list()) {
 
   if(!is.list(model)){
     if(!is.character(model)){
@@ -260,10 +268,80 @@ graph_lme <- function(formula, graph,
     
   if(model_type != "linearmodel"){
 
-  res <- optim(start_values, 
-                likelihood, method = optim_method,
-                control = optim_controls,
-                hessian = TRUE)
+
+      hessian <- TRUE
+
+      if(improve_hessian){
+        hessian <- FALSE
+      }
+
+      time_par <- NULL
+
+      if(parallel){
+        start_par <- Sys.time()
+        cl <- parallel::makeCluster(n_cores)
+        parallel::setDefaultCluster(cl = cl)
+        parallel::clusterExport(cl, "y_graph", envir = environment())
+        parallel::clusterExport(cl, "graph_bkp", envir = environment())
+        parallel::clusterExport(cl, "X_cov", envir = environment())
+        parallel::clusterExport(cl, "repl", envir = environment())        
+        parallel::clusterExport(cl, "model", envir = environment())              
+        # parallel::clusterExport(cl, "y_list", envir = environment())  
+        parallel::clusterExport(cl, "likelihood_graph_covariance",
+                       envir = as.environment("package:MetricGraph"))
+        parallel::clusterExport(cl, "likelihood_graph_laplacian",
+                       envir = as.environment("package:MetricGraph"))                       
+        parallel::clusterExport(cl, "likelihood_alpha2",
+                       envir = as.environment("package:MetricGraph"))        
+        parallel::clusterExport(cl, "likelihood_alpha1",
+                       envir = as.environment("package:MetricGraph")) 
+        parallel::clusterExport(cl, "likelihood_alpha1_v2",
+                       envir = as.environment("package:MetricGraph"))                        
+
+        end_par <- Sys.time()
+        time_par <- end_par - start_par
+
+          start_fit <- Sys.time()
+          res <- optimParallel::optimParallel(start_values, 
+                        likelihood, method = optim_method,
+                        control = optim_controls,
+                        hessian = hessian,
+                        parallel = list(forward = FALSE, cl = cl,
+                            loginfo = FALSE))
+        end_fit <- Sys.time()
+        time_fit <- end_fit-start_fit
+        parallel::stopCluster(cl)
+      } else{
+        start_fit <- Sys.time()
+            res <- optim(start_values, 
+                        likelihood, method = optim_method,
+                        control = optim_controls,
+                        hessian = hessian)
+        end_fit <- Sys.time()
+        time_fit <- end_fit-start_fit
+      }
+
+
+  time_hessian <- NULL
+
+  if(!improve_hessian){
+    observed_fisher <- res$hessian
+  } else{
+    if(!is.list(hessian_args)){
+      stop("hessian_controls must be a list")
+    }
+
+    start_hessian <- Sys.time()
+    observed_fisher <- numDeriv::hessian(likelihood, res$par, method.args = hessian_args)
+    end_hessian <- Sys.time()
+    time_hessian <- end_hessian-start_hessian
+  }
+
+
+  # res <- optim(start_values, 
+  #               likelihood, method = optim_method,
+  #               control = optim_controls,
+  #               hessian = TRUE)
 
   coeff <- res$par
   coeff <- exp(c(res$par[1:3]))
@@ -274,7 +352,6 @@ graph_lme <- function(formula, graph,
   n_fixed <- ncol(X_cov)
   n_random <- length(coeff) - n_fixed - 1  
 
-  observed_fisher <- res$hessian
   inv_fisher <- tryCatch(solve(observed_fisher), error = function(e) matrix(NA,
                                                                         nrow(observed_fisher), ncol(observed_fisher)))
   std_err <- sqrt(diag(inv_fisher))
@@ -346,6 +423,11 @@ graph_lme <- function(formula, graph,
   object$response <- y_term
   object$covariates <- cov_term
   object$nV_orig <- nV_orig
+  object$fitting_time <- time_fit
+  object$improve_hessian <- improve_hessian
+  object$time_hessian <- time_hessian
+  object$parallel <- parallel
+  object$time_par <- time_par
   if(model_matrix){
     if(ncol(X_cov)>0){
       object$model_matrix <- cbind(y_graph, X_cov)
@@ -481,6 +563,16 @@ summary.graph_lme <- function(object, ...) {
 
   ans$niter <- object$niter
 
+  ans$fitting_time <- object$fitting_time
+
+  ans$improve_hessian <- object$improve_hessian
+
+  ans$time_hessian <- object$time_hessian
+
+  ans$parallel <- object$parallel
+
+  ans$time_par <- object$time_par  
+
   class(ans) <- "summary_graph_lme"
   ans
 }
@@ -550,6 +642,14 @@ print.summary_graph_lme <- function(x, ...) {
   if(model_type != "linearmodel"){
     cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
   }
+    cat(paste0("\nTime used:"))
+    cat("\t Fit the model = ", paste(trunc(x$fitting_time[[1]] * 10^5)/10^5,attr(x$fitting_time, "units"),"\n"))
+    if(x$improve_hessian){
+    cat(paste0("\t Compute the Hessian = ", paste(trunc(x$time_hessian[[1]] * 10^5)/10^5,attr(x$time_hessian, "units"),"\n")))      
+    }
+    if(x$parallel){
+    cat(paste0("\t Set up the parallelization = ", paste(trunc(x$time_par[[1]] * 10^5)/10^5,attr(x$time_par, "units"),"\n")))      
+    }
 }
 
 

@@ -752,7 +752,7 @@ mean_field_prd <- field_pred$pred[,1]
 graph$plot_function(mean_field_prd, vertex_size = 0)
 ```
 
-Finally, let us plot predictions of the observed data at the mesh locations:
+Fin §ally, let us plot predictions of the observed data at the mesh locations:
 
 ```{r}
 obs_pred <- predict(spde_model, 
