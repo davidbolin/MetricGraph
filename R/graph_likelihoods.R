@@ -359,7 +359,6 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
       A <- Matrix::Diagonal(graph$nV)[graph$PtV, ]
       ind_tmp <- (repl_vec %in% i)
       y_tmp <- y[ind_tmp]
-      y
       if(ncol(X_cov) == 0){
         X_cov_tmp <- 0
       } else {
