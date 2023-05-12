@@ -154,7 +154,7 @@ create the `inla` model object with the
 `graph_spde` function. By default we have
 `alpha=1`. 
 
-```{r}
+```{r, message=FALSE}
 library(INLA)
 spde_model <- graph_spde(graph)
 ```

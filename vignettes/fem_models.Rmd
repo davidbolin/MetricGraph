@@ -98,11 +98,6 @@ the mesh. As can be seen in the plot, the mesh is very coarse, so let's reduce t
 graph$build_mesh(h = 0.01)
 ```
 
-The next step is to build the mass and stiffness matrices for the FEM basis.
-```{r}
-graph$compute_fem()
-```
-
 We are now ready to specify the model
 $$
 (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
@@ -183,7 +178,7 @@ We generate the observations as $Y_i = 1 + 2x_{i1} - 3 x_{i2} u(s_i) + \varepsil
     Y <- 1 + 2*x1 - 3*x2 + as.vector(A %*% u + sigma.e * rnorm(n.obs))
 ```
 
-Let us now fit the model. To this end we will use the `rspde_lme()` function from the `rSPDE` package. To this end, we will also create a new object to obtain the estimation (since the function `rspde_lme()` uses the parameters from the object as initial values, and if they are not supplied, an initial guess is given).
+Let us now fit the model. To this end we will use the `rspde_lme()` function from the `rSPDE` package. To this end, we will also create a new object to obtain the estimation (since the function `rspde_lme()` uses the parameters from the object as initial values, and if they are not supplied, an initial guess is given). 
 
 ```{r}
 op_est <- matern.operators(m = rspde.order, graph = graph)
@@ -195,17 +190,22 @@ df_data <- data.frame(y = Y, edge_number = obs.loc[,1],
                         distance_on_edge = obs.loc[,2],
                         x1 = x1, x2 = x2)
 ```
+
+Let us now add the data to the graph object:
+
+```{r}
+graph$add_observations(data = df_data, normalized = TRUE)
+```
+
 We can now fit the model:
 ```{r}
-fit <- rspde_lme(y ~ x1 + x2, model = op_est, 
-                      loc = c("edge_number",
-                      "distance_on_edge"), data = df_data)
+fit <- rspde_lme(y ~ x1 + x2, model = op_est)
 ```
-Let us look at the summary:
+
+Let us obtain a summary of the model:
 ```{r}
 summary(fit)
 ```
-
 
 Let us compare the values of the parameters of the latent model with the true ones:
 
@@ -220,30 +220,17 @@ print(data.frame(sigma = c(sigma, fit$coeff$random_effects[2]),
 Given that we have estimated the parameters, let us compute the kriging predictor 
 of the field given the observations at the mesh nodes. 
 
-Let us update the model object with the fitted parameters:
+We will perform kriging with the `predict()` method:
 
 ```{r}
-  sigma_est <- exp(theta$par[1])
-  kappa_est <- exp(theta$par[2])
-  nu_est <- exp(theta$par[3])
-
-  op_cov <- update(op,
-                   user_kappa = kappa_est,
-                   user_sigma = sigma_est,
-                   user_nu = nu_est)
-```
-
-We can now perform kriging with the `predict()` method:
-
-```{r}
-  u.krig <- predict(op, A = A, Aprd = Matrix::Diagonal(op$sizeC), Y = Y, sigma.e = sigma.e)
+  # u.krig <- predict(op, A = A, Aprd = Matrix::Diagonal(op$sizeC), Y = Y, sigma.e = sigma.e)
 ```
 Since we predicted at the mesh nodes, `Aprd` was chosen as the identity matrix with the size of the mesh. If we wish to predict at some other locations, we can simply change `Aprd` to be the observation matrix for those locations.
 
 The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function(as.vector(u.krig[[1]]), plotly = TRUE)  
+  # graph$plot_function(as.vector(u.krig[[1]]), plotly = TRUE)  
 ```
 
 ## Fitting a model with replicates
@@ -267,18 +254,25 @@ one replicate. We need to turn `y` into a vector and create an auxiliary vector 
 
 ```{r, message=FALSE, warning=FALSE}
 y_vec <- as.vector(Y.rep)
-repl <- rep(1:n.rep, each = n.obs)
-obs.loc_repl <- cbind(rep(obs.loc[,1], n.rep), 
-                        rep(obs.loc[,2], n.rep))
+repl <- rep(1:n.rep, each = n.obs)                       
 
-df_data_repl <- data.frame(y = y_vec, loc = obs.loc_repl)
+df_data_repl <- data.frame(y = y_vec, 
+                              edge_number = rep(obs.loc[,1], n.rep),
+                              distance_on_edge = rep(obs.loc[,2], n.rep), 
+                              repl = repl)
+
+```
+
+Let us clear the previous observations and add the new data to the graph:
+```{r}
+graph$clear_observations()
+graph$add_observations(data = df_data_repl, normalized = TRUE, group = "repl")
 ```
 
 We can now fit the model in the same way as before by using the `rspde_lme()` function. Note that we can optimize in parallel by setting `parallel` to `TRUE`.
 
 ```{r}
-fit_repl <- rspde_lme(y_vec ~ -1, model = op_est, repl = repl, 
-      data = df_data_repl, loc = obs.loc_repl, parallel = TRUE)
+fit_repl <- rspde_lme(y ~ -1, model = op_est, parallel = TRUE)
 ```
 
 Let us see a summary of the fit:
@@ -305,13 +299,11 @@ We begin by defining the model by using the `rspde.metric_graph()` function.
 This function contains the same arguments as the function
 `rspde.matern()`. We refer the reader to the  [R-INLA implementation of the rational SPDE approach](https://davidbolin.github.io/rSPDE/articles/rspde_inla.html) vignette for further details.
 
-We begin by adding the observations to the graph:
+We begin by clearing the previous observations and adding the observations (for the case without replicates) to the graph:
 
 ```{r}
-graph$add_observations(data = data.frame(y=Y, 
-                          edge_number = obs.loc[,1], 
-                          distance_on_edge = obs.loc[,2]), 
-                          normalized = TRUE)
+graph$clear_observations()
+graph$add_observations(data = df_data, normalized = TRUE)
 ```
 
 Let us create the model object:
@@ -339,16 +331,17 @@ The remaining is standard: we create the formula object, the
 stack object, and then fit the model by using the `inla()` function.
 So, first we create the formula object:
 ```{r}
-  f.s <- y ~ -1 + Intercept + f(field, model = rspde_model)
+  f.s <- y ~ -1 + Intercept + x1 + x2 + f(field, model = rspde_model)
 ```
 Now we create the `inla.stack` object:
 ```{r}
   stk.dat <- inla.stack(
-    data = graph_data_spde(rspde_model), A = Abar, tag = "est",
+    data = data.frame(y = graph_data_spde(rspde_model)$y), A = list(Abar,1), tag = "est",
     effects =
-      c(
+      list(c(
         rspde.index,
-        list(Intercept = 1)
+        list(Intercept = 1)), list(x1 = graph_data_spde(rspde_model)$x1 ,
+                                      x2 = graph_data_spde(rspde_model)$x2)
       )
     )
 ```
@@ -584,9 +577,7 @@ Let us clear the graph, since it contains `NA` observations we used for predicti
 and create a new `rSPDE` model object:
 ```{r}
 graph$clear_observations()
-graph$add_observations(data = data.frame(y=Y, 
-                          edge_number = obs.loc[,1], 
-                          distance_on_edge = obs.loc[,2]), 
+graph$add_observations(data = df_data, 
                           normalized = TRUE)
 rspde_model <- rspde.metric_graph(graph)
 ```
@@ -597,7 +588,7 @@ case we will use the name `loc`:
 ```{r}
     library(inlabru)
     cmp <-
-    y ~ -1 + Intercept(1) + field(loc, 
+    y ~ -1 + Intercept(1) + x1 + x2 + field(loc, 
                           model = rspde_model)
 ```
 Now, we can directly fit the model, where we pass the name of the location variable as the `loc` argument of the
