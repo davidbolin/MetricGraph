@@ -6,13 +6,14 @@
 #'
 #' @param formula Formula object describing the relation between the response variables and the fixed effects.
 #' @param graph A `metric_graph` object.
-#' @param model The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \eqn{\alpha}=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`. 
+#' @param model The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'WM1' and 'WM2' for Whittle-Matern models with \eqn{\alpha}=1 and 2, with exact precision matrices, respectively; 'WM' for Whittle-Matern models where one also estimates the smoothness parameter via finite-element method; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`. 
 #' `linearModel` corresponds to a linear model without random effects.
-#' For `Whittle-Matern` and `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
+#' For `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `WhittleMatern` models one can set the parameter `alpha` to either 1 or 2, for exact precision matrices or can provide 'nu' (where alpha = nu + 1/2), for the finite-element case with fixed nu. If the model is `WhittleMatern` and neither 'nu' nor 'alpha' is provided, then the finite-element model will be used and 'nu' will be estimated. 
+#' Finally, for type 'WhittleMatern', there is an optional argument, `rspde_order`, that chooses the order of the rational approximation. By default `rspde_order` is 2. For `isoCov` models, the list must 
 #' contain a parameter `cov_function`, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the `cov_function` argument. The default is 'exp_covariance', the
 #' exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for `Whittle-Matern` models, there is an additional parameter
 #' `version`, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default. 
-#' @param repl vector or list containing which replicates to consider in the model.
+#' @param which_repl vector or list containing which replicates to consider in the model.
 #' If `NULL` all replicates will be considered.
 #' @param optim_method The method to be used with `optim` function.
 #' @param starting_values_latent A vector containing the starting values for the latent model. If the latent model is `WhittleMatern` or `graphLaplacian`, then the starting values should be provided as a vector of the form c(sigma,kappa) or c(sigma,range) depending on the parameterization. If the model is `isoCov`, then the starting values should be provided as a vector containing the parameters of the covariance function.
@@ -33,7 +34,7 @@
 
 graph_lme <- function(formula, graph, 
                 model = list(type = "linearModel"), 
-                repl = NULL,
+                which_repl = NULL,
                 optim_method = "L-BFGS-B", 
                 starting_values_latent = NULL,
                 start_sigma_e = NULL,
@@ -52,16 +53,17 @@ graph_lme <- function(formula, graph,
     }
     model <- model[[1]]
     model <- tolower(model)
-    if(!(model%in% c("lm", "alpha1", "alpha2", "isoexp", "gl1", "gl2"))){
-      stop("If model is a character (string), the options are 'lm', 'alpha1', 'alpha2', 'isoExp', 'GL1', 'GL2'.")
+    if(!(model%in% c("lm", "wm", "wm1", "wm2", "isoexp", "gl1", "gl2"))){
+      stop("If model is a character (string), the options are 'lm', 'WM', 'WM1', 'WM2', 'isoExp', 'GL1' or 'GL2'.")
     }
     model <- switch(model,
             "lm" = list(type = "linearModel"),
-            "alpha1" = list(type = "WhittleMatern", alpha = 1, version = 1),
-            "alpha2" = list(type = "WhittleMatern", alpha = 2),
+            "wm1" = list(type = "WhittleMatern", alpha = 1, version = 1),
+            "wm2" = list(type = "WhittleMatern", alpha = 2),
             "isoexp" = list(type = "isoCov"),
             "gl1" = list(type = "graphLaplacian", alpha = 1),
-            "gl2" = list(type = "graphLaplacian", alpha = 2)
+            "gl2" = list(type = "graphLaplacian", alpha = 2),
+            "wm" = list(type = "WhittleMatern")
             )
   }
 
@@ -82,17 +84,22 @@ graph_lme <- function(formula, graph,
     stop("The possible models are 'linearModel', 'WhittleMatern', 'graphLaplacian', 'isoCov')!")
   }
 
+  
+
   if(model_type%in% c("whittlematern", "graphlaplacian")){
+    if(parameterization_latent == "spde"){
+      par_names <- c("sigma", "kappa")
+    } else{
+      par_names <- c("sigma", "range")
+    }
+  }
+
+  if(model_type == "graphlaplacian"){
     if(is.null(model[["alpha"]])){
       model[["alpha"]] <- 1
     }
     if(!(model[["alpha"]]%in%c(1,2))){
       stop("alpha should be either 1 or 2.")
-    }
-    if(parameterization_latent == "spde"){
-      par_names <- c("sigma", "kappa")
-    } else{
-      par_names <- c("sigma", "range")
     }
   }
 
@@ -128,6 +135,63 @@ graph_lme <- function(formula, graph,
   if(is.null(graph$data)){
     stop("No data found in the graph. Please, add observations before fitting the model.")
   }
+
+  if(model_type == "whittlematern"){
+    if(is.null(model[["alpha"]])){
+      if(is.null(model[["rspde_order"]])){
+        rspde_order <- 2
+      } else{
+        rspde_order <- model[["rspde_order"]]
+        if(!is.numeric(rspde_order)){
+          stop("rspde_order must be numeric.")
+        }
+        if(rspde_order<=0){
+          stop("rspde_order must be positive.")
+        }
+        if(!(rspde_order%%1 == 0) || (rspde_order > 8)){
+          stop("rspde_order must be an integer between 1 and 8.")
+        }
+        if(length(rspde_order)>1){
+          stop("rspde_order must be a number, not a vector.")
+        }
+      }
+      rspde_object <- rSPDE::matern.operators(graph = graph,
+                                                m = rspde_order,
+                                                parameterization = parameterization_latent)
+      nu <- model[["nu"]]
+      if(!is.null(nu)){
+        if(!is.numeric(nu)){
+          stop("nu must be numeric.")
+        }
+        if(nu <= 0){
+          stop("nu must be positive.")
+        }
+        if(length(nu)>1){
+          stop("nu must be a number, not a vector.")
+        }        
+      }
+      fit <- rSPDE::rspde_lme(formula = formula, model = rspde_object, 
+                            nu = nu, which_repl = which_repl,
+                            optim_method = optim_method,
+                            use_data_from_graph = TRUE,
+                            model_matrix = model_matrix,
+                            parallel = parallel,
+                            n_cores = n_cores,
+                            starting_values_latent = starting_values_latent,
+                            start_sigma_e = start_sigma_e,                            
+                            optim_controls = optim_controls,
+                            improve_hessian = improve_hessian,
+                            hessian_args = hessian_args)
+      fit$call <- call_graph_lme                            
+      return(fit)
+
+    } else{
+      if(!(model[["alpha"]] %in% c(1,2))){
+        stop("For WhittleMatern models, alpha must be either 1 or 2. For different values use 'nu' instead.")
+      }
+    }
+  }
+
 
   nV_orig <- NULL
 
@@ -224,23 +288,23 @@ graph_lme <- function(formula, graph,
       if(model[["version"]] == 2){
         likelihood <- function(theta){
           return(-likelihood_alpha1_v2(theta = theta, graph = graph_bkp, 
-              X_cov = X_cov, y = y_graph, repl = repl, BC = BC, parameterization = parameterization_latent))
+              X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC, parameterization = parameterization_latent))
         }
       } else {
         likelihood <- function(theta){
           return(-likelihood_alpha1(theta = theta, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = repl, BC = BC, parameterization = parameterization_latent))
+                             X_cov = X_cov, repl = which_repl, BC = BC, parameterization = parameterization_latent))
         }
       }
     } else{
       likelihood <- function(theta){
           return(-likelihood_alpha2(theta = theta, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = repl, BC = BC, parameterization = parameterization_latent))
+                             X_cov = X_cov, repl = which_repl, BC = BC, parameterization = parameterization_latent))
         }
     }
   } else if (model_type == "graphlaplacian"){
       likelihood <- likelihood_graph_laplacian(graph = graph_bkp, alpha = model[["alpha"]], y_graph = y_graph, 
-              X_cov = X_cov, maximize = FALSE, repl=repl, parameterization = "spde")
+              X_cov = X_cov, maximize = FALSE, repl=which_repl, parameterization = "spde")
   } else if(model_type == "isocov") {
   
   if (is.character(model[["cov_function"]])) {
@@ -256,12 +320,12 @@ graph_lme <- function(formula, graph,
     }
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov, y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
-                                                X_cov = X_cov, repl = repl)
+                                                X_cov = X_cov, repl = which_repl)
     } else{
     model[["cov_function_name"]] <- "other"
       likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov, y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
-                                                X_cov = X_cov, repl = repl)
+                                                X_cov = X_cov, repl = which_repl)
     }
     }
 
@@ -284,7 +348,7 @@ graph_lme <- function(formula, graph,
         parallel::clusterExport(cl, "y_graph", envir = environment())
         parallel::clusterExport(cl, "graph_bkp", envir = environment())
         parallel::clusterExport(cl, "X_cov", envir = environment())
-        parallel::clusterExport(cl, "repl", envir = environment())        
+        parallel::clusterExport(cl, "which_repl", envir = environment())        
         parallel::clusterExport(cl, "model", envir = environment())              
         # parallel::clusterExport(cl, "y_list", envir = environment())  
         parallel::clusterExport(cl, "likelihood_graph_covariance",
@@ -414,7 +478,7 @@ graph_lme <- function(formula, graph,
   object$formula <- formula
   object$estimation_method <- optim_method
   object$parameterization_latent <- parameterization_latent
-  object$repl <- repl
+  object$which_repl <- which_repl
   object$optim_controls <- optim_controls
   object$latent_model <- model
   object$loglik <- loglik

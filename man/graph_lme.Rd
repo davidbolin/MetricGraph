@@ -8,14 +8,18 @@ graph_lme(
   formula,
   graph,
   model = list(type = "linearModel"),
-  repl = NULL,
+  which_repl = NULL,
   optim_method = "L-BFGS-B",
   starting_values_latent = NULL,
   start_sigma_e = NULL,
   parameterization_latent = c("matern", "spde"),
   BC = 1,
   model_matrix = TRUE,
-  optim_controls = list()
+  parallel = FALSE,
+  n_cores = parallel::detectCores() - 1,
+  optim_controls = list(),
+  improve_hessian = FALSE,
+  hessian_args = list()
 )
 }
 \arguments{
@@ -30,7 +34,7 @@ contain a parameter \code{cov_function}, containing the covariance function. The
 exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for \code{Whittle-Matern} models, there is an additional parameter
 \code{version}, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default.}
 
-\item{repl}{vector or list containing which replicates to consider in the model.
+\item{which_repl}{vector or list containing which replicates to consider in the model.
 If \code{NULL} all replicates will be considered.}
 
 \item{optim_method}{The method to be used with \code{optim} function.}
@@ -46,7 +50,15 @@ If \code{NULL} all replicates will be considered.}
 
 \item{model_matrix}{logical indicating whether the model matrix should be returned as component of the returned value.}
 
+\item{parallel}{logical. Indicating whether to use optimParallel or not.}
+
+\item{n_cores}{Number of cores to be used if parallel is true.}
+
 \item{optim_controls}{Additional controls to be passed to \code{optim} or \code{optimParallel}.}
+
+\item{improve_hessian}{Should a more precise estimate of the hessian be obtained? Turning on might increase the overall time.}
+
+\item{hessian_args}{List of controls to be used if \code{improve_hessian} is \code{TRUE}. The list can contain the arguments to be passed to the \code{method.args} argument in the \code{hessian} function. See the help of the \code{hessian} function in \code{numDeriv} package for details. Observet that it only accepts the "Richardson" method for now, the method "complex" is not supported.}
 }
 \value{
 A list containing the fitted model.

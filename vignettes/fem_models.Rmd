@@ -199,7 +199,11 @@ graph$add_observations(data = df_data, normalized = TRUE)
 
 We can now fit the model:
 ```{r}
-fit <- rspde_lme(y ~ x1 + x2, model = op_est)
+fit2 <- rspde_lme(y ~ x1 + x2, model = op_est)
+```
+
+```{r}
+fit <- graph_lme(y ~ x1 + x2, graph = graph, model = "wm")
 ```
 
 Let us obtain a summary of the model:
