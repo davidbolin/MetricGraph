@@ -178,13 +178,7 @@ We generate the observations as $Y_i = 1 + 2x_{i1} - 3 x_{i2} u(s_i) + \varepsil
     Y <- 1 + 2*x1 - 3*x2 + as.vector(A %*% u + sigma.e * rnorm(n.obs))
 ```
 
-Let us now fit the model. To this end we will use the `rspde_lme()` function from the `rSPDE` package. To this end, we will also create a new object to obtain the estimation (since the function `rspde_lme()` uses the parameters from the object as initial values, and if they are not supplied, an initial guess is given). 
-
-```{r}
-op_est <- matern.operators(m = rspde.order, graph = graph)
-```
-
-Let us now assemble the `data.frame()` with the observations, the observation locations and the covariates:
+Let us now fit the model. To this end we will use the `graph_lme()` function (that, for the finite element models, acts as a wrapper for the `rspde_lme()` function from the `rSPDE` package). To this end, let us now assemble the `data.frame()` with the observations, the observation locations and the covariates:
 ```{r}
 df_data <- data.frame(y = Y, edge_number = obs.loc[,1],
                         distance_on_edge = obs.loc[,2],
@@ -197,13 +191,9 @@ Let us now add the data to the graph object:
 graph$add_observations(data = df_data, normalized = TRUE)
 ```
 
-We can now fit the model:
+We can now fit the model. To this end, we use the `graph_lme()` function and set the model to `'WM`'.
 ```{r}
-fit2 <- rspde_lme(y ~ x1 + x2, model = op_est)
-```
-
-```{r}
-fit <- graph_lme(y ~ x1 + x2, graph = graph, model = "wm")
+fit <- graph_lme(y ~ x1 + x2, graph = graph, model = "WM")
 ```
 
 Let us obtain a summary of the model:

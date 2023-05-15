@@ -12,7 +12,6 @@ graph_lme(
   optim_method = "L-BFGS-B",
   starting_values_latent = NULL,
   start_sigma_e = NULL,
-  parameterization_latent = c("matern", "spde"),
   BC = 1,
   model_matrix = TRUE,
   parallel = FALSE,
@@ -27,9 +26,11 @@ graph_lme(
 
 \item{graph}{A \code{metric_graph} object.}
 
-\item{model}{The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \eqn{\alpha}=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements \code{type}, which can be \code{linearModel}, \code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}.
+\item{model}{The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'WM1' and 'WM2' for Whittle-Matern models with \eqn{\alpha}=1 and 2, with exact precision matrices, respectively; 'WM' for Whittle-Matern models where one also estimates the smoothness parameter via finite-element method; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements \code{type}, which can be \code{linearModel}, \code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}.
 \code{linearModel} corresponds to a linear model without random effects.
-For \code{Whittle-Matern} and \code{graph-Laplacian} models, the list must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
+For \code{WhittleMatern} models, that is, if the list contains \code{type = 'WhittleMatern'}, one can choose between a finite element approximation of the precision matrix by adding \code{fem = TRUE} to the list, or to use the exact precision matrix (by setting \code{fem = FALSE}). If \code{fem} is \code{FALSE}, there is also the parameter \code{alpha}, to determine the order of the SPDE, which is either 1 or 2. If \code{fem} is \code{TRUE} and \code{alpha} is not specified, then the default value of \code{alpha=1} will be used. If \code{fem} is \code{TRUE} and one does not specify \code{alpha}, it will be estimated from the data. However, if one wants to have \code{alpha} fixed to some value, the user can specify \code{alpha} in the list. Finally, for type 'WhittleMatern', there is an optional argument, \code{rspde_order}, that chooses the order of the rational approximation. By default \code{rspde_order} is 2.
+Finally, if one wants to fit a nonstationary model, then \code{fem} necessarily needs to be \code{TRUE}, and one needs to also supply the matrices \code{B.tau} and \code{B.kappa}.
+For \code{graph-Laplacian} models, the list must also contain a parameter \code{alpha} (which is 1 by default). For \code{isoCov} models, the list must
 contain a parameter \code{cov_function}, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the \code{cov_function} argument. The default is 'exp_covariance', the
 exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for \code{Whittle-Matern} models, there is an additional parameter
 \code{version}, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default.}
@@ -42,8 +43,6 @@ If \code{NULL} all replicates will be considered.}
 \item{starting_values_latent}{A vector containing the starting values for the latent model. If the latent model is \code{WhittleMatern} or \code{graphLaplacian}, then the starting values should be provided as a vector of the form c(sigma,kappa) or c(sigma,range) depending on the parameterization. If the model is \code{isoCov}, then the starting values should be provided as a vector containing the parameters of the covariance function.}
 
 \item{start_sigma_e}{Starting value for the standard deviation of the measurament error.}
-
-\item{parameterization_latent}{The parameterization for \code{WhittleMatern} and \code{graphLaplacian} models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.}
 
 \item{BC}{For \code{WhittleMatern} models. Which boundary condition to use (0,1) 0 is no adjustment on boundary point
 1 is making the boundary condition stationary.}

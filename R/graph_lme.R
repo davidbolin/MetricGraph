@@ -8,8 +8,9 @@
 #' @param graph A `metric_graph` object.
 #' @param model The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'WM1' and 'WM2' for Whittle-Matern models with \eqn{\alpha}=1 and 2, with exact precision matrices, respectively; 'WM' for Whittle-Matern models where one also estimates the smoothness parameter via finite-element method; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively. There is also the option to provide it as a list containing the elements `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`. 
 #' `linearModel` corresponds to a linear model without random effects.
-#' For `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `WhittleMatern` models one can set the parameter `alpha` to either 1 or 2, for exact precision matrices or can provide 'nu' (where alpha = nu + 1/2), for the finite-element case with fixed nu. If the model is `WhittleMatern` and neither 'nu' nor 'alpha' is provided, then the finite-element model will be used and 'nu' will be estimated. 
-#' Finally, for type 'WhittleMatern', there is an optional argument, `rspde_order`, that chooses the order of the rational approximation. By default `rspde_order` is 2. For `isoCov` models, the list must 
+#' For `WhittleMatern` models, that is, if the list contains `type = 'WhittleMatern'`, one can choose between a finite element approximation of the precision matrix by adding `fem = TRUE` to the list, or to use the exact precision matrix (by setting `fem = FALSE`). If `fem` is `FALSE`, there is also the parameter `alpha`, to determine the order of the SPDE, which is either 1 or 2. If `fem` is `TRUE` and `alpha` is not specified, then the default value of `alpha=1` will be used. If `fem` is `TRUE` and one does not specify `alpha`, it will be estimated from the data. However, if one wants to have `alpha` fixed to some value, the user can specify `alpha` in the list. Finally, for type 'WhittleMatern', there is an optional argument, `rspde_order`, that chooses the order of the rational approximation. By default `rspde_order` is 2. 
+#' Finally, if one wants to fit a nonstationary model, then `fem` necessarily needs to be `TRUE`, and one needs to also supply the matrices `B.sigma` and `B.kappa`. 
+#' For `graph-Laplacian` models, the list must also contain a parameter `alpha` (which is 1 by default). For `isoCov` models, the list must 
 #' contain a parameter `cov_function`, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the `cov_function` argument. The default is 'exp_covariance', the
 #' exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for `Whittle-Matern` models, there is an additional parameter
 #' `version`, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default. 
@@ -18,7 +19,7 @@
 #' @param optim_method The method to be used with `optim` function.
 #' @param starting_values_latent A vector containing the starting values for the latent model. If the latent model is `WhittleMatern` or `graphLaplacian`, then the starting values should be provided as a vector of the form c(sigma,kappa) or c(sigma,range) depending on the parameterization. If the model is `isoCov`, then the starting values should be provided as a vector containing the parameters of the covariance function.
 #' @param start_sigma_e Starting value for the standard deviation of the measurament error.
-#' @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
+# @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models. Which boundary condition to use (0,1) 0 is no adjustment on boundary point
 #'        1 is making the boundary condition stationary.
 #' @param model_matrix logical indicating whether the model matrix should be returned as component of the returned value.
@@ -38,7 +39,7 @@ graph_lme <- function(formula, graph,
                 optim_method = "L-BFGS-B", 
                 starting_values_latent = NULL,
                 start_sigma_e = NULL,
-                parameterization_latent = c("matern", "spde"),
+                # parameterization_latent = c("matern", "spde"),
                 BC = 1, 
                 model_matrix = TRUE,
                 parallel = FALSE,
@@ -58,23 +59,23 @@ graph_lme <- function(formula, graph,
     }
     model <- switch(model,
             "lm" = list(type = "linearModel"),
-            "wm1" = list(type = "WhittleMatern", alpha = 1, version = 1),
-            "wm2" = list(type = "WhittleMatern", alpha = 2),
+            "wm1" = list(type = "WhittleMatern", fem = FALSE, alpha = 1, version = 1),
+            "wm2" = list(type = "WhittleMatern", fem = FALSE, alpha = 2),
             "isoexp" = list(type = "isoCov"),
             "gl1" = list(type = "graphLaplacian", alpha = 1),
             "gl2" = list(type = "graphLaplacian", alpha = 2),
-            "wm" = list(type = "WhittleMatern")
+            "wm" = list(type = "WhittleMatern", fem = TRUE)
             )
   }
 
   model_type <- model[["type"]]
   model_type <- tolower(model_type)
 
-  parameterization_latent <- parameterization_latent[[1]]
+  # parameterization_latent <- parameterization_latent[[1]]
 
-  if(!(parameterization_latent%in%c("matern", "spde"))){
-    stop("The possible values for 'parameterization_latent' are 'matern' and 'spde'!")
-  }
+  # if(!(parameterization_latent%in%c("matern", "spde"))){
+  #   stop("The possible values for 'parameterization_latent' are 'matern' and 'spde'!")
+  # }
 
   if(!(BC%in%c(0,1))){
     stop("The possible values for 'BC' are 0 and 1!")
@@ -87,11 +88,11 @@ graph_lme <- function(formula, graph,
   
 
   if(model_type%in% c("whittlematern", "graphlaplacian")){
-    if(parameterization_latent == "spde"){
+    # if(parameterization_latent == "spde"){
       par_names <- c("sigma", "kappa")
-    } else{
-      par_names <- c("sigma", "range")
-    }
+    # } else{
+    #   par_names <- c("sigma", "range")
+    # }
   }
 
   if(model_type == "graphlaplacian"){
@@ -137,7 +138,16 @@ graph_lme <- function(formula, graph,
   }
 
   if(model_type == "whittlematern"){
-    if(is.null(model[["alpha"]])){
+    if(is.null(model[["fem"]])){
+      fem <- FALSE
+      if(is.null(model[["alpha"]])){
+        alpha <- 1
+      }
+    }
+  }
+
+  if(model_type == "whittlematern"){
+    if(model[["fem"]]){
       if(is.null(model[["rspde_order"]])){
         rspde_order <- 2
       } else{
@@ -155,20 +165,34 @@ graph_lme <- function(formula, graph,
           stop("rspde_order must be a number, not a vector.")
         }
       }
-      rspde_object <- rSPDE::matern.operators(graph = graph,
+
+      if(!is.null(model[["B.sigma"]]) || !is.null(model[["B.kappa"]])){
+              rspde_object <- rSPDE::spde.matern.operators(graph = graph,
                                                 m = rspde_order,
-                                                parameterization = parameterization_latent)
-      nu <- model[["nu"]]
-      if(!is.null(nu)){
-        if(!is.numeric(nu)){
-          stop("nu must be numeric.")
+                                                parameterization = "graph",
+                                                B.sigma = model[["B.sigma"]],
+                                                B.kappa = model[["B.kappa"]])
+
+      } else{
+              rspde_object <- rSPDE::matern.operators(graph = graph,
+                                                m = rspde_order,
+                                                parameterization = "graph")
+      }
+
+      if(!is.null(alpha)){
+        if(!is.numeric(alpha)){
+          stop("alpha must be numeric.")
         }
+        nu <- model[["alpha"]] - 0.5
+        
         if(nu <= 0){
-          stop("nu must be positive.")
+          stop("nu = alpha - 0.5 must be positive.")
         }
         if(length(nu)>1){
           stop("nu must be a number, not a vector.")
         }        
+      } else{
+        nu <- NULL
       }
       fit <- rSPDE::rspde_lme(formula = formula, model = rspde_object, 
                             nu = nu, which_repl = which_repl,
@@ -182,9 +206,9 @@ graph_lme <- function(formula, graph,
                             optim_controls = optim_controls,
                             improve_hessian = improve_hessian,
                             hessian_args = hessian_args)
-      fit$call <- call_graph_lme                            
+      fit$call <- call_graph_lme           
+      class(fit) <- c(class(fit), "graph_lme")                 
       return(fit)
-
     } else{
       if(!(model[["alpha"]] %in% c(1,2))){
         stop("For WhittleMatern models, alpha must be either 1 or 2. For different values use 'nu' instead.")
