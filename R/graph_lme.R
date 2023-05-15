@@ -208,6 +208,10 @@ graph_lme <- function(formula, graph,
                             improve_hessian = improve_hessian,
                             hessian_args = hessian_args)
       fit$call <- call_graph_lme           
+      if(fit$estimate_nu){
+        names(fit$coeff$random_effects)[1] <- "alpha"
+        fit$coeff$random_effects <- fit$coeff$random_effects + 0.5
+      }
       class(fit) <- c(class(fit), "graph_lme")                 
       return(fit)
     } else{

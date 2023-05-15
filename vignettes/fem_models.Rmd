@@ -107,7 +107,7 @@ the `rSPDE` package:
 ```{r} 
   sigma <- 23
   kappa <- 15
-  nu <- 0.8
+  nu <- 0.8 # alpha = 1.3
   rspde.order <- 2
   op <- matern.operators(nu = nu, kappa = kappa, sigma = sigma, 
                          parameterization = "graph",
@@ -213,7 +213,7 @@ print(data.frame(sigma = c(sigma, fit$coeff$random_effects[2]),
 
 
 ```{r}
-op_est <- matern.operators(parameterization = "matern", 
+op_est <- matern.operators(parameterization = "spde", 
                              m = rspde.order, graph = graph)
 
 # fit2 <- rspde_lme(y ~ x1 + x2, data = df_data, loc = c("edge_number", "distance_on_edge"), model = op_est, parallel=TRUE) 
@@ -282,7 +282,7 @@ graph$add_observations(data = df_data_repl, normalized = TRUE, group = "repl")
 We can now fit the model in the same way as before by using the `rspde_lme()` function. Note that we can optimize in parallel by setting `parallel` to `TRUE`.
 
 ```{r}
-fit_repl <- rspde_lme(y ~ -1, model = op_est, parallel = TRUE)
+fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", parallel = TRUE)
 ```
 
 Let us see a summary of the fit:
@@ -592,7 +592,7 @@ and create a new `rSPDE` model object:
 graph$clear_observations()
 graph$add_observations(data = df_data, 
                           normalized = TRUE)
-rspde_model <- rspde.metric_graph(graph)
+rspde_model <- rspde.metric_graph(graph, parameterization = "spde")
 ```
 Let us now load the `inlabru` package and create the component (which is `inlabru`'s formula-like object). Since we are using the data from the graph,
 `inlabru` will also obtain the locations from the graph, thus, there is no need to provide the locations. However, we need a name for the locations 
@@ -602,7 +602,7 @@ case we will use the name `loc`:
     library(inlabru)
     cmp <-
     y ~ -1 + Intercept(1) + x1 + x2 + field(loc, 
-                          model = rspde_model)
+                          model = rspde_model)                   
 ```
 Now, we can directly fit the model, where we pass the name of the location variable as the `loc` argument of the
 `graph_data_spde()` function:
