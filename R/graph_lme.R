@@ -179,8 +179,8 @@ graph_lme <- function(formula, graph,
                                                 parameterization = "graph")
       }
 
-      if(!is.null(alpha)){
-        if(!is.numeric(alpha)){
+      if(!is.null(model[["alpha"]])){
+        if(!is.numeric(model[["alpha"]])){
           stop("alpha must be numeric.")
         }
         nu <- model[["alpha"]] - 0.5
@@ -194,6 +194,7 @@ graph_lme <- function(formula, graph,
       } else{
         nu <- NULL
       }
+
       fit <- rSPDE::rspde_lme(formula = formula, model = rspde_object, 
                             nu = nu, which_repl = which_repl,
                             optim_method = optim_method,
@@ -211,7 +212,7 @@ graph_lme <- function(formula, graph,
       return(fit)
     } else{
       if(!(model[["alpha"]] %in% c(1,2))){
-        stop("For WhittleMatern models, alpha must be either 1 or 2. For different values use 'nu' instead.")
+        stop("For WhittleMatern models, alpha must be either 1 or 2. For different values, set 'fem' to 'TRUE' instead.")
       }
     }
   }
@@ -277,14 +278,15 @@ graph_lme <- function(formula, graph,
 
     if(model_type != "linearmodel"){
       range_par <- FALSE
-      if(model_type == "whittlematern"){
-        range_par <- ifelse(parameterization_latent == "matern",TRUE,FALSE)
-      }
+      # if(model_type == "whittlematern"){
+      #   range_par <- ifelse(parameterization_latent == "matern",TRUE,FALSE)
+      # }
       start_values <- graph_starting_values(graph = graph_bkp,
                     model = model_start, 
                     manual_data = unlist(y_graph),
                     log_scale = TRUE,
-                    range_par = range_par)
+                    # range_par = range_par)
+                    range_par = FALSE)
     }
   } else if(model_type != "linearmodel") {
     start_values <- c(log(0.1*sd(y_graph),log(starting_values_latent)))
@@ -312,18 +314,18 @@ graph_lme <- function(formula, graph,
       if(model[["version"]] == 2){
         likelihood <- function(theta){
           return(-likelihood_alpha1_v2(theta = theta, graph = graph_bkp, 
-              X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC, parameterization = parameterization_latent))
+              X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC, parameterization = "spde")) # parameterization = parameterization_latent))
         }
       } else {
         likelihood <- function(theta){
           return(-likelihood_alpha1(theta = theta, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = which_repl, BC = BC, parameterization = parameterization_latent))
+                             X_cov = X_cov, repl = which_repl, BC = BC, parameterization = "spde")) # , parameterization = parameterization_latent))
         }
       }
     } else{
       likelihood <- function(theta){
           return(-likelihood_alpha2(theta = theta, graph = graph_bkp, data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = which_repl, BC = BC, parameterization = parameterization_latent))
+                             X_cov = X_cov, repl = which_repl, BC = BC, parameterization = "spde")) # , parameterization = parameterization_latent))
         }
     }
   } else if (model_type == "graphlaplacian"){
@@ -472,7 +474,12 @@ graph_lme <- function(formula, graph,
     names_tmp <- colnames(X_cov)
     data_tmp <- cbind(y_graph, X_cov)
     data_tmp <- na.omit(data_tmp)
+    start_time <- Sys.time()
     res <- lm(data_tmp[,1] ~ data_tmp[,-1] - 1)
+    end_time <- Sys.time()
+    time_fit <- end_time - start_time
+    time_hessian <- NULL
+    time_par <- NULL
     coeff_fixed <- res$coeff
     names(coeff_fixed) <- names_tmp
     sm_temp <- summary(res)
@@ -501,7 +508,7 @@ graph_lme <- function(formula, graph,
   object$response <- list(y = y_graph)
   object$formula <- formula
   object$estimation_method <- optim_method
-  object$parameterization_latent <- parameterization_latent
+  # object$parameterization_latent <- parameterization_latent
   object$which_repl <- which_repl
   object$optim_controls <- optim_controls
   object$latent_model <- model
@@ -916,11 +923,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   if(tolower(model_type$type) == "whittlematern"){
     sigma <- object$coeff$random_effects[1]
-    if(object$parameterization_latent == "spde"){
+    # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
-    } else{
-      kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
-    }
+    # } else{
+    #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
+    # }
 
       # if(model_type$alpha == 1){
       #     Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -951,11 +958,11 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
     }
     graph_bkp$compute_laplacian()
-    if(object$parameterization_latent == "spde"){
+    # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
-    } else{
-      kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
-    }
+    # } else{
+    #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
+    # }
       if(model_type$alpha == 1){
         Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
       } else{

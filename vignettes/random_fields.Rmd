@@ -238,7 +238,7 @@ We can now use the `graph_lme()` function to fit the above model. By default a l
 provides estimated values for the range parameter and `sigma`.
 
 ```{r}
-res <- graph_lme(y ~ -1, graph = graph, model = 'alpha1', parameterization_latent = "spde")
+res <- graph_lme(y ~ -1, graph = graph, model = 'WM1')
 
 summary(res)
 ```
