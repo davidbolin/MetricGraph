@@ -304,12 +304,12 @@ graph_lme <- function(formula, graph,
       if(is.character(model[["cov_function"]])){
         if(model[["cov_function"]] == "exp_covariance"){
           model_start <- "isoExp"
-          par_names <- c("sigma", "kappa")
-        } else if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
+          par_names <- c("tau", "kappa")
+        } else if(model[["cov_function"]] %in% c("WM1","WM2", "GL1", "GL2")){
           model_start <- model[["cov_function"]]
         } 
       } else{
-        stop("For 'isoCov' models with a non-exponential covariance, that are not 'alpha1', 'alpha2', 'GL1' or 'GL2', you should provide the starting values!")
+        stop("For 'isoCov' models with a non-exponential covariance, that are not 'WM1', 'WM2', 'GL1' or 'GL2', you should provide the starting values!")
       }
     } 
 
@@ -371,9 +371,9 @@ graph_lme <- function(formula, graph,
   } else if(model_type == "isocov") {
   
   if (is.character(model[["cov_function"]])) {
-    if(model[["cov_function"]] %in% c("alpha1","alpha2", "GL1", "GL2")){
+    if(model[["cov_function"]] %in% c("WM1","WM2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
-      par_names <- c("sigma", "kappa")
+      par_names <- c("tau", "kappa")
     } else{
       model_cov <- "isoCov"
       if(model[["cov_function"]] == "exp_covariance"){
@@ -394,8 +394,6 @@ graph_lme <- function(formula, graph,
 
     
   if(model_type != "linearmodel"){
-
-
       hessian <- TRUE
 
       if(improve_hessian){
@@ -470,14 +468,77 @@ graph_lme <- function(formula, graph,
   #               control = optim_controls,
   #               hessian = TRUE)
 
+  if(model_type %in% c("graphlaplacian", "whittlematern")){
+    n_par_coeff <- 3
+  } else if(model[["cov_function_name"]] == "exp_covariance"){
+    n_par_coeff <- 3
+  } else{
+    n_par_coeff <- length(starting_values_latent) + 1
+  }
+
   coeff <- res$par
-  coeff <- exp(c(res$par[1:3]))
-  coeff <- c(coeff, res$par[-c(1:3)])
+  coeff <- exp(c(res$par[1:n_par_coeff]))
+  coeff <- c(coeff, res$par[-c(1:n_par_coeff)])
 
   loglik <- -res$value
 
   n_fixed <- ncol(X_cov)
   n_random <- length(coeff) - n_fixed - 1  
+
+  n_coeff_nonfixed <- length(coeff) - n_fixed
+
+  par_change <- diag(c(exp(-c(res$par[1:n_coeff_nonfixed])), rep(1,n_fixed)))
+  observed_fisher <- par_change %*% observed_fisher %*% par_change
+
+  if(model_type %in% c("graphlaplacian", "whittlematern")){
+
+      coeff[2] <- 1/coeff[2]
+
+      grad_tmp <- diag(c(1,-1/(coeff[2]^2), 1, rep(1,n_fixed)))
+      
+      observed_fisher <- grad_tmp %*% observed_fisher %*% grad_tmp
+
+      # time_matern_par_start <- Sys.time()
+      # new_likelihood <- function(theta){
+      #   new_par <- res$par
+      #   if(estimate_nu){
+      #     new_par[3:4] <- theta
+      #   } else{
+      #     new_par[2:3] <- theta
+      #   }
+      #   return(likelihood(new_par))
+      # }
+
+      # if(estimate_nu){
+      #   coeff_random_nonnu <- coeff_random[-1]
+      #   new_observed_fisher <- observed_fisher[3:4,3:4]
+      # } else{
+      #   coeff_random_nonnu <- coeff_random
+      #   new_observed_fisher <- observed_fisher[2:3,2:3]
+      # }
+      # change_par <- change_parameterization_lme(new_likelihood, model$d, coeff_random[1], coeff_random_nonnu,
+      #                                         hessian = new_observed_fisher #,
+      #                                         # improve_gradient = improve_gradient,
+      #                                         # gradient_args = gradient_args
+      #                                         )
+      # matern_coeff <- list()
+      # matern_coeff$random_effects <- coeff_random
+      # names(matern_coeff$random_effects) <- c("nu", "sigma", "range")
+      # matern_coeff$random_effects[2:3] <- change_par$coeff
+      # matern_coeff$std_random <- std_random
+      # matern_coeff$std_random[2:3] <- change_par$std_random
+      # time_matern_par_end <- Sys.time()
+      # time_matern_par <- time_matern_par_end - time_matern_par_start
+    } else{
+      matern_coeff <- NULL
+      time_matern_par <- NULL
+    }
+
+
+
+
+
+
 
   inv_fisher <- tryCatch(solve(observed_fisher), error = function(e) matrix(NA,
                                                                         nrow(observed_fisher), ncol(observed_fisher)))

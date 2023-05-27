@@ -604,8 +604,8 @@ likelihood_graph_covariance <- function(graph,
 
   # check <- check_graph(graph)
 
-  if(!(model%in%c("alpha1", "alpha2", "GL1", "GL2", "isoCov"))){
-    stop("The available models are: 'alpha1', 'alpha2', 'GL1', 'GL2' and 'isoCov'!")
+  if(!(model%in%c("WM1", "WM2", "GL1", "GL2", "isoCov"))){
+    stop("The available models are: 'WM1', 'WM2', 'GL1', 'GL2' and 'isoCov'!")
   }
 
   loglik <- function(theta){
@@ -646,14 +646,14 @@ likelihood_graph_covariance <- function(graph,
 
       #build covariance matrix
       switch(model,
-      alpha1 = {
+      WM1 = {
 
         Q <- spde_precision(kappa = kappa, sigma = sigma,
                             alpha = 1, graph = graph)
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
       },
-      alpha2 = {
+      WM2 = {
         PtE <- graph$get_PtE()
         n.c <- 1:length(graph$CoB$S)
         Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
