@@ -9,6 +9,7 @@ examples
 ^docs$
 ^\.github$
 ^pkgdown$
+^cran_vignettes$
 ^pkgdown/_pkgdown\.yml$
 ^index\.md$
 ^.vscode$

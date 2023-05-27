@@ -157,6 +157,8 @@ Let us construct a finer mesh, simulate the field, and visualize the simulation
 in 3D by specifying the `plotly` argument in the plot function:
 ```{r}
 graph$build_mesh(h = 0.01)
+
+
 u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
 graph$plot_function(u, plotly = TRUE)
@@ -210,7 +212,7 @@ metric graph:
 
 ```{r}
 kappa <- 10
-sigma <- 2
+sigma <- 30
 sigma_e <- 0.1
 alpha <- 1
 
