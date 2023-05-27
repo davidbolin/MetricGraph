@@ -498,37 +498,26 @@ graph_lme <- function(formula, graph,
       
       observed_fisher <- grad_tmp %*% observed_fisher %*% grad_tmp
 
-      # time_matern_par_start <- Sys.time()
-      # new_likelihood <- function(theta){
-      #   new_par <- res$par
-      #   if(estimate_nu){
-      #     new_par[3:4] <- theta
-      #   } else{
-      #     new_par[2:3] <- theta
-      #   }
-      #   return(likelihood(new_par))
-      # }
-
-      # if(estimate_nu){
-      #   coeff_random_nonnu <- coeff_random[-1]
-      #   new_observed_fisher <- observed_fisher[3:4,3:4]
-      # } else{
-      #   coeff_random_nonnu <- coeff_random
-      #   new_observed_fisher <- observed_fisher[2:3,2:3]
-      # }
-      # change_par <- change_parameterization_lme(new_likelihood, model$d, coeff_random[1], coeff_random_nonnu,
-      #                                         hessian = new_observed_fisher #,
-      #                                         # improve_gradient = improve_gradient,
-      #                                         # gradient_args = gradient_args
-      #                                         )
-      # matern_coeff <- list()
-      # matern_coeff$random_effects <- coeff_random
-      # names(matern_coeff$random_effects) <- c("nu", "sigma", "range")
-      # matern_coeff$random_effects[2:3] <- change_par$coeff
-      # matern_coeff$std_random <- std_random
-      # matern_coeff$std_random[2:3] <- change_par$std_random
-      # time_matern_par_end <- Sys.time()
-      # time_matern_par <- time_matern_par_end - time_matern_par_start
+      time_matern_par_start <- Sys.time()
+      new_likelihood <- function(theta){
+        new_par <- res$par
+        new_par[2:3] <- theta
+        new_par[2] <- -new_par[2]
+        return(likelihood(new_par))
+      }
+      
+      coeff_tmp <- coeff[2:3]
+      new_observed_fisher <- observed_fisher[2:3,2:3]
+      change_par <- change_parameterization_graphlme(new_likelihood, model[["alpha"]]-0.5, 
+                                              coeff_tmp,
+                                              hessian = new_observed_fisher
+                                              )
+      matern_coeff <- list()
+      matern_coeff$random_effects <- change_par$coeff
+      names(matern_coeff$random_effects) <- c("sigma", "range")
+      matern_coeff$std_random <- change_par$std_random
+      time_matern_par_end <- Sys.time()
+      time_matern_par <- time_matern_par_end - time_matern_par_start
     } else{
       matern_coeff <- NULL
       time_matern_par <- NULL
@@ -614,6 +603,9 @@ graph_lme <- function(formula, graph,
   object$BC <- BC
   object$niter <- res$counts
   object$response <- y_term
+  object$matern_coeff <- matern_coeff
+  object$time_matern_par <- time_matern_par
+  object$optim_method <- optim_method  
   object$covariates <- cov_term
   object$nV_orig <- nV_orig
   object$fitting_time <- time_fit
@@ -754,6 +746,8 @@ summary.graph_lme <- function(object, ...) {
 
   ans$loglik <- object$loglik
 
+  ans$optim_method <- object$optim_method
+
   ans$niter <- object$niter
 
   ans$fitting_time <- object$fitting_time
@@ -834,15 +828,16 @@ print.summary_graph_lme <- function(x, ...) {
   cat("Log-Likelihood: ", x$loglik,"\n")
   if(model_type != "linearmodel"){
     cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
-  }
-    cat(paste0("\nTime used:"))
-    cat("\t Fit the model = ", paste(trunc(x$fitting_time[[1]] * 10^5)/10^5,attr(x$fitting_time, "units"),"\n"))
+    cat(paste0("Optimization method used in 'optim' = ", x$optim_method,"\n"))
+    cat(paste0("\nTime used to:"))
+    cat("\t fit the model = ", paste(trunc(x$fitting_time[[1]] * 10^5)/10^5,attr(x$fitting_time, "units"),"\n"))
     if(x$improve_hessian){
-    cat(paste0("\t Compute the Hessian = ", paste(trunc(x$time_hessian[[1]] * 10^5)/10^5,attr(x$time_hessian, "units"),"\n")))      
+    cat(paste0("\t compute the Hessian = ", paste(trunc(x$time_hessian[[1]] * 10^5)/10^5,attr(x$time_hessian, "units"),"\n")))      
     }
     if(x$parallel){
-    cat(paste0("\t Set up the parallelization = ", paste(trunc(x$time_par[[1]] * 10^5)/10^5,attr(x$time_par, "units"),"\n")))      
+    cat(paste0("\t set up the parallelization = ", paste(trunc(x$time_par[[1]] * 10^5)/10^5,attr(x$time_par, "units"),"\n")))      
     }
+  }
 }
 
 

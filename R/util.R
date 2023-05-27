@@ -938,3 +938,34 @@ make_Aprd <- function(graph, edge_number, distance_on_edge){
   loc <- (X_loc[X_loc[,1] == edge_n[1], 2])
   A_prd <- rSPDE::rSPDE.A1d(mesh_tmp, )
 }
+
+#' @noRd
+
+change_parameterization_graphlme <- function(likelihood, nu, par, hessian
+){
+  tau <- par[1]
+  kappa <- par[2]
+
+  C1 <- sqrt(8*nu)
+  C2 <- sqrt(gamma(nu) / ((4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+
+  sigma <- C2 /(tau * kappa^nu)
+  range <- C1/kappa
+
+  grad_par <- matrix(c(-C2/(kappa^nu * sigma^2),0,
+                    nu * range^(nu-1) * C2/(sigma * C1^nu), 
+                    -C1/range^2), nrow = 2, ncol=2)
+  
+
+  new_observed_fisher <- t(grad_par) %*% hessian %*% (grad_par)
+
+  # No need to include the additional term as the gradient is approximately zero.
+  # from some numerical experiments, the approximation without the additional term
+  # seems to be better in general.
+
+  inv_fisher <- tryCatch(solve(new_observed_fisher), error = function(e) matrix(NA, nrow(new_observed_fisher), ncol(new_observed_fisher)))
+  
+  std_err <- sqrt(diag(inv_fisher))
+
+  return(list(coeff = c(sigma, range), std_random = std_err))
+}
