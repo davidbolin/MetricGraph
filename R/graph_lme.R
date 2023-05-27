@@ -286,6 +286,8 @@ graph_lme <- function(formula, graph,
     colnames(X_cov) <- names_temp
   }
 
+  time_build_likelihood_start <- Sys.time()      
+  
   if(is.null(starting_values_latent)){
     if(model_type == "whittlematern"){
       if(model[["alpha"]] == 1){
@@ -346,6 +348,7 @@ graph_lme <- function(formula, graph,
     rm(data_tmp)
   }
   
+  
   if(model_type == "whittlematern"){
     if(model[["alpha"]] == 1){
       if(model[["version"]] == 2){
@@ -394,6 +397,10 @@ graph_lme <- function(formula, graph,
 
     
   if(model_type != "linearmodel"){
+      time_build_likelihood_end <- Sys.time()
+
+      time_build_likelihood <- time_build_likelihood_end - time_build_likelihood_start 
+      
       hessian <- TRUE
 
       if(improve_hessian){
@@ -551,6 +558,8 @@ graph_lme <- function(formula, graph,
   }
 
   } else{
+    time_build_likelihood <- NULL
+
     coeff_random <- NULL
     std_random <- NULL
 
@@ -609,6 +618,7 @@ graph_lme <- function(formula, graph,
   object$covariates <- cov_term
   object$nV_orig <- nV_orig
   object$fitting_time <- time_fit
+  object$time_likelihood <- time_build_likelihood
   object$improve_hessian <- improve_hessian
   object$time_hessian <- time_hessian
   object$parallel <- parallel
@@ -681,6 +691,8 @@ print.graph_lme <- function(x, ...) {
   cat(paste0("Random effects:", "\n"))
   if(!is.null(coeff_random)){
     print(coeff_random)
+    cat(paste0("\n", "Random effects (Matern parameterization):", "\n"))
+    print(x$matern_coeff$random_effects)
   } else{
     message("No random effects")
   }
@@ -694,12 +706,13 @@ print.graph_lme <- function(x, ...) {
 #' @title Summary Method for \code{graph_lme} Objects.
 #' @description Function providing a summary of results related to metric graph mixed effects regression models.
 #' @param object an object of class "graph_lme" containing results from the fitted model.
+#' @param all_times Show all computed times. 
 #' @param ... not used.
 #' @return An object of class \code{summary_graph_lme} containing several
 #' informations of a *graph_lme* object.
 #' @method summary graph_lme
 #' @export
-summary.graph_lme <- function(object, ...) {
+summary.graph_lme <- function(object, all_times = FALSE, ...) {
   ans <- list()
 
   nfixed <- length(object$coeff$fixed_effects)
@@ -720,15 +733,26 @@ summary.graph_lme <- function(object, ...) {
   SEr_random <- object$std_errors$std_random
   SEr_meas <- object$std_errors$std_meas
 
-  coeff <- c(coeff_fixed, coeff_random, coeff_meas)
-  SEr <- c(SEr_fixed,SEr_random, SEr_meas)
+  if(model_type %in% c("whittlematern", "graphlaplacian")){
+    coeff <- c(coeff_fixed, coeff_random, object$matern_coeff$random_effects, coeff_meas)
+    SEr <- c(SEr_fixed,SEr_random, object$matern_coeff$std_random, SEr_meas)
+  } else{
+    coeff <- c(coeff_fixed, coeff_random, coeff_meas)
+    SEr <- c(SEr_fixed,SEr_random, SEr_meas)
+  }
 
   if(model_type != "linearmodel"){
     tab <- cbind(coeff, SEr, coeff / SEr, 2 * stats::pnorm(-abs(coeff / SEr)))
     colnames(tab) <- c("Estimate", "Std.error", "z-value", "Pr(>|z|)")
     rownames(tab) <- names(coeff)
-    tab <- list(fixed_effects = tab[seq.int(length.out = nfixed), , drop = FALSE], random_effects = tab[seq.int(length.out = nrandom) + nfixed, , drop = FALSE], 
-    meas_error = tab[seq.int(length.out = 1) + nfixed+nrandom, , drop = FALSE])
+    if(model_type %in% c("whittlematern", "graphlaplacian")){
+      tab <- list(fixed_effects = tab[seq.int(length.out = nfixed), , drop = FALSE], random_effects = tab[seq.int(length.out = nrandom) + nfixed, , drop = FALSE], 
+      random_effects_matern = tab[seq.int(length.out = nrandom) + nrandom + nfixed, , drop = FALSE], 
+      meas_error = tab[seq.int(length.out = 1) + nfixed+2*nrandom, , drop = FALSE])
+    } else{
+      tab <- list(fixed_effects = tab[seq.int(length.out = nfixed), , drop = FALSE], random_effects = tab[seq.int(length.out = nrandom) + nfixed, , drop = FALSE], 
+      meas_error = tab[seq.int(length.out = 1) + nfixed+nrandom, , drop = FALSE])      
+    }
   } else{
     tab <- list(fixed_effects = SEr_fixed, coeff_meas = coeff_meas)
   }
@@ -737,6 +761,8 @@ summary.graph_lme <- function(object, ...) {
 
 
   ans$coefficients <- tab
+
+  ans$all_times <- all_times
 
   ans$model_type <- model_type
 
@@ -759,6 +785,11 @@ summary.graph_lme <- function(object, ...) {
   ans$parallel <- object$parallel
 
   ans$time_par <- object$time_par  
+
+  ans$time_matern_par <- object$time_matern_par
+
+  ans$time_likelihood <- object$time_likelihood  
+
 
   class(ans) <- "summary_graph_lme"
   ans
@@ -807,6 +838,10 @@ print.summary_graph_lme <- function(x, ...) {
       } else {
         message("\nNo random effects. \n")
       }
+      if (NROW(tab$random_effects_matern)) {
+        cat(paste0("\nRandom effects (Matern parameterization):\n"))
+        stats::printCoefmat(tab[["random_effects_matern"]][,1:3], digits = digits, signif.legend = FALSE)
+      }         
       #
       cat(paste0("\nMeasurement error:\n"))
         stats::printCoefmat(tab[["meas_error"]][1,1:3,drop = FALSE], digits = digits, signif.legend = FALSE)
@@ -830,6 +865,10 @@ print.summary_graph_lme <- function(x, ...) {
     cat(paste0("Number of function calls by 'optim' = ", x$niter[1],"\n"))
     cat(paste0("Optimization method used in 'optim' = ", x$optim_method,"\n"))
     cat(paste0("\nTime used to:"))
+    if(x$all_times){
+      cat("\t build the likelihood = ", paste(trunc(x$time_likelihood[[1]] * 10^5)/10^5,attr(x$time_likelihood, "units"),"\n"))
+      cat("\t compute Matern parameterization = ", paste(trunc(x$time_matern_par[[1]] * 10^5)/10^5,attr(x$time_likelihood, "units"),"\n"))      
+    }    
     cat("\t fit the model = ", paste(trunc(x$fitting_time[[1]] * 10^5)/10^5,attr(x$fitting_time, "units"),"\n"))
     if(x$improve_hessian){
     cat(paste0("\t compute the Hessian = ", paste(trunc(x$time_hessian[[1]] * 10^5)/10^5,attr(x$time_hessian, "units"),"\n")))      
