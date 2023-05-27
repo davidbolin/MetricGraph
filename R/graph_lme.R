@@ -158,6 +158,9 @@ graph_lme <- function(formula, graph,
   }
 
   if(model_type == "whittlematern"){
+    if(is.null(model[["fem"]])){
+      model[["fem"]] <- FALSE
+    }
     if(model[["fem"]]){
       if(is.null(model[["rspde_order"]])){
         rspde_order <- 2
@@ -1054,7 +1057,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
 
   if(tolower(model_type$type) == "whittlematern"){
-    sigma <- object$coeff$random_effects[1]
+    sigma <- 1/object$coeff$random_effects[1]
     # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
     # } else{
@@ -1082,7 +1085,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   } else if(tolower(model_type$type) == "graphlaplacian"){
     graph_bkp$observation_to_vertex()
-    sigma <- object$coeff$random_effects[1]
+    sigma <- 1/object$coeff$random_effects[1]
     #nV before 
     nV_temp <- object$nV_orig
     # graph_bkp$observation_to_vertex()

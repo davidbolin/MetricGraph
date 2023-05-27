@@ -13,7 +13,6 @@ graph_lme(
   starting_values_latent = NULL,
   start_sigma_e = NULL,
   BC = 1,
-  model_matrix = TRUE,
   parallel = FALSE,
   n_cores = parallel::detectCores() - 1,
   optim_controls = list(),
@@ -46,8 +45,6 @@ If \code{NULL} all replicates will be considered.}
 
 \item{BC}{For \code{WhittleMatern} models. Which boundary condition to use (0,1) 0 is no adjustment on boundary point
 1 is making the boundary condition stationary.}
-
-\item{model_matrix}{logical indicating whether the model matrix should be returned as component of the returned value.}
 
 \item{parallel}{logical. Indicating whether to use optimParallel or not.}
 

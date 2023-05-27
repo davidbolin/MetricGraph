@@ -282,21 +282,22 @@ posterior_crossvalidation <- function(object)
 
   beta_cov <- object$coeff$fixed_effects
   sigma_e <- object$coeff$measurement_error
-  sigma <- object$coeff$random_effects[1]
+  sigma <- 1/object$coeff$random_effects[1]
   kappa <- object$coeff$random_effects[2]
 
-  if(tolower(object$latent_model$type) == "whittlematern"){
-    if(object$parameterization_latent == "matern"){
-      kappa <- ifelse(object$latent_model$alpha == 1,
-                  sqrt(8 * 0.5) / kappa, sqrt(8 * (1.5)) / kappa)
-    }
-  }
+  # if(tolower(object$latent_model$type) == "whittlematern"){
+  #   if(object$parameterization_latent == "matern"){
+  #     kappa <- ifelse(object$latent_model$alpha == 1,
+  #                 sqrt(8 * 0.5) / kappa, sqrt(8 * (1.5)) / kappa)
+  #   }
+  # }
 
   if(tolower(object$latent_model$type) == "isocov"){
     if(object$latent_model$cov_function_name == "other"){
       stop("Currently the cross-validation is only implemented for the exponential covariance function.")
     }
     model <- "isoExp"
+    sigma <- 1/sigma
   } else if(tolower(object$latent_model$type) == "whittlematern"){
     if(object$latent_model$alpha == 1){
       model <- "alpha1"
@@ -429,21 +430,22 @@ posterior_crossvalidation_covariance <- function(object)
 
   beta_cov <- object$coeff$fixed_effects
   sigma_e <- object$coeff$measurement_error
-  sigma <- object$coeff$random_effects[1]
+  sigma <- 1/object$coeff$random_effects[1]
   kappa <- object$coeff$random_effects[2]
 
-  if(tolower(object$latent_model$type) == "whittlematern"){
-    if(object$parameterization_latent == "matern"){
-      kappa <- ifelse(object$latent_model$alpha == 1,
-                  sqrt(8 * 0.5) / kappa, sqrt(8 * (1.5)) / kappa)
-    }
-  }
+  # if(tolower(object$latent_model$type) == "whittlematern"){
+  #   if(object$parameterization_latent == "matern"){
+  #     kappa <- ifelse(object$latent_model$alpha == 1,
+  #                 sqrt(8 * 0.5) / kappa, sqrt(8 * (1.5)) / kappa)
+  #   }
+  # }
 
   if(tolower(object$latent_model$type) == "isocov"){
     if(object$latent_model$cov_function_name == "other"){
       stop("Currently the cross-validation is only implemented for the exponential covariance function.")
     }
     model <- "isoExp"
+    sigma <- 1/sigma
   } else if(tolower(object$latent_model$type) == "whittlematern"){
     if(object$latent_model$alpha == 1){
       model <- "alpha1"

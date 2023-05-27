@@ -4,10 +4,12 @@
 \alias{summary.graph_lme}
 \title{Summary Method for \code{graph_lme} Objects.}
 \usage{
-\method{summary}{graph_lme}(object, ...)
+\method{summary}{graph_lme}(object, all_times = FALSE, ...)
 }
 \arguments{
 \item{object}{an object of class "graph_lme" containing results from the fitted model.}
+
+\item{all_times}{Show all computed times.}
 
 \item{...}{not used.}
 }

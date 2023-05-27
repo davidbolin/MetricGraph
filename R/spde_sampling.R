@@ -3,8 +3,10 @@
 #' or conditionally on observations
 #' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 #' in the graph,  where \eqn{e_i} are independent standard Gaussian variables.
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param kappa parameter kappa from the SPDE
+#' @param tau parameter tau from the SPDE
+#' @param sigma std. deviation parameter
+#' @param range range parameter
 #' @param sigma_e parameter sigma_e
 #' @param alpha order of the SPDE
 #' @param graph metric_graph object
@@ -20,7 +22,7 @@
 #' boundary conditions and BC=1 gives stationary boundary conditions
 #' @return sample evaluated at the mesh nodes in the graph
 #' @export
-sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
+sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                         PtE = NULL,
                         type = "manual", posterior = FALSE,
                         nsim = 1,
@@ -29,6 +31,17 @@ sample_spde <- function(kappa, sigma, sigma_e = 0, alpha = 1, graph,
 
   check <- check_graph(graph)
   method <- method[[1]]
+
+  if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
+    stop("You should either provide either kappa and tau, or sigma and range.")
+  } else if(!missing(kappa) && !missing(tau)){
+    sigma <- 1/tau
+  } else if(!missing(sigma) && !missing(range)){
+    nu <- alpha - 0.5
+    kappa <- sqrt(8 * nu) / range
+    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+  }
 
   if (!(type %in% c("manual","mesh", "obs"))) {
     stop("Type must be 'manual', 'mesh' or 'obs'.")

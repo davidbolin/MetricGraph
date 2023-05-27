@@ -25,16 +25,29 @@ r_2 <- function(D, kappa, sigma, deriv = 0){
 #' Compute covariance of a point to the entire graph (discretized) for
 #' alpha=2 model
 #' @param P (2 x 1) point with edge number and normalized location on the edge
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param kappa parameter kappa from the SPDE
+#' @param tau parameter tau from the SPDE
+#' @param range range parameter
+#' @param sigma std. deviation parameter
 #' @param  graph metric_graph object
 #' @param  n.p number of points to compute the covariance on each edge
 #' @return C (n.p*numer of edges x 3) `[,1]` edge number `[,2]` distance from
 #' lower edge `[,3]` covariance
 #' @export
-covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
+covariance_alpha2 <- function(P, kappa, tau, range, sigma, graph, n.p = 50){
 
   check <- check_graph(graph)
+
+  if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
+    stop("You should either provide either kappa and tau, or sigma and range.")
+  } else if(!missing(kappa) && !missing(tau)){
+    sigma <- 1/tau
+  } else if(!missing(sigma) && !missing(range)){
+    nu <- 2 - 0.5
+    kappa <- sqrt(8 * nu) / range
+    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+  }
 
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -136,18 +149,31 @@ covariance_alpha2 <- function(P, kappa, sigma, graph, n.p = 50){
 #' Compute covariance of a point to the mesh locations in a graph for
 #' alpha=2 model
 #' @param P (2 x 1) point with edge number and normalized location on the edge
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param kappa parameter kappa from the SPDE
+#' @param tau parameter tau from the SPDE
+#' @param range range parameter
+#' @param sigma std. deviation parameter
 #' @param  graph metric_graph object
 #' @return a vector with covariance values
 #' @export
-covariance_alpha2_mesh <- function(P, kappa, sigma, graph){
+covariance_alpha2_mesh <- function(P, kappa, tau, range, sigma, graph){
 
   check <- check_graph(graph)
 
   if(!check$has.mesh) {
     stop("No mesh provided.")
   }
+
+  if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
+    stop("You should either provide either kappa and tau, or sigma and range.")
+  } else if(!missing(kappa) && !missing(tau)){
+    sigma <- 1/tau
+  } else if(!missing(sigma) && !missing(range)){
+    nu <- 2 - 0.5
+    kappa <- sqrt(8 * nu) / range
+    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+  }  
 
   #compute covaraince of the two edges of P[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,

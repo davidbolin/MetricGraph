@@ -129,10 +129,11 @@ where to sample it. As a first example, let us specify some locations manually:
 PtE <- cbind(rep(1:4, each = 4),
              rep(c(0.2, 0.4, 0.6, 0.8), times = 4))
 
-sigma <- 2
+sigma <- 1.3
 alpha <- 1
-kappa <- 5
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+range <- 0.2
+u <- sample_spde(kappa = kappa, sigma = sigma, 
+                 range = range,
                  graph = graph, PtE = PtE)
 graph$plot(X = u, X_loc = PtE)
 ```
@@ -148,7 +149,7 @@ graph$plot(mesh=TRUE)
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. We can now sample the field on this mesh and plot the 
 result as a function as follows:
 ```{r}
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
 graph$plot_function(u)
 ```
@@ -159,7 +160,7 @@ in 3D by specifying the `plotly` argument in the plot function:
 graph$build_mesh(h = 0.01)
 
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
 graph$plot_function(u, plotly = TRUE)
 ```
@@ -168,7 +169,7 @@ Since $\alpha=1$, these sample paths are continuous but not differentiable.
 To visualize the correlation structure of the field, we can compute and plot
 the covariances between some point and all other points in the graph as follows:
 ```{r}
-C <- covariance_alpha1_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
+C <- covariance_alpha1_mesh(c(2, 0.2), range = range, sigma = sigma,
                             graph = graph)
 graph$plot_function(C, plotly = TRUE)
 ```
@@ -176,14 +177,14 @@ graph$plot_function(C, plotly = TRUE)
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
 The corresponding covariance function then looks as follows: 
 ```{r}
-C <- covariance_alpha2_mesh(c(2, 0.2), kappa = kappa, sigma = sigma,
+C <- covariance_alpha2_mesh(c(2, 0.2), range = range, sigma = sigma,
                             graph = graph)
 graph$plot_function(C, plotly = TRUE)
 ```
 
 Let us simulate a process with $\alpha=2$ as well:
 ```{r}
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+u <- sample_spde(range = range, sigma = sigma, alpha = 2,
                  graph = graph, type = "mesh")
 graph$plot_function(u, plotly = TRUE)
 ```
@@ -211,8 +212,8 @@ Let us start by generating some data like this and adding it to the
 metric graph:
 
 ```{r}
-kappa <- 10
-sigma <- 30
+range <- 0.2
+sigma <- 1.3
 sigma_e <- 0.1
 alpha <- 1
 
@@ -223,7 +224,7 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, PtE = PtE)
 
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
@@ -249,11 +250,11 @@ Let us now compare with the true values:
 
 ```{r}
 sigma_e_est <- res$coeff$measurement_error
-sigma_est <- res$coeff$random_effects[1]
-kappa_est <- res$coeff$random_effects[2]
+sigma_est <- res$matern_coeff$random_effects[1]
+range_est <- res$matern_coeff$random_effects[2]
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
-                      kappa = c(kappa, kappa_est),
+                      range = c(range, range_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
 ```
@@ -307,7 +308,7 @@ Whittle--Mat\'ern fields with $\alpha = 1$. Let us plot the corresponding
 Whittle--Mat\'ern covariance to compare: 
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
-C.wm <- covariance_alpha1_mesh(P,kappa, sigma, graph, scale = TRUE)
+C.wm <- covariance_alpha1_mesh(P,kappa=kappa, tau=1/sigma, graph=graph, scale = TRUE)
 p <- graph$plot_function(Sigma[20,], plotly = TRUE)
 graph$plot_function(C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
                     support_width = 0)
@@ -416,11 +417,11 @@ Let us now generate the data for a graph Laplacian model with $\alpha=1$:
 ```{r}
 library(Matrix)
 
-sigma <- 1
+tau <- 1
 kappa <- 10
 sigma_e <- 0.1
 
-Q <- (kappa^2 * Diagonal(nrow(GL)) + GL) / sigma^2
+Q <- (kappa^2 * Diagonal(nrow(GL)) + GL) * tau^2
 LQ <- chol(forceSymmetric(Q))
 u <- solve(LQ, rnorm(nrow(Q)))[(attr(GL, "nV_idx") + 1):nrow(GL)] # The first attr(GL, "nV_idx") values are on the original vertices
 y <- u + sigma_e*rnorm(length(u))
@@ -439,11 +440,11 @@ of the function `graph_lme()`:
 res_GL <- graph_lme(y ~ -1, graph = graph, model = list(type = "graphLaplacian"))
 
 sigma_e_est <- res_GL$coeff$measurement_error
-sigma_est <- res_GL$coeff$random_effects[1]
+tau_est <- res_GL$coeff$random_effects[1]
 kappa_est <- res_GL$coeff$random_effects[2]
 
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
-                      sigma = c(sigma, sigma_est),
+                      tau = c(tau, tau_est),
                       kappa = c(kappa, kappa_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
@@ -481,8 +482,8 @@ Let us now generate some observation locations at random locations on each edge
 and sample the process: 
 
 ```{r}
-kappa <- 10
-sigma <- 20
+kappa <- 0.15
+sigma <- 1.7
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
 
@@ -493,7 +494,7 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 2,
                  graph = graph, PtE = PtE, method = "Q")
 
 y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)

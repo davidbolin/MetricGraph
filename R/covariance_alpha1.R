@@ -106,8 +106,10 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 #' Compute covariance of a point to the entire graph (discretized) for
 #' alpha=1 model
 #' @param P (2 x 1) point with edge number and normalized location on the edge
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param kappa parameter kappa from the SPDE
+#' @param tau parameter tau from the SPDE
+#' @param range range parameter
+#' @param sigma std. deviation parameter
 #' @param  graph metric_graph object
 #' @param  n.p number of points to compute the covariance on each edge
 #' @return C (n.p*number of edges x 3) `[,1]` edge number `[,2]` distance from
@@ -115,10 +117,21 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
 #' @param scale scale the covariance by \code{2*kappa} so that sigma corresponds to
 #' the marginal standard deviation (default FALSE)
 #' @export
-covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
+covariance_alpha1 <- function(P, kappa, tau, range, sigma, graph, n.p = 50,
                               scale = FALSE){
 
   check_graph(graph)
+
+  if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
+    stop("You should either provide either kappa and tau, or sigma and range.")
+  } else if(!missing(kappa) && !missing(tau)){
+    sigma <- 1/tau
+  } else if(!missing(sigma) && !missing(range)){
+    nu <- 1 - 0.5
+    kappa <- sqrt(8 * nu) / range
+    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+  }  
 
   #compute covarains of the two edges of EP[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
@@ -182,20 +195,33 @@ covariance_alpha1 <- function(P, kappa, sigma, graph, n.p = 50,
 #' Compute covariance of a point to the mesh points of the graph for
 #' alpha=1 model
 #' @param P (2 x 1) point with edge number and normalized location on the edge
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param kappa parameter kappa from the SPDE
+#' @param tau parameter tau from the SPDE
+#' @param range range parameter
+#' @param sigma std. deviation parameter
 #' @param  graph metric_graph object
 #' @param scale scale the covariance by \code{2*kappa} so that sigma corresponds to
 #' the marginal standard deviation (default FALSE)
 #' @return vector with covariance values (order Vertex of Graph then mesh$PtE)
 #' @export
-covariance_alpha1_mesh <- function(P, kappa, sigma, graph, scale = FALSE) {
+covariance_alpha1_mesh <- function(P, kappa, tau, range, sigma, graph, scale = FALSE) {
 
   check <- check_graph(graph)
 
   if(!check$has.mesh) {
     stop("No mesh provided.")
   }
+
+  if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
+    stop("You should either provide either kappa and tau, or sigma and range.")
+  } else if(!missing(kappa) && !missing(tau)){
+    sigma <- 1/tau
+  } else if(!missing(sigma) && !missing(range)){
+    nu <- 1 - 0.5
+    kappa <- sqrt(8 * nu) / range
+    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+  }  
 
   #compute covarains of the two edges of EP[1]
   Q <- spde_precision(kappa = kappa, sigma = sigma,
