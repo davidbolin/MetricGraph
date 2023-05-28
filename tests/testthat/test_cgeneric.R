@@ -1,4 +1,5 @@
 test_that("Check cgeneric precision matrices", {
+set.seed(1)
 testthat::skip_on_cran()
   inla_installed <- "INLA" %in% rownames(installed.packages())
   if(!inla_installed){

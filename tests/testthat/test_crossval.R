@@ -1,4 +1,5 @@
 test_that("Check likelihoods for alternative models", {
+  set.seed(1)
   V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1),
              c(-1, 1), c(-1, 0), c(0, -1))
   E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),
@@ -54,6 +55,7 @@ test_that("Check likelihoods for alternative models", {
 
 
 test_that("Check agrement beteen covariance and precision cross validation", {
+  set.seed(1)
   V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1),
              c(-1, 1), c(-1, 0), c(0, -1))
   E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),

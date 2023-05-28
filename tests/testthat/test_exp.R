@@ -22,6 +22,7 @@ test_that("Check agrement beteen covariance and precision matrix formulation", {
 
 
 test_that("Check agrement beteen covariance and precision likelihoods", {
+  set.seed(1)
   nt <- 10
   kappa <- 1
   sigma_e <- 0.1

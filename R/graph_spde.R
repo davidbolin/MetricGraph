@@ -497,7 +497,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
               }
             )
     } else{
-            hyperpar_sample <- inla.hyperpar.sample(n_samples, inla)
+            hyperpar_sample <- INLA::inla.hyperpar.sample(n_samples, inla)
             reciprocal_tau_est <- exp(hyperpar_sample[, paste0('Theta1 for ',name)])
             tau_est <- 1/reciprocal_tau_est
             range_est <- exp(hyperpar_sample[, paste0('Theta2 for ',name)])
