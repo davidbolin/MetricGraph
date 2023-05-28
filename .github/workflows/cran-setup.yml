@@ -17,7 +17,7 @@ on:
             git rm -rf pkgdown/
             git rm index.md
             git rm -rf examples
-            git rm -rf inst/shared/
+            git rm -rf inst/shared
             rm -rf vignettes
             mkdir vignettes
             cd cran_vignettes
