@@ -7,7 +7,7 @@ test_that("test if the over determined covariances are correct",{
 
   graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
                                                 Lines(list(line.line2),ID="2"))))
-  Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2, graph = graph, BC = 1)
+  Q <- spde_precision(kappa = kappa, tau = 1/sigma, alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
   Qtilde <- (graph$CoB$T)%*%Q%*%t(graph$CoB$T)
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
@@ -16,9 +16,9 @@ test_that("test if the over determined covariances are correct",{
   t <- c(0,graph$edge_lengths[1],graph$edge_lengths[1],graph$edge_lengths[2]+ graph$edge_lengths[1])
 
   D <-  rep(1,4)%*%t(t)-t(rep(1,4)%*%t(t))
-  R00 <- r_2(D,sigma = sigma, kappa = kappa)
-  R01 <- -r_2(D,sigma = sigma, kappa = kappa, deriv = 1)
-  R11 <- -r_2(D,sigma = sigma, kappa = kappa, deriv = 2)
+  R00 <- r_2(D, tau = 1/sigma, kappa = kappa)
+  R01 <- -r_2(D,tau = 1/sigma, kappa = kappa, deriv = 1)
+  R11 <- -r_2(D,tau = 1/sigma, kappa = kappa, deriv = 2)
   R <- cbind(rbind(R00, R01), rbind(t(R01), R11))
   ind <- rep(0:3, each = 2) + rep(c(1, 5), times = 4) #reoder
   R <- R[ind, ind]

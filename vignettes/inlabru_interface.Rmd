@@ -115,9 +115,8 @@ sigma <- 2
 alpha <- 1
 nu <- alpha - 0.5
 r <- 0.15 # r stands for range
-kappa <- sqrt(8 * nu) / r
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = alpha,
+u <- sample_spde(range = r, sigma = sigma, alpha = alpha,
                  graph = graph_bru, PtE = obs_loc)
 graph_bru$plot(X = u, X_loc = obs_loc)
 ```
@@ -310,11 +309,10 @@ sigma_rep <- 1.5
 alpha_rep <- 1
 nu_rep <- alpha_rep - 0.5
 r_rep <- 0.2 # r stands for range
-kappa_rep <- sqrt(8 * nu_rep) / r_rep
 
 n_repl <- 30
 
-u_rep <- sample_spde(kappa = kappa_rep, sigma = sigma_rep,
+u_rep <- sample_spde(range = r_rep, sigma = sigma_rep,
                  alpha = alpha_rep,
                  graph = graph_bru, PtE = obs_loc,
                  nsim = n_repl)
