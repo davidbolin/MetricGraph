@@ -600,7 +600,7 @@ and sample the process. Let us sample from a Whitlle--Matérn process on the met
 ```{r, message=FALSE}
 library(tidyr)
 
-kappa <- 10
+range <- 0.15
 sigma <- 2
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
@@ -614,7 +614,7 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, PtE = PtE, nsim = n_repl)
 
 y <- u + sigma_e*matrix(rnorm(n.obs.per.edge * graph$nE * n_repl), ncol = n_repl)
@@ -639,15 +639,15 @@ graph$plot(data="y", group=2)
 To fit the model, we simply proceed in an identical manner as for the case without replicates by using the `graph_lme()` function:
 
 ```{r}
-fit_repl <- graph_lme(y ~ -1, graph = graph, model = "alpha1", parameterization = "spde")
+fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM1")
 
 sigma_e_est <- fit_repl$coeff$measurement_error
-sigma_est <- fit_repl$coeff$random_effects[1]
-kappa_est <- fit_repl$coeff$random_effects[2]
-
+sigma_est <- fit_repl$matern_coeff$random_effects[1]
+range_est <- fit_repl$matern_coeff$random_effects[2]
+ 
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
-                      kappa = c(kappa, kappa_est),
+                      range = c(range, range_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
 ```
@@ -708,7 +708,7 @@ and sample the process. Let us sample from a Whitlle--Matérn process on the met
 
 ```{r}
 graph$clear_observations()
-kappa <- 10
+range <- 0.15
 sigma <- 2
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
@@ -720,7 +720,7 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, PtE = PtE)
 
 beta <- c(2,1)
@@ -738,15 +738,15 @@ graph$add_observations(data=df_graph, normalized = TRUE)
 Let us now estimate the parameters using the `graph_lme()` function:
 
 ```{r}
-fit_cov <- graph_lme(y ~ x1, graph = graph, model = "alpha1", parameterization_latent = "spde")
+fit_cov <- graph_lme(y ~ x1, graph = graph, model = "WM1")
 sigma_e_est <- fit_cov$coeff$measurement_error
-sigma_est <- fit_cov$coeff$random_effects[1]
-kappa_est <- fit_cov$coeff$random_effects[2]
+sigma_est <- fit_cov$matern_coeff$random_effects[1]
+range_est <- fit_cov$matern_coeff$random_effects[2]
 beta_1_est <- fit_cov$coeff$fixed_effects[1]
 beta_2_est <- fit_cov$coeff$fixed_effects[2]
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
-                      kappa = c(kappa, kappa_est),
+                      range = c(range, range_est),
                       beta_1 = c(beta[1], beta_1_est),
                       beta_2 = c(beta[2], beta_2_est),
                       row.names = c("Truth", "Estimate"))
@@ -788,7 +788,7 @@ and sample the process. Let us sample from a Whitlle--Matérn process on the met
 `alpha=1` and 20 replicates. We will include an intercept and covariates. The covariates can be added in the `data.frame` passed to the `add_observations()` function.
 
 ```{r}
-kappa <- 10
+range <- 0.2
 sigma <- 2
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
@@ -801,7 +801,7 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
 }
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, PtE = PtE, nsim = n_repl)
 
 beta <- c(2,1)
@@ -826,15 +826,15 @@ graph$add_observations(data = df_graph, normalized = TRUE, group = "repl")
 Let us now estimate the parameters with the `graph_lme()` function:
 
 ```{r}
-fit_cov_repl <- graph_lme(y ~ x1, graph = graph, model = "alpha1", parameterization_latent = "spde")
+fit_cov_repl <- graph_lme(y ~ x1, graph = graph, model = "WM1")
 sigma_e_est <- fit_cov_repl$coeff$measurement_error
-sigma_est <- fit_cov_repl$coeff$random_effects[1]
-kappa_est <- fit_cov_repl$coeff$random_effects[2]
+sigma_est <- fit_cov_repl$matern_coeff$random_effects[1]
+range_est <- fit_cov_repl$matern_coeff$random_effects[2]
 beta_1_est <- fit_cov_repl$coeff$fixed_effects[1]
 beta_2_est <- fit_cov_repl$coeff$fixed_effects[2]
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
-                      kappa = c(kappa, kappa_est),
+                      range = c(range, range_est),
                       beta_1 = c(beta[1], beta_1_est),
                       beta_2 = c(beta[2], beta_2_est),
                       row.names = c("Truth", "Estimate"))

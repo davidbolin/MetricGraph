@@ -41,6 +41,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
     kappa <- sqrt(8 * nu) / range
     sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+    tau <- 1/sigma
   }
 
   if (!(type %in% c("manual","mesh", "obs"))) {
@@ -202,7 +203,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
   return(u)
   } else if ((nsim%%1 == 0) && nsim>1 && method != "Q"){
     u_rep <- unlist(lapply(1:nsim, function(i){
-      sample_spde(kappa=kappa, sigma=sigma, sigma_e = sigma_e,
+      sample_spde(kappa=kappa, tau=tau, range=range, sigma=sigma, sigma_e = sigma_e,
       alpha = alpha, graph = graph,
                         PtE = PtE,
                         type = type,
