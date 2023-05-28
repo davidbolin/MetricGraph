@@ -11,6 +11,8 @@ jobs:
       env:
         GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       steps:
+        - uses: actions/checkout@v2      
+        
         - name: Delete vignettes and pkgdown, then copy cran vign
           run: |
             git rm -rf vignettes
