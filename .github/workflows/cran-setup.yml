@@ -18,9 +18,11 @@ on:
             git rm index.md
             git rm -rf examples
             git rm -rf inst/shared/
+            rm -rf vignettes
             mkdir vignettes
             cd cran_vignettes
             cp * ../vignettes
+            cd ..
             git rm -rf cran_vignettes
             git add vignettes
             git commit -m "Doing the setup"
