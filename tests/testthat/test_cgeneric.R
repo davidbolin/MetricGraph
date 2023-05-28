@@ -40,7 +40,7 @@ graph$observation_to_vertex()
 
 A <- graph$A()
 
-sigma <- 1.3
+tau <- 0.05
 
 sigma.e <- 0.1
 
@@ -52,7 +52,7 @@ kappa <- sqrt(8 * nu) / r
 
 theta <- c(sigma, kappa)
 
-Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 1, graph = graph)
+Q <- spde_precision(kappa = kappa, tau = tau, alpha = 1, graph = graph)
 
 sizeQ <- nrow(Q)
 
@@ -78,7 +78,7 @@ graph$data$y <- as.vector(y)
 spde_model <- graph_spde(graph)
 
 spde_model_check <- graph_spde(graph, start_kappa = kappa,
-                                    start_sigma = sigma,
+                                    start_sigma = 1/tau,
                                     parameterization = "spde")
 
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q

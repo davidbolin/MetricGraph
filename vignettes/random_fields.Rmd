@@ -482,8 +482,8 @@ Let us now generate some observation locations at random locations on each edge
 and sample the process: 
 
 ```{r}
-kappa <- 0.15
-sigma <- 1.7
+range <- 0.25
+sigma <- 2.3
 sigma_e <- 0.1
 theta <-  c(sigma_e, sigma, kappa)
 

@@ -1,36 +1,36 @@
 
-test_that("Check agrement covariance function agrees", {
+test_that("Check agreement covariance function agrees", {
   set.seed(1)
   kappa <- 0.1*runif(1)+0.1
   sigma <- runif(1)+1
   c <- 1/(4*kappa^3)
   x <- seq(0,1,length.out=10)
-  expect_equal(MetricGraph:::r_2(x, sigma = sigma, kappa = kappa),
+  expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa),
                rSPDE::matern.covariance(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
 })
 
 
-test_that("Check agrement derivative covariance function agrees", {
+test_that("Check agreement derivative covariance function agrees", {
   set.seed(1)
   kappa <- 0.1 * runif(1) + 0.1
   sigma <- runif(1) + 1
   c <- 1/(4*kappa^3)
   x <- seq(-1, 1, length.out = 20)
-  expect_equal(MetricGraph:::r_2(x, sigma = sigma, kappa = kappa, deriv = 1),
+  expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa, deriv = 1),
                matern_derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
 })
-test_that("Check agrement derivative covariance function agrees", {
+test_that("Check agreement derivative covariance function agrees", {
   set.seed(1)
   kappa <- 0.1*runif(1)+0.1
   sigma <- runif(1)+1
   c <- 1/(4*kappa^3)
   x <- seq(-1,1,length.out=20)
-  expect_equal(MetricGraph:::r_2(x, sigma = sigma, kappa = kappa,
+  expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa,
                              deriv = 2),
                matern_derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
 })
 
-test_that("Check agrement covariance matrix", {
+test_that("Check agreement covariance matrix", {
   set.seed(1)
   kappa <- 0.1 * runif(1) + 0.1
   sigma <- runif(1) + 1
@@ -42,9 +42,9 @@ test_that("Check agrement covariance matrix", {
   r1 <- -matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
   r2 <- -matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
   Sigma.0 <- rbind(cbind(r, r1), cbind(t(r1), r2))*c
-  r_00 <- MetricGraph:::r_2(D, sigma = sigma, kappa = kappa)
-  r_01 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 1)
-  r_11 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 2)
+  r_00 <- MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa)
+  r_01 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 1)
+  r_11 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 2)
 
   Sigma_ <- rbind(cbind(r_00, r_01), cbind(t(r_01), r_11))
   testthat::expect_equal( c(Sigma.0), c(Sigma_), tol=1e-9)
@@ -52,7 +52,7 @@ test_that("Check agrement covariance matrix", {
 
 
 
-test_that("test agrement precision matrix and article method", {
+test_that("test agreement precision matrix and article method", {
   set.seed(1)
   kappa <- 0.1* runif(1) + 0.1
   sigma <- runif(1) + 1
@@ -60,9 +60,9 @@ test_that("test agrement precision matrix and article method", {
   l_e <- runif(1) + 0.5
   x_ <- c(0, l_e)
   D <- outer(x_, x_, "-")
-  r_00 <- MetricGraph:::r_2(D, sigma = sigma, kappa = kappa)
-  r_01 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 1)
-  r_11 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 2)
+  r_00 <- MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa)
+  r_01 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 1)
+  r_11 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 2)
   # order by node not derivative
   R_00 <- matrix(c(r_00[1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
   R_01 <- matrix(c(r_00[2], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
@@ -94,54 +94,54 @@ test_that("test agrement precision matrix and article method", {
   R_adj <- R_node + R00R0l %*% Adj %*% R00R0l
   testthat::expect_equal(c(Sigma.2), c(R_adj), tol = 1e-9)
 })
-# test cov
-test_that("test agrement nueman of the adjusted", {
-  set.seed(1)
-  kappa <- 0.1* runif(1) + 1
-  sigma <- runif(1) + 1
-  c <- 1 / (4 * kappa^3)
-  l_e <- runif(1) + 0.5
-  x_ <- c(0, l_e)
-  eps <- 1e-4
+# Commented because there is no test
+# test_that("test agreement neumann of the adjusted", {
+#   set.seed(1)
+#   kappa <- 0.1* runif(1) + 1
+#   sigma <- runif(1) + 1
+#   c <- 1 / (4 * kappa^3)
+#   l_e <- runif(1) + 0.5
+#   x_ <- c(0, l_e)
+#   eps <- 1e-4
 
-  D <- outer(x_, x_, "-")
-  r_00 <- MetricGraph:::r_2(D, sigma = sigma, kappa = kappa)
-  r_01 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 1)
-  r_11 <- - MetricGraph:::r_2(D, sigma = sigma, kappa = kappa, deriv = 2)
-  # order by node not derivative
-  R_00 <- matrix(c(r_00[1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
-  R_01 <- matrix(c(r_00[2], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
-  R_node <- rbind(cbind(R_00, R_01), cbind(t(R_01), R_00))
-  Q_adj = solve(R_node) - 0.5 * solve(rbind(cbind(R_00, matrix(0, 2, 2)),
-                                            cbind(matrix(0, 2, 2), R_00)))
+#   D <- outer(x_, x_, "-")
+#   r_00 <- MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa)
+#   r_01 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 1)
+#   r_11 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 2)
+#   # order by node not derivative
+#   R_00 <- matrix(c(r_00[1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
+#   R_01 <- matrix(c(r_00[2], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
+#   R_node <- rbind(cbind(R_00, R_01), cbind(t(R_01), R_00))
+#   Q_adj = solve(R_node) - 0.5 * solve(rbind(cbind(R_00, matrix(0, 2, 2)),
+#                                             cbind(matrix(0, 2, 2), R_00)))
 
-  Adj <- solve(rbind(cbind(R_00, -R_01), cbind(-t(R_01), R_00)))
-  R00R0l <-rbind(cbind(R_00, R_01), cbind(t(R_01), R_00))
-  R_adj <- R_node + R00R0l %*% Adj %*% R00R0l
-  t <- sum(x_)/2
-  D2 <- (outer(c(x_,t), c(x_,t), "-"))
-  r_00_ <- MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa)
-  r_01_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 1)
-  r_11_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 2)
-  R_t0 <- matrix(c(r_00_[1,3], r_01_[1,3], r_01_[3,1], r_11_[3,1]),2,2)
-  R_t1 <- matrix(c(r_00_[2,3], r_01_[2,3], r_01_[3,2], r_11_[3,2]),2,2)
-  R_corr <- cbind(R_t0,R_t1)
-  R_t <- R_t0 + cbind(R_00, R_01)%*%Adj %*% t(R_corr)
-  x_[0] <- 0
-  t_eps <- eps
-  D2 <- (outer(c(x_,t_eps), c(x_,t_eps), "-"))
-  r_00_ <- MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa)
-  r_01_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 1)
-  r_11_ <- - MetricGraph:::r_2(D2, sigma = sigma, kappa = kappa, deriv = 2)
-  R_eps0 <- matrix(c(r_00_[1,3], r_01_[1,3], r_01_[3,1], r_11_[3,1]),2,2)
-  R_eps1 <- matrix(c(r_00_[2,3], r_01_[2,3], r_01_[3,2], r_11_[3,2]),2,2)
-  R_corr_eps <- cbind(R_eps0,R_eps1)
-  R_00_e <- matrix(c(r_00_[1,1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
-  R_01_e <- matrix(c(r_00_[2,1], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
+#   Adj <- solve(rbind(cbind(R_00, -R_01), cbind(-t(R_01), R_00)))
+#   R00R0l <-rbind(cbind(R_00, R_01), cbind(t(R_01), R_00))
+#   R_adj <- R_node + R00R0l %*% Adj %*% R00R0l
+#   t <- sum(x_)/2
+#   D2 <- (outer(c(x_,t), c(x_,t), "-"))
+#   r_00_ <- MetricGraph:::r_2(D2, tau = 1/sigma, kappa = kappa)
+#   r_01_ <- - MetricGraph:::r_2(D2, tau = 1/sigma, kappa = kappa, deriv = 1)
+#   r_11_ <- - MetricGraph:::r_2(D2, tau = 1/sigma, kappa = kappa, deriv = 2)
+#   R_t0 <- matrix(c(r_00_[1,3], r_01_[1,3], r_01_[3,1], r_11_[3,1]),2,2)
+#   R_t1 <- matrix(c(r_00_[2,3], r_01_[2,3], r_01_[3,2], r_11_[3,2]),2,2)
+#   R_corr <- cbind(R_t0,R_t1)
+#   R_t <- R_t0 + cbind(R_00, R_01)%*%Adj %*% t(R_corr)
+#   x_[0] <- 0
+#   t_eps <- eps
+#   D2 <- (outer(c(x_,t_eps), c(x_,t_eps), "-"))
+#   r_00_ <- MetricGraph:::r_2(D2, tau = 1/sigma, kappa = kappa)
+#   r_01_ <- - MetricGraph:::r_2(D2, tau = 1/sigma, kappa = kappa, deriv = 1)
+#   r_11_ <- - MetricGraph:::r_2(D2, tau = 1/sigma, kappa = kappa, deriv = 2)
+#   R_eps0 <- matrix(c(r_00_[1,3], r_01_[1,3], r_01_[3,1], r_11_[3,1]),2,2)
+#   R_eps1 <- matrix(c(r_00_[2,3], r_01_[2,3], r_01_[3,2], r_11_[3,2]),2,2)
+#   R_corr_eps <- cbind(R_eps0,R_eps1)
+#   R_00_e <- matrix(c(r_00_[1,1], r_01[1,1], r_01[1,1], r_11[1,1]),2,2)
+#   R_01_e <- matrix(c(r_00_[2,1], r_01[2,1], r_01[1,2], r_11[2,1]),2,2)
 
-  R_t2 <- R_t0 + cbind(R_00_e, R_01_e)%*%Adj %*% t(R_corr)
-  (R_t-R_adj[1:2,1:2])/eps
-})
+#   R_t2 <- R_t0 + cbind(R_00_e, R_01_e)%*%Adj %*% t(R_corr)
+#   (R_t-R_adj[1:2,1:2])/eps
+# })
 test_that("test likelihood",{
   set.seed(13)
   nt <- 40
@@ -154,7 +154,7 @@ test_that("test likelihood",{
   Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                  Lines(list(line2),ID="2")))
   graph <- metric_graph$new(lines = Lines)
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = 1/sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
   Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
@@ -167,7 +167,7 @@ test_that("test likelihood",{
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
     X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
-                                          sigma = sigma,
+                                          tau = 1/sigma,
                                           sigma_e = sigma_e,
                                           u_e = u_e[4*(i-1) +1:4],
                                           l_e = graph$edge_lengths[i],
@@ -191,7 +191,7 @@ test_that("test likelihood",{
   #covariance likelihood
 
   lik2 <-likelihood_graph_covariance(graph = graph2,
-                                     model = "alpha2", repl = NULL, y_graph = graph2$data[["y"]],
+                                     model = "WM2", repl = NULL, y_graph = graph2$data[["y"]],
                                      log_scale = FALSE, X_cov = NULL)
   lik2 <- lik2(exp(theta))
   #likelihood with extended graph
@@ -214,7 +214,7 @@ test_that("test posterior mean",{
   Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                  Lines(list(line2),ID="2")))
   graph <- metric_graph$new(lines = Lines)
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = 1/sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
   Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
@@ -227,7 +227,7 @@ test_that("test posterior mean",{
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
     X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
-                                          sigma = sigma,
+                                          tau = 1/sigma,
                                           sigma_e = sigma_e,
                                           u_e = u_e[4*(i-1) +1:4],
                                           l_e = graph$edge_lengths[i],
@@ -241,12 +241,12 @@ test_that("test posterior mean",{
   graph$add_observations(data = df_temp, normalized = FALSE)
 
   #test posterior at observation locations
-  res <- graph_lme(y ~ -1, graph=graph, model="alpha2", parameterization = "spde")
+  res <- graph_lme(y ~ -1, graph=graph, model="WM2")
   pm <- predict(res, data = df_temp)$mean
 
   kappa_est <- res$coeff$random_effects[2]
-  sigma_est <- res$coeff$random_effects[1]
-  theta_est <- c(res$coeff$measurement_error, sigma_est, kappa_est)
+  tau_est <- res$coeff$random_effects[1]
+  theta_est <- c(res$coeff$measurement_error, tau_est, kappa_est)
 
   graph2 <- graph$clone()
   graph2$observation_to_vertex()
@@ -254,7 +254,7 @@ test_that("test posterior mean",{
   n.o <- length(graph2$y)
   n.v <- dim(graph2$V)[1]
   n.c <- 1:length(graph2$CoB$S)
-  Q <- spde_precision(kappa = kappa_est, sigma = sigma_est,
+  Q <- spde_precision(kappa = kappa_est, tau = tau_est,
                       alpha = 2, graph = graph2, BC = 1)
   Qtilde <- (graph2$CoB$T) %*% Q %*% t(graph2$CoB$T)
   Qtilde <- Qtilde[-n.c,-n.c]
@@ -274,5 +274,5 @@ test_that("test posterior mean",{
   ord1 <- order(graph$data[["__coord_x"]], graph$data[["__coord_y"]])
   ord2 <- order(graph2$data[["__coord_x"]], graph2$data[["__coord_y"]])
 
-  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-15)
+  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-10)
 })

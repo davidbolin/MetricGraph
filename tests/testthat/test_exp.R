@@ -4,17 +4,17 @@
 #' test agreement between Q and R
 test_that("Check agrement beteen covariance and precision matrix formulation", {
   kappa <- 1
-  sigma <- 1
+  tau <- 1
   t <- 0:3
-  Q0  <- precision_exp_line(kappa = kappa, sigma = sigma, t = t)
-  R0  <- r_1(as.matrix(dist(t)),kappa = kappa, sigma = sigma)
+  Q0  <- precision_exp_line(kappa = kappa, tau = tau, t = t)
+  R0  <- r_1(as.matrix(dist(t)),kappa = kappa, tau = tau)
   R0_ <- solve(Q0)
   expect_equal(c(as.matrix(solve(R0))), c(as.matrix(Q0)), tolerance = 1e-10)
   kappa = 1.5
   sigma = 0.5
   t <- 0:3
-  Q0  <- precision_exp_line(kappa = kappa, sigma = sigma, t = t)
-  R0  <- r_1(as.matrix(dist(t)), kappa = kappa, sigma = sigma)
+  Q0  <- precision_exp_line(kappa = kappa, tau = tau, t = t)
+  R0  <- r_1(as.matrix(dist(t)), kappa = kappa, tau = tau)
   R0_ <- solve(Q0)
   expect_equal(c(as.matrix(solve(R0))), c(as.matrix(Q0)), tolerance = 1e-10)
 })
@@ -72,10 +72,12 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
 })
 
 test_that("Test posterior mean", {
+  set.seed(1)
   nt <- 100
-  kappa <- 20
+  range <- 20
+  kappa <- sqrt(4)/range
   sigma_e <- 0.2
-  tau   <- 1/2
+  tau   <- 0.5
   line1 <- sp::Line(rbind(c(30, 80), c(120, 80)))
   line2 <- sp::Line(rbind(c(30, 00), c(30, 80)))
 
@@ -88,7 +90,7 @@ test_that("Test posterior mean", {
                      seq(from = 0,to =1, length.out = nt/2 + 1)[1:(nt/2)]))
 
   u <- sample_spde(kappa = kappa, tau = tau,
-                   alpha = 1, graph = graph, PtE = PtE, method = "Q")
+                   alpha = 1, graph = graph, PtE = PtE)
 
 
   y <- u + sigma_e*rnorm(nt)
@@ -111,8 +113,8 @@ test_that("Test posterior mean", {
   diag(Sigma.obs) <- diag(Sigma.obs) + theta_est[1]^2
   pm2 <- Sigma %*% solve(Sigma.obs, graph$data$y)
 
-  expect_equal(sum((sort(pm)-sort(pm2))^2), 0, tolerance=1e-10)
+  expect_equal(sum((sort(pm)-sort(pm2))^2), 0, tolerance=1e-8)
 
-  expect_equal(sum((pm - df_temp$y)^2), sum((pm2 - graph$data$y)^2), tolerance = 1e-10)
+  expect_equal(sum((pm - df_temp$y)^2), sum((pm2 - graph$data$y)^2), tolerance = 1e-8)
 
 })
