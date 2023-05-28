@@ -7,7 +7,7 @@ name: cran_setup
   
 jobs:
     cran_setup:
-      runs-on: macOS-latest
+      runs-on: ubuntu-20.04
       env:
         GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       steps:
