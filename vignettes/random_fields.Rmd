@@ -482,12 +482,12 @@ Let us now generate some observation locations at random locations on each edge
 and sample the process: 
 
 ```{r}
-range <- 0.25
-sigma <- 2.3
-sigma_e <- 0.1
+range <- 0.15
+sigma <- 2
+sigma_e <- 0.3
 theta <-  c(sigma_e, sigma, kappa)
 
-n.obs.per.edge <- 20
+n.obs.per.edge <- 15
 PtE <- NULL
 for(i in 1:graph$nE){
   #add locations sampled at random to each edge
