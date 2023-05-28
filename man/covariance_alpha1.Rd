@@ -5,14 +5,18 @@
 \title{Compute covariance of a point to the entire graph (discretized) for
 alpha=1 model}
 \usage{
-covariance_alpha1(P, kappa, sigma, graph, n.p = 50, scale = FALSE)
+covariance_alpha1(P, kappa, tau, range, sigma, graph, n.p = 50, scale = FALSE)
 }
 \arguments{
 \item{P}{(2 x 1) point with edge number and normalized location on the edge}
 
-\item{kappa}{parameter kappa}
+\item{kappa}{parameter kappa from the SPDE}
 
-\item{sigma}{parameter sigma}
+\item{tau}{parameter tau from the SPDE}
+
+\item{range}{range parameter}
+
+\item{sigma}{std. deviation parameter}
 
 \item{graph}{metric_graph object}
 

@@ -6,6 +6,8 @@
 \usage{
 sample_spde(
   kappa,
+  tau,
+  range,
   sigma,
   sigma_e = 0,
   alpha = 1,
@@ -19,9 +21,13 @@ sample_spde(
 )
 }
 \arguments{
-\item{kappa}{parameter kappa}
+\item{kappa}{parameter kappa from the SPDE}
 
-\item{sigma}{parameter sigma}
+\item{tau}{parameter tau from the SPDE}
+
+\item{range}{range parameter}
+
+\item{sigma}{std. deviation parameter}
 
 \item{sigma_e}{parameter sigma_e}
 

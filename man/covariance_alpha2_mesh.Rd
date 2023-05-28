@@ -5,14 +5,18 @@
 \title{Compute covariance of a point to the mesh locations in a graph for
 alpha=2 model}
 \usage{
-covariance_alpha2_mesh(P, kappa, sigma, graph)
+covariance_alpha2_mesh(P, kappa, tau, range, sigma, graph)
 }
 \arguments{
 \item{P}{(2 x 1) point with edge number and normalized location on the edge}
 
-\item{kappa}{parameter kappa}
+\item{kappa}{parameter kappa from the SPDE}
 
-\item{sigma}{parameter sigma}
+\item{tau}{parameter tau from the SPDE}
+
+\item{range}{range parameter}
+
+\item{sigma}{std. deviation parameter}
 
 \item{graph}{metric_graph object}
 }

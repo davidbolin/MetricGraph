@@ -7,7 +7,7 @@
 posterior_mean_covariance(theta, graph, model = "alpha1")
 }
 \arguments{
-\item{theta}{estimated model parameters (sigma_e, sigma, kappa)}
+\item{theta}{estimated model parameters (sigma_e, tau, kappa)}
 
 \item{graph}{metric graph  object}
 

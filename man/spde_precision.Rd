@@ -4,12 +4,12 @@
 \alias{spde_precision}
 \title{The precision matrix for all vertices for a Whittle-Matérn field}
 \usage{
-spde_precision(kappa, sigma, alpha, graph, BC = 1, build = TRUE)
+spde_precision(kappa, tau, alpha, graph, BC = 1, build = TRUE)
 }
 \arguments{
 \item{kappa}{range parameter kappa}
 
-\item{sigma}{variance parameter}
+\item{tau}{variance parameter}
 
 \item{alpha}{smoothness parameter (1 or 2)}
 

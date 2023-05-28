@@ -13,7 +13,7 @@ spde_posterior_mean(
 )
 }
 \arguments{
-\item{theta}{parameters (sigma_e, sigma, kappa)}
+\item{theta}{parameters (sigma_e, tau, kappa)}
 
 \item{graph}{metric_graph object}
 

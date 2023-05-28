@@ -14,7 +14,7 @@ posterior_crossvalidation_manual(
 )
 }
 \arguments{
-\item{theta}{Estimated model parameters (sigma_e, sigma, kappa)}
+\item{theta}{Estimated model parameters (sigma_e, tau, kappa)}
 
 \item{graph}{metric graph object}
 
