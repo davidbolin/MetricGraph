@@ -394,6 +394,7 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' @param metric_graph_spde The `inla_metric_graph_spde` object used for the effect in
 #' the inla formula.
 #' @param compute.summary Should the summary be computed?
+#' @param n_samples The number of samples to be used if parameterization is `matern`
 #' @return If the model was fitted with `matern` parameterization (the default), it returns a list containing:
 #' \item{marginals.range}{Marginal densities for the range parameter}
 #' \item{marginals.log.range}{Marginal densities for log(range)}
@@ -420,7 +421,7 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' \item{summary.tau}{Summary statistics for tau}
 #' @export
 
-spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE) {
+spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE, n_samples = 1000) {
   if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
     stop("You should provide an inla_metric_graph_spde object!")
   }
@@ -430,7 +431,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
   parameterization <- metric_graph_spde$parameterization
 
     if(parameterization == "spde"){
-      row_names <- c("sigma", "kappa")
+      row_names <- c("tau", "kappa")
     } else{
       row_names <- c("sigma", "range")
     }
@@ -442,10 +443,12 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
   }
 
   if(parameterization == "spde"){
-    name_theta1 <- "sigma"
+    name_theta1 <- "reciprocal_tau"
+    name_theta1_t <- "tau"
     name_theta2 <- "kappa"
   } else{
-    name_theta1 <- "sigma"
+    name_theta1 <- "reciprocal_tau"
+    name_theta1_t <- "sigma"
     name_theta2 <- "range"
   }
 
@@ -474,24 +477,50 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
     )
     names(result[[paste0("marginals.log.",name_theta2)]]) <- name_theta2
 
-    result[[paste0("marginals.",name_theta1)]] <- lapply(
-      result[[paste0("marginals.log.",name_theta1)]],
-      function(x) {
-        INLA::inla.tmarginal(
-          function(y) exp(y),
-          x
-        )
-      }
-    )
-    result[[paste0("marginals.",name_theta2)]] <- lapply(
-      result[[paste0("marginals.log.",name_theta2)]],
-      function(x) {
-        INLA::inla.tmarginal(
-          function(y) exp(y),
-          x
-        )
-      }
-    )
+    if(parameterization == "spde"){
+            result[[paste0("marginals.",name_theta1_t)]] <- lapply(
+              result[[paste0("marginals.log.",name_theta1_t)]],
+              function(x) {
+                INLA::inla.tmarginal(
+                  function(y) exp(-y),
+                  x
+                )
+              }
+            )
+            result[[paste0("marginals.",name_theta2)]] <- lapply(
+              result[[paste0("marginals.log.",name_theta2)]],
+              function(x) {
+                INLA::inla.tmarginal(
+                  function(y) exp(y),
+                  x
+                )
+              }
+            )
+    } else{
+            hyperpar_sample <- inla.hyperpar.sample(n_samples, inla)
+            reciprocal_tau_est <- exp(hyperpar_sample[, paste0('Theta1 for ',name)])
+            tau_est <- 1/reciprocal_tau_est
+            range_est <- exp(hyperpar_sample[, paste0('Theta2 for ',name)])
+            kappa_est <- sqrt(4)/range_est
+            sigma_est <- sqrt(gamma(0.5) / (tau_est^2 * kappa_est^(2 * 0.5) *
+                    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+
+            density_sigma <- stats::density(sigma_est)
+
+            result[[paste0("marginals.",name_theta1_t)]] <- list()
+            result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]] <- cbind(density_sigma$x, density_sigma$y)
+            colnames(result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]]) <- c("x","y")
+
+            result[[paste0("marginals.",name_theta2)]] <- lapply(
+              result[[paste0("marginals.log.",name_theta2)]],
+              function(x) {
+                INLA::inla.tmarginal(
+                  function(y) exp(y),
+                  x
+                )
+              }
+            )
+    }
   }
 
   if (compute.summary) {
@@ -520,9 +549,9 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
       return(norm_const)
     }
 
-    norm_const_theta1 <- norm_const(result[[paste0("marginals.",name_theta1)]][[name_theta1]])
-    result[[paste0("marginals.",name_theta1)]][[name_theta1]][, "y"] <-
-    result[[paste0("marginals.",name_theta1)]][[name_theta1]][, "y"] / norm_const_theta1
+    norm_const_theta1 <- norm_const(result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]])
+    result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]][, "y"] <-
+    result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]][, "y"] / norm_const_theta1
 
     norm_const_theta2 <- norm_const(result[[paste0("marginals.",name_theta2)]][[name_theta2]])
     result[[paste0("marginals.",name_theta2)]][[name_theta2]][, "y"] <-
@@ -531,14 +560,14 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
 
 
 
-    result[[paste0("summary.",name_theta1)]] <- create_summary_from_density(result[[paste0("marginals.",name_theta1)]][[name_theta1]],
-    name = name_theta1)
+    result[[paste0("summary.",name_theta1_t)]] <- create_summary_from_density(result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]],
+    name = name_theta1_t)
     result[[paste0("summary.",name_theta2)]] <-
     create_summary_from_density(result[[paste0("marginals.",name_theta2)]][[name_theta2]], name = name_theta2)
   }
 
   class(result) <- "metric_graph_spde_result"
-  result$params <- c(name_theta1,name_theta2)
+  result$params <- c(name_theta1_t,name_theta2)
   return(result)
 }
 
