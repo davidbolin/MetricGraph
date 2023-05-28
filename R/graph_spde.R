@@ -421,7 +421,7 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' \item{summary.tau}{Summary statistics for tau}
 #' @export
 
-spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE, n_samples = 1000) {
+spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE, n_samples = 5000) {
   if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
     stop("You should provide an inla_metric_graph_spde object!")
   }
