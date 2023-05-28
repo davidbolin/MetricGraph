@@ -12,6 +12,7 @@ on:
   pull_request:
     branches:
       - devel
+      - stable
 
 name: R-CMD-check-windows
 

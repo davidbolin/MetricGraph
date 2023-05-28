@@ -4,7 +4,13 @@
 \alias{spde_metric_graph_result}
 \title{metric graph SPDE result extraction from INLA estimation results}
 \usage{
-spde_metric_graph_result(inla, name, metric_graph_spde, compute.summary = TRUE)
+spde_metric_graph_result(
+  inla,
+  name,
+  metric_graph_spde,
+  compute.summary = TRUE,
+  n_samples = 1000
+)
 }
 \arguments{
 \item{inla}{An \code{inla} object obtained from a call to
@@ -17,6 +23,8 @@ in the inla formula.}
 the inla formula.}
 
 \item{compute.summary}{Should the summary be computed?}
+
+\item{n_samples}{The number of samples to be used if parameterization is \code{matern}}
 }
 \value{
 If the model was fitted with \code{matern} parameterization (the default), it returns a list containing:

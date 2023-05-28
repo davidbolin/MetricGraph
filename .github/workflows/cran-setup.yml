@@ -1,0 +1,28 @@
+on:
+    push:
+      branches:
+        - cran
+  
+  name: cran_setup
+  
+  jobs:
+    cran_setup:
+      runs-on: macOS-latest
+      env:
+        GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      steps:
+        - name: Delete vignettes and pkgdown, then copy cran vign
+          run: |
+            git rm -rf vignettes
+            git rm -rf pkgdown/
+            git rm index.md
+            git rm -rf examples
+            git rm -rf inst/shared/
+            mkdir vignettes
+            cd cran_vignettes
+            cp * ../vignettes
+            git rm -rf cran_vignettes
+            git add vignettes
+            git commit -m "Doing the setup"
+            git push
+          shell: bash
