@@ -1,11 +1,11 @@
 on:
-    push:
-      branches:
-        - cran
+  push:
+    branches:
+      - cran
+
+name: cran_setup
   
-  name: cran_setup
-  
-  jobs:
+jobs:
     cran_setup:
       runs-on: macOS-latest
       env:
