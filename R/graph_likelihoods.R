@@ -71,7 +71,7 @@
 
 
 #' Computes the log likelihood function fo theta for the graph object
-#' @param theta parameters (sigma_e, sigma, kappa)
+#' @param theta parameters (sigma_e, reciprocal_tau, kappa)
 #' @param graph  metric_graph object
 #' @param data_name name of the response variable
 #' @param BC which boundary condition to use (0,1)
@@ -90,7 +90,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   }
 
   sigma_e <- exp(theta[1])
-  sigma <- exp(theta[2])
+  reciprocal_tau <- exp(theta[2])
   if(parameterization == "matern"){
     kappa = sqrt(8 * 1.5) / exp(theta[3])
   } else{
@@ -120,7 +120,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const, ]
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                       alpha = 2, graph = graph, BC=BC)
   R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
                         LDL = FALSE, perm = TRUE)
@@ -183,12 +183,12 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         d.index <- c(1,2)
         S[-d.index, -d.index] <- r_2(D, kappa = kappa,
-                                     sigma = sigma, deriv = 0)
+                                     tau = 1/reciprocal_tau, deriv = 0)
         S[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                     kappa = kappa, sigma = sigma,
+                                     kappa = kappa, tau = 1/reciprocal_tau,
                                      deriv = 2)
         S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
-                                     sigma = sigma, deriv = 1)
+                                     tau = 1/reciprocal_tau, deriv = 1)
         S[-d.index, d.index] <- t(S[d.index, -d.index])
 
         #covariance update see Art p.17
@@ -317,7 +317,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
 #' Log-likelihood calculation for alpha=1 model
 #'
-#' @param theta (sigma_e, sigma, kappa)
+#' @param theta (sigma_e, reciprocal_tau, kappa)
 #' @param graph metric_graph object
 #' @param X_cov matrix of covariates
 #' @param y response vector
@@ -343,8 +343,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   }
 
   sigma_e <- exp(theta[1])
+  reciprocal_tau <- exp(theta[2])
   #build Q
-  Q <- spde_precision(kappa = kappa, sigma = exp(theta[2]),
+  Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                       alpha = 1, graph = graph, BC=BC)
   if(is.null(graph$PtV)){
     stop("No observation at the vertices! Run observation_to_vertex().")
@@ -393,7 +394,7 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
 }
 
 #' Log-likelihood calculation for alpha=1 model
-#' @param theta (sigma_e, sigma, kappa)
+#' @param theta (sigma_e, reciprocal_tau, kappa)
 #' @param graph metric_graph object
 #' @param data_name name of the response variable
 #' @param repl 
@@ -417,7 +418,9 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     kappa = exp(theta[3])
   }
 
-  Q.list <- spde_precision(kappa = kappa, sigma = exp(theta[2]), alpha = 1,
+  reciprocal_tau <- exp(theta[2])
+
+  Q.list <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 1,
                            graph = graph, build = FALSE,BC=BC)
 
   Qp <- Matrix::sparseMatrix(i = Q.list$i,
@@ -502,7 +505,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
       D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
 
-      S <- r_1(D_matrix, kappa = kappa, sigma = exp(theta[2]))
+      S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
 
       #covariance update see Art p.17
       E.ind <- c(1:2)
@@ -625,11 +628,11 @@ likelihood_graph_covariance <- function(graph,
       } else{
         if(log_scale){
           sigma_e <- exp(theta[1])
-          sigma <- exp(theta[2])
+          reciprocal_tau <- exp(theta[2])
           kappa <- exp(theta[3])
         } else{
           sigma_e <- theta[1]
-          sigma <- theta[2]
+          reciprocal_tau <- theta[2]
           kappa <- theta[3]
         }
       }
@@ -648,7 +651,7 @@ likelihood_graph_covariance <- function(graph,
       switch(model,
       WM1 = {
 
-        Q <- spde_precision(kappa = kappa, sigma = sigma,
+        Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                             alpha = 1, graph = graph)
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
@@ -656,7 +659,7 @@ likelihood_graph_covariance <- function(graph,
       WM2 = {
         PtE <- graph$get_PtE()
         n.c <- 1:length(graph$CoB$S)
-        Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
+        Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
                             graph = graph, BC = 1)
         Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
         Qtilde <- Qtilde[-n.c,-n.c]
@@ -667,12 +670,12 @@ likelihood_graph_covariance <- function(graph,
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
 
       }, GL1 = {
-        Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2
+        Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / reciprocal_tau^2
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
       }, GL2 = {
 
         Q <- kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
-        Q <- Q %*% Q / sigma^2
+        Q <- Q %*% Q / reciprocal_tau^2
         Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
 
       }, isoCov = {
@@ -759,9 +762,9 @@ likelihood_graph_covariance <- function(graph,
 #' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
 #' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
 #' The parameter `theta` must be supplied as
-#' the vector `c(sigma_e, sigma, kappa)`.
+#' the vector `c(sigma_e, reciprocal_tau, kappa)`.
 #'
-#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, reciprocal_tau, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
 #' @noRd
 
@@ -797,7 +800,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
 
     sigma_e <- exp(theta[1])
-    sigma <- exp(theta[2])
+    reciprocal_tau <- exp(theta[2])
     if(parameterization == "matern"){
       kappa = sqrt(8 * (alpha-0.5)) / exp(theta[3])
     } else{
@@ -818,7 +821,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           Q <- Q %*% K
         }
       }
-      Q <- Q / sigma^2
+      Q <- Q / reciprocal_tau^2
 
       R <- chol(Q)
 

@@ -1,11 +1,11 @@
 
 #' The exponential covariance
 #' @param D vector or matrix with distances
-#' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param kappa parameter kappa from the SPDE
+#' @param tau parameter tau from the SPDE
 #' @noRd
-r_1 <- function(D, kappa, sigma) {
-  return((sigma^2 / (2 * kappa)) * exp(-kappa * abs(D)))
+r_1 <- function(D, kappa, tau) {
+  return((1 / (2 * kappa * tau^2)) * exp(-kappa * abs(D)))
 }
 
 
@@ -13,11 +13,11 @@ r_1 <- function(D, kappa, sigma) {
 #' @param t locations
 #' @param l_e circle perimeter
 #' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param tau parameter tau
 #' @noRd
-r_1_circle <- function(t, l_e, kappa, sigma) {
+r_1_circle <- function(t, l_e, kappa, tau) {
 
-  c <- sigma^2 / (2 * kappa * sinh(kappa *l_e/2))
+  c <- 1 / (2 * kappa * sinh(kappa *l_e/2) * tau^2)
   r <- matrix(0, length(t), length(t))
   r_0 <- cosh(-kappa * l_e / 2)
   if (length(t) == 1) {
@@ -40,13 +40,12 @@ r_1_circle <- function(t, l_e, kappa, sigma) {
 #' Precision matrix for exponential covariance
 #' @description Computes the precision matrix of observations on an interval
 #' for a Gaussian process with an exponential covariance
-#' \deqn{r(h) = \sigma^2\exp(-\kappa h)/(2\kappa)}{r(h) = sigma^2*(exp(-kappa*h)/(2*kappa)}
 #' @param kappa parameter kappa
-#' @param sigma parameter sigma
+#' @param tau parameter tau
 #' @param t (n x 1) position on the line
 #' @param t_sorted (bool)
 #' @noRd
-precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
+precision_exp_line <- function(kappa, tau, t,  t_sorted = FALSE) {
 
   l_t <- length(t)
   i_ <- j_ <- x_ <- rep(0, 4*(l_t-1) + 2)
@@ -93,7 +92,7 @@ precision_exp_line <- function(kappa, sigma, t,  t_sorted = FALSE) {
   count <- count + 2
   Q <- Matrix::sparseMatrix(i = i_[1:count],
                             j = j_[1:count],
-                            x = (2 * kappa / sigma^2) * x_[1:count],
+                            x = (2 * kappa * tau^2) * x_[1:count],
                             dims = c(l_t, l_t))
   if (t_sorted == FALSE)
     Q <- Matrix::t(P) %*% Q %*% P
@@ -124,17 +123,15 @@ covariance_alpha1 <- function(P, kappa, tau, range, sigma, graph, n.p = 50,
 
   if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
     stop("You should either provide either kappa and tau, or sigma and range.")
-  } else if(!missing(kappa) && !missing(tau)){
-    sigma <- 1/tau
   } else if(!missing(sigma) && !missing(range)){
     nu <- 1 - 0.5
     kappa <- sqrt(8 * nu) / range
-    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
   }  
 
   #compute covarains of the two edges of EP[1]
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = tau,
                       alpha = 1, graph = graph)
   R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[P[1],]
@@ -147,7 +144,7 @@ covariance_alpha1 <- function(P, kappa, tau, range, sigma, graph, n.p = 50,
   # compute covariance between two edges and the point
   t_norm <- P[2]
   l <- graph$edge_lengths[P[1]]
-  Q_line <- as.matrix(precision_exp_line(kappa = kappa, sigma = sigma,
+  Q_line <- as.matrix(precision_exp_line(kappa = kappa, tau = tau,
                                          t = c(0, l * t_norm,l)))
   Q_AB <- Q_line[2, c(1,3), drop = FALSE]
   Q_AA <- Q_line[2, 2]
@@ -162,7 +159,7 @@ covariance_alpha1 <- function(P, kappa, tau, range, sigma, graph, n.p = 50,
     t_s <- seq(0, 1, length.out = n.p)
     if (i == P[1]) {
       D_matrix <- as.matrix(dist(c(0, l, l * t_norm, l * t_s)))
-      S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+      S <- r_1(D_matrix, kappa = kappa, tau = tau)
 
       #covariance update
       E.ind <- c(1:2)
@@ -174,7 +171,7 @@ covariance_alpha1 <- function(P, kappa, tau, range, sigma, graph, n.p = 50,
       C_P <- CV_P[graph$E[i, ]] %*% Bt[, -1] + Sigma_i[1, -1]
     } else {
       D_matrix <- as.matrix(dist(c(0, l, l * t_s)))
-      S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+      S <- r_1(D_matrix, kappa = kappa, tau = tau)
 
       #covariance update
       E.ind <- c(1:2)
@@ -214,17 +211,15 @@ covariance_alpha1_mesh <- function(P, kappa, tau, range, sigma, graph, scale = F
 
   if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
     stop("You should either provide either kappa and tau, or sigma and range.")
-  } else if(!missing(kappa) && !missing(tau)){
-    sigma <- 1/tau
   } else if(!missing(sigma) && !missing(range)){
     nu <- 1 - 0.5
     kappa <- sqrt(8 * nu) / range
-    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
   }  
 
   #compute covarains of the two edges of EP[1]
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = tau,
                       alpha = 1, graph = graph)
   R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[P[1],]
@@ -237,7 +232,7 @@ covariance_alpha1_mesh <- function(P, kappa, tau, range, sigma, graph, scale = F
   # compute covariance between two edges and the point
   t_norm <- P[2]
   l <- graph$edge_lengths[P[1]]
-  Q_line <- as.matrix(precision_exp_line(kappa = kappa, sigma = sigma,
+  Q_line <- as.matrix(precision_exp_line(kappa = kappa, tau = tau,
                                          t = c(0, l * t_norm,l)))
   Q_AB <- Q_line[2, c(1,3), drop = FALSE]
   Q_AA <- Q_line[2, 2]
@@ -253,7 +248,7 @@ covariance_alpha1_mesh <- function(P, kappa, tau, range, sigma, graph, scale = F
     t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
     if (i == P[1]) {
       D_matrix <- as.matrix(dist(c(0, l, l * t_norm, l * t_s)))
-      S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+      S <- r_1(D_matrix, kappa = kappa, tau = tau)
 
       #covariance update
       E.ind <- c(1:2)
@@ -265,7 +260,7 @@ covariance_alpha1_mesh <- function(P, kappa, tau, range, sigma, graph, scale = F
       C_P <- CV_P[graph$E[i, ]] %*% Bt[, -1] + Sigma_i[1, -1]
     } else {
       D_matrix <- as.matrix(dist(c(0, l, l * t_s)))
-      S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+      S <- r_1(D_matrix, kappa = kappa, tau = tau)
 
       #covariance update
       E.ind <- c(1:2)

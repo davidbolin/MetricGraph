@@ -305,8 +305,7 @@ As an example, let us simulate the field $u$ on the graph using $\alpha = 1$.
 To do so, we again draw some locations at random, then sample the field at these locations and plot the result
 ```{r, fig.align = "center",echo=TRUE}
 sigma <- 1.3
-r <- 0.15 # range parameter
-kappa <- sqrt(8*0.5)/r
+range <- 0.15 # range parameter
 sigma_e <- 0.1
 
 n.obs <- 200
@@ -314,7 +313,7 @@ obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 
 # The graph has very small edges, so we will use the 
 # Q method to improve numerical stability
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, PtE = obs.loc, method = "Q")
 graph$clear_observations()
 graph$add_observations(data = data.frame(edge_number = obs.loc[, 1],
@@ -326,7 +325,7 @@ graph$plot(data = "u", vertex_size = 0)
 
 We can also sample the field at the mesh on the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, type = "mesh", method = "Q")
 graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
 ```
@@ -335,7 +334,7 @@ Since $\alpha=1$, these sample paths are continuous but not differentiable.
 To visualize the correlation structure of the field, we can compute and plot
 the covariances between some point and all other points in the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-C <- covariance_alpha1_mesh(c(200, 0.1), kappa = kappa, sigma = sigma, 
+C <- covariance_alpha1_mesh(c(200, 0.1), range = range, sigma = sigma, 
                             graph = graph)
 graph$plot_function(C, vertex_size = 0, edge_width = 0.5)
 ```
@@ -684,7 +683,7 @@ Here we are showing the estimate of the practical correlation range ($2/\kappa$)
 ```{r}
   result_df_bru <- data.frame(
     parameter = c("std.dev", "range"),
-    true = c(sigma, 2 / kappa),
+    true = c(sigma, range),
     mean = c(
       spde_bru_result$summary.sigma$mean,
       spde_bru_result$summary.range$mean

@@ -1,6 +1,6 @@
 
 #' Computes the posterior expectation for SPDE models
-#' @param theta parameters (sigma_e, sigma, kappa)
+#' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph  metric_graph object
 #' @param alpha alpha parameter (1 or 2)
 #' @param type decides where to predict, 'obs' or 'mesh'.
@@ -42,7 +42,7 @@ spde_posterior_mean <- function(theta,
 }
 
 #' Computes the posterior mean for the alpha=1 model
-#' @param theta parameters (sigma_e, sigma, kappa)
+#' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph metric_graph object
 #' @param type decides where to predict, 'obs' or 'mesh'.
 #' @param leave.edge.out compute the mean of the graph if the observations
@@ -57,10 +57,10 @@ posterior_mean_obs_alpha1 <- function(theta,
                                       leave.edge.out = FALSE) {
 
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
 
-  Qp <- spde_precision(sigma= theta[2], kappa = theta[3],
+  Qp <- spde_precision(tau= theta[2], kappa = theta[3],
                        alpha = 1, graph = graph)
   if(leave.edge.out == FALSE)
     V.post <- posterior_mean_alpha1(theta = theta, graph = graph, resp = resp, PtE_resp = PtE_resp)
@@ -87,7 +87,7 @@ posterior_mean_obs_alpha1 <- function(theta,
     l <- graph$edge_lengths[e]
     if (type == "obs") {
       D <- as.matrix(dist(c(0,l, l*obs.loc)))
-      S <- r_1(D,kappa = kappa, sigma = sigma)
+      S <- r_1(D,kappa = kappa, tau = tau)
 
       E.ind <- c(1:2)
       Obs.ind <- -E.ind
@@ -106,7 +106,7 @@ posterior_mean_obs_alpha1 <- function(theta,
       pred.id <- PtE_pred[, 1] == e
       pred.loc <- PtE_pred[pred.id,2]
       D <- as.matrix(dist(c(0,l, l*obs.loc, l*pred.loc)))
-      S <- r_1(D,kappa = kappa, sigma = sigma)
+      S <- r_1(D,kappa = kappa, tau = tau)
       E.ind <- c(1:2)
       Obs.ind <- 2 + seq_len(length(obs.loc))
       Pred.ind <- 2 + length(obs.loc) + seq_len(length(pred.loc))
@@ -135,7 +135,7 @@ posterior_mean_obs_alpha1 <- function(theta,
 }
 
 #' Computes the posterior mean for the alpha=2 model
-#' @param theta parameters (sigma_e, sigma, kappa)
+#' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph metric_graph object
 #' @param leave.edge.out compute the expectation of the graph if the
 #' @param type Set to 'obs' for computation at observation locations, or to
@@ -153,7 +153,7 @@ posterior_mean_obs_alpha2 <- function(theta,
     stop("leave.edge.out only possible for type = 'obs'.")
   }
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
   
   if(is.null(PtE_resp)){
@@ -194,12 +194,12 @@ posterior_mean_obs_alpha2 <- function(theta,
       S <- matrix(0, length(t) + 2, length(t) + 2)
 
       d.index <- c(1, 2)
-      S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
+      S[-d.index, -d.index] <- r_2(D, kappa = kappa, tau = tau, deriv = 0)
       S[d.index, d.index] <- -r_2(as.matrix(dist(c(0, l))),
-                                  kappa = kappa, sigma = sigma,
+                                  kappa = kappa, tau = tau,
                                   deriv = 2)
       S[d.index, -d.index] <- -r_2(D[1:2, ], kappa = kappa,
-                                   sigma = sigma, deriv = 1)
+                                   tau = tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 
       #covariance update see Art p.17
@@ -230,12 +230,12 @@ posterior_mean_obs_alpha2 <- function(theta,
       S <- matrix(0, length(t) + 2, length(t) + 2)
 
       d.index <- c(1,2)
-      S[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma, deriv = 0)
+      S[-d.index, -d.index] <- r_2(D, kappa = kappa, tau = tau, deriv = 0)
       S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                  kappa = kappa, sigma = sigma,
+                                  kappa = kappa, tau = tau,
                                   deriv = 2)
       S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
-                                   sigma = sigma, deriv = 1)
+                                   tau = tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 
       #covariance update see Art p.17
@@ -283,10 +283,10 @@ posterior_mean_obs_alpha2 <- function(theta,
 posterior_mean_alpha1 <- function(theta, graph, resp, PtE_resp, rem.edge = FALSE) {
 
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
 
-  Qp.list <- spde_precision(kappa = theta[3], sigma = theta[2], alpha = 1,
+  Qp.list <- spde_precision(kappa = theta[3], tau = 1/theta[2], alpha = 1,
                             graph = graph, build = FALSE)
   #build BSIGMAB
   Qpmu <- rep(0, graph$nV)
@@ -305,7 +305,7 @@ posterior_mean_alpha1 <- function(theta, graph, resp, PtE_resp, rem.edge = FALSE
     l <- graph$edge_lengths[e]
     # D_matrix <- as.matrix(dist(c(0, l, l*graph$PtE[obs.id, 2])))
     D_matrix <- as.matrix(dist(c(0, l, l*PtE_resp[obs.id, 2])))
-    S <- r_1(D_matrix, kappa = kappa, sigma = sigma)
+    S <- r_1(D_matrix, kappa = kappa, tau = tau)
 
     #covariance update see Art p.17
     E.ind <- c(1:2)
@@ -354,13 +354,13 @@ posterior_mean_alpha1 <- function(theta, graph, resp, PtE_resp, rem.edge = FALSE
 }
 
 #' Computes the posterior mean for alpha = 2
-#' @param theta parameters (sigma_e, sigma, kappa)
+#' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph metric_graph object
 #' @noRd
 posterior_mean_alpha2 <- function(theta, graph, resp, PtE_resp, rem.edge = NULL) {
 
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
   if(is.null(PtE_resp)){
     PtE_resp <- graph$get_PtE()
@@ -371,7 +371,7 @@ posterior_mean_alpha2 <- function(theta, graph, resp, PtE_resp, rem.edge = NULL)
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const,]
-  Q <- spde_precision(kappa = theta[3], sigma = theta[2],
+  Q <- spde_precision(kappa = theta[3], tau = 1/theta[2],
                       alpha = 2, graph = graph)
 
   #build BSIGMAB
@@ -394,12 +394,12 @@ posterior_mean_alpha2 <- function(theta, graph, resp, PtE_resp, rem.edge = NULL)
 
     d.index <- c(1, 2)
     S[-d.index, -d.index] <- r_2(D, kappa = kappa,
-                                 sigma = sigma, deriv = 0)
+                                 tau = tau, deriv = 0)
     S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                kappa = kappa, sigma = sigma,
+                                kappa = kappa, tau = tau,
                                 deriv = 2)
     S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
-                                 sigma = sigma, deriv = 1)
+                                 tau = tau, deriv = 1)
     S[-d.index, d.index] <- t(S[d.index, -d.index])
 
     #covariance update see Art p.17

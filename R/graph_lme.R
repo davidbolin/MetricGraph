@@ -1060,7 +1060,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
 
   if(tolower(model_type$type) == "whittlematern"){
-    sigma <- 1/object$coeff$random_effects[1]
+    tau <- object$coeff$random_effects[1]
     # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
     # } else{
@@ -1088,7 +1088,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   } else if(tolower(model_type$type) == "graphlaplacian"){
     graph_bkp$observation_to_vertex()
-    sigma <- 1/object$coeff$random_effects[1]
+    tau <- object$coeff$random_effects[1]
     #nV before 
     nV_temp <- object$nV_orig
     # graph_bkp$observation_to_vertex()
@@ -1102,10 +1102,10 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
     # }
       if(model_type$alpha == 1){
-        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
+        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
       } else{
         Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
-        Q <- Q %*% Q / sigma^2
+        Q <- Q %*% Q * tau^2
       }
 
   } else if(tolower(model_type$type) == "isocov"){
@@ -1132,15 +1132,17 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
         # } else 
         if(model_type$cov_function == "GL1"){
               #nV before 
+              tau <- object$coeff$random_effects[1]
               nV_temp <- object$nV_orig
               graph_bkp$observation_to_vertex()
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
               graph_bkp$compute_laplacian()        
-              Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) / sigma^2
+              Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
         } else if(model_type$cov_function == "GL2"){
               #nV before 
+              tau <- object$coeff$random_effects[1]
               nV_temp <- object$nV_orig
               graph_bkp$observation_to_vertex()
               if(graph_bkp$nV > nV_temp){
@@ -1148,7 +1150,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
               }
               graph_bkp$compute_laplacian()
               Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
-              Q <- Q %*% Q / sigma^2
+              Q <- Q %*% Q * tau^2
         # } else if(model_type$cov_function == "exp_covariance"){
         #           graph_bkp$compute_resdist(full = TRUE)
         #           Sigma <- as.matrix(exp_covariance(graph_bkp$res_dist[[1]], c(sigma,kappa)))
@@ -1180,7 +1182,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
   cond_aux1 <- (tolower(model_type$type) == "whittlematern")
   cond_aux2 <- (tolower(model_type$type) == "isocov" && is.character(model_type$cov_function))
   if(cond_aux2){
-    cond_aux2 <- (model_type$cov_function == "alpha2" || model_type$cov_function == "alpha1")
+    cond_aux2 <- (model_type$cov_function == "WM2" || model_type$cov_function == "WM1")
   }
   cond_wm <- cond_aux1 || cond_aux2 
 
@@ -1219,7 +1221,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
     }
   }
   if(cond_aux2){
-    if(model_type$cov_function == "alpha2"){
+    if(model_type$cov_function == "WM2"){
       cond_alpha2 <- TRUE
     } else{
       cond_alpha1 <- TRUE
@@ -1228,15 +1230,16 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
 
   if(compute_variances || posterior_samples){
     if(cond_wm){
+      tau <- object$coeff$random_effects[1]
       graph_bkp2 <- graph_bkp$clone()
       graph_bkp2$observation_to_vertex()
       if(cond_alpha1){
-        Q <- spde_precision(kappa = kappa, sigma = sigma,
+        Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 1, graph = graph_bkp2)
       } else{
         PtE <- graph_bkp2$get_PtE()
         n.c <- 1:length(graph_bkp2$CoB$S)
-        Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
+        Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
                             graph = graph_bkp2, BC = BC)
         Qtilde <- (graph_bkp2$CoB$T) %*% Q %*% t(graph_bkp2$CoB$T)
         Qtilde <- Qtilde[-n.c,-n.c]
@@ -1282,7 +1285,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
       PtE_obs <- PtE_full[idx_obs,]
 
       if(cond_alpha2){
-          mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,sigma,kappa),
+          mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]], data_prd_temp[[distance_on_edge]]))
         if(!only_latent){
@@ -1292,7 +1295,7 @@ predict.graph_lme <- function(object, data = NULL, mesh = FALSE, mesh_h = 0.01, 
             mu_krig <- mu_krig[ord_idx]
           }   
       } else{
-          mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,sigma,kappa),
+          mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]], data_prd_temp[[distance_on_edge]]))
                         # PtE_pred = cbind(edge_nb, dist_ed))

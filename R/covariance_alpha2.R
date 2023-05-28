@@ -1,12 +1,12 @@
 #' The Matern covariance with alpha = 2
 #' @param D vector or matrix with distances
-#' @param sigma parameter sigma
+#' @param tau parameter tau
 #' @param kappa parameter kappa
 #' @param deriv (0,1,2) no derivative, first, or second order
 #' @noRd
-r_2 <- function(D, kappa, sigma, deriv = 0){
+r_2 <- function(D, kappa, tau, deriv = 0){
   aD <- abs(D)
-  c <- ( sigma^2/(4 * kappa^3))
+  c <- ( 1/(4 * (kappa^3) * (tau^2)))
 
   R0 <-  exp( -kappa * aD)
   if (deriv == 0)
@@ -40,17 +40,15 @@ covariance_alpha2 <- function(P, kappa, tau, range, sigma, graph, n.p = 50){
 
   if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
     stop("You should either provide either kappa and tau, or sigma and range.")
-  } else if(!missing(kappa) && !missing(tau)){
-    sigma <- 1/tau
   } else if(!missing(sigma) && !missing(range)){
     nu <- 2 - 0.5
     kappa <- sqrt(8 * nu) / range
-    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
   }
 
   #compute covaraince of the two edges of P[1]
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = tau,
                       alpha = 2, graph = graph)
   if (is.null(graph$CoB))
     graph$buildC(2, FALSE)
@@ -85,12 +83,12 @@ covariance_alpha2 <- function(P, kappa, tau, range, sigma, graph, n.p = 50){
   t <- l * c(0, 1, t_norm)
   D <- outer (t, t, `-`)
   d.index <- c(1, 2)
-  Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma)
+  Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, tau = tau)
   Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                  kappa = kappa, sigma = sigma,
+                                  kappa = kappa, tau = tau,
                                   deriv = 2)
   Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa,
-                                   sigma = sigma, deriv = 1)
+                                   tau = tau, deriv = 1)
   Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 
   B <- Sigma[1:4, 5] %*% solve(Sigma[1:4, 1:4])
@@ -106,11 +104,11 @@ covariance_alpha2 <- function(P, kappa, tau, range, sigma, graph, n.p = 50){
       index_boundary <- c(d.index, 3:4)
       t <- l*c(0, 1, t_norm, t_s)
       D <- outer (t, t, `-`)
-      Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma)
+      Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, tau = tau)
       Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                      kappa = kappa, sigma = sigma,
+                                      kappa = kappa, tau = tau,
                                       deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, sigma = sigma,
+      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index,  -d.index])
 
@@ -127,11 +125,11 @@ covariance_alpha2 <- function(P, kappa, tau, range, sigma, graph, n.p = 50){
       index_boundary <- c(d.index, 3:4)
       t <- l*c(0, 1, t_s)
       D <- outer (t, t, `-`)
-      Sigma[-d.index, -d.index] <- r_2(D,kappa = kappa, sigma = sigma)
+      Sigma[-d.index, -d.index] <- r_2(D,kappa = kappa, tau = tau)
       Sigma[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                       kappa = kappa, sigma = sigma,
+                                       kappa = kappa, tau = tau,
                                        deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, sigma = sigma,
+      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 
@@ -166,17 +164,15 @@ covariance_alpha2_mesh <- function(P, kappa, tau, range, sigma, graph){
 
   if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
     stop("You should either provide either kappa and tau, or sigma and range.")
-  } else if(!missing(kappa) && !missing(tau)){
-    sigma <- 1/tau
   } else if(!missing(sigma) && !missing(range)){
     nu <- 2 - 0.5
     kappa <- sqrt(8 * nu) / range
-    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
   }  
 
   #compute covaraince of the two edges of P[1]
-  Q <- spde_precision(kappa = kappa, sigma = sigma,
+  Q <- spde_precision(kappa = kappa, tau = tau,
                       alpha = 2, graph = graph)
   if (is.null(graph$CoB))
     graph$buildC(2, FALSE)
@@ -211,12 +207,12 @@ covariance_alpha2_mesh <- function(P, kappa, tau, range, sigma, graph){
   t <- l * c(0, 1, t_norm)
   D <- outer (t, t, `-`)
   d.index <- c(1, 2)
-  Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma)
+  Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, tau = tau)
   Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                  kappa = kappa, sigma = sigma,
+                                  kappa = kappa, tau = tau,
                                   deriv = 2)
   Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa,
-                                   sigma = sigma, deriv = 1)
+                                   tau = tau, deriv = 1)
   Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 
   B <- Sigma[1:4, 5] %*% solve(Sigma[1:4, 1:4])
@@ -234,11 +230,11 @@ covariance_alpha2_mesh <- function(P, kappa, tau, range, sigma, graph){
       index_boundary <- c(d.index, 3:4)
       t <- l*c(0, 1, t_norm, t_s)
       D <- outer (t, t, `-`)
-      Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, sigma = sigma)
+      Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa, tau = tau)
       Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                      kappa = kappa, sigma = sigma,
+                                      kappa = kappa, tau = tau,
                                       deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, sigma = sigma,
+      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index,  -d.index])
 
@@ -255,11 +251,11 @@ covariance_alpha2_mesh <- function(P, kappa, tau, range, sigma, graph){
       index_boundary <- c(d.index, 3:4)
       t <- l*c(0, 1, t_s)
       D <- outer (t, t, `-`)
-      Sigma[-d.index, -d.index] <- r_2(D,kappa = kappa, sigma = sigma)
+      Sigma[-d.index, -d.index] <- r_2(D,kappa = kappa, tau = tau)
       Sigma[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
-                                       kappa = kappa, sigma = sigma,
+                                       kappa = kappa, tau = tau,
                                        deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, sigma = sigma,
+      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 

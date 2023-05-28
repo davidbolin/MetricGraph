@@ -1,7 +1,7 @@
 
 #' Posterior mean for models assuming observations at vertices
 #'
-#' @param theta estimated model parameters (sigma_e, sigma, kappa)
+#' @param theta estimated model parameters (sigma_e, tau, kappa)
 #' @param graph metric graph  object
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
@@ -23,16 +23,16 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
   n.v <- dim(graph$V)[1]
 
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
 
   #build covariance matrix
   if (model == "alpha1") {
-    Q <- Qalpha1(c(sigma, kappa), graph)
+    Q <- Qalpha1(c(tau, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
     n.c <- 1:length(graph$CoB$S)
-    Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
+    Q <- Qalpha2(c(tau, kappa), graph, BC = 1)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
@@ -41,14 +41,14 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) * tau^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
     K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
-    Q <- K %*% K / sigma^2
+    Q <- K %*% K * tau^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist))
+    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist))
   } else {
     stop("wrong model choice")
   }
@@ -62,7 +62,7 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 
 #' Prediction for models assuming observations at vertices
 #'
-#' @param theta Estimated model parameters (sigma_e, sigma, kappa)
+#' @param theta Estimated model parameters (sigma_e, tau, kappa)
 #' @param graph metric graph object
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
@@ -92,18 +92,18 @@ posterior_crossvalidation_covariance_manual <- function(theta,
   }
 
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
 
   #build covariance matrix
   if (model == "alpha1") {
-    Q <- Qalpha1(c(sigma, kappa), graph)
+    Q <- Qalpha1(c(tau, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
 
     graph$buildC(2,BC==0)
     n.c <- 1:length(graph$CoB$S)
-    Q <- Qalpha2(c(sigma, kappa), graph, BC = BC)
+    Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
@@ -113,14 +113,14 @@ posterior_crossvalidation_covariance_manual <- function(theta,
       (3 * (PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2 # DOES NOT WORK FOR REPLICATES
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) * tau^2 # DOES NOT WORK FOR REPLICATES
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
     K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]] # DOES NOT WORK FOR REPLICATES
-    Q <- K %*% K / sigma^2
+    Q <- K %*% K * tau^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist))
+    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist))
   } else {
     stop("wrong model choice")
   }
@@ -157,7 +157,7 @@ posterior_crossvalidation_covariance_manual <- function(theta,
 
 #' Prediction for models assuming observations at vertices
 #'
-#' @param theta Estimated model parameters (sigma_e, sigma, kappa)
+#' @param theta Estimated model parameters (sigma_e, tau, kappa)
 #' @param graph metric graph object
 #' @param data_name name of the data
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
@@ -186,18 +186,18 @@ posterior_crossvalidation_manual <- function(theta,
     stop("You must run graph$observation_to_vertex() first.")
   }
   sigma_e <- theta[1]
-  sigma <- theta[2]
+  tau <- theta[2]
   kappa <- theta[3]
 
   #setup matrices for prediction
   if(model == "isoExp"){
     graph$compute_resdist()
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist[[1]]))
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
     n.c <- 1:length(graph$CoB$S)
-    Q <- Qalpha2(c(sigma, kappa), graph, BC = 1)
+    Q <- Qalpha2(c(tau, kappa), graph, BC = 1)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
@@ -210,12 +210,12 @@ posterior_crossvalidation_manual <- function(theta,
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if (model %in% c("alpha1", "GL1", "GL2")) {
     if(model == "alpha1"){
-      Q <- Qalpha1(c(sigma, kappa), graph, BC = BC)
+      Q <- Qalpha1(c(tau, kappa), graph, BC = BC)
     } else if(model == "GL1"){
-      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) / sigma^2
+      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) * tau^2
     } else if (model == "GL2") {
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
-      Q <- K %*% K / sigma^2
+      Q <- K %*% K * tau^2
     }
     A <- graph$A()
     Q.p <- Q  + t(A)%*%A/sigma_e^2
@@ -282,7 +282,7 @@ posterior_crossvalidation <- function(object)
 
   beta_cov <- object$coeff$fixed_effects
   sigma_e <- object$coeff$measurement_error
-  sigma <- 1/object$coeff$random_effects[1]
+  tau <- object$coeff$random_effects[1]
   kappa <- object$coeff$random_effects[2]
 
   # if(tolower(object$latent_model$type) == "whittlematern"){
@@ -297,7 +297,7 @@ posterior_crossvalidation <- function(object)
       stop("Currently the cross-validation is only implemented for the exponential covariance function.")
     }
     model <- "isoExp"
-    sigma <- 1/sigma
+    sigma <- object$coeff$random_effects[1]
   } else if(tolower(object$latent_model$type) == "whittlematern"){
     if(object$latent_model$alpha == 1){
       model <- "alpha1"
@@ -323,7 +323,7 @@ posterior_crossvalidation <- function(object)
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
     n.c <- 1:length(graph$CoB$S)
-    Q <- Qalpha2(c(sigma, kappa), graph, BC = BC)
+    Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
@@ -336,12 +336,12 @@ posterior_crossvalidation <- function(object)
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if (model %in% c("alpha1", "GL1", "GL2")) {
     if(model == "alpha1"){
-      Q <- Qalpha1(c(sigma, kappa), graph, BC = BC)
+      Q <- Qalpha1(c(tau, kappa), graph, BC = BC)
     } else if(model == "GL1"){
-      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) / sigma^2
+      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) * tau^2
     } else if (model == "GL2") {
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
-      Q <- K %*% K / sigma^2
+      Q <- K %*% K * tau^2
     }
     A <- graph$A()
     Q.p <- Q  + t(A)%*%A/sigma_e^2
@@ -430,7 +430,7 @@ posterior_crossvalidation_covariance <- function(object)
 
   beta_cov <- object$coeff$fixed_effects
   sigma_e <- object$coeff$measurement_error
-  sigma <- 1/object$coeff$random_effects[1]
+  tau <- object$coeff$random_effects[1]
   kappa <- object$coeff$random_effects[2]
 
   # if(tolower(object$latent_model$type) == "whittlematern"){
@@ -445,7 +445,7 @@ posterior_crossvalidation_covariance <- function(object)
       stop("Currently the cross-validation is only implemented for the exponential covariance function.")
     }
     model <- "isoExp"
-    sigma <- 1/sigma
+    sigma <- object$coeff$random_effects[1]
   } else if(tolower(object$latent_model$type) == "whittlematern"){
     if(object$latent_model$alpha == 1){
       model <- "alpha1"
@@ -479,13 +479,13 @@ posterior_crossvalidation_covariance <- function(object)
 
   #build covariance matrix
   if (model == "alpha1") {
-    Q <- Qalpha1(c(sigma, kappa), graph)
+    Q <- Qalpha1(c(tau, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
 
     graph$buildC(2,BC==0)
     n.c <- 1:length(graph$CoB$S)
-    Q <- Qalpha2(c(sigma, kappa), graph, BC = BC)
+    Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
     Qtilde <- Qtilde[-n.c, -n.c]
     Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
@@ -495,11 +495,11 @@ posterior_crossvalidation_covariance <- function(object)
       (3 * (PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   } else if (model == "GL1"){
-    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) / sigma^2 # DOES NOT WORK FOR REPLICATES
+    Q <- (kappa^2 * Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]) * tau^2 # DOES NOT WORK FOR REPLICATES
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "GL2"){
     K <- kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]] # DOES NOT WORK FOR REPLICATES
-    Q <- K %*% K / sigma^2
+    Q <- K %*% K * tau^2
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
     graph$compute_resdist(full = TRUE)

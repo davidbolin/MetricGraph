@@ -1,6 +1,6 @@
 #' The precision matrix for all vertices for a Whittle-Matérn field
 #' @param kappa range parameter kappa
-#' @param sigma variance parameter
+#' @param tau variance parameter
 #' @param alpha smoothness parameter (1 or 2)
 #' @param graph metric_graph object
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
@@ -9,17 +9,17 @@
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list
 #' @export
-spde_precision <- function(kappa, sigma, alpha, graph, BC = 1, build = TRUE) {
+spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 
   check <- check_graph(graph)
 
   if (alpha == 1) {
-    return(Qalpha1(theta = c(sigma, kappa),
+    return(Qalpha1(theta = c(tau, kappa),
                    graph = graph,
                    BC = BC,
                    build = build))
   } else if (alpha == 2) {
-      return(Qalpha2(theta = c(sigma, kappa),
+      return(Qalpha2(theta = c(tau, kappa),
                      graph = graph,
                      BC = BC,
                      build = build))
@@ -27,7 +27,7 @@ spde_precision <- function(kappa, sigma, alpha, graph, BC = 1, build = TRUE) {
 }
 
 #' The precision matrix for all vertices in the alpha=1 case
-#' @param theta - sigma, kappa
+#' @param theta - tau, kappa
 #' @param graph metric_graph object
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 gives stationary boundary conditions
@@ -38,7 +38,7 @@ spde_precision <- function(kappa, sigma, alpha, graph, BC = 1, build = TRUE) {
 Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 
   kappa <- theta[2]
-  sigma <- theta[1]
+  tau <- theta[1]
   i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
   count <- 0
   for(i in 1:graph$nE){
@@ -87,7 +87,7 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
   if(build){
     Q <- Matrix::sparseMatrix(i = i_[1:count],
                               j = j_[1:count],
-                              x = (2 * kappa / sigma^2) * x_[1:count],
+                              x = (2 * kappa * tau^2) * x_[1:count],
                               dims = c(graph$nV, graph$nV))
 
 
@@ -95,14 +95,14 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
   } else {
     return(list(i = i_[1:count],
                 j = j_[1:count],
-                x = (2 * kappa / sigma^2) * x_[1:count],
+                x = (2 * kappa * tau^2) * x_[1:count],
                 dims = c(graph$nV, graph$nV)))
   }
 }
 
 
 #' The precision matrix for all vertices in the alpha=2 case
-#' @param theta - sigma, kappa
+#' @param theta - tau, kappa
 #' @param graph metric_graph object
 #' @param w ([0,1]) how two weight the top edge
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
@@ -118,14 +118,15 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
   kappa <- theta[2]
-  sigma <- theta[1]
+  tau <- theta[1]
+
   i_ <- j_ <- x_ <- rep(0, graph$nE * 16)
   count <- 0
 
-  R_00 <- matrix(c( r_2(0, kappa = kappa, sigma = sigma, deriv = 0),
-                   -r_2(0, kappa = kappa, sigma = sigma, deriv = 1),
-                   -r_2(0, kappa = kappa, sigma = sigma, deriv = 1),
-                   -r_2(0, kappa = kappa, sigma = sigma, deriv = 2)), 2, 2)
+  R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+                   -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                   -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                   -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
   R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
                   cbind(matrix(0, 2, 2), R_00))
   R00i <- solve(R_00)
@@ -137,11 +138,11 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
     #lots of redundant caculations
     d_ <- c(0, l_e)
     D <- outer(d_, d_, "-")
-    r_0l <-   r_2(l_e, kappa = kappa, sigma = sigma, deriv = 0)
-    r_11 <- - r_2(l_e, kappa = kappa, sigma = sigma, deriv = 2)
+    r_0l <-   r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
+    r_11 <- - r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
     # order by node not derivative
-    R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, sigma = sigma, deriv = 1),
-                     r_2(l_e, kappa = kappa, sigma = sigma, deriv = 1), r_11), 2, 2)
+    R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, tau = tau, deriv = 1),
+                     r_2(l_e, kappa = kappa, tau = tau, deriv = 1), r_11), 2, 2)
 
     R_node[1:2, 3:4] <- R_01
     R_node[3:4, 1:2] <- t(R_01)
@@ -271,7 +272,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
 
 #' The precision matrix for all vertices in the alpha=1 case
-#' @param theta - sigma, kappa
+#' @param theta - tau, kappa
 #' @param graph metric_graph object
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 gives stationary boundary conditions
@@ -284,7 +285,7 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
 
   #TODO: fix BC=1 problem
   kappa <- theta[2]
-  sigma <- theta[1]
+  tau <- theta[1]
   i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
   count <- 0
   for(i in 1:graph$nE){
@@ -334,7 +335,7 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
   if(build){
     Q <- Matrix::sparseMatrix(i = i_[1:count],
                               j = j_[1:count],
-                              x = (2 * kappa / sigma^2) * x_[1:count],
+                              x = (2 * kappa * tau^2) * x_[1:count],
                               dims = c(graph$nV, graph$nV))
 
 
@@ -342,7 +343,7 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
   } else {
     return(list(i = i_[1:count],
                 j = j_[1:count],
-                x = (2 * kappa / sigma^2) * x_[1:count],
+                x = (2 * kappa * tau^2) * x_[1:count],
                 dims = c(graph$nV, graph$nV)))
   }
 }

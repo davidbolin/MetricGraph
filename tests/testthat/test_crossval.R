@@ -7,9 +7,9 @@ test_that("Check likelihoods for alternative models", {
   graph <- metric_graph$new(V = V, E = E)
 
   kappa <- 10
-  sigma <- 20
+  tau <- 1/20
   sigma_e <- 0.1
-  theta <-  c(sigma_e, sigma, kappa)
+  theta <-  c(sigma_e, 1/tau, kappa)
 
   n.obs.per.edge <- 5
   PtE <- NULL
@@ -17,7 +17,7 @@ test_that("Check likelihoods for alternative models", {
     PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), (runif(n.obs.per.edge))))
   }
 
-  u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+  u <- sample_spde(kappa = kappa, tau = tau, alpha = 2,
                    graph = graph, PtE = PtE)
 
   y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)
@@ -62,9 +62,9 @@ test_that("Check agrement beteen covariance and precision cross validation", {
   graph <- metric_graph$new(V = V, E = E)
 
   kappa <- 10
-  sigma <- 20
+  tau <- 1/20
   sigma_e <- 0.1
-  theta <-  c(sigma_e, sigma, kappa)
+  theta <-  c(sigma_e, 1/tau, kappa)
 
   n.obs.per.edge <- 5
   PtE <- NULL
@@ -72,7 +72,7 @@ test_that("Check agrement beteen covariance and precision cross validation", {
     PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge)))
   }
 
-  u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 2,
+  u <- sample_spde(kappa = kappa, tau = tau, alpha = 2,
                    graph = graph, PtE = PtE)
 
   y <- u + sigma_e*rnorm(n.obs.per.edge * graph$nE)

@@ -34,14 +34,11 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
 
   if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
     stop("You should either provide either kappa and tau, or sigma and range.")
-  } else if(!missing(kappa) && !missing(tau)){
-    sigma <- 1/tau
   } else if(!missing(sigma) && !missing(range)){
     nu <- alpha - 0.5
     kappa <- sqrt(8 * nu) / range
-    sigma <- sigma/sqrt(gamma(nu)/ (kappa^(2 * nu) *
+    tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
-    tau <- 1/sigma
   }
 
   if (!(type %in% c("manual","mesh", "obs"))) {
@@ -74,7 +71,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
   if (!posterior) {
     if (alpha == 1) {
         if(method == "conditional"){
-              Q <- spde_precision(kappa = kappa, sigma = sigma,
+              Q <- spde_precision(kappa = kappa, tau = tau,
                                   alpha = 1, graph = graph, BC=BC)
               R <- Cholesky(Q,LDL = FALSE, perm = TRUE)
               V0 <- as.vector(solve(R, solve(R,rnorm(graph$nV),
@@ -101,7 +98,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                   t <- PtE[PtE[,1] == i, 2]
                 }
 
-                samp <- sample_alpha1_line(kappa = kappa, sigma = sigma,
+                samp <- sample_alpha1_line(kappa = kappa, tau = tau,
                                            u_e = V0[graph$E[i, ]], t = t,
                                            l_e = graph$edge_lengths[i])
                 u <- c(u, samp[,2])
@@ -120,9 +117,9 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                       distance_on_edge = PtE[,2])
           graph_tmp$add_observations(data = df_graph, normalized=TRUE)
           graph_tmp$observation_to_vertex()
-          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
+          Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
         } else if(type == "obs"){
-          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
+          Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
           n_obs_tmp <- length(graph$data[["__group"]])
           order_PtE <- 1:n_obs_tmp
         } else if(type == "mesh"){
@@ -133,7 +130,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                       distance_on_edge = graph$mesh$PtE[,2])
           graph_tmp$add_observations(data = df_graph, normalized=TRUE)
           graph_tmp$observation_to_vertex()
-          Q_tmp <- Qalpha1(theta = c(sigma, kappa), graph_tmp, BC=BC)
+          Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
           n_obs_tmp <- dim(Q_tmp)[1]
           order_PtE <- 1:n_obs_tmp
         }
@@ -152,7 +149,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
 
     } else if (alpha == 2) {
 
-      Q <- spde_precision(kappa = kappa, sigma = sigma,
+      Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 2, graph = graph, BC = BC)
       if(is.null(graph$C))
         graph$buildC(2)
@@ -187,7 +184,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
         } else {
           t <- PtE[PtE[,1] == i, 2]
         }
-        samp <- sample_alpha2_line(kappa = kappa, sigma = sigma,
+        samp <- sample_alpha2_line(kappa = kappa, tau = tau,
                                    sigma_e = sigma_e,
                                    u_e = u_e[4*(i-1) +1:4],
                                    t = t,
@@ -223,7 +220,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
 #' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 #' where \eqn{e_i} are independent standard Gaussian variables.
 #' @param kappa parameter kappa
-#' @param theta parameter theta
+#' @param tau parameter tau
 #' @param sigma_e parameter sigma_e
 #' @param u_e  (2 x 1) the two end points
 #' @param l_e (1 x 1) line length
@@ -233,7 +230,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
 #' @param  y (n x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
 #' @noRd
-sample_alpha1_line <- function(kappa, sigma, sigma_e,
+sample_alpha1_line <- function(kappa, tau, sigma_e,
                                u_e, l_e, t = NULL,
                                nt = 100,  py = NULL,
                                y = NULL, sample = TRUE) {
@@ -267,7 +264,7 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
     t <- c(py, t)
   }
 
-  Q <- precision_exp_line(kappa = kappa, sigma = sigma, t = t)
+  Q <- precision_exp_line(kappa = kappa, tau = tau, t = t)
 
   index_E <- length(py) + 1:2
   Q_X <- Q[-index_E,-index_E, drop=F]
@@ -311,7 +308,7 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
 #' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 #' where \eqn{e_i} are independent standard Gaussian variables.
 #' @param kappa parameter kappa
-#' @param theta parameter theta
+#' @param tau parameter tau
 #' @param sigma_e parameter sigma_e
 #' @param u_e  (4 x 1) process and derivative at the two end points
 #' @param l_e (1 x 1) line length
@@ -321,7 +318,7 @@ sample_alpha1_line <- function(kappa, sigma, sigma_e,
 #' @param  y (n x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
 #' @noRd
-sample_alpha2_line <-function(kappa, sigma, sigma_e,
+sample_alpha2_line <-function(kappa, tau, sigma_e,
                               u_e, l_e, t=NULL, Line=NULL,
                               nt=100,  py=NULL, y=NULL, sample=TRUE) {
 
@@ -360,11 +357,11 @@ sample_alpha2_line <-function(kappa, sigma, sigma_e,
   index_E <- 2 + length(py) + 1:2
   D <- outer (t, t, `-`)
   Sigma[-d.index, -d.index] <- r_2(D, kappa = kappa,
-                                   sigma = sigma, deriv = 0)
+                                   tau = tau, deriv = 0)
   Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l_e))),
-                                  kappa = kappa, sigma = sigma, deriv = 2)
+                                  kappa = kappa, tau = tau, deriv = 2)
   Sigma[d.index, -d.index] <- -r_2(D[index_E-2,],kappa = kappa,
-                                   sigma = sigma, deriv = 1)
+                                   tau = tau, deriv = 1)
   Sigma[-d.index,  d.index] <- t(Sigma[d.index,  -d.index])
 
   index_boundary <- c(d.index,index_E)
