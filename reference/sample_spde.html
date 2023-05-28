@@ -73,6 +73,8 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sample_spde</span><span class="op">(</span></span>
 <span>  <span class="va">kappa</span>,</span>
+<span>  <span class="va">tau</span>,</span>
+<span>  <span class="va">range</span>,</span>
 <span>  <span class="va">sigma</span>,</span>
 <span>  sigma_e <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -89,11 +91,19 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>kappa</dt>
-<dd><p>parameter kappa</p></dd>
+<dd><p>parameter kappa from the SPDE</p></dd>
+
+
+<dt>tau</dt>
+<dd><p>parameter tau from the SPDE</p></dd>
+
+
+<dt>range</dt>
+<dd><p>range parameter</p></dd>
 
 
 <dt>sigma</dt>
-<dd><p>parameter sigma</p></dd>
+<dd><p>std. deviation parameter</p></dd>
 
 
 <dt>sigma_e</dt>

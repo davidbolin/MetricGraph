@@ -74,7 +74,13 @@ for a metric graph spde effect from an inla result object.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">spde_metric_graph_result</span><span class="op">(</span><span class="va">inla</span>, <span class="va">name</span>, <span class="va">metric_graph_spde</span>, compute.summary <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">spde_metric_graph_result</span><span class="op">(</span></span>
+<span>  <span class="va">inla</span>,</span>
+<span>  <span class="va">name</span>,</span>
+<span>  <span class="va">metric_graph_spde</span>,</span>
+<span>  compute.summary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  n_samples <span class="op">=</span> <span class="fl">5000</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -96,6 +102,10 @@ the inla formula.</p></dd>
 
 <dt>compute.summary</dt>
 <dd><p>Should the summary be computed?</p></dd>
+
+
+<dt>n_samples</dt>
+<dd><p>The number of samples to be used if parameterization is <code>matern</code></p></dd>
 
 </dl></div>
     <div class="section level2">

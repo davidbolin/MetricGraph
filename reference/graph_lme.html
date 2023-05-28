@@ -81,14 +81,16 @@ graph Laplacian as well as fields with isotropic covariance structure.</p>
 <span>  <span class="va">formula</span>,</span>
 <span>  <span class="va">graph</span>,</span>
 <span>  model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"linearModel"</span><span class="op">)</span>,</span>
-<span>  repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  optim_method <span class="op">=</span> <span class="st">"L-BFGS-B"</span>,</span>
 <span>  starting_values_latent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  start_sigma_e <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  parameterization_latent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"matern"</span>, <span class="st">"spde"</span><span class="op">)</span>,</span>
 <span>  BC <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  model_matrix <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  optim_controls <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  optim_controls <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  improve_hessian <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  hessian_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,15 +105,17 @@ graph Laplacian as well as fields with isotropic covariance structure.</p>
 
 
 <dt>model</dt>
-<dd><p>The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'alpha1' and 'alpha2' for Whittle-Matern models with \(\alpha\)=1 and 2, respectively; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \(\alpha\) = 1 and 2, respectively. There is also the option to provide it as a list containing the elements <code>type</code>, which can be <code>linearModel</code>, <code>WhittleMatern</code>, <code>graphLaplacian</code> or <code>isoCov</code>.
+<dd><p>The random effects model that will be used (it also includes the option of not having any random effects). It can be either a character, whose options are 'lm', for linear models without random effects; 'WM1' and 'WM2' for Whittle-Matern models with \(\alpha\)=1 and 2, with exact precision matrices, respectively; 'WM' for Whittle-Matern models where one also estimates the smoothness parameter via finite-element method; 'isoExp' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a SPDE model based on graph Laplacian with \(\alpha\) = 1 and 2, respectively. There is also the option to provide it as a list containing the elements <code>type</code>, which can be <code>linearModel</code>, <code>WhittleMatern</code>, <code>graphLaplacian</code> or <code>isoCov</code>.
 <code>linearModel</code> corresponds to a linear model without random effects.
-For <code>Whittle-Matern</code> and <code>graph-Laplacian</code> models, the list must also contain a parameter <code>alpha</code> (which is 1 by default). For <code>isoCov</code> models, the list must
-contain a parameter <code>cov_function</code>, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'alpha1', 'alpha2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the <code>cov_function</code> argument. The default is 'exp_covariance', the
+For <code>WhittleMatern</code> models, that is, if the list contains <code>type = 'WhittleMatern'</code>, one can choose between a finite element approximation of the precision matrix by adding <code>fem = TRUE</code> to the list, or to use the exact precision matrix (by setting <code>fem = FALSE</code>). If <code>fem</code> is <code>FALSE</code>, there is also the parameter <code>alpha</code>, to determine the order of the SPDE, which is either 1 or 2. If <code>fem</code> is <code>TRUE</code> and <code>alpha</code> is not specified, then the default value of <code>alpha=1</code> will be used. If <code>fem</code> is <code>TRUE</code> and one does not specify <code>alpha</code>, it will be estimated from the data. However, if one wants to have <code>alpha</code> fixed to some value, the user can specify either <code>alpha</code> or <code>nu</code> in the list. See the vignettes for examples. Finally, for type 'WhittleMatern', there is an optional argument, <code>rspde_order</code>, that chooses the order of the rational approximation. By default <code>rspde_order</code> is 2.
+Finally, if one wants to fit a nonstationary model, then <code>fem</code> necessarily needs to be <code>TRUE</code>, and one needs to also supply the matrices <code>B.tau</code> and <code>B.kappa</code> or <code>B.range</code> and <code>B.sigma</code>.
+For <code>graph-Laplacian</code> models, the list must also contain a parameter <code>alpha</code> (which is 1 by default). For <code>isoCov</code> models, the list must
+contain a parameter <code>cov_function</code>, containing the covariance function. The function accepts a string input for the following covariance functions: 'exp_covariance', 'WM1', 'WM2', 'GL1', 'GL2'. For another covariance function, the function itself must be provided as the <code>cov_function</code> argument. The default is 'exp_covariance', the
 exponential covariance. We also have covariance-based versions of the Whittle-Matern and graph Laplacian models, however they are much slower, they are the following (string) values for 'cov_function': 'alpha1' and 'alpha2' for Whittle-Matern fields, and 'GL1' and 'GL2' for graph Laplacian models. Finally, for <code>Whittle-Matern</code> models, there is an additional parameter
 <code>version</code>, which can be either 1 or 2, to tell which version of the likelihood should be used. Version is 1 by default.</p></dd>
 
 
-<dt>repl</dt>
+<dt>which_repl</dt>
 <dd><p>vector or list containing which replicates to consider in the model.
 If <code>NULL</code> all replicates will be considered.</p></dd>
 
@@ -128,21 +132,29 @@ If <code>NULL</code> all replicates will be considered.</p></dd>
 <dd><p>Starting value for the standard deviation of the measurament error.</p></dd>
 
 
-<dt>parameterization_latent</dt>
-<dd><p>The parameterization for <code>WhittleMatern</code> and <code>graphLaplacian</code> models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.</p></dd>
-
-
 <dt>BC</dt>
 <dd><p>For <code>WhittleMatern</code> models. Which boundary condition to use (0,1) 0 is no adjustment on boundary point
 1 is making the boundary condition stationary.</p></dd>
 
 
-<dt>model_matrix</dt>
-<dd><p>logical indicating whether the model matrix should be returned as component of the returned value.</p></dd>
+<dt>parallel</dt>
+<dd><p>logical. Indicating whether to use optimParallel or not.</p></dd>
+
+
+<dt>n_cores</dt>
+<dd><p>Number of cores to be used if parallel is true.</p></dd>
 
 
 <dt>optim_controls</dt>
 <dd><p>Additional controls to be passed to <code>optim</code> or <code>optimParallel</code>.</p></dd>
+
+
+<dt>improve_hessian</dt>
+<dd><p>Should a more precise estimate of the hessian be obtained? Turning on might increase the overall time.</p></dd>
+
+
+<dt>hessian_args</dt>
+<dd><p>List of controls to be used if <code>improve_hessian</code> is <code>TRUE</code>. The list can contain the arguments to be passed to the <code>method.args</code> argument in the <code>hessian</code> function. See the help of the <code>hessian</code> function in <code>numDeriv</code> package for details. Observet that it only accepts the "Richardson" method for now, the method "complex" is not supported.</p></dd>
 
 </dl></div>
     <div class="section level2">

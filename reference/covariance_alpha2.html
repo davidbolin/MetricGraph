@@ -77,7 +77,7 @@ alpha=2 model</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">covariance_alpha2</span><span class="op">(</span><span class="va">P</span>, <span class="va">kappa</span>, <span class="va">sigma</span>, <span class="va">graph</span>, n.p <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">covariance_alpha2</span><span class="op">(</span><span class="va">P</span>, <span class="va">kappa</span>, <span class="va">tau</span>, <span class="va">range</span>, <span class="va">sigma</span>, <span class="va">graph</span>, n.p <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -87,11 +87,19 @@ alpha=2 model</p>
 
 
 <dt>kappa</dt>
-<dd><p>parameter kappa</p></dd>
+<dd><p>parameter kappa from the SPDE</p></dd>
+
+
+<dt>tau</dt>
+<dd><p>parameter tau from the SPDE</p></dd>
+
+
+<dt>range</dt>
+<dd><p>range parameter</p></dd>
 
 
 <dt>sigma</dt>
-<dd><p>parameter sigma</p></dd>
+<dd><p>std. deviation parameter</p></dd>
 
 
 <dt>graph</dt>
