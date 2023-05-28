@@ -566,6 +566,9 @@ graph_lme <- function(formula, graph,
     coeff_random <- NULL
     std_random <- NULL
 
+    matern_coeff <- NULL
+    time_matern_par <- NULL    
+
     if(ncol(X_cov) == 0){
       stop("The model does not have either random nor fixed effects.")
     }

@@ -360,8 +360,7 @@ Let us create such observations, clear the current data in the graph, and finall
 # Q method to improve numerical stability
 
 sigma <- 2
-r <- 0.2 # range parameter
-kappa <- sqrt(8*0.5)/r
+range <- 0.2 # range parameter
 sigma_e <- 0.1
 
 n.obs.1 <- 400 # all edges
@@ -376,7 +375,7 @@ long.edges <- graph$edge_lengths > 0.5
 
 obs.loc <- rbind(obs.loc, cbind(sample(which(long.edges), n.obs.2, replace=TRUE), runif(n.obs.2)))
 
-u <- sample_spde(kappa = kappa, sigma = sigma, alpha = 1,
+u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, PtE = obs.loc, method = "Q")
 
 beta0 = -1
@@ -414,7 +413,7 @@ summary(res_lm)
 Let us now fit the linear mixed-effects model with a Whittle-Mat\'ern latent model with $\alpha=1$. To this end, we can either specify the `model` argument as `'alpha1'` or as the following list: `list(type = 'WhittleMatern', alpha = 1)`. The list makes it easier to understand which model is being chosen as a random effect, however, it makes it longer, and less convenient, to write. Let us use the simplified form:
 
 ```{r}
-res <- graph_lme(y ~ lon + lat, graph = graph, model = 'alpha1')
+res <- graph_lme(y ~ lon + lat, graph = graph, model = 'WM1')
 ```
 
 Let us get the summary of the result:
@@ -425,11 +424,11 @@ summary(res)
 We will now compare with the true values of the random effects:
 ```{r}
 sigma_e_est <- res$coeff$measurement_error[[1]]
-sigma_est <- res$coeff$random_effects[1]
-range_est <- res$coeff$random_effects[2]
+sigma_est <- res$matern_coeff$random_effects[1]
+range_est <- res$matern_coeff$random_effects[2]
 results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
                       sigma = c(sigma, sigma_est),
-                      range = c(r, range_est),
+                      range = c(range, range_est),
                       row.names = c("Truth", "Estimate"))
 print(results)
 ```
