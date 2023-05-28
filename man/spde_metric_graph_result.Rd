@@ -9,7 +9,7 @@ spde_metric_graph_result(
   name,
   metric_graph_spde,
   compute.summary = TRUE,
-  n_samples = 1000
+  n_samples = 5000
 )
 }
 \arguments{
