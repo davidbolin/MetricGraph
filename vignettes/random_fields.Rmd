@@ -191,9 +191,8 @@ graph$plot_function(u, plotly = TRUE)
 
 ## Inference
 
-Mostly for illustration purposes, the `MetricGraph` package contains implementations
-of likelihoods for Whittle--Matérn fields observed under Gaussian measurement 
-noise. In this section we will illustrate these methods. For the use of the 
+The `MetricGraph` package contains implementations of a linear mixed effects models, where the random effect can be Whittle--Matérn fields, and the model is observed under Gaussian measurement 
+noise. We also implemented random effects being SPDE fields obtained from the graph Laplacian as well as models with isotropic covariances. In this section we will illustrate these methods. For the use of the 
 Whittle--Matérn fields in more complicated hierarchical models, we recommend
 using the interfaces to the `INLA` and `inlabru` packages. See [INLA interface of Whittle--Matérn fields](inla_interface.html)
 and [inlabru interface of Whittle--Matérn fields](inlabru_interface.html) for further details on these.
@@ -237,7 +236,7 @@ graph$add_observations(data = df_data, normalized = TRUE)
 graph$plot(data = "y")
 ```
 
-We can now use the `graph_lme()` function to fit the above model. By default a linear regression model is chosen. Since we want to fit a model with a latent model given by a Whittle-Mat\'ern field with $\alpha=1$, we should set the `model` argument to either `'alpha1'` or to `list(model = 'WhittleMatern', alpha = 1)` (the first is more convenient but less decriptive). We will choose `parameterization_latent` as `"spde"` to obtain the estimated values for `kappa` and `sigma`. By default it
+We can now use the `graph_lme()` function to fit the above model. By default a linear regression model is chosen. Since we want to fit a model with a latent model given by a Whittle-Matérn field with $\alpha=1$, we should set the `model` argument to either `'alpha1'` or to `list(model = 'WhittleMatern', alpha = 1)` (the first is more convenient but less decriptive). We will choose `parameterization_latent` as `"spde"` to obtain the estimated values for `kappa` and `sigma`. By default it
 provides estimated values for the range parameter and `sigma`.
 
 ```{r}
@@ -304,8 +303,8 @@ graph$plot_function(Sigma[20,], plotly = TRUE)
 ```
 
 One can note that this covariance function looks quite similar to that of the 
-Whittle--Mat\'ern fields with $\alpha = 1$. Let us plot the corresponding
-Whittle--Mat\'ern covariance to compare: 
+Whittle--Matérn fields with $\alpha = 1$. Let us plot the corresponding
+Whittle--Matérn covariance to compare: 
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
 C.wm <- covariance_alpha1_mesh(P,kappa=kappa, tau=1/sigma, graph=graph, scale = TRUE)
