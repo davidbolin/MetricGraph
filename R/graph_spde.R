@@ -503,7 +503,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
             range_est <- exp(hyperpar_sample[, paste0('Theta2 for ',name)])
             kappa_est <- sqrt(4)/range_est
             sigma_est <- sqrt(gamma(0.5) / (tau_est^2 * kappa_est^(2 * 0.5) *
-                    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+                    (4 * pi)^(1 / 2) * gamma(0.5 + 1 / 2)))
 
             density_sigma <- stats::density(sigma_est)
 
