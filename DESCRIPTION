@@ -7,7 +7,7 @@ Authors@R: c(
     person("Jonas", "Wallin", email = "jonas.wallin81@gmail.com", role = "aut"),
     person("Alexandre", "Simas", email = "alexandre.impa@gmail.com", role = "aut"))
 Maintainer: David Bolin <davidbolin@gmail.com>
-Description: Functions for working with random fields on metric graphs.
+Description: Functions for working with data and random fields on metric graphs. The main references for MetricGraph are Bolin, Simas and Wallin (2022) <doi:10.48550/arXiv.2205.06163>, Bolin, Kovacs, Kumar and Simas (2023) <doi:10.48550/arXiv.2302.03995> and Bolin, Simas and Wallin (2023) <doi:10.48550/arXiv.2304.03190> and <doi:10.48550/arXiv.2304.10372>.
 License: GPL (>=3)
 Imports: stats, ggplot2, igraph, sp, sf, viridis, rSPDE (>= 2.3.1), Matrix, methods,  Rcpp (>= 1.0.5), parallel, optimParallel, numDeriv
 Suggests: knitr, testthat, INLA (>= 0.0-1468840039), inlabru, osmdata, sn,  plotly, tidyr
