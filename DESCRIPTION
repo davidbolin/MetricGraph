@@ -9,7 +9,7 @@ Authors@R: c(
 Maintainer: David Bolin <davidbolin@gmail.com>
 Description: Functions for working with random fields on metric graphs.
 License: GPL (>=3)
-Imports: stats, ggplot2, igraph, sp, sf, viridis, rSPDE, Matrix, methods,  Rcpp (>= 1.0.5), parallel, optimParallel, numDeriv
+Imports: stats, ggplot2, igraph, sp, sf, viridis, rSPDE (>= 2.3.0), Matrix, methods,  Rcpp (>= 1.0.5), parallel, optimParallel, numDeriv
 Suggests: knitr, testthat, INLA (>= 0.0-1468840039), inlabru, osmdata, sn,  plotly, tidyr
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 BugReports: https://github.com/davidbolin/MetricGraph/issues
