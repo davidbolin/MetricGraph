@@ -363,8 +363,7 @@ Finally, we can fit the model:
 ```{r, warning=FALSE}
   rspde_fit <- inla(f.s, data = inla.stack.data(stk.dat),
     control.inla = list(int.strategy = "eb"),
-    control.predictor = list(A = inla.stack.A(stk.dat), compute = TRUE),
-              inla.mode = "experimental"
+    control.predictor = list(A = inla.stack.A(stk.dat), compute = TRUE)
   )
 ```
 
@@ -541,8 +540,7 @@ rspde_fit_rep <-
     data = inla.stack.data(st.dat.rep),
     family = "gaussian",
     control.predictor =
-      list(A = inla.stack.A(st.dat.rep)),
-            inla.mode = "experimental"
+      list(A = inla.stack.A(st.dat.rep))
   )
 ```
 
@@ -614,8 +612,7 @@ Now, we can directly fit the model, where we pass the name of the location varia
     bru(cmp,
         data=graph_data_spde(rspde_model, loc = "loc"),
       options=list(
-      family = "gaussian",
-      inla.mode = "experimental")
+      family = "gaussian")
     )
 ```
 Let us now obtain the estimates of the parameters in the
@@ -703,8 +700,7 @@ to `loc`, which is the name we gave to the locations.
                          repl = "__all",
                          loc = "loc"),
       options=list(
-      family = "gaussian",
-      inla.mode = "experimental")
+      family = "gaussian")
     )
 ```
 
