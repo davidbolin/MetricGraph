@@ -9,7 +9,8 @@ spde_metric_graph_result(
   name,
   metric_graph_spde,
   compute.summary = TRUE,
-  n_samples = 5000
+  n_samples = 5000,
+  n_density = 1024
 )
 }
 \arguments{
@@ -24,7 +25,9 @@ the inla formula.}
 
 \item{compute.summary}{Should the summary be computed?}
 
-\item{n_samples}{The number of samples to be used if parameterization is \code{matern}}
+\item{n_samples}{The number of samples to be used if parameterization is \code{matern}.}
+
+\item{n_density}{The number of equally spaced points to estimate the density.}
 }
 \value{
 If the model was fitted with \code{matern} parameterization (the default), it returns a list containing:
