@@ -394,7 +394,8 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' @param metric_graph_spde The `inla_metric_graph_spde` object used for the effect in
 #' the inla formula.
 #' @param compute.summary Should the summary be computed?
-#' @param n_samples The number of samples to be used if parameterization is `matern`
+#' @param n_samples The number of samples to be used if parameterization is `matern`.
+#' @param n_density The number of equally spaced points to estimate the density.
 #' @return If the model was fitted with `matern` parameterization (the default), it returns a list containing:
 #' \item{marginals.range}{Marginal densities for the range parameter}
 #' \item{marginals.log.range}{Marginal densities for log(range)}
@@ -421,7 +422,7 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' \item{summary.tau}{Summary statistics for tau}
 #' @export
 
-spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE, n_samples = 5000) {
+spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE, n_samples = 5000, n_density = 1024) {
   if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
     stop("You should provide an inla_metric_graph_spde object!")
   }
@@ -505,7 +506,7 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
             sigma_est <- sqrt(gamma(0.5) / (tau_est^2 * kappa_est^(2 * 0.5) *
                     (4 * pi)^(1 / 2) * gamma(0.5 + 1 / 2)))
 
-            density_sigma <- stats::density(sigma_est)
+            density_sigma <- stats::density(sigma_est, n = n_density)
 
             result[[paste0("marginals.",name_theta1_t)]] <- list()
             result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]] <- cbind(density_sigma$x, density_sigma$y)
