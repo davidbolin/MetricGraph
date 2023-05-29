@@ -49,7 +49,7 @@ bibentry(bibtype = "Article",
                            email = "alexandre.simas@kaust.edu.sa")),
          year = "2023",
          journal = "arXiv preprint arXiv:2302.03995",
-         doi = "10.48550/arXiv:2302.03995"
+         doi = "10.48550/arXiv.2302.03995"
 )
 
 
@@ -66,7 +66,7 @@ bibentry(bibtype = "Article",
                            role = "aut")),
          year = "2023",
          journal = "arXiv preprint arXiv:2304.03190",
-         doi = "10.48550/arXiv:2304.03190"
+         doi = "10.48550/arXiv.2304.03190"
 )
 
 bibentry(bibtype = "Article",
@@ -82,7 +82,7 @@ bibentry(bibtype = "Article",
                            role = "aut")),
          year = "2023",
          journal = "arXiv preprint arXiv:2304.10372",
-         doi = "10.48550/arXiv:2304.10372"
+         doi = "10.48550/arXiv.2304.10372"
 )
 
 
