@@ -79,7 +79,8 @@ for a metric graph spde effect from an inla result object.</p>
 <span>  <span class="va">name</span>,</span>
 <span>  <span class="va">metric_graph_spde</span>,</span>
 <span>  compute.summary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  n_samples <span class="op">=</span> <span class="fl">5000</span></span>
+<span>  n_samples <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  n_density <span class="op">=</span> <span class="fl">1024</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,7 +106,11 @@ the inla formula.</p></dd>
 
 
 <dt>n_samples</dt>
-<dd><p>The number of samples to be used if parameterization is <code>matern</code></p></dd>
+<dd><p>The number of samples to be used if parameterization is <code>matern</code>.</p></dd>
+
+
+<dt>n_density</dt>
+<dd><p>The number of equally spaced points to estimate the density.</p></dd>
 
 </dl></div>
     <div class="section level2">
