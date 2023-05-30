@@ -1003,6 +1003,7 @@ predict.inla_metric_graph_spde <- function(object,
 #' @param y not used.
 #' @param vertex_size size of the vertices.
 #' @param ... additional parameters to be passed to the plot function.
+#' @return A `ggplot2` object.
 #' @export 
 
 plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){

@@ -905,6 +905,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param return_as_list Should the means of the predictions and the posterior samples be returned as a list, with each replicate being an element?
 #' @param return_original_order Should the results be return in the original (input) order or in the order inside the graph?
 #' @param ... Not used.
+#' @value A list with elements `mean`, which contains the means of the predictions, `variance` (if `compute_variance` is `TRUE`), which contains the variances of the predictions, `samples` (if `posterior_samples` is `TRUE`), which contains the posterior samples.
 #' @export
 #' @method predict graph_lme
 
