@@ -59,9 +59,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field CoB change-of-basis object used for Kirchhoff constraints.
   CoB = NULL,
 
-  #' @field points the observations in a SpatialPointsDataFrame.
-  points  = NULL,
-
   #' @field data a list containing the data on the graph.
   data = NULL,
 
@@ -633,10 +630,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Computes the weigthed graph Laplacian for the graph
-  #' @param full Should the resistance distances be computed for all
+  #' @param full Should the Laplacian be computed for all
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
-  #' @param obs Should the resistance distances be computed at the observation locations?
+  #' @param obs Should the Laplacian be computed at the observation locations?
   #' @param group vector or list containing which groups to compute the
   #' Laplacian for. If `NULL`, it will be computed for all groups.
   #' @return Called for its side effects. The Laplacian is stored inside the `Laplacian` element in the `metric_graph` object.
@@ -666,6 +663,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           idx_notna <- idx_not_all_NA(data_grp)
           PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
                        data_grp[["__distance_on_edge"]][idx_notna])
+          if(nrow(PtE) == 0){
+            stop("All the observations are NA.")
+          }
           self$Laplacian[[grp]] <- private$compute_laplacian_PtE(PtE,
                                                               normalized = TRUE)
       }
