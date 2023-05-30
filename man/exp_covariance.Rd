@@ -9,10 +9,11 @@ exp_covariance(h, theta)
 \arguments{
 \item{h}{Distances to evaluate the covariance function at.}
 
-\item{theta}{A vector \code{c(sigma, kappa)}, where \code{sigma} is the standard deviation and \code{kappa} is a range-like parameter.}
+\item{theta}{A vector \code{c(sigma, kappa)}, where \code{sigma} is the standard
+deviation and \code{kappa} is a range-like parameter.}
 }
 \value{
-A vector with the values C(h).
+A vector with the values of the covariance function.
 }
 \description{
 \code{exp_covariance} evaluates the exponential covariance function

@@ -397,7 +397,7 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
 #' @param theta (sigma_e, reciprocal_tau, kappa)
 #' @param graph metric_graph object
 #' @param data_name name of the response variable
-#' @param repl
+#' @param repl replicates
 #' @param X_cov matrix of covariates
 #' @param BC. - which boundary condition to use (0,1)
 #' @noRd

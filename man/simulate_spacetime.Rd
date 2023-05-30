@@ -7,29 +7,29 @@
 simulate_spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0)
 }
 \arguments{
-\item{graph}{metric_graph object}
+\item{graph}{A \code{metric_graph} object.}
 
-\item{t}{vector of time points}
+\item{t}{Vector of time points.}
 
-\item{kappa}{range parameter kappa}
+\item{kappa}{Spatial range parameter.}
 
-\item{rho}{drift parameter}
+\item{rho}{Drift parameter.}
 
-\item{gamma}{temporal range parameter}
+\item{gamma}{Temporal range parameter.}
 
-\item{alpha}{smoothness parameter (integer) for spatial operator}
+\item{alpha}{Smoothness parameter (integer) for spatial operator.}
 
-\item{beta}{smoothness parameter (integer) for Q-Wiener process}
+\item{beta}{Smoothness parameter (integer) for Q-Wiener process.}
 
-\item{sigma}{variance parameter}
+\item{sigma}{Variance parameter.}
 
-\item{u0}{starting value}
+\item{u0}{Starting value.}
 
-\item{BC}{which boundary condition to use (0,1) 0 is no adjustment on boundary point
-1 is making the boundary condition stationary}
+\item{BC}{Which boundary condition to use (0,1). Here, 0 is no adjustment on
+the boundary and 1 results in making the boundary condition stationary.}
 }
 \value{
-Precision matrix
+Precision matrix.
 }
 \description{
 Simulation with starting value u0

@@ -9,7 +9,8 @@ graph_spde_make_index(name, graph_spde, n.group = 1, n.repl = 1, ...)
 \arguments{
 \item{name}{A character string with the base name of the effect.}
 
-\item{graph_spde}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function.}
+\item{graph_spde}{An \code{inla_metric_graph_spde} object built with the
+\code{graph_spde()} function.}
 
 \item{n.group}{Number of groups.}
 

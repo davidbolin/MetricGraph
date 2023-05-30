@@ -2,24 +2,24 @@
 % Please edit documentation in R/graph_lgcp.R
 \name{graph_lgcp}
 \alias{graph_lgcp}
-\title{Simulation of log-Gaussian Cox process on metric graph}
+\title{Simulation of log-Gaussian Cox process on metric graph.}
 \usage{
 graph_lgcp(intercept = 0, sigma, range, alpha, graph)
 }
 \arguments{
-\item{intercept}{mean value of the Gaussian process}
+\item{intercept}{Mean value of the Gaussian process.}
 
-\item{sigma}{parameter for marginal standard deviations}
+\item{sigma}{Parameter for marginal standard deviations.}
 
-\item{range}{parameter for practical correlation range}
+\item{range}{Parameter for practical correlation range.}
 
-\item{alpha}{smoothness parameter (1 or 2)}
+\item{alpha}{Smoothness parameter (1 or 2).}
 
-\item{graph}{metric_graph object}
+\item{graph}{A \code{metric_graph} object.}
 }
 \value{
-List with Gaussian process sample and simulated points
+List with Gaussian process sample and simulated points.
 }
 \description{
-Simulation of log-Gaussian Cox process on metric graph
+Simulation of log-Gaussian Cox process on metric graph.
 }
