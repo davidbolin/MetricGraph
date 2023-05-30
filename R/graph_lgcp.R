@@ -1,10 +1,10 @@
-#' Simulation of log-Gaussian Cox process on metric graph
-#' @param intercept mean value of the Gaussian process
-#' @param sigma parameter for marginal standard deviations
-#' @param range parameter for practical correlation range
-#' @param alpha smoothness parameter (1 or 2)
-#' @param graph metric_graph object
-#' @return List with Gaussian process sample and simulated points
+#' Simulation of log-Gaussian Cox process on metric graph.
+#' @param intercept Mean value of the Gaussian process.
+#' @param sigma Parameter for marginal standard deviations.
+#' @param range Parameter for practical correlation range.
+#' @param alpha Smoothness parameter (1 or 2).
+#' @param graph A `metric_graph` object.
+#' @return List with Gaussian process sample and simulated points.
 #' @export
 graph_lgcp <- function(intercept = 0, sigma, range, alpha, graph) {
 

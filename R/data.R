@@ -1,13 +1,17 @@
 #' Traffic speed data from San Jose, California
 #'
-#' Data set of traffic speed observations on highways in the city of San Jose, California.
+#' Data set of traffic speed observations on highways in the city of San Jose,
+#' California.
 #'
 #' @format ## `pems`
 #' A list with three elements:
 #' \describe{
 #'   \item{lines}{A `SpatialLines` object containing the road segments}
-#'   \item{PtE}{Locations of the observations on the road segments as a data.frame with 325 rows and 2 columns. The first column indicates the edge number and the second column indicates the distance on edge of the position.}
-#'   \item{Y}{Observations of traffic speed. Consists of a vector with 325 observations.}
+#'   \item{PtE}{Locations of the observations on the road segments as a
+#'   data.frame with 325 rows and 2 columns. The first column indicates the edge
+#'   number and the second column indicates the distance on edge of the position.}
+#'   \item{Y}{Observations of traffic speed. Consists of a vector with
+#'   325 observations.}
 #' }
 #' @source https://www.openstreetmap.org
 #' @source https://github.com/spbu-math-cs/Graph-Gaussian-Processes/blob/main/examples/data/PEMS.zip

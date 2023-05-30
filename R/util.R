@@ -287,21 +287,25 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #'
 #' The results are given as `c(start_sigma_e, start_sigma, start_kappa)`
 #'
-#' @param graph a `metric_graph` object.
-#' @param model type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
-#' are supported
+#' @param graph A `metric_graph` object.
+#' @param model Type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
+#' are supported.
 #' @param data Should the data be used to obtain improved starting values?
 #' @param data_name The name of the response variable in `graph$data`.
 #' @param manual_data A vector (or matrix) of response variables.
-#' @param range_par Should an initial value for range parameter be returned instead of for kappa?
+#' @param range_par Should an initial value for range parameter be returned
+#' instead of for kappa?
 #' @param nu Should an initial value for nu be returned?
-#' @param like_format Should the starting values be returned with sigma.e as the last element? This is the format for the likelihood constructor from the rSPDE package.
+#' @param like_format Should the starting values be returned with sigma.e as the
+#' last element? This is the format for the likelihood constructor from the
+#' `rSPDE` package.
 #' @param log_scale Should the initial values be returned in log scale?
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
 graph_starting_values <- function(graph,
-                                  model = c("alpha1", "alpha2", "isoExp", "GL1", "GL2"),
+                                  model = c("alpha1", "alpha2", "isoExp",
+                                            "GL1", "GL2"),
                                   data = TRUE,
                                   data_name = NULL,
                                   range_par = FALSE,
@@ -427,7 +431,7 @@ graph_starting_values <- function(graph,
       } else{
         out_vec <- c(0.1 * data_std,1)
       }
-    
+
       if(range_par){
         out_vec <- c(out_vec, prior.range.nominal)
       } else{
@@ -455,11 +459,11 @@ graph_starting_values <- function(graph,
 #' \deqn{C(h) = \sigma^2 \exp\{-kappa h\}}
 #'
 #' @param h Distances to evaluate the covariance function at.
-#' @param theta A vector `c(sigma, kappa)`, where `sigma` is the standard deviation and `kappa` is a range-like parameter.
+#' @param theta A vector `c(sigma, kappa)`, where `sigma` is the standard
+#' deviation and `kappa` is a range-like parameter.
 #'
-#' @return A vector with the values C(h).
+#' @return A vector with the values of the covariance function.
 #' @export
-
 exp_covariance <- function(h, theta){
   sigma <- theta[1]
   kappa <- theta[2]
@@ -469,8 +473,6 @@ exp_covariance <- function(h, theta){
 
 #' Processing data to be used in add_observations
 #' @noRd
-#'
-
 process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
   new_data[["__edge_number"]] <- PtE[,1]
   new_data[["__distance_on_edge"]] <- PtE[,2]
@@ -481,7 +483,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     } else{
       group_vector <- rep(1, length(PtE[,1]))
     }
-  } 
+  }
 
   if(is.null(old_data)){
       group_val <- unique(group_vector)
@@ -508,7 +510,8 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     }
     data_coords_new[["group"]] <- group_vector
     data_coords[["idx"]] <- 1:nrow(data_coords)
-    idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE, sort = FALSE)
+    idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE,
+                             sort = FALSE)
     idx_new_entries <- idx_new_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
@@ -606,7 +609,6 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
 #' find indices of the rows with all NA's in lists
 #' @noRd
 #'
-
 idx_not_all_NA <- function(data_list){
      data_list[["__edge_number"]] <- NULL
      data_list[["__distance_on_edge"]] <- NULL
@@ -628,7 +630,6 @@ idx_not_all_NA <- function(data_list){
 #' Select replicate
 #' @noRd
 #'
-
 select_group <- function(data_list, group){
     grp <- data_list[["__group"]]
     grp <- which(grp %in% group)
@@ -638,7 +639,7 @@ select_group <- function(data_list, group){
 
 #' Create lines for package name
 #'
-#' @return `SpatialLines` object with package name
+#' @return `SpatialLines` object with package name.
 #' @export
 logo_lines <- function(){
   n <- 100
@@ -879,7 +880,7 @@ nearestPointOnSegment <- function(s, p){
     result
 }
 
-#' @noRd 
+#' @noRd
 
 projectVecLine2 <- function(lines, points, normalized = FALSE){
   lines <- lines@lines[[1]]@Lines[[1]]@coords
@@ -887,7 +888,7 @@ projectVecLine2 <- function(lines, points, normalized = FALSE){
   return(projectVecLine(lines, points, normalized))
 }
 
-#' @noRd 
+#' @noRd
 
 distance2 <- function(points, lines, byid=FALSE){
   rownames(points@coords) <- 1:nrow(points@coords)
@@ -901,7 +902,7 @@ distance2 <- function(points, lines, byid=FALSE){
   }
 }
 
-#' @noRd 
+#' @noRd
 
 intersection2 <- function(lines1, lines2){
   lines1_sf <- sf::st_as_sf(lines1)
@@ -911,7 +912,7 @@ intersection2 <- function(lines1, lines2){
   return(inter_lines)
 }
 
-#' @noRd 
+#' @noRd
 
 intersection3 <- function(lines1_sf, lines2_sf){
   inter_lines <- sf::st_intersection(lines1_sf, lines2_sf)
@@ -919,14 +920,14 @@ intersection3 <- function(lines1_sf, lines2_sf){
   return(inter_lines)
 }
 
-#' @noRd 
+#' @noRd
 
 interpolate2 <- function(lines, pos, normalized = FALSE){
     lines <- lines@lines[[1]]@Lines[[1]]@coords
     return(interpolate2_aux(lines, pos, normalized))
 }
 
-#' @noRd 
+#' @noRd
 
 make_Aprd <- function(graph, edge_number, distance_on_edge){
   X_loc <- cbind(edge_number, distance_on_edge)
@@ -953,9 +954,9 @@ change_parameterization_graphlme <- function(likelihood, nu, par, hessian
   range <- C1/kappa
 
   grad_par <- matrix(c(-C2/(kappa^nu * sigma^2),0,
-                    nu * range^(nu-1) * C2/(sigma * C1^nu), 
+                    nu * range^(nu-1) * C2/(sigma * C1^nu),
                     -C1/range^2), nrow = 2, ncol=2)
-  
+
 
   new_observed_fisher <- t(grad_par) %*% hessian %*% (grad_par)
 
@@ -963,8 +964,10 @@ change_parameterization_graphlme <- function(likelihood, nu, par, hessian
   # from some numerical experiments, the approximation without the additional term
   # seems to be better in general.
 
-  inv_fisher <- tryCatch(solve(new_observed_fisher), error = function(e) matrix(NA, nrow(new_observed_fisher), ncol(new_observed_fisher)))
-  
+  inv_fisher <- tryCatch(solve(new_observed_fisher),
+                         error = function(e) matrix(NA, nrow(new_observed_fisher),
+                                                    ncol(new_observed_fisher)))
+
   std_err <- sqrt(diag(inv_fisher))
 
   return(list(coeff = c(sigma, range), std_random = std_err))

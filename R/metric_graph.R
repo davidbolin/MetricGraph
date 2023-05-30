@@ -20,85 +20,82 @@
 #' @export
 metric_graph <-  R6::R6Class("metric_graph",
   public = list(
-  #' @field V matrix with positions in Euclidean space of the vertices of the
+  #' @field V Matrix with positions in Euclidean space of the vertices of the
   #' graph.
   V = NULL,
 
-  #' @field nV the number of vertices.
+  #' @field nV The number of vertices.
   nV = 0,
 
-  #' @field E matrix with the edges of the graph, where `E[i,1]` is the vertex
+  #' @field E Matrix with the edges of the graph, where `E[i,1]` is the vertex
   #' at the start of the ith edge and `E[i,2]` is the vertex at the end of the
   #' edge.
   E = NULL,
 
-  #' @field nE the number of edges.
+  #' @field nE The number of edges.
   nE= 0,
 
-  #' @field edge_lengths vector with the lengths of the edges in the graph.
+  #' @field edge_lengths Vector with the lengths of the edges in the graph.
   edge_lengths = NULL,
 
-  #' @field EID vector with the IDs of the edges in the graph.
+  #' @field EID Vector with the IDs of the edges in the graph.
   EID = NULL,
 
 
-  #' @field LtE matrix with edge positions on the lines.
+  #' @field LtE Matrix with edge positions on the lines.
   LtE = NULL,
 
-  #' @field ELend vector with the locations of the end points of the edges on
+  #' @field ELend Vector with the locations of the end points of the edges on
   #' the lines in the graph. The locations are normalized on the line.
   ELend = NULL,
 
-  #' @field ELstart vector with the locations of the starting points of the
+  #' @field ELstart Vector with the locations of the starting points of the
   #' edges on the lines in the graph. The locations are normalized on the line.
   ELstart = NULL,
 
-  #' @field C constraint matrix used to set Kirchhoff constraints.
+  #' @field C Constraint matrix used to set Kirchhoff constraints.
   C = NULL,
 
-  #' @field CoB change-of-basis object used for Kirchhoff constraints.
+  #' @field CoB Change-of-basis object used for Kirchhoff constraints.
   CoB = NULL,
 
-  #' @field points the observations in a SpatialPointsDataFrame.
-  points  = NULL,
-
-  #' @field data a list containing the data on the graph.
+  #' @field data List containing data on the metric graph.
   data = NULL,
 
-  #' @field PtV vector with the indices of the vertices which are observation.
-  #' locations
+  #' @field PtV Vector with the indices of the vertices which are observation
+  #' locations.
   PtV  = NULL,
 
-  #' @field mesh mesh object used for plotting.
+  #' @field mesh Mesh object used for plotting.
   mesh = NULL,
 
-  #' @field lines the lines in the graph.
+  #' @field lines The lines in the graph.
   lines = NULL,
 
-  #' @field geo_dist geodesic distances between the vertices in the graph.
+  #' @field geo_dist Geodesic distances between the vertices in the graph.
   geo_dist = NULL,
 
-  #' @field res_dist resistance distances between the observation locations.
+  #' @field res_dist Resistance distances between the observation locations.
   res_dist = NULL,
 
-  #' @field Laplacian the weighted graph Laplacian of the vertices in the
+  #' @field Laplacian The weighted graph Laplacian of the vertices in the
   #' graph. The weights are given by the edge lengths.
   Laplacian = NULL,
 
   #' @description Create a new `metric_graph` object.
-  #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`.
+  #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
   #' @param E m x 2 matrix where each row represents an edge.
   #' @param longlat If TRUE, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in km.
-  #' @param tolerance a list that provides tolerances during the construction of
+  #' @param tolerance List that provides tolerances during the construction of
   #' the graph:
-  #' - `vertex_vertex` vertices that are closer than this number are merged
+  #' - `vertex_vertex` Vertices that are closer than this number are merged
   #' (default = 1e-7).
-  #' - `vertex_line` if a vertex at the end of one line is closer than this
+  #' - `vertex_line` If a vertex at the end of one line is closer than this
   #' number to another line, this vertex is connected to that line
   #' (default = 1e-7)
-  #' - `line_line` if two lines at some point are closer than this number, a new
+  #' - `line_line` If two lines at some point are closer than this number, a new
   #' vertex is added at that point and the two lines are connected (default = 0)
   #'
   #' If `longlat = TRUE`, the tolerances are given in km.
@@ -118,7 +115,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' In this case, the vertices are set by the end points of the lines.
   #' Thus, if two lines are intersecting somewhere else, this will not be
   #' viewed as a vertex.
-  #' @return A metric_graph object.
+  #' @return A `metric_graph` object.
   initialize = function(lines = NULL,
                         V = NULL,
                         E = NULL,
@@ -149,7 +146,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(is.null(tolerance$buffer_line_line)){
       tolerance$buffer_line_line <- max(tolerance$line_line/2 - 1e-10,0)
     }
-    max_tol <- max(c(tolerance$vertex_vertex, tolerance$vertex_line, tolerance$line_line))
+    max_tol <- max(c(tolerance$vertex_vertex,
+                     tolerance$vertex_line,
+                     tolerance$line_line))
+
     private$tolerance <- tolerance
 
     PtE_tmp_line_line <- NULL
@@ -157,9 +157,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(is.null(lines) && is.null(V) && is.null(E)) {
       lines <- logo_lines()
-      #tolerance <- list(vertex_vertex = 1e-3,
-      #                  vertex_line = 1e-2,
-      #                  line_line = 1e-3)
     }
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
@@ -228,7 +225,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     PtE[,2] <- PtE[,2]/self$edge_lengths[PtE[,1]]
 
-    filter_tol <- ((PtE[,2] > max_tol/self$edge_lengths[PtE[,1]]) & (PtE[,2] < 1- max_tol/self$edge_lengths[PtE[,1]]))
+    filter_tol <- ((PtE[,2] > max_tol/self$edge_lengths[PtE[,1]]) &
+                     (PtE[,2] < 1- max_tol/self$edge_lengths[PtE[,1]]))
 
     PtE <- PtE[filter_tol,]
 
@@ -291,7 +289,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
 
-      filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) & (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
+      filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) &
+                       (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
 
       PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
       PtE_tmp <- unique(PtE_tmp)
@@ -361,6 +360,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     private$initial_graph <- self$clone()
+
     # Cloning again to add the initial graph to the initial graph
     private$initial_graph <- self$clone()
 
@@ -383,12 +383,14 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Computes shortest path distances between the vertices in the
   #' graph
   #' @param full Should the geodesic distances be computed for all
-  #' the available locations. If `FALSE`, it will be computed
+  #' the available locations? If `FALSE`, it will be computed
   #' separately for the locations of each group.
-  #' @param obs Should the geodesic distances be computed at the observation locations?
-  #' @param group vector or list containing which groups to compute the distance
+  #' @param obs Should the geodesic distances be computed at the observation
+  #' locations?
+  #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
-  #' @return Called for its side effects. The geodesic distances are stored inside the `geo_dist` element of the `metric_graph` object.
+  #' @return No return value. Called for its side effects. The computed geodesic
+  #' distances are stored in the `geo_dist` element of the `metric_graph` object.
   compute_geodist = function(full = FALSE, obs = TRUE, group = NULL) {
     self$geo_dist <- list()
 
@@ -418,12 +420,15 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
   #' @description Computes shortest path distances between the vertices in the
-  #' graph
-  #' @param PtE points to compute the metric for.
+  #' graph.
+  #' @param PtE Points to compute the metric for.
   #' @param normalized are the locations in PtE in normalized distance?
-  #' @param include_vertices Should the original vertices be included in the distance matrix?
+  #' @param include_vertices Should the original vertices be included in the
+  #' distance matrix?
   #' @return A matrix containing the geodesic distances.
-  compute_geodist_PtE = function(PtE, normalized = TRUE, include_vertices = TRUE){
+  compute_geodist_PtE = function(PtE,
+                                 normalized = TRUE,
+                                 include_vertices = TRUE){
       graph.temp <- self$clone()
       graph.temp$clear_observations()
       df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
@@ -441,7 +446,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       df_temp$included <- TRUE
       temp_merge <- merge(df_temp, df_temp2, all = TRUE)
-                              
+
       df_temp$included <- NULL
 
       df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
@@ -451,11 +456,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       df_temp2$included <- NULL
 
       df_temp <- rbind(df_temp2, df_temp)
-      
+
       df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
       graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized)                                   
+                                     normalized = normalized)
       graph.temp$observation_to_vertex()
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
@@ -464,7 +469,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       #Ordering back in the input order
       geodist_temp[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- geodist_temp
       if(!include_vertices){
-        # geodist_temp <- geodist_temp[(self$nV+1):nrow(geodist_temp), (self$nV+1):nrow(geodist_temp)]
         geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp), (nV_new+1):nrow(geodist_temp)]
       }
       return(geodist_temp)
@@ -472,7 +476,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Computes shortest path distances between the vertices in the
   #' mesh.
-  #' @return Called for its side effects. The geodesic distances on the mesh are stored inside `mesh$geo_dist` in the `metric_graph` object.
+  #' @return No return value. Called for its side effects. The geodesic distances
+  #' on the mesh are stored in `mesh$geo_dist` in the `metric_graph` object.
   compute_geodist_mesh = function() {
     g <- graph(edges = c(t(self$mesh$E)), directed = FALSE)
     E(g)$weight <- self$mesh$h_e
@@ -484,10 +489,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
-  #' @param obs Should the resistance distances be computed at the observation locations?
-  #' @param group vector or list containing which groups to compute the distance
+  #' @param obs Should the resistance distances be computed at the observation
+  #' locations?
+  #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
-  #' @return Called for its side effects. The geodesic distances are stored inside the `res_dist` element of the `metric_graph` object.
+  #' @return No return value. Called for its side effects. The geodesic distances
+  #' are stored in the `res_dist` element of the `metric_graph` object.
   compute_resdist = function(full = FALSE, obs = TRUE, group = NULL) {
     self$res_dist <- list()
     if(is.null(self$data)){
@@ -496,7 +503,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(!obs){
       graph.temp <- self$clone()
       graph.temp$build_mesh(h=1000)
-      
+
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
       self$res_dist[["__vertices"]] <- self$compute_resdist_PtE(PtE,
@@ -517,18 +524,22 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
                      data_grp[["__distance_on_edge"]][idx_notna])
-        self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE, normalized=TRUE)
+        self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE,
+                                                                       normalized=TRUE)
       }
     }
   },
 
   #' @description Computes the resistance distance between the observation
   #' locations.
-  #' @param PtE points to compute the metric for.
-  #' @param normalized are the locations in PtE in normalized distance?
-  #' @param include_vertices Should the original vertices be included in the Laplacian matrix?
+  #' @param PtE Points to compute the metric for.
+  #' @param normalized Are the locations in PtE in normalized distance?
+  #' @param include_vertices Should the original vertices be included in the
+  #' Laplacian matrix?
   #' @return A matrix containing the resistance distances.
-  compute_resdist_PtE = function(PtE, normalized = TRUE, include_vertices = FALSE) {
+  compute_resdist_PtE = function(PtE,
+                                 normalized = TRUE,
+                                 include_vertices = FALSE) {
       graph.temp <- self$clone()
       graph.temp$clear_observations()
       df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
@@ -541,12 +552,13 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       graph.temp$build_mesh(h = 1000)
 
-      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
-                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
+      df_temp2 <- data.frame(y = 0,
+                             edge_number = graph.temp$mesh$VtE[1:nrow(self$V), 1],
+                             distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V), 2])
 
       df_temp$included <- TRUE
       temp_merge <- merge(df_temp, df_temp2, all = TRUE)
-                              
+
       df_temp$included <- NULL
 
       df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
@@ -556,11 +568,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       df_temp2$included <- NULL
 
       df_temp <- rbind(df_temp2, df_temp)
-      
+
       df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
       graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized)     
+                                     normalized = normalized)
 
         graph.temp$observation_to_vertex()
         graph.temp$compute_geodist(full=TRUE)
@@ -569,8 +581,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
       for (i in 1:graph.temp$nE) {
-        # tmp <- -1 / graph.temp$geo_dist[["__complete"]][graph.temp$E[i, 1],
-        #                                                 graph.temp$E[i, 2]]
         tmp <- -1 / geodist_temp[graph.temp$E[i, 1],
                                                          graph.temp$E[i, 2]]
         L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
@@ -595,9 +605,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       return(R)
   },
 
-  #' @description Gets the degrees of the vertices.
+  #' @description Returns the degrees of the vertices in the metric graph.
   #' @return A vector containing the degrees of the vertices.
-
   get_degrees = function(){
     degrees <- rep(0,self$nV)
     for(i in 1:self$nV) {
@@ -608,7 +617,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Computes the resistance metric between the vertices in the
   #' mesh.
-  #' @return Called for its side effects. The geodesic distances on the mesh are stored inside `mesh$res_dist` in the `metric_graph` object.
+  #' @return No return value. Called for its side effects. The geodesic distances
+  #' on the mesh are stored in the `mesh$res_dist` element in the `metric_graph`
+  #' object.
   compute_resdist_mesh = function() {
     if (is.null(self$mesh)) {
       stop("no mesh provided")
@@ -632,14 +643,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       t(rep(1,dim(self$mesh$V)[1])) %x% diag(Li)
   },
 
-  #' @description Computes the weigthed graph Laplacian for the graph
+  #' @description Computes the weigthed graph Laplacian for the graph.
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
-  #' @param obs Should the resistance distances be computed at the observation locations?
-  #' @param group vector or list containing which groups to compute the
+  #' @param obs Should the resistance distances be computed at the observation
+  #' locations?
+  #' @param group Vector or list containing which groups to compute the
   #' Laplacian for. If `NULL`, it will be computed for all groups.
-  #' @return Called for its side effects. The Laplacian is stored inside the `Laplacian` element in the `metric_graph` object.
+  #' @return No reutrn value. Called for its side effects. The Laplacian is stored
+  #' in the `Laplacian` element in the `metric_graph` object.
   compute_laplacian = function(full = FALSE, obs = TRUE, group = NULL) {
     self$Laplacian <- list()
     if(is.null(self$data)){
@@ -648,7 +661,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(!obs){
       graph.temp <- self$clone()
       graph.temp$build_mesh(h=1000)
-      
+
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
       self$Laplacian[["__vertices"]] <- private$compute_laplacian_PtE(PtE,
@@ -672,8 +685,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
 
-  #' @description Removes vertices of degree 2 of the graph.
-  #' @return Called for its side effects.
+  #' @description Removes vertices of degree 2 from the metric graph.
+  #' @return No return value. Called for its side effects.
   prune_vertices = function(){
    while(sum(self$get_degrees()==2)>0) {
      private$remove.first.deg2()
@@ -698,7 +711,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Gets PtE from the data.
-  #' @return A matrix with two columns, where the first column contains the edge number and the second column contains the distance on edge of the observation locations.
+  #' @return A matrix with two columns, where the first column contains the edge
+  #' number and the second column contains the distance on edge of the
+  #' observation locations.
   get_PtE = function() {
     if(is.null(self$data)){
       stop("There is no data!")
@@ -712,7 +727,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Gets the spatial points from the data.
-  #' @param A `SpatialPoints` object of the observation locations.
+  #' @return A `SpatialPoints` object of the observation locations.
   get_Spoints = function(){
      if(is.null(self$data)){
       stop("There is no data!")
@@ -725,8 +740,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Adds observation locations as vertices in the graph.
-  #' @param tolerance parameter in which we merge vertices together. Not intended for non-expert use.
-  #' @return Called for its side effects.
+  #' @param tolerance Parameter in which we merge vertices together. Not intended
+  #' for non-expert use.
+  #' @return No return value. Called for its side effects.
   observation_to_vertex = function(tolerance = 1e-15) {
     if(tolerance <= 0 || tolerance >=1){
       stop("tolerance should be between 0 and 1.")
@@ -748,7 +764,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$PtV[i] <- self$E[e, 2]
       } else {
         PtV_tmp <- private$split_edge(e, t, tolerance)
-        # self$PtV[i] <- dim(self$V)[1]
         if(!is.null(PtV_tmp)){
           self$PtV[i] <- PtV_tmp
         }
@@ -783,15 +798,14 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Returns a list or a matrix with the mesh locations.
-  #' @param bru logical. Should an `inlabru`-friendly list be returned?
-  #' @param loc character. If `bru` is set to `TRUE`, the name of the location variable.
+  #' @param bru Should an `inlabru`-friendly list be returned?
+  #' @param loc If `bru` is set to `TRUE`, the name of the location variable.
   #' The default name is 'loc'.
-  #' @param normalized if TRUE, then the distances in `distance_on_edge` are
+  #' @param normalized If TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default TRUE.
   #'
   #' @return A list or a matrix containing the mesh locations.
-
-  get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE){
+  get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE) {
     if(is.null(self$mesh)){
       stop("There is no mesh!")
     }
@@ -812,8 +826,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
 
-  #' @description Clear all observations from the object.
-  #' @return Called for its side effects.
+  #' @description Clear all observations from the `metric_graph` object.
+  #' @return No return value. Called for its side effects.
   clear_observations = function() {
     self$data <- NULL
     self$geo_dist <- NULL
@@ -821,12 +835,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$PtV <- NULL
   },
 
-  #' @description Add observations to the graph.
-  #' @param Spoints SpatialPoints or SpatialPointsDataFrame of the observations,
-  #' which may include the coordinates only, or the coordinates as well as the
-  #' observations.
-  #' @param data A data.frame or named list containing the observations. In case
-  #' of groups, the data.frames for the groups should be stacked vertically,
+  #' @description Add observations to the metric graph.
+  #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
+  #' observations. It may include the coordinates of the observations only, or
+  #' the coordinates as well as the observations.
+  #' @param data A `data.frame` or named list containing the observations. In
+  #' case of groups, the data.frames for the groups should be stacked vertically,
   #' with a column indicating the index of the group. If `data` is not `NULL`,
   #' it takes priority over any eventual data in `Spoints`.
   #' @param edge_number Column (or entry on the list) of the `data` that
@@ -857,9 +871,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
-  #' This helps detecting mistakes on the input
-  #' locations when adding new data.
-  #' @return Called for its side effects. The observations are stored in the `data` element of the `metric_graph` object.
+  #' This helps detecting mistakes on the input locations when adding new data.
+  #' @return No return value. Called for its side effects. The observations are
+  #' stored in the `data` element of the `metric_graph` object.
   add_observations = function(Spoints = NULL,
                               data = NULL,
                               edge_number = "edge_number",
@@ -956,11 +970,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
 
-  #' @description build Kirchoff constraint matrix from edges, currently not
-  #' implemented for circles (edges that start and end in the same vertex)
+  #' @description Build Kirchoff constraint matrix from edges.
   #' @param alpha the type of constraint (currently only supports 2)
   #' @param edge_constraint if TRUE, add constraints on vertices of degree 1
-  #' @return Called for its side effects.
+  #' @details Currently not implemented for circles (edges that start and end
+  #' in the same vertex)
+  #' @return No return value. Called for its side effects.
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
@@ -1016,18 +1031,21 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
 
-  #' @description build mesh object for graph.
-  #' @param h maximum distance between mesh nodes (should be provided if n is not provided).
-  #' @param n maximum number of nodes per edge (should be provided if h is not provided).
+  #' @description Builds mesh object for graph.
+  #' @param h Maximum distance between mesh nodes (should be provided if n is
+  #' not provided).
+  #' @param n Maximum number of nodes per edge (should be provided if h is not
+  #' provided).
   #' @details The mesh is a list with the objects:
-  #' - PtE which contains the mesh locations excluding the original vertices;
-  #' - V the verties of the mesh;
-  #' - E the edges of the mesh;
-  #' - n_e the number of vertices in the mesh per original edge in the graph;
-  #' - h_e the mesh width per edge in the graph;
-  #' - ind the indices of the vertices in the mesh;
-  #' - VtE all mesh locations including the original vertices.
-  #' @return Called for its side effects. The mesh is stored in the `mesh` element of the `metric_graph` object.
+  #' - `PtE` The mesh locations excluding the original vertices;
+  #' - `V` The verties of the mesh;
+  #' - `E` The edges of the mesh;
+  #' - `n_e` The number of vertices in the mesh per original edge in the graph;
+  #' - `h_e` The mesh width per edge in the graph;
+  #' - `ind` The indices of the vertices in the mesh;
+  #' - `VtE` All mesh locations including the original vertices.
+  #' @return No return value. Called for its side effects. The mesh is stored in
+  #' the `mesh` element of the `metric_graph` object.
   build_mesh = function(h=NULL,n=NULL) {
 
     if(is.null(h) && is.null(n)){
@@ -1103,47 +1121,21 @@ metric_graph <-  R6::R6Class("metric_graph",
     } else {
       self$mesh$V <- rbind(self$mesh$V)
     }
-
-    # if(sum(duplicated(self$mesh$V)) > 0){
-    #   n_dup <- sum(duplicated(self$mesh$V))
-    #   dup_idx <- which(duplicated(self$mesh$V))
-    #   self$mesh$V[dup_idx,] <- self$mesh$V[dup_idx,] + matrix(runif(2*n_dup)*1e-10,nrow = n_dup, ncol=2)
-    # }
-
   },
 
-  #' @description build mass and stiffness matrices for given mesh object.
+  #' @description Build mass and stiffness matrices for given mesh object.
   #' @details The function builds: The matrix `C` which is the mass matrix with
   #' elements \eqn{<\phi_i, \phi_j>}, the matrix `G` which is the stiffness
   #' matrix with elements \eqn{<d\phi_i, d\phi_j>}, the matrix `B` with elements
   #' \eqn{<d\phi_i, \phi_j>}, and the vector with weights \eqn{<\phi_i, 1>}.
-  #' @return Called for its side effects. The finite element matrices `C`, `G` and `B` are stored inside the `mesh` element inside the `metric_graph` object.
+  #' @return No return value. Called for its side effects. The finite element
+  #' matrices `C`, `G` and `B` are stored in the `mesh` element in the
+  #' `metric_graph` object.
   compute_fem = function() {
     if (is.null(self$mesh)) {
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    # self$mesh$G <- self$mesh$C <- self$mesh$B <- Matrix(0,nrow=nV,ncol=nV)
-
-    # for (e in 1:dim(self$mesh$E)[1]) {
-    #   v1 <- self$mesh$E[e, 1]
-    #   v2 <- self$mesh$E[e, 2]
-
-    #   self$mesh$C[v1,v1] <- self$mesh$C[v1, v1] + self$mesh$h_e[e]/3
-    #   self$mesh$C[v2,v2] <- self$mesh$C[v2, v2] + self$mesh$h_e[e]/3
-    #   self$mesh$C[v1,v2] <- self$mesh$C[v1, v2] + self$mesh$h_e[e]/6
-    #   self$mesh$C[v2,v1] <- self$mesh$C[v2, v1] + self$mesh$h_e[e]/6
-
-    #   self$mesh$G[v1,v1] <- self$mesh$G[v1, v1] + 1 / self$mesh$h_e[e]
-    #   self$mesh$G[v2,v2] <- self$mesh$G[v2, v2] + 1 / self$mesh$h_e[e]
-    #   self$mesh$G[v1,v2] <- self$mesh$G[v1, v2] - 1 / self$mesh$h_e[e]
-    #   self$mesh$G[v2,v1] <- self$mesh$G[v2, v1] - 1 / self$mesh$h_e[e]
-
-    #   self$mesh$B[v1,v1] <- self$mesh$B[v1, v1] - 0.5
-    #   self$mesh$B[v1,v2] <- self$mesh$B[v1, v2] - 0.5
-    #   self$mesh$B[v2,v2] <- self$mesh$B[v2, v2] + 0.5
-    #   self$mesh$B[v2,v1] <- self$mesh$B[v2, v1] + 0.5
-    # }
     fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV)
     self$mesh$C <- fem_temp$C
     self$mesh$G <- fem_temp$G
@@ -1152,8 +1144,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$mesh$weights <- rowSums(self$mesh$C)
   },
 
-  #' @description Computes observation matrix for mesh
-  #' @param PtE locations given as (edge number in graph, normalized location on
+  #' @description Computes observation matrix for mesh.
+  #' @param PtE Locations given as (edge number in graph, normalized location on
   #' edge)
   #' @return The observation matrix.
   mesh_A = function(PtE) {
@@ -1182,10 +1174,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(A)
   },
 
-  #' @description Find one edge corresponding to each vertex
-  #' @return VtE matrix where `VtE[i,1]` is the edge number, `VtE[i,2] = 0`
-  #' if the vertex is at the start of the edge and `VtE[i,1] = 1` if the vertex
-  #' is at the end of the edge
+  #' @description Find one edge corresponding to each vertex.
+  #' @return A nV x 2 matrix the first element of the `i`th row is the edge
+  #' number corresponding to the `i`th vertex and the second value is 0
+  #' if the vertex is at the start of the edge and 1 if the vertex
+  #' is at the end of the edge.
   VtEfirst = function() {
     n.V <- dim(self$V)[1]
     VtE <- matrix(0, n.V, 2)
@@ -1202,28 +1195,28 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(VtE)
   },
 
-  #' @description plot a metric graph
+  #' @description Plots the metric graph
   #' @param data Which column of the data to plot? If `NULL`, no data will be
   #' plotted.
   #' @param group If there are groups, which group to plot? If `group` is a
   #' number, it will be the index of the group as stored internally. If `group`
   #' is a character, then the group will be chosen by its name.
-  #' @param plotly use plot_ly for 3D plot (default FALSE). This option requires
-  #' the 'plotly' package.
-  #' @param vertex_size size of the vertices
-  #' @param vertex_color color of vertices
-  #' @param edge_width line width for edges
-  #' @param edge_color color of edges
-  #' @param data_size size of markers for data
+  #' @param plotly Use plot_ly for 3D plot (default `FALSE`). This option
+  #' requires the `plotly` package.
+  #' @param vertex_size Size of the vertices.
+  #' @param vertex_color Color of vertices.
+  #' @param edge_width Line width for edges.
+  #' @param edge_color Color of edges.
+  #' @param data_size Size of markers for data.
   #' @param mesh Plot the mesh locations?
-  #' @param X Additional values to plot
-  #' @param X_loc locations of the additional values in the format
-  #' (edge, normalized distance on edge)
-  #' @param p existing ggplot or plot_ly object to add the graph to
-  #' @param degree show the degrees of the vertices?
-  #' @param direction show the direction of the edges?
-  #' @param ... additional arguments for ggplot or plot_ly
-  #' @return a plot_ly or or ggplot object
+  #' @param X Additional values to plot.
+  #' @param X_loc Locations of the additional values in the format
+  #' (edge, normalized distance on edge).
+  #' @param p Existing `ggplot` or `plot_ly` object to add the graph to
+  #' @param degree Show the degrees of the vertices?
+  #' @param direction Show the direction of the edges?
+  #' @param ... Additional arguments for `ggplot` or `plot_ly`
+  #' @return A `plot_ly` (if `plotly=TRUE`) or `ggplot` object.
   #' @examples
   #' library(sp)
   #' line1 <- Line(rbind(c(0,0),c(1,0)))
@@ -1252,14 +1245,14 @@ metric_graph <-  R6::R6Class("metric_graph",
                   degree = FALSE,
                   direction = FALSE,
                   ...) {
-    if(!is.null(data) && is.null(self$data)){
+    if(!is.null(data) && is.null(self$data)) {
       stop("The graph does not contain data.")
     }
-    if(is.numeric(group) && !is.null(data)){
+    if(is.numeric(group) && !is.null(data)) {
       unique_group <- unique(self$data[["__group"]])
       group <- unique_group[group]
     }
-    if(!plotly){
+    if(!plotly) {
       p <- private$plot_2d(line_width = edge_width,
                            marker_size = vertex_size,
                            vertex_color = vertex_color,
@@ -1292,30 +1285,30 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
-  #' @description Plots the connections
-
+  #' @description Plots the connections in the graph
+  #' @returns No return value. Called for its side effects.
   plot_connections = function(){
         g <- graph(edges = c(t(self$E)), directed = FALSE)
         plot(g)
   },
 
-  #' @description plot continuous function on the graph
+  #' @description Plots continuous function on the graph.
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at the mesh in the graph
-  #' @param plotly if TRUE, then plot is shown in 3D. This option requires the
-  #' package 'plotly'.
-  #' @param vertex_size (for both 2d and 3d plots) size of the vertices
-  #' @param vertex_color color of vertices
-  #' @param edge_width width for edges
-  #' @param edge_color for 3D plot, color of edges
-  #' @param line_width for 3D plot, line width of the function curve.
-  #' @param line_color color of the function curve
-  #' @param support_width for 3D plot, width of support lines
-  #' @param support_color for 3D plot, color of support lines
-  #' @param p previous plot in which the new plot should be added.
-  #' @param ... additional arguments for ggplot or plot_ly
-  #' @return either a ggplot or a plot_ly object
+  #' @param plotly If `TRUE`, then the plot is shown in 3D. This option requires
+  #' the package `plotly`.
+  #' @param vertex_size Size of the vertices.
+  #' @param vertex_color Color of vertices.
+  #' @param edge_width Width for edges.
+  #' @param edge_color For 3D plot, color of edges.
+  #' @param line_width For 3D plot, line width of the function curve.
+  #' @param line_color Color of the function curve.
+  #' @param support_width For 3D plot, width of support lines.
+  #' @param support_color For 3D plot, color of support lines.
+  #' @param p Previous plot to which the new plot should be added.
+  #' @param ... Additional arguments for `ggplot` or `plot_ly`
+  #' @return Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
   plot_function = function(X,
                            plotly = FALSE,
                            vertex_size = 5,
@@ -1327,17 +1320,12 @@ metric_graph <-  R6::R6Class("metric_graph",
                            support_width = 0.5,
                            support_color = "gray",
                            p = NULL,
-                          #  movie = FALSE,
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
     }
 
     mesh <- FALSE
-
-    # if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1 || movie) {
-    #   mesh <- TRUE
-    # }
 
     if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1) {
       mesh <- TRUE
@@ -1358,11 +1346,11 @@ metric_graph <-  R6::R6Class("metric_graph",
         X <- c(rep(NA, dim(self$V)[1]), X)
       }
 
-      # if (length(X) != dim(self$V)[1] + PtE_dim) {
-      #   stop("X does not have the correct size")
-      # }
+
       if (length(X) != dim(unique(self$mesh$V))[1] && length(X) != dim(self$mesh$V)[1]) {
-        stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim," ", dim(self$mesh$V)[1], " and ", dim(unique(self$mesh$V))[1],")"))
+        stop(paste0("X does not have the correct size (the possible sizes are ",
+                    PtE_dim," ", dim(self$mesh$V)[1], " and ",
+                    dim(unique(self$mesh$V))[1],")"))
       }
 
       if(dim(unique(self$mesh$V))[1] != dim(self$mesh$V)[1]){
@@ -1373,8 +1361,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
       }
     }
-
-
 
     if (mesh) {
       n.v <- dim(self$V)[1]
@@ -1477,12 +1463,10 @@ metric_graph <-  R6::R6Class("metric_graph",
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
 
+        coords <- interpolate2(Line_edge,
+                               pos = data.to.plot.order[, 1, drop = TRUE],
+                               normalized = TRUE)
 
-        # p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
-        #                                                         drop = FALSE],
-        #                           normalized = TRUE)
-        # coords <-p2@coords
-        coords <- interpolate2(Line_edge, pos = data.to.plot.order[, 1, drop = TRUE], normalized = TRUE)
         x.loc <- c(x.loc, coords[, 1])
         y.loc <- c(y.loc, coords[, 2])
         z.loc <- c(z.loc, data.to.plot.order[, 2])
@@ -1536,19 +1520,19 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
-  #' @description plot a movies of a continuous function evolving on the graph
+  #' @description Plots a movie of a continuous function evolving on the graph.
   #' @param X A m x T matrix where the ith column represents the function at the
   #' ith time, evaluated at the mesh locations.
-  #' @param plotly if TRUE, then plot is shown in 3D. This option requires the
-  #' package 'plotly'.
-  #' @param vertex_size (for both 2d and 3d plots) size of the vertices
-  #' @param vertex_color color of vertices
-  #' @param edge_width width for edges
-  #' @param edge_color for 3D plot, color of edges
-  #' @param line_width for 3D plot, line width of the function curve.
-  #' @param line_color color of the function curve
-  #' @param ... additional arguments for ggplot or plot_ly
-  #' @return either a ggplot or a plot_ly object
+  #' @param plotly If `TRUE`, then plot is shown in 3D. This option requires the
+  #' package `plotly`.
+  #' @param vertex_size Size of the vertices.
+  #' @param vertex_color Color of vertices.
+  #' @param edge_width Width for edges.
+  #' @param edge_color For 3D plot, color of edges.
+  #' @param line_width For 3D plot, line width of the function curve.
+  #' @param line_color Color of the function curve.
+  #' @param ... Additional arguments for ggplot or plot_ly.
+  #' @return Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
   plot_movie = function(X,
                         plotly = TRUE,
                         vertex_size = 5,
@@ -1577,14 +1561,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       X <- c(rep(NA, dim(self$V)[1]), X)
     }
 
-    # if (dim(X)[1] != dim(self$V)[1] + PtE_dim) {
-    #   stop("X does not have the correct size")
-    # }
-
     if (dim(X)[1] != dim(unique(self$mesh$V))[1]) {
       stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, " and ", dim(unique(self$mesh$V))[1],")"))
     }
-
 
     n.v <- dim(self$V)[1]
     XV <- X[1:n.v,]
@@ -1638,11 +1617,10 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
-        # p2 <- rgeos::gInterpolate(Line_edge, data.to.plot.order[, 1,
-        #                                                         drop = FALSE],
-        #                           normalized = TRUE)
-        # coords <-p2@coords
-        coords <- interpolate2(Line_edge, pos = data.to.plot.order[, 1, drop = TRUE], normalized = TRUE)
+
+        coords <- interpolate2(Line_edge,
+                               pos = data.to.plot.order[, 1, drop = TRUE],
+                               normalized = TRUE)
         x.loc <- c(x.loc, rep(coords[, 1], frames))
         y.loc <- c(y.loc, rep(coords[, 2], frames))
         z.loc <- c(z.loc, c(data.to.plot.order[, 2:(frames+1)]))
@@ -1691,14 +1669,15 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(p)
   },
 
-  #' @description Add observations on mesh to the object
-  #' @param data A data.frame or named list containing the observations. In case
-  #' of groups, the data.frames for the groups should be stacked vertically,
+  #' @description Add observations on mesh to the object.
+  #' @param data A `data.frame` or named list containing the observations.
+  #' In case of groups, the data.frames for the groups should be stacked vertically,
   #' with a column indicating the index of the group. If `data_frame` is not
   #' `NULL`, it takes priority over any eventual data in `Spoints`.
   #' @param group If the data_frame contains groups, one must provide the column
   #' in which the group indices are stored.
-  #' @return Called for its side effects. The observations are stored inside the `data` element inside the `metric_graph` object.
+  #' @return No return value. Called for its side effects. The observations are
+  #' stored in the `data` element in the `metric_graph` object.
   add_mesh_observations = function(data = NULL, group = NULL) {
 
     if(is.null(self$mesh)){
@@ -1713,7 +1692,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                           normalized = TRUE)
   },
 
-  #' @description Get a copy of the initial graph
+  #' @description Returns a copy of the initial metric graph.
+  #' @return A `metric_graph` object.
   get_initial_graph = function() {
     tmp_graph <- private$initial_graph$clone()
     if(private$pruned){
@@ -1731,7 +1711,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param include_NA Should the locations for which all observations are NA be
   #' included?
   #' @return The observation or prediction matrix.
-
   A = function(group = NULL,
                obs_to_vert = FALSE,
                include_NA = TRUE){
@@ -1776,11 +1755,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Convert between locations on the graph and Euclidean
-  #' coordinates
-  #' @param PtE matrix with locations on the graph (edge number and normalized
+  #' coordinates.
+  #' @param PtE Matrix with locations on the graph (edge number and normalized
   #' position on the edge).
-  #' @param XY matrix with locations in Euclidean space
-  #' @param normalized If TRUE, it is assumed that the positions in `PtE` are
+  #' @param XY Matrix with locations in Euclidean space
+  #' @param normalized If `TRUE`, it is assumed that the positions in `PtE` are
   #' normalized to (0,1), and the object returned if `XY` is specified contains
   #' normalized locations.
   #' @return If `PtE` is specified, then a matrix with Euclidean coordinates of
@@ -1817,8 +1796,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       LT <- private$edge_pos_to_line_pos2(PtE[, 1], PtE[, 2])
       for (i in 1:dim(PtE)[1]) {
-        # Points[i,] <- rgeos::gInterpolate(self$lines[LT[i, 1], ] ,LT[i, 2], normalized = TRUE)@coords
-        Points[i,] <- interpolate2(self$lines[LT[i, 1], ] , pos = LT[i, 2], normalized = TRUE)
+        Points[i,] <- interpolate2(self$lines[LT[i, 1], ] ,
+                                   pos = LT[i, 2], normalized = TRUE)
       }
       return(Points)
     } else {
@@ -1832,8 +1811,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       for (ind in unique(LtE[, 1])) {
         index.p <- LtE[, 1] == ind
-        # LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
-        #                                normalized=TRUE)
         LtE[index.p,2]=projectVecLine2(self$lines[ind,], Spoints[index.p,],
                                        normalized=TRUE)
 
@@ -1863,12 +1840,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   line_to_vertex = function(tolerance = 0, longlat = FALSE) {
     lines <- c()
     for(i in 1:length(self$lines)){
-      #tmp <- self$lines@lines[[i]]@Lines[[1]]@coords
-      #self$lines@lines[[i]]@Lines[[1]]@coords <- tmp
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
-      #lines contain [line index, start point,
-      #               line index, end point]
       lines <- rbind(lines, c(i, points[1,]), c(i, points[n,]))
     }
 
@@ -1881,7 +1854,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         vertex <- rbind(vertex, lines[i, ])
       }
     }
-    #lvl = c(line index, vertex number of start, vertex number of end, length])
+
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     k=1
     lines_keep_id <- NULL
@@ -1920,7 +1893,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                                               length(self$lines)))
     self$ELend <- rep(1, dim(self$E)[1])
     self$ELstart <- rep(0, dim(self$E)[1])
-    self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
+    self$EID <- as.vector(sapply(slot(self$lines,"lines"),
+                                 function(x) slot(x, "ID")))
   },
 
   #Compute PtE for mesh given PtE for graph
@@ -2518,14 +2492,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       slot_id_lines <- sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
       id_line <- slot_id_lines[integer_id_line]
 
-      # if(nrow(line_coords)> 2){
-      #             closest_coord <- which.min(sapply(1:nrow(line_coords), function(j){
-      #         (self$V[added_vertex_id,1]-line_coords[j,1])^2 + (self$V[added_vertex_id,2] - line_coords[j,2])^2
-      # })) } else{
-      #             closest_coord <- 1
-      # }
-
-
       times_split <- sum(which(private$split_lines_ids_times[,1] == integer_id_line))
       private$split_lines_ids_times <- rbind(private$split_lines_ids_times,
                                              cbind(integer_id_line, 1))
@@ -2680,7 +2646,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     graph.temp$clear_observations()
     df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                          edge_number = PtE[,1],
-                         distance_on_edge = PtE[,2])                        
+                         distance_on_edge = PtE[,2])
     if(sum(duplicated(df_temp))>0){
       warning("Duplicated locations were found when computing the laplacian. The returned values are given for unique locations.")
       df_temp <- unique(df_temp)
@@ -2692,20 +2658,20 @@ metric_graph <-  R6::R6Class("metric_graph",
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
     df_temp$included <- TRUE
     temp_merge <- merge(df_temp, df_temp2, all = TRUE)
-                            
+
     df_temp$included <- NULL
     df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
     df_temp2$included <- NULL
     df_temp <- rbind(df_temp2, df_temp)
 
     nV_new <- sum(is.na(temp_merge["included"]))
-    
+
     df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
     graph.temp$add_observations(data = df_temp, normalized = normalized)
     graph.temp$observation_to_vertex()
     Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
-    
+
     for (i in 1:graph.temp$nE) {
       Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1 / graph.temp$edge_lengths[i]
       Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1 / graph.temp$edge_lengths[i]
@@ -2859,7 +2825,7 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 
 ))
 
-#' @title Connected components of metric graph
+#' @title Connected components of metric graph.
 #' @description Class representing connected components of a metric graph
 #' @details A list of graph objects created from vertex and edge matrices, or
 #' from an sp::Lines object where each line is representing and edge. For more
@@ -2880,32 +2846,32 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 #' @export
 graph_components <-  R6::R6Class("graph_components",
    public = list(
-   #' @field graphs list of graphs
+   #' @field graphs List of graphs.
    graphs = NULL,
 
-   #' @field n the number of graphs
+   #' @field n The number of graphs.
    n = 0,
 
-   #' @field sizes number of vertices for each of the graphs
+   #' @field sizes Number of vertices for each of the graphs.
    sizes = NULL,
 
-   #' @field lengths total edge lengths for each of the graphs
+   #' @field lengths Total edge lengths for each of the graphs.
    lengths = NULL,
 
    #' Create metric graphs for connected components
    #'
-   #' @param lines object of type `SpatialLinesDataFrame` or `SpatialLines`
-   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices
-   #' @param E m x 2 matrix where each row represents an edge
-   #' @param longlat If TRUE, then it is assumed that the coordinates are given
+   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
+   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
+   #' @param E m x 2 matrix where each row represents an edge.
+   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given
    #' in Longitude/Latitude and that distances should be computed in km.
    #' @param tolerance vertices that are closer than this number are merged when
    #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
    #' tolerance is given in km.
-   #' @param by_length Sort the components by total edge length? If FALSE,
+   #' @param by_length Sort the components by total edge length? If `FALSE`,
    #' the components are sorted by the number of vertices.
    #' @param ... additional arguments used when specifying the graphs
-   #' @return A `graph_components` object
+   #' @return A `graph_components` object.
    initialize = function(lines = NULL,
                          V = NULL,
                          E = NULL,
@@ -2953,20 +2919,20 @@ graph_components <-  R6::R6Class("graph_components",
      }
    },
 
-   #' @description Return the largest component
+   #' @description Returns the largest component in the graph.
+   #' @return A `metric_graph` object.
    get_largest = function() {
      return(self$graphs[[1]])
    },
 
-
    #' Plot all components
    #'
-   #' @param edge_colors a 3 x nc matrix with RGB values for the edge colors to
-   #' be used when plotting each graph
-   #' @param vertex_colors a 3 x nc matrix with RGB values for the edge colors to
-   #' be used when plotting each graph
-   #' @param ... additional arguments for plotting the individual graphs
-   #' @return called for its side effects.
+   #' @param edge_colors A 3 x nc matrix with RGB values for the edge colors to
+   #' be used when plotting each graph.
+   #' @param vertex_colors A 3 x nc matrix with RGB values for the edge colors to
+   #' be used when plotting each graph.
+   #' @param ... Additional arguments for plotting the individual graphs.
+   #' @return A `ggplot` object.
    plot = function(edge_colors = NULL, vertex_colors = NULL, ...) {
 
      if (is.null(edge_colors)) {
