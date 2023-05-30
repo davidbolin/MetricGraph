@@ -97,50 +97,64 @@ model with isotropic covariance.</p></dd>
 
 
 <dt>y_graph</dt>
-<dd><p>Response vector given in the same order as the internal locations from the graph.</p></dd>
+<dd><p>Response vector given in the same order as the internal
+locations from the graph.</p></dd>
 
 
 <dt>cov_function</dt>
-<dd><p>The covariance function to be used in case 'model' is chosen as 'isoCov'. <code>cov_function</code> must be a function
-of <code>(h, theta_cov)</code>, where <code>h</code> is a vector, or matrix, containing the distances to evaluate the covariance function at, and
-<code>theta_cov</code> is the vector of parameters of the covariance function <code>cov_function</code>.</p></dd>
+<dd><p>The covariance function to be used in case 'model' is
+chosen as 'isoCov'. <code>cov_function</code> must be a function of <code>(h, theta_cov)</code>,
+where <code>h</code> is a vector, or matrix, containing the distances to evaluate the
+covariance function at, and <code>theta_cov</code> is the vector of parameters of the
+covariance function <code>cov_function</code>.</p></dd>
 
 
 <dt>X_cov</dt>
-<dd><p>Matrix with covariates. The order must be the same as the internal order from the graph.</p></dd>
+<dd><p>Matrix with covariates. The order must be the same as the
+internal order from the graph.</p></dd>
 
 
 <dt>repl</dt>
-<dd><p>Vector with the replicates to be considered. If <code>NULL</code> all replicates will be considered.</p></dd>
+<dd><p>Vector with the replicates to be considered. If <code>NULL</code> all
+replicates will be considered.</p></dd>
 
 
 <dt>log_scale</dt>
-<dd><p>Should the parameters <code>theta</code> of the returning function be given in log scale?</p></dd>
+<dd><p>Should the parameters <code>theta</code> of the returning function be
+given in log-scale?</p></dd>
 
 
 <dt>maximize</dt>
-<dd><p>If <code>FALSE</code> the function will return minus the likelihood, so one can directly apply it to the <code>optim</code> function.</p></dd>
+<dd><p>If <code>FALSE</code> the function will return minus the likelihood, so
+one can directly apply it to the <code>optim</code> function.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>The log-likelihood function, which is returned as a function with parameter 'theta'.
-For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter <code>theta</code> must be supplied as
-the vector <code>c(sigma_e, sigma, kappa)</code>.</p>
+<p>The log-likelihood function, which is returned as a function with
+parameter 'theta'. For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the
+parameter <code>theta</code> must be supplied as the vector <code>c(sigma_e, sigma, kappa)</code>.</p>
 
 
-<p>For 'isoCov' model, theta must be a vector such that <code>theta[1]</code> is <code>sigma.e</code> and the vector
-<code>theta[2:(q+1)]</code> is the input of <code>cov_function</code>, where <code>q</code> is the number of parameters of the covariance function.</p>
+<p>For 'isoCov' model, theta must be a vector such that <code>theta[1]</code> is <code>sigma.e</code></p>
 
 
-<p>If <code>covariates</code> is <code>TRUE</code>, then the parameter <code>theta</code> must be supplied as the vector <code>c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])</code>,
-where <code>beta[1],...,beta[p]</code> are the coefficients and <code>p</code> is the number of covariates.</p>
+<p>and the vector <code>theta[2:(q+1)]</code> is the input of <code>cov_function</code>, where <code>q</code> is
+the number of parameters of the covariance function.</p>
 
 
-<p>For the remaining models, if <code>covariates</code> is <code>TRUE</code>, then <code>theta</code> must be supplied as the vector <code>c(sigma_e, sigma, kappa, beta[1], ..., beta[p])</code>,
-where <code>beta[1],...,beta[p]</code> are the coefficients and <code>p</code> is the number of covariates.</p>
+<p>If <code>covariates</code> is <code>TRUE</code>, then the parameter <code>theta</code> must be supplied as the
+vector <code>c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])</code>,
+where <code>beta[1],...,beta[p]</code> are the coefficients and <code>p</code> is the number of
+covariates.</p>
+
+
+<p>For the remaining models, if <code>covariates</code> is <code>TRUE</code>, then <code>theta</code> must be
+supplied as the vector <code>c(sigma_e, sigma, kappa, beta[1], ..., beta[p])</code>,
+where <code>beta[1],...,beta[p]</code> are the coefficients and <code>p</code> is the number of
+covariates.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

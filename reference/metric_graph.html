@@ -75,6 +75,9 @@
     
 
 <p>Object of <code><a href="https://r6.r-lib.org/reference/R6Class.html" class="external-link">R6Class</a></code> for creating metric graphs.</p>
+
+
+<p>No return value. Called for its side effects.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -86,81 +89,81 @@ see the help vignette:
     <div class="section level2">
     <h2 id="public-fields">Public fields<a class="anchor" aria-label="anchor" href="#public-fields"></a></h2>
     <p></p><div class="r6-fields"><dl><dt><code>V</code></dt>
-<dd><p>matrix with positions in Euclidean space of the vertices of the
+<dd><p>Matrix with positions in Euclidean space of the vertices of the
 graph.</p></dd>
 
 
 <dt><code>nV</code></dt>
-<dd><p>the number of vertices.</p></dd>
+<dd><p>The number of vertices.</p></dd>
 
 
 <dt><code>E</code></dt>
-<dd><p>matrix with the edges of the graph, where <code>E[i,1]</code> is the vertex
+<dd><p>Matrix with the edges of the graph, where <code>E[i,1]</code> is the vertex
 at the start of the ith edge and <code>E[i,2]</code> is the vertex at the end of the
 edge.</p></dd>
 
 
 <dt><code>nE</code></dt>
-<dd><p>the number of edges.</p></dd>
+<dd><p>The number of edges.</p></dd>
 
 
 <dt><code>edge_lengths</code></dt>
-<dd><p>vector with the lengths of the edges in the graph.</p></dd>
+<dd><p>Vector with the lengths of the edges in the graph.</p></dd>
 
 
 <dt><code>EID</code></dt>
-<dd><p>vector with the IDs of the edges in the graph.</p></dd>
+<dd><p>Vector with the IDs of the edges in the graph.</p></dd>
 
 
 <dt><code>LtE</code></dt>
-<dd><p>matrix with edge positions on the lines.</p></dd>
+<dd><p>Matrix with edge positions on the lines.</p></dd>
 
 
 <dt><code>ELend</code></dt>
-<dd><p>vector with the locations of the end points of the edges on
+<dd><p>Vector with the locations of the end points of the edges on
 the lines in the graph. The locations are normalized on the line.</p></dd>
 
 
 <dt><code>ELstart</code></dt>
-<dd><p>vector with the locations of the starting points of the
+<dd><p>Vector with the locations of the starting points of the
 edges on the lines in the graph. The locations are normalized on the line.</p></dd>
 
 
 <dt><code>C</code></dt>
-<dd><p>constraint matrix used to set Kirchhoff constraints.</p></dd>
+<dd><p>Constraint matrix used to set Kirchhoff constraints.</p></dd>
 
 
 <dt><code>CoB</code></dt>
-<dd><p>change-of-basis object used for Kirchhoff constraints.</p></dd>
+<dd><p>Change-of-basis object used for Kirchhoff constraints.</p></dd>
 
 
 <dt><code>data</code></dt>
-<dd><p>a list containing the data on the graph.</p></dd>
+<dd><p>List containing data on the metric graph.</p></dd>
 
 
 <dt><code>PtV</code></dt>
-<dd><p>vector with the indices of the vertices which are observation.
-locations</p></dd>
+<dd><p>Vector with the indices of the vertices which are observation
+locations.</p></dd>
 
 
 <dt><code>mesh</code></dt>
-<dd><p>mesh object used for plotting.</p></dd>
+<dd><p>Mesh object used for plotting.</p></dd>
 
 
 <dt><code>lines</code></dt>
-<dd><p>the lines in the graph.</p></dd>
+<dd><p>The lines in the graph.</p></dd>
 
 
 <dt><code>geo_dist</code></dt>
-<dd><p>geodesic distances between the vertices in the graph.</p></dd>
+<dd><p>Geodesic distances between the vertices in the graph.</p></dd>
 
 
 <dt><code>res_dist</code></dt>
-<dd><p>resistance distances between the observation locations.</p></dd>
+<dd><p>Resistance distances between the observation locations.</p></dd>
 
 
 <dt><code>Laplacian</code></dt>
-<dd><p>the weighted graph Laplacian of the vertices in the
+<dd><p>The weighted graph Laplacian of the vertices in the
 graph. The weights are given by the edge lengths.</p></dd>
 
 
@@ -223,7 +226,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>lines</code></dt>
-<dd><p>object of type <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code>.</p></dd>
+<dd><p>Object of type <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code>.</p></dd>
 
 
 <dt><code>V</code></dt>
@@ -240,13 +243,13 @@ in Longitude/Latitude and that distances should be computed in km.</p></dd>
 
 
 <dt><code>tolerance</code></dt>
-<dd><p>a list that provides tolerances during the construction of
-the graph:</p><ul><li><p><code>vertex_vertex</code> vertices that are closer than this number are merged
+<dd><p>List that provides tolerances during the construction of
+the graph:</p><ul><li><p><code>vertex_vertex</code> Vertices that are closer than this number are merged
 (default = 1e-7).</p></li>
-<li><p><code>vertex_line</code> if a vertex at the end of one line is closer than this
+<li><p><code>vertex_line</code> If a vertex at the end of one line is closer than this
 number to another line, this vertex is connected to that line
 (default = 1e-7)</p></li>
-<li><p><code>line_line</code> if two lines at some point are closer than this number, a new
+<li><p><code>line_line</code> If two lines at some point are closer than this number, a new
 vertex is added at that point and the two lines are connected (default = 0)</p></li>
 </ul><p>If <code>longlat = TRUE</code>, the tolerances are given in km.</p></dd>
 
@@ -290,7 +293,7 @@ viewed as a vertex.</p>
 
 <div class="section">
 <h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
-<p>A metric_graph object.</p>
+<p>A <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_geodist"></a><div class="section">
@@ -305,16 +308,17 @@ graph</p><div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>full</code></dt>
 <dd><p>Should the geodesic distances be computed for all
-the available locations. If <code>FALSE</code>, it will be computed
+the available locations? If <code>FALSE</code>, it will be computed
 separately for the locations of each group.</p></dd>
 
 
 <dt><code>obs</code></dt>
-<dd><p>Should the geodesic distances be computed at the observation locations?</p></dd>
+<dd><p>Should the geodesic distances be computed at the observation
+locations?</p></dd>
 
 
 <dt><code>group</code></dt>
-<dd><p>vector or list containing which groups to compute the distance
+<dd><p>Vector or list containing which groups to compute the distance
 for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 
 
@@ -322,13 +326,14 @@ for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 </div>
 <div class="section">
 <h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
-<p>Called for its side effects. The geodesic distances are stored inside the <code>geo_dist</code> element of the <code>metric_graph</code> object.</p>
+<p>No return value. Called for its side effects. The computed geodesic
+distances are stored in the <code>geo_dist</code> element of the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_geodist_PtE"></a><div class="section">
 <h3 id="method-compute-geodist-pte-">Method <code>compute_geodist_PtE()</code><a class="anchor" aria-label="anchor" href="#method-compute-geodist-pte-"></a></h3>
 <p>Computes shortest path distances between the vertices in the
-graph</p><div class="section">
+graph.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_geodist_PtE</span><span class="op">(</span></span>
 <span>  <span class="va">PtE</span>,</span>
@@ -340,7 +345,7 @@ graph</p><div class="section">
 <div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
-<dd><p>points to compute the metric for.</p></dd>
+<dd><p>Points to compute the metric for.</p></dd>
 
 
 <dt><code>normalized</code></dt>
@@ -348,7 +353,8 @@ graph</p><div class="section">
 
 
 <dt><code>include_vertices</code></dt>
-<dd><p>Should the original vertices be included in the distance matrix?</p></dd>
+<dd><p>Should the original vertices be included in the
+distance matrix?</p></dd>
 
 
 </dl><p></p></div>
@@ -368,7 +374,8 @@ mesh.</p><div class="section">
 
 <div class="section">
 <h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
-<p>Called for its side effects. The geodesic distances on the mesh are stored inside <code>mesh$geo_dist</code> in the <code>metric_graph</code> object.</p>
+<p>No return value. Called for its side effects. The geodesic distances
+on the mesh are stored in <code>mesh$geo_dist</code> in the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_resdist"></a><div class="section">
@@ -388,11 +395,12 @@ separately for the locations of each group.</p></dd>
 
 
 <dt><code>obs</code></dt>
-<dd><p>Should the resistance distances be computed at the observation locations?</p></dd>
+<dd><p>Should the resistance distances be computed at the observation
+locations?</p></dd>
 
 
 <dt><code>group</code></dt>
-<dd><p>vector or list containing which groups to compute the distance
+<dd><p>Vector or list containing which groups to compute the distance
 for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 
 
@@ -400,7 +408,8 @@ for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 </div>
 <div class="section">
 <h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
-<p>Called for its side effects. The geodesic distances are stored inside the <code>res_dist</code> element of the <code>metric_graph</code> object.</p>
+<p>No return value. Called for its side effects. The geodesic distances
+are stored in the <code>res_dist</code> element of the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_resdist_PtE"></a><div class="section">
@@ -418,15 +427,16 @@ locations.</p><div class="section">
 <div class="section">
 <h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
-<dd><p>points to compute the metric for.</p></dd>
+<dd><p>Points to compute the metric for.</p></dd>
 
 
 <dt><code>normalized</code></dt>
-<dd><p>are the locations in PtE in normalized distance?</p></dd>
+<dd><p>Are the locations in PtE in normalized distance?</p></dd>
 
 
 <dt><code>include_vertices</code></dt>
-<dd><p>Should the original vertices be included in the Laplacian matrix?</p></dd>
+<dd><p>Should the original vertices be included in the
+Laplacian matrix?</p></dd>
 
 
 </dl><p></p></div>
@@ -438,7 +448,7 @@ locations.</p><div class="section">
 
 </div><p></p><hr><a id="method-metric_graph-get_degrees"></a><div class="section">
 <h3 id="method-get-degrees-">Method <code>get_degrees()</code><a class="anchor" aria-label="anchor" href="#method-get-degrees-"></a></h3>
-<p>Gets the degrees of the vertices.</p><div class="section">
+<p>Returns the degrees of the vertices in the metric graph.</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_degrees</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -458,12 +468,14 @@ mesh.</p><div class="section">
 
 <div class="section">
 <h4 id="returns-7">Returns<a class="anchor" aria-label="anchor" href="#returns-7"></a></h4>
-<p>Called for its side effects. The geodesic distances on the mesh are stored inside <code>mesh$res_dist</code> in the <code>metric_graph</code> object.</p>
+<p>No return value. Called for its side effects. The geodesic distances
+on the mesh are stored in the <code>mesh$res_dist</code> element in the <code>metric_graph</code>
+object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_laplacian"></a><div class="section">
 <h3 id="method-compute-laplacian-">Method <code>compute_laplacian()</code><a class="anchor" aria-label="anchor" href="#method-compute-laplacian-"></a></h3>
-<p>Computes the weigthed graph Laplacian for the graph</p><div class="section">
+<p>Computes the weigthed graph Laplacian for the graph.</p><div class="section">
 <h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_laplacian</span><span class="op">(</span>full <span class="op">=</span> <span class="cn">FALSE</span>, obs <span class="op">=</span> <span class="cn">TRUE</span>, group <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -471,17 +483,18 @@ mesh.</p><div class="section">
 <div class="section">
 <h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>full</code></dt>
-<dd><p>Should the Laplacian be computed for all
+<dd><p>Should the resistance distances be computed for all
 the available locations. If <code>FALSE</code>, it will be computed
 separately for the locations of each group.</p></dd>
 
 
 <dt><code>obs</code></dt>
-<dd><p>Should the Laplacian be computed at the observation locations?</p></dd>
+<dd><p>Should the resistance distances be computed at the observation
+locations?</p></dd>
 
 
 <dt><code>group</code></dt>
-<dd><p>vector or list containing which groups to compute the
+<dd><p>Vector or list containing which groups to compute the
 Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 
 
@@ -489,19 +502,20 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 </div>
 <div class="section">
 <h4 id="returns-8">Returns<a class="anchor" aria-label="anchor" href="#returns-8"></a></h4>
-<p>Called for its side effects. The Laplacian is stored inside the <code>Laplacian</code> element in the <code>metric_graph</code> object.</p>
+<p>No reutrn value. Called for its side effects. The Laplacian is stored
+in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-prune_vertices"></a><div class="section">
 <h3 id="method-prune-vertices-">Method <code>prune_vertices()</code><a class="anchor" aria-label="anchor" href="#method-prune-vertices-"></a></h3>
-<p>Removes vertices of degree 2 of the graph.</p><div class="section">
+<p>Removes vertices of degree 2 from the metric graph.</p><div class="section">
 <h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="returns-9">Returns<a class="anchor" aria-label="anchor" href="#returns-9"></a></h4>
-<p>Called for its side effects.</p>
+<p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_PtE"></a><div class="section">
@@ -513,7 +527,9 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 
 <div class="section">
 <h4 id="returns-10">Returns<a class="anchor" aria-label="anchor" href="#returns-10"></a></h4>
-<p>A matrix with two columns, where the first column contains the edge number and the second column contains the distance on edge of the observation locations.</p>
+<p>A matrix with two columns, where the first column contains the edge
+number and the second column contains the distance on edge of the
+observation locations.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_Spoints"></a><div class="section">
@@ -524,12 +540,8 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 </div>
 
 <div class="section">
-<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>A</code></dt>
-<dd><p><code>SpatialPoints</code> object of the observation locations.</p></dd>
-
-
-</dl><p></p></div>
+<h4 id="returns-11">Returns<a class="anchor" aria-label="anchor" href="#returns-11"></a></h4>
+<p>A <code>SpatialPoints</code> object of the observation locations.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-observation_to_vertex"></a><div class="section">
@@ -540,16 +552,17 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 </div>
 
 <div class="section">
-<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>tolerance</code></dt>
-<dd><p>parameter in which we merge vertices together. Not intended for non-expert use.</p></dd>
+<dd><p>Parameter in which we merge vertices together. Not intended
+for non-expert use.</p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-11">Returns<a class="anchor" aria-label="anchor" href="#returns-11"></a></h4>
-<p>Called for its side effects.</p>
+<h4 id="returns-12">Returns<a class="anchor" aria-label="anchor" href="#returns-12"></a></h4>
+<p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_mesh_locations"></a><div class="section">
@@ -560,43 +573,43 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 </div>
 
 <div class="section">
-<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>bru</code></dt>
-<dd><p>logical. Should an <code>inlabru</code>-friendly list be returned?</p></dd>
+<dd><p>Should an <code>inlabru</code>-friendly list be returned?</p></dd>
 
 
 <dt><code>loc</code></dt>
-<dd><p>character. If <code>bru</code> is set to <code>TRUE</code>, the name of the location variable.
+<dd><p>If <code>bru</code> is set to <code>TRUE</code>, the name of the location variable.
 The default name is 'loc'.</p></dd>
 
 
 <dt><code>normalized</code></dt>
-<dd><p>if TRUE, then the distances in <code>distance_on_edge</code> are
+<dd><p>If TRUE, then the distances in <code>distance_on_edge</code> are
 assumed to be normalized to (0,1). Default TRUE.</p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-12">Returns<a class="anchor" aria-label="anchor" href="#returns-12"></a></h4>
+<h4 id="returns-13">Returns<a class="anchor" aria-label="anchor" href="#returns-13"></a></h4>
 <p>A list or a matrix containing the mesh locations.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-clear_observations"></a><div class="section">
 <h3 id="method-clear-observations-">Method <code>clear_observations()</code><a class="anchor" aria-label="anchor" href="#method-clear-observations-"></a></h3>
-<p>Clear all observations from the object.</p><div class="section">
+<p>Clear all observations from the <code>metric_graph</code> object.</p><div class="section">
 <h4 id="usage-14">Usage<a class="anchor" aria-label="anchor" href="#usage-14"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-13">Returns<a class="anchor" aria-label="anchor" href="#returns-13"></a></h4>
-<p>Called for its side effects.</p>
+<h4 id="returns-14">Returns<a class="anchor" aria-label="anchor" href="#returns-14"></a></h4>
+<p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-add_observations"></a><div class="section">
 <h3 id="method-add-observations-">Method <code>add_observations()</code><a class="anchor" aria-label="anchor" href="#method-add-observations-"></a></h3>
-<p>Add observations to the graph.</p><div class="section">
+<p>Add observations to the metric graph.</p><div class="section">
 <h4 id="usage-15">Usage<a class="anchor" aria-label="anchor" href="#usage-15"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span></span>
 <span>  Spoints <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -613,16 +626,16 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>Spoints</code></dt>
-<dd><p>SpatialPoints or SpatialPointsDataFrame of the observations,
-which may include the coordinates only, or the coordinates as well as the
-observations.</p></dd>
+<dd><p><code>SpatialPoints</code> or <code>SpatialPointsDataFrame</code> containing the
+observations. It may include the coordinates of the observations only, or
+the coordinates as well as the observations.</p></dd>
 
 
 <dt><code>data</code></dt>
-<dd><p>A data.frame or named list containing the observations. In case
-of groups, the data.frames for the groups should be stacked vertically,
+<dd><p>A <code>data.frame</code> or named list containing the observations. In
+case of groups, the data.frames for the groups should be stacked vertically,
 with a column indicating the index of the group. If <code>data</code> is not <code>NULL</code>,
 it takes priority over any eventual data in <code>Spoints</code>.</p></dd>
 
@@ -677,27 +690,26 @@ assumed to be normalized to (0,1). Default FALSE. Will not be used if
 <dd><p>Parameter to control a warning when adding observations.
 If the distance of some location and the closest point on the graph is
 greater than the tolerance, the function will display a warning.
-This helps detecting mistakes on the input
-locations when adding new data.</p></dd>
+This helps detecting mistakes on the input locations when adding new data.</p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-14">Returns<a class="anchor" aria-label="anchor" href="#returns-14"></a></h4>
-<p>Called for its side effects. The observations are stored in the <code>data</code> element of the <code>metric_graph</code> object.</p>
+<h4 id="returns-15">Returns<a class="anchor" aria-label="anchor" href="#returns-15"></a></h4>
+<p>No return value. Called for its side effects. The observations are
+stored in the <code>data</code> element of the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-buildC"></a><div class="section">
 <h3 id="method-buildc-">Method <code>buildC()</code><a class="anchor" aria-label="anchor" href="#method-buildc-"></a></h3>
-<p>build Kirchoff constraint matrix from edges, currently not
-implemented for circles (edges that start and end in the same vertex)</p><div class="section">
+<p>Build Kirchoff constraint matrix from edges.</p><div class="section">
 <h4 id="usage-16">Usage<a class="anchor" aria-label="anchor" href="#usage-16"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">buildC</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">2</span>, edge_constraint <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
+<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>alpha</code></dt>
 <dd><p>the type of constraint (currently only supports 2)</p></dd>
 
@@ -709,54 +721,63 @@ implemented for circles (edges that start and end in the same vertex)</p><div cl
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-15">Returns<a class="anchor" aria-label="anchor" href="#returns-15"></a></h4>
-<p>Called for its side effects.</p>
+<h4 id="details-2">Details<a class="anchor" aria-label="anchor" href="#details-2"></a></h4>
+<p>Currently not implemented for circles (edges that start and end
+in the same vertex)</p>
+</div>
+
+<div class="section">
+<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
+<p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-build_mesh"></a><div class="section">
 <h3 id="method-build-mesh-">Method <code>build_mesh()</code><a class="anchor" aria-label="anchor" href="#method-build-mesh-"></a></h3>
-<p>build mesh object for graph.</p><div class="section">
+<p>Builds mesh object for graph.</p><div class="section">
 <h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="cn">NULL</span>, n <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
+<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>h</code></dt>
-<dd><p>maximum distance between mesh nodes (should be provided if n is not provided).</p></dd>
+<dd><p>Maximum distance between mesh nodes (should be provided if n is
+not provided).</p></dd>
 
 
 <dt><code>n</code></dt>
-<dd><p>maximum number of nodes per edge (should be provided if h is not provided).</p></dd>
+<dd><p>Maximum number of nodes per edge (should be provided if h is not
+provided).</p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="details-2">Details<a class="anchor" aria-label="anchor" href="#details-2"></a></h4>
-<p>The mesh is a list with the objects:</p><ul><li><p>PtE which contains the mesh locations excluding the original vertices;</p></li>
-<li><p>V the verties of the mesh;</p></li>
-<li><p>E the edges of the mesh;</p></li>
-<li><p>n_e the number of vertices in the mesh per original edge in the graph;</p></li>
-<li><p>h_e the mesh width per edge in the graph;</p></li>
-<li><p>ind the indices of the vertices in the mesh;</p></li>
-<li><p>VtE all mesh locations including the original vertices.</p></li>
+<h4 id="details-3">Details<a class="anchor" aria-label="anchor" href="#details-3"></a></h4>
+<p>The mesh is a list with the objects:</p><ul><li><p><code>PtE</code> The mesh locations excluding the original vertices;</p></li>
+<li><p><code>V</code> The verties of the mesh;</p></li>
+<li><p><code>E</code> The edges of the mesh;</p></li>
+<li><p><code>n_e</code> The number of vertices in the mesh per original edge in the graph;</p></li>
+<li><p><code>h_e</code> The mesh width per edge in the graph;</p></li>
+<li><p><code>ind</code> The indices of the vertices in the mesh;</p></li>
+<li><p><code>VtE</code> All mesh locations including the original vertices.</p></li>
 </ul></div>
 
 <div class="section">
-<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
-<p>Called for its side effects. The mesh is stored in the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
+<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
+<p>No return value. Called for its side effects. The mesh is stored in
+the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_fem"></a><div class="section">
 <h3 id="method-compute-fem-">Method <code>compute_fem()</code><a class="anchor" aria-label="anchor" href="#method-compute-fem-"></a></h3>
-<p>build mass and stiffness matrices for given mesh object.</p><div class="section">
+<p>Build mass and stiffness matrices for given mesh object.</p><div class="section">
 <h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_fem</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="details-3">Details<a class="anchor" aria-label="anchor" href="#details-3"></a></h4>
+<h4 id="details-4">Details<a class="anchor" aria-label="anchor" href="#details-4"></a></h4>
 <p>The function builds: The matrix <code>C</code> which is the mass matrix with
 elements \(&lt;\phi_i, \phi_j&gt;\), the matrix <code>G</code> which is the stiffness
 matrix with elements \(&lt;d\phi_i, d\phi_j&gt;\), the matrix <code>B</code> with elements
@@ -764,48 +785,51 @@ matrix with elements \(&lt;d\phi_i, d\phi_j&gt;\), the matrix <code>B</code> wit
 </div>
 
 <div class="section">
-<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
-<p>Called for its side effects. The finite element matrices <code>C</code>, <code>G</code> and <code>B</code> are stored inside the <code>mesh</code> element inside the <code>metric_graph</code> object.</p>
+<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
+<p>No return value. Called for its side effects. The finite element
+matrices <code>C</code>, <code>G</code> and <code>B</code> are stored in the <code>mesh</code> element in the
+<code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-mesh_A"></a><div class="section">
 <h3 id="method-mesh-a-">Method <code>mesh_A()</code><a class="anchor" aria-label="anchor" href="#method-mesh-a-"></a></h3>
-<p>Computes observation matrix for mesh</p><div class="section">
+<p>Computes observation matrix for mesh.</p><div class="section">
 <h4 id="usage-19">Usage<a class="anchor" aria-label="anchor" href="#usage-19"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">mesh_A</span><span class="op">(</span><span class="va">PtE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
+<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
-<dd><p>locations given as (edge number in graph, normalized location on
+<dd><p>Locations given as (edge number in graph, normalized location on
 edge)</p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
+<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
 <p>The observation matrix.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-VtEfirst"></a><div class="section">
 <h3 id="method-vtefirst-">Method <code>VtEfirst()</code><a class="anchor" aria-label="anchor" href="#method-vtefirst-"></a></h3>
-<p>Find one edge corresponding to each vertex</p><div class="section">
+<p>Find one edge corresponding to each vertex.</p><div class="section">
 <h4 id="usage-20">Usage<a class="anchor" aria-label="anchor" href="#usage-20"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">VtEfirst</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
-<p>VtE matrix where <code>VtE[i,1]</code> is the edge number, <code>VtE[i,2] = 0</code>
-if the vertex is at the start of the edge and <code>VtE[i,1] = 1</code> if the vertex
-is at the end of the edge</p>
+<h4 id="returns-20">Returns<a class="anchor" aria-label="anchor" href="#returns-20"></a></h4>
+<p>A nV x 2 matrix the first element of the <code>i</code>th row is the edge
+number corresponding to the <code>i</code>th vertex and the second value is 0
+if the vertex is at the start of the edge and 1 if the vertex
+is at the end of the edge.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot"></a><div class="section">
 <h3 id="method-plot-">Method <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code><a class="anchor" aria-label="anchor" href="#method-plot-"></a></h3>
-<p>plot a metric graph</p><div class="section">
+<p>Plots the metric graph</p><div class="section">
 <h4 id="usage-21">Usage<a class="anchor" aria-label="anchor" href="#usage-21"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -827,7 +851,7 @@ is at the end of the edge</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
+<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>Which column of the data to plot? If <code>NULL</code>, no data will be
 plotted.</p></dd>
@@ -840,28 +864,28 @@ is a character, then the group will be chosen by its name.</p></dd>
 
 
 <dt><code>plotly</code></dt>
-<dd><p>use plot_ly for 3D plot (default FALSE). This option requires
-the 'plotly' package.</p></dd>
+<dd><p>Use plot_ly for 3D plot (default <code>FALSE</code>). This option
+requires the <code>plotly</code> package.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
-<dd><p>size of the vertices</p></dd>
+<dd><p>Size of the vertices.</p></dd>
 
 
 <dt><code>vertex_color</code></dt>
-<dd><p>color of vertices</p></dd>
+<dd><p>Color of vertices.</p></dd>
 
 
 <dt><code>edge_width</code></dt>
-<dd><p>line width for edges</p></dd>
+<dd><p>Line width for edges.</p></dd>
 
 
 <dt><code>edge_color</code></dt>
-<dd><p>color of edges</p></dd>
+<dd><p>Color of edges.</p></dd>
 
 
 <dt><code>data_size</code></dt>
-<dd><p>size of markers for data</p></dd>
+<dd><p>Size of markers for data.</p></dd>
 
 
 <dt><code>mesh</code></dt>
@@ -869,35 +893,35 @@ the 'plotly' package.</p></dd>
 
 
 <dt><code>X</code></dt>
-<dd><p>Additional values to plot</p></dd>
+<dd><p>Additional values to plot.</p></dd>
 
 
 <dt><code>X_loc</code></dt>
-<dd><p>locations of the additional values in the format
-(edge, normalized distance on edge)</p></dd>
+<dd><p>Locations of the additional values in the format
+(edge, normalized distance on edge).</p></dd>
 
 
 <dt><code>p</code></dt>
-<dd><p>existing ggplot or plot_ly object to add the graph to</p></dd>
+<dd><p>Existing <code>ggplot</code> or <code>plot_ly</code> object to add the graph to</p></dd>
 
 
 <dt><code>degree</code></dt>
-<dd><p>show the degrees of the vertices?</p></dd>
+<dd><p>Show the degrees of the vertices?</p></dd>
 
 
 <dt><code>direction</code></dt>
-<dd><p>show the direction of the edges?</p></dd>
+<dd><p>Show the direction of the edges?</p></dd>
 
 
 <dt><code>...</code></dt>
-<dd><p>additional arguments for ggplot or plot_ly</p></dd>
+<dd><p>Additional arguments for <code>ggplot</code> or <code>plot_ly</code></p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-20">Returns<a class="anchor" aria-label="anchor" href="#returns-20"></a></h4>
-<p>a plot_ly or or ggplot object</p>
+<h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
+<p>A <code>plot_ly</code> (if <code>plotly=TRUE</code>) or <code>ggplot</code> object.</p>
 </div>
 <div class="section">
 <h4 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a></h4>
@@ -918,7 +942,7 @@ the 'plotly' package.</p></dd>
 
 </div><p></p><hr><a id="method-metric_graph-plot_connections"></a><div class="section">
 <h3 id="method-plot-connections-">Method <code>plot_connections()</code><a class="anchor" aria-label="anchor" href="#method-plot-connections-"></a></h3>
-<p>Plots the connections</p><div class="section">
+<p>Plots the connections in the graph</p><div class="section">
 <h4 id="usage-22">Usage<a class="anchor" aria-label="anchor" href="#usage-22"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_connections</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -926,7 +950,7 @@ the 'plotly' package.</p></dd>
 
 </div><p></p><hr><a id="method-metric_graph-plot_function"></a><div class="section">
 <h3 id="method-plot-function-">Method <code>plot_function()</code><a class="anchor" aria-label="anchor" href="#method-plot-function-"></a></h3>
-<p>plot continuous function on the graph</p><div class="section">
+<p>Plots continuous function on the graph.</p><div class="section">
 <h4 id="usage-23">Usage<a class="anchor" aria-label="anchor" href="#usage-23"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span></span>
 <span>  <span class="va">X</span>,</span>
@@ -945,7 +969,7 @@ the 'plotly' package.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-14">Arguments<a class="anchor" aria-label="anchor" href="#arguments-14"></a></h4>
+<h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>X</code></dt>
 <dd><p>Either an m x 3 matrix with (edge number, position on
 curve (in length), value) or a vector with values for the function
@@ -953,60 +977,60 @@ evaluated at the mesh in the graph</p></dd>
 
 
 <dt><code>plotly</code></dt>
-<dd><p>if TRUE, then plot is shown in 3D. This option requires the
-package 'plotly'.</p></dd>
+<dd><p>If <code>TRUE</code>, then the plot is shown in 3D. This option requires
+the package <code>plotly</code>.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
-<dd><p>(for both 2d and 3d plots) size of the vertices</p></dd>
+<dd><p>Size of the vertices.</p></dd>
 
 
 <dt><code>vertex_color</code></dt>
-<dd><p>color of vertices</p></dd>
+<dd><p>Color of vertices.</p></dd>
 
 
 <dt><code>edge_width</code></dt>
-<dd><p>width for edges</p></dd>
+<dd><p>Width for edges.</p></dd>
 
 
 <dt><code>edge_color</code></dt>
-<dd><p>for 3D plot, color of edges</p></dd>
+<dd><p>For 3D plot, color of edges.</p></dd>
 
 
 <dt><code>line_width</code></dt>
-<dd><p>for 3D plot, line width of the function curve.</p></dd>
+<dd><p>For 3D plot, line width of the function curve.</p></dd>
 
 
 <dt><code>line_color</code></dt>
-<dd><p>color of the function curve</p></dd>
+<dd><p>Color of the function curve.</p></dd>
 
 
 <dt><code>support_width</code></dt>
-<dd><p>for 3D plot, width of support lines</p></dd>
+<dd><p>For 3D plot, width of support lines.</p></dd>
 
 
 <dt><code>support_color</code></dt>
-<dd><p>for 3D plot, color of support lines</p></dd>
+<dd><p>For 3D plot, color of support lines.</p></dd>
 
 
 <dt><code>p</code></dt>
-<dd><p>previous plot in which the new plot should be added.</p></dd>
+<dd><p>Previous plot to which the new plot should be added.</p></dd>
 
 
 <dt><code>...</code></dt>
-<dd><p>additional arguments for ggplot or plot_ly</p></dd>
+<dd><p>Additional arguments for <code>ggplot</code> or <code>plot_ly</code></p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
-<p>either a ggplot or a plot_ly object</p>
+<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
+<p>Either a <code>ggplot</code> (if <code>plotly=FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_movie"></a><div class="section">
 <h3 id="method-plot-movie-">Method <code>plot_movie()</code><a class="anchor" aria-label="anchor" href="#method-plot-movie-"></a></h3>
-<p>plot a movies of a continuous function evolving on the graph</p><div class="section">
+<p>Plots a movie of a continuous function evolving on the graph.</p><div class="section">
 <h4 id="usage-24">Usage<a class="anchor" aria-label="anchor" href="#usage-24"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_movie</span><span class="op">(</span></span>
 <span>  <span class="va">X</span>,</span>
@@ -1022,64 +1046,64 @@ package 'plotly'.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
+<h4 id="arguments-14">Arguments<a class="anchor" aria-label="anchor" href="#arguments-14"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>X</code></dt>
 <dd><p>A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.</p></dd>
 
 
 <dt><code>plotly</code></dt>
-<dd><p>if TRUE, then plot is shown in 3D. This option requires the
-package 'plotly'.</p></dd>
+<dd><p>If <code>TRUE</code>, then plot is shown in 3D. This option requires the
+package <code>plotly</code>.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
-<dd><p>(for both 2d and 3d plots) size of the vertices</p></dd>
+<dd><p>Size of the vertices.</p></dd>
 
 
 <dt><code>vertex_color</code></dt>
-<dd><p>color of vertices</p></dd>
+<dd><p>Color of vertices.</p></dd>
 
 
 <dt><code>edge_width</code></dt>
-<dd><p>width for edges</p></dd>
+<dd><p>Width for edges.</p></dd>
 
 
 <dt><code>edge_color</code></dt>
-<dd><p>for 3D plot, color of edges</p></dd>
+<dd><p>For 3D plot, color of edges.</p></dd>
 
 
 <dt><code>line_width</code></dt>
-<dd><p>for 3D plot, line width of the function curve.</p></dd>
+<dd><p>For 3D plot, line width of the function curve.</p></dd>
 
 
 <dt><code>line_color</code></dt>
-<dd><p>color of the function curve</p></dd>
+<dd><p>Color of the function curve.</p></dd>
 
 
 <dt><code>...</code></dt>
-<dd><p>additional arguments for ggplot or plot_ly</p></dd>
+<dd><p>Additional arguments for ggplot or plot_ly.</p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
-<p>either a ggplot or a plot_ly object</p>
+<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
+<p>Either a <code>ggplot</code> (if <code>plotly=FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-add_mesh_observations"></a><div class="section">
 <h3 id="method-add-mesh-observations-">Method <code>add_mesh_observations()</code><a class="anchor" aria-label="anchor" href="#method-add-mesh-observations-"></a></h3>
-<p>Add observations on mesh to the object</p><div class="section">
+<p>Add observations on mesh to the object.</p><div class="section">
 <h4 id="usage-25">Usage<a class="anchor" aria-label="anchor" href="#usage-25"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">add_mesh_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="cn">NULL</span>, group <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
+<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
-<dd><p>A data.frame or named list containing the observations. In case
-of groups, the data.frames for the groups should be stacked vertically,
+<dd><p>A <code>data.frame</code> or named list containing the observations.
+In case of groups, the data.frames for the groups should be stacked vertically,
 with a column indicating the index of the group. If <code>data_frame</code> is not
 <code>NULL</code>, it takes priority over any eventual data in <code>Spoints</code>.</p></dd>
 
@@ -1092,17 +1116,22 @@ in which the group indices are stored.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
-<p>Called for its side effects. The observations are stored inside the <code>data</code> element inside the <code>metric_graph</code> object.</p>
+<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
+<p>No return value. Called for its side effects. The observations are
+stored in the <code>data</code> element in the <code>metric_graph</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_initial_graph"></a><div class="section">
 <h3 id="method-get-initial-graph-">Method <code>get_initial_graph()</code><a class="anchor" aria-label="anchor" href="#method-get-initial-graph-"></a></h3>
-<p>Get a copy of the initial graph</p><div class="section">
+<p>Returns a copy of the initial metric graph.</p><div class="section">
 <h4 id="usage-26">Usage<a class="anchor" aria-label="anchor" href="#usage-26"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_initial_graph</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
+<p>A <code>metric_graph</code> object.</p>
+</div>
 
 </div><p></p><hr><a id="method-metric_graph-A"></a><div class="section">
 <h3 id="method-a-">Method <code>A()</code><a class="anchor" aria-label="anchor" href="#method-a-"></a></h3>
@@ -1112,7 +1141,7 @@ in which the group indices are stored.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
+<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>group</code></dt>
 <dd><p>A vector. If <code>NULL</code>, the A matrix for the first group will be
 returned. One can use all groups by simply setting the <code>group</code> variable
@@ -1132,31 +1161,31 @@ included?</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
+<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
 <p>The observation or prediction matrix.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-coordinates"></a><div class="section">
 <h3 id="method-coordinates-">Method <code><a href="https://rdrr.io/pkg/sp/man/coordinates.html" class="external-link">coordinates()</a></code><a class="anchor" aria-label="anchor" href="#method-coordinates-"></a></h3>
 <p>Convert between locations on the graph and Euclidean
-coordinates</p><div class="section">
+coordinates.</p><div class="section">
 <h4 id="usage-28">Usage<a class="anchor" aria-label="anchor" href="#usage-28"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="cn">NULL</span>, XY <span class="op">=</span> <span class="cn">NULL</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
+<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
-<dd><p>matrix with locations on the graph (edge number and normalized
+<dd><p>Matrix with locations on the graph (edge number and normalized
 position on the edge).</p></dd>
 
 
 <dt><code>XY</code></dt>
-<dd><p>matrix with locations in Euclidean space</p></dd>
+<dd><p>Matrix with locations in Euclidean space</p></dd>
 
 
 <dt><code>normalized</code></dt>
-<dd><p>If TRUE, it is assumed that the positions in <code>PtE</code> are
+<dd><p>If <code>TRUE</code>, it is assumed that the positions in <code>PtE</code> are
 normalized to (0,1), and the object returned if <code>XY</code> is specified contains
 normalized locations.</p></dd>
 
@@ -1164,7 +1193,7 @@ normalized locations.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
+<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
 <p>If <code>PtE</code> is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If <code>XY</code> is provided, then a matrix with the
 closest locations on the graph is returned</p>
@@ -1178,7 +1207,7 @@ closest locations on the graph is returned</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-19">Arguments<a class="anchor" aria-label="anchor" href="#arguments-19"></a></h4>
+<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
