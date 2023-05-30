@@ -4,7 +4,7 @@
 \alias{graph_components}
 \title{Connected components of metric graph}
 \value{
-Object of \code{\link{R6Class}} for creating metric graph components.
+Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 }
 \description{
 Class representing connected components of a metric graph

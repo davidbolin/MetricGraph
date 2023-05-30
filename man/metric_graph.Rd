@@ -4,7 +4,7 @@
 \alias{metric_graph}
 \title{Metric graph}
 \value{
-Object of \code{\link{R6Class}} for creating metric graphs.
+Object of \code{\link[R6]{R6Class}} for creating metric graphs.
 }
 \description{
 Class representing a general metric graph.

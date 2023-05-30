@@ -4,7 +4,7 @@
 #' sp::Lines object where each line is representing and edge. For more details,
 #'  see the help vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
-#' @return Object of \code{\link{R6Class}} for creating metric graphs.
+#' @return Object of \code{\link[R6]{R6Class}} for creating metric graphs.
 #' @examples
 #' library(sp)
 #' line1 <- Line(rbind(c(0, 0), c(2, 0)))
@@ -2865,7 +2865,7 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 #' from an sp::Lines object where each line is representing and edge. For more
 #' details, see the help vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
-#' @return Object of \code{\link{R6Class}} for creating metric graph components.
+#' @return Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 #' @examples
 #' library(sp)
 #' line1 <- Line(rbind(c(0, 0), c(1, 0)))
