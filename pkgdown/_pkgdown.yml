@@ -86,7 +86,6 @@ reference:
   - title: Space-time models
     contents:
     - simulate_spacetime
-    - plot_spacetime_covariances
     - make.Q.euler
     - make.Q.spacetime
   - title: Sampling SPDE on metric graphs

@@ -643,6 +643,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       t(rep(1,dim(self$mesh$V)[1])) %x% diag(Li)
   },
 
+
   #' @description Computes the weigthed graph Laplacian for the graph.
   #' @param full Should the resistance distances be computed for all
   #' the available locations. If `FALSE`, it will be computed
@@ -679,6 +680,9 @@ metric_graph <-  R6::R6Class("metric_graph",
           idx_notna <- idx_not_all_NA(data_grp)
           PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
                        data_grp[["__distance_on_edge"]][idx_notna])
+          if(nrow(PtE) == 0){
+            stop("All the observations are NA.")
+          }
           self$Laplacian[[grp]] <- private$compute_laplacian_PtE(PtE,
                                                               normalized = TRUE)
       }

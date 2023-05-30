@@ -407,8 +407,14 @@ prob_points <- c(prob_points, which(PtE[,2] < 1e-3))
 prob_points <- c(prob_points, which(PtE[,2] > 1 - 1e-3))
 
 PtE <- PtE[!(1:nrow(PtE)%in%prob_points),]
+df_temp <- data.frame(y = 0, edge_number = PtE[,1],
+                        distance_on_edge = PtE[,2])
+                        
+graph$clear_observations()
+graph$add_observations(data = df_temp, normalized = TRUE)
+graph$compute_laplacian()
 
-GL <- graph$compute_laplacian_PtE(PtE = PtE, normalized = TRUE)
+GL <- graph$Laplacian[[1]]
 ```
 
 Let us now generate the data for a graph Laplacian model with $\alpha=1$:
