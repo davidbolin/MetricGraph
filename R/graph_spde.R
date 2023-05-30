@@ -1101,6 +1101,7 @@ predict.rspde_metric_graph <- function(object,
 #' @param loc character. Name of the locations to be used in `inlabru`'s component.
 #' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
 #' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
+#' @value A list containing the processed data to be used in a user-friendly manner by inlabru.
 #' @export
 
 graph_bru_process_data <- function(data, edge_number = "edge_number",

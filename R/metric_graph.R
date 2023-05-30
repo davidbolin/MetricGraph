@@ -4,6 +4,7 @@
 #' sp::Lines object where each line is representing and edge. For more details,
 #'  see the help vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
+#' @value Object of \code{\link{R6Class}} for creating metric graphs.
 #' @examples
 #' library(sp)
 #' line1 <- Line(rbind(c(0, 0), c(2, 0)))
@@ -642,11 +643,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
-      self$Laplacian[["__vertices"]] <- self$compute_laplacian_PtE(PtE,
+      self$Laplacian[["__vertices"]] <- private$compute_laplacian_PtE(PtE,
                                                             normalized = TRUE)
     } else if(full){
       PtE <- self$get_PtE()
-      self$Laplacian[["__complete"]] <- self$compute_laplacian_PtE(PtE,
+      self$Laplacian[["__complete"]] <- private$compute_laplacian_PtE(PtE,
                                                             normalized = TRUE)
     } else{
       if(is.null(group)){
@@ -657,63 +658,10 @@ metric_graph <-  R6::R6Class("metric_graph",
           idx_notna <- idx_not_all_NA(data_grp)
           PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
                        data_grp[["__distance_on_edge"]][idx_notna])
-          self$Laplacian[[grp]] <- self$compute_laplacian_PtE(PtE,
+          self$Laplacian[[grp]] <- private$compute_laplacian_PtE(PtE,
                                                               normalized = TRUE)
       }
     }
-  },
-
-  #' @description Computes the weigthed graph Laplacian for the graph
-  #' @param PtE points to compute the metric for.
-  #' @param normalized are the locations in PtE in normalized distance?
-
-  compute_laplacian_PtE = function(PtE, normalized = TRUE) {
-
-    graph.temp <- self$clone()
-    graph.temp$clear_observations()
-    df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
-                         edge_number = PtE[,1],
-                         distance_on_edge = PtE[,2])                        
-    if(sum(duplicated(df_temp))>0){
-      warning("Duplicated locations were found when computing the laplacian. The returned values are given for unique locations.")
-      df_temp <- unique(df_temp)
-    }
-
-    graph.temp$build_mesh(h = 1000)
-
-    df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
-                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
-    df_temp$included <- TRUE
-    temp_merge <- merge(df_temp, df_temp2, all = TRUE)
-                            
-    df_temp$included <- NULL
-    df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
-    df_temp2$included <- NULL
-    df_temp <- rbind(df_temp2, df_temp)
-
-    nV_new <- sum(is.na(temp_merge["included"]))
-    
-    df_temp[["__dummy"]] <- 1:nrow(df_temp)
-
-    graph.temp$add_observations(data = df_temp, normalized = normalized)
-    graph.temp$observation_to_vertex()
-    Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
-    
-    for (i in 1:graph.temp$nE) {
-      Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1 / graph.temp$edge_lengths[i]
-      Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1 / graph.temp$edge_lengths[i]
-    }
-    Laplacian <- Matrix::Diagonal(graph.temp$nV,
-                                  as.vector(Matrix::rowSums(Wmat))) - Wmat
-
-    # Reordering from vertices to points
-    Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
-    # Order back to the input order
-    Laplacian[graph.temp$data[["__dummy"]], graph.temp$data[["__dummy"]]] <- Laplacian
-
-    attr(Laplacian, "nV_idx") <- nV_new
-
-    return(Laplacian)
   },
 
   #' @description Removes vertices of degree 2 of the graph.
@@ -2707,6 +2655,55 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
   },
 
+  compute_laplacian_PtE = function(PtE, normalized = TRUE) {
+
+    graph.temp <- self$clone()
+    graph.temp$clear_observations()
+    df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                         edge_number = PtE[,1],
+                         distance_on_edge = PtE[,2])                        
+    if(sum(duplicated(df_temp))>0){
+      warning("Duplicated locations were found when computing the laplacian. The returned values are given for unique locations.")
+      df_temp <- unique(df_temp)
+    }
+
+    graph.temp$build_mesh(h = 1000)
+
+    df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+                                  distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
+    df_temp$included <- TRUE
+    temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+                            
+    df_temp$included <- NULL
+    df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+    df_temp2$included <- NULL
+    df_temp <- rbind(df_temp2, df_temp)
+
+    nV_new <- sum(is.na(temp_merge["included"]))
+    
+    df_temp[["__dummy"]] <- 1:nrow(df_temp)
+
+    graph.temp$add_observations(data = df_temp, normalized = normalized)
+    graph.temp$observation_to_vertex()
+    Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
+    
+    for (i in 1:graph.temp$nE) {
+      Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1 / graph.temp$edge_lengths[i]
+      Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1 / graph.temp$edge_lengths[i]
+    }
+    Laplacian <- Matrix::Diagonal(graph.temp$nV,
+                                  as.vector(Matrix::rowSums(Wmat))) - Wmat
+
+    # Reordering from vertices to points
+    Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
+    # Order back to the input order
+    Laplacian[graph.temp$data[["__dummy"]], graph.temp$data[["__dummy"]]] <- Laplacian
+
+    attr(Laplacian, "nV_idx") <- nV_new
+
+    return(Laplacian)
+  },
+
   find_line_line_points = function(tol) {
   lines_sf <- sf::st_as_sf(self$lines)
   # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
@@ -2807,9 +2804,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
   }
-  p_add <<- points_add
-  p_pte <<- points_add_PtE
-  ret_tmp <<- list(points = points_add, PtE = points_add_PtE)
+  p_add <- points_add
+  p_pte <- points_add_PtE
+  # ret_tmp <- list(points = points_add, PtE = points_add_PtE)
   return(list(points = points_add, PtE = points_add_PtE))
 },
 
@@ -2849,6 +2846,7 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 #' from an sp::Lines object where each line is representing and edge. For more
 #' details, see the help vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
+#' @value Object of \code{\link{R6Class}} for creating metric graph components.
 #' @examples
 #' library(sp)
 #' line1 <- Line(rbind(c(0, 0), c(1, 0)))
@@ -2949,6 +2947,7 @@ graph_components <-  R6::R6Class("graph_components",
    #' @param vertex_colors a 3 x nc matrix with RGB values for the edge colors to
    #' be used when plotting each graph
    #' @param ... additional arguments for plotting the individual graphs
+   #' @return called for its side effects.
    plot = function(edge_colors = NULL, vertex_colors = NULL, ...) {
 
      if (is.null(edge_colors)) {
