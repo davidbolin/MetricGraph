@@ -15,6 +15,9 @@
 
 \item{...}{additional parameters to be passed to the plot function.}
 }
+\value{
+A \code{ggplot2} object.
+}
 \description{
 Auxiliar function to obtain plots of the predictions of the field
 using inlabru.

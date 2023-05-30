@@ -7,7 +7,7 @@
 #' @param leave_edge_out leave_edge_out = TRUE means that the
 #' posterior mean is computed for each observation based on all observations
 #' which are not on that edge. 
-#' @value A vector with the posterior expectations.
+#' @return A vector with the posterior expectations.
 #' @export
 spde_posterior_mean <- function(theta,
                                 graph,

@@ -210,7 +210,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         E <- graph$E[e, ]
         if (E[1] == E[2]) {
-          warning("Warning: circle not implemented\n")
+          warning("Circle not implemented")
         }
           BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
           Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +

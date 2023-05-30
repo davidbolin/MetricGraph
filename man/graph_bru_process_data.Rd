@@ -21,6 +21,9 @@ for the locations to obtain the prediction.}
 
 \item{loc}{character. Name of the locations to be used in \code{inlabru}'s component.}
 }
+\value{
+A list containing the processed data to be used in a user-friendly manner by inlabru.
+}
 \description{
 Prepare data frames or data lists to be used with inlabru in metric graphs
 }

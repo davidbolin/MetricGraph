@@ -54,6 +54,9 @@ for the locations to obtain the prediction.}
 
 \item{...}{Not used.}
 }
+\value{
+A list with elements \code{mean}, which contains the means of the predictions, \code{variance} (if \code{compute_variance} is \code{TRUE}), which contains the variances of the predictions, \code{samples} (if \code{posterior_samples} is \code{TRUE}), which contains the posterior samples.
+}
 \description{
 Prediction of a mixed effects regression model on a metric graph.
 }

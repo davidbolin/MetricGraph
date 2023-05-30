@@ -3,6 +3,9 @@
 \name{graph_components}
 \alias{graph_components}
 \title{Connected components of metric graph}
+\value{
+Object of \code{\link{R6Class}} for creating metric graph components.
+}
 \description{
 Class representing connected components of a metric graph
 }
@@ -112,6 +115,9 @@ be used when plotting each graph}
 \item{\code{...}}{additional arguments for plotting the individual graphs}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}

@@ -3,8 +3,11 @@
 \name{metric_graph}
 \alias{metric_graph}
 \title{Metric graph}
+\value{
+Object of \code{\link{R6Class}} for creating metric graphs.
+}
 \description{
-Class representing a general metric graph
+Class representing a general metric graph.
 }
 \details{
 A graph object created from vertex and edge matrices, or from an
@@ -45,49 +48,49 @@ graph$plot()
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{V}}{matrix with positions in Euclidean space of the vertices of the
-graph}
+graph.}
 
-\item{\code{nV}}{the number of vertices}
+\item{\code{nV}}{the number of vertices.}
 
 \item{\code{E}}{matrix with the edges of the graph, where \code{E[i,1]} is the vertex
 at the start of the ith edge and \code{E[i,2]} is the vertex at the end of the
-edge}
+edge.}
 
-\item{\code{nE}}{the number of edges}
+\item{\code{nE}}{the number of edges.}
 
-\item{\code{edge_lengths}}{vector with the lengths of the edges in the graph}
+\item{\code{edge_lengths}}{vector with the lengths of the edges in the graph.}
 
-\item{\code{EID}}{vector with the IDs of the edges in the graph}
+\item{\code{EID}}{vector with the IDs of the edges in the graph.}
 
-\item{\code{LtE}}{matrix with edge positions on the lines}
+\item{\code{LtE}}{matrix with edge positions on the lines.}
 
 \item{\code{ELend}}{vector with the locations of the end points of the edges on
-the lines in the graph. The locations are normalized on the line}
+the lines in the graph. The locations are normalized on the line.}
 
 \item{\code{ELstart}}{vector with the locations of the starting points of the
-edges on the lines in the graph. The locations are normalized on the line}
+edges on the lines in the graph. The locations are normalized on the line.}
 
-\item{\code{C}}{constraint matrix used to set Kirchhoff constraints}
+\item{\code{C}}{constraint matrix used to set Kirchhoff constraints.}
 
-\item{\code{CoB}}{change-of-basis object used for Kirchhoff constraints}
+\item{\code{CoB}}{change-of-basis object used for Kirchhoff constraints.}
 
-\item{\code{points}}{the observations in a SpatialPointsDataFrame}
+\item{\code{points}}{the observations in a SpatialPointsDataFrame.}
 
-\item{\code{data}}{a list containing the data on the graph}
+\item{\code{data}}{a list containing the data on the graph.}
 
-\item{\code{PtV}}{vector with the indices of the vertices which are observation
+\item{\code{PtV}}{vector with the indices of the vertices which are observation.
 locations}
 
-\item{\code{mesh}}{mesh object used for plotting}
+\item{\code{mesh}}{mesh object used for plotting.}
 
-\item{\code{lines}}{the lines in the graph}
+\item{\code{lines}}{the lines in the graph.}
 
-\item{\code{geo_dist}}{geodesic distances between the vertices in the graph}
+\item{\code{geo_dist}}{geodesic distances between the vertices in the graph.}
 
-\item{\code{res_dist}}{resistance distances between the observation locations}
+\item{\code{res_dist}}{resistance distances between the observation locations.}
 
 \item{\code{Laplacian}}{the weighted graph Laplacian of the vertices in the
-graph. The weights are given by the edge lengths}
+graph. The weights are given by the edge lengths.}
 }
 \if{html}{\out{</div>}}
 }
@@ -103,7 +106,6 @@ graph. The weights are given by the edge lengths}
 \item \href{#method-metric_graph-get_degrees}{\code{metric_graph$get_degrees()}}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
-\item \href{#method-metric_graph-compute_laplacian_PtE}{\code{metric_graph$compute_laplacian_PtE()}}
 \item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
 \item \href{#method-metric_graph-get_Spoints}{\code{metric_graph$get_Spoints()}}
@@ -131,7 +133,7 @@ graph. The weights are given by the edge lengths}
 \if{html}{\out{<a id="method-metric_graph-new"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new \code{metric_graph} object
+Create a new \code{metric_graph} object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(
   lines = NULL,
@@ -150,13 +152,13 @@ Create a new \code{metric_graph} object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{lines}}{object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}}
+\item{\code{lines}}{object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}.}
 
-\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices}
+\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
 
-\item{\code{E}}{m x 2 matrix where each row represents an edge}
+\item{\code{E}}{m x 2 matrix where each row represents an edge.}
 
-\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given
+\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in km.}
 
 \item{\code{tolerance}}{a list that provides tolerances during the construction of
@@ -178,7 +180,7 @@ connected and a warning is given if this is not the case.}
 
 \item{\code{adjust_lines}}{Set to \code{TRUE} to adjust the lines object to match the graph
 connections. This can take some time for large graphs, so by default it is \code{TRUE}
-for graphs with at most 100 lines, and \code{FALSE} for larger graphs}
+for graphs with at most 100 lines, and \code{FALSE} for larger graphs.}
 
 \item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
 initialization. Default is \code{FALSE}.}
@@ -186,7 +188,7 @@ initialization. Default is \code{FALSE}.}
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
 are removed. The default is the \code{vertex_vertex} tolerance.}
 
-\item{\code{verbose}}{Print progress of graph creation}
+\item{\code{verbose}}{Print progress of graph creation.}
 }
 \if{html}{\out{</div>}}
 }
@@ -200,7 +202,7 @@ viewed as a vertex.
 }
 
 \subsection{Returns}{
-A metric_graph object
+A metric_graph object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -226,6 +228,9 @@ separately for the locations of each group.}
 for. If \code{NULL}, it will be computed for all groups.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Called for its side effects. The geodesic distances are stored inside the \code{geo_dist} element of the \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -253,24 +258,30 @@ graph
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+A matrix containing the geodesic distances.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_geodist_mesh"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_geodist_mesh}{}}}
 \subsection{Method \code{compute_geodist_mesh()}}{
 Computes shortest path distances between the vertices in the
-mesh
+mesh.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist_mesh()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Called for its side effects. The geodesic distances on the mesh are stored inside \code{mesh$geo_dist} in the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_resdist"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_resdist}{}}}
 \subsection{Method \code{compute_resdist()}}{
 Computes the resistance distance between the observation
-locations
+locations.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
 }
@@ -289,13 +300,16 @@ for. If \code{NULL}, it will be computed for all groups.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Called for its side effects. The geodesic distances are stored inside the \code{res_dist} element of the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_resdist_PtE"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_resdist_PtE}{}}}
 \subsection{Method \code{compute_resdist_PtE()}}{
 Computes the resistance distance between the observation
-locations
+locations.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_PtE(
   PtE,
@@ -315,27 +329,36 @@ locations
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+A matrix containing the resistance distances.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_degrees"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-get_degrees}{}}}
 \subsection{Method \code{get_degrees()}}{
-Gets the degrees of the vertices
+Gets the degrees of the vertices.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_degrees()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A vector containing the degrees of the vertices.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_resdist_mesh"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_resdist_mesh}{}}}
 \subsection{Method \code{compute_resdist_mesh()}}{
 Computes the resistance metric between the vertices in the
-mesh
+mesh.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_mesh()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Called for its side effects. The geodesic distances on the mesh are stored inside \code{mesh$res_dist} in the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_laplacian"></a>}}
@@ -360,24 +383,8 @@ Laplacian for. If \code{NULL}, it will be computed for all groups.}
 }
 \if{html}{\out{</div>}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-compute_laplacian_PtE"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-compute_laplacian_PtE}{}}}
-\subsection{Method \code{compute_laplacian_PtE()}}{
-Computes the weigthed graph Laplacian for the graph
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian_PtE(PtE, normalized = TRUE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{PtE}}{points to compute the metric for.}
-
-\item{\code{normalized}}{are the locations in PtE in normalized distance?}
-}
-\if{html}{\out{</div>}}
+\subsection{Returns}{
+Called for its side effects. The Laplacian is stored inside the \code{Laplacian} element in the \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -389,16 +396,22 @@ Removes vertices of degree 2 of the graph.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Called for its side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_PtE"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-get_PtE}{}}}
 \subsection{Method \code{get_PtE()}}{
-Gets PtE from the data
+Gets PtE from the data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_PtE()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A matrix with two columns, where the first column contains the edge number and the second column contains the distance on edge of the observation locations.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_Spoints"></a>}}
@@ -409,12 +422,19 @@ Gets the spatial points from the data.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_Spoints()}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{A}}{\code{SpatialPoints} object of the observation locations.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-observation_to_vertex"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-observation_to_vertex}{}}}
 \subsection{Method \code{observation_to_vertex()}}{
-Adds observation locations as vertices in the graph
+Adds observation locations as vertices in the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15)}\if{html}{\out{</div>}}
 }
@@ -426,12 +446,15 @@ Adds observation locations as vertices in the graph
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Called for its side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_mesh_locations"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-get_mesh_locations}{}}}
 \subsection{Method \code{get_mesh_locations()}}{
-Returns a list or a matrix with the mesh locations
+Returns a list or a matrix with the mesh locations.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
 }
@@ -449,22 +472,28 @@ assumed to be normalized to (0,1). Default TRUE.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+A list or a matrix containing the mesh locations.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-clear_observations"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-clear_observations}{}}}
 \subsection{Method \code{clear_observations()}}{
-Clear all observations from the object
+Clear all observations from the object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$clear_observations()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Called for its side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-add_observations"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-add_observations}{}}}
 \subsection{Method \code{add_observations()}}{
-Add observations to the graph
+Add observations to the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
   Spoints = NULL,
@@ -532,6 +561,9 @@ locations when adding new data.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Called for its side effects. The observations are stored in the \code{data} element of the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-buildC"></a>}}
@@ -552,12 +584,15 @@ implemented for circles (edges that start and end in the same vertex)
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Called for its side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-build_mesh"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-build_mesh}{}}}
 \subsection{Method \code{build_mesh()}}{
-build mesh object for graph
+build mesh object for graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h = NULL, n = NULL)}\if{html}{\out{</div>}}
 }
@@ -565,31 +600,34 @@ build mesh object for graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{h}}{maximum distance between mesh nodes (should be provided if n is not provided)}
+\item{\code{h}}{maximum distance between mesh nodes (should be provided if n is not provided).}
 
-\item{\code{n}}{maximum number of nodes per edge (should be provided if h is not provided)}
+\item{\code{n}}{maximum number of nodes per edge (should be provided if h is not provided).}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-The mesh is a list with the objects
+The mesh is a list with the objects:
 \itemize{
-\item PtE which contains the mesh locations excluding the original vertices
-\item V the verties of the mesh
-\item E the edges of the mesh
-\item n_e the number of vertices in the mesh per original edge in the graph
-\item h_e the mesh width per edge in the graph
-\item ind the indices of the vertices in the mesh
-\item VtE all mesh locations including the original vertices
+\item PtE which contains the mesh locations excluding the original vertices;
+\item V the verties of the mesh;
+\item E the edges of the mesh;
+\item n_e the number of vertices in the mesh per original edge in the graph;
+\item h_e the mesh width per edge in the graph;
+\item ind the indices of the vertices in the mesh;
+\item VtE all mesh locations including the original vertices.
 }
 }
 
+\subsection{Returns}{
+Called for its side effects. The mesh is stored in the \code{mesh} element of the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_fem"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_fem}{}}}
 \subsection{Method \code{compute_fem()}}{
-build mass and stiffness matrices for given mesh object
+build mass and stiffness matrices for given mesh object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem()}\if{html}{\out{</div>}}
 }
@@ -601,6 +639,9 @@ matrix with elements \eqn{<d\phi_i, d\phi_j>}, the matrix \code{B} with elements
 \eqn{<d\phi_i, \phi_j>}, and the vector with weights \eqn{<\phi_i, 1>}.
 }
 
+\subsection{Returns}{
+Called for its side effects. The finite element matrices \code{C}, \code{G} and \code{B} are stored inside the \code{mesh} element inside the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-mesh_A"></a>}}
@@ -618,6 +659,9 @@ Computes observation matrix for mesh
 edge)}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The observation matrix.
 }
 }
 \if{html}{\out{<hr>}}
@@ -861,6 +905,9 @@ in which the group indices are stored.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Called for its side effects. The observations are stored inside the \code{data} element inside the \code{metric_graph} object.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_initial_graph"></a>}}
@@ -895,6 +942,9 @@ returned.}
 included?}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The observation or prediction matrix.
 }
 }
 \if{html}{\out{<hr>}}

@@ -25,6 +25,9 @@ spde_posterior_mean(
 posterior mean is computed for each observation based on all observations
 which are not on that edge.}
 }
+\value{
+A vector with the posterior expectations.
+}
 \description{
 Computes the posterior expectation for SPDE models
 }
