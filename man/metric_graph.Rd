@@ -74,8 +74,6 @@ edges on the lines in the graph. The locations are normalized on the line.}
 
 \item{\code{CoB}}{change-of-basis object used for Kirchhoff constraints.}
 
-\item{\code{points}}{the observations in a SpatialPointsDataFrame.}
-
 \item{\code{data}}{a list containing the data on the graph.}
 
 \item{\code{PtV}}{vector with the indices of the vertices which are observation.
@@ -372,11 +370,11 @@ Computes the weigthed graph Laplacian for the graph
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{full}}{Should the resistance distances be computed for all
+\item{\code{full}}{Should the Laplacian be computed for all
 the available locations. If \code{FALSE}, it will be computed
 separately for the locations of each group.}
 
-\item{\code{obs}}{Should the resistance distances be computed at the observation locations?}
+\item{\code{obs}}{Should the Laplacian be computed at the observation locations?}
 
 \item{\code{group}}{vector or list containing which groups to compute the
 Laplacian for. If \code{NULL}, it will be computed for all groups.}

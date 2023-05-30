@@ -5,23 +5,33 @@
 \alias{MetricGraph}
 \title{Gaussian processes on metric graphs}
 \description{
-\code{MetricGraph} is used for specifying Gaussian random fields on metric graphs.
+\code{MetricGraph}is used for creation and manipulation of metric graphs, such as street or river networks.
+It also has several functions thatfacilitates operations and visualizations of data on metric graphs,
+and the creation of a large class of random fields and stochastic partial differential equations on
+such spaces.
 The main models are the Whittle-Matérn fields, which are specified through the
 fractional elliptic SPDE
 \deqn{(\kappa^2 - \Delta)^{\alpha/2} (\tau u(s)) = W,}
 \eqn{\kappa,\tau>0} and \eqn{\alpha>1/2} are parameters and \eqn{W} is Gaussian white noise.
-The package also implements models based on graph Laplacians and isotropic covariance functions,
-and contains various utility functions for specifying graphs, computing likelihoods, performing
-prediction, simulating processes, and visualizing results and graphs.
+It contains exact implementations of the above model for \eqn{\alpha=1} and \eqn{\alpha=2},
+and contains approximate implementations, via the finite element method, for any \eqn{\alpha > 0.5}.
+It also implements models based on graph Laplacians and isotropic covariance functions.
+Several utility functions for specifying graphs, computing likelihoods, performing
+prediction, simulating processes, and visualizing results on metric graphs are provided.
+In particular, linear mixed effects models including random field components can be fitted to
+data based on computationally efficient sparse matrix representations. Interfaces to the R
+pacakges INLA and inlabru are also provided, which facilitate working with Bayesian statistical
+models on metric graphs.
 }
 \details{
 At the heart of the package is the \code{R6} class \verb{[metric_graph()]}. This is used for specifying
 metric graphs, and contains various utility functions which are needed for specifying Gaussian
 processes on such spaces.
 
-Basic statistical operations such as likelihood evaluations (see
-\verb{[likelihood.graph.covariance], [likelihood.graph]}) and
-predictions (see ...) are also implemented...
+Linear mixed effects models are provided (see
+\verb{[graph_lme]}) and perform
+predictions (see \verb{[predict.graph_lme]}). The package also has interfaces for
+\code{INLA} (see \verb{[graph_spde]}), and it this interface also works with \code{inlabru}.
 
 For a more detailed introduction to the package, see the MetricGraph Vignettes.
 }
