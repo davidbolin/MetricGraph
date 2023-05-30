@@ -91,12 +91,6 @@ reference:
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
-  - title: Posterior tools
-    contents:
-    - spde_posterior_mean
-    - posterior_crossvalidation_manual
-    - posterior_crossvalidation_covariance_manual    
-    - posterior_mean_covariance   
   - title: Precision matrices
     contents:
     - spde_precision
