@@ -1,5 +1,5 @@
 #Internal function to assemble operator matrix
-#' @noRd 
+#' @noRd
 make.L <- function(n,kappa,C,G) {
   L0 <- G + kappa^2*C
   Ci <- Diagonal(1/rowSums(C),n=dim(C)[1])
@@ -33,19 +33,19 @@ make.G <- function(n,C,G) {
   return(Gk)
 }
 
-#' Space-time precision operator discretization
-#' 
-#' The precision matrix for all vertices for space-time field
-#' 
-#' @param graph metric_graph object
-#' @param t vector of time points
-#' @param kappa range parameter kappa
-#' @param rho drift parameter
-#' @param gamma temporal range parameter
-#' @param alpha smoothness parameter (integer) for spatial operator
-#' @param beta smoothness parameter (integer) for Q-Wiener process
-#' @param sigma variance parameter
-#' @return Precision matrix
+#' Space-time precision operator discretization.
+#'
+#' The precision matrix for all vertices for space-time field.
+#'
+#' @param graph A `metric_graph` object.
+#' @param t Vector of time points.
+#' @param kappa Spatial range parameter.
+#' @param rho Drift parameter.
+#' @param gamma Temporal range parameter.
+#' @param alpha Smoothness parameter (integer) for spatial operator.
+#' @param beta Smoothness parameter (integer) for Q-Wiener process.
+#' @param sigma Variance parameter.
+#' @return Precision matrix.
 #' @export
 make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 
@@ -95,22 +95,20 @@ make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 }
 
 #' Space-time precision operator Euler discretization
-#' 
+#'
 #' The precision matrix for all vertices for space-time field
-#' 
-#' @param graph metric_graph object
-#' @param t vector of time points
-#' @param kappa range parameter kappa
-#' @param sigma variance parameter
-#' @param theta parameter theta
-#' @param rho drift parameter
-#' @param gamma temporal range parameter
-#' @param alpha smoothness parameter (integer) for spatial operator
-#' @param beta smoothness parameter (integer) for Q-Wiener process
-#' @return Precision matrix
+#'
+#' @param graph A `metric_graph` object.
+#' @param t Vector of time points.
+#' @param kappa Spatial range parameter.
+#' @param sigma Variance parameter.
+#' @param theta Parameter theta for the Euler scheme.
+#' @param rho Drift parameter.
+#' @param gamma Temporal range parameter.
+#' @param alpha Smoothness parameter (integer) for spatial operator.
+#' @param beta Smoothness parameter (integer) for Q-Wiener process.
+#' @return Precision matrix.
 #' @export
-
-
 make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 
   G <- graph$mesh$G
@@ -150,23 +148,24 @@ make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 }
 
 #' space-time simulation based on implicit Euler discretization in time
-#' 
+#'
 #' Simulation with starting value u0
-#' 
-#' @param graph metric_graph object
-#' @param t vector of time points
-#' @param kappa range parameter kappa
-#' @param rho drift parameter
-#' @param gamma temporal range parameter
-#' @param alpha smoothness parameter (integer) for spatial operator
-#' @param beta smoothness parameter (integer) for Q-Wiener process
-#' @param sigma variance parameter
-#' @param u0 starting value
-#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
-#'        1 is making the boundary condition stationary 
-#' @return Precision matrix
+#'
+#' @param graph A `metric_graph` object.
+#' @param t Vector of time points.
+#' @param kappa Spatial range parameter.
+#' @param rho Drift parameter.
+#' @param gamma Temporal range parameter.
+#' @param alpha Smoothness parameter (integer) for spatial operator.
+#' @param beta Smoothness parameter (integer) for Q-Wiener process.
+#' @param sigma Variance parameter.
+#' @param u0 Starting value.
+#' @param BC Which boundary condition to use (0,1). Here, 0 is no adjustment on
+#' the boundary and 1 results in making the boundary condition stationary.
+#' @return Precision matrix.
 #' @export
-simulate_spacetime <- function(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0, BC = 0) {
+simulate_spacetime <- function(graph, t, kappa, rho, gamma, alpha,
+                               beta, sigma, u0, BC = 0) {
   n <- length(u0)
   Cd <- Diagonal(rowSums(graph$mesh$C),n=n)
   Cd[1:graph$nV] <- (graph$get_degrees()==1)*BC

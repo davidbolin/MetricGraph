@@ -142,7 +142,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       loglik <- loglik + det_R
       Qpmu <- rep(0, 4 * nrow(graph$E))
       # y_rep <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
-      y_rep <- y[graph$data[["__group"]] == u_repl[repl_y]]      
+      y_rep <- y[graph$data[["__group"]] == u_repl[repl_y]]
       #build BSIGMAB
 
       i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
@@ -164,11 +164,11 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
         # }
 
-      if(!is.null(X_cov)){ 
+      if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov == 0){
             X_cov_repl <- 0
-          } else{ 
+          } else{
             X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[obs.id, ,drop = FALSE]
             y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
@@ -331,7 +331,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterization) {
 
   repl_vec <- graph[["data"]][["__group"]]
-  
+
   if(is.null(repl)){
     repl <- unique(repl_vec)
   }
@@ -355,7 +355,7 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   R <- Matrix::chol(Q)
 
   l <- 0
-  
+
   for(i in repl){
       A <- Matrix::Diagonal(graph$nV)[graph$PtV, ]
       ind_tmp <- (repl_vec %in% i)
@@ -366,7 +366,7 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
         X_cov_tmp <- X_cov[ind_tmp,,drop=FALSE]
       }
       na_obs <- is.na(y_tmp)
-      
+
       y_ <- y_tmp[!na_obs]
       n.o <- length(y_)
       Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
@@ -397,7 +397,7 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
 #' @param theta (sigma_e, reciprocal_tau, kappa)
 #' @param graph metric_graph object
 #' @param data_name name of the response variable
-#' @param repl 
+#' @param repl
 #' @param X_cov matrix of covariates
 #' @param BC. - which boundary condition to use (0,1)
 #' @noRd
@@ -486,11 +486,11 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
       # }
 
-      if(!is.null(X_cov)){ 
+      if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov == 0){
             X_cov_repl <- 0
-          } else{ 
+          } else{
             X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
             X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
@@ -510,7 +510,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       #covariance update see Art p.17
       E.ind <- c(1:2)
       Obs.ind <- -E.ind
-    
+
       Bt <- solve(S[E.ind, E.ind, drop = FALSE], S[E.ind, Obs.ind, drop = FALSE])
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
@@ -575,26 +575,38 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoCov" gives a
 #' model with isotropic covariance.
-#' @param cov_function The covariance function to be used in case 'model' is chosen as 'isoCov'. `cov_function` must be a function
-#' of `(h, theta_cov)`, where `h` is a vector, or matrix, containing the distances to evaluate the covariance function at, and
-#' `theta_cov` is the vector of parameters of the covariance function `cov_function`.
-#' @param y_graph Response vector given in the same order as the internal locations from the graph.
-#' @param X_cov Matrix with covariates. The order must be the same as the internal order from the graph.
-#' @param repl Vector with the replicates to be considered. If `NULL` all replicates will be considered.
-#' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
-#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
-#' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
-#' For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the parameter `theta` must be supplied as
-#' the vector `c(sigma_e, sigma, kappa)`.
+#' @param cov_function The covariance function to be used in case 'model' is
+#' chosen as 'isoCov'. `cov_function` must be a function of `(h, theta_cov)`,
+#' where `h` is a vector, or matrix, containing the distances to evaluate the
+#' covariance function at, and `theta_cov` is the vector of parameters of the
+#' covariance function `cov_function`.
+#' @param y_graph Response vector given in the same order as the internal
+#' locations from the graph.
+#' @param X_cov Matrix with covariates. The order must be the same as the
+#' internal order from the graph.
+#' @param repl Vector with the replicates to be considered. If `NULL` all
+#' replicates will be considered.
+#' @param log_scale Should the parameters `theta` of the returning function be
+#' given in log-scale?
+#' @param maximize If `FALSE` the function will return minus the likelihood, so
+#' one can directly apply it to the `optim` function.
+#' @return The log-likelihood function, which is returned as a function with
+#' parameter 'theta'. For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the
+#' parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa)`.
 #'
-#' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e` and the vector
-#' `theta[2:(q+1)]` is the input of `cov_function`, where `q` is the number of parameters of the covariance function.
+#' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e`
+#' and the vector `theta[2:(q+1)]` is the input of `cov_function`, where `q` is
+#' the number of parameters of the covariance function.
 #'
-#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])`,
-#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the
+#' vector `c(sigma_e, theta[2], ..., theta[q+1], beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
+#' covariates.
 #'
-#' For the remaining models, if `covariates` is `TRUE`, then `theta` must be supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
-#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
+#' For the remaining models, if `covariates` is `TRUE`, then `theta` must be
+#' supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
+#' covariates.
 #' @export
 likelihood_graph_covariance <- function(graph,
                                         model = "alpha1",
@@ -713,25 +725,14 @@ likelihood_graph_covariance <- function(graph,
           Sigma_non_na <- Sigma[!na_obs, !na_obs]
           R <- chol(Sigma_non_na)
           v <- y_graph[graph$data[["__group"]] == u_repl[repl_y]]
-          # if(covariates){
-          #   n_cov <- ncol(graph$covariates[[1]])
-          #   if(length(graph$covariates)==1){
-          #     X_cov <- graph$covariates[[1]]
-          #   } else if(length(graph$covariates) == ncol(graph$y)){
-          #     X_cov <- graph$covariates[[i]]
-          #   } else{
-          #   stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-          #   }
-          #     X_cov <- X_cov[!na_obs,]
-          #     v <- v - X_cov %*% theta_covariates
-          # }
 
-          if(!is.null(X_cov)){ 
+          if(!is.null(X_cov)){
               n_cov <- ncol(X_cov)
               if(n_cov == 0){
                 X_cov_repl <- 0
-              } else{ 
-                X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+              } else{
+                X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], ,
+                                    drop=FALSE]
                 v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
               }
           }
@@ -756,18 +757,22 @@ likelihood_graph_covariance <- function(graph,
 #'
 #' @param graph metric_graph object
 #' @param alpha integer greater or equal to 1. Order of the equation.
-#' @param covariates Logical. If `TRUE`, the model will be considered with covariates. It requires `graph` to have
-#' covariates included by the method `add_covariates()`.
-#' @param log_scale Should the parameters `theta` of the returning function be given in log scale?
-#' @param maximize If `FALSE` the function will return minus the likelihood, so one can directly apply it to the `optim` function.
-#' @return The log-likelihood function, which is returned as a function with parameter 'theta'.
-#' The parameter `theta` must be supplied as
+#' @param covariates Logical. If `TRUE`, the model will be considered with
+#' covariates. It requires `graph` to have covariates included by the method
+#' `add_covariates()`.
+#' @param log_scale Should the parameters `theta` of the returning function be
+#' given in log-scale?
+#' @param maximize If `FALSE` the function will return minus the likelihood, so
+#' one can directly apply it to the `optim` function.
+#' @return The log-likelihood function, which is returned as a function with
+#' parameter 'theta'. The parameter `theta` must be supplied as
 #' the vector `c(sigma_e, reciprocal_tau, kappa)`.
 #'
-#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the vector `c(sigma_e, reciprocal_tau, kappa, beta[1], ..., beta[p])`,
-#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of covariates.
+#' If `covariates` is `TRUE`, then the parameter `theta` must be supplied as the
+#' vector `c(sigma_e, reciprocal_tau, kappa, beta[1], ..., beta[p])`,
+#' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
+#' covariates.
 #' @noRd
-
 likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
               X_cov = NULL, maximize = FALSE, parameterization) {
 
@@ -814,7 +819,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
     u_repl <- unique(graph$data[["__group"]])
     for(repl_y in 1:length(u_repl)){
-      K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]] 
+      K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]]
       Q <- K
       if (alpha>1) {
         for (k in 2:alpha) {
@@ -834,25 +839,12 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       R.p <- chol(Q.p)
       l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
 
-      # if(covariates){
-      #   n_cov <- ncol(graph$covariates[[1]])
-      #   if(length(graph$covariates)==1){
-      #     X_cov <- graph$covariates[[1]]
-      #   } else if(length(graph$covariates) == ncol(graph$y)){
-      #     X_cov <- graph$covariates[[i]]
-      #   } else{
-      #     stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-      #   }
 
-      #   X_cov <- X_cov[!na_obs,]
-      #   v <- v - X_cov %*% theta[4:(3+n_cov)]
-      # }
-
-      if(!is.null(X_cov)){ 
+      if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov == 0){
             X_cov_repl <- 0
-          } else{ 
+          } else{
             X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[!na.obs, , drop = FALSE]
             v <- v - X_cov_repl %*% theta[4:(3+n_cov)]

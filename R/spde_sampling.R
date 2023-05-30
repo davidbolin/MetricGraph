@@ -1,26 +1,29 @@
-#' Sample Whittle-Matérn field on graph
-#' @details Samples a Gaussian Whittle-Matérn field on a graph, either from the prior
-#' or conditionally on observations
+#' Samples a Whittle-Matérn field on a metric graph.
+#' @details Samples a Gaussian Whittle-Matérn field on a metric graph, either
+#' from the prior or conditionally on observations
 #' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
-#' in the graph,  where \eqn{e_i} are independent standard Gaussian variables.
-#' @param kappa parameter kappa from the SPDE
-#' @param tau parameter tau from the SPDE
-#' @param sigma std. deviation parameter
-#' @param range range parameter
-#' @param sigma_e parameter sigma_e
-#' @param alpha order of the SPDE
-#' @param graph metric_graph object
-#' @param PtE matrix with locations (edge, normalized distance on edge) to
-#' sample from
-#' @param type If manual is set, then sampling is done at the locations
-#' specified in PtE. Set to "mesh" for simulation at mesh nodes, and to "obs"
+#' on the graph,  where \eqn{e_i} are independent standard Gaussian variables.
+#' The parameters for the field can either be specified in terms of tau and kappa
+#' or practical correlation range and marginal standard deviation.
+#' @param kappa Range parameter.
+#' @param tau Precision parameter.
+#' @param sigma Marginal standard deviation parameter.
+#' @param range Practical correlation range parameter.
+#' @param sigma_e Standard deviation of the measurement noise.
+#' @param alpha Smoothness parameter.
+#' @param graph A `metric_graph` object.
+#' @param PtE Matrix with locations (edge, normalized distance on edge) where
+#' the samples should be generated.
+#' @param type If "manual" is set, then sampling is done at the locations
+#' specified in `PtE`. Set to "mesh" for simulation at mesh nodes, and to "obs"
 #' for simulation at observation locations.
-#' @param posterior sample conditionally on the observations?
-#' @param nsim number of samples to be generated.
-#' @param method Which method to sample? The options are "conditional" and "Q". "Q" is more stable but takes longer.
-#' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
-#' boundary conditions and BC=1 gives stationary boundary conditions
-#' @return sample evaluated at the mesh nodes in the graph
+#' @param posterior Sample conditionally on the observations?
+#' @param nsim Number of samples to be generated.
+#' @param method Which method to use for the sampling? The options are
+#' "conditional" and "Q". Here, "Q" is more stable but takes longer.
+#' @param BC Boundary conditions for degree 1 vertices. BC = 0 gives Neumann
+#' boundary conditions and BC = 1 gives stationary boundary conditions.
+#' @return Matrix or vector with the samples.
 #' @export
 sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                         PtE = NULL,
@@ -212,11 +215,14 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
     stop("The number of simulations must be an integer greater than zero!")
   }
 }
-#' Sample Gaussian process with exponential covariance on a line given end points
-#' @details Samples a Gaussian process \eqn{u(t)} with an exponential covariance function
+#' Samples a Gaussian process with exponential covariance on an interval given
+#' the values at the end points.
+#' @details Samples a Gaussian process \eqn{u(t)} with an exponential covariance
+#' function
 #' \deqn{r(h) = \sigma^2\exp(-\kappa h)/(2\kappa)}{r(h) = sigma^2*(exp(-kappa*h)/(2*kappa)}
 #' on an interval \eqn{(0,l_e)} conditionally on \eqn{u(0), u(l_e)}.
-#' If `y` and `py` are supplied, the sampling is done conditionally on observations
+#' If `y` and `py` are supplied, the sampling is done conditionally on
+#' observations
 #' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
 #' where \eqn{e_i} are independent standard Gaussian variables.
 #' @param kappa parameter kappa

@@ -1,12 +1,12 @@
 
-#' Computes the posterior expectation for SPDE models
-#' @param theta parameters (sigma_e, tau, kappa)
-#' @param graph  metric_graph object
-#' @param alpha alpha parameter (1 or 2)
-#' @param type decides where to predict, 'obs' or 'mesh'.
-#' @param leave_edge_out leave_edge_out = TRUE means that the
-#' posterior mean is computed for each observation based on all observations
-#' which are not on that edge. 
+#' Computes the posterior expectation for SPDE models.
+#' @param theta parameters (sigma_e, tau, kappa).
+#' @param graph A `metric_graph` object.
+#' @param alpha Smoothness parameter (1 or 2).
+#' @param type Decides where to predict. Set to 'obs' for prediction at the
+#' observation locations or to 'mesh' for prediction at the mesh locations.
+#' @param leave_edge_out If `TRUE`, the posterior mean is computed for each
+#' observation based on all observations which are not on that edge.
 #' @return A vector with the posterior expectations.
 #' @noRd
 spde_posterior_mean <- function(theta,
@@ -64,8 +64,8 @@ posterior_mean_obs_alpha1 <- function(theta,
   Qp <- spde_precision(tau= theta[2], kappa = theta[3],
                        alpha = 1, graph = graph)
   if(leave.edge.out == FALSE)
-    V.post <- posterior_mean_alpha1(theta = theta, graph = graph, resp = resp, PtE_resp = PtE_resp)
-
+    V.post <- posterior_mean_alpha1(theta = theta, graph = graph,
+                                    resp = resp, PtE_resp = PtE_resp)
 
   Qpmu <- rep(0, nrow(graph$V))
   if(type == "obs") {
@@ -80,7 +80,9 @@ posterior_mean_obs_alpha1 <- function(theta,
 
   for (e in obs.edges) {
     if(leave.edge.out == TRUE)
-      V.post <- posterior_mean_alpha1(theta = theta, graph = graph, rem.edge = e, resp = resp, PtE_resp = PtE_resp)
+      V.post <- posterior_mean_alpha1(theta = theta, graph = graph,
+                                      rem.edge = e, resp = resp,
+                                      PtE_resp = PtE_resp)
 
     obs.id <- which(PtE_resp[,1] == e)
     obs.loc <- PtE_resp[obs.id,2]
@@ -156,7 +158,7 @@ posterior_mean_obs_alpha2 <- function(theta,
   sigma_e <- theta[1]
   tau <- theta[2]
   kappa <- theta[3]
-  
+
   if(is.null(PtE_resp)){
     PtE <- graph$get_PtE()
   }
@@ -165,7 +167,8 @@ posterior_mean_obs_alpha2 <- function(theta,
   }
 
   if(leave.edge.out == FALSE)
-    E.post <- posterior_mean_alpha2(theta = theta, graph = graph, resp = resp, PtE_resp = PtE_resp)
+    E.post <- posterior_mean_alpha2(theta = theta, graph = graph,
+                                    resp = resp, PtE_resp = PtE_resp)
 
   y_hat <- rep(0, length(resp))
 
@@ -173,8 +176,6 @@ posterior_mean_obs_alpha2 <- function(theta,
     y_hat <- rep(0, length(resp))
     obs.edges <- unique(PtE_resp[,1])
   }  else {
-    # y_hat <- rep(0, dim(graph$mesh$PtE)[1])
-    # obs.edges <- unique(graph$mesh$PtE[,1])
     y_hat <- rep(0, dim(PtE_pred)[1])
     obs.edges <- unique(PtE_pred[,1])
   }
@@ -220,9 +221,6 @@ posterior_mean_obs_alpha2 <- function(theta,
                                                          y_i - y_hat[obs.id])
       }
     } else {
-      # pred.id <- graph$mesh$PtE[, 1] == e
-      # pred.loc <- graph$mesh$PtE[pred.id, 2]
-
       pred.id <- PtE_pred[, 1] == e
       pred.loc <- PtE_pred[pred.id, 2]
 
@@ -260,19 +258,11 @@ posterior_mean_obs_alpha2 <- function(theta,
         u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
         y_hat_obs <- t(Bt) %*% u_e
         y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
-                                                                #  y_i - y_hat[obs.id])
-                                                                y_i - y_hat_obs)
+                                                                 y_i - y_hat_obs)
       }
     }
   }
-  if(type == "obs"){
-    return(y_hat)
-  } else {
-    # E.p <- E.post[seq(from=1, by = 2, to = dim(E.post)[1])]
-    # return(c(E.p[which(!duplicated(c(t(graph$E))))],y_hat))
-    # return(c(E.p[c(t(graph$E))],y_hat))
-    return(y_hat)
-  }
+  return(y_hat)
 }
 
 
@@ -281,7 +271,8 @@ posterior_mean_obs_alpha2 <- function(theta,
 #' @param graph - metric_graph object
 #' @param rem.edge  - remove edge
 #' @noRd
-posterior_mean_alpha1 <- function(theta, graph, resp, PtE_resp, rem.edge = FALSE) {
+posterior_mean_alpha1 <- function(theta, graph, resp,
+                                  PtE_resp, rem.edge = FALSE) {
 
   sigma_e <- theta[1]
   tau <- theta[2]
@@ -358,7 +349,8 @@ posterior_mean_alpha1 <- function(theta, graph, resp, PtE_resp, rem.edge = FALSE
 #' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph metric_graph object
 #' @noRd
-posterior_mean_alpha2 <- function(theta, graph, resp, PtE_resp, rem.edge = NULL) {
+posterior_mean_alpha2 <- function(theta, graph, resp,
+                                  PtE_resp, rem.edge = NULL) {
 
   sigma_e <- theta[1]
   tau <- theta[2]
@@ -503,7 +495,7 @@ posterior_mean_alpha2 <- function(theta, graph, resp, PtE_resp, rem.edge = NULL)
   i_ <- i_[1:count]
   j_ <- j_[1:count]
   x_ <- x_[1:count]
-  
+
   BtSB <- Matrix::sparseMatrix(i = i_,
                                j = j_,
                                x = x_,
