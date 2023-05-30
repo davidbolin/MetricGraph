@@ -43,8 +43,6 @@
 #' @importFrom igraph E E<-
 #' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
-#' @importFrom parallel detectCores
-#' @importFrom optimParallel optimParallel
 #' @importFrom graphics layout
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

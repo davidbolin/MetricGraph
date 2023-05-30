@@ -10,7 +10,7 @@
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with the posterior mean evaluated at the observation locations
-#' @export
+#' @noRd
 posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 {
   check <- check_graph(graph)
@@ -77,7 +77,7 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with all predictions
-#' @export
+#' @noRd
 posterior_crossvalidation_covariance_manual <- function(theta,
                                                  graph,
                                                  data_name,
@@ -173,7 +173,7 @@ posterior_crossvalidation_covariance_manual <- function(theta,
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
-#' @export
+#' @noRd
 posterior_crossvalidation_manual <- function(theta,
                                       graph,
                                       data_name,

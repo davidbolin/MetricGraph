@@ -8,7 +8,7 @@
 #' posterior mean is computed for each observation based on all observations
 #' which are not on that edge. 
 #' @return A vector with the posterior expectations.
-#' @export
+#' @noRd
 spde_posterior_mean <- function(theta,
                                 graph,
                                 alpha = 1,
