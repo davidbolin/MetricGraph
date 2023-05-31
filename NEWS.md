@@ -1,3 +1,5 @@
+# MetricGraph (development version)
+
 # MetricGraph 1.1.0
 * Improved the documentation.
 * Reorganized some functions.

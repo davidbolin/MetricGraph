@@ -1,7 +1,7 @@
 Package: MetricGraph
 Type: Package
 Title: Random Fields on Metric Graphs
-Version: 1.1.0
+Version: 1.1.0.9000
 Authors@R: c(
     person("David", "Bolin", email = "davidbolin@gmail.com", role = c("cre", "aut")),
     person("Jonas", "Wallin", email = "jonas.wallin81@gmail.com", role = "aut"),
