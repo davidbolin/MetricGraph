@@ -9,9 +9,15 @@ Basic statistical tasks such as likelihood evaluation and prediction is implemen
 
 We refer to the [package homepage][ref7] for detailed tutorials on all different aspects of the package.
 
-<p align="center">
-  <img src="./man/figures/logo.png" width="350" title="MetricGraph logo">
-</p>
+# Installation instructions #
+The latest stable version can be installed by using the command
+```r
+remotes::install_github("davidbolin/metricgraph", ref = "stable")
+```
+in R. The development version can be installed using the command
+```r
+remotes::install_github("davidbolin/metricgraph", ref = "devel")
+```
 
 # References #
 D. Bolin, A. Simas, J. Wallin (2022) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. ArXiv:2205.06163
@@ -22,16 +28,10 @@ D. Bolin, A. Simas, J. Wallin (2023) [Markov properties of Gaussian random field
 
 D. Bolin, A. Simas, J. Wallin (2023) [Statistical inference for Gaussian Whittle-Matérn fields on metric graphs][ref4]. ArXiv:2304.10372
 
+<p align="center">
+  <img src="./man/figures/logo.png" width="350" title="MetricGraph logo">
+</p>
 
-# Installation instructions #
-The latest stable version can be installed by using the command
-```r
-remotes::install_github("davidbolin/metricgraph", ref = "stable")
-```
-in R. The development version can be installed using the command
-```r
-remotes::install_github("davidbolin/metricgraph", ref = "devel")
-```
 
 # Repository branch workflows #
 The package version format for released versions is `major.minor.bugfix`. All regular development should be performed on the `devel` branch or in a feature branch, managed with `git flow feature`. Ideally, all the changes should be made on the `devel` branch. The `devel` version of the package should contain unit tests and examples for all important functions. Several functions may depend on `INLA`. Examples and tests for such functions might create problems when submitting to CRAN. To solve this problem, we created some Github Actions scripts that get the examples and tests depending on `INLA` on the `devel` branch and adapt to versions that will not fail on CRAN. Therefore, the best way to handle these situations is to avoid as much as possible to do any push to the `stable` branch. The idea is to update the `stable` branch by merges following the workflow that will be described below. 
