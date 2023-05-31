@@ -86,28 +86,18 @@ reference:
   - title: Space-time models
     contents:
     - simulate_spacetime
-    - plot_spacetime_covariances
     - make.Q.euler
     - make.Q.spacetime
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
-  - title: Posterior tools
-    contents:
-    - spde_posterior_mean
-    - posterior_crossvalidation_manual
-    - posterior_crossvalidation_covariance_manual    
-    - posterior_mean_covariance   
   - title: Precision matrices
     contents:
     - spde_precision
   - title: Covariance functions
     contents:
     - exp_covariance
-    - covariance_alpha1
-    - covariance_alpha2
-    - covariance_alpha1_mesh
-    - covariance_alpha2_mesh
+    - spde_covariance
   - title: Datasets
     contents:
     - pems

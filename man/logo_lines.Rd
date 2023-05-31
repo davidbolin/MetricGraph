@@ -7,7 +7,7 @@
 logo_lines()
 }
 \value{
-\code{SpatialLines} object with package name
+\code{SpatialLines} object with package name.
 }
 \description{
 Create lines for package name

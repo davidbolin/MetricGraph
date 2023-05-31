@@ -1,0 +1,69 @@
+MetricGraph, Copyright (c) 2023, David Bolin, Alexandre B. Simas and Jonas Wallin
+Various files in this package have different copyrights.
+
+The R package and code, and the main programs, were written by and are
+Copyright by David Bolin, Alexandre B. Simas and Jonas Wallin, as listed below, and are
+redistributable under the GNU Public License, version 2 or later.
+The package also includes codes from the R package maptools. All sections of
+the codes are covered by GPL or LGPL licenses. For detailed copyright
+and license information, see the individual library copyright files
+in copying/, listed below.
+
+Copyright: David Bolin, Alexandre B. Simas, Jonas Wallin
+License: GPL version 2 or later
+R/graph_inference.R
+R/graph_inference.R
+R/graph_lgcp.R
+R/graph_likelihoods.R
+R/graph_lme.R
+R/graph_spde.R
+R/metric_graph.R
+R/MetricGraph.R
+R/space_time.R
+R/spde_covariance.R
+R/spde_posteriors.R
+R/spde_precision.R
+R/spde_sampling.R
+R/util.R
+src/aux_functions.cpp 
+src/CB.cpp
+vignettes/fem_models.Rmd  
+vignettes/inla_interface.Rmd  
+vignettes/inlabru_interface.Rmd  
+vignettes/metric_graph.Rmd  
+vignettes/MetricGraph.Rmd  
+vignettes/pointprocess.Rmd  
+vignettes/random_fields.Rmd
+
+
+Copyright:  Roger Bivand, Nicholas Lewin-Koh, Edzer Pebesma, Eric Archer,
+Adrian Baddeley, Nick Bearman, Hans-Jörg Bibiko, Steven Brey, Jonathan Callahan,
+German Carrillo , Stéphane Dray , David Forrest , Michael Friendly , Patrick Giraudoux ,
+Duncan Golicher , Virgilio Gómez Rubio , Patrick Hausmann , Karl Ove Hufthammer , Thomas Jagger ,
+Kent Johnson , Matthew Lewis ORCID iD , Sebastian Luque , Don MacQueen , Andrew Niccolai ,
+Edzer Pebesma , Oscar Perpiñán Lamigueiro , Ethan Plunkett , Ege Rubak ORCID iD , Tom Short ,
+Greg Snow , Ben Stabler , Murray Stokely , Rolf Turner
+
+License: GPL version 2 or later
+R/snap_lines.R
+
+
+Licence
+=======
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Version 2 of the GPL license can be displayed by 'RShowDoc("LGPL-2")' in R.
+
+Version 3 of the GPL license can be displayed by 'RShowDoc("LGPL-3")' in R.

@@ -10,13 +10,12 @@ model from a \code{rspde.result} object}
 \arguments{
 \item{object}{A \code{rspde.result} object.}
 
-\item{digits}{integer, used for number formatting with signif()}
+\item{digits}{Integer, used for number formatting with signif()}
 
 \item{...}{Currently not used.}
 }
 \value{
-Returns a \code{data.frame}
-containing the summary.
+A \code{data.frame} containing the summary.
 }
 \description{
 Summary for posteriors of rSPDE field parameters in

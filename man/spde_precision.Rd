@@ -2,28 +2,28 @@
 % Please edit documentation in R/spde_precision.R
 \name{spde_precision}
 \alias{spde_precision}
-\title{The precision matrix for all vertices for a Whittle-Matérn field}
+\title{Computes the precision matrix for all vertices for a Whittle-Matérn field.}
 \usage{
 spde_precision(kappa, tau, alpha, graph, BC = 1, build = TRUE)
 }
 \arguments{
-\item{kappa}{range parameter kappa}
+\item{kappa}{Range parameter.}
 
-\item{tau}{variance parameter}
+\item{tau}{Precision parameter.}
 
-\item{alpha}{smoothness parameter (1 or 2)}
+\item{alpha}{Smoothness parameter (1 or 2).}
 
-\item{graph}{metric_graph object}
+\item{graph}{A \code{metric_graph} object.}
 
-\item{BC}{boundary conditions for degree=1 vertices. BC =0 gives Neumann
-boundary conditions and BC=1 gives stationary boundary conditions}
+\item{BC}{Set boundary conditions for degree=1 vertices. BC =0 gives Neumann
+boundary conditions and BC=1 gives stationary boundary conditions.}
 
-\item{build}{(bool) if TRUE return the precision matrix otherwise return
-a list(i,j,x, nv)}
+\item{build}{If \code{TRUE}, the precision matrix is returned. Otherwise a list
+list(i,j,x, nv) is returned.}
 }
 \value{
-Precision matrix or list
+Precision matrix or list.
 }
 \description{
-The precision matrix for all vertices for a Whittle-Matérn field
+Computes the precision matrix for all vertices for a Whittle-Matérn field.
 }

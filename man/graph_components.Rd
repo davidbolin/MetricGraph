@@ -2,7 +2,10 @@
 % Please edit documentation in R/metric_graph.R
 \name{graph_components}
 \alias{graph_components}
-\title{Connected components of metric graph}
+\title{Connected components of metric graph.}
+\value{
+Object of \code{\link[R6]{R6Class}} for creating metric graph components.
+}
 \description{
 Class representing connected components of a metric graph
 }
@@ -26,13 +29,13 @@ graphs$plot()
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{graphs}}{list of graphs}
+\item{\code{graphs}}{List of graphs.}
 
-\item{\code{n}}{the number of graphs}
+\item{\code{n}}{The number of graphs.}
 
-\item{\code{sizes}}{number of vertices for each of the graphs}
+\item{\code{sizes}}{Number of vertices for each of the graphs.}
 
-\item{\code{lengths}}{total edge lengths for each of the graphs
+\item{\code{lengths}}{Total edge lengths for each of the graphs.
 Create metric graphs for connected components}
 }
 \if{html}{\out{</div>}}
@@ -57,18 +60,18 @@ Create metric graphs for connected components}
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{lines}}{object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}}
+\item{\code{lines}}{Object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}.}
 
-\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices}
+\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
 
-\item{\code{E}}{m x 2 matrix where each row represents an edge}
+\item{\code{E}}{m x 2 matrix where each row represents an edge.}
 
-\item{\code{by_length}}{Sort the components by total edge length? If FALSE,
+\item{\code{by_length}}{Sort the components by total edge length? If \code{FALSE},
 the components are sorted by the number of vertices.}
 
 \item{\code{...}}{additional arguments used when specifying the graphs}
 
-\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given
+\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given
 in Longitude/Latitude and that distances should be computed in km.}
 
 \item{\code{tolerance}}{vertices that are closer than this number are merged when
@@ -78,19 +81,22 @@ tolerance is given in km.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A \code{graph_components} object
+A \code{graph_components} object.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-graph_components-get_largest"></a>}}
 \if{latex}{\out{\hypertarget{method-graph_components-get_largest}{}}}
 \subsection{Method \code{get_largest()}}{
-Return the largest component
-Plot all components
+Returns the largest component in the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph_components$get_largest()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A \code{metric_graph} object.
+Plot all components
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-graph_components-plot"></a>}}
@@ -103,15 +109,18 @@ Plot all components
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{edge_colors}}{a 3 x nc matrix with RGB values for the edge colors to
-be used when plotting each graph}
+\item{\code{edge_colors}}{A 3 x nc matrix with RGB values for the edge colors to
+be used when plotting each graph.}
 
-\item{\code{vertex_colors}}{a 3 x nc matrix with RGB values for the edge colors to
-be used when plotting each graph}
+\item{\code{vertex_colors}}{A 3 x nc matrix with RGB values for the edge colors to
+be used when plotting each graph.}
 
-\item{\code{...}}{additional arguments for plotting the individual graphs}
+\item{\code{...}}{Additional arguments for plotting the individual graphs.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A \code{ggplot} object.
 }
 }
 \if{html}{\out{<hr>}}

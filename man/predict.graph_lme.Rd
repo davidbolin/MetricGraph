@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_lme.R
 \name{predict.graph_lme}
 \alias{predict.graph_lme}
-\title{Prediction of a mixed effects regression model on a metric graph.}
+\title{Prediction for a mixed effects regression model on a metric graph.}
 \usage{
 \method{predict}{graph_lme}(
   object,
@@ -25,35 +25,50 @@
 \arguments{
 \item{object}{The fitted object with the \code{graph_lme()} function}
 
-\item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge number and the distance on edge
-for the locations to obtain the prediction.}
+\item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge
+number and the distance on edge for the locations to obtain the prediction.}
 
-\item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh, and either \code{only_latent} is set to TRUE or the model does not have covariates.}
+\item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh,
+and either \code{only_latent} is set to TRUE or the model does not have covariates.}
 
-\item{mesh_h}{If the graph does not have a mesh, one will be created with this value of 'h'.}
+\item{mesh_h}{If the graph does not have a mesh, one will be created with this
+value of 'h'.}
 
-\item{repl}{Which replicates to obtain the prediction. If \code{NULL} predictions will be obtained for all replicates. Default is \code{NULL}.}
+\item{repl}{Which replicates to obtain the prediction. If \code{NULL} predictions
+will be obtained for all replicates. Default is \code{NULL}.}
 
 \item{compute_variances}{Set to also TRUE to compute the kriging variances.}
 
 \item{posterior_samples}{If \code{TRUE}, posterior samples will be returned.}
 
-\item{n_samples}{Number of samples to be returned. Will only be used if \code{sampling} is \code{TRUE}.}
+\item{n_samples}{Number of samples to be returned. Will only be used if
+\code{sampling} is \code{TRUE}.}
 
-\item{only_latent}{Should the posterior samples and predictions be only given to the latent model?}
+\item{only_latent}{Should the posterior samples and predictions be only given
+to the latent model?}
 
-\item{edge_number}{Name of the variable that contains the edge number, the default is \code{edge_number}.}
+\item{edge_number}{Name of the variable that contains the edge number, the
+default is \code{edge_number}.}
 
-\item{distance_on_edge}{Name of the variable that contains the distance on edge, the default is \code{distance_on_edge}.}
+\item{distance_on_edge}{Name of the variable that contains the distance on
+edge, the default is \code{distance_on_edge}.}
 
 \item{normalized}{Are the distances on edges normalized?}
 
-\item{return_as_list}{Should the means of the predictions and the posterior samples be returned as a list, with each replicate being an element?}
+\item{return_as_list}{Should the means of the predictions and the posterior
+samples be returned as a list, with each replicate being an element?}
 
-\item{return_original_order}{Should the results be return in the original (input) order or in the order inside the graph?}
+\item{return_original_order}{Should the results be return in the original
+(input) order or in the order inside the graph?}
 
 \item{...}{Not used.}
 }
+\value{
+A list with elements \code{mean}, which contains the means of the
+predictions, \code{variance} (if \code{compute_variance} is \code{TRUE}), which contains the
+variances of the predictions, \code{samples} (if \code{posterior_samples} is \code{TRUE}),
+which contains the posterior samples.
+}
 \description{
-Prediction of a mixed effects regression model on a metric graph.
+Prediction for a mixed effects regression model on a metric graph.
 }

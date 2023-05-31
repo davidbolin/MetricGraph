@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{spde_metric_graph_result}
 \alias{spde_metric_graph_result}
-\title{metric graph SPDE result extraction from INLA estimation results}
+\title{Metric graph SPDE result extraction from INLA estimation results.}
 \usage{
 spde_metric_graph_result(
   inla,
@@ -14,14 +14,13 @@ spde_metric_graph_result(
 )
 }
 \arguments{
-\item{inla}{An \code{inla} object obtained from a call to
-\code{inla()}.}
+\item{inla}{An \code{inla} object obtained from a call to \code{inla()}.}
 
 \item{name}{A character string with the name of the rSPDE effect
 in the inla formula.}
 
-\item{metric_graph_spde}{The \code{inla_metric_graph_spde} object used for the effect in
-the inla formula.}
+\item{metric_graph_spde}{The \code{inla_metric_graph_spde} object used for the
+effect in the inla formula.}
 
 \item{compute.summary}{Should the summary be computed?}
 
@@ -30,7 +29,8 @@ the inla formula.}
 \item{n_density}{The number of equally spaced points to estimate the density.}
 }
 \value{
-If the model was fitted with \code{matern} parameterization (the default), it returns a list containing:
+If the model was fitted with \code{matern} parameterization (the default),
+it returns a list containing:
 \item{marginals.range}{Marginal densities for the range parameter}
 \item{marginals.log.range}{Marginal densities for log(range)}
 \item{marginals.sigma}{Marginal densities for std. deviation}

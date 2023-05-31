@@ -24,40 +24,58 @@
 )
 }
 \arguments{
-\item{object}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function.}
+\item{object}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()}
+function.}
 
 \item{cmp}{The \code{inlabru} component used to fit the model.}
 
 \item{bru_fit}{A fitted model using \code{inlabru} or \code{inla}.}
 
-\item{data}{A data.frame of covariates needed for the prediction. The locations must be normalized PtE.}
+\item{data}{A data.frame of covariates needed for the prediction. The
+locations must be normalized PtE.}
 
-\item{formula}{A formula where the right hand side defines an R expression to evaluate for each generated sample. If NULL, the latent and hyperparameter states are returned as named list elements. See Details for more information.}
+\item{formula}{A formula where the right hand side defines an R expression to
+evaluate for each generated sample. If NULL, the latent and hyperparameter
+states are returned as named list elements. See Details for more information.}
 
-\item{data_coords}{It decides which coordinate system to use. If \code{PtE}, the user must provide the locations
-as a data frame with the first column being the edge number and
-the second column as the distance on edge, otherwise if \code{euclidean}, the user must provide
-a data frame with the first column being the \code{x} Euclidean coordinates and the second column
-being the \code{y} Euclidean coordinates.}
+\item{data_coords}{It decides which coordinate system to use. If \code{PtE}, the
+user must provide the locations as a data frame with the first column being
+the edge number and the second column as the distance on edge, otherwise if
+\code{euclidean}, the user must provide a data frame with the first column being
+the \code{x} Euclidean coordinates and the second column being the \code{y} Euclidean
+coordinates.}
 
-\item{normalized}{if \code{TRUE}, then the distances in distance on edge are assumed to be normalized to (0,1). Default TRUE. Will not be
+\item{normalized}{if \code{TRUE}, then the distances in distance on edge are
+assumed to be normalized to (0,1). Default TRUE. Will not be
 used if \code{data_coords} is \code{euclidean}.}
 
-\item{n.samples}{Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.}
+\item{n.samples}{Integer setting the number of samples to draw in order to
+calculate the posterior statistics. The default is rather low but provides a
+quick approximate result.}
 
 \item{seed}{Random number generator seed passed on to inla.posterior.sample}
 
-\item{probs}{A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile}
+\item{probs}{A numeric vector of probabilities with values in the standard
+unit interval to be passed to stats::quantile}
 
-\item{return_original_order}{Should the predictions be returned in the original order?}
+\item{return_original_order}{Should the predictions be returned in the
+original order?}
 
-\item{num.threads}{Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"}
+\item{num.threads}{Specification of desired number of threads for parallel
+computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"}
 
-\item{include}{Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)}
+\item{include}{Character vector of component labels that are needed by the
+predictor expression; Default: NULL (include all components that are not
+explicitly excluded)}
 
-\item{exclude}{Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)}
+\item{exclude}{Character vector of component labels that are not used by the
+predictor expression. The exclusion list is applied to the list as determined
+by the include parameter; Default: NULL (do not remove any components from
+the inclusion list)}
 
-\item{drop}{logical; If keep=FALSE, data is a SpatialDataFrame, and the prediciton summary has the same number of rows as data, then the output is a SpatialDataFrame object. Default FALSE.}
+\item{drop}{logical; If keep=FALSE, data is a SpatialDataFrame, and the
+prediciton summary has the same number of rows as data, then the output is a
+SpatialDataFrame object. Default FALSE.}
 
 \item{...}{Additional arguments passed on to inla.posterior.sample}
 }

@@ -334,7 +334,7 @@ Since $\alpha=1$, these sample paths are continuous but not differentiable.
 To visualize the correlation structure of the field, we can compute and plot
 the covariances between some point and all other points in the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-C <- covariance_alpha1_mesh(c(200, 0.1), range = range, sigma = sigma, 
+C <- spde_covariance(c(200, 0.1), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
 graph$plot_function(C, vertex_size = 0, edge_width = 0.5)
 ```

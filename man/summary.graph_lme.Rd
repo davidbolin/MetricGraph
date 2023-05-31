@@ -7,16 +7,18 @@
 \method{summary}{graph_lme}(object, all_times = FALSE, ...)
 }
 \arguments{
-\item{object}{an object of class "graph_lme" containing results from the fitted model.}
+\item{object}{an object of class \code{graph_lme} containing results from the
+fitted model.}
 
 \item{all_times}{Show all computed times.}
 
 \item{...}{not used.}
 }
 \value{
-An object of class \code{summary_graph_lme} containing several
-informations of a \emph{graph_lme} object.
+An object of class \code{summary_graph_lme} containing information
+about a \emph{graph_lme} object.
 }
 \description{
-Function providing a summary of results related to metric graph mixed effects regression models.
+Function providing a summary of results related to metric graph
+mixed effects regression models.
 }

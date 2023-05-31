@@ -17,22 +17,25 @@ graph_starting_values(
 )
 }
 \arguments{
-\item{graph}{a \code{metric_graph} object.}
+\item{graph}{A \code{metric_graph} object.}
 
-\item{model}{type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
-are supported}
+\item{model}{Type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
+are supported.}
 
 \item{data}{Should the data be used to obtain improved starting values?}
 
 \item{data_name}{The name of the response variable in \code{graph$data}.}
 
-\item{range_par}{Should an initial value for range parameter be returned instead of for kappa?}
+\item{range_par}{Should an initial value for range parameter be returned
+instead of for kappa?}
 
 \item{nu}{Should an initial value for nu be returned?}
 
 \item{manual_data}{A vector (or matrix) of response variables.}
 
-\item{like_format}{Should the starting values be returned with sigma.e as the last element? This is the format for the likelihood constructor from the rSPDE package.}
+\item{like_format}{Should the starting values be returned with sigma.e as the
+last element? This is the format for the likelihood constructor from the
+\code{rSPDE} package.}
 
 \item{log_scale}{Should the initial values be returned in log scale?}
 }
