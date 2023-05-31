@@ -99,7 +99,7 @@ test_that("Test posterior mean", {
   graph$add_observations(data = df_temp, normalized = TRUE)
 
   #test posterior at observation locations
-  res <- graph_lme(y ~ -1, graph=graph, model="WM1")
+  res <- graph_lme(y ~ -1, graph=graph, model="WM1", parallel = FALSE)
   pm <- predict(res, data = df_temp, normalized=TRUE)$mean
 
   kappa_est <- res$coeff$random_effects[2]

@@ -7,8 +7,9 @@
 graph_data_spde(graph_spde, repl = NULL, only_pred = FALSE, loc = NULL)
 }
 \arguments{
-\item{graph_spde}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()} function or
-an \code{rspde_metric_graph} object built with the \code{rspde.metric_graph()} function from the \code{rSPDE} package.}
+\item{graph_spde}{An \code{inla_metric_graph_spde} object built with the
+\code{graph_spde()} function or an \code{rspde_metric_graph} object built with the
+\code{rspde.metric_graph()} function from the \code{rSPDE} package.}
 
 \item{repl}{Which replicates? If there is no replicates, one
 can set \code{repl} to \code{NULL}. If one wants all replicates,
@@ -16,10 +17,11 @@ then one sets to \code{repl} to \verb{__all}.}
 
 \item{only_pred}{Should only return the \code{data.frame} to the prediction data?}
 
-\item{loc}{Character with the name of the location variable to be used in \code{inlabru}'s prediction.}
+\item{loc}{Character with the name of the location variable to be used in
+\code{inlabru}'s prediction.}
 }
 \value{
-The observation matrix
+The observation matrix.
 }
 \description{
 Constructs observation/prediction weight matrices

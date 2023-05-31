@@ -2,30 +2,30 @@
 % Please edit documentation in R/space_time.R
 \name{make.Q.spacetime}
 \alias{make.Q.spacetime}
-\title{Space-time precision operator discretization}
+\title{Space-time precision operator discretization.}
 \usage{
 make.Q.spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma)
 }
 \arguments{
-\item{graph}{metric_graph object}
+\item{graph}{A \code{metric_graph} object.}
 
-\item{t}{vector of time points}
+\item{t}{Vector of time points.}
 
-\item{kappa}{range parameter kappa}
+\item{kappa}{Spatial range parameter.}
 
-\item{rho}{drift parameter}
+\item{rho}{Drift parameter.}
 
-\item{gamma}{temporal range parameter}
+\item{gamma}{Temporal range parameter.}
 
-\item{alpha}{smoothness parameter (integer) for spatial operator}
+\item{alpha}{Smoothness parameter (integer) for spatial operator.}
 
-\item{beta}{smoothness parameter (integer) for Q-Wiener process}
+\item{beta}{Smoothness parameter (integer) for Q-Wiener process.}
 
-\item{sigma}{variance parameter}
+\item{sigma}{Variance parameter.}
 }
 \value{
-Precision matrix
+Precision matrix.
 }
 \description{
-The precision matrix for all vertices for space-time field
+The precision matrix for all vertices for space-time field.
 }

@@ -1,13 +1,13 @@
-#' The precision matrix for all vertices for a Whittle-Matérn field
-#' @param kappa range parameter kappa
-#' @param tau variance parameter
-#' @param alpha smoothness parameter (1 or 2)
-#' @param graph metric_graph object
-#' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
-#' boundary conditions and BC=1 gives stationary boundary conditions
-#' @param build (bool) if TRUE return the precision matrix otherwise return
-#' a list(i,j,x, nv)
-#' @return Precision matrix or list
+#' Computes the precision matrix for all vertices for a Whittle-Matérn field.
+#' @param kappa Range parameter.
+#' @param tau Precision parameter.
+#' @param alpha Smoothness parameter (1 or 2).
+#' @param graph A `metric_graph` object.
+#' @param BC Set boundary conditions for degree=1 vertices. BC =0 gives Neumann
+#' boundary conditions and BC=1 gives stationary boundary conditions.
+#' @param build If `TRUE`, the precision matrix is returned. Otherwise a list
+#' list(i,j,x, nv) is returned.
+#' @return Precision matrix or list.
 #' @export
 spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 
@@ -149,7 +149,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
     Q_adj <- solve(R_node) + Ajd
 
     if (graph$E[i, 1] == graph$E[i, 2]) {
-      cat("Warning: circlular edges are not implemented\n")
+      warning("Circular edges are not implemented")
     }
 
       #lower edge precision u

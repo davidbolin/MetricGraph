@@ -1,8 +1,9 @@
 
-#' Posterior mean for models assuming observations at vertices
+#' Posterior mean for Gaussian random field models on metric graphs assuming
+#' observations at vertices.
 #'
-#' @param theta estimated model parameters (sigma_e, tau, kappa)
-#' @param graph metric graph  object
+#' @param theta Estimated model parameters (sigma_e, tau, kappa).
+#' @param graph A `metric_graph`  object.
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
@@ -10,7 +11,7 @@
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with the posterior mean evaluated at the observation locations
-#' @export
+#' @noRd
 posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 {
   check <- check_graph(graph)
@@ -62,8 +63,8 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 
 #' Prediction for models assuming observations at vertices
 #'
-#' @param theta Estimated model parameters (sigma_e, tau, kappa)
-#' @param graph metric graph object
+#' @param theta Estimated model parameters (sigma_e, tau, kappa).
+#' @param graph A `metric_graph` object.
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
@@ -72,12 +73,12 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
 #' @param ind Indices for cross validation. It should be a vector of the same
 #' length as the data, with integer values representing each group in the
 #' cross-validation. If NULL, leave-one-out cross validation is performed.
-#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
-#'        1 is making the boundary condition stationary 
+#' @param BC Which boundary condition to use for the Whittle-Matern models (0,1).
+#' Here 0 denotes Neumann boundary conditions and 1 stationary conditions.
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with all predictions
-#' @export
+#' @noRd
 posterior_crossvalidation_covariance_manual <- function(theta,
                                                  graph,
                                                  data_name,
@@ -157,23 +158,23 @@ posterior_crossvalidation_covariance_manual <- function(theta,
 
 #' Prediction for models assuming observations at vertices
 #'
-#' @param theta Estimated model parameters (sigma_e, tau, kappa)
-#' @param graph metric graph object
-#' @param data_name name of the data
+#' @param theta Estimated model parameters (sigma_e, tau, kappa).
+#' @param graph A `metric_graph` object.
+#' @param data_name Name of the data.
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoExp" gives a
-#' model with isotropic exponential covariance
+#' model with isotropic exponential covariance.
 #' @param ind Indices for cross validation. It should be a vector of the same
 #' length as the data, with integer values representing each group in the
 #' cross-validation. If NULL, leave-one-out cross validation is performed.
-#' @param BC which boundary condition to use (0,1) 0 is no adjustment on boundary point
-#'        1 is making the boundary condition stationary 
+#' @param BC Which boundary condition to use for the Whittle-Matern models (0,1).
+#' Here 0 denotes Neumann boundary conditions and 1 stationary conditions.
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
-#' @export
+#' @noRd
 posterior_crossvalidation_manual <- function(theta,
                                       graph,
                                       data_name,
@@ -262,7 +263,8 @@ posterior_crossvalidation_manual <- function(theta,
 }
 
 
-#' Prediction for models assuming observations at vertices for graph_lme models
+#' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
+#' the vertices of metric graphs.
 #'
 #' @param object A fitted model using the `graph_lme()` function.
 #' @return Vector with the posterior expectations and variances as well as
@@ -348,13 +350,13 @@ posterior_crossvalidation <- function(object)
   } else {
     stop("Wrong model choice.")
   }
-  
+
   if(!is.matrix(object$model_matrix)){
     object$model_matrix <- matrix(object$model_matrix, ncol=1)
   }
 
   y_graph <- object$model_matrix[,1]
-  
+
   ind <- 1:length(y_graph)
 
   if(ncol(object$model_matrix) > 1){
@@ -408,7 +410,8 @@ posterior_crossvalidation <- function(object)
               rmse = sqrt(mean(rmse))))
 }
 
-#' Prediction for models assuming observations at vertices for graph_lme models
+#' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
+#' the vertices of metric graphs.
 #'
 #' @param object A fitted model using the `graph_lme()` function.
 #' @details This function does not use sparsity for any model.
@@ -468,7 +471,7 @@ posterior_crossvalidation_covariance <- function(object)
   }
 
   y_graph <- object$model_matrix[,1]
-  
+
   ind <- 1:length(y_graph)
 
   if(ncol(object$model_matrix) > 1){

@@ -2,24 +2,26 @@
 #' INLA implementation of Whittle-Matérn fields for metric graphs.
 #'
 #' This function creates an inla object that can be used
-#' in `INLA` or `inlabru` to fit Whittle-Matérn fields
-#' on metric graphs.
+#' in `INLA` or `inlabru` to fit Whittle-Matérn fields on metric graphs.
 #'
 #' @param graph_object A `metric_graph` object.
 #' @param alpha The order of the SPDE.
-#' @param stationary_endpoints Which vertices of degree 1 should contain stationary boundary conditions?
-#' @param parameterization Which parameterization to be used? The options are 'matern' (sigma and range) and 'spde' (sigma and kappa).
+#' @param stationary_endpoints Which vertices of degree 1 should contain
+#' stationary boundary conditions?
+#' @param parameterization Which parameterization to be used? The options are
+#' 'matern' (sigma and range) and 'spde' (sigma and kappa).
 #' @param start_sigma Starting value for sigma.
 #' @param prior_sigma a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of sigma on the log scale.
 #' @param start_range Starting value for range parameter.
 #' @param prior_range a `list` containing the elements `meanlog` and
-#' `sdlog`, that is, the mean and standard deviation of the range parameter on the log scale. Will not be used if prior.kappa is non-null.
+#' `sdlog`, that is, the mean and standard deviation of the range parameter on
+#' the log scale. Will not be used if prior.kappa is non-null.
 #' @param start_kappa Starting value for kappa.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
-#' @param shared_lib Which shared lib to use for the cgeneric implementation? 
-#' If "detect", it will check if the shared lib exists locally, in which case it will 
+#' @param shared_lib Which shared lib to use for the cgeneric implementation?
+#' If "detect", it will check if the shared lib exists locally, in which case it will
 #' use it. Otherwise it will use INLA's shared library.
 #' If "INLA", it will use the shared lib from INLA's installation. If 'MetricGraph', then
 #' it will use the local installation (does not work if your installation is from CRAN).
@@ -27,35 +29,39 @@
 #' @param debug Should debug be displayed?
 #'
 #' @return An inla object.
-#' @details 
-#' This function is used to construct a Matern SPDE model on a metric graph. The latent field 
-#' \eqn{u} is the solution of the SPDE
-#' \deqn{(\kappa^2 - \Delta)^\alpha u = \sigma W,} where \eqn{W} is the Gaussian white noise
-#' on the metric graph. This model implements exactly
-#'  the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite element approximation
-#' for general \eqn{\alpha} we refer the reader to the `rSPDE` package and to the
-#' Whittle--Matérn fields with general smoothness vignette.
-#' 
-#' We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}}, which
-#' can be interpreted as a range parameter. 
-#' 
-#' Let \eqn{\kappa_0} and \eqn{\sigma_0} be the starting values for \eqn{\kappa} and 
+#' @details
+#' This function is used to construct a Matern SPDE model on a metric graph.
+#' The latent field \eqn{u} is the solution of the SPDE
+#' \deqn{(\kappa^2 - \Delta)^\alpha u = \sigma W,} where \eqn{W} is Gaussian
+#' white noise on the metric graph. This model implements exactly
+#' the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite
+#' element approximation for general \eqn{\alpha} we refer the reader to the
+#' `rSPDE` package and to the Whittle--Matérn fields with general smoothness vignette.
+#'
+#' We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}},
+#' which can be interpreted as a range parameter.
+#'
+#' Let \eqn{\kappa_0} and \eqn{\sigma_0} be the starting values for \eqn{\kappa} and
 #' \eqn{\sigma}, we write \eqn{\sigma = \exp\{\theta_1\}} and \eqn{\kappa = \exp\{\theta_2\}}.
 #' We assume priors on \eqn{\theta_1} and \eqn{\theta_2} to be normally distributed
 #' with mean, respectively, \eqn{\log(\sigma_0)} and \eqn{\log(\kappa_0)}, and variance 10.
 #' Similarly, if we let \eqn{\rho_0} be the starting value for \eqn{\rho}, then
 #' we write \eqn{\rho = \exp\{\theta_2\}} and assume a normal prior for \eqn{\theta_2},
 #' with mean \eqn{\log(\rho_0)} and variance 10.
-#' 
+#'
 #' @export
-graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
- parameterization = c("matern", "spde"),
- start_range = NULL, prior_range = NULL,
- start_kappa = NULL, start_sigma = NULL,
- prior_kappa = NULL,
- prior_sigma = NULL, 
- shared_lib = "detect",
- debug = FALSE){
+graph_spde <- function(graph_object,
+                       alpha = 1,
+                       stationary_endpoints = "all",
+                       parameterization = c("matern", "spde"),
+                       start_range = NULL,
+                       prior_range = NULL,
+                       start_kappa = NULL,
+                       start_sigma = NULL,
+                       prior_kappa = NULL,
+                       prior_sigma = NULL,
+                       shared_lib = "detect",
+                       debug = FALSE){
 
   graph_spde <- graph_object$clone()
 
@@ -216,7 +222,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
     start_theta <- start_lkappa
     prior_theta <- prior_kappa
   }
-  
+
   ### Location of object files
 
   gpgraph_lib <- shared_lib
@@ -245,7 +251,7 @@ graph_spde <- function(graph_object, alpha = 1, stationary_endpoints = "all",
   }
 
 
-  model <- 
+  model <-
         do.call(eval(parse(text='INLA::inla.cgeneric.define')),
         list(model="inla_cgeneric_gpgraph_alpha1_model",
             shlib=gpgraph_lib,
@@ -273,21 +279,25 @@ return(model)
 }
 
 
-
 #'  Model index vector generation for metric graph models
 #'
 #' Generates a list of named index vectors for
 #' `INLA`-based metric graph models.
 #'
 #' @param name A character string with the base name of the effect.
-#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param graph_spde An `inla_metric_graph_spde` object built with the
+#' `graph_spde()` function.
 #' @param n.group Number of groups.
 #' @param n.repl Number of replicates.
 #' @param ... Currently not being used.
 #'
 #' @return A list of indexes.
 #' @export
-graph_spde_make_index <- function (name, graph_spde, n.group = 1, n.repl = 1, ...) {
+graph_spde_make_index <- function (name,
+                                   graph_spde,
+                                   n.group = 1,
+                                   n.repl = 1,
+                                   ...) {
     n.spde <- dim(graph_spde$graph_spde$V)[1]
     name.group <- paste(name, ".group", sep = "")
     name.repl <- paste(name, ".repl", sep = "")
@@ -304,10 +314,11 @@ graph_spde_make_index <- function (name, graph_spde, n.group = 1, n.repl = 1, ..
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
 #'
-#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param graph_spde An `inla_metric_graph_spde` object built with the
+#' `graph_spde()` function.
 #' @param repl Which replicates? If there is no replicates, or to
 #' use all replicates, one can set to `NULL`.
-#' @return The observation matrix
+#' @return The observation matrix.
 #' @export
 
 graph_spde_make_A <- function (graph_spde, repl = NULL) {
@@ -320,17 +331,19 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
 #'
-#' @param graph_spde An `inla_metric_graph_spde` object built with the `graph_spde()` function or
-#' an `rspde_metric_graph` object built with the `rspde.metric_graph()` function from the `rSPDE` package.
+#' @param graph_spde An `inla_metric_graph_spde` object built with the
+#' `graph_spde()` function or an `rspde_metric_graph` object built with the
+#' `rspde.metric_graph()` function from the `rSPDE` package.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
 #' @param only_pred Should only return the `data.frame` to the prediction data?
-#' @param loc Character with the name of the location variable to be used in `inlabru`'s prediction.
-#' @return The observation matrix
+#' @param loc Character with the name of the location variable to be used in
+#' `inlabru`'s prediction.
+#' @return The observation matrix.
 #' @export
 
-graph_data_spde <- function (graph_spde, repl = NULL, 
+graph_data_spde <- function (graph_spde, repl = NULL,
                                 only_pred = FALSE,
                                 loc = NULL){
   graph_tmp <- graph_spde$graph_spde$clone()
@@ -355,16 +368,17 @@ graph_data_spde <- function (graph_spde, repl = NULL,
   return(ret)
 }
 
-#' Extraction of vector of replicates for inlabru
+#' Extraction of vector of replicates for inlabru.
 #'
 #' Extracts the vector of replicates from an rSPDE
 #' model object for inlabru
 #'
-#' @param graph_spde An `rspde_metric_graph` object built with the `rspde.metric_graph()` function from the `rSPDE` package.
+#' @param graph_spde An `rspde_metric_graph` object built with the
+#' `rspde.metric_graph()` function from the `rSPDE` package.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
-#' @return The vector of replicates
+#' @return The vector of replicates.
 #' @export
 
 graph_repl_spde <- function (graph_spde, repl = NULL){
@@ -384,19 +398,19 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 
 
 #' @name spde_metric_graph_result
-#' @title metric graph SPDE result extraction from INLA estimation results
+#' @title Metric graph SPDE result extraction from INLA estimation results.
 #' @description Extract field and parameter values and distributions
 #' for a metric graph spde effect from an inla result object.
-#' @param inla An `inla` object obtained from a call to
-#' `inla()`.
+#' @param inla An `inla` object obtained from a call to `inla()`.
 #' @param name A character string with the name of the rSPDE effect
 #' in the inla formula.
-#' @param metric_graph_spde The `inla_metric_graph_spde` object used for the effect in
-#' the inla formula.
+#' @param metric_graph_spde The `inla_metric_graph_spde` object used for the
+#' effect in the inla formula.
 #' @param compute.summary Should the summary be computed?
 #' @param n_samples The number of samples to be used if parameterization is `matern`.
 #' @param n_density The number of equally spaced points to estimate the density.
-#' @return If the model was fitted with `matern` parameterization (the default), it returns a list containing:
+#' @return If the model was fitted with `matern` parameterization (the default),
+#' it returns a list containing:
 #' \item{marginals.range}{Marginal densities for the range parameter}
 #' \item{marginals.log.range}{Marginal densities for log(range)}
 #' \item{marginals.sigma}{Marginal densities for std. deviation}
@@ -422,7 +436,11 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' \item{summary.tau}{Summary statistics for tau}
 #' @export
 
-spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summary = TRUE, n_samples = 5000, n_density = 1024) {
+spde_metric_graph_result <- function(inla, name,
+                                     metric_graph_spde,
+                                     compute.summary = TRUE,
+                                     n_samples = 5000,
+                                     n_density = 1024) {
   if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
     stop("You should provide an inla_metric_graph_spde object!")
   }
@@ -577,14 +595,15 @@ spde_metric_graph_result <- function(inla, name, metric_graph_spde, compute.summ
 #'
 #' Returns a ggplot-friendly data-frame with the marginal posterior densities.
 #' @aliases gg_df gg_df.metric_graph_spde_result
-#' @param result An metric_graph_spde_result object.
-#' @param parameter Vector. Which parameters to get the posterior density in the data.frame? The options are `sigma`, `range` or `kappa`.
+#' @param result A metric_graph_spde_result object.
+#' @param parameter Vector. Which parameters to get the posterior density in the
+#' data.frame? The options are `sigma`, `range` or `kappa`.
 #' @param transform Should the posterior density be given in the original scale?
 #' @param restrict_x_axis Variables to restrict the range of x axis based on quantiles.
 #' @param restrict_quantiles List of quantiles to restrict x axis.
 #' @param ... Not being used.
 #'
-#' @return A data frame containing the posterior densities.
+#' @return A `data.frame` containing the posterior densities.
 #' @export
 gg_df.metric_graph_spde_result <- function(result,
                           parameter = result$params,
@@ -665,11 +684,10 @@ gg_df.metric_graph_spde_result <- function(result,
 #' their original scales.
 #'
 #' @param object A `rspde.result` object.
-#' @param digits integer, used for number formatting with signif()
+#' @param digits Integer, used for number formatting with signif()
 #' @param ... Currently not used.
 #'
-#' @return Returns a `data.frame`
-#' containing the summary.
+#' @return A `data.frame` containing the summary.
 #' @export
 #' @method summary metric_graph_spde_result
 
@@ -706,7 +724,7 @@ bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
   mapper <- list(model = model)
   inlabru::bru_mapper_define(mapper, new_class = "bru_mapper_inla_metric_graph_spde")
 }
- 
+
 #' @param mapper A `bru_mapper.inla_metric_graph_spde` object
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
@@ -816,11 +834,12 @@ create_summary_from_density <- function(density_df, name) {
 
 #' @name bru_graph_rep
 #' @title Creates a vector of replicates to be used with inlabru
-#' @description Auxiliar function to create a vector of replicates to be used with inlabru
+#' @description Auxiliar function to create a vector of replicates to be used
+#' with inlabru
 #' @param repl A vector of replicates. If set to `__all`, a vector
 #' for all replicates will be generated.
 #' @param graph_spde Name of the field
-#' @return A vector of replicates to be used with inlabru
+#' @return A vector of replicates to be used with inlabru.
 #' @export
 
 bru_graph_rep <- function(repl, graph_spde){
@@ -837,33 +856,51 @@ bru_graph_rep <- function(repl, graph_spde){
 #' @title Predict method for inlabru fits on Metric Graphs
 #' @description Auxiliar function to obtain predictions of the field
 #' using inlabru.
-#' @param object An `inla_metric_graph_spde` object built with the `graph_spde()` function.
+#' @param object An `inla_metric_graph_spde` object built with the `graph_spde()`
+#' function.
 #' @param cmp The `inlabru` component used to fit the model.
 #' @param bru_fit A fitted model using `inlabru` or `inla`.
-#' @param data A data.frame of covariates needed for the prediction. The locations must be normalized PtE.
-#' @param formula A formula where the right hand side defines an R expression to evaluate for each generated sample. If NULL, the latent and hyperparameter states are returned as named list elements. See Details for more information.
-#' @param data_coords It decides which coordinate system to use. If `PtE`, the user must provide the locations
-#' as a data frame with the first column being the edge number and 
-#' the second column as the distance on edge, otherwise if `euclidean`, the user must provide 
-#' a data frame with the first column being the `x` Euclidean coordinates and the second column
-#' being the `y` Euclidean coordinates.
-#' @param  normalized if `TRUE`, then the distances in distance on edge are assumed to be normalized to (0,1). Default TRUE. Will not be 
+#' @param data A data.frame of covariates needed for the prediction. The
+#' locations must be normalized PtE.
+#' @param formula A formula where the right hand side defines an R expression to
+#' evaluate for each generated sample. If NULL, the latent and hyperparameter
+#' states are returned as named list elements. See Details for more information.
+#' @param data_coords It decides which coordinate system to use. If `PtE`, the
+#' user must provide the locations as a data frame with the first column being
+#' the edge number and the second column as the distance on edge, otherwise if
+#' `euclidean`, the user must provide a data frame with the first column being
+#' the `x` Euclidean coordinates and the second column being the `y` Euclidean
+#' coordinates.
+#' @param  normalized if `TRUE`, then the distances in distance on edge are
+#' assumed to be normalized to (0,1). Default TRUE. Will not be
 #' used if `data_coords` is `euclidean`.
-#' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
+#' @param n.samples Integer setting the number of samples to draw in order to
+#' calculate the posterior statistics. The default is rather low but provides a
+#' quick approximate result.
 #' @param seed Random number generator seed passed on to inla.posterior.sample
-#' @param probs	A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile
-#' @param return_original_order Should the predictions be returned in the original order?
-#' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
-#' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
-#' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
-#' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the prediciton summary has the same number of rows as data, then the output is a SpatialDataFrame object. Default FALSE.
+#' @param probs	A numeric vector of probabilities with values in the standard
+#' unit interval to be passed to stats::quantile
+#' @param return_original_order Should the predictions be returned in the
+#' original order?
+#' @param num.threads	Specification of desired number of threads for parallel
+#' computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
+#' @param include	Character vector of component labels that are needed by the
+#' predictor expression; Default: NULL (include all components that are not
+#' explicitly excluded)
+#' @param exclude	Character vector of component labels that are not used by the
+#' predictor expression. The exclusion list is applied to the list as determined
+#' by the include parameter; Default: NULL (do not remove any components from
+#' the inclusion list)
+#' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the
+#' prediciton summary has the same number of rows as data, then the output is a
+#' SpatialDataFrame object. Default FALSE.
 #' @param... Additional arguments passed on to inla.posterior.sample
 #' @return A list with predictions.
 #' @export
 
 predict.inla_metric_graph_spde <- function(object,
                                            cmp,
-                                           bru_fit, 
+                                           bru_fit,
                                            data = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
@@ -871,7 +908,7 @@ predict.inla_metric_graph_spde <- function(object,
                                            n.samples = 100,
                                            seed = 0L,
                                            probs = c(0.025, 0.5, 0.975),
-                                           return_original_order = TRUE,                                           
+                                           return_original_order = TRUE,
                                            num.threads = NULL,
                                            include = NULL,
                                            exclude = NULL,
@@ -880,7 +917,7 @@ predict.inla_metric_graph_spde <- function(object,
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
-  }                                            
+  }
   graph_tmp <- object$graph_spde$get_initial_graph()
   # graph_tmp <- object$graph_spde$clone()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
@@ -909,7 +946,7 @@ predict.inla_metric_graph_spde <- function(object,
     new_data[["__distance_on_edge"]] <- data[[name_locations]][,2]
   } else{
     new_data[["__coord_x"]] <- data[[name_locations]][,1]
-    new_data[["__coord_y"]] <- data[[name_locations]][,2]    
+    new_data[["__coord_y"]] <- data[[name_locations]][,2]
   }
 
   new_data[["__dummy_var"]] <- 1:length(new_data[["__edge_number"]])
@@ -922,7 +959,7 @@ predict.inla_metric_graph_spde <- function(object,
                   data_coords = data_coords,
                   normalized = normalized)
 
-  dummy1 <- graph_tmp$data[["__dummy_var"]]            
+  dummy1 <- graph_tmp$data[["__dummy_var"]]
 
   graph_tmp$data[["__dummy_var2"]] <- 1:length(graph_tmp$data[["__dummy_var"]])
 
@@ -937,11 +974,11 @@ predict.inla_metric_graph_spde <- function(object,
   #                   coord_x = "__coord_x",
   #                   coord_y = "__coord_y",
   #                   data_coords = "euclidean")
-  
+
   graph_tmp$observation_to_vertex()
 
   # tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
-  #                                       graph_tmp$data[["__coord_y"]]) 
+  #                                       graph_tmp$data[["__coord_y"]])
   # tmp_list2 <- lapply(1:nrow(tmp_list2), function(i){tmp_list2[i,]})
   # idx_list <- match(tmp_list, tmp_list2)
 
@@ -957,14 +994,14 @@ predict.inla_metric_graph_spde <- function(object,
   #                                             graph_tmp$data[["__distance_on_edge"]][idx_list])
 
   new_data_list[[name_locations]] <- cbind(new_data_list[["__edge_number"]],
-                                              new_data_list[["__distance_on_edge"]])                                   
+                                              new_data_list[["__distance_on_edge"]])
 
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
   name_model <- deparse(substitute(object))
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
-  bru_fit_new <- inlabru::bru(cmp, 
+  bru_fit_new <- inlabru::bru(cmp,
           data = graph_data_spde(spde____model, loc = name_locations))
   pred <- predict(object = bru_fit_new,
                     data = new_data_list,
@@ -989,21 +1026,22 @@ predict.inla_metric_graph_spde <- function(object,
   # pred_list[["new_model"]] <- spde____model
   # pred_list[["new_fit"]] <- bru_fit_new
   # pred_list[["new_graph"]] <- graph_tmp
-  
+
   class(pred_list) <- "graph_bru_pred"
-  return(pred_list)                    
+  return(pred_list)
 }
 
 
 #' @name plot.graph_bru_pred
-#' @title Plot of predicted values with inlabru
+#' @title Plot of predicted values with inlabru.
 #' @description Auxiliar function to obtain plots of the predictions of the field
 #' using inlabru.
 #' @param x a predicted object obtained with the `predict` method.
 #' @param y not used.
 #' @param vertex_size size of the vertices.
 #' @param ... additional parameters to be passed to the plot function.
-#' @export 
+#' @return A `ggplot2` object.
+#' @export
 
 plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
   m_prd_bru <- x$pred$mean
@@ -1017,32 +1055,50 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' @title Predict method for inlabru fits on Metric Graphs for rSPDE models
 #' @description Auxiliar function to obtain predictions of the field
 #' using inlabru and rSPDE.
-#' @param object An `rspde_metric_graph` object built with the `rspde.metric_graph()` function.
+#' @param object An `rspde_metric_graph` object built with the
+#' `rspde.metric_graph()` function.
 #' @param cmp The `inlabru` component used to fit the model.
 #' @param bru_fit A fitted model using `inlabru` or `inla`.
-#' @param data A data.frame of covariates needed for the prediction. The locations must be normalized PtE.
-#' @param formula A formula where the right hand side defines an R expression to evaluate for each generated sample. If NULL, the latent and hyperparameter states are returned as named list elements. See Details for more information.
-#' @param data_coords It decides which coordinate system to use. If `PtE`, the user must provide the locations
-#' as a data frame with the first column being the edge number and 
-#' the second column as the distance on edge, otherwise if `euclidean`, the user must provide 
-#' a data frame with the first column being the `x` Euclidean coordinates and the second column
-#' being the `y` Euclidean coordinates.
-#' @param  normalized if `TRUE`, then the distances in distance on edge are assumed to be normalized to (0,1). Default TRUE. Will not be 
-#' used if `data_coords` is `euclidean`.
-#' @param n.samples Integer setting the number of samples to draw in order to calculate the posterior statistics. The default is rather low but provides a quick approximate result.
+#' @param data A data.frame of covariates needed for the prediction. The locations
+#' must be normalized PtE.
+#' @param formula A formula where the right hand side defines an R expression to
+#' evaluate for each generated sample. If NULL, the latent and hyperparameter
+#' states are returned as named list elements. See Details for more information.
+#' @param data_coords It decides which coordinate system to use. If `PtE`, the
+#' user must provide the locations as a data frame with the first column being
+#' the edge number and the second column as the distance on edge, otherwise if
+#' `euclidean`, the user must provide a data frame with the first column being
+#' the `x` Euclidean coordinates and the second column being the `y` Euclidean
+#' coordinates.
+#' @param  normalized if `TRUE`, then the distances in distance on edge are
+#' assumed to be normalized to (0,1). Default TRUE. Will not be used if
+#' `data_coords` is `euclidean`.
+#' @param n.samples Integer setting the number of samples to draw in order to
+#' calculate the posterior statistics. The default is rather low but provides a
+#' quick approximate result.
 #' @param seed Random number generator seed passed on to inla.posterior.sample
-#' @param probs	A numeric vector of probabilities with values in the standard unit interval to be passed to stats::quantile.
-#' @param num.threads	Specification of desired number of threads for parallel computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
-#' @param include	Character vector of component labels that are needed by the predictor expression; Default: NULL (include all components that are not explicitly excluded)
-#' @param exclude	Character vector of component labels that are not used by the predictor expression. The exclusion list is applied to the list as determined by the include parameter; Default: NULL (do not remove any components from the inclusion list)
-#' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the prediciton summary has the same number of rows as data, then the output is a SpatialDataFrame object. Default FALSE.
-#' @param... Additional arguments passed on to inla.posterior.sample
+#' @param probs	A numeric vector of probabilities with values in the standard
+#' unit interval to be passed to stats::quantile.
+#' @param num.threads	Specification of desired number of threads for parallel
+#' computations. Default NULL, leaves it up to INLA. When seed != 0, overridden
+#' to "1:1"
+#' @param include	Character vector of component labels that are needed by the
+#' predictor expression; Default: NULL (include all components that are not
+#' explicitly excluded)
+#' @param exclude	Character vector of component labels that are not used by the
+#' predictor expression. The exclusion list is applied to the list as determined
+#' by the include parameter; Default: NULL (do not remove any components from the
+#' inclusion list)
+#' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the
+#' prediciton summary has the same number of rows as data, then the output is a
+#' SpatialDataFrame object. Default FALSE.
+#' @param... Additional arguments passed on to inla.posterior.sample.
 #' @return A list with predictions.
 #' @export
 
 predict.rspde_metric_graph <- function(object,
                                            cmp,
-                                           bru_fit, 
+                                           bru_fit,
                                            data = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
@@ -1058,7 +1114,7 @@ predict.rspde_metric_graph <- function(object,
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
-  }                                            
+  }
   graph_tmp <- object$graph_spde$get_initial_graph()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
 
@@ -1088,19 +1144,24 @@ predict.rspde_metric_graph <- function(object,
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
   pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
-  
+
   class(pred_list) <- "graph_bru_pred"
-  return(pred_list)                    
+  return(pred_list)
 }
 
 
 #' @name graph_bru_process_data
-#' @title Prepare data frames or data lists to be used with inlabru in metric graphs
-#' @param data A `data.frame` or a `list` containing the covariates, the edge number and the distance on edge
-#' for the locations to obtain the prediction.
+#' @title Prepare data frames or data lists to be used with inlabru in metric
+#' graphs.
+#' @param data A `data.frame` or a `list` containing the covariates, the edge
+#' number and the distance on edge for the locations to obtain the prediction.
 #' @param loc character. Name of the locations to be used in `inlabru`'s component.
-#' @param edge_number Name of the variable that contains the edge number, the default is `edge_number`.
-#' @param distance_on_edge Name of the variable that contains the distance on edge, the default is `distance_on_edge`.
+#' @param edge_number Name of the variable that contains the edge number, the
+#' default is `edge_number`.
+#' @param distance_on_edge Name of the variable that contains the distance on
+#' edge, the default is `distance_on_edge`.
+#' @return A list containing the processed data to be used in a user-friendly
+#' manner by inlabru.
 #' @export
 
 graph_bru_process_data <- function(data, edge_number = "edge_number",

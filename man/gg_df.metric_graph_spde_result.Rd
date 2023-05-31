@@ -16,9 +16,10 @@
 )
 }
 \arguments{
-\item{result}{An metric_graph_spde_result object.}
+\item{result}{A metric_graph_spde_result object.}
 
-\item{parameter}{Vector. Which parameters to get the posterior density in the data.frame? The options are \code{sigma}, \code{range} or \code{kappa}.}
+\item{parameter}{Vector. Which parameters to get the posterior density in the
+data.frame? The options are \code{sigma}, \code{range} or \code{kappa}.}
 
 \item{transform}{Should the posterior density be given in the original scale?}
 
@@ -29,7 +30,7 @@
 \item{...}{Not being used.}
 }
 \value{
-A data frame containing the posterior densities.
+A \code{data.frame} containing the posterior densities.
 }
 \description{
 Returns a ggplot-friendly data-frame with the marginal posterior densities.

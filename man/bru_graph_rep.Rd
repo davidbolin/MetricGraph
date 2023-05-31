@@ -13,8 +13,9 @@ for all replicates will be generated.}
 \item{graph_spde}{Name of the field}
 }
 \value{
-A vector of replicates to be used with inlabru
+A vector of replicates to be used with inlabru.
 }
 \description{
-Auxiliar function to create a vector of replicates to be used with inlabru
+Auxiliar function to create a vector of replicates to be used
+with inlabru
 }

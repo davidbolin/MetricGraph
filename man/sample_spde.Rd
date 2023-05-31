@@ -2,7 +2,7 @@
 % Please edit documentation in R/spde_sampling.R
 \name{sample_spde}
 \alias{sample_spde}
-\title{Sample Whittle-Matérn field on graph}
+\title{Samples a Whittle-Matérn field on a metric graph.}
 \usage{
 sample_spde(
   kappa,
@@ -21,45 +21,48 @@ sample_spde(
 )
 }
 \arguments{
-\item{kappa}{parameter kappa from the SPDE}
+\item{kappa}{Range parameter.}
 
-\item{tau}{parameter tau from the SPDE}
+\item{tau}{Precision parameter.}
 
-\item{range}{range parameter}
+\item{range}{Practical correlation range parameter.}
 
-\item{sigma}{std. deviation parameter}
+\item{sigma}{Marginal standard deviation parameter.}
 
-\item{sigma_e}{parameter sigma_e}
+\item{sigma_e}{Standard deviation of the measurement noise.}
 
-\item{alpha}{order of the SPDE}
+\item{alpha}{Smoothness parameter.}
 
-\item{graph}{metric_graph object}
+\item{graph}{A \code{metric_graph} object.}
 
-\item{PtE}{matrix with locations (edge, normalized distance on edge) to
-sample from}
+\item{PtE}{Matrix with locations (edge, normalized distance on edge) where
+the samples should be generated.}
 
-\item{type}{If manual is set, then sampling is done at the locations
-specified in PtE. Set to "mesh" for simulation at mesh nodes, and to "obs"
+\item{type}{If "manual" is set, then sampling is done at the locations
+specified in \code{PtE}. Set to "mesh" for simulation at mesh nodes, and to "obs"
 for simulation at observation locations.}
 
-\item{posterior}{sample conditionally on the observations?}
+\item{posterior}{Sample conditionally on the observations?}
 
-\item{nsim}{number of samples to be generated.}
+\item{nsim}{Number of samples to be generated.}
 
-\item{method}{Which method to sample? The options are "conditional" and "Q". "Q" is more stable but takes longer.}
+\item{method}{Which method to use for the sampling? The options are
+"conditional" and "Q". Here, "Q" is more stable but takes longer.}
 
-\item{BC}{boundary conditions for degree=1 vertices. BC =0 gives Neumann
-boundary conditions and BC=1 gives stationary boundary conditions}
+\item{BC}{Boundary conditions for degree 1 vertices. BC = 0 gives Neumann
+boundary conditions and BC = 1 gives stationary boundary conditions.}
 }
 \value{
-sample evaluated at the mesh nodes in the graph
+Matrix or vector with the samples.
 }
 \description{
-Sample Whittle-Matérn field on graph
+Samples a Whittle-Matérn field on a metric graph.
 }
 \details{
-Samples a Gaussian Whittle-Matérn field on a graph, either from the prior
-or conditionally on observations
+Samples a Gaussian Whittle-Matérn field on a metric graph, either
+from the prior or conditionally on observations
 \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
-in the graph,  where \eqn{e_i} are independent standard Gaussian variables.
+on the graph,  where \eqn{e_i} are independent standard Gaussian variables.
+The parameters for the field can either be specified in terms of tau and kappa
+or practical correlation range and marginal standard deviation.
 }

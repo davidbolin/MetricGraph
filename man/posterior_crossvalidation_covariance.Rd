@@ -2,7 +2,8 @@
 % Please edit documentation in R/graph_inference.R
 \name{posterior_crossvalidation_covariance}
 \alias{posterior_crossvalidation_covariance}
-\title{Prediction for models assuming observations at vertices for graph_lme models}
+\title{Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
+the vertices of metric graphs.}
 \usage{
 posterior_crossvalidation_covariance(object)
 }
@@ -13,7 +14,8 @@ posterior_crossvalidation_covariance(object)
 Vector with all predictions
 }
 \description{
-Prediction for models assuming observations at vertices for graph_lme models
+Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
+the vertices of metric graphs.
 }
 \details{
 This function does not use sparsity for any model.
