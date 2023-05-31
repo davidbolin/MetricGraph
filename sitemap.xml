@@ -46,18 +46,6 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha1.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha1_mesh.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha2.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha2_mesh.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/exp_covariance.html</loc>
   </url>
   <url>
@@ -137,6 +125,9 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/simulate_spacetime.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/spde_covariance.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.html</loc>
