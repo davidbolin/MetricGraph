@@ -63,14 +63,14 @@
 #' (0,1). Here, 0 is Neumann boundary conditions and 1 uses stationary boundary
 #' conditions.
 # @param model_matrix logical indicating whether the model matrix should be returned as component of the returned value.
-#' @param parallel logical. Indicating whether to use optimParallel or not.
+#' @param parallel logical. Indicating whether to use `optimParallel()` or not.
 #' @param n_cores Number of cores to be used if parallel is true.
-#' @param optim_controls Additional controls to be passed to `optim` or `optimParallel`.
+#' @param optim_controls Additional controls to be passed to `optim()` or `optimParallel()`.
 #' @param improve_hessian Should a more precise estimate of the hessian be obtained?
 #' Turning on might increase the overall time.
 #' @param hessian_args List of controls to be used if `improve_hessian` is `TRUE`.
 #' The list can contain the arguments to be passed to the `method.args` argument
-#' in the `hessian` function. See the help of the `hessian` function in `numDeriv`
+#' in the `hessian` function. See the help of the `hessian` function in 'numDeriv'
 #' package for details. Observet that it only accepts the "Richardson" method for
 #' now, the method "complex" is not supported.
 #' @return A list containing the fitted model.

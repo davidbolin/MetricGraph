@@ -802,7 +802,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Returns a list or a matrix with the mesh locations.
-  #' @param bru Should an `inlabru`-friendly list be returned?
+  #' @param bru Should an 'inlabru'-friendly list be returned?
   #' @param loc If `bru` is set to `TRUE`, the name of the location variable.
   #' The default name is 'loc'.
   #' @param normalized If TRUE, then the distances in `distance_on_edge` are
@@ -1206,7 +1206,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' number, it will be the index of the group as stored internally. If `group`
   #' is a character, then the group will be chosen by its name.
   #' @param plotly Use plot_ly for 3D plot (default `FALSE`). This option
-  #' requires the `plotly` package.
+  #' requires the 'plotly' package.
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Line width for edges.
@@ -1216,10 +1216,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param X Additional values to plot.
   #' @param X_loc Locations of the additional values in the format
   #' (edge, normalized distance on edge).
-  #' @param p Existing `ggplot` or `plot_ly` object to add the graph to
+  #' @param p Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to
   #' @param degree Show the degrees of the vertices?
   #' @param direction Show the direction of the edges?
-  #' @param ... Additional arguments for `ggplot` or `plot_ly`
+  #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
   #' @return A `plot_ly` (if `plotly=TRUE`) or `ggplot` object.
   #' @examples
   #' library(sp)
@@ -1301,7 +1301,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' curve (in length), value) or a vector with values for the function
   #' evaluated at the mesh in the graph
   #' @param plotly If `TRUE`, then the plot is shown in 3D. This option requires
-  #' the package `plotly`.
+  #' the package 'plotly'.
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.
@@ -1311,7 +1311,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param support_width For 3D plot, width of support lines.
   #' @param support_color For 3D plot, color of support lines.
   #' @param p Previous plot to which the new plot should be added.
-  #' @param ... Additional arguments for `ggplot` or `plot_ly`
+  #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
   #' @return Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
   plot_function = function(X,
                            plotly = FALSE,
@@ -1528,7 +1528,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param X A m x T matrix where the ith column represents the function at the
   #' ith time, evaluated at the mesh locations.
   #' @param plotly If `TRUE`, then plot is shown in 3D. This option requires the
-  #' package `plotly`.
+  #' package 'plotly'.
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.

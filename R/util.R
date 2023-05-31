@@ -298,7 +298,7 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param nu Should an initial value for nu be returned?
 #' @param like_format Should the starting values be returned with sigma.e as the
 #' last element? This is the format for the likelihood constructor from the
-#' `rSPDE` package.
+#' 'rSPDE' package.
 #' @param log_scale Should the initial values be returned in log scale?
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
