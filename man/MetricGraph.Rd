@@ -20,7 +20,7 @@ Several utility functions for specifying graphs, computing likelihoods, performi
 prediction, simulating processes, and visualizing results on metric graphs are provided.
 In particular, linear mixed effects models including random field components can be fitted to
 data based on computationally efficient sparse matrix representations. Interfaces to the R
-pacakges INLA and inlabru are also provided, which facilitate working with Bayesian statistical
+packages INLA and inlabru are also provided, which facilitate working with Bayesian statistical
 models on metric graphs.
 }
 \details{
