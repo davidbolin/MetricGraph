@@ -169,7 +169,7 @@ Since $\alpha=1$, these sample paths are continuous but not differentiable.
 To visualize the correlation structure of the field, we can compute and plot
 the covariances between some point and all other points in the graph as follows:
 ```{r}
-C <- covariance_alpha1_mesh(c(2, 0.2), range = range, sigma = sigma,
+C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
 graph$plot_function(C, plotly = TRUE)
 ```
@@ -177,7 +177,7 @@ graph$plot_function(C, plotly = TRUE)
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
 The corresponding covariance function then looks as follows: 
 ```{r}
-C <- covariance_alpha2_mesh(c(2, 0.2), range = range, sigma = sigma,
+C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 2,
                             graph = graph)
 graph$plot_function(C, plotly = TRUE)
 ```
@@ -307,7 +307,7 @@ Whittle--Matérn fields with $\alpha = 1$. Let us plot the corresponding
 Whittle--Matérn covariance to compare: 
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
-C.wm <- covariance_alpha1_mesh(P,kappa=kappa, tau=1/sigma, graph=graph, scale = TRUE)
+C.wm <- spde_covariance(P,range=2/kappa, sigma=sigma, graph=graph, alpha = 1)
 p <- graph$plot_function(Sigma[20,], plotly = TRUE)
 graph$plot_function(C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
                     support_width = 0)
