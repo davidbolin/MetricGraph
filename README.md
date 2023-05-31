@@ -9,6 +9,9 @@ Basic statistical tasks such as likelihood evaluation and prediction is implemen
 
 We refer to the [package homepage][ref7] for detailed tutorials on all different aspects of the package.
 
+<p align="center">
+  <img src="./man/figures/logo.png" width="350" title="MetricGraph logo">
+</p>
 
 # References #
 D. Bolin, A. Simas, J. Wallin (2022) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. ArXiv:2205.06163
