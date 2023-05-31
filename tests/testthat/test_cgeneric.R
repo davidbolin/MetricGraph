@@ -2,7 +2,7 @@ test_that("Check cgeneric precision matrices", {
 set.seed(1)
 testthat::skip_on_cran()
   if (!requireNamespace("INLA", quietly=TRUE))
-    stop('INLA package is not installed. (see www.r-inla.org/download-install)')
+    testthat::skip(message = 'INLA package is not installed. (see www.r-inla.org/download-install)')
   
   old_threads <- INLA::inla.getOption("num.threads")
   INLA::inla.setOption(num.threads = "1:1")
