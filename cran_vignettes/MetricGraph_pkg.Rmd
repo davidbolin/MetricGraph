@@ -1,0 +1,158 @@
+---
+title: "MetricGraph Package"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{MetricGraph Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2205.06163
+  type: preprint
+  issued:
+    year: 2022
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2304.10372
+  type: preprint
+  issued:
+    year: 2023
+- id: Anderes2020
+  title: "Isotropic covariance functions on graphs and their edges"
+  author:
+  - family: Anderes
+    given: Ethan
+  - family: Møller
+    given: Jesper
+  - family: Rasmussen
+    given: Jakob G
+  container-title: Annals of Statistics
+  type: article
+  issue: 48
+  pages: 2478-2503
+  issued:
+    year: 2020
+- id: Borovitskiy2021
+  title: "Matérn Gaussian processes on graphs"
+  author:
+  - family: Borovitskiy
+    given: Viacheslav
+  - family: Azangulov
+    given: Iskander
+  - family: Terenin
+    given: Alexander 
+  - family: Mostowsky
+    given: Peter
+  - family: Deisenroth
+    given: Marc
+  - family: Durrande
+    given: Nicolas
+  container-title: International Conference on Artificial Intelligence and Statistics
+  type: article
+  pages: 2593-2601
+  issued: 
+    year: 2021
+- id: LindgrenRue2015
+  title: Bayesian Spatial Modelling with R-INLA.
+  author:
+  - family: Lindgren
+    given: Finn
+  - family: Rue
+    given: Haavard
+  container-title: Journal of Statistical Software
+  type: article
+  issue: 63
+  pages: 1-25
+  issued:
+    year: 2015
+- id: inlabru2019
+  title: inlabru an R package for Bayesian spatial modelling from ecological survey data
+  author:
+  - family: Bachl
+    given: Fabian E.
+  - family: Lindgren
+    given: Finn
+  - family: Borchers
+    given: David L.
+  - family: Illian
+    given: Janine B.
+  container-title: Methods in Ecology and Evolution
+  type: article
+  issue: 10
+  pages: 760-766
+  issued:
+    year: 2019
+- id: sppackage
+  title: Applied spatial data analysis with R
+  author:
+  - family: Bivand
+    given: Roger S.
+  - family: Pebesma
+    given: Edzer
+  - family: Gomez-Rubio
+    given: Virgilio
+  publisher: Springer, NY
+  type: book
+  issued:
+    year: 2013
+- id: plotlypackage
+  title: Interactive Web-Based Data Visualization with R, plotly, and shiny
+  author:
+  - family: Sievert
+    given: Carson
+  publisher: Chapman and Hall/CRC
+  type: book
+  issued:
+    year: 2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Package Home Page
+
+For more details on the package, along with a brief introduction, function references and several vignettes, go to the [`MetricGraph` home page](https://davidbolin.github.io/MetricGraph/).
+
+For the source codes, reporting issues, etc., please go the the [`MetricGraph` GitHub page](https://github.com/davidbolin/MetricGraph).
+
+# Vignettes
+
+We have the following vignettes for the `MetricGraph` package:
+
+* [MetricGraph: Random Fields on Metric Graphs](https://davidbolin.github.io/MetricGraph/articles/MetricGraph.html)
+
+* [Working with metric graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graph.html)
+
+* [Gaussian random fields on metric graphs](https://davidbolin.github.io/MetricGraph/articles/random_fields.html)
+
+* [Whittle--Matérn fields with general smoothness](https://davidbolin.github.io/MetricGraph/articles/fem_models.html)
+
+* [inlabru interface of Whittle--Matérn fields](https://davidbolin.github.io/MetricGraph/articles/inlabru_interface.html)
+
+* [INLA interface for Whittle--Matérn fields on metric graphs](https://davidbolin.github.io/MetricGraph/articles/inla_interface.html)
+
+* [Log-Gaussian Cox processes on metric graphs](https://davidbolin.github.io/MetricGraph/articles/pointprocess.html)
+
+# Function Manuals
+
+Detailed references for functions including several examples can be found in the [Function References](https://davidbolin.github.io/MetricGraph/reference/index.html).
