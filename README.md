@@ -1,4 +1,4 @@
-# MetricGraph <a href="https://ggplot2.tidyverse.org](https://davidbolin.github.io/MetricGraph/"><img src="/man/figures/logo.png" align="right" height="138" /></a>
+# MetricGraph <a href="https://davidbolin.github.io/MetricGraph/"><img src="/man/figures/logo.png" align="right" height="138" /></a>
 
 [![R-CMD-check](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml)
 [![R-CMD-check-windows](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml)
