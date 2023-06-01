@@ -1,3 +1,6 @@
+# MetricGraph 1.1.1
+* Adjusts on documentation for CRAN.
+
 # MetricGraph 1.1.0
 * Improved the documentation.
 * Reorganized some functions.

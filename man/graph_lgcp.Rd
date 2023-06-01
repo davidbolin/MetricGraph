@@ -2,7 +2,8 @@
 % Please edit documentation in R/graph_lgcp.R
 \name{graph_lgcp}
 \alias{graph_lgcp}
-\title{Simulation of log-Gaussian Cox process on metric graph.}
+\title{Simulation of log-Gaussian Cox processes driven by Whittle-Matérn
+fields on metric graphs}
 \usage{
 graph_lgcp(intercept = 0, sigma, range, alpha, graph)
 }
@@ -21,5 +22,6 @@ graph_lgcp(intercept = 0, sigma, range, alpha, graph)
 List with Gaussian process sample and simulated points.
 }
 \description{
-Simulation of log-Gaussian Cox process on metric graph.
+Simulation of log-Gaussian Cox processes driven by Whittle-Matérn
+fields on metric graphs
 }

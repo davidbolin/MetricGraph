@@ -35,7 +35,7 @@ instead of for kappa?}
 
 \item{like_format}{Should the starting values be returned with sigma.e as the
 last element? This is the format for the likelihood constructor from the
-\code{rSPDE} package.}
+'rSPDE' package.}
 
 \item{log_scale}{Should the initial values be returned in log scale?}
 }
@@ -43,5 +43,6 @@ last element? This is the format for the likelihood constructor from the
 A vector, \code{c(start_sigma_e, start_sigma, start_kappa)}
 }
 \description{
-The results are given as \code{c(start_sigma_e, start_sigma, start_kappa)}
+Computes appropriate starting values for optimization of Gaussian random
+field models on metric graphs.
 }

@@ -5,16 +5,14 @@
 \title{Metric graph}
 \value{
 Object of \code{\link[R6]{R6Class}} for creating metric graphs.
-
-No return value. Called for its side effects.
 }
 \description{
 Class representing a general metric graph.
 }
 \details{
 A graph object created from vertex and edge matrices, or from an
-sp::Lines object where each line is representing and edge. For more details,
-see the help vignette:
+\code{sp::SpatialLines} object where each line is representing and edge. For more details,
+see the vignette:
 \code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
@@ -28,23 +26,6 @@ lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
 graph <- metric_graph$new(lines)
 graph$plot()
 
-
-## ------------------------------------------------
-## Method `metric_graph$plot`
-## ------------------------------------------------
-
-library(sp)
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
-theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
-graph <- metric_graph$new(lines = Lines)
-graph$plot()
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -54,9 +35,9 @@ graph.}
 
 \item{\code{nV}}{The number of vertices.}
 
-\item{\code{E}}{Matrix with the edges of the graph, where \code{E[i,1]} is the vertex
-at the start of the ith edge and \code{E[i,2]} is the vertex at the end of the
-edge.}
+\item{\code{E}}{Matrix with the edges of the graph, where each row represents an
+edge, \code{E[i,1]} is the vertex at the start of the ith edge and \code{E[i,2]} is
+the vertex at the end of the edge.}
 
 \item{\code{nE}}{The number of edges.}
 
@@ -156,7 +137,7 @@ Create a new \code{metric_graph} object.
 
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
 
-\item{\code{E}}{m x 2 matrix where each row represents an edge.}
+\item{\code{E}}{m x 2 matrix where each row represents one of the m edges.}
 
 \item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in km.}
@@ -168,9 +149,9 @@ the graph:
 (default = 1e-7).
 \item \code{vertex_line} If a vertex at the end of one line is closer than this
 number to another line, this vertex is connected to that line
-(default = 1e-7)
+(default = 1e-7).
 \item \code{line_line} If two lines at some point are closer than this number, a new
-vertex is added at that point and the two lines are connected (default = 0)
+vertex is added at that point and the two lines are connected (default = 0).
 }
 
 If \code{longlat = TRUE}, the tolerances are given in km.}
@@ -451,8 +432,9 @@ Adds observation locations as vertices in the graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{tolerance}}{Parameter in which we merge vertices together. Not intended
-for non-expert use.}
+\item{\code{tolerance}}{Observations locations are merged to a single vertex if
+they are closer than this number (given in relative edge distance between
+0 and 1). The default is \code{1e-15}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -472,7 +454,7 @@ Returns a list or a matrix with the mesh locations.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{bru}}{Should an \code{inlabru}-friendly list be returned?}
+\item{\code{bru}}{Should an 'inlabru'-friendly list be returned?}
 
 \item{\code{loc}}{If \code{bru} is set to \code{TRUE}, the name of the location variable.
 The default name is 'loc'.}
@@ -651,9 +633,10 @@ Build mass and stiffness matrices for given mesh object.
 
 \subsection{Details}{
 The function builds: The matrix \code{C} which is the mass matrix with
-elements \eqn{<\phi_i, \phi_j>}, the matrix \code{G} which is the stiffness
-matrix with elements \eqn{<d\phi_i, d\phi_j>}, the matrix \code{B} with elements
-\eqn{<d\phi_i, \phi_j>}, and the vector with weights \eqn{<\phi_i, 1>}.
+elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix \code{G} which is the stiffness
+matrix with elements \eqn{G_{ij} = <d\phi_i, d\phi_j>}, the matrix \code{B} with
+elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, and the vector with weights
+\eqn{<\phi_i, 1>}.
 }
 
 \subsection{Returns}{
@@ -679,6 +662,11 @@ edge)}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+For n locations and a mesh with m nodes, \code{A} is an n x m matrix with
+elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
+}
+
 \subsection{Returns}{
 The observation matrix.
 }
@@ -703,7 +691,7 @@ is at the end of the edge.
 \if{html}{\out{<a id="method-metric_graph-plot"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-plot}{}}}
 \subsection{Method \code{plot()}}{
-Plots the metric graph
+Plots the metric graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   data = NULL,
@@ -735,7 +723,7 @@ number, it will be the index of the group as stored internally. If \code{group}
 is a character, then the group will be chosen by its name.}
 
 \item{\code{plotly}}{Use plot_ly for 3D plot (default \code{FALSE}). This option
-requires the \code{plotly} package.}
+requires the 'plotly' package.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
@@ -754,38 +742,19 @@ requires the \code{plotly} package.}
 \item{\code{X_loc}}{Locations of the additional values in the format
 (edge, normalized distance on edge).}
 
-\item{\code{p}}{Existing \code{ggplot} or \code{plot_ly} object to add the graph to}
+\item{\code{p}}{Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to}
 
 \item{\code{degree}}{Show the degrees of the vertices?}
 
 \item{\code{direction}}{Show the direction of the edges?}
 
-\item{\code{...}}{Additional arguments for \code{ggplot} or \code{plot_ly}}
+\item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A \code{plot_ly} (if \code{plotly=TRUE}) or \code{ggplot} object.
+A \code{plot_ly} (if \code{plotly = TRUE}) or \code{ggplot} object.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{library(sp)
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
-theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
-graph <- metric_graph$new(lines = Lines)
-graph$plot()
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-plot_connections"></a>}}
@@ -796,6 +765,9 @@ Plots the connections in the graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_connections()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-plot_function"></a>}}
@@ -827,7 +799,7 @@ curve (in length), value) or a vector with values for the function
 evaluated at the mesh in the graph}
 
 \item{\code{plotly}}{If \code{TRUE}, then the plot is shown in 3D. This option requires
-the package \code{plotly}.}
+the package 'plotly'.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
@@ -847,12 +819,12 @@ the package \code{plotly}.}
 
 \item{\code{p}}{Previous plot to which the new plot should be added.}
 
-\item{\code{...}}{Additional arguments for \code{ggplot} or \code{plot_ly}}
+\item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Either a \code{ggplot} (if \code{plotly=FALSE}) or a \code{plot_ly} object.
+Either a \code{ggplot} (if \code{plotly = FALSE}) or a \code{plot_ly} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -881,7 +853,7 @@ Plots a movie of a continuous function evolving on the graph.
 ith time, evaluated at the mesh locations.}
 
 \item{\code{plotly}}{If \code{TRUE}, then plot is shown in 3D. This option requires the
-package \code{plotly}.}
+package 'plotly'.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
@@ -998,7 +970,7 @@ normalized locations.}
 \subsection{Returns}{
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
-closest locations on the graph is returned
+closest locations on the graph is returned.
 }
 }
 \if{html}{\out{<hr>}}

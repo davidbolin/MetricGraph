@@ -2,8 +2,8 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_bru_process_data}
 \alias{graph_bru_process_data}
-\title{Prepare data frames or data lists to be used with inlabru in metric
-graphs.}
+\title{Prepare data frames or data lists to be used with 'inlabru' in metric
+graphs}
 \usage{
 graph_bru_process_data(
   data,
@@ -22,13 +22,13 @@ default is \code{edge_number}.}
 \item{distance_on_edge}{Name of the variable that contains the distance on
 edge, the default is \code{distance_on_edge}.}
 
-\item{loc}{character. Name of the locations to be used in \code{inlabru}'s component.}
+\item{loc}{character. Name of the locations to be used in 'inlabru' component.}
 }
 \value{
 A list containing the processed data to be used in a user-friendly
-manner by inlabru.
+manner by 'inlabru'.
 }
 \description{
-Prepare data frames or data lists to be used with inlabru in metric
-graphs.
+Prepare data frames or data lists to be used with 'inlabru' in metric
+graphs
 }

@@ -1,6 +1,6 @@
 
 #' Posterior mean for Gaussian random field models on metric graphs assuming
-#' observations at vertices.
+#' observations at vertices
 #'
 #' @param theta Estimated model parameters (sigma_e, tau, kappa).
 #' @param graph A `metric_graph`  object.
@@ -264,7 +264,7 @@ posterior_crossvalidation_manual <- function(theta,
 
 
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
-#' the vertices of metric graphs.
+#' the vertices of metric graphs
 #'
 #' @param object A fitted model using the `graph_lme()` function.
 #' @return Vector with the posterior expectations and variances as well as
@@ -411,13 +411,13 @@ posterior_crossvalidation <- function(object)
 }
 
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
-#' the vertices of metric graphs.
+#' the vertices of metric graphs
 #'
 #' @param object A fitted model using the `graph_lme()` function.
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with all predictions
-#' @export
+#' @noRd
 posterior_crossvalidation_covariance <- function(object)
 {
 

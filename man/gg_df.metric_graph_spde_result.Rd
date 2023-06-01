@@ -3,7 +3,7 @@
 \name{gg_df.metric_graph_spde_result}
 \alias{gg_df.metric_graph_spde_result}
 \alias{gg_df}
-\title{Data frame for metric_graph_spde_result objects to be used in ggplot2}
+\title{Data frame for metric_graph_spde_result objects to be used in 'ggplot2'}
 \usage{
 \method{gg_df}{metric_graph_spde_result}(
   result,
@@ -33,5 +33,5 @@ data.frame? The options are \code{sigma}, \code{range} or \code{kappa}.}
 A \code{data.frame} containing the posterior densities.
 }
 \description{
-Returns a ggplot-friendly data-frame with the marginal posterior densities.
+Returns a 'ggplot2'-friendly data-frame with the marginal posterior densities.
 }

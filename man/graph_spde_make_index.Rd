@@ -23,5 +23,5 @@ A list of indexes.
 }
 \description{
 Generates a list of named index vectors for
-\code{INLA}-based metric graph models.
+'INLA'-based metric graph models.
 }

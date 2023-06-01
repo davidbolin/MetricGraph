@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_lme.R
 \name{predict.graph_lme}
 \alias{predict.graph_lme}
-\title{Prediction for a mixed effects regression model on a metric graph.}
+\title{Prediction for a mixed effects regression model on a metric graph}
 \usage{
 \method{predict}{graph_lme}(
   object,
@@ -23,7 +23,7 @@
 )
 }
 \arguments{
-\item{object}{The fitted object with the \code{graph_lme()} function}
+\item{object}{The fitted object with the \code{graph_lme()} function.}
 
 \item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge
 number and the distance on edge for the locations to obtain the prediction.}
@@ -70,5 +70,5 @@ variances of the predictions, \code{samples} (if \code{posterior_samples} is \co
 which contains the posterior samples.
 }
 \description{
-Prediction for a mixed effects regression model on a metric graph.
+Prediction for a mixed effects regression model on a metric graph
 }

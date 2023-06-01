@@ -16,6 +16,6 @@ deviation and \code{kappa} is a range-like parameter.}
 A vector with the values of the covariance function.
 }
 \description{
-\code{exp_covariance} evaluates the exponential covariance function
+Evaluates the exponential covariance function
 \deqn{C(h) = \sigma^2 \exp\{-kappa h\}}
 }

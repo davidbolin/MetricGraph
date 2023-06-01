@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{predict.rspde_metric_graph}
 \alias{predict.rspde_metric_graph}
-\title{Predict method for inlabru fits on Metric Graphs for rSPDE models}
+\title{Predict method for 'inlabru' fits on Metric Graphs for 'rSPDE' models}
 \usage{
 \method{predict}{rspde_metric_graph}(
   object,
@@ -26,9 +26,9 @@
 \item{object}{An \code{rspde_metric_graph} object built with the
 \code{rspde.metric_graph()} function.}
 
-\item{cmp}{The \code{inlabru} component used to fit the model.}
+\item{cmp}{The 'inlabru' component used to fit the model.}
 
-\item{bru_fit}{A fitted model using \code{inlabru} or \code{inla}.}
+\item{bru_fit}{A fitted model using 'inlabru' or 'INLA'.}
 
 \item{data}{A data.frame of covariates needed for the prediction. The locations
 must be normalized PtE.}
@@ -58,7 +58,7 @@ quick approximate result.}
 unit interval to be passed to stats::quantile.}
 
 \item{num.threads}{Specification of desired number of threads for parallel
-computations. Default NULL, leaves it up to INLA. When seed != 0, overridden
+computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden
 to "1:1"}
 
 \item{include}{Character vector of component labels that are needed by the
@@ -81,5 +81,5 @@ A list with predictions.
 }
 \description{
 Auxiliar function to obtain predictions of the field
-using inlabru and rSPDE.
+using 'inlabru' and 'rSPDE'.
 }

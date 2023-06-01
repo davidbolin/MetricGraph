@@ -18,6 +18,6 @@ model from a \code{rspde.result} object}
 A \code{data.frame} containing the summary.
 }
 \description{
-Summary for posteriors of rSPDE field parameters in
+Summary for posteriors of 'rSPDE' field parameters in
 their original scales.
 }

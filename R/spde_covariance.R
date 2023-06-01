@@ -1,4 +1,7 @@
+#' Covariance function for Whittle-Matérn fields
+#' 
 #' Computes the covariance function for a Whittle-Matérn field.
+#' 
 #' @param P Location (edge number and normalized location on the edge) for the
 #' location to evaluate the covariance function at.
 #' @param kappa Parameter kappa from the SPDE.
@@ -7,6 +10,9 @@
 #' @param sigma Standard deviation parameter.
 #' @param alpha Smoothness parameter (1 or 2).
 #' @param graph A `metric_graph` object.
+#' @details Compute the covariance function \eqn{\rho(P,s_i)}{\rho(P,s_i)} where
+#' P is the provided location and \eqn{s_i}{s_i} are all locations in the mesh
+#' of the graph.
 #' @return Vector with the covariance function evaluate at the mesh locations.
 #' @export
 #'

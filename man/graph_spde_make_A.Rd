@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_spde_make_A}
 \alias{graph_spde_make_A}
-\title{Observation/prediction matrices for rSPDE models.}
+\title{Observation/prediction matrices for 'rSPDE' models}
 \usage{
 graph_spde_make_A(graph_spde, repl = NULL)
 }

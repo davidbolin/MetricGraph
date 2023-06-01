@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_spde}
 \alias{graph_spde}
-\title{INLA implementation of Whittle-Matérn fields for metric graphs.}
+\title{'INLA' implementation of Whittle-Matérn fields for metric graphs}
 \usage{
 graph_spde(
   graph_object,
@@ -48,19 +48,19 @@ the log scale. Will not be used if prior.kappa is non-null.}
 
 \item{shared_lib}{Which shared lib to use for the cgeneric implementation?
 If "detect", it will check if the shared lib exists locally, in which case it will
-use it. Otherwise it will use INLA's shared library.
-If "INLA", it will use the shared lib from INLA's installation. If 'MetricGraph', then
+use it. Otherwise it will use 'INLA's shared library.
+If 'INLA', it will use the shared lib from 'INLA's installation. If 'MetricGraph', then
 it will use the local installation (does not work if your installation is from CRAN).
 Otherwise, you can directly supply the path of the .so (or .dll) file.}
 
 \item{debug}{Should debug be displayed?}
 }
 \value{
-An inla object.
+An 'INLA' object.
 }
 \description{
-This function creates an inla object that can be used
-in \code{INLA} or \code{inlabru} to fit Whittle-Matérn fields on metric graphs.
+This function creates an 'INLA' object that can be used
+in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.
 }
 \details{
 This function is used to construct a Matern SPDE model on a metric graph.
@@ -69,7 +69,7 @@ The latent field \eqn{u} is the solution of the SPDE
 white noise on the metric graph. This model implements exactly
 the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite
 element approximation for general \eqn{\alpha} we refer the reader to the
-\code{rSPDE} package and to the Whittle--Matérn fields with general smoothness vignette.
+'rSPDE' package and to the Whittle--Matérn fields with general smoothness vignette.
 
 We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}},
 which can be interpreted as a range parameter.

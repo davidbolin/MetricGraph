@@ -1,4 +1,7 @@
+#' Precision matrix for Whittle-Matérn fields
+#' 
 #' Computes the precision matrix for all vertices for a Whittle-Matérn field.
+#' 
 #' @param kappa Range parameter.
 #' @param tau Precision parameter.
 #' @param alpha Smoothness parameter (1 or 2).
