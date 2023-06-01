@@ -2,23 +2,23 @@
 % Please edit documentation in R/graph_spde.R
 \name{plot.graph_bru_pred}
 \alias{plot.graph_bru_pred}
-\title{Plot of predicted values with inlabru.}
+\title{Plot of predicted values with 'inlabru'}
 \usage{
 \method{plot}{graph_bru_pred}(x, y = NULL, vertex_size = 0, ...)
 }
 \arguments{
-\item{x}{a predicted object obtained with the \code{predict} method.}
+\item{x}{A predicted object obtained with the \code{predict} method.}
 
-\item{y}{not used.}
+\item{y}{Not used.}
 
-\item{vertex_size}{size of the vertices.}
+\item{vertex_size}{Size of the vertices.}
 
-\item{...}{additional parameters to be passed to the plot function.}
+\item{...}{Additional parameters to be passed to the plot function.}
 }
 \value{
-A \code{ggplot2} object.
+A 'ggplot2' object.
 }
 \description{
-Auxiliar function to obtain plots of the predictions of the field
-using inlabru.
+Auxiliary function to obtain plots of the predictions of the field
+using 'inlabru'.
 }

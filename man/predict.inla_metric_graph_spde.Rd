@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{predict.inla_metric_graph_spde}
 \alias{predict.inla_metric_graph_spde}
-\title{Predict method for inlabru fits on Metric Graphs}
+\title{Predict method for 'inlabru' fits on Metric Graphs}
 \usage{
 \method{predict}{inla_metric_graph_spde}(
   object,
@@ -27,9 +27,9 @@
 \item{object}{An \code{inla_metric_graph_spde} object built with the \code{graph_spde()}
 function.}
 
-\item{cmp}{The \code{inlabru} component used to fit the model.}
+\item{cmp}{The 'inlabru' component used to fit the model.}
 
-\item{bru_fit}{A fitted model using \code{inlabru} or \code{inla}.}
+\item{bru_fit}{A fitted model using 'inlabru' or 'INLA'.}
 
 \item{data}{A data.frame of covariates needed for the prediction. The
 locations must be normalized PtE.}
@@ -53,7 +53,7 @@ used if \code{data_coords} is \code{euclidean}.}
 calculate the posterior statistics. The default is rather low but provides a
 quick approximate result.}
 
-\item{seed}{Random number generator seed passed on to inla.posterior.sample}
+\item{seed}{Random number generator seed passed on to \code{inla.posterior.sample()}}
 
 \item{probs}{A numeric vector of probabilities with values in the standard
 unit interval to be passed to stats::quantile}
@@ -62,7 +62,7 @@ unit interval to be passed to stats::quantile}
 original order?}
 
 \item{num.threads}{Specification of desired number of threads for parallel
-computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"}
+computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden to "1:1"}
 
 \item{include}{Character vector of component labels that are needed by the
 predictor expression; Default: NULL (include all components that are not
@@ -77,12 +77,12 @@ the inclusion list)}
 prediciton summary has the same number of rows as data, then the output is a
 SpatialDataFrame object. Default FALSE.}
 
-\item{...}{Additional arguments passed on to inla.posterior.sample}
+\item{...}{Additional arguments passed on to \code{inla.posterior.sample()}.}
 }
 \value{
 A list with predictions.
 }
 \description{
 Auxiliar function to obtain predictions of the field
-using inlabru.
+using 'inlabru'.
 }

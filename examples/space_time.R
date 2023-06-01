@@ -31,8 +31,8 @@ alpha <- 1
 beta <- 0
 
 #show spacetime covariances
-Q <- make.Q.spacetime(graph,t,kappa,rho,gamma, alpha, beta, sigma)
-ct.dir <- MetricGraph:::plot.spacetime.covariances(graph,Q = Q,
+Q <- make_Q_spacetime(graph,t,kappa,rho,gamma, alpha, beta, sigma)
+ct.dir <- MetricGraph:::plot_spacetime_covariances(graph,Q = Q,
                                                    t.ind = c(nt/2),
                                                    s.ind = 235,
                                                    t = t)
@@ -50,7 +50,7 @@ beta <- 0
 t <- seq(from=0, to = T, length.out = nt)
 u0 <- rep(0,dim(graph$mesh$C)[1])
 u0[50] <- 1
-U <- MetricGraph:::simulate.spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0)
+U <- MetricGraph:::simulate_spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0)
 fig <- graph$plot_movie(U)
 fig
 
@@ -101,14 +101,14 @@ nt = 200
 T = 0.25
 t <- seq(from=0, to = T, length.out = nt)
 
-Q <- make.Q.euler(graph, t, kappa, rho, gamma, alpha, beta,sigma,theta=1)
+Q <- make_Q_euler(graph, t, kappa, rho, gamma, alpha, beta,sigma,theta=1)
 ct.eul <- plot.covariances(graph,Q, Qs = 2*gamma*make.L(alpha+beta,kappa,graph$mesh$C,
                                                         graph$mesh$G)/sigma^2,
                  t.ind = c(1, nt/2, nt-2), s.ind = 50,t.shift = 0,t = t)
 
 
 
-Q <- make.Q.direct(graph,t,kappa,rho,gamma)
+Q <- make_Q_direct(graph,t,kappa,rho,gamma)
 ct.dir <- plot.spacetime.covariances(graph,Q = Q/sigma^2,Qs = 2*gamma*L0/sigma^2,
                                      t.ind = c(12,nt/2,nt-2), s.ind = 50,t.shift = c(0),t = t)
 

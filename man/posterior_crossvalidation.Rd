@@ -3,7 +3,7 @@
 \name{posterior_crossvalidation}
 \alias{posterior_crossvalidation}
 \title{Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
-the vertices of metric graphs.}
+the vertices of metric graphs}
 \usage{
 posterior_crossvalidation(object)
 }
@@ -18,5 +18,5 @@ CRPS.
 }
 \description{
 Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
-the vertices of metric graphs.
+the vertices of metric graphs
 }

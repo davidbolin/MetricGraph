@@ -6,7 +6,7 @@
 \alias{ibm_n.bru_mapper_inla_metric_graph_spde}
 \alias{ibm_values.bru_mapper_inla_metric_graph_spde}
 \alias{ibm_jacobian.bru_mapper_inla_metric_graph_spde}
-\title{metric graph inlabru mapper}
+\title{Metric graph 'inlabru' mapper}
 \usage{
 bru_get_mapper.inla_metric_graph_spde(model, ...)
 
@@ -26,5 +26,5 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde(mapper, input, ...)
 \item{input}{The values for which to produce a mapping matrix}
 }
 \description{
-metric graph inlabru mapper
+Metric graph 'inlabru' mapper
 }

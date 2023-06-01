@@ -1,6 +1,6 @@
 #'  Gaussian processes on metric graphs
 #'
-#' `MetricGraph`is used for creation and manipulation of metric graphs, such as street or river networks.
+#' 'MetricGraph' is used for creation and manipulation of metric graphs, such as street or river networks.
 #' It also has several functions thatfacilitates operations and visualizations of data on metric graphs, 
 #' and the creation of a large class of random fields and stochastic partial differential equations on 
 #' such spaces.
@@ -15,7 +15,7 @@
 #' prediction, simulating processes, and visualizing results on metric graphs are provided.
 #' In particular, linear mixed effects models including random field components can be fitted to 
 #' data based on computationally efficient sparse matrix representations. Interfaces to the R 
-#' packages INLA and inlabru are also provided, which facilitate working with Bayesian statistical 
+#' packages 'INLA' and 'inlabru' are also provided, which facilitate working with Bayesian statistical 
 #' models on metric graphs.
 #'
 #' At the heart of the package is the `R6` class `[metric_graph()]`. This is used for specifying
@@ -25,9 +25,9 @@
 #' Linear mixed effects models are provided (see
 #' `[graph_lme]`) and perform
 #' predictions (see `[predict.graph_lme]`). The package also has interfaces for 
-#' `INLA` (see `[graph_spde]`), and it this interface also works with `inlabru`.
+#' 'INLA' (see `[graph_spde]`), and it this interface also works with 'inlabru'.
 #'
-#' For a more detailed introduction to the package, see the MetricGraph Vignettes.
+#' For a more detailed introduction to the package, see the 'MetricGraph' Vignettes.
 #'
 #' @docType package
 #' @name MetricGraph

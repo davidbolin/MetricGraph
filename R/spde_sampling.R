@@ -1,7 +1,10 @@
-#' Samples a Whittle-Matérn field on a metric graph.
+#' Samples a Whittle-Matérn field on a metric graph
+#' 
+#' Obtains samples of a Whittle-Matérn field on a metric graph.
+#' 
 #' @details Samples a Gaussian Whittle-Matérn field on a metric graph, either
 #' from the prior or conditionally on observations
-#' \deqn{y_i = u(t_i) + sigma_e e_i}{y_i = u(t_i) + sigma_e e_i}
+#' \deqn{y_i = u(t_i) + \sigma_e e_i}{y_i = u(t_i) + \sigma_e e_i}
 #' on the graph,  where \eqn{e_i} are independent standard Gaussian variables.
 #' The parameters for the field can either be specified in terms of tau and kappa
 #' or practical correlation range and marginal standard deviation.

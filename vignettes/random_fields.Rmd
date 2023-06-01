@@ -552,26 +552,6 @@ results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
                       row.names = c("alpha=1", "alpha=2", "isoExp",
                                     "GL1", "GL2"))
 round(1000*results)
-
-cv.alpha1 <- posterior_crossvalidation_covariance(fit_alpha1)
-cv.alpha2 <- posterior_crossvalidation_covariance(fit_alpha2)
-cv.exp <- posterior_crossvalidation_covariance(fit_isoexp)
-cv.GL1 <- posterior_crossvalidation_covariance(fit_GL1)
-cv.GL2 <- posterior_crossvalidation_covariance(fit_GL2)
-results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
-                               cv.GL1$rmse, cv.GL2$rmse),
-                      mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,
-                               cv.GL1$mae, cv.GL2$mae),
-                      crps = c(cv.alpha1$crps, cv.alpha2$crps, cv.exp$crps,
-                               cv.GL1$crps, cv.GL2$crps),
-                      scrps = c(cv.alpha1$scrps, cv.alpha2$scrps, cv.exp$scrps,
-                               cv.GL1$scrps, cv.GL2$scrps),
-                      logscore = c(cv.alpha1$logscore, cv.alpha2$logscore,
-                                   cv.exp$logscore, cv.GL1$logscore, 
-                                   cv.GL2$logscore),
-                      row.names = c("alpha=1", "alpha=2", "isoExp",
-                                    "GL1", "GL2"))
-round(1000*results)
 ```
 
 # A model with replicates

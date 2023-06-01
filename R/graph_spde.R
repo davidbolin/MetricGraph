@@ -1,8 +1,8 @@
 
-#' INLA implementation of Whittle-Matérn fields for metric graphs.
+#' 'INLA' implementation of Whittle-Matérn fields for metric graphs
 #'
-#' This function creates an inla object that can be used
-#' in `INLA` or `inlabru` to fit Whittle-Matérn fields on metric graphs.
+#' This function creates an 'INLA' object that can be used
+#' in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.
 #'
 #' @param graph_object A `metric_graph` object.
 #' @param alpha The order of the SPDE.
@@ -22,13 +22,13 @@
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
 #' If "detect", it will check if the shared lib exists locally, in which case it will
-#' use it. Otherwise it will use INLA's shared library.
-#' If "INLA", it will use the shared lib from INLA's installation. If 'MetricGraph', then
+#' use it. Otherwise it will use 'INLA's shared library.
+#' If 'INLA', it will use the shared lib from 'INLA's installation. If 'MetricGraph', then
 #' it will use the local installation (does not work if your installation is from CRAN).
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
 #'
-#' @return An inla object.
+#' @return An 'INLA' object.
 #' @details
 #' This function is used to construct a Matern SPDE model on a metric graph.
 #' The latent field \eqn{u} is the solution of the SPDE
@@ -36,7 +36,7 @@
 #' white noise on the metric graph. This model implements exactly
 #' the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite
 #' element approximation for general \eqn{\alpha} we refer the reader to the
-#' `rSPDE` package and to the Whittle--Matérn fields with general smoothness vignette.
+#' 'rSPDE' package and to the Whittle--Matérn fields with general smoothness vignette.
 #'
 #' We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}},
 #' which can be interpreted as a range parameter.
@@ -282,7 +282,7 @@ return(model)
 #'  Model index vector generation for metric graph models
 #'
 #' Generates a list of named index vectors for
-#' `INLA`-based metric graph models.
+#' 'INLA'-based metric graph models.
 #'
 #' @param name A character string with the base name of the effect.
 #' @param graph_spde An `inla_metric_graph_spde` object built with the
@@ -309,7 +309,7 @@ graph_spde_make_index <- function (name,
 }
 
 
-#' Observation/prediction matrices for rSPDE models.
+#' Observation/prediction matrices for 'rSPDE' models
 #'
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
@@ -326,21 +326,20 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 }
 
 
-#' Observation/prediction matrices for rSPDE models.
+#' Data extraction for 'rSPDE' models
 #'
-#' Constructs observation/prediction weight matrices
-#' for metric graph models.
+#' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 #'
 #' @param graph_spde An `inla_metric_graph_spde` object built with the
 #' `graph_spde()` function or an `rspde_metric_graph` object built with the
-#' `rspde.metric_graph()` function from the `rSPDE` package.
+#' `rspde.metric_graph()` function from the 'rSPDE' package.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc Character with the name of the location variable to be used in
-#' `inlabru`'s prediction.
-#' @return The observation matrix.
+#' 'inlabru' prediction.
+#' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
 graph_data_spde <- function (graph_spde, repl = NULL,
@@ -368,13 +367,13 @@ graph_data_spde <- function (graph_spde, repl = NULL,
   return(ret)
 }
 
-#' Extraction of vector of replicates for inlabru.
+#' Extraction of vector of replicates for 'inlabru'
 #'
-#' Extracts the vector of replicates from an rSPDE
-#' model object for inlabru
+#' Extracts the vector of replicates from an 'rSPDE'
+#' model object for 'inlabru'
 #'
 #' @param graph_spde An `rspde_metric_graph` object built with the
-#' `rspde.metric_graph()` function from the `rSPDE` package.
+#' `rspde.metric_graph()` function from the 'rSPDE' package.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
@@ -398,42 +397,42 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 
 
 #' @name spde_metric_graph_result
-#' @title Metric graph SPDE result extraction from INLA estimation results.
+#' @title Metric graph SPDE result extraction from 'INLA' estimation results
 #' @description Extract field and parameter values and distributions
-#' for a metric graph spde effect from an inla result object.
-#' @param inla An `inla` object obtained from a call to `inla()`.
-#' @param name A character string with the name of the rSPDE effect
-#' in the inla formula.
+#' for a metric graph spde effect from an 'INLA' result object.
+#' @param inla An 'INLA' object obtained from a call to `inla()`.
+#' @param name A character string with the name of the 'rSPDE' effect
+#' in the model.
 #' @param metric_graph_spde The `inla_metric_graph_spde` object used for the
-#' effect in the inla formula.
+#' random effect in the model.
 #' @param compute.summary Should the summary be computed?
 #' @param n_samples The number of samples to be used if parameterization is `matern`.
 #' @param n_density The number of equally spaced points to estimate the density.
 #' @return If the model was fitted with `matern` parameterization (the default),
 #' it returns a list containing:
-#' \item{marginals.range}{Marginal densities for the range parameter}
-#' \item{marginals.log.range}{Marginal densities for log(range)}
-#' \item{marginals.sigma}{Marginal densities for std. deviation}
-#' \item{marginals.log.sigma}{Marginal densities for log(std. deviation)}
-#' \item{marginals.values}{Marginal densities for the field values}
-#' \item{summary.log.range}{Summary statistics for log(range)}
-#' \item{summary.log.sigma}{Summary statistics for log(std. deviation)}
-#' \item{summary.values}{Summary statistics for the field values}
+#' \item{marginals.range}{Marginal densities for the range parameter.}
+#' \item{marginals.log.range}{Marginal densities for log(range).}
+#' \item{marginals.sigma}{Marginal densities for std. deviation.}
+#' \item{marginals.log.sigma}{Marginal densities for log(std. deviation).}
+#' \item{marginals.values}{Marginal densities for the field values.}
+#' \item{summary.log.range}{Summary statistics for log(range).}
+#' \item{summary.log.sigma}{Summary statistics for log(std. deviation).}
+#' \item{summary.values}{Summary statistics for the field values.}
 #' If `compute.summary` is `TRUE`, then the list will also contain
-#' \item{summary.kappa}{Summary statistics for kappa}
-#' \item{summary.tau}{Summary statistics for tau}
+#' \item{summary.kappa}{Summary statistics for kappa.}
+#' \item{summary.tau}{Summary statistics for tau.}
 #' If the model was fitted with the `spde` parameterization, it returns a list containing:
-#' \item{marginals.kappa}{Marginal densities for kappa}
-#' \item{marginals.log.kappa}{Marginal densities for log(kappa)}
-#' \item{marginals.log.tau}{Marginal densities for log(tau)}
-#' \item{marginals.tau}{Marginal densities for tau}
-#' \item{marginals.values}{Marginal densities for the field values}
-#' \item{summary.log.kappa}{Summary statistics for log(kappa)}
-#' \item{summary.log.tau}{Summary statistics for log(tau)}
-#' \item{summary.values}{Summary statistics for the field values}
+#' \item{marginals.kappa}{Marginal densities for kappa.}
+#' \item{marginals.log.kappa}{Marginal densities for log(kappa).}
+#' \item{marginals.log.tau}{Marginal densities for log(tau).}
+#' \item{marginals.tau}{Marginal densities for tau.}
+#' \item{marginals.values}{Marginal densities for the field values.}
+#' \item{summary.log.kappa}{Summary statistics for log(kappa).}
+#' \item{summary.log.tau}{Summary statistics for log(tau).}
+#' \item{summary.values}{Summary statistics for the field values.}
 #' If `compute.summary` is `TRUE`, then the list will also contain
-#' \item{summary.kappa}{Summary statistics for kappa}
-#' \item{summary.tau}{Summary statistics for tau}
+#' \item{summary.kappa}{Summary statistics for kappa.}
+#' \item{summary.tau}{Summary statistics for tau.}
 #' @export
 
 spde_metric_graph_result <- function(inla, name,
@@ -591,9 +590,9 @@ spde_metric_graph_result <- function(inla, name,
 }
 
 
-#' Data frame for metric_graph_spde_result objects to be used in ggplot2
+#' Data frame for metric_graph_spde_result objects to be used in 'ggplot2'
 #'
-#' Returns a ggplot-friendly data-frame with the marginal posterior densities.
+#' Returns a 'ggplot2'-friendly data-frame with the marginal posterior densities.
 #' @aliases gg_df gg_df.metric_graph_spde_result
 #' @param result A metric_graph_spde_result object.
 #' @param parameter Vector. Which parameters to get the posterior density in the
@@ -680,7 +679,7 @@ gg_df.metric_graph_spde_result <- function(result,
 #' Summary for posteriors of field parameters for an `inla_rspde`
 #' model from a `rspde.result` object
 #'
-#' Summary for posteriors of rSPDE field parameters in
+#' Summary for posteriors of 'rSPDE' field parameters in
 #' their original scales.
 #'
 #' @param object A `rspde.result` object.
@@ -707,7 +706,7 @@ summary.metric_graph_spde_result <- function(object,
 
 
 #'
-#' @title metric graph inlabru mapper
+#' @title Metric graph 'inlabru' mapper
 #' @name bru_mapper.inla_metric_graph_spde
 #' @param model An `inla_metric_graph_spde` for which to construct or extract a mapper
 #' @param \dots Arguments passed on to other methods
@@ -754,10 +753,10 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
 
 #' @name create_summary_from_density
 #' @title Creates a summary from a density data frame
-#' @description Auxiliar function to create summaries from density data drames
-#' @param density_df A density data frame
-#' @param name Name of the parameter
-#' @return A data frame containing a basic summary
+#' @description Auxiliary function to create summaries from density data frames.
+#' @param density_df A density data frame.
+#' @param name Name of the parameter.
+#' @return A data frame containing a basic summary.
 #' @noRd
 
 create_summary_from_density <- function(density_df, name) {
@@ -833,13 +832,13 @@ create_summary_from_density <- function(density_df, name) {
 
 
 #' @name bru_graph_rep
-#' @title Creates a vector of replicates to be used with inlabru
-#' @description Auxiliar function to create a vector of replicates to be used
-#' with inlabru
+#' @title Creates a vector of replicates to be used with 'inlabru'
+#' @description Auxiliary function to create a vector of replicates to be used
+#' with 'inlabru'.
 #' @param repl A vector of replicates. If set to `__all`, a vector
 #' for all replicates will be generated.
-#' @param graph_spde Name of the field
-#' @return A vector of replicates to be used with inlabru.
+#' @param graph_spde Name of the field.
+#' @return A vector of replicates to be used with 'inlabru'.
 #' @export
 
 bru_graph_rep <- function(repl, graph_spde){
@@ -853,13 +852,13 @@ bru_graph_rep <- function(repl, graph_spde){
 }
 
 #' @name predict.inla_metric_graph_spde
-#' @title Predict method for inlabru fits on Metric Graphs
+#' @title Predict method for 'inlabru' fits on Metric Graphs
 #' @description Auxiliar function to obtain predictions of the field
-#' using inlabru.
+#' using 'inlabru'.
 #' @param object An `inla_metric_graph_spde` object built with the `graph_spde()`
 #' function.
-#' @param cmp The `inlabru` component used to fit the model.
-#' @param bru_fit A fitted model using `inlabru` or `inla`.
+#' @param cmp The 'inlabru' component used to fit the model.
+#' @param bru_fit A fitted model using 'inlabru' or 'INLA'.
 #' @param data A data.frame of covariates needed for the prediction. The
 #' locations must be normalized PtE.
 #' @param formula A formula where the right hand side defines an R expression to
@@ -877,13 +876,13 @@ bru_graph_rep <- function(repl, graph_spde){
 #' @param n.samples Integer setting the number of samples to draw in order to
 #' calculate the posterior statistics. The default is rather low but provides a
 #' quick approximate result.
-#' @param seed Random number generator seed passed on to inla.posterior.sample
+#' @param seed Random number generator seed passed on to `inla.posterior.sample()`
 #' @param probs	A numeric vector of probabilities with values in the standard
 #' unit interval to be passed to stats::quantile
 #' @param return_original_order Should the predictions be returned in the
 #' original order?
 #' @param num.threads	Specification of desired number of threads for parallel
-#' computations. Default NULL, leaves it up to INLA. When seed != 0, overridden to "1:1"
+#' computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden to "1:1"
 #' @param include	Character vector of component labels that are needed by the
 #' predictor expression; Default: NULL (include all components that are not
 #' explicitly excluded)
@@ -894,7 +893,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
-#' @param... Additional arguments passed on to inla.posterior.sample
+#' @param... Additional arguments passed on to `inla.posterior.sample()`.
 #' @return A list with predictions.
 #' @export
 
@@ -1033,14 +1032,14 @@ predict.inla_metric_graph_spde <- function(object,
 
 
 #' @name plot.graph_bru_pred
-#' @title Plot of predicted values with inlabru.
-#' @description Auxiliar function to obtain plots of the predictions of the field
-#' using inlabru.
-#' @param x a predicted object obtained with the `predict` method.
-#' @param y not used.
-#' @param vertex_size size of the vertices.
-#' @param ... additional parameters to be passed to the plot function.
-#' @return A `ggplot2` object.
+#' @title Plot of predicted values with 'inlabru'
+#' @description Auxiliary function to obtain plots of the predictions of the field
+#' using 'inlabru'.
+#' @param x A predicted object obtained with the `predict` method.
+#' @param y Not used.
+#' @param vertex_size Size of the vertices.
+#' @param ... Additional parameters to be passed to the plot function.
+#' @return A 'ggplot2' object.
 #' @export
 
 plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
@@ -1052,13 +1051,13 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 }
 
 #' @name predict.rspde_metric_graph
-#' @title Predict method for inlabru fits on Metric Graphs for rSPDE models
+#' @title Predict method for 'inlabru' fits on Metric Graphs for 'rSPDE' models
 #' @description Auxiliar function to obtain predictions of the field
-#' using inlabru and rSPDE.
+#' using 'inlabru' and 'rSPDE'.
 #' @param object An `rspde_metric_graph` object built with the
 #' `rspde.metric_graph()` function.
-#' @param cmp The `inlabru` component used to fit the model.
-#' @param bru_fit A fitted model using `inlabru` or `inla`.
+#' @param cmp The 'inlabru' component used to fit the model.
+#' @param bru_fit A fitted model using 'inlabru' or 'INLA'.
 #' @param data A data.frame of covariates needed for the prediction. The locations
 #' must be normalized PtE.
 #' @param formula A formula where the right hand side defines an R expression to
@@ -1080,7 +1079,7 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' @param probs	A numeric vector of probabilities with values in the standard
 #' unit interval to be passed to stats::quantile.
 #' @param num.threads	Specification of desired number of threads for parallel
-#' computations. Default NULL, leaves it up to INLA. When seed != 0, overridden
+#' computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden
 #' to "1:1"
 #' @param include	Character vector of component labels that are needed by the
 #' predictor expression; Default: NULL (include all components that are not
@@ -1151,17 +1150,17 @@ predict.rspde_metric_graph <- function(object,
 
 
 #' @name graph_bru_process_data
-#' @title Prepare data frames or data lists to be used with inlabru in metric
-#' graphs.
+#' @title Prepare data frames or data lists to be used with 'inlabru' in metric
+#' graphs
 #' @param data A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction.
-#' @param loc character. Name of the locations to be used in `inlabru`'s component.
+#' @param loc character. Name of the locations to be used in 'inlabru' component.
 #' @param edge_number Name of the variable that contains the edge number, the
 #' default is `edge_number`.
 #' @param distance_on_edge Name of the variable that contains the distance on
 #' edge, the default is `distance_on_edge`.
 #' @return A list containing the processed data to be used in a user-friendly
-#' manner by inlabru.
+#' manner by 'inlabru'.
 #' @export
 
 graph_bru_process_data <- function(data, edge_number = "edge_number",

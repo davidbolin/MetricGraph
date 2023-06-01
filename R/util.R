@@ -285,7 +285,8 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 
 #' Starting values for random field models on metric graphs
 #'
-#' The results are given as `c(start_sigma_e, start_sigma, start_kappa)`
+#' Computes appropriate starting values for optimization of Gaussian random
+#' field models on metric graphs.
 #'
 #' @param graph A `metric_graph` object.
 #' @param model Type of model, "alpha1", "alpha2", "isoExp", "GL1", and "GL2"
@@ -298,7 +299,7 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param nu Should an initial value for nu be returned?
 #' @param like_format Should the starting values be returned with sigma.e as the
 #' last element? This is the format for the likelihood constructor from the
-#' `rSPDE` package.
+#' 'rSPDE' package.
 #' @param log_scale Should the initial values be returned in log scale?
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
@@ -455,7 +456,7 @@ graph_starting_values <- function(graph,
 
 #' Exponential covariance function
 #'
-#' `exp_covariance` evaluates the exponential covariance function
+#' Evaluates the exponential covariance function
 #' \deqn{C(h) = \sigma^2 \exp\{-kappa h\}}
 #'
 #' @param h Distances to evaluate the covariance function at.
@@ -755,7 +756,7 @@ logo_lines <- function(){
 
 
 
-#' @noRd 
+#' @noRd
 
 projectVecLine2 <- function(lines, points, normalized = FALSE){
   lines <- lines@lines[[1]]@Lines[[1]]@coords

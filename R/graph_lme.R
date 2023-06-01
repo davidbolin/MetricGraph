@@ -60,17 +60,17 @@
 #' error.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
-#' (0,1). Here, 0 is Neumann boundary conditions and 1 uses stationary boundary
+#' (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
 #' conditions.
 # @param model_matrix logical indicating whether the model matrix should be returned as component of the returned value.
-#' @param parallel logical. Indicating whether to use optimParallel or not.
+#' @param parallel logical. Indicating whether to use `optimParallel()` or not.
 #' @param n_cores Number of cores to be used if parallel is true.
-#' @param optim_controls Additional controls to be passed to `optim` or `optimParallel`.
+#' @param optim_controls Additional controls to be passed to `optim()` or `optimParallel()`.
 #' @param improve_hessian Should a more precise estimate of the hessian be obtained?
 #' Turning on might increase the overall time.
 #' @param hessian_args List of controls to be used if `improve_hessian` is `TRUE`.
 #' The list can contain the arguments to be passed to the `method.args` argument
-#' in the `hessian` function. See the help of the `hessian` function in `numDeriv`
+#' in the `hessian` function. See the help of the `hessian` function in 'numDeriv'
 #' package for details. Observet that it only accepts the "Richardson" method for
 #' now, the method "complex" is not supported.
 #' @return A list containing the fitted model.
@@ -699,7 +699,7 @@ graph_lme <- function(formula, graph,
 }
 
 #' @name logLik.graph_lme
-#' @title Log-likelihood for \code{graph_lme} objects.
+#' @title Log-likelihood for \code{graph_lme} objects
 #' @description computes the log-likelihood for a fitted mixed effects model on
 #' metric graphs.
 #' @param x Object of class `graph_lme` containing results from the fitted model.
@@ -763,7 +763,7 @@ print.graph_lme <- function(x, ...) {
 
 
 #' @name summary.graph_lme
-#' @title Summary Method for \code{graph_lme} Objects.
+#' @title Summary Method for \code{graph_lme} Objects
 #' @description Function providing a summary of results related to metric graph
 #' mixed effects regression models.
 #' @param object an object of class `graph_lme` containing results from the
@@ -858,7 +858,7 @@ summary.graph_lme <- function(object, all_times = FALSE, ...) {
 }
 
 #' @name print.summary_graph_lme
-#' @title Print method for \code{summary_graph_lme} objects.
+#' @title Print method for \code{summary_graph_lme} objects
 #' @description Provides a brief description of results related to metric graph
 #' mixed effects regression models.
 #' @param x object of class "summary_graph_lme" containing results of summary
@@ -956,8 +956,8 @@ print.summary_graph_lme <- function(x, ...) {
 
 
 #' @name predict.graph_lme
-#' @title Prediction for a mixed effects regression model on a metric graph.
-#' @param object The fitted object with the `graph_lme()` function
+#' @title Prediction for a mixed effects regression model on a metric graph
+#' @param object The fitted object with the `graph_lme()` function.
 #' @param data A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction.
 #' @param mesh Obtain predictions for mesh nodes? The graph must have a mesh,

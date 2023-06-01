@@ -2,17 +2,18 @@
 % Please edit documentation in R/metric_graph.R
 \name{graph_components}
 \alias{graph_components}
-\title{Connected components of metric graph.}
+\title{Connected components of metric graph}
 \value{
 Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 }
 \description{
-Class representing connected components of a metric graph
+Class representing connected components of a metric graph.
 }
 \details{
-A list of graph objects created from vertex and edge matrices, or
-from an sp::Lines object where each line is representing and edge. For more
-details, see the help vignette:
+A list of \code{metric_graph} objects (representing the different
+connected components in the full graph) created from vertex and edge matrices,
+or from an sp::SpatialLines object where each line is representing and edge.
+For more details, see the vignette:
 \code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
@@ -29,7 +30,7 @@ graphs$plot()
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{graphs}}{List of graphs.}
+\item{\code{graphs}}{List of the graphs representing the connected components.}
 
 \item{\code{n}}{The number of graphs.}
 
@@ -69,12 +70,12 @@ Create metric graphs for connected components}
 \item{\code{by_length}}{Sort the components by total edge length? If \code{FALSE},
 the components are sorted by the number of vertices.}
 
-\item{\code{...}}{additional arguments used when specifying the graphs}
+\item{\code{...}}{Additional arguments used when specifying the graphs}
 
 \item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given
 in Longitude/Latitude and that distances should be computed in km.}
 
-\item{\code{tolerance}}{vertices that are closer than this number are merged when
+\item{\code{tolerance}}{Vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the
 tolerance is given in km.}
 }
@@ -95,13 +96,13 @@ Returns the largest component in the graph.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
-Plot all components
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-graph_components-plot"></a>}}
 \if{latex}{\out{\hypertarget{method-graph_components-plot}{}}}
 \subsection{Method \code{plot()}}{
+Plots all components.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph_components$plot(edge_colors = NULL, vertex_colors = NULL, ...)}\if{html}{\out{</div>}}
 }
