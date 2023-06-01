@@ -43,6 +43,7 @@ if (getRversion() >= "3.6.0") {
 }
 
 import(Matrix)
+importFrom(R6,R6Class)
 importFrom(Rcpp,evalCpp)
 importFrom(ggplot2,aes)
 importFrom(ggplot2,coord_fixed)
