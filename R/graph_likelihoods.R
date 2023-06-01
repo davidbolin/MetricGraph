@@ -568,9 +568,8 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 }
 
 
-#' Function factory for likelihood evaluation not using sparsity
-#'
-#' @param graph metric_graph object
+#' Function factory for likelihood evaluation not using sparsity.
+#' @param graph A `metric_graph` object.
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the
 #' model based on the graph Laplacian with smoothness 2, and "isoCov" gives a
@@ -590,8 +589,9 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' given in log-scale?
 #' @param maximize If `FALSE` the function will return minus the likelihood, so
 #' one can directly apply it to the `optim` function.
-#' @return The log-likelihood function, which is returned as a function with
-#' parameter 'theta'. For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the
+#' @return The log-likelihood function.
+#' @details The log-likelihood function that is returned is a function of a
+#' parameter `theta`. For models 'alpha1', 'alpha2', 'GL1' and 'GL2', the
 #' parameter `theta` must be supplied as the vector `c(sigma_e, sigma, kappa)`.
 #'
 #' For 'isoCov' model, theta must be a vector such that `theta[1]` is `sigma.e`
@@ -607,7 +607,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' supplied as the vector `c(sigma_e, sigma, kappa, beta[1], ..., beta[p])`,
 #' where `beta[1],...,beta[p]` are the coefficients and `p` is the number of
 #' covariates.
-#' @export
+#' @noRd
 likelihood_graph_covariance <- function(graph,
                                         model = "alpha1",
                                         y_graph,

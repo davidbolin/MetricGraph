@@ -32,7 +32,7 @@ navbar:
       - text: Whittle--Matérn fields with general smoothness
         href: articles/fem_models.html
       - text: Log-Gaussian Cox processes on metric graphs
-        href: articles/pointprocess.html        
+        href: articles/pointprocess.html
     twitter:
       icon: fa-twitter
       href: https://twitter.com/jdavidbolin
@@ -42,11 +42,11 @@ home:
   links:
   - text: Our research group
     href: http://stochproc.kaust.edu.sa/
-   
-    
+
+
 reference:
   - title: MetricGraph package
-    contents: 
+    contents:
     - MetricGraph
     - logo_lines
   - title: Metric graph constructor
@@ -77,17 +77,15 @@ reference:
     - predict.graph_lme
     - summary.graph_lme
     - posterior_crossvalidation
-    - posterior_crossvalidation_covariance     
     - graph_starting_values
-    - likelihood_graph_covariance
   - title: Log-Cox Gaussian processes
     contents:
     - graph_lgcp
   - title: Space-time models
     contents:
     - simulate_spacetime
-    - make.Q.euler
-    - make.Q.spacetime
+    - make_Q_euler
+    - make_Q_spacetime
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde

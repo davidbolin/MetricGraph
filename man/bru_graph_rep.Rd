@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{bru_graph_rep}
 \alias{bru_graph_rep}
-\title{Creates a vector of replicates to be used with inlabru}
+\title{Creates a vector of replicates to be used with 'inlabru'}
 \usage{
 bru_graph_rep(repl, graph_spde)
 }
@@ -13,9 +13,9 @@ for all replicates will be generated.}
 \item{graph_spde}{Name of the field}
 }
 \value{
-A vector of replicates to be used with inlabru.
+A vector of replicates to be used with 'inlabru'.
 }
 \description{
 Auxiliar function to create a vector of replicates to be used
-with inlabru
+with 'inlabru'
 }

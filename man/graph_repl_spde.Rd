@@ -2,13 +2,13 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_repl_spde}
 \alias{graph_repl_spde}
-\title{Extraction of vector of replicates for inlabru.}
+\title{Extraction of vector of replicates for 'inlabru'.}
 \usage{
 graph_repl_spde(graph_spde, repl = NULL)
 }
 \arguments{
 \item{graph_spde}{An \code{rspde_metric_graph} object built with the
-\code{rspde.metric_graph()} function from the \code{rSPDE} package.}
+\code{rspde.metric_graph()} function from the 'rSPDE' package.}
 
 \item{repl}{Which replicates? If there is no replicates, one
 can set \code{repl} to \code{NULL}. If one wants all replicates,
@@ -18,6 +18,6 @@ then one sets to \code{repl} to \verb{__all}.}
 The vector of replicates.
 }
 \description{
-Extracts the vector of replicates from an rSPDE
-model object for inlabru
+Extracts the vector of replicates from an 'rSPDE'
+model object for 'inlabru'
 }

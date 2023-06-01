@@ -47,7 +47,7 @@ make.G <- function(n,C,G) {
 #' @param sigma Variance parameter.
 #' @return Precision matrix.
 #' @export
-make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
+make_Q_spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 
   G <- graph$mesh$G
   C <- graph$mesh$C
@@ -109,7 +109,7 @@ make.Q.spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 #' @param beta Smoothness parameter (integer) for Q-Wiener process.
 #' @return Precision matrix.
 #' @export
-make.Q.euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
+make_Q_euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 
   G <- graph$mesh$G
   C <- graph$mesh$C

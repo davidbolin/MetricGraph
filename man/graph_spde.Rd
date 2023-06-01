@@ -69,7 +69,7 @@ The latent field \eqn{u} is the solution of the SPDE
 white noise on the metric graph. This model implements exactly
 the cases in which \eqn{\alpha = 1} or \eqn{\alpha = 2}. For a finite
 element approximation for general \eqn{\alpha} we refer the reader to the
-\code{rSPDE} package and to the Whittle--Matérn fields with general smoothness vignette.
+'rSPDE' package and to the Whittle--Matérn fields with general smoothness vignette.
 
 We also have the alternative parameterization \eqn{\rho = \frac{\sqrt{8(\alpha-0.5)}}{\kappa}},
 which can be interpreted as a range parameter.

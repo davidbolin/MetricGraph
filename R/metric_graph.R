@@ -1,8 +1,8 @@
 #' @title Metric graph
 #' @description Class representing a general metric graph.
 #' @details A graph object created from vertex and edge matrices, or from an
-#' sp::Lines object where each line is representing and edge. For more details,
-#'  see the help vignette:
+#' `sp::SpatialLines` object where each line is representing and edge. For more details,
+#'  see the vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graphs.
 #' @examples
@@ -27,9 +27,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field nV The number of vertices.
   nV = 0,
 
-  #' @field E Matrix with the edges of the graph, where `E[i,1]` is the vertex
-  #' at the start of the ith edge and `E[i,2]` is the vertex at the end of the
-  #' edge.
+  #' @field E Matrix with the edges of the graph, where each row represents an
+  #' edge, `E[i,1]` is the vertex at the start of the ith edge and `E[i,2]` is
+  #' the vertex at the end of the edge.
   E = NULL,
 
   #' @field nE The number of edges.
@@ -85,7 +85,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Create a new `metric_graph` object.
   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
-  #' @param E m x 2 matrix where each row represents an edge.
+  #' @param E m x 2 matrix where each row represents one of the m edges.
   #' @param longlat If TRUE, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in km.
   #' @param tolerance List that provides tolerances during the construction of
@@ -94,9 +94,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' (default = 1e-7).
   #' - `vertex_line` If a vertex at the end of one line is closer than this
   #' number to another line, this vertex is connected to that line
-  #' (default = 1e-7)
+  #' (default = 1e-7).
   #' - `line_line` If two lines at some point are closer than this number, a new
-  #' vertex is added at that point and the two lines are connected (default = 0)
+  #' vertex is added at that point and the two lines are connected (default = 0).
   #'
   #' If `longlat = TRUE`, the tolerances are given in km.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
@@ -744,8 +744,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Adds observation locations as vertices in the graph.
-  #' @param tolerance Parameter in which we merge vertices together. Not intended
-  #' for non-expert use.
+  #' @param tolerance Observations locations are merged to a single vertex if
+  #' they are closer than this number (given in relative edge distance between
+  #' 0 and 1). The default is `1e-15`.
   #' @return No return value. Called for its side effects.
   observation_to_vertex = function(tolerance = 1e-15) {
     if(tolerance <= 0 || tolerance >=1){
@@ -1129,9 +1130,10 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Build mass and stiffness matrices for given mesh object.
   #' @details The function builds: The matrix `C` which is the mass matrix with
-  #' elements \eqn{<\phi_i, \phi_j>}, the matrix `G` which is the stiffness
-  #' matrix with elements \eqn{<d\phi_i, d\phi_j>}, the matrix `B` with elements
-  #' \eqn{<d\phi_i, \phi_j>}, and the vector with weights \eqn{<\phi_i, 1>}.
+  #' elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix `G` which is the stiffness
+  #' matrix with elements \eqn{G_{ij} = <d\phi_i, d\phi_j>}, the matrix `B` with
+  #' elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, and the vector with weights
+  #' \eqn{<\phi_i, 1>}.
   #' @return No return value. Called for its side effects. The finite element
   #' matrices `C`, `G` and `B` are stored in the `mesh` element in the
   #' `metric_graph` object.
@@ -1151,6 +1153,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @description Computes observation matrix for mesh.
   #' @param PtE Locations given as (edge number in graph, normalized location on
   #' edge)
+  #' @details For n locations and a mesh with m nodes, `A` is an n x m matrix with
+  #' elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
   #' @return The observation matrix.
   mesh_A = function(PtE) {
     if(ncol(PtE)!= 2){
@@ -1199,7 +1203,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(VtE)
   },
 
-  #' @description Plots the metric graph
+  #' @description Plots the metric graph.
   #' @param data Which column of the data to plot? If `NULL`, no data will be
   #' plotted.
   #' @param group If there are groups, which group to plot? If `group` is a
@@ -1220,20 +1224,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param degree Show the degrees of the vertices?
   #' @param direction Show the direction of the edges?
   #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
-  #' @return A `plot_ly` (if `plotly=TRUE`) or `ggplot` object.
-  #' @examples
-  #' library(sp)
-  #' line1 <- Line(rbind(c(0,0),c(1,0)))
-  #' line2 <- Line(rbind(c(0,0),c(0,1)))
-  #' line3 <- Line(rbind(c(0,1),c(-1,1)))
-  #' theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-  #' line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-  #' Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-  #'                               Lines(list(line2),ID="2"),
-  #'                               Lines(list(line3),ID="3"),
-  #'                               Lines(list(line4),ID="4")))
-  #' graph <- metric_graph$new(lines = Lines)
-  #' graph$plot()
+  #' @return A `plot_ly` (if `plotly = TRUE`) or `ggplot` object.
   plot = function(data = NULL,
                   group = 1,
                   plotly = FALSE,
@@ -1290,7 +1281,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #' @description Plots the connections in the graph
-  #' @returns No return value. Called for its side effects.
+  #' @return No return value. Called for its side effects.
   plot_connections = function(){
         g <- graph(edges = c(t(self$E)), directed = FALSE)
         plot(g)
@@ -1312,7 +1303,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param support_color For 3D plot, color of support lines.
   #' @param p Previous plot to which the new plot should be added.
   #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
-  #' @return Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
+  #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
   plot_function = function(X,
                            plotly = FALSE,
                            vertex_size = 5,
@@ -1768,7 +1759,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' normalized locations.
   #' @return If `PtE` is specified, then a matrix with Euclidean coordinates of
   #' the locations is returned. If `XY` is provided, then a matrix with the
-  #' closest locations on the graph is returned
+  #' closest locations on the graph is returned.
   coordinates = function(PtE = NULL, XY = NULL, normalized = TRUE) {
     if(is.null(PtE) && is.null(XY)) {
       stop("PtE or XY must be provided")
@@ -2830,10 +2821,11 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 ))
 
 #' @title Connected components of metric graph.
-#' @description Class representing connected components of a metric graph
-#' @details A list of graph objects created from vertex and edge matrices, or
-#' from an sp::Lines object where each line is representing and edge. For more
-#' details, see the help vignette:
+#' @description Class representing connected components of a metric graph.
+#' @details A list of `metric_graph` objects (representing the different
+#' connected components in the full graph) created from vertex and edge matrices,
+#' or from an sp::SpatialLines object where each line is representing and edge.
+#' For more details, see the vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 #' @examples
@@ -2850,7 +2842,7 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 #' @export
 graph_components <-  R6::R6Class("graph_components",
    public = list(
-   #' @field graphs List of graphs.
+   #' @field graphs List of the graphs representing the connected components.
    graphs = NULL,
 
    #' @field n The number of graphs.
@@ -2869,12 +2861,12 @@ graph_components <-  R6::R6Class("graph_components",
    #' @param E m x 2 matrix where each row represents an edge.
    #' @param longlat If `TRUE`, then it is assumed that the coordinates are given
    #' in Longitude/Latitude and that distances should be computed in km.
-   #' @param tolerance vertices that are closer than this number are merged when
+   #' @param tolerance Vertices that are closer than this number are merged when
    #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
    #' tolerance is given in km.
    #' @param by_length Sort the components by total edge length? If `FALSE`,
    #' the components are sorted by the number of vertices.
-   #' @param ... additional arguments used when specifying the graphs
+   #' @param ... Additional arguments used when specifying the graphs
    #' @return A `graph_components` object.
    initialize = function(lines = NULL,
                          V = NULL,
@@ -2929,8 +2921,7 @@ graph_components <-  R6::R6Class("graph_components",
      return(self$graphs[[1]])
    },
 
-   #' Plot all components
-   #'
+   #' @description Plots all components.
    #' @param edge_colors A 3 x nc matrix with RGB values for the edge colors to
    #' be used when plotting each graph.
    #' @param vertex_colors A 3 x nc matrix with RGB values for the edge colors to

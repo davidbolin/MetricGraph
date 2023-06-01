@@ -85,18 +85,18 @@ error.}
 (0,1). Here, 0 is Neumann boundary conditions and 1 uses stationary boundary
 conditions.}
 
-\item{parallel}{logical. Indicating whether to use optimParallel or not.}
+\item{parallel}{logical. Indicating whether to use \code{optimParallel()} or not.}
 
 \item{n_cores}{Number of cores to be used if parallel is true.}
 
-\item{optim_controls}{Additional controls to be passed to \code{optim} or \code{optimParallel}.}
+\item{optim_controls}{Additional controls to be passed to \code{optim()} or \code{optimParallel()}.}
 
 \item{improve_hessian}{Should a more precise estimate of the hessian be obtained?
 Turning on might increase the overall time.}
 
 \item{hessian_args}{List of controls to be used if \code{improve_hessian} is \code{TRUE}.
 The list can contain the arguments to be passed to the \code{method.args} argument
-in the \code{hessian} function. See the help of the \code{hessian} function in \code{numDeriv}
+in the \code{hessian} function. See the help of the \code{hessian} function in 'numDeriv'
 package for details. Observet that it only accepts the "Richardson" method for
 now, the method "complex" is not supported.}
 }

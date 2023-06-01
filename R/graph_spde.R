@@ -328,8 +328,7 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 
 #' Observation/prediction matrices for 'rSPDE' models.
 #'
-#' Constructs observation/prediction weight matrices
-#' for metric graph models.
+#' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 #'
 #' @param graph_spde An `inla_metric_graph_spde` object built with the
 #' `graph_spde()` function or an `rspde_metric_graph` object built with the
@@ -340,7 +339,7 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc Character with the name of the location variable to be used in
 #' 'inlabru' prediction.
-#' @return The observation matrix.
+#' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
 graph_data_spde <- function (graph_spde, repl = NULL,
@@ -411,29 +410,29 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 #' @param n_density The number of equally spaced points to estimate the density.
 #' @return If the model was fitted with `matern` parameterization (the default),
 #' it returns a list containing:
-#' \item{marginals.range}{Marginal densities for the range parameter}
-#' \item{marginals.log.range}{Marginal densities for log(range)}
-#' \item{marginals.sigma}{Marginal densities for std. deviation}
-#' \item{marginals.log.sigma}{Marginal densities for log(std. deviation)}
-#' \item{marginals.values}{Marginal densities for the field values}
-#' \item{summary.log.range}{Summary statistics for log(range)}
-#' \item{summary.log.sigma}{Summary statistics for log(std. deviation)}
-#' \item{summary.values}{Summary statistics for the field values}
+#' \item{marginals.range}{Marginal densities for the range parameter.}
+#' \item{marginals.log.range}{Marginal densities for log(range).}
+#' \item{marginals.sigma}{Marginal densities for std. deviation.}
+#' \item{marginals.log.sigma}{Marginal densities for log(std. deviation).}
+#' \item{marginals.values}{Marginal densities for the field values.}
+#' \item{summary.log.range}{Summary statistics for log(range).}
+#' \item{summary.log.sigma}{Summary statistics for log(std. deviation).}
+#' \item{summary.values}{Summary statistics for the field values.}
 #' If `compute.summary` is `TRUE`, then the list will also contain
-#' \item{summary.kappa}{Summary statistics for kappa}
-#' \item{summary.tau}{Summary statistics for tau}
+#' \item{summary.kappa}{Summary statistics for kappa.}
+#' \item{summary.tau}{Summary statistics for tau.}
 #' If the model was fitted with the `spde` parameterization, it returns a list containing:
-#' \item{marginals.kappa}{Marginal densities for kappa}
-#' \item{marginals.log.kappa}{Marginal densities for log(kappa)}
-#' \item{marginals.log.tau}{Marginal densities for log(tau)}
-#' \item{marginals.tau}{Marginal densities for tau}
-#' \item{marginals.values}{Marginal densities for the field values}
-#' \item{summary.log.kappa}{Summary statistics for log(kappa)}
-#' \item{summary.log.tau}{Summary statistics for log(tau)}
-#' \item{summary.values}{Summary statistics for the field values}
+#' \item{marginals.kappa}{Marginal densities for kappa.}
+#' \item{marginals.log.kappa}{Marginal densities for log(kappa).}
+#' \item{marginals.log.tau}{Marginal densities for log(tau).}
+#' \item{marginals.tau}{Marginal densities for tau.}
+#' \item{marginals.values}{Marginal densities for the field values.}
+#' \item{summary.log.kappa}{Summary statistics for log(kappa).}
+#' \item{summary.log.tau}{Summary statistics for log(tau).}
+#' \item{summary.values}{Summary statistics for the field values.}
 #' If `compute.summary` is `TRUE`, then the list will also contain
-#' \item{summary.kappa}{Summary statistics for kappa}
-#' \item{summary.tau}{Summary statistics for tau}
+#' \item{summary.kappa}{Summary statistics for kappa.}
+#' \item{summary.tau}{Summary statistics for tau.}
 #' @export
 
 spde_metric_graph_result <- function(inla, name,
@@ -754,10 +753,10 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
 
 #' @name create_summary_from_density
 #' @title Creates a summary from a density data frame
-#' @description Auxiliar function to create summaries from density data drames
-#' @param density_df A density data frame
-#' @param name Name of the parameter
-#' @return A data frame containing a basic summary
+#' @description Auxiliary function to create summaries from density data frames.
+#' @param density_df A density data frame.
+#' @param name Name of the parameter.
+#' @return A data frame containing a basic summary.
 #' @noRd
 
 create_summary_from_density <- function(density_df, name) {
@@ -834,11 +833,11 @@ create_summary_from_density <- function(density_df, name) {
 
 #' @name bru_graph_rep
 #' @title Creates a vector of replicates to be used with 'inlabru'
-#' @description Auxiliar function to create a vector of replicates to be used
-#' with 'inlabru'
+#' @description Auxiliary function to create a vector of replicates to be used
+#' with 'inlabru'.
 #' @param repl A vector of replicates. If set to `__all`, a vector
 #' for all replicates will be generated.
-#' @param graph_spde Name of the field
+#' @param graph_spde Name of the field.
 #' @return A vector of replicates to be used with 'inlabru'.
 #' @export
 
@@ -894,7 +893,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
-#' @param... Additional arguments passed on to `inla.posterior.sample()`
+#' @param... Additional arguments passed on to `inla.posterior.sample()`.
 #' @return A list with predictions.
 #' @export
 
@@ -1034,12 +1033,12 @@ predict.inla_metric_graph_spde <- function(object,
 
 #' @name plot.graph_bru_pred
 #' @title Plot of predicted values with 'inlabru'.
-#' @description Auxiliar function to obtain plots of the predictions of the field
+#' @description Auxiliary function to obtain plots of the predictions of the field
 #' using 'inlabru'.
-#' @param x a predicted object obtained with the `predict` method.
-#' @param y not used.
-#' @param vertex_size size of the vertices.
-#' @param ... additional parameters to be passed to the plot function.
+#' @param x A predicted object obtained with the `predict` method.
+#' @param y Not used.
+#' @param vertex_size Size of the vertices.
+#' @param ... Additional parameters to be passed to the plot function.
 #' @return A 'ggplot2' object.
 #' @export
 

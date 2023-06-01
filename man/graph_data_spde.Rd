@@ -2,14 +2,14 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_data_spde}
 \alias{graph_data_spde}
-\title{Observation/prediction matrices for rSPDE models.}
+\title{Observation/prediction matrices for 'rSPDE' models.}
 \usage{
 graph_data_spde(graph_spde, repl = NULL, only_pred = FALSE, loc = NULL)
 }
 \arguments{
 \item{graph_spde}{An \code{inla_metric_graph_spde} object built with the
 \code{graph_spde()} function or an \code{rspde_metric_graph} object built with the
-\code{rspde.metric_graph()} function from the \code{rSPDE} package.}
+\code{rspde.metric_graph()} function from the 'rSPDE' package.}
 
 \item{repl}{Which replicates? If there is no replicates, one
 can set \code{repl} to \code{NULL}. If one wants all replicates,
@@ -18,7 +18,7 @@ then one sets to \code{repl} to \verb{__all}.}
 \item{only_pred}{Should only return the \code{data.frame} to the prediction data?}
 
 \item{loc}{Character with the name of the location variable to be used in
-\code{inlabru}'s prediction.}
+'inlabru' prediction.}
 }
 \value{
 The observation matrix.

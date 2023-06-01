@@ -60,7 +60,7 @@
 #' error.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
-#' (0,1). Here, 0 is Neumann boundary conditions and 1 uses stationary boundary
+#' (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
 #' conditions.
 # @param model_matrix logical indicating whether the model matrix should be returned as component of the returned value.
 #' @param parallel logical. Indicating whether to use `optimParallel()` or not.
@@ -957,7 +957,7 @@ print.summary_graph_lme <- function(x, ...) {
 
 #' @name predict.graph_lme
 #' @title Prediction for a mixed effects regression model on a metric graph.
-#' @param object The fitted object with the `graph_lme()` function
+#' @param object The fitted object with the `graph_lme()` function.
 #' @param data A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction.
 #' @param mesh Obtain predictions for mesh nodes? The graph must have a mesh,

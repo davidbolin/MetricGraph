@@ -5,7 +5,7 @@
 \alias{MetricGraph}
 \title{Gaussian processes on metric graphs}
 \description{
-\code{MetricGraph}is used for creation and manipulation of metric graphs, such as street or river networks.
+'MetricGraph' is used for creation and manipulation of metric graphs, such as street or river networks.
 It also has several functions thatfacilitates operations and visualizations of data on metric graphs,
 and the creation of a large class of random fields and stochastic partial differential equations on
 such spaces.
@@ -20,7 +20,7 @@ Several utility functions for specifying graphs, computing likelihoods, performi
 prediction, simulating processes, and visualizing results on metric graphs are provided.
 In particular, linear mixed effects models including random field components can be fitted to
 data based on computationally efficient sparse matrix representations. Interfaces to the R
-packages INLA and inlabru are also provided, which facilitate working with Bayesian statistical
+packages 'INLA' and 'inlabru' are also provided, which facilitate working with Bayesian statistical
 models on metric graphs.
 }
 \details{
@@ -31,7 +31,7 @@ processes on such spaces.
 Linear mixed effects models are provided (see
 \verb{[graph_lme]}) and perform
 predictions (see \verb{[predict.graph_lme]}). The package also has interfaces for
-\code{INLA} (see \verb{[graph_spde]}), and it this interface also works with \code{inlabru}.
+'INLA' (see \verb{[graph_spde]}), and it this interface also works with 'inlabru'.
 
-For a more detailed introduction to the package, see the MetricGraph Vignettes.
+For a more detailed introduction to the package, see the 'MetricGraph' Vignettes.
 }

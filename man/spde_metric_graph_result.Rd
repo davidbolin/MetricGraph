@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{spde_metric_graph_result}
 \alias{spde_metric_graph_result}
-\title{Metric graph SPDE result extraction from INLA estimation results.}
+\title{Metric graph SPDE result extraction from 'INLA' estimation results.}
 \usage{
 spde_metric_graph_result(
   inla,
@@ -14,13 +14,13 @@ spde_metric_graph_result(
 )
 }
 \arguments{
-\item{inla}{An \code{inla} object obtained from a call to \code{inla()}.}
+\item{inla}{An 'INLA' object obtained from a call to \code{inla()}.}
 
-\item{name}{A character string with the name of the rSPDE effect
-in the inla formula.}
+\item{name}{A character string with the name of the 'rSPDE' effect
+in the model.}
 
 \item{metric_graph_spde}{The \code{inla_metric_graph_spde} object used for the
-effect in the inla formula.}
+random effect in the model.}
 
 \item{compute.summary}{Should the summary be computed?}
 
@@ -57,5 +57,5 @@ If \code{compute.summary} is \code{TRUE}, then the list will also contain
 }
 \description{
 Extract field and parameter values and distributions
-for a metric graph spde effect from an inla result object.
+for a metric graph spde effect from an 'INLA' result object.
 }

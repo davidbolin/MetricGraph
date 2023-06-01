@@ -417,7 +417,7 @@ posterior_crossvalidation <- function(object)
 #' @details This function does not use sparsity for any model.
 #'
 #' @return Vector with all predictions
-#' @export
+#' @noRd
 posterior_crossvalidation_covariance <- function(object)
 {
 

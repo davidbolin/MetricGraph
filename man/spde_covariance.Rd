@@ -28,3 +28,8 @@ Vector with the covariance function evaluate at the mesh locations.
 \description{
 Computes the covariance function for a Whittle-Matérn field.
 }
+\details{
+Compute the covariance function \eqn{\rho(P,s_i)}{\rho(P,s_i)} where
+P is the provided location and \eqn{s_i}{s_i} are all locations in the mesh
+of the graph.
+}
