@@ -75,15 +75,12 @@
     
 
 <p>Object of <code><a href="https://r6.r-lib.org/reference/R6Class.html" class="external-link">R6Class</a></code> for creating metric graphs.</p>
-
-
-<p>No return value. Called for its side effects.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A graph object created from vertex and edge matrices, or from an
-sp::Lines object where each line is representing and edge. For more details,
-see the help vignette:
+<code><a href="https://rdrr.io/pkg/sp/man/SpatialLines.html" class="external-link">sp::SpatialLines</a></code> object where each line is representing and edge. For more details,
+see the vignette:
 <code><a href="../articles/metric_graph.html">vignette("metric_graph", package = "MetricGraph")</a></code></p>
     </div>
     <div class="section level2">
@@ -98,9 +95,9 @@ graph.</p></dd>
 
 
 <dt><code>E</code></dt>
-<dd><p>Matrix with the edges of the graph, where <code>E[i,1]</code> is the vertex
-at the start of the ith edge and <code>E[i,2]</code> is the vertex at the end of the
-edge.</p></dd>
+<dd><p>Matrix with the edges of the graph, where each row represents an
+edge, <code>E[i,1]</code> is the vertex at the start of the ith edge and <code>E[i,2]</code> is
+the vertex at the end of the edge.</p></dd>
 
 
 <dt><code>nE</code></dt>
@@ -234,7 +231,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 
 
 <dt><code>E</code></dt>
-<dd><p>m x 2 matrix where each row represents an edge.</p></dd>
+<dd><p>m x 2 matrix where each row represents one of the m edges.</p></dd>
 
 
 <dt><code>longlat</code></dt>
@@ -248,9 +245,9 @@ the graph:</p><ul><li><p><code>vertex_vertex</code> Vertices that are closer tha
 (default = 1e-7).</p></li>
 <li><p><code>vertex_line</code> If a vertex at the end of one line is closer than this
 number to another line, this vertex is connected to that line
-(default = 1e-7)</p></li>
+(default = 1e-7).</p></li>
 <li><p><code>line_line</code> If two lines at some point are closer than this number, a new
-vertex is added at that point and the two lines are connected (default = 0)</p></li>
+vertex is added at that point and the two lines are connected (default = 0).</p></li>
 </ul><p>If <code>longlat = TRUE</code>, the tolerances are given in km.</p></dd>
 
 
@@ -554,8 +551,9 @@ observation locations.</p>
 <div class="section">
 <h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>tolerance</code></dt>
-<dd><p>Parameter in which we merge vertices together. Not intended
-for non-expert use.</p></dd>
+<dd><p>Observations locations are merged to a single vertex if
+they are closer than this number (given in relative edge distance between
+0 and 1). The default is <code>1e-15</code>.</p></dd>
 
 
 </dl><p></p></div>
@@ -575,7 +573,7 @@ for non-expert use.</p></dd>
 <div class="section">
 <h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>bru</code></dt>
-<dd><p>Should an <code>inlabru</code>-friendly list be returned?</p></dd>
+<dd><p>Should an 'inlabru'-friendly list be returned?</p></dd>
 
 
 <dt><code>loc</code></dt>
@@ -779,9 +777,10 @@ the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 <div class="section">
 <h4 id="details-4">Details<a class="anchor" aria-label="anchor" href="#details-4"></a></h4>
 <p>The function builds: The matrix <code>C</code> which is the mass matrix with
-elements \(&lt;\phi_i, \phi_j&gt;\), the matrix <code>G</code> which is the stiffness
-matrix with elements \(&lt;d\phi_i, d\phi_j&gt;\), the matrix <code>B</code> with elements
-\(&lt;d\phi_i, \phi_j&gt;\), and the vector with weights \(&lt;\phi_i, 1&gt;\).</p>
+elements \(C_{ij} = &lt;\phi_i, \phi_j&gt;\), the matrix <code>G</code> which is the stiffness
+matrix with elements \(G_{ij} = &lt;d\phi_i, d\phi_j&gt;\), the matrix <code>B</code> with
+elements \(B_{ij} = &lt;d\phi_i, \phi_j&gt;\), and the vector with weights
+\(&lt;\phi_i, 1&gt;\).</p>
 </div>
 
 <div class="section">
@@ -808,6 +807,12 @@ edge)</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
+<h4 id="details-5">Details<a class="anchor" aria-label="anchor" href="#details-5"></a></h4>
+<p>For n locations and a mesh with m nodes, <code>A</code> is an n x m matrix with
+elements \(A_{ij} = \phi_j(s_i)\).</p>
+</div>
+
+<div class="section">
 <h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
 <p>The observation matrix.</p>
 </div>
@@ -829,7 +834,7 @@ is at the end of the edge.</p>
 
 </div><p></p><hr><a id="method-metric_graph-plot"></a><div class="section">
 <h3 id="method-plot-">Method <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code><a class="anchor" aria-label="anchor" href="#method-plot-"></a></h3>
-<p>Plots the metric graph</p><div class="section">
+<p>Plots the metric graph.</p><div class="section">
 <h4 id="usage-21">Usage<a class="anchor" aria-label="anchor" href="#usage-21"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -865,7 +870,7 @@ is a character, then the group will be chosen by its name.</p></dd>
 
 <dt><code>plotly</code></dt>
 <dd><p>Use plot_ly for 3D plot (default <code>FALSE</code>). This option
-requires the <code>plotly</code> package.</p></dd>
+requires the 'plotly' package.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
@@ -902,7 +907,7 @@ requires the <code>plotly</code> package.</p></dd>
 
 
 <dt><code>p</code></dt>
-<dd><p>Existing <code>ggplot</code> or <code>plot_ly</code> object to add the graph to</p></dd>
+<dd><p>Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to</p></dd>
 
 
 <dt><code>degree</code></dt>
@@ -914,31 +919,15 @@ requires the <code>plotly</code> package.</p></dd>
 
 
 <dt><code>...</code></dt>
-<dd><p>Additional arguments for <code>ggplot</code> or <code>plot_ly</code></p></dd>
+<dd><p>Additional arguments to pass to <code>ggplot()</code> or <code>plot_ly()</code></p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
 <h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
-<p>A <code>plot_ly</code> (if <code>plotly=TRUE</code>) or <code>ggplot</code> object.</p>
+<p>A <code>plot_ly</code> (if <code>plotly = TRUE</code>) or <code>ggplot</code> object.</p>
 </div>
-<div class="section">
-<h4 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a></h4>
-<p></p><div class="r example copy"><div class="sourceCode"><pre><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span>
-<span><span class="va">line1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">line2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">line3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span>from<span class="op">=</span><span class="va">pi</span>,to<span class="op">=</span><span class="fl">3</span><span class="op">*</span><span class="va">pi</span><span class="op">/</span><span class="fl">2</span>,length.out <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
-<span><span class="va">line4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>,<span class="fl">1</span><span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">Lines</span> <span class="op">=</span> <span class="fu">sp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialLines.html" class="external-link">SpatialLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line1</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"1"</span><span class="op">)</span>,</span>
-<span>                              <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line2</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"2"</span><span class="op">)</span>,</span>
-<span>                              <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line3</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"3"</span><span class="op">)</span>,</span>
-<span>                              <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line4</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"4"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>lines <span class="op">=</span> <span class="va">Lines</span><span class="op">)</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
 
 </div><p></p><hr><a id="method-metric_graph-plot_connections"></a><div class="section">
 <h3 id="method-plot-connections-">Method <code>plot_connections()</code><a class="anchor" aria-label="anchor" href="#method-plot-connections-"></a></h3>
@@ -947,6 +936,10 @@ requires the <code>plotly</code> package.</p></dd>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_connections</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
+<p>No return value. Called for its side effects.</p>
+</div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_function"></a><div class="section">
 <h3 id="method-plot-function-">Method <code>plot_function()</code><a class="anchor" aria-label="anchor" href="#method-plot-function-"></a></h3>
@@ -978,7 +971,7 @@ evaluated at the mesh in the graph</p></dd>
 
 <dt><code>plotly</code></dt>
 <dd><p>If <code>TRUE</code>, then the plot is shown in 3D. This option requires
-the package <code>plotly</code>.</p></dd>
+the package 'plotly'.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
@@ -1018,14 +1011,14 @@ the package <code>plotly</code>.</p></dd>
 
 
 <dt><code>...</code></dt>
-<dd><p>Additional arguments for <code>ggplot</code> or <code>plot_ly</code></p></dd>
+<dd><p>Additional arguments for <code>ggplot()</code> or <code>plot_ly()</code></p></dd>
 
 
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
-<p>Either a <code>ggplot</code> (if <code>plotly=FALSE</code>) or a <code>plot_ly</code> object.</p>
+<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
+<p>Either a <code>ggplot</code> (if <code>plotly = FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_movie"></a><div class="section">
@@ -1054,7 +1047,7 @@ ith time, evaluated at the mesh locations.</p></dd>
 
 <dt><code>plotly</code></dt>
 <dd><p>If <code>TRUE</code>, then plot is shown in 3D. This option requires the
-package <code>plotly</code>.</p></dd>
+package 'plotly'.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
@@ -1088,7 +1081,7 @@ package <code>plotly</code>.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
+<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
 <p>Either a <code>ggplot</code> (if <code>plotly=FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
@@ -1116,7 +1109,7 @@ in which the group indices are stored.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
+<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
 <p>No return value. Called for its side effects. The observations are
 stored in the <code>data</code> element in the <code>metric_graph</code> object.</p>
 </div>
@@ -1129,7 +1122,7 @@ stored in the <code>data</code> element in the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
+<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
 <p>A <code>metric_graph</code> object.</p>
 </div>
 
@@ -1161,7 +1154,7 @@ included?</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
+<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
 <p>The observation or prediction matrix.</p>
 </div>
 
@@ -1193,10 +1186,10 @@ normalized locations.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
+<h4 id="returns-28">Returns<a class="anchor" aria-label="anchor" href="#returns-28"></a></h4>
 <p>If <code>PtE</code> is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If <code>XY</code> is provided, then a matrix with the
-closest locations on the graph is returned</p>
+closest locations on the graph is returned.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-clone"></a><div class="section">
@@ -1232,24 +1225,6 @@ closest locations on the graph is returned</p>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## ------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co">## Method `metric_graph$plot`</span></span></span>
-<span class="r-in"><span><span class="co">## ------------------------------------------------</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span>from<span class="op">=</span><span class="va">pi</span>,to<span class="op">=</span><span class="fl">3</span><span class="op">*</span><span class="va">pi</span><span class="op">/</span><span class="fl">2</span>,length.out <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>,<span class="fl">1</span><span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">Lines</span> <span class="op">=</span> <span class="fu">sp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialLines.html" class="external-link">SpatialLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line1</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"1"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                              <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line2</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                              <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line3</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"3"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                              <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line4</span><span class="op">)</span>,ID<span class="op">=</span><span class="st">"4"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va">metric_graph</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>lines <span class="op">=</span> <span class="va">Lines</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="metric_graph-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

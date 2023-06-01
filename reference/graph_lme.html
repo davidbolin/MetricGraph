@@ -180,7 +180,7 @@ conditions.</p></dd>
 
 
 <dt>parallel</dt>
-<dd><p>logical. Indicating whether to use optimParallel or not.</p></dd>
+<dd><p>logical. Indicating whether to use <code>optimParallel()</code> or not.</p></dd>
 
 
 <dt>n_cores</dt>
@@ -188,7 +188,7 @@ conditions.</p></dd>
 
 
 <dt>optim_controls</dt>
-<dd><p>Additional controls to be passed to <code>optim</code> or <code>optimParallel</code>.</p></dd>
+<dd><p>Additional controls to be passed to <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> or <code>optimParallel()</code>.</p></dd>
 
 
 <dt>improve_hessian</dt>
@@ -199,7 +199,7 @@ Turning on might increase the overall time.</p></dd>
 <dt>hessian_args</dt>
 <dd><p>List of controls to be used if <code>improve_hessian</code> is <code>TRUE</code>.
 The list can contain the arguments to be passed to the <code>method.args</code> argument
-in the <code>hessian</code> function. See the help of the <code>hessian</code> function in <code>numDeriv</code>
+in the <code>hessian</code> function. See the help of the <code>hessian</code> function in 'numDeriv'
 package for details. Observet that it only accepts the "Richardson" method for
 now, the method "complex" is not supported.</p></dd>
 

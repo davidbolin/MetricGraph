@@ -85,16 +85,13 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/likelihood_graph_covariance.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/logo_lines.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/make.Q.euler.html</loc>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_euler.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/make.Q.spacetime.html</loc>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_spacetime.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/metric_graph.html</loc>
@@ -107,9 +104,6 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation_covariance.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/predict.graph_lme.html</loc>
