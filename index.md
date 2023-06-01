@@ -1,5 +1,6 @@
 # MetricGraph #
 
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version-last-release/MetricGraph)](https://cran.r-project.org/package=MetricGraph)
 [![R-CMD-check](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml)
 [![R-CMD-check-windows](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml)
 
@@ -21,6 +22,13 @@ D. Bolin, A. Simas, J. Wallin (2023) [Statistical inference for Gaussian Whittle
 
 
 # Installation instructions #
+The latest CRAN release of the package can be installed directly from CRAN with `install.packages("MetricGraph")`.
+
+It is also possible to install the CRAN version from github by using the command:
+```r
+remotes::install_github("davidbolin/metricgraph", ref = "cran")
+```
+
 The latest stable version can be installed by using the command
 ```r
 remotes::install_github("davidbolin/metricgraph", ref = "stable")
