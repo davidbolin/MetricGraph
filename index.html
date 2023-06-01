@@ -93,7 +93,7 @@
 <img src="logo.png" class="logo" alt=""><h1 id="metricgraph">MetricGraph<a class="anchor" aria-label="anchor" href="#metricgraph"></a>
 </h1>
 </div>
-<p><a href="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml" class="external-link"><img src="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml" class="external-link"><img src="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg" alt="R-CMD-check-windows"></a></p>
+<p><a href="https://cran.r-project.org/package=MetricGraph" class="external-link"><img src="http://www.r-pkg.org/badges/version-last-release/MetricGraph" alt="CRAN_Status_Badge"></a> <a href="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml" class="external-link"><img src="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg" alt="R-CMD-check"></a> <a href="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml" class="external-link"><img src="https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg" alt="R-CMD-check-windows"></a></p>
 <p><code>MetricGraph</code> is an R package used for working with data and random fields on metric graphs, such as street or river networks. The main functionality is contained in the <code>metric_graph</code> class, which is used for specifying metric graphs, adding data to them, visualization, and other basic functions that are needed for working with data and random fields on metric graphs. The package also implements various Gaussian fields on metric graphs, and in particular the Whittle–Matérn fields introduced in the references below.</p>
 <p>Basic statistical tasks such as likelihood evaluation and prediction is implemented for these Gaussian fields in <code>MetricGraph</code>. Further, the package also contains interfaces to <a href="https://r-inla.org" title="INLA homepage" class="external-link">R-INLA</a> and <a href="https://sites.google.com/inlabru.org/inlabru" title="inlabru homepage" class="external-link">inlabru</a> that facilitates using those packages for full Bayesian inference of general Latent Gaussian Models (LGMs) that includes Whittle-Matérn fields on metric graphs.</p>
 <p>To get started with the package, please go to the <a href="articles/MetricGraph.html">MetricGraph: Random Fields on Metric Graphs</a> vignette. For more comprehensive examples, please see the vignettes in the <code>vignettes</code> tab.</p>
@@ -109,17 +109,22 @@
 <div class="section level1">
 <h1 id="installation-instructions">Installation instructions<a class="anchor" aria-label="anchor" href="#installation-instructions"></a>
 </h1>
-<p>The latest stable version can be installed by using the command</p>
+<p>The latest CRAN release of the package can be installed directly from CRAN with <code>install.packages("MetricGraph")</code>.</p>
+<p>It is also possible to install the CRAN version from github by using the command:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"davidbolin/metricgraph"</span>, ref <span class="op">=</span> <span class="st">"cran"</span><span class="op">)</span></span></code></pre></div>
+<p>The latest stable version can be installed by using the command</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"davidbolin/metricgraph"</span>, ref <span class="op">=</span> <span class="st">"stable"</span><span class="op">)</span></span></code></pre></div>
 <p>in R. The development version can be installed using the command</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"davidbolin/metricgraph"</span>, ref <span class="op">=</span> <span class="st">"devel"</span><span class="op">)</span></span></code></pre></div>
 </div>
 
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=MetricGraph" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/davidbolin/MetricGraph/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/davidbolin/MetricGraph/issues" class="external-link">Report a bug</a></li>
 <li><a href="http://stochproc.kaust.edu.sa/" class="external-link">Our research group</a></li>
