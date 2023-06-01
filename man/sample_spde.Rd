@@ -2,7 +2,7 @@
 % Please edit documentation in R/spde_sampling.R
 \name{sample_spde}
 \alias{sample_spde}
-\title{Samples a Whittle-Matérn field on a metric graph.}
+\title{Samples a Whittle-Matérn field on a metric graph}
 \usage{
 sample_spde(
   kappa,
@@ -56,7 +56,7 @@ boundary conditions and BC = 1 gives stationary boundary conditions.}
 Matrix or vector with the samples.
 }
 \description{
-Samples a Whittle-Matérn field on a metric graph.
+Obtains samples of a Whittle-Matérn field on a metric graph.
 }
 \details{
 Samples a Gaussian Whittle-Matérn field on a metric graph, either

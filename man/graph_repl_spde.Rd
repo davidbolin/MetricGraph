@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_repl_spde}
 \alias{graph_repl_spde}
-\title{Extraction of vector of replicates for 'inlabru'.}
+\title{Extraction of vector of replicates for 'inlabru'}
 \usage{
 graph_repl_spde(graph_spde, repl = NULL)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/spde_covariance.R
 \name{spde_covariance}
 \alias{spde_covariance}
-\title{Computes the covariance function for a Whittle-Matérn field.}
+\title{Covariance function for Whittle-Matérn fields}
 \usage{
 spde_covariance(P, kappa, tau, range, sigma, alpha, graph)
 }

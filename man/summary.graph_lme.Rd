@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_lme.R
 \name{summary.graph_lme}
 \alias{summary.graph_lme}
-\title{Summary Method for \code{graph_lme} Objects.}
+\title{Summary Method for \code{graph_lme} Objects}
 \usage{
 \method{summary}{graph_lme}(object, all_times = FALSE, ...)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_spde}
 \alias{graph_spde}
-\title{'INLA' implementation of Whittle-Matérn fields for metric graphs.}
+\title{'INLA' implementation of Whittle-Matérn fields for metric graphs}
 \usage{
 graph_spde(
   graph_object,

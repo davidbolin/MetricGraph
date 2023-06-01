@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{spde_metric_graph_result}
 \alias{spde_metric_graph_result}
-\title{Metric graph SPDE result extraction from 'INLA' estimation results.}
+\title{Metric graph SPDE result extraction from 'INLA' estimation results}
 \usage{
 spde_metric_graph_result(
   inla,
@@ -31,29 +31,29 @@ random effect in the model.}
 \value{
 If the model was fitted with \code{matern} parameterization (the default),
 it returns a list containing:
-\item{marginals.range}{Marginal densities for the range parameter}
-\item{marginals.log.range}{Marginal densities for log(range)}
-\item{marginals.sigma}{Marginal densities for std. deviation}
-\item{marginals.log.sigma}{Marginal densities for log(std. deviation)}
-\item{marginals.values}{Marginal densities for the field values}
-\item{summary.log.range}{Summary statistics for log(range)}
-\item{summary.log.sigma}{Summary statistics for log(std. deviation)}
-\item{summary.values}{Summary statistics for the field values}
+\item{marginals.range}{Marginal densities for the range parameter.}
+\item{marginals.log.range}{Marginal densities for log(range).}
+\item{marginals.sigma}{Marginal densities for std. deviation.}
+\item{marginals.log.sigma}{Marginal densities for log(std. deviation).}
+\item{marginals.values}{Marginal densities for the field values.}
+\item{summary.log.range}{Summary statistics for log(range).}
+\item{summary.log.sigma}{Summary statistics for log(std. deviation).}
+\item{summary.values}{Summary statistics for the field values.}
 If \code{compute.summary} is \code{TRUE}, then the list will also contain
-\item{summary.kappa}{Summary statistics for kappa}
-\item{summary.tau}{Summary statistics for tau}
+\item{summary.kappa}{Summary statistics for kappa.}
+\item{summary.tau}{Summary statistics for tau.}
 If the model was fitted with the \code{spde} parameterization, it returns a list containing:
-\item{marginals.kappa}{Marginal densities for kappa}
-\item{marginals.log.kappa}{Marginal densities for log(kappa)}
-\item{marginals.log.tau}{Marginal densities for log(tau)}
-\item{marginals.tau}{Marginal densities for tau}
-\item{marginals.values}{Marginal densities for the field values}
-\item{summary.log.kappa}{Summary statistics for log(kappa)}
-\item{summary.log.tau}{Summary statistics for log(tau)}
-\item{summary.values}{Summary statistics for the field values}
+\item{marginals.kappa}{Marginal densities for kappa.}
+\item{marginals.log.kappa}{Marginal densities for log(kappa).}
+\item{marginals.log.tau}{Marginal densities for log(tau).}
+\item{marginals.tau}{Marginal densities for tau.}
+\item{marginals.values}{Marginal densities for the field values.}
+\item{summary.log.kappa}{Summary statistics for log(kappa).}
+\item{summary.log.tau}{Summary statistics for log(tau).}
+\item{summary.values}{Summary statistics for the field values.}
 If \code{compute.summary} is \code{TRUE}, then the list will also contain
-\item{summary.kappa}{Summary statistics for kappa}
-\item{summary.tau}{Summary statistics for tau}
+\item{summary.kappa}{Summary statistics for kappa.}
+\item{summary.tau}{Summary statistics for tau.}
 }
 \description{
 Extract field and parameter values and distributions

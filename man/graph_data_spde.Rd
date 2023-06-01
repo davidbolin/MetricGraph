@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_data_spde}
 \alias{graph_data_spde}
-\title{Observation/prediction matrices for 'rSPDE' models.}
+\title{Data extraction for 'rSPDE' models}
 \usage{
 graph_data_spde(graph_spde, repl = NULL, only_pred = FALSE, loc = NULL)
 }
@@ -21,9 +21,8 @@ then one sets to \code{repl} to \verb{__all}.}
 'inlabru' prediction.}
 }
 \value{
-The observation matrix.
+An 'INLA' and 'inlabru' friendly list with the data.
 }
 \description{
-Constructs observation/prediction weight matrices
-for metric graph models.
+Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 }

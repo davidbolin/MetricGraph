@@ -2,7 +2,7 @@
 % Please edit documentation in R/spde_precision.R
 \name{spde_precision}
 \alias{spde_precision}
-\title{Computes the precision matrix for all vertices for a Whittle-Matérn field.}
+\title{Precision matrix for Whittle-Matérn fields}
 \usage{
 spde_precision(kappa, tau, alpha, graph, BC = 1, build = TRUE)
 }

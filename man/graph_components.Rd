@@ -2,7 +2,7 @@
 % Please edit documentation in R/metric_graph.R
 \name{graph_components}
 \alias{graph_components}
-\title{Connected components of metric graph.}
+\title{Connected components of metric graph}
 \value{
 Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 }

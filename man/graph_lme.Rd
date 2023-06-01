@@ -82,7 +82,7 @@ of the covariance function.}
 error.}
 
 \item{BC}{For \code{WhittleMatern} models, decides which boundary condition to use
-(0,1). Here, 0 is Neumann boundary conditions and 1 uses stationary boundary
+(0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
 conditions.}
 
 \item{parallel}{logical. Indicating whether to use \code{optimParallel()} or not.}

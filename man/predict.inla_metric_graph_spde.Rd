@@ -77,7 +77,7 @@ the inclusion list)}
 prediciton summary has the same number of rows as data, then the output is a
 SpatialDataFrame object. Default FALSE.}
 
-\item{...}{Additional arguments passed on to \code{inla.posterior.sample()}}
+\item{...}{Additional arguments passed on to \code{inla.posterior.sample()}.}
 }
 \value{
 A list with predictions.

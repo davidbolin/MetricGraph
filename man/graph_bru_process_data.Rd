@@ -3,7 +3,7 @@
 \name{graph_bru_process_data}
 \alias{graph_bru_process_data}
 \title{Prepare data frames or data lists to be used with 'inlabru' in metric
-graphs.}
+graphs}
 \usage{
 graph_bru_process_data(
   data,
@@ -30,5 +30,5 @@ manner by 'inlabru'.
 }
 \description{
 Prepare data frames or data lists to be used with 'inlabru' in metric
-graphs.
+graphs
 }

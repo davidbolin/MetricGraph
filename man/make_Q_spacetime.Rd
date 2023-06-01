@@ -2,7 +2,7 @@
 % Please edit documentation in R/space_time.R
 \name{make_Q_spacetime}
 \alias{make_Q_spacetime}
-\title{Space-time precision operator discretization.}
+\title{Space-time precision operator discretization}
 \usage{
 make_Q_spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma)
 }
