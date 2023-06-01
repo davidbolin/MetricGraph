@@ -33,7 +33,7 @@ make.G <- function(n,C,G) {
   return(Gk)
 }
 
-#' Space-time precision operator discretization.
+#' Space-time precision operator discretization
 #'
 #' The precision matrix for all vertices for space-time field.
 #'

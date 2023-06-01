@@ -568,7 +568,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 }
 
 
-#' Function factory for likelihood evaluation not using sparsity.
+#' Function factory for likelihood evaluation not using sparsity
 #' @param graph A `metric_graph` object.
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
 #' the model based on the graph Laplacian with smoothness 1, "GL2" gives the

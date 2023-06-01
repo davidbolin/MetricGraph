@@ -1,5 +1,5 @@
 #' Simulation of log-Gaussian Cox processes driven by Whittle-Matérn
-#' fields on metric graphs.
+#' fields on metric graphs
 #' @param intercept Mean value of the Gaussian process.
 #' @param sigma Parameter for marginal standard deviations.
 #' @param range Parameter for practical correlation range.

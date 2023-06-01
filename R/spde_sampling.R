@@ -1,4 +1,7 @@
-#' Samples a Whittle-Matérn field on a metric graph.
+#' Samples a Whittle-Matérn field on a metric graph
+#' 
+#' Obtains samples of a Whittle-Matérn field on a metric graph.
+#' 
 #' @details Samples a Gaussian Whittle-Matérn field on a metric graph, either
 #' from the prior or conditionally on observations
 #' \deqn{y_i = u(t_i) + \sigma_e e_i}{y_i = u(t_i) + \sigma_e e_i}

@@ -2820,7 +2820,7 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 
 ))
 
-#' @title Connected components of metric graph.
+#' @title Connected components of metric graph
 #' @description Class representing connected components of a metric graph.
 #' @details A list of `metric_graph` objects (representing the different
 #' connected components in the full graph) created from vertex and edge matrices,

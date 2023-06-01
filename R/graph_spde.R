@@ -1,5 +1,5 @@
 
-#' 'INLA' implementation of Whittle-Matérn fields for metric graphs.
+#' 'INLA' implementation of Whittle-Matérn fields for metric graphs
 #'
 #' This function creates an 'INLA' object that can be used
 #' in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.
@@ -309,7 +309,7 @@ graph_spde_make_index <- function (name,
 }
 
 
-#' Observation/prediction matrices for 'rSPDE' models.
+#' Observation/prediction matrices for 'rSPDE' models
 #'
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
@@ -326,7 +326,7 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 }
 
 
-#' Observation/prediction matrices for 'rSPDE' models.
+#' Data extraction for 'rSPDE' models
 #'
 #' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 #'
@@ -367,7 +367,7 @@ graph_data_spde <- function (graph_spde, repl = NULL,
   return(ret)
 }
 
-#' Extraction of vector of replicates for 'inlabru'.
+#' Extraction of vector of replicates for 'inlabru'
 #'
 #' Extracts the vector of replicates from an 'rSPDE'
 #' model object for 'inlabru'
@@ -397,7 +397,7 @@ graph_repl_spde <- function (graph_spde, repl = NULL){
 
 
 #' @name spde_metric_graph_result
-#' @title Metric graph SPDE result extraction from 'INLA' estimation results.
+#' @title Metric graph SPDE result extraction from 'INLA' estimation results
 #' @description Extract field and parameter values and distributions
 #' for a metric graph spde effect from an 'INLA' result object.
 #' @param inla An 'INLA' object obtained from a call to `inla()`.
@@ -1032,7 +1032,7 @@ predict.inla_metric_graph_spde <- function(object,
 
 
 #' @name plot.graph_bru_pred
-#' @title Plot of predicted values with 'inlabru'.
+#' @title Plot of predicted values with 'inlabru'
 #' @description Auxiliary function to obtain plots of the predictions of the field
 #' using 'inlabru'.
 #' @param x A predicted object obtained with the `predict` method.
@@ -1151,7 +1151,7 @@ predict.rspde_metric_graph <- function(object,
 
 #' @name graph_bru_process_data
 #' @title Prepare data frames or data lists to be used with 'inlabru' in metric
-#' graphs.
+#' graphs
 #' @param data A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction.
 #' @param loc character. Name of the locations to be used in 'inlabru' component.

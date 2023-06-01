@@ -699,7 +699,7 @@ graph_lme <- function(formula, graph,
 }
 
 #' @name logLik.graph_lme
-#' @title Log-likelihood for \code{graph_lme} objects.
+#' @title Log-likelihood for \code{graph_lme} objects
 #' @description computes the log-likelihood for a fitted mixed effects model on
 #' metric graphs.
 #' @param x Object of class `graph_lme` containing results from the fitted model.
@@ -763,7 +763,7 @@ print.graph_lme <- function(x, ...) {
 
 
 #' @name summary.graph_lme
-#' @title Summary Method for \code{graph_lme} Objects.
+#' @title Summary Method for \code{graph_lme} Objects
 #' @description Function providing a summary of results related to metric graph
 #' mixed effects regression models.
 #' @param object an object of class `graph_lme` containing results from the
@@ -858,7 +858,7 @@ summary.graph_lme <- function(object, all_times = FALSE, ...) {
 }
 
 #' @name print.summary_graph_lme
-#' @title Print method for \code{summary_graph_lme} objects.
+#' @title Print method for \code{summary_graph_lme} objects
 #' @description Provides a brief description of results related to metric graph
 #' mixed effects regression models.
 #' @param x object of class "summary_graph_lme" containing results of summary
@@ -956,7 +956,7 @@ print.summary_graph_lme <- function(x, ...) {
 
 
 #' @name predict.graph_lme
-#' @title Prediction for a mixed effects regression model on a metric graph.
+#' @title Prediction for a mixed effects regression model on a metric graph
 #' @param object The fitted object with the `graph_lme()` function.
 #' @param data A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction.

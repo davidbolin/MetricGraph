@@ -1,4 +1,7 @@
+#' Covariance function for Whittle-Matérn fields
+#' 
 #' Computes the covariance function for a Whittle-Matérn field.
+#' 
 #' @param P Location (edge number and normalized location on the edge) for the
 #' location to evaluate the covariance function at.
 #' @param kappa Parameter kappa from the SPDE.
