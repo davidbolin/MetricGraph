@@ -46,18 +46,6 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha1.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha1_mesh.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha2.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/covariance_alpha2_mesh.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/exp_covariance.html</loc>
   </url>
   <url>
@@ -97,16 +85,7 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/likelihood_graph_covariance.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/logo_lines.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/make.Q.euler.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/make.Q.spacetime.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_euler.html</loc>
@@ -124,25 +103,7 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_pred.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/plot.spacetime.covariances.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/plot_spacetime_covariances.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation_covariance.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation_covariance_manual.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation_manual.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_mean_covariance.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/predict.graph_lme.html</loc>
@@ -157,9 +118,6 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/sample_spde.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/simulate.spacetime.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/simulate_spacetime.html</loc>
   </url>
   <url>
@@ -167,9 +125,6 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/spde_posterior_mean.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/spde_precision.html</loc>

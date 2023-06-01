@@ -1,4 +1,4 @@
-pandoc: 3.1.1
+pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
@@ -9,7 +9,7 @@ articles:
   metric_graph: metric_graph.html
   pointprocess: pointprocess.html
   random_fields: random_fields.html
-last_built: 2023-06-01T17:46Z
+last_built: 2023-06-01T18:40Z
 urls:
   reference: https://davidbolin.github.io/MetricGraph/reference
   article: https://davidbolin.github.io/MetricGraph/articles
