@@ -19,7 +19,6 @@ jobs:
             git config --local user.name "GitHub Actions"          
             git rm -rf vignettes
             git rm -rf pkgdown/
-            git rm index.md
             git rm -rf examples
             rm -rf vignettes
             mkdir vignettes
