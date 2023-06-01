@@ -214,17 +214,6 @@ print(data.frame(sigma = c(sigma, fit$matern_coeff$random_effects[2]),
 ```
 
 
-```{r}
-op_est <- matern.operators(parameterization = "spde", 
-                             m = rspde.order, graph = graph)
-
-fit2 <- rspde_lme(y ~ x1 + x2, data = df_data, loc = c("edge_number", "distance_on_edge"), model = op_est, parallel=TRUE) 
-
-summary(fit2)
-```
-
-
-
 ### Kriging
 Given that we have estimated the parameters, let us compute the kriging predictor 
 of the field given the observations at the mesh nodes. 
