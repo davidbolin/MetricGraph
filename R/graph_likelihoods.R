@@ -129,7 +129,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   obs.edges <- unique(PtE[, 1])
 
   loglik <- 0
-  det_R <- Matrix::determinant(R)$modulus[1]
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
   # n.o <- length(graph$data[[data_name]])
   # u_repl <- unique(graph$data[["__group"]])
   det_R_count <- NULL
@@ -300,7 +300,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         Qp <- Q + BtSB
         Qp <- Tc %*% Qp %*% t(Tc)
         R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
-        det_R_count <- Matrix::determinant(R_count)$modulus[1]
+        det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
       }
       loglik <- loglik - det_R_count
 
@@ -429,7 +429,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
                              dims = Q.list$dims)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
-  det_R <- Matrix::determinant(R)$modulus[1]
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
 
   #build BSIGMAB
   PtE <- graph$get_PtE()
@@ -552,7 +552,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         R_count <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
-        det_R_count <- Matrix::determinant(R_count)$modulus[1]
+        det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
     }
 
     loglik <- loglik - det_R_count

@@ -751,8 +751,10 @@ print.graph_lme <- function(x, ...) {
   cat(paste0("Random effects:", "\n"))
   if(!is.null(coeff_random)){
     print(coeff_random)
-    cat(paste0("\n", "Random effects (Matern parameterization):", "\n"))
-    print(x$matern_coeff$random_effects)
+    if(!is.null(x$matern_coeff$random_effects)){
+      cat(paste0("\n", "Random effects (Matern parameterization):", "\n"))
+      print(x$matern_coeff$random_effects)
+    }
   } else{
     message("No random effects")
   }
