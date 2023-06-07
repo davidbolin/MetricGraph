@@ -737,7 +737,7 @@ likelihood_graph_covariance <- function(graph,
           y_tmp <- y_graph[ind_tmp]
           na_obs <- is.na(y_tmp)
           Sigma_non_na <- Sigma[!na_obs, !na_obs]
-          R <- chol(Sigma_non_na)
+          R <- base::chol(Sigma_non_na)
           v <- y_graph[graph$data[["__group"]] == u_repl[repl_y]]
 
           if(!is.null(X_cov)){
@@ -842,7 +842,9 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       }
       Q <- Q / reciprocal_tau^2
 
-      R <- chol(Q)
+      # R <- chol(Q)
+
+      R <- Matrix::Cholesky(Q)
 
       v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
       na.obs <- is.na(v)
@@ -850,8 +852,10 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       v <- v[!na.obs]
       n.o <- length(v)
       Q.p <- Q  + t(A.repl) %*% A.repl/sigma_e^2
-      R.p <- chol(Q.p)
-      l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      # R.p <- chol(Q.p)
+      R.p <- Matrix::Cholesky(Q.p)
+      # l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      l <- l + determinant(R, logarithm = TRUE, sqrt = TRUE)$modulus - determinant(R.p, logarithm = TRUE, sqrt=TRUE)$modulus - n.o * log(sigma_e)
 
 
       if(!is.null(X_cov)){
@@ -865,7 +869,8 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           }
       }
 
-      mu.p <- solve(Q.p,as.vector(t(A.repl) %*% v / sigma_e^2))
+      # mu.p <- solve(Q.p,as.vector(t(A.repl) %*% v / sigma_e^2))
+      mu.p <- solve(R.p, as.vector(t(A.repl) %*% v / sigma_e^2), system = "A")
       v <- v - A.repl%*%mu.p
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }

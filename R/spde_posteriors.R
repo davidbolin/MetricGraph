@@ -305,7 +305,7 @@ posterior_mean_alpha1 <- function(theta, graph, resp,
     Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
     Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-    R <- chol(Sigma_i)
+    R <- base::chol(Sigma_i)
     Sigma_iB <- solve(Sigma_i, t(Bt))
     BtSinvB <- Bt %*% Sigma_iB
 
@@ -404,10 +404,10 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
       S[Obs.ind, E.ind, drop = FALSE] %*% Bt
     diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
-    R <- chol(Sigma_i, pivot=T)
+    R <- base::chol(Sigma_i, pivot=T)
     Sigma_iB <- t(Bt)
-    Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R,
-                                               backsolve(R,
+    Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
+                                               base::backsolve(R,
                                                          t(Bt[,attr(R,"pivot")]),
                                                          transpose = TRUE),
                                                upper.tri = TRUE)
