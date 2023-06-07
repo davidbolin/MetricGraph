@@ -198,14 +198,19 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
         diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
-        R <- chol(Sigma_i, pivot = TRUE)
+        R <- base::chol(Sigma_i, pivot = TRUE)
         if(attr(R, "rank") < dim(R)[1])
           return(-Inf)
 
         Sigma_iB <- t(Bt)
-        Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R,
-                                            backsolve(R, t(Bt[, attr(R,"pivot")]),
+        Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
+                                            base::backsolve(R, t(Bt[, attr(R,"pivot")]),
                                             transpose = TRUE), upper.tri = TRUE)
+
+
+        # R <- Matrix::Cholesky(Sigma_i)
+        # Sigma_iB <- solve(R, t(Bt), system = "A")
+
         BtSinvB <- Bt %*% Sigma_iB
 
         E <- graph$E[e, ]
@@ -288,6 +293,8 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         loglik <- loglik - 0.5  * t(y_i)%*%solve(Sigma_i, y_i)
         loglik <- loglik - sum(log(diag(R)))
+        # loglik <- loglik - 0.5 * c(determinant(R, logarithm = TRUE)$modulus)
+        
       }
       if(is.null(det_R_count)){
         i_ <- i_[1:count]
@@ -352,7 +359,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   }
 
   # R <- chol(Q)
-  R <- Matrix::chol(Q)
+  # R <- Matrix::chol(Q)
+
+  R <- Matrix::Cholesky(Q)
 
   l <- 0
 
@@ -370,9 +379,12 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
       y_ <- y_tmp[!na_obs]
       n.o <- length(y_)
       Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
-      R.p <- Matrix::chol(Q.p)
+      # R.p <- Matrix::chol(Q.p)
+      R.p <- Matrix::Cholesky(Q.p)
 
-      l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      # l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+
+      l <- l + determinant(R, logarithm = TRUE, sqrt = TRUE)$modulus - determinant(R.p, logarithm = TRUE, sqrt = TRUE)$modulus - n.o * log(sigma_e)
 
       v <- y_
 
@@ -381,7 +393,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
         v <- v - X_cov_tmp %*% theta[4:(3+ncol(X_cov))]
       }
 
-      mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
+      # mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
+
+      mu.p <- solve(R.p, as.vector(t(A[!na_obs,]) %*% v / sigma_e^2), system = "A")
 
       v <- v - A[!na_obs,]%*%mu.p
 
@@ -515,7 +529,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-      R <- chol(Sigma_i)
+      R <- base::chol(Sigma_i)
       Sigma_iB <- solve(Sigma_i, t(Bt))
       BtSinvB <- Bt %*% Sigma_iB
 
