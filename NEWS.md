@@ -1,5 +1,6 @@
-# MetricGraph (development version)
+# MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.
+
 # MetricGraph 1.1.1
 * Adjusts on documentation for CRAN.
 
