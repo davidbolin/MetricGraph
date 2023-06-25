@@ -11,16 +11,16 @@ references:
 - id: xiong22
   title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
   author:
-  - family: Xiong
-    given: Zhen
+  - family: Bolin
+    given: David  
   - family: Simas
     given: Alexandre B.
-  - family: Bolin
-    given: David
-  container-title: arXiv:2209.04670
-  type: preprint
+  - family: Xiong
+    given: Zhen
+  container-title: Journal of Computational and Graphical Statistics
+  type: article
   issued:
-    year: 2022
+    year: 2023
 - id: graph_fem
   title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
   author:

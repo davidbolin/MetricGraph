@@ -17,10 +17,10 @@ references:
     given: Alexandre B.
   - family: Bolin
     given: David
-  container-title: arXiv:2209.04670
-  type: preprint
+  container-title: Bernoulli
+  type: article
   issued:
-  year: 2022
+  year: 2023
 - id: graph_fem
   title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
   author:

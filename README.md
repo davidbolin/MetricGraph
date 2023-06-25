@@ -30,7 +30,7 @@ remotes::install_github("davidbolin/metricgraph", ref = "devel")
 ```
 
 # References #
-D. Bolin, A. Simas, J. Wallin (2022) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. ArXiv:2205.06163
+D. Bolin, A. Simas, J. Wallin (2023) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. Bernoulli. In press.
 
 D. Bolin, M. Kovács, V. Kumar, A. Simas (2023) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. ArXiv:2302.03995
 

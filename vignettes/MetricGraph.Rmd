@@ -19,10 +19,10 @@ references:
     given: Alexandre B.
   - family: Wallin
     given: Jonas
-  container-title: arXiv:2205.06163
-  type: preprint
+  container-title: Bernoulli
+  type: article
   issued:
-    year: 2022
+    year: 2023
 - id: BSW2022b
   title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
   author:
