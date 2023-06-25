@@ -119,8 +119,8 @@ graphs, adding data to them, visualization, and other basic functions
 that are needed for working with data and random fields on metric
 graphs. The package also implements three types of Gaussian processes on
 metric graphs: The Whittle–Matérn fields introduced by <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin,
-Simas, and Wallin (2022)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
-Simas, and Wallin (2023)</span></a>, Gaussian processes with isotropic
+Simas, and Wallin (2023a)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
+Simas, and Wallin (2023b)</span></a>, Gaussian processes with isotropic
 covariance functions <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>, and
 Gaussian models based on the graph Laplacian <a href="http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf" class="external-link"><span class="citation">Borovitskiy et al. (2021)</span></a>.</p>
 <p>Basic statistical tasks such as likelihood evaluation and prediction
@@ -522,7 +522,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 20</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  1.00564 mins</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  37.76991 secs</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -599,7 +599,7 @@ two, we recommend using the Whittle–Matérn model since it has Markov
 properties which makes inference much faster. Further, that covariance
 is well-defined for any compact metric graph, whereas the isotropic
 exponential is only guaranteed to be positive definite if the graph has
-Euclidean edges. See <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin, Simas, and Wallin (2023)</span></a> for further
+Euclidean edges. See <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin, Simas, and Wallin (2023b)</span></a> for further
 comparisons.</p>
 <p>However, let us now illustrate how to use it for the data that we
 generated above. To work with the covariance function, the only
@@ -647,7 +647,7 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## Number of function calls by 'optim' = 28</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  43.9417 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  37.47258 secs</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -741,7 +741,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 18</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  6.0572 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  4.11032 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -830,7 +830,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 31</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  9.9813 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  6.82208 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -910,8 +910,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.916840 0.0999880   1.732850 1.914330    2.12284 1.928570</span></span>
-<span><span class="co">## range 0.168491 0.0245042   0.125787 0.166603    0.22187 0.162634</span></span></code></pre>
+<span><span class="co">## sigma 1.913400 0.0997583    1.72960 1.910970   2.118700 1.927440</span></span>
+<span><span class="co">## range 0.168444 0.0244669    0.12565 0.166627   0.221543 0.162949</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -931,8 +931,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.9168398 1.9285680</span></span>
-<span><span class="co">## 2     range  0.2 0.1684912 0.1626343</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.9133978 1.9274447</span></span>
+<span><span class="co">## 2     range  0.2 0.1684439 0.1629491</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
@@ -1015,12 +1015,12 @@ Bivand, Roger S., Edzer Pebesma, and Virgilio Gomez-Rubio. 2013.
 <em>Applied Spatial Data Analysis with R</em>. Springer, NY.
 </div>
 <div id="ref-BSW2022a" class="csl-entry">
-Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2022.
+Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023a.
 <span>“Gaussian Whittle–Matérn Fields on Metric Graphs.”</span>
-<em>arXiv:2205.06163</em>.
+<em>Bernoulli</em>.
 </div>
 <div id="ref-BSW2022b" class="csl-entry">
-———. 2023. <span>“Statistical Properties of Gaussian Whittle–Matérn
+———. 2023b. <span>“Statistical Properties of Gaussian Whittle–Matérn
 Fields on Metric Graphs.”</span> <em>arXiv:2304.10372</em>.
 </div>
 <div id="ref-Borovitskiy2021" class="csl-entry">

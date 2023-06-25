@@ -110,8 +110,8 @@ Alexandre B. Simas, and Jonas Wallin</h4>
 </h2>
 <p>In this vignette we will present our <code>R-INLA</code> interface to
 Whittle–Matérn fields. The underlying theory for this approach is
-provided in <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin, Simas, and Wallin (2022)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
-Simas, and Wallin (2023)</span></a>.</p>
+provided in <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin, Simas, and Wallin (2023a)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
+Simas, and Wallin (2023b)</span></a>.</p>
 <p>For an introduction to the <code>metric_graph</code> class, please
 see the <a href="metric_graph.html">Working with metric graphs</a>
 vignette.</p>
@@ -247,9 +247,9 @@ and should be supplied to the stack by using the
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## sigma 2.027330 0.2009530  1.6642700 2.015030   2.456070 1.98477</span></span>
-<span><span class="co">## range 0.146785 0.0334587  0.0943202 0.142123   0.225019 0.13243</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 2.026350 0.2009210  1.6625900 2.014390   2.454830 1.987230</span></span>
+<span><span class="co">## range 0.146759 0.0333899  0.0941218 0.142214   0.224581 0.132839</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -267,8 +267,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 2.0273335 1.9847682</span></span>
-<span><span class="co">## 2     range 0.15 0.1467846 0.1324304</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 2.0263510 1.9872349</span></span>
+<span><span class="co">## 2     range 0.15 0.1467594 0.1328389</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
@@ -459,9 +459,9 @@ function.</p>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.36346 0.0619210   1.248200 1.361680   1.489460 1.342140</span></span>
-<span><span class="co">## range 0.15372 0.0154831   0.126133 0.152684   0.186837 0.150422</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.363200 0.0618882   1.247940 1.361450    1.48877 1.342720</span></span>
+<span><span class="co">## range 0.153724 0.0154790   0.126091 0.152739    0.18679 0.150558</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -478,8 +478,8 @@ function.</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.3634564 1.3421440</span></span>
-<span><span class="co">## 2     range  0.2 0.1537203 0.1504216</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.3631978 1.3427158</span></span>
+<span><span class="co">## 2     range  0.2 0.1537238 0.1505585</span></span></code></pre>
 <p>Now, let us consider the case with all replicates. We create a new
 index object by using the <code><a href="../reference/graph_spde_make_index.html">graph_spde_make_index()</a></code> function
 with the argument <code>n.repl</code> set to the total number of
@@ -523,8 +523,8 @@ function <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean         sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.479500 0.03033480   1.421790 1.478560   1.539580 1.471690</span></span>
-<span><span class="co">## range 0.186062 0.00852288   0.169929 0.185836   0.203413 0.185369</span></span></code></pre>
+<span><span class="co">## sigma 1.479690 0.03014200   1.422040 1.479160   1.540620 1.480530</span></span>
+<span><span class="co">## range 0.186096 0.00852159   0.170095 0.185814   0.203596 0.185179</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -541,16 +541,16 @@ function <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.4794972 1.4716905</span></span>
-<span><span class="co">## 2     range  0.2 0.1860624 0.1853688</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.4796930 1.4805296</span></span>
+<span><span class="co">## 2     range  0.2 0.1860962 0.1851794</span></span></code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-BSW2022a" class="csl-entry">
-Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2022.
+Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023a.
 <span>“Gaussian Whittle–Matérn Fields on Metric Graphs.”</span>
-<em>arXiv:2205.06163</em>.
+<em>Bernoulli</em>.
 </div>
 <div id="ref-BSW2022b" class="csl-entry">
-———. 2023. <span>“Statistical Properties of Gaussian Whittle–Matérn
+———. 2023b. <span>“Statistical Properties of Gaussian Whittle–Matérn
 Fields on Metric Graphs.”</span> <em>arXiv:2304.10372</em>.
 </div>
 </div>
