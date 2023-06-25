@@ -1,3 +1,5 @@
+# MetricGraph 1.1.2
+
 # MetricGraph 1.1.1
 * Adjusts on documentation for CRAN.
 
