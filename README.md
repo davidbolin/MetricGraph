@@ -1,5 +1,6 @@
 # MetricGraph <a href="https://davidbolin.github.io/MetricGraph/"><img src="/man/figures/logo.png" align="right" height="138" /></a>
 
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version-last-release/MetricGraph)](https://cran.r-project.org/package=MetricGraph)
 [![R-CMD-check](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml)
 [![R-CMD-check-windows](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml)
 
@@ -12,6 +13,13 @@ Basic statistical tasks such as likelihood evaluation and prediction is implemen
 We refer to the [package homepage][ref7] for detailed tutorials on all different aspects of the package.
 
 # Installation instructions #
+The latest CRAN release of the package can be installed directly from CRAN with `install.packages("MetricGraph")`.
+
+It is also possible to install the CRAN version from github by using the command:
+```r
+remotes::install_github("davidbolin/metricgraph", ref = "cran")
+```
+
 The latest stable version can be installed by using the command
 ```r
 remotes::install_github("davidbolin/metricgraph", ref = "stable")

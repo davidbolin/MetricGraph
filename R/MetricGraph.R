@@ -43,6 +43,7 @@
 #' @importFrom igraph E E<-
 #' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
+#' @importFrom R6 R6Class
 #' @importFrom graphics layout
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

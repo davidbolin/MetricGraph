@@ -467,6 +467,15 @@ graph_lme <- function(formula, graph,
 
       time_par <- NULL
 
+      likelihood_new <- function(theta){
+        l_tmp <- tryCatch(likelihood(theta), 
+                            error = function(e){return(NULL)})
+          if(is.null(l_tmp)){
+              return(-10^100)
+          }
+          return(l_tmp)
+        }
+
       if(parallel){
         start_par <- Sys.time()
         cl <- parallel::makeCluster(n_cores)
@@ -493,7 +502,7 @@ graph_lme <- function(formula, graph,
 
           start_fit <- Sys.time()
           res <- optimParallel::optimParallel(start_values,
-                        likelihood, method = optim_method,
+                        likelihood_new, method = optim_method,
                         control = optim_controls,
                         hessian = hessian,
                         parallel = list(forward = FALSE, cl = cl,
@@ -502,13 +511,38 @@ graph_lme <- function(formula, graph,
         time_fit <- end_fit-start_fit
         parallel::stopCluster(cl)
       } else{
+        possible_methods <- c("CG", "BFGS", "L-BFGS-B", "Nelder-Mead")
         start_fit <- Sys.time()
-            res <- optim(start_values,
-                        likelihood, method = optim_method,
+            res <- tryCatch(optim(start_values,
+                        likelihood_new, method = optim_method,
                         control = optim_controls,
-                        hessian = hessian)
+                        hessian = hessian), error = function(e){return(NA)})
         end_fit <- Sys.time()
         time_fit <- end_fit-start_fit
+
+         if(is.na(res[1])){
+              tmp_method <- optim_method
+              while(length(possible_methods)>1){
+                possible_methods <- setdiff(possible_methods, tmp_method)
+                new_method <- possible_methods[1]
+                warning(paste("optim method",tmp_method,"failed. Another optimization method was used."))
+                start_fit <- Sys.time()
+                  res <- tryCatch(optim(start_values, 
+                            likelihood_new, method = new_method,
+                            control = optim_controls,
+                            hessian = hessian), error = function(e){return(NA)})
+                end_fit <- Sys.time()
+                time_fit <- end_fit-start_fit
+                tmp_method <- new_method
+                if(!is.na(res[1])){
+                  optim_method <- new_method
+                  break
+                }
+              }
+              if(length(possible_methods) == 1){
+                stop("All optimization methods failed.")
+              }
+          }
       }
 
 
@@ -751,8 +785,10 @@ print.graph_lme <- function(x, ...) {
   cat(paste0("Random effects:", "\n"))
   if(!is.null(coeff_random)){
     print(coeff_random)
-    cat(paste0("\n", "Random effects (Matern parameterization):", "\n"))
-    print(x$matern_coeff$random_effects)
+    if(!is.null(x$matern_coeff$random_effects)){
+      cat(paste0("\n", "Random effects (Matern parameterization):", "\n"))
+      print(x$matern_coeff$random_effects)
+    }
   } else{
     message("No random effects")
   }

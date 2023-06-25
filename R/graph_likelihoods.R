@@ -129,7 +129,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   obs.edges <- unique(PtE[, 1])
 
   loglik <- 0
-  det_R <- Matrix::determinant(R)$modulus[1]
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
   # n.o <- length(graph$data[[data_name]])
   # u_repl <- unique(graph$data[["__group"]])
   det_R_count <- NULL
@@ -198,14 +198,19 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
         diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
-        R <- chol(Sigma_i, pivot = TRUE)
+        R <- base::chol(Sigma_i, pivot = TRUE)
         if(attr(R, "rank") < dim(R)[1])
           return(-Inf)
 
         Sigma_iB <- t(Bt)
-        Sigma_iB[attr(R,"pivot"),] <- forwardsolve(R,
-                                            backsolve(R, t(Bt[, attr(R,"pivot")]),
+        Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
+                                            base::backsolve(R, t(Bt[, attr(R,"pivot")]),
                                             transpose = TRUE), upper.tri = TRUE)
+
+
+        # R <- Matrix::Cholesky(Sigma_i)
+        # Sigma_iB <- solve(R, t(Bt), system = "A")
+
         BtSinvB <- Bt %*% Sigma_iB
 
         E <- graph$E[e, ]
@@ -288,6 +293,8 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         loglik <- loglik - 0.5  * t(y_i)%*%solve(Sigma_i, y_i)
         loglik <- loglik - sum(log(diag(R)))
+        # loglik <- loglik - 0.5 * c(determinant(R, logarithm = TRUE)$modulus)
+        
       }
       if(is.null(det_R_count)){
         i_ <- i_[1:count]
@@ -300,7 +307,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         Qp <- Q + BtSB
         Qp <- Tc %*% Qp %*% t(Tc)
         R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
-        det_R_count <- Matrix::determinant(R_count)$modulus[1]
+        det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
       }
       loglik <- loglik - det_R_count
 
@@ -352,7 +359,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   }
 
   # R <- chol(Q)
-  R <- Matrix::chol(Q)
+  # R <- Matrix::chol(Q)
+
+  R <- Matrix::Cholesky(Q)
 
   l <- 0
 
@@ -370,9 +379,12 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
       y_ <- y_tmp[!na_obs]
       n.o <- length(y_)
       Q.p <- Q  + t(A[!na_obs,]) %*% A[!na_obs,]/sigma_e^2
-      R.p <- Matrix::chol(Q.p)
+      # R.p <- Matrix::chol(Q.p)
+      R.p <- Matrix::Cholesky(Q.p)
 
-      l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      # l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+
+      l <- l + determinant(R, logarithm = TRUE, sqrt = TRUE)$modulus - determinant(R.p, logarithm = TRUE, sqrt = TRUE)$modulus - n.o * log(sigma_e)
 
       v <- y_
 
@@ -381,7 +393,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
         v <- v - X_cov_tmp %*% theta[4:(3+ncol(X_cov))]
       }
 
-      mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
+      # mu.p <- solve(Q.p,as.vector(t(A[!na_obs,]) %*% v / sigma_e^2))
+
+      mu.p <- solve(R.p, as.vector(t(A[!na_obs,]) %*% v / sigma_e^2), system = "A")
 
       v <- v - A[!na_obs,]%*%mu.p
 
@@ -429,7 +443,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
                              dims = Q.list$dims)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
-  det_R <- Matrix::determinant(R)$modulus[1]
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
 
   #build BSIGMAB
   PtE <- graph$get_PtE()
@@ -515,7 +529,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-      R <- chol(Sigma_i)
+      R <- base::chol(Sigma_i)
       Sigma_iB <- solve(Sigma_i, t(Bt))
       BtSinvB <- Bt %*% Sigma_iB
 
@@ -552,7 +566,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         R_count <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
-        det_R_count <- Matrix::determinant(R_count)$modulus[1]
+        det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
     }
 
     loglik <- loglik - det_R_count
@@ -723,7 +737,7 @@ likelihood_graph_covariance <- function(graph,
           y_tmp <- y_graph[ind_tmp]
           na_obs <- is.na(y_tmp)
           Sigma_non_na <- Sigma[!na_obs, !na_obs]
-          R <- chol(Sigma_non_na)
+          R <- base::chol(Sigma_non_na)
           v <- y_graph[graph$data[["__group"]] == u_repl[repl_y]]
 
           if(!is.null(X_cov)){
@@ -828,7 +842,9 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       }
       Q <- Q / reciprocal_tau^2
 
-      R <- chol(Q)
+      # R <- chol(Q)
+
+      R <- Matrix::Cholesky(Q)
 
       v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
       na.obs <- is.na(v)
@@ -836,8 +852,10 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       v <- v[!na.obs]
       n.o <- length(v)
       Q.p <- Q  + t(A.repl) %*% A.repl/sigma_e^2
-      R.p <- chol(Q.p)
-      l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      # R.p <- chol(Q.p)
+      R.p <- Matrix::Cholesky(Q.p)
+      # l <- l + sum(log(diag(R))) - sum(log(diag(R.p))) - n.o*log(sigma_e)
+      l <- l + determinant(R, logarithm = TRUE, sqrt = TRUE)$modulus - determinant(R.p, logarithm = TRUE, sqrt=TRUE)$modulus - n.o * log(sigma_e)
 
 
       if(!is.null(X_cov)){
@@ -851,7 +869,8 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           }
       }
 
-      mu.p <- solve(Q.p,as.vector(t(A.repl) %*% v / sigma_e^2))
+      # mu.p <- solve(Q.p,as.vector(t(A.repl) %*% v / sigma_e^2))
+      mu.p <- solve(R.p, as.vector(t(A.repl) %*% v / sigma_e^2), system = "A")
       v <- v - A.repl%*%mu.p
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }
