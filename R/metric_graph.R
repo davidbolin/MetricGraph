@@ -1132,7 +1132,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @details The function builds: The matrix `C` which is the mass matrix with
   #' elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix `G` which is the stiffness
   #' matrix with elements \eqn{G_{ij} = <d\phi_i, d\phi_j>}, the matrix `B` with
-  #' elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, and the vector with weights
+  #' elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, the matrix `D` with elements
+  #' \eqn{D_{ij} = \sum_{v\in V}\phi_i(v)\phi_j(v)}, and the vector with weights
   #' \eqn{<\phi_i, 1>}.
   #' @return No return value. Called for its side effects. The finite element
   #' matrices `C`, `G` and `B` are stored in the `mesh` element in the
@@ -1146,6 +1147,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$mesh$C <- fem_temp$C
     self$mesh$G <- fem_temp$G
     self$mesh$B <- fem_temp$B
+    self$mesh$D <- Diagonal(dim(self$mesh$C)[1],
+                            c(rep(1, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
 
     self$mesh$weights <- rowSums(self$mesh$C)
   },
@@ -2308,68 +2311,76 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(v2 > ind) {
         v2 <- v2 - 1
       }
-
+      loc.rem <- self$V[ind,]
       e_remidx <- which(self$LtE[,e_rem[2]] == 1)
 
       if(e_remidx == e_rem[2]){
-                line_keep1 <- line_keep2 <- NULL
-                if(e_rem[1]>1) {
-                  line_keep1 <- self$lines[1:(e_rem[1]-1)]
-                }
+        line_keep1 <- line_keep2 <- NULL
+        if(e_rem[1]>1) {
+          line_keep1 <- self$lines[1:(e_rem[1]-1)]
+        }
 
-                line_keep2 <- self$lines[setdiff((e_rem[1]+1):length(self$lines),e_rem[2])]
+        line_keep2 <- self$lines[setdiff((e_rem[1]+1):length(self$lines),e_rem[2])]
 
-                line_merge <- list()
-                coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords
-                tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords
-                diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
-                diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
-                diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
-                diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
-                diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
-                if(which.min(diffs) == 1) {
-                  coords <- rbind(coords[rev(1:dim(coords)[1]),], tmp)
-                  E_new <- matrix(c(v2,v1),1,2)
-                } else if(which.min(diffs)==2){
-                  coords <- rbind(tmp,coords)
-                  E_new <- matrix(c(v2,v1),1,2)
-                } else if(which.min(diffs)==3) {
-                  coords <- rbind(coords, tmp)
-                  E_new <- matrix(c(v1,v2),1,2)
-                } else {
-                  coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
-                  E_new <- matrix(c(v1,v2),1,2)
-                }
-                line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
+        line_merge <- list()
+        coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords #line from v1 to v.rem
+        tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords #line from v.rem to v2
+        diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
+        diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
+        diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
+        diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
+        diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
 
-                if(!is.null(line_keep1) && !is.null(line_keep2)) {
-                  line_new <- SpatialLines(c(line_keep1@lines, line_merge, line_keep2@lines))
-                } else if (is.null(line_keep1)) {
-                  line_new <- SpatialLines(c(line_merge, line_keep2@lines))
-                } else if (is.null(line_keep2)) {
-                  line_new <- SpatialLines(c(line_keep1@lines, line_merge))
-                } else {
-                  line_new <- SpatialLines(c(line_merge))
-                }
-                for(i in 1:length(line_new)) {
-                  slot(line_new@lines[[i]],"ID") <- sprintf("%d",i)
-                }
+        if(which.min(diffs) == 1) {
+          if(norm(as.matrix(coords[dim(coords)[1],]-loc.rem)) <
+             norm(as.matrix(coords[1,]-loc.rem))) {
+            #vertex removed is at the end of the segment
+            coords <- rbind(tmp, coords[rev(1:dim(coords)[1]),])
+            E_new <- matrix(c(v1,v2),1,2)
+          } else {
+            coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+            E_new <- matrix(c(v2,v1),1,2)
+          }
+        } else if(which.min(diffs)==2){
+          coords <- rbind(tmp,coords)
+          E_new <- matrix(c(v2,v1),1,2)
+        } else if(which.min(diffs)==3) {
+          coords <- rbind(coords, tmp)
+          E_new <- matrix(c(v1,v2),1,2)
+        } else {
+          coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+          E_new <- matrix(c(v1,v2),1,2)
+        }
+        line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
 
-                #update lines
-                self$lines <- line_new
-                self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
-                self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+        if(!is.null(line_keep1) && !is.null(line_keep2)) {
+          line_new <- SpatialLines(c(line_keep1@lines, line_merge, line_keep2@lines))
+        } else if (is.null(line_keep1)) {
+          line_new <- SpatialLines(c(line_merge, line_keep2@lines))
+        } else if (is.null(line_keep2)) {
+          line_new <- SpatialLines(c(line_keep1@lines, line_merge))
+        } else {
+          line_new <- SpatialLines(c(line_merge))
+        }
+        for(i in 1:length(line_new)) {
+          slot(line_new@lines[[i]],"ID") <- sprintf("%d",i)
+        }
+
+        #update lines
+        self$lines <- line_new
+        self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
+        self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
       } else{
-                E_new1 <- self$E[e1,1]
-                E_new2 <- self$E[e2,2]
-                if(E_new1 > ind){
-                  E_new1 <- E_new1 - 1
-                }
-                if(E_new2 > ind){
-                  E_new2 <- E_new2 -1
-                }
-                E_new <- matrix(c(E_new1, E_new2),1,2)
-                self$LtE <- self$LtE[,-e_rem[2]]
+        E_new1 <- self$E[e1,1]
+        E_new2 <- self$E[e2,2]
+        if(E_new1 > ind){
+          E_new1 <- E_new1 - 1
+        }
+        if(E_new2 > ind){
+          E_new2 <- E_new2 -1
+        }
+        E_new <- matrix(c(E_new1, E_new2),1,2)
+        self$LtE <- self$LtE[,-e_rem[2]]
       }
 
       #update vertices
