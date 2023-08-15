@@ -1174,11 +1174,11 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     x <- private$PtE_to_mesh(PtE)
     n <- dim(x)[1]
-    A <- Matrix(0, nrow = n, ncol = dim(self$mesh$V)[1])
-    for (i in 1:n) {
-      A[i, self$mesh$E[x[i, 1], 1]] = 1 - x[i, 2]
-      A[i, self$mesh$E[x[i, 1], 2]] = x[i, 2]
-    }
+
+    A <- sparseMatrix(i = c(1:n, 1:n),
+                      j = c(self$mesh$E[x[, 1], 1], self$mesh$E[x[, 1], 2]),
+                      x = c(1 - x[, 2], x[, 2]),
+                      dims = c(n, dim(self$mesh$V)[1]))
     return(A)
   },
 
