@@ -464,19 +464,19 @@ illustrate:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
-<span><span class="co">## (Intercept)  -1.2691     0.0776  -16.36   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon           1.0871     0.0787   13.81   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat           1.8779     0.0787   23.86   &lt;2e-16 ***</span></span></code></pre>
+<span><span class="co">## (Intercept) -1.26962    0.07760  -16.36   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          1.08794    0.07871   13.82   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          1.87821    0.07871   23.86   &lt;2e-16 ***</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## No random effects.</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">## std. dev </span></span>
-<span><span class="co">## 1.735098 </span></span>
+<span><span class="co">## 1.735248 </span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -983.4967</span></span></code></pre>
+<span><span class="co">## Log-Likelihood:  -983.5398</span></span></code></pre>
 <p>Let us now fit the linear mixed-effects model with a Whittle-Mat'ern
 latent model with <span class="math inline">\(\alpha=1\)</span>. To this
 end, we can either specify the <code>model</code> argument as
@@ -498,31 +498,31 @@ the simplified form:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.2146    0.1299  -9.353  &lt; 2e-16 ***</span></span>
-<span><span class="co">## lon           1.0135    0.1265   8.012 1.13e-15 ***</span></span>
-<span><span class="co">## lat           2.0332    0.1341  15.158  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.2150    0.1299  -9.357  &lt; 2e-16 ***</span></span>
+<span><span class="co">## lon           1.0157    0.1265   8.029  9.8e-16 ***</span></span>
+<span><span class="co">## lat           2.0330    0.1341  15.158  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##        Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.112735  0.005218  21.603</span></span>
-<span><span class="co">## kappa 10.074812  1.466113   6.872</span></span>
+<span><span class="co">## tau    0.112738  0.005219  21.600</span></span>
+<span><span class="co">## kappa 10.074586  1.466103   6.872</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma  1.97609   0.10306  19.175</span></span>
-<span><span class="co">## range  0.19851   0.02793   7.108</span></span>
+<span><span class="co">## sigma  1.97606   0.10305  19.177</span></span>
+<span><span class="co">## range  0.19852   0.02793   7.109</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.03237   0.10602   0.305</span></span>
+<span><span class="co">## std. dev   0.0323    0.1063   0.304</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -818.7776 </span></span>
+<span><span class="co">## Log-Likelihood:  -818.8287 </span></span>
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  48.58885 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  1.25101 mins</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -533,9 +533,9 @@ the simplified form:</p>
 <span>                      range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">range</span>, <span class="va">range_est</span><span class="op">)</span>,</span>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Truth"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             sigma_e    sigma     range</span></span>
-<span><span class="co">## Truth    0.10000000 2.000000 0.2000000</span></span>
-<span><span class="co">## Estimate 0.03237202 1.976094 0.1985149</span></span></code></pre>
+<pre><code><span><span class="co">##            sigma_e    sigma     range</span></span>
+<span><span class="co">## Truth    0.1000000 2.000000 0.2000000</span></span>
+<span><span class="co">## Estimate 0.0323025 1.976058 0.1985193</span></span></code></pre>
 <p>Given these estimated parameters, we can now do kriging to estimate
 the field at locations in the graph. As an example, we now obtain
 predictions on the regular mesh that we previously constructed. First,
@@ -628,26 +628,26 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.0872    0.1963  -5.538 3.06e-08 ***</span></span>
-<span><span class="co">## lon           0.9707    0.1465   6.627 3.42e-11 ***</span></span>
-<span><span class="co">## lat           1.9920    0.1719  11.590  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.0874    0.1963  -5.539 3.03e-08 ***</span></span>
+<span><span class="co">## lon           0.9727    0.1465   6.641 3.11e-11 ***</span></span>
+<span><span class="co">## lat           1.9914    0.1719  11.586  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    1.80464   0.09554  18.888</span></span>
-<span><span class="co">## kappa 13.35839   2.02762   6.588</span></span>
+<span><span class="co">## tau    1.80473   0.09556  18.886</span></span>
+<span><span class="co">## kappa 13.35828   2.02807   6.587</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
-<span><span class="co">##           Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev 0.0004491 0.0874939   0.005</span></span>
+<span><span class="co">##          Estimate Std.error z-value</span></span>
+<span><span class="co">## std. dev 0.001182  0.086325   0.014</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -823.8847 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 54</span></span>
+<span><span class="co">## Log-Likelihood:  -823.9405 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 49</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  1.031 mins</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  1.14662 mins</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -717,31 +717,31 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.2790    0.1375  -9.303  &lt; 2e-16 ***</span></span>
-<span><span class="co">## lon           1.0488    0.1416   7.408 1.28e-13 ***</span></span>
-<span><span class="co">## lat           1.9465    0.1405  13.850  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.2796    0.1375  -9.308  &lt; 2e-16 ***</span></span>
+<span><span class="co">## lon           1.0517    0.1416   7.427 1.11e-13 ***</span></span>
+<span><span class="co">## lat           1.9464    0.1405  13.849  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau   0.110623  0.005486  20.163</span></span>
-<span><span class="co">## kappa 2.451735  0.315607   7.768</span></span>
+<span><span class="co">## tau   0.110628  0.005486  20.164</span></span>
+<span><span class="co">## kappa 2.451489  0.315573   7.768</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
 <span><span class="co">## sigma   4.0823    0.1755  23.264</span></span>
-<span><span class="co">## range   0.8157    0.1007   8.105</span></span>
+<span><span class="co">## range   0.8158    0.1007   8.104</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.01692   0.20380   0.083</span></span>
+<span><span class="co">## std. dev  0.01689   0.20410   0.083</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -824.6858 </span></span>
+<span><span class="co">## Log-Likelihood:  -824.7427 </span></span>
 <span><span class="co">## Number of function calls by 'optim' = 29</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.93681 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  5.56696 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -806,31 +806,31 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept) -1.27267   0.09822  -12.96   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          1.01914   0.08331   12.23   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          1.88740   0.08462   22.30   &lt;2e-16 ***</span></span>
+<span><span class="co">## (Intercept) -1.27078   0.09814  -12.95   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          1.01820   0.08340   12.21   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          1.88600   0.08469   22.27   &lt;2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.08090   0.00541   14.96</span></span>
-<span><span class="co">## kappa  3.71702   0.51914    7.16</span></span>
+<span><span class="co">## tau   0.080755  0.005396  14.967</span></span>
+<span><span class="co">## kappa 3.731236  0.519610   7.181</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   4.5334    0.1516  29.911</span></span>
-<span><span class="co">## range   0.5381    0.0747   7.203</span></span>
+<span><span class="co">## sigma  4.53306   0.15134  29.952</span></span>
+<span><span class="co">## range  0.53602   0.07421   7.223</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
-<span><span class="co">##           Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev 0.0002828 0.0827539   0.003</span></span>
+<span><span class="co">##          Estimate Std.error z-value</span></span>
+<span><span class="co">## std. dev 0.000492  0.097764   0.005</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -946.0264 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 51</span></span>
+<span><span class="co">## Log-Likelihood:  -946.0181 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 48</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  10.73988 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  14.40107 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -910,8 +910,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.014080 0.1118990   1.808380 2.010620   2.241510 2.007030</span></span>
-<span><span class="co">## range 0.208911 0.0303314   0.156499 0.206383   0.275397 0.200881</span></span></code></pre>
+<span><span class="co">## sigma 2.011770 0.1107390   1.806460 2.008530   2.235170 2.017430</span></span>
+<span><span class="co">## range 0.208766 0.0302374   0.156323 0.206327   0.274856 0.201047</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -930,9 +930,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 2.0140847 2.0070342</span></span>
-<span><span class="co">## 2     range  0.2 0.2089107 0.2008809</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 2.0117739 2.017426</span></span>
+<span><span class="co">## 2     range  0.2 0.2087658 0.201047</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
