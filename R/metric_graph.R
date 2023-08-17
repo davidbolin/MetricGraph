@@ -1917,10 +1917,18 @@ metric_graph <-  R6::R6Class("metric_graph",
       } else {
         ind2 <- sort(sort(abs(VtE[ind, 2] - PtE[i, 2]),
                           index.return = TRUE)$ix[1:2])
-        v1 <- ind[ind2[1]]
-        v2 <- ind[ind2[2]]
-        d1 <- VtE[v1, 2]
-        d2 <- VtE[v2, 2]
+        if(length(ind2) == 2) {
+          v1 <- ind[ind2[1]]
+          v2 <- ind[ind2[2]]
+          d1 <- VtE[v1, 2]
+          d2 <- VtE[v2, 2]
+        } else {
+          v1 <- self$E[ei, 1]
+          ind2 <- which.min(VtE[ind, 2])
+          v2 <- ind[ind2]
+          d1 <- 0
+          d2 <- VtE[v2, 2]
+        }
       }
       #edge on mesh
       e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
