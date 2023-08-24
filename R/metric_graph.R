@@ -800,6 +800,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     if (!is.null(self$CoB)) {
       self$buildC(2)
     }
+
+    if (!is.null(self$mesh)) {
+      self$mesh <- NULL
+      warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
+    }
   },
 
   #' @description Returns a list or a matrix with the mesh locations.
