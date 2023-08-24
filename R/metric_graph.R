@@ -1771,6 +1771,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
     x <- y <- NULL
     if (!is.null(PtE)) {
+      if(is.vector(PtE)) {
+        if(length(PtE) != 2)
+          stop("PtE is a vector but does not have length 2")
+
+        PtE <- matrix(PtE,1,2)
+      }
       if(ncol(PtE)!= 2){
         stop("PtE must have two columns!")
       }
@@ -1897,43 +1903,33 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #Compute PtE for mesh given PtE for graph
   PtE_to_mesh = function(PtE){
-    VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
+    Vertexes <- self$VtEfirst()
+    VtE <- rbind(Vertexes, self$mesh$PtE)
     PtE_update <- matrix(0, dim(PtE)[1], 2)
     for (i in 1:dim(PtE)[1]) {
-      ei <- PtE[i, 1]
-      ind <- which(VtE[,1] == ei)
-      if (PtE[i,2]<min(VtE[ind, 2])) { #node on first edge on line
-        v1 <- self$E[ei, 1]
-        ind2 <- which.min(VtE[ind, 2])
-        v2 <- ind[ind2]
-        d1 <- 0
-        d2 <- VtE[v2, 2]
-      } else if (PtE[i,2] > max(VtE[ind,2])) { #node on last edge on line
-        ind2 <- which.max(VtE[ind, 2])
-        v1 <- ind[ind2]
-        v2 <- self$E[ei, 2]
-        d1 <- VtE[v1, 2]
-        d2 <- 1
+      ei <- PtE[i, 1] #extract edge
+
+      #extract distances of all mesh nodes on edge including end points
+      ind.nodes <- which(self$mesh$PtE[,1] == ei)
+      dist.nodes <- self$mesh$PtE[ind.nodes,2]
+      if(length(ind.nodes)>0) {
+        ind <- c(self$E[ei,1], ind.nodes + self$nV, self$E[ei,2])
+        dists <- c(0,dist.nodes,1)
       } else {
-        ind2 <- sort(sort(abs(VtE[ind, 2] - PtE[i, 2]),
-                          index.return = TRUE)$ix[1:2])
-        if(length(ind2) == 2) {
-          v1 <- ind[ind2[1]]
-          v2 <- ind[ind2[2]]
-          d1 <- VtE[v1, 2]
-          d2 <- VtE[v2, 2]
-        } else {
-          v1 <- self$E[ei, 1]
-          ind2 <- which.min(VtE[ind, 2])
-          v2 <- ind[ind2]
-          d1 <- 0
-          d2 <- VtE[v2, 2]
-        }
+        ind <- c(self$E[ei,1], self$E[ei,2])
+        dists <- c(0,1)
       }
-      #edge on mesh
+
+      ind2 <- sort(sort(abs(dists - PtE[i, 2]), index.return = TRUE)$ix[1:2])
+      v1 <- ind[ind2[1]] #vertex "before" the point
+      v2 <- ind[ind2[2]] #vertex "after" the point
+      d1 <- dists[ind2[1]] #distance on the edge of the point before
+      d2 <- dists[ind2[2]] #distance on the edge of the point after
+
+      #find the "edge" in the mesh on which the point is
       e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
-      #distance on edge
-      if (self$mesh$E[e, 1] == v1) {
+
+      if (self$mesh$E[e, 1] == v1) { #edge starts in the vertex before
         d <- (PtE[i, 2] - d1)/(d2 - d1)
       } else {
         d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
