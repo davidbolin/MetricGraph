@@ -9,7 +9,7 @@ articles:
   metric_graph: metric_graph.html
   pointprocess: pointprocess.html
   random_fields: random_fields.html
-last_built: 2023-08-24T14:49Z
+last_built: 2023-09-26T21:46Z
 urls:
   reference: https://davidbolin.github.io/MetricGraph/reference
   article: https://davidbolin.github.io/MetricGraph/articles

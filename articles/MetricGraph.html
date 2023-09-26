@@ -97,7 +97,7 @@
                         <h4 data-toc-skip class="author">David Bolin,
 Alexandre B. Simas, and Jonas Wallin</h4>
             
-            <h4 data-toc-skip class="date">2023-08-24</h4>
+            <h4 data-toc-skip class="date">2023-09-26</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -522,7 +522,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  46.07451 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  55.43317 secs</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -608,11 +608,6 @@ class has built in support for this, and we can obtain the distances
 between the observation locations as</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">compute_resdist</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
 <p>However, if the goal is to fit a model using this covariance
 function, there is no need for the user to compute it. It is done
 internally when one uses the <code><a href="../reference/graph_lme.html">graph_lme()</a></code> function. We need
@@ -622,17 +617,9 @@ arguments, as the exponential covariance is the default). Let us fit a
 linear regression model with a random effect given by a Gaussian field
 with an isotropic exponential covariance function (alternatively, one
 can also write <code>model = 'isoExp'</code>):</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"isoCov"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"isoCov"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Latent model - Covariance-based model</span></span>
 <span><span class="co">## </span></span>
@@ -660,19 +647,13 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## Number of function calls by 'optim' = 49</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  59.5709 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  1.15077 mins</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">u_est_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est_exp</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">u_est_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est_exp</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-28-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>To perform kriging prediction to other locations, one can use the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method along with a <code>data.frame</code>
@@ -680,30 +661,18 @@ containing the locations in which one wants to obtain predictions and
 the corresponding covariate values at these locations. In this example
 we will use the <code>data_mesh_pred</code> from the previous example.
 We start by obtaining predictions for the latent model:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, data <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
-<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">u_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp</span><span class="op">$</span><span class="va">mean</span></span>
+<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">u_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est_exp</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-29-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, let us estimated the observed values at the mesh
 locations:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_exp_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, data <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
-<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">y_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp_y</span><span class="op">$</span><span class="va">mean</span></span>
+<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">y_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp_y</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est_exp</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-30-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
@@ -737,17 +706,9 @@ internally. We now set the <code>model</code> argument as a list with
 the <code>type</code> being <code>"GraphLaplacian"</code>
 (alternatively, one can also write <code>model = 'GL1'</code>) to obtain
 a graph Laplacian model with <code>alpha=1</code>:</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_gl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_gl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Latent model - graph Laplacian SPDE with alpha = 1</span></span>
 <span><span class="co">## </span></span>
@@ -780,19 +741,14 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 29</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  4.15441 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  4.56408 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
 field and the posterior means of the field:</p>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pred_u_GL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl</span>, data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_u_GL</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pred_u_GL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl</span>, data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_u_GL</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-32-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Now, if we do predictions outside of the observation locations on a
 graph Laplacian model, we need to modify the graph. This modifies the
@@ -802,33 +758,25 @@ observation locations we want to do predictions. However, if we use the
 observation locations, the <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> will return
 predictions together with a <code>warning</code> that one should refit
 the model to obtain proper predictions:</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl</span>, data <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in predict.graph_lme(res_gl, data = data_mesh_pred, normalized = TRUE,</span></span>
 <span><span class="co">## : There are prediction locations outside of the observation locations. Refit</span></span>
 <span><span class="co">## the model with all the locations you want to obtain predictions.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">u_est_GL</span> <span class="op">&lt;-</span> <span class="va">pred_GL</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-33-1.png" width="700" style="display: block; margin: auto;">
 and here the (incorrect way of obtaining) predictions of the observed
 data:</p>
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl</span>, data <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
 <pre><code><span><span class="co">## Warning in predict.graph_lme(res_gl, data = data_mesh_pred, normalized = TRUE,</span></span>
 <span><span class="co">## : There are prediction locations outside of the observation locations. Refit</span></span>
 <span><span class="co">## the model with all the locations you want to obtain predictions.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y_est_GL</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-34-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -836,28 +784,20 @@ data:</p>
 predictions. Let us create a new data set with all the original
 locations and all the locations we want to obtain predictions (with
 <code>y=NA</code> at the locations we want to obtain predictions):</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_mesh_temp</span> <span class="op">&lt;-</span> <span class="va">data_mesh_pred</span></span>
 <span><span class="va">data_mesh_temp</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data_mesh_pred</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">new_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">data_mesh_temp</span>, all <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let us clone the graph and add the new data:</p>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph_pred</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">graph_pred</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">graph_pred</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">new_data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now fit the model with all data:</p>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_gl_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph_pred</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span>
-<span></span>
-<span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl_pred</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_gl_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph_pred</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl_pred</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Latent model - graph Laplacian SPDE with alpha = 1</span></span>
 <span><span class="co">## </span></span>
@@ -890,43 +830,28 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 48</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  10.05087 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  12.25705 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
 posterior means at the observation locations:</p>
-<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pred_u_GL_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_u_GL_full</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pred_u_GL_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_u_GL_full</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-38-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Let us now obtain predictions at the desired locations:</p>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, data <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
-<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">u_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_full</span><span class="op">$</span><span class="va">mean</span></span>
+<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">u_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_full</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est_GL_full</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-39-1.png" width="700" style="display: block; margin: auto;">
 and here the correct way of obtaining predictions of the observed data
 at the desired locations:</p>
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_y_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, data <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
-<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_bkp$observation_to_vertex(): Removing the existing mesh due to</span></span>
-<span><span class="co">## the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in graph.temp$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
-<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">y_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y_full</span><span class="op">$</span><span class="va">mean</span></span>
+<span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">y_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y_full</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est_GL_full</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-40-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
@@ -952,23 +877,21 @@ load <code>INLA</code> and <code>inlabru</code> packages. We will also
 need to create the <code>inla</code> model object with the
 <code>graph_spde</code> function. By default we have
 <code>alpha=1</code>.</p>
-<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">INLA</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.inlabru.org" class="external-link">inlabru</a></span><span class="op">)</span></span>
 <span><span class="va">spde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph_spde$observation_to_vertex(): Removing the existing mesh due</span></span>
-<span><span class="co">## to the change in the graph structure, please create a new mesh if needed.</span></span></code></pre>
 <p>Recall that the data is already on the graph object (from the
 previous models above). Now, we create <code>inlabru</code>’s component,
 which is a formula-like object:</p>
-<div class="sourceCode" id="cb92"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="fu">Intercept</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span> <span class="op">+</span> <span class="fu">field</span><span class="op">(</span><span class="va">loc</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span></span></code></pre></div>
 <p>This formula is very simple since we are not assuming mean zero, so
 that we do not need an intercept, and we do not have any other
 covariates or model components. However, the setup is exactly the same
 for more complicated models, with the only exception that we would have
 more terms in the formla. Now, we directly fit the model:</p>
-<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_bru_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://inlabru-org.github.io/inlabru/reference/bru.html" class="external-link">bru</a></span><span class="op">(</span><span class="va">cmp</span>, data<span class="op">=</span><span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span><span class="va">spde_model</span>, loc <span class="op">=</span> <span class="st">"loc"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in inla.model.properties.generic(inla.trim.family(model), mm[names(mm) == : Model 'cgeneric' in section 'latent' is marked as 'experimental'; changes may appear at any time.</span></span>
 <span><span class="co">##   Use this model with extra care!!! Further warnings are disabled.</span></span></code></pre>
@@ -981,19 +904,19 @@ obtain point estimates but entire posterior distributions for the
 parameters. To view the estimates we can use the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
-<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_bru_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_bru_fit</span>, </span>
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.01061 0.1109380   1.809860 2.006180   2.238770 1.995350</span></span>
-<span><span class="co">## range 0.20737 0.0294436   0.157477 0.204499   0.272755 0.198229</span></span></code></pre>
+<pre><code><span><span class="co">##           mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 2.013220 0.111614   1.803750 2.008650   2.237030 1.973540</span></span>
+<span><span class="co">## range 0.208689 0.030128   0.156173 0.206369   0.274253 0.201489</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
 values:</p>
-<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_bru</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -1007,12 +930,12 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 2.010614 1.9953539</span></span>
-<span><span class="co">## 2     range  0.2 0.207370 0.1982287</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 2.0132176 1.9735354</span></span>
+<span><span class="co">## 2     range  0.2 0.2086892 0.2014892</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
-<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">posterior_df_bru_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -1037,7 +960,7 @@ predictions. In this case, we will want the predictions on a mesh.</p>
 <code><a href="../reference/graph_bru_process_data.html">graph_bru_process_data()</a></code> helps us into converting that
 <code>data.frame</code> to an <code>inlabru</code> friendly format for
 dealing with metric graphs:</p>
-<div class="sourceCode" id="cb100"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_bru_process_data.html">graph_bru_process_data</a></span><span class="op">(</span><span class="va">data_mesh_pred</span>, loc <span class="op">=</span> <span class="st">"loc"</span><span class="op">)</span></span></code></pre></div>
 <p>We can now obtain the predictions by using the <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>
 method. Observe that our <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method for graph models
@@ -1046,27 +969,36 @@ is a bit different from <code>inlabru</code>’s standard
 created with the <code><a href="../reference/graph_spde.html">graph_spde()</a></code> function, the second is
 <code>inlabru</code>’s component, and the remaining is as done with the
 standard <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method in <code>inlabru</code>.</p>
-<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">field_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">spde_model</span>, </span>
 <span>                                <span class="va">cmp</span>,</span>
 <span>                                <span class="va">spde_bru_fit</span>, </span>
 <span>                                data <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>                                formula <span class="op">=</span> <span class="op">~</span> <span class="va">field</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: The `data` argument of `predict()` is deprecated as of inlabru 2.8.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use the `newdata` argument instead.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> `data` provided but not `newdata`. Setting `newdata &lt;- data`.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">MetricGraph</span> package.</span></span>
+<span><span class="co">##   Please report the issue at</span></span>
+<span><span class="co">##   <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/davidbolin/MetricGraph/issues&gt;</span>.</span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
 <p>Let us plot the predictions of the latent field:</p>
-<div class="sourceCode" id="cb102"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_field_prd</span> <span class="op">&lt;-</span> <span class="va">field_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_field_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-49-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Fin §ally, let us plot predictions of the observed data at the mesh
 locations:</p>
-<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obs_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">spde_model</span>, </span>
 <span>                                <span class="va">cmp</span>,</span>
 <span>                                <span class="va">spde_bru_fit</span>, </span>
 <span>                                data <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>                                formula <span class="op">=</span> <span class="op">~</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">lat</span> <span class="op">+</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">field</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot the predictions:</p>
-<div class="sourceCode" id="cb104"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_obs_prd</span> <span class="op">&lt;-</span> <span class="va">obs_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_obs_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-51-1.png" width="700" style="display: block; margin: auto;"></p>
