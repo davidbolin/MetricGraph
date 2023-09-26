@@ -306,12 +306,12 @@ graph_lme <- function(formula, graph,
 
   if(model_type %in% c("graphlaplacian", "isocov")){
     graph_bkp <- graph$clone()
-    graph_bkp$observation_to_vertex()
+    graph_bkp$observation_to_vertex(mesh_warning=FALSE)
     nV_orig <- graph_bkp$nV
     data <- graph_bkp$data
   } else if((model_type == "whittlematern") && (model[["alpha"]] == 1) && (model[["version"]]==2)){
     graph_bkp <- graph$clone()
-    graph_bkp$observation_to_vertex()
+    graph_bkp$observation_to_vertex(mesh_warning=FALSE)
     data <- graph_bkp$data
   } else{
     data <- graph$data
@@ -1219,7 +1219,7 @@ predict.graph_lme <- function(object,
       # }
 
   } else if(tolower(model_type$type) == "graphlaplacian"){
-    graph_bkp$observation_to_vertex()
+    graph_bkp$observation_to_vertex(mesh_warning=FALSE)
     tau <- object$coeff$random_effects[1]
     #nV before
     nV_temp <- object$nV_orig
@@ -1266,7 +1266,7 @@ predict.graph_lme <- function(object,
               #nV before
               tau <- object$coeff$random_effects[1]
               nV_temp <- object$nV_orig
-              graph_bkp$observation_to_vertex()
+              graph_bkp$observation_to_vertex(mesh_warning=FALSE)
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
@@ -1276,7 +1276,7 @@ predict.graph_lme <- function(object,
               #nV before
               tau <- object$coeff$random_effects[1]
               nV_temp <- object$nV_orig
-              graph_bkp$observation_to_vertex()
+              graph_bkp$observation_to_vertex(mesh_warning=FALSE)
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
@@ -1364,7 +1364,7 @@ predict.graph_lme <- function(object,
     if(cond_wm){
       tau <- object$coeff$random_effects[1]
       graph_bkp2 <- graph_bkp$clone()
-      graph_bkp2$observation_to_vertex()
+      graph_bkp2$observation_to_vertex(mesh_warning=FALSE)
       if(cond_alpha1){
         Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 1, graph = graph_bkp2)

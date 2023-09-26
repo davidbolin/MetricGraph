@@ -461,7 +461,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       graph.temp$add_observations(data = df_temp,
                                      normalized = normalized)
-      graph.temp$observation_to_vertex()
+      graph.temp$observation_to_vertex(mesh_warning = FALSE)
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
       geodist_temp <- distances(g)
@@ -574,7 +574,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       graph.temp$add_observations(data = df_temp,
                                      normalized = normalized)
 
-        graph.temp$observation_to_vertex()
+        graph.temp$observation_to_vertex(mesh_warning=FALSE)
         graph.temp$compute_geodist(full=TRUE)
         geodist_temp <- graph.temp$geo_dist[["__complete"]]
         geodist_temp[graph.temp$PtV, graph.temp$PtV] <- geodist_temp
@@ -747,8 +747,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param tolerance Observations locations are merged to a single vertex if
   #' they are closer than this number (given in relative edge distance between
   #' 0 and 1). The default is `1e-15`.
+  #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
   #' @return No return value. Called for its side effects.
-  observation_to_vertex = function(tolerance = 1e-15) {
+  observation_to_vertex = function(tolerance = 1e-15, mesh_warning = TRUE) {
     if(tolerance <= 0 || tolerance >=1){
       stop("tolerance should be between 0 and 1.")
     }
@@ -803,7 +804,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if (!is.null(self$mesh)) {
       self$mesh <- NULL
-      warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
+      if(mesh_warning){
+        warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
+      }
     }
   },
 
@@ -1723,7 +1726,7 @@ metric_graph <-  R6::R6Class("metric_graph",
              method with 'obs_to_vertex=TRUE', in which the observations will be
              turned to vertices and the A matrix will then be computed")
     } else if(is.null(self$PtV)){
-      self$observation_to_vertex()
+      self$observation_to_vertex(mesh_warning=FALSE)
     }
 
     if(is.null(group)){
@@ -2684,7 +2687,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
     graph.temp$add_observations(data = df_temp, normalized = normalized)
-    graph.temp$observation_to_vertex()
+    graph.temp$observation_to_vertex(mesh_warning = FALSE)
     Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
 
     for (i in 1:graph.temp$nE) {

@@ -65,7 +65,7 @@ graph_spde <- function(graph_object,
 
   graph_spde <- graph_object$clone()
 
-  graph_spde$observation_to_vertex()
+  graph_spde$observation_to_vertex(mesh_warning=FALSE)
 
   parameterization <- parameterization[[1]]
   if(!(alpha%in%c(1,2))){
@@ -974,7 +974,7 @@ predict.inla_metric_graph_spde <- function(object,
   #                   coord_y = "__coord_y",
   #                   data_coords = "euclidean")
 
-  graph_tmp$observation_to_vertex()
+  graph_tmp$observation_to_vertex(mesh_warning=FALSE)
 
   # tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
   #                                       graph_tmp$data[["__coord_y"]])
