@@ -74,7 +74,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for graph_lme</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
-<span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  newdata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mesh <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  mesh_h <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -87,7 +87,8 @@
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_as_list <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_original_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  data <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -97,7 +98,7 @@
 <dd><p>The fitted object with the <code><a href="graph_lme.html">graph_lme()</a></code> function.</p></dd>
 
 
-<dt>data</dt>
+<dt>newdata</dt>
 <dd><p>A <code>data.frame</code> or a <code>list</code> containing the covariates, the edge
 number and the distance on edge for the locations to obtain the prediction.</p></dd>
 
@@ -161,6 +162,10 @@ samples be returned as a list, with each replicate being an element?</p></dd>
 
 <dt>...</dt>
 <dd><p>Not used.</p></dd>
+
+
+<dt>data</dt>
+<dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>newdata</code> instead.</p></dd>
 
 </dl></div>
     <div class="section level2">

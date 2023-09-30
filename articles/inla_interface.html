@@ -97,7 +97,7 @@
                         <h4 data-toc-skip class="author">David Bolin,
 Alexandre B. Simas, and Jonas Wallin</h4>
             
-            <h4 data-toc-skip class="date">2023-09-26</h4>
+            <h4 data-toc-skip class="date">2023-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/inla_interface.Rmd" class="external-link"><code>vignettes/inla_interface.Rmd</code></a></small>
       <div class="d-none name"><code>inla_interface.Rmd</code></div>
@@ -248,8 +248,8 @@ and should be supplied to the stack by using the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##            mean        sd 0.025quant  0.5quant 0.975quant      mode</span></span>
-<span><span class="co">## sigma 1.6491900 0.1351820  1.3983900 1.6446700   1.928360 1.6563900</span></span>
-<span><span class="co">## range 0.0866122 0.0172266  0.0580053 0.0847757   0.125439 0.0811923</span></span></code></pre>
+<span><span class="co">## sigma 1.6493000 0.1338400  1.4036100 1.6437200   1.929610 1.6491200</span></span>
+<span><span class="co">## range 0.0864802 0.0170289  0.0583153 0.0846245   0.124975 0.0809646</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -266,9 +266,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean       mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.6491920 1.65639115</span></span>
-<span><span class="co">## 2     range 0.15 0.0866122 0.08119234</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true       mean       mode</span></span>
+<span><span class="co">## 1   std.dev 2.00 1.64930036 1.64912019</span></span>
+<span><span class="co">## 2     range 0.15 0.08648021 0.08096462</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
@@ -459,9 +459,9 @@ function.</p>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.389930 0.0634450    1.27050 1.387920   1.519700 1.389200</span></span>
-<span><span class="co">## range 0.159473 0.0162572    0.13093 0.158231   0.194716 0.155175</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
+<span><span class="co">## sigma 1.389960 0.0634464   1.270490 1.387930   1.519760 1.38867</span></span>
+<span><span class="co">## range 0.159479 0.0162610   0.130928 0.158238   0.194728 0.15520</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -477,9 +477,9 @@ function.</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.389931 1.3891962</span></span>
-<span><span class="co">## 2     range  0.2 0.159473 0.1551748</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
+<span><span class="co">## 1   std.dev  1.5 1.3899598 1.388665</span></span>
+<span><span class="co">## 2     range  0.2 0.1594788 0.155200</span></span></code></pre>
 <p>Now, let us consider the case with all replicates. We create a new
 index object by using the <code><a href="../reference/graph_spde_make_index.html">graph_spde_make_index()</a></code> function
 with the argument <code>n.repl</code> set to the total number of
@@ -522,9 +522,9 @@ function <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##          mean         sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## sigma 1.50073 0.03065650   1.442610 1.499770   1.561690 1.49272</span></span>
-<span><span class="co">## range 0.19435 0.00889655   0.177448 0.194141   0.212396 0.19373</span></span></code></pre>
+<pre><code><span><span class="co">##           mean         sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.500360 0.03059900    1.44171 1.499570   1.560840 1.492930</span></span>
+<span><span class="co">## range 0.193815 0.00895881    0.17677 0.193619   0.212001 0.193246</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -541,8 +541,8 @@ function <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.5007260 1.4927163</span></span>
-<span><span class="co">## 2     range  0.2 0.1943504 0.1937302</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.5003551 1.4929345</span></span>
+<span><span class="co">## 2     range  0.2 0.1938146 0.1932462</span></span></code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-BSW2022a" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023a.
