@@ -655,7 +655,7 @@ use the `get_mesh_locations()` method. We also set `bru=TRUE` and `loc="loc"` to
 Now, we can simply provide these locations to the `predict` method
 along with the fitted object `rspde_bru_fit`:
 ```{r}
-  field_pred <- predict(rspde_model, cmp, rspde_bru_fit, data=data_prd_list, ~field)
+  field_pred <- predict(rspde_model, cmp, rspde_bru_fit, newdata=data_prd_list, ~field)
 ```
 
 Finally, let us plot the predicted values. To this end 

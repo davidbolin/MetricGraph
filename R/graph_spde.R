@@ -859,7 +859,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' function.
 #' @param cmp The 'inlabru' component used to fit the model.
 #' @param bru_fit A fitted model using 'inlabru' or 'INLA'.
-#' @param data A data.frame of covariates needed for the prediction. The
+#' @param newdata A data.frame of covariates needed for the prediction. The
 #' locations must be normalized PtE.
 #' @param formula A formula where the right hand side defines an R expression to
 #' evaluate for each generated sample. If NULL, the latent and hyperparameter
@@ -894,13 +894,14 @@ bru_graph_rep <- function(repl, graph_spde){
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
 #' @param... Additional arguments passed on to `inla.posterior.sample()`.
+#' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with predictions.
 #' @export
 
 predict.inla_metric_graph_spde <- function(object,
                                            cmp,
                                            bru_fit,
-                                           data = NULL,
+                                           newdata = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
                                            normalized = TRUE,
@@ -912,7 +913,23 @@ predict.inla_metric_graph_spde <- function(object,
                                            include = NULL,
                                            exclude = NULL,
                                            drop = FALSE,
-                                           ...){
+                                           ...,
+                                           data = deprecated()){
+  if (lifecycle::is_present(data)) {
+    if (is.null(newdata)) {
+      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+        details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
+      )
+      newdata <- data
+    } else {
+      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+        details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
+      )
+    }
+    data <- NULL
+  }
+
+  data <- newdata
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
@@ -1003,7 +1020,7 @@ predict.inla_metric_graph_spde <- function(object,
   bru_fit_new <- inlabru::bru(cmp,
           data = graph_data_spde(spde____model, loc = name_locations))
   pred <- predict(object = bru_fit_new,
-                    data = new_data_list,
+                    newdata = new_data_list,
                     formula = formula,
                     n.samples = n.samples,
                     seed = seed,
@@ -1058,7 +1075,7 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' `rspde.metric_graph()` function.
 #' @param cmp The 'inlabru' component used to fit the model.
 #' @param bru_fit A fitted model using 'inlabru' or 'INLA'.
-#' @param data A data.frame of covariates needed for the prediction. The locations
+#' @param newdata A data.frame of covariates needed for the prediction. The locations
 #' must be normalized PtE.
 #' @param formula A formula where the right hand side defines an R expression to
 #' evaluate for each generated sample. If NULL, the latent and hyperparameter
@@ -1092,13 +1109,14 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
 #' @param... Additional arguments passed on to inla.posterior.sample.
+#' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with predictions.
 #' @export
 
 predict.rspde_metric_graph <- function(object,
                                            cmp,
                                            bru_fit,
-                                           data = NULL,
+                                           newdata = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
                                            normalized = TRUE,
@@ -1109,7 +1127,23 @@ predict.rspde_metric_graph <- function(object,
                                            include = NULL,
                                            exclude = NULL,
                                            drop = FALSE,
-                                           ...){
+                                           ...,
+                                           data = deprecated()){
+  if (lifecycle::is_present(data)) {
+    if (is.null(newdata)) {
+      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+        details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
+      )
+      newdata <- data
+    } else {
+      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+        details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
+      )
+    }
+    data <- NULL
+  }
+
+  data <- newdata
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
@@ -1129,7 +1163,7 @@ predict.rspde_metric_graph <- function(object,
   }
 
   pred <- predict(object = bru_fit,
-                    data = data,
+                    newdata = newdata,
                     formula = formula,
                     n.samples = n.samples,
                     seed = seed,

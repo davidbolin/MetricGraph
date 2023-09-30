@@ -46,5 +46,6 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom R6 R6Class
 #' @importFrom graphics layout
+#' @importFrom lifecycle deprecated
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

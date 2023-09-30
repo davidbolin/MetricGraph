@@ -994,7 +994,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' @name predict.graph_lme
 #' @title Prediction for a mixed effects regression model on a metric graph
 #' @param object The fitted object with the `graph_lme()` function.
-#' @param data A `data.frame` or a `list` containing the covariates, the edge
+#' @param newdata A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction.
 #' @param mesh Obtain predictions for mesh nodes? The graph must have a mesh,
 #' and either `only_latent` is set to TRUE or the model does not have covariates.
@@ -1018,6 +1018,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param return_original_order Should the results be return in the original
 #' (input) order or in the order inside the graph?
 #' @param ... Not used.
+#' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with elements `mean`, which contains the means of the
 #' predictions, `variance` (if `compute_variance` is `TRUE`), which contains the
 #' variances of the predictions, `samples` (if `posterior_samples` is `TRUE`),
@@ -1026,7 +1027,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' @method predict graph_lme
 
 predict.graph_lme <- function(object,
-                              data = NULL,
+                              newdata = NULL,
                               mesh = FALSE,
                               mesh_h = 0.01,
                               repl = NULL,
@@ -1039,8 +1040,24 @@ predict.graph_lme <- function(object,
                               normalized = FALSE,
                               return_as_list = FALSE,
                               return_original_order = TRUE,
-                               ...) {
+                               ...,
+                               data = deprecated()) {
+  
+  if (lifecycle::is_present(data)) {
+    if (is.null(newdata)) {
+      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+        details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
+      )
+      newdata <- data
+    } else {
+      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+        details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
+      )
+    }
+    data <- NULL
+  }
 
+  data <- newdata
   if(is.null(data)){
     if(!mesh){
       stop("If 'mesh' is false, you should supply data!")

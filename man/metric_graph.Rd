@@ -426,7 +426,7 @@ A \code{SpatialPoints} object of the observation locations.
 \subsection{Method \code{observation_to_vertex()}}{
 Adds observation locations as vertices in the graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15, mesh_warning = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -435,6 +435,8 @@ Adds observation locations as vertices in the graph.
 \item{\code{tolerance}}{Observations locations are merged to a single vertex if
 they are closer than this number (given in relative edge distance between
 0 and 1). The default is \code{1e-15}.}
+
+\item{\code{mesh_warning}}{Display a warning if the graph structure change and the metric graph has a mesh object.}
 }
 \if{html}{\out{</div>}}
 }
@@ -635,7 +637,8 @@ Build mass and stiffness matrices for given mesh object.
 The function builds: The matrix \code{C} which is the mass matrix with
 elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix \code{G} which is the stiffness
 matrix with elements \eqn{G_{ij} = <d\phi_i, d\phi_j>}, the matrix \code{B} with
-elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, and the vector with weights
+elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, the matrix \code{D} with elements
+\eqn{D_{ij} = \sum_{v\in V}\phi_i(v)\phi_j(v)}, and the vector with weights
 \eqn{<\phi_i, 1>}.
 }
 

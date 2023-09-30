@@ -203,6 +203,8 @@ test_that("test likelihood",{
 })
 
 test_that("test posterior mean",{
+  library(sp)
+  library(Matrix)
   set.seed(13)
   nt <- 90
   kappa <- 0.3
@@ -242,7 +244,7 @@ test_that("test posterior mean",{
 
   #test posterior at observation locations
   res <- graph_lme(y ~ -1, graph=graph, model="WM2", parallel = FALSE)
-  pm <- predict(res, data = df_temp)$mean
+  pm <- predict(res, newdata = df_temp)$mean
 
   kappa_est <- res$coeff$random_effects[2]
   tau_est <- res$coeff$random_effects[1]
@@ -276,3 +278,5 @@ test_that("test posterior mean",{
 
   expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-10)
 })
+
+

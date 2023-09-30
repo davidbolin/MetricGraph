@@ -6,7 +6,7 @@
 \usage{
 \method{predict}{graph_lme}(
   object,
-  data = NULL,
+  newdata = NULL,
   mesh = FALSE,
   mesh_h = 0.01,
   repl = NULL,
@@ -19,13 +19,14 @@
   normalized = FALSE,
   return_as_list = FALSE,
   return_original_order = TRUE,
-  ...
+  ...,
+  data = deprecated()
 )
 }
 \arguments{
 \item{object}{The fitted object with the \code{graph_lme()} function.}
 
-\item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge
+\item{newdata}{A \code{data.frame} or a \code{list} containing the covariates, the edge
 number and the distance on edge for the locations to obtain the prediction.}
 
 \item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh,
@@ -62,6 +63,8 @@ samples be returned as a list, with each replicate being an element?}
 (input) order or in the order inside the graph?}
 
 \item{...}{Not used.}
+
+\item{data}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{newdata} instead.}
 }
 \value{
 A list with elements \code{mean}, which contains the means of the

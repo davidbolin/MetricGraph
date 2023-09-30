@@ -275,7 +275,7 @@ method in `inlabru`.
 field_pred <- predict(spde_model_bru, 
                                 cmp,
                                 spde_bru_fit, 
-                                data = data_list,
+                                newdata = data_list,
                                 formula = ~field)
 ```
 

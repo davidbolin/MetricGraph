@@ -8,6 +8,23 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
+- id: lgcp
+  title: "Going off grid: computationally efficient inference for log-Gaussian Cox processes"
+  author:
+  - family: Simpson
+    given: D
+  - family: Illian
+    given: J. B.
+  - family: Lindgren
+    given: F.
+  - family: Sørbye
+    given: S. H.
+  - family: Rue
+    given: H.
+  container-title: Biometrika
+  type: article
+  issued:
+  year: 2016
 - id: xiong22
   title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
   author:
