@@ -772,7 +772,10 @@ distance2 <- function(points, lines, byid=FALSE){
   lines_sf <- sf::st_as_sf(lines)
   dist_result <- sf::st_distance(points_sf, lines_sf)
   if(byid){
-    return(matrix(apply(dist_result,1,min),nrow=1))
+    ID_names <- sapply(slot(lines, "lines"), function(x) slot(x, "ID"))
+    dist_result <- t(dist_result)
+    row.names(dist_result) <- ID_names
+    return(dist_result)
   } else{
     return(min(dist_result))
   }
