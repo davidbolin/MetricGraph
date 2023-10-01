@@ -851,3 +851,36 @@ change_parameterization_graphlme <- function(likelihood, nu, par, hessian
 
   return(list(coeff = c(sigma, range), std_random = std_err))
 }
+
+#' @noRd 
+
+process_factor_unit <- function(vertex_unit, length_unit){
+  if(is.null(vertex_unit) && is.null(length_unit)){
+    return(1)
+  } else if(is.null(vertex_unit) || is.null(length_unit)){
+          stop("If one of 'vertex_unit' or 'length_unit' is NULL, then the other must also be NULL.")
+  }
+  if(vertex_unit == length_unit){
+    return(1)
+  } else if(vertex_unit == "longlat"){
+    fact <- switch(length_unit, "km" = 1,
+                        "m" = 1000,
+                        "miles" = 0.621371192)
+    return(fact)
+  } else if(vertex_unit == "km"){
+    fact <- switch(length_unit, "km" = 1,
+                        "m" = 1000,
+                        "miles" = 0.621371192) 
+    return(fact) 
+  } else if(vertex_unit == "m"){
+    fact <- switch(length_unit, "km" = 1e-3,
+                        "m" = 1,
+                        "miles" = 0.621371192*1e-3) 
+    return(fact)
+  } else if(vertex_unit == "miles"){
+    fact <- switch(length_unit, "km" = 1.609344,
+                        "m" = 1.609344*1e3,
+                        "miles" = 1) 
+    return(fact)
+  }
+}
