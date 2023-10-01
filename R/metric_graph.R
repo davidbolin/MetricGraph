@@ -2308,6 +2308,7 @@ metric_graph <-  R6::R6Class("metric_graph",
    }
   },
 
+
   remove.first.deg2 = function() {
     ind <- which(self$get_degrees()==2)
     if(length(ind)>0) {
@@ -2325,16 +2326,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       loc.rem <- self$V[ind,]
       e_remidx <- which(self$LtE[,e_rem[2]] == 1)
+      if(length(e_remidx)>0 && e_remidx == e_rem[2]){
+        ind_keep1 <- seq_len(e_rem[1]-1)
+        ind_keep2 <- setdiff((e_rem[1]+1):length(self$lines),e_rem[2])
 
-      if(e_remidx == e_rem[2]){
-        line_keep1 <- line_keep2 <- NULL
-        if(e_rem[1]>1) {
-          line_keep1 <- self$lines[1:(e_rem[1]-1)]
-        }
-
-        line_keep2 <- self$lines[setdiff((e_rem[1]+1):length(self$lines),e_rem[2])]
-
-        line_merge <- list()
         coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords #line from v1 to v.rem
         tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords #line from v.rem to v2
         diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
@@ -2363,28 +2358,23 @@ metric_graph <-  R6::R6Class("metric_graph",
           coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
           E_new <- matrix(c(v1,v2),1,2)
         }
-        line_merge <-  Lines(list(Line(coords)), ID = sprintf("new%d",1))
 
-        if(!is.null(line_keep1) && !is.null(line_keep2)) {
-          line_new <- SpatialLines(c(line_keep1@lines, line_merge, line_keep2@lines))
-        } else if (is.null(line_keep1)) {
-          line_new <- SpatialLines(c(line_merge, line_keep2@lines))
-        } else if (is.null(line_keep2)) {
-          line_new <- SpatialLines(c(line_keep1@lines, line_merge))
-        } else {
-          line_new <- SpatialLines(c(line_merge))
-        }
-        for(i in 1:length(line_new)) {
-          slot(line_new@lines[[i]],"ID") <- sprintf("%d",i)
-        }
+        #set element e_rem[1] to the new line
+        self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords <- coords
+        #remove e_rem[2]
+        self$lines <- self$lines[-e_rem[2]]
 
         #update lines
-        self$lines <- line_new
-        self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
+        #self$lines <- line_new
+        self$EID <- self$EID[-e_rem[2]]
         self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+
       } else{
         E_new1 <- self$E[e1,1]
         E_new2 <- self$E[e2,2]
+        #if(verbose){
+        #  cat("ind = ", ind, ", E_new1 = ", E_new1, ", E_new2 = ", E_new2, "\n")
+        #}
         if(E_new1 > ind){
           E_new1 <- E_new1 - 1
         }
