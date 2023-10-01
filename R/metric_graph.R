@@ -86,8 +86,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
   #' @param E m x 2 matrix where each row represents one of the m edges.
-  #' @param longlat If TRUE, then it is assumed that the coordinates are given.
-  #' in Longitude/Latitude and that distances should be computed in km.
+  #' @param vertex_unit The unit in which the vertices are specified. The options are 'longlat' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
+  #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
+  #' If `vertex_unit` is 'longlat', then the default value for `length_unit` is 'm'.
+  #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
+  #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
+  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'longlat'` and `length_unit = 'm'`.
   #' @param tolerance List that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged
@@ -119,6 +123,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   initialize = function(lines = NULL,
                         V = NULL,
                         E = NULL,
+                        vertex_unit = NULL,
+                        length_unit = vertex_unit,
                         longlat = FALSE,
                         tolerance = list(vertex_vertex = 1e-7,
                                          vertex_line = 1e-7,
@@ -129,7 +135,52 @@ metric_graph <-  R6::R6Class("metric_graph",
                         remove_circles = TRUE,
                         verbose = FALSE) {
 
-    private$longlat <- longlat
+      valid_units_vertex <- c("m", "km", "miles", "longlat")
+      valid_units_length <- c("m", "km", "miles")
+
+    # private$longlat <- longlat
+
+    if((is.null(vertex_unit) && !is.null(length_unit)) || (is.null(length_unit) && !is.null(vertex_unit))){
+      stop("If one of 'vertex_unit' or 'length_unit' is NULL, then the other must also be NULL.")
+    }
+
+    if(!is.null(vertex_unit)){
+      vertex_unit <- vertex_unit[[1]]
+      if(!is.character(vertex_unit)){
+        stop("'vertex_unit' must be a string!")
+      }
+      if(!(vertex_unit %in% valid_units_vertex)){
+        stop(paste("The possible options for 'vertex_unit' are ", valid_units_vertex))
+      }
+      private$vertex_unit <- vertex_unit
+    }
+
+    if(!is.null(length_unit)){
+      length_unit <- length_unit[[1]]
+      if(!is.character(length_unit)){
+        stop("'length_unit' must be a string!")
+      }
+      if(length_unit == "longlat"){
+        length_unit <- "m"
+      }
+      if(!(length_unit %in% valid_units_length)){
+        stop(paste("The possible options for 'length_unit' are ", valid_units_length))
+      }
+      private$length_unit <- length_unit
+    } 
+
+    if(longlat){
+      private$vertex_unit <- "longlat"
+      private$length_unit <- "m"
+    } else if(!is.null(vertex_unit)){ 
+        if(private$vertex_unit == "longlat"){
+          longlat <- TRUE
+        }
+    }
+
+    factor_unit <- process_factor_unit(private$vertex_unit, private$length_unit)
+
+
 
     tolerance_default = list(vertex_vertex = 1e-7,
                              vertex_line = 1e-7,
@@ -193,7 +244,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
-                           longlat = longlat)
+                           longlat = longlat, factor_unit)
       )
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -339,7 +390,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       private$clear_initial_info()
     }
-    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat)
+    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
     if(is.logical(remove_circles)){
       private$remove_circles(tolerance$vertex_vertex)
     } else {
@@ -1273,6 +1324,13 @@ metric_graph <-  R6::R6Class("metric_graph",
                            degree = degree,
                            direction = direction,
                            ...)
+      if(!is.null(private$vertex_unit)){
+        if(private$vertex_unit == "longlat"){
+          p <- p + labs(x = "Longitude",  y = "Latitude")
+        } else{
+          p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")")) 
+        }
+      }
     } else {
       requireNamespace("plotly")
       p <- private$plot_3d(line_width = edge_width,
@@ -1287,6 +1345,13 @@ metric_graph <-  R6::R6Class("metric_graph",
                            X_loc = X_loc,
                            p = p,
                            ...)
+      if(!is.null(private$vertex_unit)){
+        if(private$vertex_unit == "longlat"){
+          p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
+        } else{
+          p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
+        }
+      }
     }
     return(p)
   },
@@ -1355,7 +1420,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       if (length(X) != dim(unique(self$mesh$V))[1] && length(X) != dim(self$mesh$V)[1]) {
         stop(paste0("X does not have the correct size (the possible sizes are ",
-                    PtE_dim," ", dim(self$mesh$V)[1], " and ",
+                    PtE_dim,", ", dim(self$mesh$V)[1], " and ",
                     dim(unique(self$mesh$V))[1],")"))
       }
 
@@ -1506,6 +1571,15 @@ metric_graph <-  R6::R6Class("metric_graph",
                                          color = support_color),
                              split = ~i, showlegend = FALSE)
       }
+
+      if(!is.null(private$vertex_unit)){
+        if(private$vertex_unit == "longlat"){
+          p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
+        } else{
+          p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
+        }
+      }
+
     } else {
       if(is.null(p)) {
         p <- ggplot(data = data, aes(x = x, y = y,
@@ -1522,6 +1596,13 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
+      if(!is.null(private$vertex_unit)){
+        if(private$vertex_unit == "longlat"){
+          p <- p + labs(x = "Longitude",  y = "Latitude")
+        } else{
+          p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")")) 
+        }
+      }
     }
     return(p)
   },
@@ -1669,6 +1750,15 @@ metric_graph <-  R6::R6Class("metric_graph",
                              line = list(width = line_width,
                                          color = line_color),
                              split = ~i, showlegend = FALSE, ...)
+
+      if(!is.null(private$vertex_unit)){
+        if(private$vertex_unit == "longlat"){
+          p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
+        } else{
+          p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
+        }
+      }
+
     } else {
       stop("not implemented")
     }
@@ -1849,7 +1939,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   private = list(
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0, longlat = FALSE) {
+  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact) {
     lines <- c()
     for(i in 1:length(self$lines)){
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
@@ -1858,7 +1948,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     #save all vertices that are more than tolerance distance apart
-    dists <- spDists(lines[, 2:3, drop = FALSE], longlat = longlat)
+    dists <- spDists(lines[, 2:3, drop = FALSE], longlat = longlat) * fact
     vertex <- lines[1, , drop = FALSE]
     for (i in 2:dim(lines)[1]) {
       i.min <- which.min(dists[i, 1:(i-1)])
@@ -1883,7 +1973,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$lines@lines[[i]]@Lines[[1]]@coords[1,] <- vertex[ind1, 2:3]
       i.e <- dim(self$lines@lines[[i]]@Lines[[1]]@coords)[1]
       self$lines@lines[[i]]@Lines[[1]]@coords[i.e,] <- vertex[ind2, 2:3]
-      ll <- LineLength(self$lines@lines[[i]]@Lines[[1]], longlat = longlat)
+      ll <- LineLength(self$lines@lines[[i]]@Lines[[1]], longlat = longlat) * fact
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
         k=k+1
@@ -2235,9 +2325,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   #utility function to merge close vertices
-  merge_close_vertices = function(tolerance, longlat) {
+  merge_close_vertices = function(tolerance, longlat, fact) {
     if(tolerance > 0) {
-      dists <- spDists(self$V, longlat = longlat)
+      dists <- spDists(self$V, longlat = longlat) * fact
       v.merge <- NULL
       k <- 0
       for (i in 2:self$nV) {
@@ -2443,6 +2533,14 @@ metric_graph <-  R6::R6Class("metric_graph",
   # should the information be saved when splitting edges?
 
   addinfo = FALSE,
+
+  # vertex unit 
+
+  vertex_unit = NULL,
+
+  # Length unit
+
+  length_unit = NULL,
 
   clear_initial_info = function(){
     private$initial_added_vertex = NULL
@@ -2834,8 +2932,8 @@ add_vertices = function(PtE, tolerance = 1e-10) {
 
   temp_PtE = NULL,
 
-  # longlat
-  longlat = NULL,
+  # # longlat
+  # longlat = NULL,
 
   # tolerance
 
@@ -2882,8 +2980,11 @@ graph_components <-  R6::R6Class("graph_components",
    #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
    #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
    #' @param E m x 2 matrix where each row represents an edge.
-   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given
-   #' in Longitude/Latitude and that distances should be computed in km.
+  #' @param vertex_unit The unit in which the vertices are specified. The options are 'longlat' (the great circle distance in km), 'km', 'm' and 'miles'. The default is 'km'.
+  #' @param length_unit The unit in which the lengths will be computed. The options are 'longlat' (the great circle distance in km), 'km', 'm' and 'miles'. The default is 'm'.
+  #' @param longlat If TRUE, then it is assumed that the coordinates are given.
+  #' in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
+  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'longlat'` and `length_unit = 'm'`.
    #' @param tolerance Vertices that are closer than this number are merged when
    #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
    #' tolerance is given in km.

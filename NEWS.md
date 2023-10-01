@@ -1,5 +1,7 @@
 # MetricGraph (development version)
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.
+* Bugfixes on sample_spde and when adding observations based on Euclidean positions.
+* Added options `vertex_unit` and `length_unit` on graph creations.
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.
