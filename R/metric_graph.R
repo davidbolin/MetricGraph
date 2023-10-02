@@ -1909,7 +1909,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       colnames(coords.old) <- paste(colnames(coords.old), '_old', sep="")
       Spoints@coords = SP@coords
       Spoints@bbox   = SP@bbox
-      LtE = cbind(match(SP@data[,1], self$EID), 0)
+      LtE <- cbind(match(SP@data[,1], self$EID), 0)
 
       for (ind in unique(LtE[, 1])) {
         index.p <- LtE[, 1] == ind
@@ -1917,6 +1917,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                        normalized=TRUE)
 
       }
+
       PtE <- LtE
       for (ind in unique(LtE[, 1])) {
         Es_ind <- which(self$LtE[ind, ] > 0)
@@ -1924,9 +1925,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         for (j in index.p) {
           E_ind <- which.min(replace(self$ELend[Es_ind],
                                      self$ELend[Es_ind] < LtE[j,2], NA))
-          PtE[j, 1] <- Es_ind[E_ind]
-          PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
-            (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
+
+          if(length(E_ind)>0){
+            PtE[j, 1] <- Es_ind[E_ind]
+            PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
+              (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
+          }
         }
       }
       if (!normalized) {
@@ -2380,7 +2384,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
           self$lines <- self$lines[-ind]
           self$E <- self$E[-ind,]
-          self$EID <- self$EID[-ind]
+          # self$EID <- self$EID[-ind]
+          self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
           self$edge_lengths <- self$edge_lengths[-ind]
           self$ELend <- self$ELend[-ind]
           self$ELstart <- self$ELstart[-ind]
@@ -2402,10 +2407,16 @@ metric_graph <-  R6::R6Class("metric_graph",
   remove.first.deg2 = function() {
     ind <- which(self$get_degrees()==2)
     if(length(ind)>0) {
+      LineLengths <- self$LtE%*%self$edge_lengths
+
       ind <- ind[1]
       e1 <- which(self$E[,2]==ind)
       e2 <- which(self$E[,1]==ind)
       e_rem <- sort(c(e1,e2))
+
+      Line_1 <- which(self$LtE[, e_rem[1]] == 1)
+      Line_2 <- which(self$LtE[, e_rem[2]] == 1)
+
       v1 <- setdiff(self$E[e_rem[1],],ind)
       v2 <- setdiff(self$E[e_rem[2],],ind)
       if(v1 > ind) {
@@ -2434,19 +2445,24 @@ metric_graph <-  R6::R6Class("metric_graph",
             #vertex removed is at the end of the segment
             coords <- rbind(tmp, coords[rev(1:dim(coords)[1]),])
             E_new <- matrix(c(v1,v2),1,2)
+            which_line_starts <- 2
           } else {
             coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
             E_new <- matrix(c(v2,v1),1,2)
+            which_line_starts <- 1
           }
         } else if(which.min(diffs)==2){
           coords <- rbind(tmp,coords)
           E_new <- matrix(c(v2,v1),1,2)
+          which_line_starts <- 2
         } else if(which.min(diffs)==3) {
           coords <- rbind(coords, tmp)
           E_new <- matrix(c(v1,v2),1,2)
+          which_line_starts <- 1
         } else {
           coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
           E_new <- matrix(c(v1,v2),1,2)
+          which_line_starts <- 1
         }
 
         #set element e_rem[1] to the new line
@@ -2456,7 +2472,14 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         #update lines
         #self$lines <- line_new
-        self$EID <- self$EID[-e_rem[2]]
+        # self$EID <- self$EID[-e_rem[2]]
+        # self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
+        # self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+        if(sum(self$LtE[e_rem[2],])>1){
+          idx_addback <- which(self$LtE[e_rem[2],] == 1)
+          # idx_addback <- ifelse(idx_addback > e_rem[2], idx_addback-1, idx_addback)
+          self$LtE[e_rem[1],idx_addback] <- 1
+        }
         self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
 
       } else{
@@ -2473,6 +2496,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         E_new <- matrix(c(E_new1, E_new2),1,2)
         self$LtE <- self$LtE[,-e_rem[2]]
+        which_line_starts <- 0
       }
 
       #update vertices
@@ -2483,11 +2507,51 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
       self$E <- self$E[-e_rem[2],,drop=FALSE]
       self$E[e_rem[1],] <- E_new
-      self$EID <- self$EID[-ind]
-      self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
-      self$edge_lengths <- self$edge_lengths[-e_rem[2]]
+      # self$EID <- self$EID[-ind]
+      self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
+
+      if(which_line_starts > 0){
+      if(Line_1 != Line_2){
+        if(which_line_starts == 1){
+          if(self$ELstart[e_rem[2]] == 0) {
+            self$ELend[e_rem[1]] <- (self$ELend[e_rem[2]]*LineLengths[Line_2]+LineLengths[Line_1])/(LineLengths[Line_2] + LineLengths[Line_1])
+          } else {
+            self$ELend[e_rem[1]] <- ((self$ELend[e_rem[2]] - self$ELstart[e_rem[2]])*LineLengths[Line_2]+LineLengths[Line_1])/(LineLengths[Line_2] + LineLengths[Line_1])
+          }
+          self$ELstart[e_rem[1]] <- (self$ELstart[e_rem[1]] * LineLengths[Line_1])/(LineLengths[Line_2] + LineLengths[Line_1])
+        } else{
+          if(self$ELstart[e_rem[1]] == 0) {
+            self$ELend[e_rem[1]] <- (self$ELend[e_rem[1]]*LineLengths[Line_1]+LineLengths[Line_2])/(LineLengths[Line_2] + LineLengths[Line_1])
+          } else {
+            self$ELend[e_rem[1]] <- ((self$ELend[e_rem[1]] - self$ELstart[e_rem[1]])*LineLengths[Line_1]+LineLengths[Line_2])/(LineLengths[Line_2] + LineLengths[Line_1])
+          }
+          self$ELstart[e_rem[1]] <- (self$ELstart[e_rem[2]] * LineLengths[Line_2])/(LineLengths[Line_2] + LineLengths[Line_1])
+        }
+      } else {
+          if (self$ELend[e_rem[2]] == 1){
+            self$ELend[e_rem[1]] <- 1
+          }
+          if (self$ELstart[e_rem[2]] == 0){
+            self$ELstart[e_rem[1]] <- 0
+          }       
+      }   
+      } else{
+          if (self$ELend[e_rem[2]] == 1){
+            self$ELend[e_rem[1]] <- 1
+          }
+          if (self$ELstart[e_rem[2]] == 0){
+            self$ELstart[e_rem[1]] <- 0
+          }
+      }
+
+
+      
       self$ELend <- self$ELend[-e_rem[2]]
       self$ELstart <- self$ELstart[-e_rem[2]]
+
+      self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
+      self$edge_lengths <- self$edge_lengths[-e_rem[2]]
+
       self$nE <- self$nE - 1
     }
   },
