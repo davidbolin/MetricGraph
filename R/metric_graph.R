@@ -768,7 +768,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
    while(sum(res$degrees==2 & !res$problematic)>0) {
-     if(verbose){
+     if(verbose && to.prune > 0){
       #  setTxtProgressBar(pb,k)
       bar_prune$increment()
        #message(sprintf("removing vertex %d of %d.", k, to.prune))
@@ -776,9 +776,9 @@ metric_graph <-  R6::R6Class("metric_graph",
      }
      res <- private$remove.first.deg2(res)
    }
-    if(verbose && to.prune > 0){
-      close(pb)
-    }
+    # if(verbose && to.prune > 0){
+    #   close(pb)
+    # }
    if(!is.null(self$data)){
       x_coord <- self$data[["__coord_x"]]
       y_coord <- self$data[["__coord_y"]]
