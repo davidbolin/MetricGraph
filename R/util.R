@@ -862,7 +862,7 @@ process_factor_unit <- function(vertex_unit, length_unit){
   }
   if(vertex_unit == length_unit){
     return(1)
-  } else if(vertex_unit == "longlat"){
+  } else if(vertex_unit == "degrees"){
     fact <- switch(length_unit, "km" = 1,
                         "m" = 1000,
                         "miles" = 0.621371192)

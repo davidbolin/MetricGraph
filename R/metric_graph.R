@@ -86,12 +86,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
   #' @param E m x 2 matrix where each row represents one of the m edges.
-  #' @param vertex_unit The unit in which the vertices are specified. The options are 'longlat' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
+  #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
-  #' If `vertex_unit` is 'longlat', then the default value for `length_unit` is 'm'.
+  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'm'.
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
-  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'longlat'` and `length_unit = 'm'`.
+  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
   #' @param tolerance List that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged
@@ -135,7 +135,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         remove_circles = TRUE,
                         verbose = FALSE) {
 
-      valid_units_vertex <- c("m", "km", "miles", "longlat")
+      valid_units_vertex <- c("m", "km", "miles", "degrees")
       valid_units_length <- c("m", "km", "miles")
 
     # private$longlat <- longlat
@@ -160,7 +160,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(!is.character(length_unit)){
         stop("'length_unit' must be a string!")
       }
-      if(length_unit == "longlat"){
+      if(length_unit == "degrees"){
         length_unit <- "m"
       }
       if(!(length_unit %in% valid_units_length)){
@@ -170,10 +170,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     } 
 
     if(longlat){
-      private$vertex_unit <- "longlat"
+      private$vertex_unit <- "degrees"
       private$length_unit <- "m"
     } else if(!is.null(vertex_unit)){ 
-        if(private$vertex_unit == "longlat"){
+        if(private$vertex_unit == "degrees"){
           longlat <- TRUE
         }
     }
@@ -1573,7 +1573,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
 
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "longlat"){
+        if(private$vertex_unit == "degrees"){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -1597,7 +1597,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "longlat"){
+        if(private$vertex_unit == "degrees"){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")")) 
@@ -1752,7 +1752,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                              split = ~i, showlegend = FALSE, ...)
 
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "longlat"){
+        if(private$vertex_unit == "degrees"){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -2485,6 +2485,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       } else{
         E_new1 <- self$E[e1,1]
         E_new2 <- self$E[e2,2]
+
         #if(verbose){
         #  cat("ind = ", ind, ", E_new1 = ", E_new1, ", E_new2 = ", E_new2, "\n")
         #}
@@ -3034,11 +3035,12 @@ graph_components <-  R6::R6Class("graph_components",
    #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
    #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
    #' @param E m x 2 matrix where each row represents an edge.
-  #' @param vertex_unit The unit in which the vertices are specified. The options are 'longlat' (the great circle distance in km), 'km', 'm' and 'miles'. The default is 'km'.
-  #' @param length_unit The unit in which the lengths will be computed. The options are 'longlat' (the great circle distance in km), 'km', 'm' and 'miles'. The default is 'm'.
+  #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
+  #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
+  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'm'.
   #' @param longlat If TRUE, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
-  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'longlat'` and `length_unit = 'm'`.
+  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
    #' @param tolerance Vertices that are closer than this number are merged when
    #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
    #' tolerance is given in km.
