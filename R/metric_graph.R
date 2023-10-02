@@ -167,12 +167,12 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop(paste("The possible options for 'length_unit' are ", valid_units_length))
       }
       private$length_unit <- length_unit
-    } 
+    }
 
     if(longlat){
       private$vertex_unit <- "degrees"
       private$length_unit <- "km"
-    } else if(!is.null(vertex_unit)){ 
+    } else if(!is.null(vertex_unit)){
         if(private$vertex_unit == "degrees"){
           longlat <- TRUE
         }
@@ -742,10 +742,41 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   #' @description Removes vertices of degree 2 from the metric graph.
   #' @return No return value. Called for its side effects.
-  prune_vertices = function(){
-   while(sum(self$get_degrees()==2)>0) {
-     private$remove.first.deg2()
+  #' @param verbose Show progress? Default is `FALSE`.
+  #' @details
+    #' Vertices of degree 2 are removed as long as the corresponding edges that
+    #' would be merged are compatible in terms of direction.
+    #'
+  prune_vertices = function(verbose = FALSE){
+    degrees <- self$get_degrees()
+    start.deg <- end.deg <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+      start.deg[i] <- sum(self$E[,1]==i)
+      end.deg[i] <- sum(self$E[,2]==i)
+    }
+    problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    res <- list(degrees = degrees, problematic = problematic)
+    if(verbose){
+      to.prune <- sum(res$degrees==2 & !res$problematic)
+      k <- 1
+      message(sprintf("removing %d vertices", to.prune))
+      if(to.prune > 0) {
+        pb = txtProgressBar(min = 1, max = to.prune, initial = 1, style = 3)
+      }
+
+    }
+
+   while(sum(res$degrees==2 & !res$problematic)>0) {
+     if(verbose){
+       setTxtProgressBar(pb,k)
+       #message(sprintf("removing vertex %d of %d.", k, to.prune))
+       k <- k + 1
+     }
+     res <- private$remove.first.deg2(res)
    }
+    if(verbose && to.prune > 0){
+      close(pb)
+    }
    if(!is.null(self$data)){
       x_coord <- self$data[["__coord_x"]]
       y_coord <- self$data[["__coord_y"]]
@@ -1328,7 +1359,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         if(private$vertex_unit == "longlat"){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
-          p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")")) 
+          p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
         }
       }
     } else {
@@ -1600,7 +1631,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         if(private$vertex_unit == "degrees"){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
-          p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")")) 
+          p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
         }
       }
     }
@@ -2404,12 +2435,15 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
 
-  remove.first.deg2 = function() {
-    ind <- which(self$get_degrees()==2)
+  remove.first.deg2 = function(res) {
+    ind <- which(res$degrees==2 & !res$problematic)
+    res.out <- res
     if(length(ind)>0) {
       LineLengths <- self$LtE%*%self$edge_lengths
 
       ind <- ind[1]
+      res.out$degrees <- res$degrees[-ind]
+      res.out$problematic <- res$problematic[-ind]
       e1 <- which(self$E[,2]==ind)
       e2 <- which(self$E[,1]==ind)
       e_rem <- sort(c(e1,e2))
@@ -2534,8 +2568,8 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
           if (self$ELstart[e_rem[2]] == 0){
             self$ELstart[e_rem[1]] <- 0
-          }       
-      }   
+          }
+      }
       } else{
           if (self$ELend[e_rem[2]] == 1){
             self$ELend[e_rem[1]] <- 1
@@ -2546,7 +2580,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
 
 
-      
+
       self$ELend <- self$ELend[-e_rem[2]]
       self$ELstart <- self$ELstart[-e_rem[2]]
 
@@ -2555,6 +2589,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       self$nE <- self$nE - 1
     }
+    return(res.out)
   },
 
   # Vertex added in the initial processing
@@ -2589,7 +2624,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   addinfo = FALSE,
 
-  # vertex unit 
+  # vertex unit
 
   vertex_unit = NULL,
 
