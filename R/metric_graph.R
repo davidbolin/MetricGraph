@@ -88,7 +88,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param E m x 2 matrix where each row represents one of the m edges.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
-  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'm'.
+  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
@@ -161,7 +161,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop("'length_unit' must be a string!")
       }
       if(length_unit == "degrees"){
-        length_unit <- "m"
+        length_unit <- "km"
       }
       if(!(length_unit %in% valid_units_length)){
         stop(paste("The possible options for 'length_unit' are ", valid_units_length))
@@ -171,7 +171,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(longlat){
       private$vertex_unit <- "degrees"
-      private$length_unit <- "m"
+      private$length_unit <- "km"
     } else if(!is.null(vertex_unit)){ 
         if(private$vertex_unit == "degrees"){
           longlat <- TRUE
@@ -3037,7 +3037,7 @@ graph_components <-  R6::R6Class("graph_components",
    #' @param E m x 2 matrix where each row represents an edge.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
-  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'm'.
+  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
   #' @param longlat If TRUE, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
