@@ -954,3 +954,54 @@ msg_progress_bar <-
       }
     )
   )
+
+  #' @noRd
+  #' 
+  
+  get_rel_pos_prune <- function(which_line_starts, Line_1, Line_2, start_1, end_1, start_2, end_2, length_line1, length_line2){
+
+      if(Line_1 != Line_2){
+        total_length <- length_line2 + length_line1
+        if(which_line_starts == 1){
+          # if(start_2 == 0) {
+          #   end <- (end_2*length_line2+length_line1)/total_length
+          # } else {
+          #   end <- ((end_2 - start_2)*length_line2+length_line1)/total_length
+          # }
+          # if(end_1 == 1){
+          #   start <- (start_1 * length_line1)/total_length
+          # } else{
+          #   start <- ((end_1 - start_1)*length_line1+length_line2)/total_length
+          # }
+          start <- start_1 * length_line1 / total_length
+          end <- (end_2 * length_line2 + length_line1)/ total_length
+        } else{
+          # if(start_1 == 0) {
+          #   end <- (end_1*length_line1+length_line2)/total_length
+          # } else {
+          #   end <- ((end_1 - start_1)*length_line1+length_line2)/total_length
+          # }
+          # if(end_2 == 1){
+          #   start <- (start_2 * length_line2)/total_length
+          # } else{
+          #   start <- ((end_2 - start_2)*length_line2+length_line1)/total_length
+          # }
+          start <- start_2 * length_line2 / total_length
+          end <- (end_1 * length_line1 + length_line2)/ total_length
+        }
+      } else {
+          end <- max(end_1,end_2)
+          start <- min(start_1,start_2)
+      }
+
+      return(list(start = start, end = end))
+  }
+
+
+
+#' @noRd 
+#' 
+
+get_vertex_pos_in_line <- function(V, coords_line){
+    return(which.min(sapply(1:nrow(coords_line), function(i){norm(as.matrix(V - coords_line[i,]))})))
+}
