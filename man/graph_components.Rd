@@ -72,8 +72,14 @@ the components are sorted by the number of vertices.}
 
 \item{\code{...}}{Additional arguments used when specifying the graphs}
 
-\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given
-in Longitude/Latitude and that distances should be computed in km.}
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
+
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
+If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+
+\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
+in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
 
 \item{\code{tolerance}}{Vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the

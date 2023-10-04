@@ -436,7 +436,28 @@ metric_graph <-  R6::R6Class("metric_graph",
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
     }
   },
-
+  print = function() {
+    cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
+    if(!is.null(self$characteristics)) {
+      cat("Some characteristics of the graph:\n")
+      if(self$characteristics$has_loops){
+        cat("  Has loops: TRUE\n")
+      } else {
+        cat("  Has loops: FALSE\n")
+      }
+      if(self$characteristics$has_multiple_edges){
+        cat("  Has multiple edges: TRUE\n")
+      } else {
+        cat("  Has multiple edges: FALSE\n")
+      }
+      if(self$characteristics$is_tree){
+        cat("  Is a tree: TRUE\n")
+      } else {
+        cat("  Is a tree: FALSE\n")
+      }
+    }
+    invisible(self)
+  },
   #' @description Computes various characteristics of the graph
   #' @return No return value. Called for its side effects. The computed characteristics
   #' are stored in the `characteristics` element of the `metric_graph` object.
@@ -455,7 +476,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     k <- 1
     while(k < self$nV && self$characteristics$has_multiple_edges == FALSE) {
       ind <- which(self$E[,1]==k | self$E[,2]==k) #edges starting or ending in k
-      if(length(ind) > length(unique(rowSums(self$E[ind,])))) {
+      if(length(ind) > length(unique(rowSums(self$E[ind,,drop=FALSE])))) {
         self$characteristics$has_multiple_edges <- TRUE
       } else {
         k <- k + 1
@@ -1439,7 +1460,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @return TRUE if the graph is a tree and FALSE otherwise.
   is_tree = function(){
         g <- graph(edges = c(t(self$E)), directed = FALSE)
-        return(is_tree(g, mode = "all"))
+        return(igraph::is_tree(g, mode = "all"))
   },
 
   #' @description Plots continuous function on the graph.
