@@ -394,12 +394,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
 
-    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
-    if(is.logical(remove_circles)){
-      private$remove_circles(tolerance$vertex_vertex)
-    } else {
-      private$remove_circles(remove_circles)
-    }
+    # private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
+    # if(is.logical(remove_circles)){
+    #   private$remove_circles(tolerance$vertex_vertex)
+    # } else {
+    #   private$remove_circles(remove_circles)
+    # }
 
     if (remove_deg2) {
       if (verbose) {
@@ -1403,7 +1403,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @return TRUE if the graph is a tree and FALSE otherwise.
   is_tree = function(){
         g <- graph(edges = c(t(self$E)), directed = FALSE)
-        return(is_tree(graph, mode = "all"))
+        return(is_tree(g, mode = "all"))
   },
 
   #' @description Plots continuous function on the graph.
