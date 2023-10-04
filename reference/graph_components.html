@@ -146,9 +146,19 @@ the components are sorted by the number of vertices.</p></dd>
 <dd><p>Additional arguments used when specifying the graphs</p></dd>
 
 
+<dt><code>vertex_unit</code></dt>
+<dd><p>The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is <code>NULL</code>, which means no unit. However, if you set <code>length_unit</code>, you need to set <code>vertex_unit</code>.</p></dd>
+
+
+<dt><code>length_unit</code></dt>
+<dd><p>The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is <code>vertex_unit</code>. Observe that if <code>vertex_unit</code> is <code>NULL</code>, <code>length_unit</code> can only be <code>NULL</code>.
+If <code>vertex_unit</code> is 'degrees', then the default value for <code>length_unit</code> is 'km'.</p></dd>
+
+
 <dt><code>longlat</code></dt>
-<dd><p>If <code>TRUE</code>, then it is assumed that the coordinates are given
-in Longitude/Latitude and that distances should be computed in km.</p></dd>
+<dd><p>If TRUE, then it is assumed that the coordinates are given.
+in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
+<code>vertex_unit</code> and <code>length_unit</code>, and is equivalent to <code>vertex_unit = 'degrees'</code> and <code>length_unit = 'm'</code>.</p></dd>
 
 
 <dt><code>tolerance</code></dt>
