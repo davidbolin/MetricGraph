@@ -82,6 +82,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' graph. The weights are given by the edge lengths.
   Laplacian = NULL,
 
+  #' @field characteristics List with various characteristics of the graph.
+  characteristics = NULL,
+
   #' @description Create a new `metric_graph` object.
   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
@@ -431,6 +434,39 @@ metric_graph <-  R6::R6Class("metric_graph",
     # Checking if there is some edge with infinite length
     if(any(!is.finite(self$edge_lengths))){
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
+    }
+  },
+
+  #' @description Computes various characteristics of the graph
+  #' @return No return value. Called for its side effects. The computed characteristics
+  #' are stored in the `characteristics` element of the `metric_graph` object.
+  compute_characteristics = function() {
+    self$characteristics <- list()
+
+    #check for loops
+    if(sum(self$E[,1]==self$E[,2])>0) {
+      self$characteristics$has_loops <- TRUE
+    } else {
+      self$characteristics$has_loops <- FALSE
+    }
+
+    #check for multiple edges
+    self$characteristics$has_multiple_edges <- FALSE
+    k <- 1
+    while(k < self$nV && self$characteristics$has_multiple_edges == FALSE) {
+      ind <- which(self$E[,1]==k | self$E[,2]==k) #edges starting or ending in k
+      if(length(ind) > length(unique(rowSums(self$E[ind,])))) {
+        self$characteristics$has_multiple_edges <- TRUE
+      } else {
+        k <- k + 1
+      }
+    }
+
+    #check for tree structure
+    if(!self$characteristics$has_loops && !self$characteristics$has_multiple_edges){
+      self$characteristics$is_tree <- self$is_tree()
+    } else {
+      self$characteristics$is_tree <- FALSE
     }
   },
 
@@ -2033,7 +2069,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     lines_keep_id <- NULL
 
     for (i in 1:max(lines[, 1])) {
-      
+
       if(verbose){
         bar_line_vertex$increment()
       }
@@ -2391,7 +2427,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       for (ind in unique(LtE[, 1])) {
         if(verbose){
           bar_multiple_snaps$increment()
-        }        
+        }
         Es_ind <- which(self$LtE[ind, ] > 0)
 
         index.p <- which(LtE[, 1] == ind)
@@ -2542,7 +2578,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       # if( (Line_2 == e_rem[2]) && (Line_1 != Line_2)){
 
-      if( Line_1 != Line_2){        
+      if( Line_1 != Line_2){
         # ind_keep1 <- seq_len(e_rem[1]-1)
         # ind_keep2 <- setdiff((e_rem[1]+1):length(self$lines),e_rem[2])
 
@@ -2568,7 +2604,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         #   #    norm(as.matrix(coords[1,]-loc.rem))) {
         #   if(norm(as.matrix(coords[e_line1,]-loc.rem)) <
         #      norm(as.matrix(coords[s_line1,]-loc.rem))) {
-            
+
         #     #vertex removed is at the end of the segment
         #     coords <- rbind(tmp, coords[rev(1:dim(coords)[1]),])
         #     E_new <- matrix(c(v1,v2),1,2)
@@ -2627,7 +2663,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         #   diff_es <- norm(as.matrix(coords[e_line1,] - tmp[s_line2,]))
         #   diff_ee <- norm(as.matrix(coords[e_line1,] - tmp[e_line2,]))
         #   diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
-        
+
         #   if(which.min(diffs) == 1) {
         #   if(norm(as.matrix(coords[e_line1,]-loc.rem)) <
         #      norm(as.matrix(coords[s_line1,]-loc.rem))) {
@@ -2844,7 +2880,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$ELend[added_edges_id[1]] <- 1
         self$ELstart[added_edges_id[2]] <- 0
         self$ELend[added_edges_id[2]] <- 1
-        
+
         self$edge_lengths[added_edges_id[1]] <- LineLength(line1@Lines[[1]])
         self$edge_lengths[added_edges_id[2]] <- LineLength(line2@Lines[[1]])
         self$EID <- c(self$EID, paste0(id_line, "__", as.character(times_split+1)))
