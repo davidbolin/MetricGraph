@@ -392,13 +392,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       private$clear_initial_info()
     }
+
+
     private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
     if(is.logical(remove_circles)){
       private$remove_circles(tolerance$vertex_vertex)
     } else {
       private$remove_circles(remove_circles)
     }
-
 
     if (remove_deg2) {
       if (verbose) {
@@ -1396,6 +1397,13 @@ metric_graph <-  R6::R6Class("metric_graph",
   plot_connections = function(){
         g <- graph(edges = c(t(self$E)), directed = FALSE)
         plot(g)
+  },
+
+  #' @description Checks if the graph is a tree (without considering directions)
+  #' @return TRUE if the graph is a tree and FALSE otherwise.
+  is_tree = function(){
+        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        return(is_tree(graph, mode = "all"))
   },
 
   #' @description Plots continuous function on the graph.
@@ -2523,27 +2531,26 @@ metric_graph <-  R6::R6Class("metric_graph",
       # s_line2 <- min(p_v2_in_line2, p_v_in_line2)
       # e_line2 <- max(p_v2_in_line2, p_v_in_line2)
 
-      ELstart1 <- self$ELstart[e_rem[1]]
-      ELstart2 <- self$ELstart[e_rem[2]]
-      ELend1 <- self$ELend[e_rem[1]]
-      ELend2 <- self$ELend[e_rem[2]]
-
       if(v1 > ind) {
         v1 <- v1-1
       }
       if(v2 > ind) {
         v2 <- v2 - 1
       }
-      loc.rem <- self$V[ind,]
+      # loc.rem <- self$V[ind,]
       # e_remidx <- which(self$LtE[,e_rem[2]] == 1)
-      e_remidx <- Line_2
 
-      if( (e_remidx == e_rem[2]) && (Line_1 != Line_2)){
+      # if( (Line_2 == e_rem[2]) && (Line_1 != Line_2)){
+
+      if( Line_1 != Line_2){        
         # ind_keep1 <- seq_len(e_rem[1]-1)
         # ind_keep2 <- setdiff((e_rem[1]+1):length(self$lines),e_rem[2])
 
-        coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords #line from v1 to v.rem
-        tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords #line from v.rem to v2
+        # coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords #line from v1 to v.rem
+        # tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords #line from v.rem to v2
+
+         coords <- self$lines@lines[[Line_1]]@Lines[[1]]@coords #line from v1 to v.rem
+         tmp <- self$lines@lines[[Line_2]]@Lines[[1]]@coords #line from v.rem to v2
 
 
         # diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
@@ -2594,21 +2601,24 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
 
         #set element e_rem[1] to the new line
-        self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords <- coords
+        # self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords <- coords
+        self$lines@lines[[Line_1]]@Lines[[1]]@coords <- coords
         #remove e_rem[2]
-        self$lines <- self$lines[-e_rem[2]]
+        # self$lines <- self$lines[-e_rem[2]]
+        self$lines <- self$lines[-Line_2]
 
         #update lines
         #self$lines <- line_new
         # self$EID <- self$EID[-e_rem[2]]
         # self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
         # self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
-        if(sum(self$LtE[e_rem[2],])>1){
-          idx_addback <- which(self$LtE[e_rem[2],] == 1)
+        if(sum(self$LtE[Line_2,])>1){
+          idx_addback <- which(self$LtE[Line_2,] == 1)
           # idx_addback <- ifelse(idx_addback > e_rem[2], idx_addback-1, idx_addback)
-          self$LtE[e_rem[1],idx_addback] <- 1
+          self$LtE[Line_1,idx_addback] <- 1
         }
-        self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+        # self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+        self$LtE <- self$LtE[-Line_2, -e_rem[2]]
       } else{
         #   coords <- self$lines@lines[[Line_1]]@Lines[[1]]@coords #line from v1 to v.rem
         #   tmp <- self$lines@lines[[Line_2]]@Lines[[1]]@coords #line from v.rem to v2
@@ -2834,6 +2844,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$ELend[added_edges_id[1]] <- 1
         self$ELstart[added_edges_id[2]] <- 0
         self$ELend[added_edges_id[2]] <- 1
+        
         self$edge_lengths[added_edges_id[1]] <- LineLength(line1@Lines[[1]])
         self$edge_lengths[added_edges_id[2]] <- LineLength(line2@Lines[[1]])
         self$EID <- c(self$EID, paste0(id_line, "__", as.character(times_split+1)))

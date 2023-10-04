@@ -34,7 +34,7 @@
 #' @aliases MetricGraph-package
 #' @import Matrix
 #' @export Cholesky t
-#' @importFrom igraph graph distances
+#' @importFrom igraph graph distances is_tree
 #' @importFrom rSPDE matern.covariance gg_df
 #' @importFrom methods is slot
 #' @export gg_df
