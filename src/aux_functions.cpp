@@ -226,3 +226,4 @@ double compute_length(Eigen::MatrixXd coords) {
     return(arclength);
 
 }
+

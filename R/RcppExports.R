@@ -85,3 +85,11 @@ compute_length <- function(coords) {
     .Call(`_MetricGraph_compute_length`, coords)
 }
 
+#' @name extract_vertices
+#' @title Extract vertices from edges
+#' @description Obtains the vertices from the list of edges.
+#' @param coords [nx2 matrix] Matrix with the vertices.
+extract_vertices <- function(edges) {
+    .Call(`_MetricGraph_extract_vertices`, edges)
+}
+

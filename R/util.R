@@ -1044,13 +1044,3 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
     }
 }
 
-#' @noRd
-#' 
-
-dist_function <- function(p1, p2, longlat){
-    if(longlat){
-
-    } else{
-      return(dist)
-    }
-}

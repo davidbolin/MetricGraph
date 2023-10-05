@@ -93,9 +93,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' If `longlat = TRUE`, the tolerances are given in km.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
   #' connected and a warning is given if this is not the case.
-  #' @param adjust_lines Set to `TRUE` to adjust the lines object to match the graph
-  #' connections. This can take some time for large graphs, so by default it is `TRUE`
-  #' for graphs with at most 100 lines, and `FALSE` for larger graphs.
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
   #' @param remove_circles All circlular edges with a length smaller than this number
@@ -121,7 +118,6 @@ metric_graph <-  R6::R6Class("metric_graph",
                                          vertex_line = 1e-7,
                                          line_line = 0),
                         check_connected = TRUE,
-                        adjust_lines = NULL,
                         remove_deg2 = FALSE,
                         remove_circles = TRUE,
                         verbose = FALSE) {
@@ -256,14 +252,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       )
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
-    }
-
-    if(is.null(adjust_lines)) {
-      if(length(self$lines) < 100) {
-        adjust_lines = TRUE
-      } else {
-        adjust_lines = FALSE
-      }
     }
 
     if (tolerance$line_line > 0) {
@@ -1995,13 +1983,13 @@ metric_graph <-  R6::R6Class("metric_graph",
   private = list(
   #function for creating Vertex and Edges from self$lines
   line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit) {
-    lines <- matrix(nrow = 2*length(self$edges), ncol = 3)
 
     if(verbose){
       message("Part 1/2")
-      bar_line_vertex <- msg_progress_bar(length(self$lines))
+      bar_line_vertex <- msg_progress_bar(length(self$edges))
     }
 
+    lines <- matrix(nrow = 2*length(self$edges), ncol = 3)
     for(i in 1:length(self$edges)){
       if(verbose){
         bar_line_vertex$increment()
@@ -2029,8 +2017,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         dists <- sp::spDists(sp_points, longlat = TRUE) * fact
     }
 
-    vertex <- matrix(nrow = nrow(lines), ncol = 3)
-    vertex[1,] <- lines[1, , drop = FALSE]
+
     if(verbose){
       message("Done!")
     }
@@ -2040,15 +2027,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       bar_line_vertex <- msg_progress_bar(dim(lines)[1]-1 + max(lines[, 1]))
     }
 
-    for (i in 2:dim(lines)[1]) {
-      if(verbose){
-        bar_line_vertex$increment()
-      }
-      if (all(dists[i, 1:(i-1)] > tolerance)) {
-        vertex[i, ] <- lines[i, ]
-      }
-    }
-    vertex <- na.exclude(vertex)
+    idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
+    vertex2 <- lines[idx_keep,]
+
 
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     k=1

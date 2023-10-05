@@ -73,6 +73,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// extract_vertices
+Eigen::MatrixXd extract_vertices(Rcpp::List edges);
+RcppExport SEXP _MetricGraph_extract_vertices(SEXP edgesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type edges(edgesSEXP);
+    rcpp_result_gen = Rcpp::wrap(extract_vertices(edges));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
@@ -80,6 +91,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},
     {"_MetricGraph_interpolate2_aux", (DL_FUNC) &_MetricGraph_interpolate2_aux, 3},
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
+    {"_MetricGraph_extract_vertices", (DL_FUNC) &_MetricGraph_extract_vertices, 1},
     {NULL, NULL, 0}
 };
 
