@@ -82,6 +82,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' graph. The weights are given by the edge lengths.
   Laplacian = NULL,
 
+  #' @field characteristics List with various characteristics of the graph.
+  characteristics = NULL,
+
   #' @description Create a new `metric_graph` object.
   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
@@ -150,7 +153,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop("'vertex_unit' must be a string!")
       }
       if(!(vertex_unit %in% valid_units_vertex)){
-        stop(paste("The possible options for 'vertex_unit' are ", valid_units_vertex))
+        stop(paste("The possible options for 'vertex_unit' are ", toString(valid_units_vertex)))
       }
       private$vertex_unit <- vertex_unit
     }
@@ -164,7 +167,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         length_unit <- "km"
       }
       if(!(length_unit %in% valid_units_length)){
-        stop(paste("The possible options for 'length_unit' are ", valid_units_length))
+        stop(paste("The possible options for 'length_unit' are ", toString(valid_units_length)))
       }
       private$length_unit <- length_unit
     }
@@ -244,7 +247,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
-                           longlat = longlat, factor_unit)
+                           longlat = longlat, factor_unit, verbose=verbose)
       )
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -266,7 +269,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     t <- system.time(
-      points_add <- private$find_line_line_points(tol = tolerance$line_line)
+      points_add <- private$find_line_line_points(tol = tolerance$line_line, verbose=verbose)
       )
 
     if(verbose){
@@ -295,7 +298,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       PtE <- na.omit(PtE)
 
       t <- system.time(
-      private$add_vertices(PtE, tolerance = tolerance$line_line)
+      private$add_vertices(PtE, tolerance = tolerance$line_line, verbose = verbose)
       )
 
       if(verbose){
@@ -313,7 +316,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
           private$split_line_at_added_vertex(private$initial_line_added[i],
                                             private$initial_added_vertex[i],
-                                            private$initial_edges_added[i,])
+                                            private$initial_edges_added[i,],
+                                            verbose=verbose)
       })
 
       if(verbose){
@@ -333,7 +337,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       t <- system.time(
         PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
-                                              tolerance = tolerance$vertex_line)
+                                              tolerance = tolerance$vertex_line, verbose = verbose)
         )
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -361,7 +365,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         PtE_tmp <- na.omit(PtE_tmp)
 
         t <- system.time(
-          private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line)
+          private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line, verbose=verbose)
           )
 
         if(verbose){
@@ -379,7 +383,8 @@ metric_graph <-  R6::R6Class("metric_graph",
           for(i in 1:length(private$initial_added_vertex)){
             private$split_line_at_added_vertex(private$initial_line_added[i],
                                                private$initial_added_vertex[i],
-                                               private$initial_edges_added[i,])
+                                               private$initial_edges_added[i,],
+                                               verbose=verbose)
           })
 
         if(verbose){
@@ -390,20 +395,21 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       private$clear_initial_info()
     }
-    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
-    if(is.logical(remove_circles)){
-      private$remove_circles(tolerance$vertex_vertex)
-    } else {
-      private$remove_circles(remove_circles)
-    }
 
+
+    # private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
+    # if(is.logical(remove_circles)){
+    #   private$remove_circles(tolerance$vertex_vertex)
+    # } else {
+    #   private$remove_circles(remove_circles)
+    # }
 
     if (remove_deg2) {
       if (verbose) {
         message("Remove degree 2 vertices")
       }
       t <- system.time(
-      private$merge.all.deg2()
+        self$prune_vertices(verbose = verbose)
       )
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -428,6 +434,60 @@ metric_graph <-  R6::R6Class("metric_graph",
     # Checking if there is some edge with infinite length
     if(any(!is.finite(self$edge_lengths))){
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
+    }
+  },
+  print = function() {
+    cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
+    if(!is.null(self$characteristics)) {
+      cat("Some characteristics of the graph:\n")
+      if(self$characteristics$has_loops){
+        cat("  Has loops: TRUE\n")
+      } else {
+        cat("  Has loops: FALSE\n")
+      }
+      if(self$characteristics$has_multiple_edges){
+        cat("  Has multiple edges: TRUE\n")
+      } else {
+        cat("  Has multiple edges: FALSE\n")
+      }
+      if(self$characteristics$is_tree){
+        cat("  Is a tree: TRUE\n")
+      } else {
+        cat("  Is a tree: FALSE\n")
+      }
+    }
+    invisible(self)
+  },
+  #' @description Computes various characteristics of the graph
+  #' @return No return value. Called for its side effects. The computed characteristics
+  #' are stored in the `characteristics` element of the `metric_graph` object.
+  compute_characteristics = function() {
+    self$characteristics <- list()
+
+    #check for loops
+    if(sum(self$E[,1]==self$E[,2])>0) {
+      self$characteristics$has_loops <- TRUE
+    } else {
+      self$characteristics$has_loops <- FALSE
+    }
+
+    #check for multiple edges
+    self$characteristics$has_multiple_edges <- FALSE
+    k <- 1
+    while(k < self$nV && self$characteristics$has_multiple_edges == FALSE) {
+      ind <- which(self$E[,1]==k | self$E[,2]==k) #edges starting or ending in k
+      if(length(ind) > length(unique(rowSums(self$E[ind,,drop=FALSE])))) {
+        self$characteristics$has_multiple_edges <- TRUE
+      } else {
+        k <- k + 1
+      }
+    }
+
+    #check for tree structure
+    if(!self$characteristics$has_loops && !self$characteristics$has_multiple_edges){
+      self$characteristics$is_tree <- self$is_tree()
+    } else {
+      self$characteristics$is_tree <- FALSE
     }
   },
 
@@ -761,22 +821,24 @@ metric_graph <-  R6::R6Class("metric_graph",
       k <- 1
       message(sprintf("removing %d vertices", to.prune))
       if(to.prune > 0) {
-        pb = txtProgressBar(min = 1, max = to.prune, initial = 1, style = 3)
+        # pb = txtProgressBar(min = 1, max = to.prune, initial = 1, style = 3)
+        bar_prune <- msg_progress_bar(to.prune)
       }
 
     }
 
    while(sum(res$degrees==2 & !res$problematic)>0) {
-     if(verbose){
-       setTxtProgressBar(pb,k)
+     if(verbose && to.prune > 0){
+      #  setTxtProgressBar(pb,k)
+      bar_prune$increment()
        #message(sprintf("removing vertex %d of %d.", k, to.prune))
        k <- k + 1
      }
      res <- private$remove.first.deg2(res)
    }
-    if(verbose && to.prune > 0){
-      close(pb)
-    }
+    # if(verbose && to.prune > 0){
+    #   close(pb)
+    # }
    if(!is.null(self$data)){
       x_coord <- self$data[["__coord_x"]]
       y_coord <- self$data[["__coord_y"]]
@@ -1394,6 +1456,13 @@ metric_graph <-  R6::R6Class("metric_graph",
         plot(g)
   },
 
+  #' @description Checks if the graph is a tree (without considering directions)
+  #' @return TRUE if the graph is a tree and FALSE otherwise.
+  is_tree = function(){
+        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        return(igraph::is_tree(g, mode = "all"))
+  },
+
   #' @description Plots continuous function on the graph.
   #' @param X Either an m x 3 matrix with (edge number, position on
   #' curve (in length), value) or a vector with values for the function
@@ -1974,18 +2043,42 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   private = list(
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact) {
+  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose) {
     lines <- c()
+
+    if(verbose){
+      message("Part 1/2")
+      bar_line_vertex <- msg_progress_bar(length(self$lines))
+    }
+
     for(i in 1:length(self$lines)){
+      if(verbose){
+        bar_line_vertex$increment()
+      }
       points <- self$lines@lines[[i]]@Lines[[1]]@coords
       n <- dim(points)[1]
       lines <- rbind(lines, c(i, points[1,]), c(i, points[n,]))
     }
 
     #save all vertices that are more than tolerance distance apart
+    if(verbose){
+      message("Computing auxiliary distances")
+    }
     dists <- spDists(lines[, 2:3, drop = FALSE], longlat = longlat) * fact
     vertex <- lines[1, , drop = FALSE]
+    if(verbose){
+      message("Done!")
+    }
+
+    if(verbose){
+      message("Part 2/2")
+      bar_line_vertex <- msg_progress_bar(dim(lines)[1]-1 + max(lines[, 1]))
+    }
+
     for (i in 2:dim(lines)[1]) {
+      if(verbose){
+        bar_line_vertex$increment()
+      }
       i.min <- which.min(dists[i, 1:(i-1)])
       if (dists[i, i.min] > tolerance) {
         vertex <- rbind(vertex, lines[i, ])
@@ -1995,7 +2088,13 @@ metric_graph <-  R6::R6Class("metric_graph",
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     k=1
     lines_keep_id <- NULL
+
     for (i in 1:max(lines[, 1])) {
+
+      if(verbose){
+        bar_line_vertex$increment()
+      }
+
       which.line <- sort(which(lines[, 1] == i))
       line <- lines[which.line, ]
       #index of vertex corresponding to the start of the line
@@ -2288,18 +2387,32 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   ## Coordinates function to return all the lines intersecting within a tolerance
 
-    coordinates_multiple_snaps = function(XY, tolerance){
+    coordinates_multiple_snaps = function(XY, tolerance, verbose = verbose){
       Spoints <- SpatialPoints(XY)
       coords_line <- c()
       coords_tmp <- c()
       Spoints_sf <- sf::st_as_sf(Spoints)
       lines_sf <- sf::st_as_sf(self$lines)
 
+      if(verbose){
+        message("Computing auxiliary distances")
+      }
       # within_dist <- gWithinDistance(Spoints, self$lines, dist = tolerance, byid = TRUE)
       within_dist <- t(as.matrix(sf::st_is_within_distance(Spoints_sf, lines_sf, dist = tolerance)))
+      if(verbose){
+        message("Done!")
+      }
+
+      if(verbose){
+        message("Part 1/2")
+        bar_multiple_snaps <- msg_progress_bar(length(self$lines))
+      }
 
 
       for(i in 1:length(self$lines)){
+        if(verbose){
+          bar_multiple_snaps$increment()
+        }
         select_points <- matrix(XY[within_dist[i,],], ncol=2)
         if(nrow(select_points) > 0){
           SP_tmp <- SpatialPoints(select_points)
@@ -2314,7 +2427,15 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       LtE = cbind(match(coords_line, self$EID), 0)
 
+      if(verbose){
+        message("Part 2/2")
+        bar_multiple_snaps <- msg_progress_bar(2*length(unique(LtE[, 1])))
+      }
+
       for (ind in unique(LtE[, 1])) {
+        if(verbose){
+          bar_multiple_snaps$increment()
+        }
         index.p <- LtE[, 1] == ind
         # LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
         #                                normalized=TRUE)
@@ -2325,7 +2446,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       PtE <- LtE
 
       for (ind in unique(LtE[, 1])) {
-
+        if(verbose){
+          bar_multiple_snaps$increment()
+        }
         Es_ind <- which(self$LtE[ind, ] > 0)
 
         index.p <- which(LtE[, 1] == ind)
@@ -2442,81 +2565,151 @@ metric_graph <-  R6::R6Class("metric_graph",
       LineLengths <- self$LtE%*%self$edge_lengths
 
       ind <- ind[1]
-      res.out$degrees <- res$degrees[-ind]
-      res.out$problematic <- res$problematic[-ind]
       e1 <- which(self$E[,2]==ind)
       e2 <- which(self$E[,1]==ind)
-      e_rem <- sort(c(e1,e2))
+      order_edges <- order(c(e1,e2))
+      e_rem <- c(e1,e2)[order_edges]
+
+      which_line_starts <- which(order_edges == 1)
 
       Line_1 <- which(self$LtE[, e_rem[1]] == 1)
       Line_2 <- which(self$LtE[, e_rem[2]] == 1)
 
       v1 <- setdiff(self$E[e_rem[1],],ind)
       v2 <- setdiff(self$E[e_rem[2],],ind)
+
+      # p_v1_in_line1 <- get_vertex_pos_in_line(self$V[v1,],  self$lines@lines[[Line_1]]@Lines[[1]]@coords)
+      # p_v_in_line1 <-  get_vertex_pos_in_line(self$V[ind,], self$lines@lines[[Line_1]]@Lines[[1]]@coords)
+      # p_v2_in_line2 <- get_vertex_pos_in_line(self$V[v2,],  self$lines@lines[[Line_2]]@Lines[[1]]@coords)
+      # p_v_in_line2 <-  get_vertex_pos_in_line(self$V[ind,], self$lines@lines[[Line_2]]@Lines[[1]]@coords)
+
+      # s_line1 <- min(p_v1_in_line1, p_v_in_line1)
+      # e_line1 <- max(p_v1_in_line1, p_v_in_line1)
+      # s_line2 <- min(p_v2_in_line2, p_v_in_line2)
+      # e_line2 <- max(p_v2_in_line2, p_v_in_line2)
+
       if(v1 > ind) {
         v1 <- v1-1
       }
       if(v2 > ind) {
         v2 <- v2 - 1
       }
-      loc.rem <- self$V[ind,]
-      e_remidx <- which(self$LtE[,e_rem[2]] == 1)
-      if(length(e_remidx)>0 && e_remidx == e_rem[2]){
-        ind_keep1 <- seq_len(e_rem[1]-1)
-        ind_keep2 <- setdiff((e_rem[1]+1):length(self$lines),e_rem[2])
+      # loc.rem <- self$V[ind,]
+      # e_remidx <- which(self$LtE[,e_rem[2]] == 1)
 
-        coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords #line from v1 to v.rem
-        tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords #line from v.rem to v2
-        diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
-        diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
-        diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
-        diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
-        diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
+      # if( (Line_2 == e_rem[2]) && (Line_1 != Line_2)){
 
-        if(which.min(diffs) == 1) {
-          if(norm(as.matrix(coords[dim(coords)[1],]-loc.rem)) <
-             norm(as.matrix(coords[1,]-loc.rem))) {
-            #vertex removed is at the end of the segment
-            coords <- rbind(tmp, coords[rev(1:dim(coords)[1]),])
-            E_new <- matrix(c(v1,v2),1,2)
-            which_line_starts <- 2
-          } else {
-            coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
-            E_new <- matrix(c(v2,v1),1,2)
-            which_line_starts <- 1
-          }
-        } else if(which.min(diffs)==2){
-          coords <- rbind(tmp,coords)
-          E_new <- matrix(c(v2,v1),1,2)
-          which_line_starts <- 2
-        } else if(which.min(diffs)==3) {
-          coords <- rbind(coords, tmp)
-          E_new <- matrix(c(v1,v2),1,2)
-          which_line_starts <- 1
-        } else {
-          coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
-          E_new <- matrix(c(v1,v2),1,2)
-          which_line_starts <- 1
+      if( Line_1 != Line_2){
+        # ind_keep1 <- seq_len(e_rem[1]-1)
+        # ind_keep2 <- setdiff((e_rem[1]+1):length(self$lines),e_rem[2])
+
+        # coords <- self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords #line from v1 to v.rem
+        # tmp <- self$lines@lines[[e_rem[2]]]@Lines[[1]]@coords #line from v.rem to v2
+
+         coords <- self$lines@lines[[Line_1]]@Lines[[1]]@coords #line from v1 to v.rem
+         tmp <- self$lines@lines[[Line_2]]@Lines[[1]]@coords #line from v.rem to v2
+
+
+        # diff_ss <- norm(as.matrix(coords[1,] - tmp[1,]))
+        # diff_se <- norm(as.matrix(coords[1,] - tmp[dim(tmp)[1],]))
+        # diff_es <- norm(as.matrix(coords[dim(coords)[1],] - tmp[1,]))
+        # diff_ee <- norm(as.matrix(coords[dim(coords)[1],] - tmp[dim(tmp)[1],]))
+        # diff_ss <- norm(as.matrix(coords[s_line1,] - tmp[s_line2,]))
+        # diff_se <- norm(as.matrix(coords[s_line1,] - tmp[e_line2,]))
+        # diff_es <- norm(as.matrix(coords[e_line1,] - tmp[s_line2,]))
+        # diff_ee <- norm(as.matrix(coords[e_line1,] - tmp[e_line2,]))
+        # diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
+
+        # if(which.min(diffs) == 1) {
+        #   # if(norm(as.matrix(coords[dim(coords)[1],]-loc.rem)) <
+        #   #    norm(as.matrix(coords[1,]-loc.rem))) {
+        #   if(norm(as.matrix(coords[e_line1,]-loc.rem)) <
+        #      norm(as.matrix(coords[s_line1,]-loc.rem))) {
+
+        #     #vertex removed is at the end of the segment
+        #     coords <- rbind(tmp, coords[rev(1:dim(coords)[1]),])
+        #     E_new <- matrix(c(v1,v2),1,2)
+        #     which_line_starts <- 2
+        #   } else {
+        #     coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+        #     E_new <- matrix(c(v2,v1),1,2)
+        #     which_line_starts <- 1
+        #   }
+        # } else if(which.min(diffs)==2){
+        #   coords <- rbind(tmp,coords)
+        #   E_new <- matrix(c(v2,v1),1,2)
+        #   which_line_starts <- 2
+        # } else if(which.min(diffs)==3) {
+        #   coords <- rbind(coords, tmp)
+        #   E_new <- matrix(c(v1,v2),1,2)
+        #   which_line_starts <- 1
+        # } else {
+        #   coords <- rbind(coords, tmp[rev(1:dim(tmp)[1]),])
+        #   E_new <- matrix(c(v1,v2),1,2)
+        #   which_line_starts <- 1
+        # }
+
+        if(which_line_starts == 1){
+           coords <- rbind(coords, tmp)
+           E_new <- matrix(c(v1,v2),1,2)
+        } else{
+           coords <- rbind(tmp,coords)
+           E_new <- matrix(c(v2,v1),1,2)
         }
 
         #set element e_rem[1] to the new line
-        self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords <- coords
+        # self$lines@lines[[e_rem[1]]]@Lines[[1]]@coords <- coords
+        self$lines@lines[[Line_1]]@Lines[[1]]@coords <- coords
         #remove e_rem[2]
-        self$lines <- self$lines[-e_rem[2]]
+        # self$lines <- self$lines[-e_rem[2]]
+        self$lines <- self$lines[-Line_2]
 
         #update lines
         #self$lines <- line_new
         # self$EID <- self$EID[-e_rem[2]]
         # self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
         # self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
-        if(sum(self$LtE[e_rem[2],])>1){
-          idx_addback <- which(self$LtE[e_rem[2],] == 1)
+        if(sum(self$LtE[Line_2,])>1){
+          idx_addback <- which(self$LtE[Line_2,] == 1)
           # idx_addback <- ifelse(idx_addback > e_rem[2], idx_addback-1, idx_addback)
-          self$LtE[e_rem[1],idx_addback] <- 1
+          self$LtE[Line_1,idx_addback] <- 1
         }
-        self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
-
+        # self$LtE <- self$LtE[-e_rem[2],-e_rem[2]]
+        self$LtE <- self$LtE[-Line_2, -e_rem[2]]
       } else{
+        #   coords <- self$lines@lines[[Line_1]]@Lines[[1]]@coords #line from v1 to v.rem
+        #   tmp <- self$lines@lines[[Line_2]]@Lines[[1]]@coords #line from v.rem to v2
+        #   diff_ss <- norm(as.matrix(coords[s_line1,] - tmp[s_line2,]))
+        #   diff_se <- norm(as.matrix(coords[s_line1,] - tmp[e_line2,]))
+        #   diff_es <- norm(as.matrix(coords[e_line1,] - tmp[s_line2,]))
+        #   diff_ee <- norm(as.matrix(coords[e_line1,] - tmp[e_line2,]))
+        #   diffs <- c(diff_ss, diff_se, diff_es, diff_ee)
+
+        #   if(which.min(diffs) == 1) {
+        #   if(norm(as.matrix(coords[e_line1,]-loc.rem)) <
+        #      norm(as.matrix(coords[s_line1,]-loc.rem))) {
+        #     which_line_starts <- 2
+        #               if(self$ELend[e_rem[2]] < 1){
+        #   }
+        #   } else {
+        #     which_line_starts <- 1
+        #                         if(self$ELend[e_rem[1]] < 1){
+        #   }
+        #   }
+        # } else if(which.min(diffs)==2){
+        #             if(self$ELend[e_rem[2]] < 1){
+        #   }
+        #   which_line_starts <- 2
+        # } else if(which.min(diffs)==3) {
+        #   which_line_starts <- 1
+        #                       if(self$ELend[e_rem[1]] < 1){
+        #   }
+        # } else {
+        #   which_line_starts <- 1
+        #                       if(self$ELend[e_rem[1]] < 1){
+        #   }
+        # }
+
         E_new1 <- self$E[e1,1]
         E_new2 <- self$E[e2,2]
 
@@ -2531,8 +2724,10 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         E_new <- matrix(c(E_new1, E_new2),1,2)
         self$LtE <- self$LtE[,-e_rem[2]]
-        which_line_starts <- 0
       }
+
+      res.out$degrees <- res$degrees[-ind]
+      res.out$problematic <- res$problematic[-ind]
 
       #update vertices
       self$V <- self$V[-ind,]
@@ -2545,41 +2740,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       # self$EID <- self$EID[-ind]
       self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
 
-      if(which_line_starts > 0){
-      if(Line_1 != Line_2){
-        if(which_line_starts == 1){
-          if(self$ELstart[e_rem[2]] == 0) {
-            self$ELend[e_rem[1]] <- (self$ELend[e_rem[2]]*LineLengths[Line_2]+LineLengths[Line_1])/(LineLengths[Line_2] + LineLengths[Line_1])
-          } else {
-            self$ELend[e_rem[1]] <- ((self$ELend[e_rem[2]] - self$ELstart[e_rem[2]])*LineLengths[Line_2]+LineLengths[Line_1])/(LineLengths[Line_2] + LineLengths[Line_1])
-          }
-          self$ELstart[e_rem[1]] <- (self$ELstart[e_rem[1]] * LineLengths[Line_1])/(LineLengths[Line_2] + LineLengths[Line_1])
-        } else{
-          if(self$ELstart[e_rem[1]] == 0) {
-            self$ELend[e_rem[1]] <- (self$ELend[e_rem[1]]*LineLengths[Line_1]+LineLengths[Line_2])/(LineLengths[Line_2] + LineLengths[Line_1])
-          } else {
-            self$ELend[e_rem[1]] <- ((self$ELend[e_rem[1]] - self$ELstart[e_rem[1]])*LineLengths[Line_1]+LineLengths[Line_2])/(LineLengths[Line_2] + LineLengths[Line_1])
-          }
-          self$ELstart[e_rem[1]] <- (self$ELstart[e_rem[2]] * LineLengths[Line_2])/(LineLengths[Line_2] + LineLengths[Line_1])
-        }
-      } else {
-          if (self$ELend[e_rem[2]] == 1){
-            self$ELend[e_rem[1]] <- 1
-          }
-          if (self$ELstart[e_rem[2]] == 0){
-            self$ELstart[e_rem[1]] <- 0
-          }
-      }
-      } else{
-          if (self$ELend[e_rem[2]] == 1){
-            self$ELend[e_rem[1]] <- 1
-          }
-          if (self$ELstart[e_rem[2]] == 0){
-            self$ELstart[e_rem[1]] <- 0
-          }
-      }
+      rel_pos_prune <- get_rel_pos_prune(which_line_starts, Line_1, Line_2, self$ELstart[e_rem[1]], self$ELend[e_rem[1]], self$ELstart[e_rem[2]], self$ELend[e_rem[2]], LineLengths[Line_1], LineLengths[Line_2])
 
-
+      self$ELstart[e_rem[1]] <- rel_pos_prune[["start"]]
+      self$ELend[e_rem[1]] <- rel_pos_prune[["end"]]
 
       self$ELend <- self$ELend[-e_rem[2]]
       self$ELstart <- self$ELstart[-e_rem[2]]
@@ -2659,7 +2823,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   split_line_at_added_vertex = function(integer_id_line,
                                         added_vertex_id,
-                                        added_edges_id){
+                                        added_edges_id, verbose){
 
       id_conjugate_line <- which(private$conjugate_initial_line[, 1] == integer_id_line)
       id_lines_of_interest <- c(integer_id_line,
@@ -2668,7 +2832,15 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       distances_lines <- c()
       idx_min <- c()
+
+      if(verbose){
+        bar_split_line_vertex <- msg_progress_bar(length(id_lines_of_interest))
+      }
+
       for(id_ in id_lines_of_interest){
+        if(verbose){
+          bar_split_line_vertex$increment()
+        }
           line <- self$lines@lines[id_]
           # tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
           tmp_dist <- distance2(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
@@ -2729,6 +2901,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$ELend[added_edges_id[1]] <- 1
         self$ELstart[added_edges_id[2]] <- 0
         self$ELend[added_edges_id[2]] <- 1
+
         self$edge_lengths[added_edges_id[1]] <- LineLength(line1@Lines[[1]])
         self$edge_lengths[added_edges_id[2]] <- LineLength(line2@Lines[[1]])
         self$EID <- c(self$EID, paste0(id_line, "__", as.character(times_split+1)))
@@ -2895,13 +3068,20 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(Laplacian)
   },
 
-  find_line_line_points = function(tol) {
+  find_line_line_points = function(tol,verbose) {
   lines_sf <- sf::st_as_sf(self$lines)
   # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
   points_add_PtE <- NULL
+
+  if(verbose){
+    bar_line_line <- msg_progress_bar(length(self$lines)-1)
+  }
   for(i in 1:(length(self$lines)-1)) {
+    if(verbose){
+      bar_line_line$increment()
+    }
     #lines within tol of line i
     inds <- i+which(as.vector(dists[i, (i+1):length(self$lines)]))
     if(length(inds)>0) {
@@ -3001,10 +3181,15 @@ metric_graph <-  R6::R6Class("metric_graph",
   return(list(points = points_add, PtE = points_add_PtE))
 },
 
-add_vertices = function(PtE, tolerance = 1e-10) {
-
+add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   e.u <- unique(PtE[,1])
+  if(verbose){
+    bar_eu <- msg_progress_bar(length(e.u))
+  }
   for (i in 1:length(e.u)) {
+    if(verbose){
+      bar_eu$increment()
+    }
     dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
     private$split_edge(e.u[i], dists[1], tolerance)
     if(length(dists)>1) {

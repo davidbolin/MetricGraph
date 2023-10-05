@@ -72,6 +72,8 @@ locations.}
 
 \item{\code{Laplacian}}{The weighted graph Laplacian of the vertices in the
 graph. The weights are given by the edge lengths.}
+
+\item{\code{characteristics}}{List with various characteristics of the graph.}
 }
 \if{html}{\out{</div>}}
 }
@@ -79,6 +81,8 @@ graph. The weights are given by the edge lengths.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-print}{\code{metric_graph$print()}}
+\item \href{#method-metric_graph-compute_characteristics}{\code{metric_graph$compute_characteristics()}}
 \item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
 \item \href{#method-metric_graph-compute_geodist_PtE}{\code{metric_graph$compute_geodist_PtE()}}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
@@ -101,6 +105,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
+\item \href{#method-metric_graph-is_tree}{\code{metric_graph$is_tree()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-metric_graph-plot_movie}{\code{metric_graph$plot_movie()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
@@ -120,6 +125,8 @@ Create a new \code{metric_graph} object.
   lines = NULL,
   V = NULL,
   E = NULL,
+  vertex_unit = NULL,
+  length_unit = vertex_unit,
   longlat = FALSE,
   tolerance = list(vertex_vertex = 1e-07, vertex_line = 1e-07, line_line = 0),
   check_connected = TRUE,
@@ -139,8 +146,14 @@ Create a new \code{metric_graph} object.
 
 \item{\code{E}}{m x 2 matrix where each row represents one of the m edges.}
 
-\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
-in Longitude/Latitude and that distances should be computed in km.}
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
+
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
+If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+
+\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
+in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of
 the graph:
@@ -184,6 +197,29 @@ viewed as a vertex.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-print"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-print}{}}}
+\subsection{Method \code{print()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$print()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_characteristics"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_characteristics}{}}}
+\subsection{Method \code{compute_characteristics()}}{
+Computes various characteristics of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_characteristics()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects. The computed characteristics
+are stored in the \code{characteristics} element of the \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -385,7 +421,19 @@ in the \code{Laplacian} element in the \code{metric_graph} object.
 \subsection{Method \code{prune_vertices()}}{
 Removes vertices of degree 2 from the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(verbose = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{Show progress? Default is \code{FALSE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Vertices of degree 2 are removed as long as the corresponding edges that
+would be merged are compatible in terms of direction.
 }
 
 \subsection{Returns}{
@@ -770,6 +818,19 @@ Plots the connections in the graph
 
 \subsection{Returns}{
 No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-is_tree"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-is_tree}{}}}
+\subsection{Method \code{is_tree()}}{
+Checks if the graph is a tree (without considering directions)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$is_tree()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+TRUE if the graph is a tree and FALSE otherwise.
 }
 }
 \if{html}{\out{<hr>}}
