@@ -39,7 +39,6 @@
 #' @importFrom methods is slot
 #' @export gg_df
 #' @importFrom stats predict approx lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif
-#' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates SpatialLines LineLength spDists
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete
 #' @importFrom igraph E E<-
 #' @importFrom viridis scale_color_viridis viridis

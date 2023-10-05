@@ -83,7 +83,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   Laplacian = NULL,
 
   #' @description Create a new `metric_graph` object.
-  #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
+  #' @param lines A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
   #' @param E m x 2 matrix where each row represents one of the m edges.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
@@ -92,6 +92,9 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
+  #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
+  #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`. 
+  #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
   #' @param tolerance List that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged
@@ -126,6 +129,9 @@ metric_graph <-  R6::R6Class("metric_graph",
                         vertex_unit = NULL,
                         length_unit = vertex_unit,
                         longlat = FALSE,
+                        crs = NULL, 
+                        proj4string = NULL,
+                        which_longlat = "sp",
                         tolerance = list(vertex_vertex = 1e-7,
                                          vertex_line = 1e-7,
                                          line_line = 0),
@@ -137,6 +143,14 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       valid_units_vertex <- c("m", "km", "miles", "degrees")
       valid_units_length <- c("m", "km", "miles")
+
+      if(longlat && (which_longlat == "sp") && is.null(proj4string)){
+        proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
+      }
+
+      if(longlat && (which_longlat == "sf") && is.null(crs)){
+        proj4string <- sf::st_crs(4326)
+      }
 
     # private$longlat <- longlat
 
@@ -207,16 +221,23 @@ metric_graph <-  R6::R6Class("metric_graph",
     PtE_tmp_line_vertex <- NULL
 
     if(is.null(lines) && is.null(V) && is.null(E)) {
-      lines <- logo_lines()
+      self$lines <- logo_lines()
     }
     if(!is.null(lines)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
       if (inherits(lines,"SpatialLinesDataFrame")) {
-        self$lines = SpatialLines(lines@lines)
+        tmp_lines = SpatialLines(lines@lines)
+        self$edges <- lapply(1:length(tmp_lines), function(i){lines@lines[[i]]@Lines[[1]]@coords})
       } else if (inherits(lines,"SpatialLines")) {
-        self$lines = lines
+        self$edges = lapply(1:length(lines), function(i){lines@lines[[i]]@Lines[[1]]@coords})
+      } else if(inherits(lines, "MULTILINESTRING")) {
+        coords_multilinestring <- sf::st_coordinates(lines)
+        lines_ids <- unique(coords_multilinestring[,"L1"])
+        self$edges <- lapply(1:length(lines_ids), function(i){coords_multilinestring[coords_multilinestring[,"L1"]==i ,1:2]})
+      } else if(is.list(lines)){
+        self$edges <- check_lines_input(lines)
       } else {
         stop("lines should be of class SpatialLines or SpatialLinesDataFrame")
       }
@@ -230,12 +251,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       lines <- list()
       for(i in 1:dim(E)[1]) {
-        id <- sprintf("%d", i)
-        lines[[i]] <- Lines(list(Line(rbind(V[E[i,1], ],
-                                            V[E[i,2], ]))),
-                            ID = id)
+        lines[[i]] <- rbind(V[E[i,1], ], V[E[i,2], ])
       }
-      self$lines <- SpatialLines(lines)
+      self$edges <- lines
     }
 
     if(verbose){
@@ -244,7 +262,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
-                           longlat = longlat, factor_unit, verbose=verbose)
+                           longlat = longlat, factor_unit, verbose=verbose,
+                           crs, proj4string, which_longlat)
       )
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1986,29 +2005,41 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   private = list(
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose) {
-    lines <- c()
+  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat) {
+    lines <- matrix(nrow = 2*length(self$edges), ncol = 3)
 
     if(verbose){
       message("Part 1/2")
       bar_line_vertex <- msg_progress_bar(length(self$lines))
     }
 
-    for(i in 1:length(self$lines)){
+    for(i in 1:length(self$edges)){
       if(verbose){
         bar_line_vertex$increment()
       }
-      points <- self$lines@lines[[i]]@Lines[[1]]@coords
+      points <- self$edges[[i]]
       n <- dim(points)[1]
-      lines <- rbind(lines, c(i, points[1,]), c(i, points[n,]))
+      lines[2*i-1,] <- c(i, points[1,])
+      lines[2*i, ] <- c(i, points[n,])
     }
 
     #save all vertices that are more than tolerance distance apart
     if(verbose){
       message("Computing auxiliary distances")
     }
-    dists <- spDists(lines[, 2:3, drop = FALSE], longlat = longlat) * fact
-    vertex <- lines[1, , drop = FALSE]
+
+    if(!longlat){
+        dists <- as.matrix(dist(lines[, 2:3, drop = FALSE]) * fact)
+    } else {
+        sf_points <- sf::st_as_sf(as.data.frame(lines), coords = c(2,3), crs = crs)
+        dists <- sf::st_distance(sf_points, which = "Great Circle")
+        units(dists) <- length_unit
+        dists <- units::drop_units(dists)
+    }
+
+
+    vertex <- matrix(nrow = nrow(lines), ncol = 3)
+    vertex[1,] <- lines[1, , drop = FALSE]
     if(verbose){
       message("Done!")
     }
@@ -2022,11 +2053,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(verbose){
         bar_line_vertex$increment()
       }
-      i.min <- which.min(dists[i, 1:(i-1)])
-      if (dists[i, i.min] > tolerance) {
-        vertex <- rbind(vertex, lines[i, ])
+      if (all(dists[i, 1:(i-1)] > tolerance)) {
+        vertex[i, ] <- lines[i, ]
       }
     }
+    vertex <- na.exclude(vertex)
 
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     k=1
@@ -2046,11 +2077,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
                           (vertex[, 3] - line[2, 3])^2)
-
-      self$lines@lines[[i]]@Lines[[1]]@coords[1,] <- vertex[ind1, 2:3]
-      i.e <- dim(self$lines@lines[[i]]@Lines[[1]]@coords)[1]
-      self$lines@lines[[i]]@Lines[[1]]@coords[i.e,] <- vertex[ind2, 2:3]
-      ll <- LineLength(self$lines@lines[[i]]@Lines[[1]], longlat = longlat) * fact
+      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs) * fact
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
         k=k+1
@@ -2059,21 +2086,12 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     lvl <- lvl[1:(k-1),,drop = FALSE]
-    self$lines <- self$lines[lines_keep_id]
+    self$edges <- self$edges[lines_keep_id]
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
     self$nV <- dim(self$V)[1]
     self$nE <- dim(self$E)[1]
-    self$LtE <- Matrix::sparseMatrix(j = 1:dim(self$E)[1],
-                                     i = c(1:length(self$lines)),
-                                     x = rep(1,dim(self$E)[1]),
-                                     dims = c(dim(self$E)[1],
-                                              length(self$lines)))
-    self$ELend <- rep(1, dim(self$E)[1])
-    self$ELstart <- rep(0, dim(self$E)[1])
-    self$EID <- as.vector(sapply(slot(self$lines,"lines"),
-                                 function(x) slot(x, "ID")))
   },
 
   #Compute PtE for mesh given PtE for graph

@@ -646,112 +646,112 @@ logo_lines <- function(){
   n <- 100
   #G
   theta <- seq(from=pi,to=3*pi/2,length.out = n)
-  line1 <- Line(cbind(1+sin(theta),2+2*cos(theta)))
+  line1 <- cbind(1+sin(theta),2+2*cos(theta))
 
   theta <- seq(from=pi/2,to=pi,length.out = n)
-  line2 <- Line(cbind(1+sin(theta),1.5+1.5*cos(theta)))
+  line2 <- cbind(1+sin(theta),1.5+1.5*cos(theta))
 
   theta <- seq(from=3*pi/2,to=2*pi,length.out = n)
-  line3 <- Line(cbind(2+2*sin(theta),2+2*cos(theta)))
+  line3 <- cbind(2+2*sin(theta),2+2*cos(theta))
 
-  line4 <- Line(rbind(c(1,1.5),c(2,1.5)))
+  line4 <- rbind(c(1,1.5),c(2,1.5))
 
   #R
-  line5 <- Line(rbind(c(2,0),c(2,4)))
-  line6 <- Line(rbind(c(2,4),c(3,4)))
+  line5 <- rbind(c(2,0),c(2,4))
+  line6 <- rbind(c(2,4),c(3,4))
   theta <- seq(from=0,to=pi,length.out = n)
-  line7 <- Line(cbind(3+sin(theta),3+cos(theta)))
-  line8 <- Line(rbind(c(3,2),c(2,2)))
-  line9 <- Line(rbind(c(2,2),c(4,0)))
+  line7 <- cbind(3+sin(theta),3+cos(theta))
+  line8 <- rbind(c(3,2),c(2,2))
+  line9 <- rbind(c(2,2),c(4,0))
 
   #A
-  line10 <- Line(rbind(c(4,0),c(5,4)))
-  line11 <- Line(rbind(c(5,4),c(6,0)))
-  line12 <- Line(rbind(c(4.5,2),c(5.5,2)))
+  line10 <- rbind(c(4,0),c(5,4))
+  line11 <- rbind(c(5,4),c(6,0))
+  line12 <- rbind(c(4.5,2),c(5.5,2))
 
   #P
-  line13 <- Line(rbind(c(6,0),c(6,4)))
-  line14 <- Line(rbind(c(6,4),c(7,4)))
+  line13 <- rbind(c(6,0),c(6,4))
+  line14 <- rbind(c(6,4),c(7,4))
   theta <- seq(from=0,to=pi,length.out = n)
-  line15 <- Line(cbind(7+sin(theta),3+cos(theta)))
-  line16 <- Line(rbind(c(7,2),c(6,2)))
+  line15 <- cbind(7+sin(theta),3+cos(theta))
+  line16 <- rbind(c(7,2),c(6,2))
 
   #H
-  line17 <- Line(rbind(c(8,0),c(8,4)))
-  line18 <- Line(rbind(c(10,0),c(10,4)))
-  line19 <- Line(rbind(c(8,2),c(10,2)))
+  line17 <- rbind(c(8,0),c(8,4))
+  line18 <- rbind(c(10,0),c(10,4))
+  line19 <- rbind(c(8,2),c(10,2))
 
   #M
-  line20 <- Line(rbind(c(0,4),c(0.75,8)))
-  line21 <- Line(rbind(c(0.75,8),c(1.5,5)))
-  line22 <- Line(rbind(c(1.5,5),c(2.25,8)))
-  line23 <- Line(rbind(c(2.25,8),c(3,4)))
+  line20 <- rbind(c(0,4),c(0.75,8))
+  line21 <- rbind(c(0.75,8),c(1.5,5))
+  line22 <- rbind(c(1.5,5),c(2.25,8))
+  line23 <- rbind(c(2.25,8),c(3,4))
 
   # E
-  line24 <- Line(rbind(c(3,4),c(3,8)))
-  line25 <- Line(rbind(c(3,8),c(4,8)))
-  line26 <- Line(rbind(c(3,6),c(4,6)))
-  line27 <- Line(rbind(c(3,4),c(5,4)))
+  line24 <- rbind(c(3,4),c(3,8))
+  line25 <- rbind(c(3,8),c(4,8))
+  line26 <- rbind(c(3,6),c(4,6))
+  line27 <- rbind(c(3,4),c(5,4))
 
   # T
-  line28 <- Line(rbind(c(5,4),c(5,8)))
-  line29 <- Line(rbind(c(4,8),c(6,8)))
+  line28 <- rbind(c(5,4),c(5,8))
+  line29 <- rbind(c(4,8),c(6,8))
 
 
   # R
-  line30 <- Line(rbind(c(6,4),c(6,8)))
-  line31 <- Line(rbind(c(6,8),c(7,8)))
+  line30 <- rbind(c(6,4),c(6,8))
+  line31 <- rbind(c(6,8),c(7,8))
   theta <- seq(from=0,to=pi,length.out = n)
-  line32 <- Line(cbind(7+sin(theta),7+cos(theta)))
-  line33 <- Line(rbind(c(7,6),c(6,6)))
-  line34 <- Line(rbind(c(6,6),c(8,4)))
+  line32 <- cbind(7+sin(theta),7+cos(theta))
+  line33 <- rbind(c(7,6),c(6,6))
+  line34 <- rbind(c(6,6),c(8,4))
 
   # I
-  line35 <- Line(rbind(c(8,4),c(8,8)))
+  line35 <- rbind(c(8,4),c(8,8))
 
   # C
   theta <- seq(from=pi,to=3*pi/2,length.out = n)
-  line36 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
+  line36 <- cbind(10+2*sin(theta),6+2*cos(theta))
   theta <- seq(from=3*pi/2,to=2*pi,length.out = n)
-  line37 <- Line(cbind(10+2*sin(theta),6+2*cos(theta)))
+  line37 <- cbind(10+2*sin(theta),6+2*cos(theta))
 
-  return(sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                               Lines(list(line2),ID="2"),
-                               Lines(list(line3),ID="3"),
-                               Lines(list(line4),ID="4"),
-                               Lines(list(line5),ID="5"),
-                               Lines(list(line6),ID="6"),
-                               Lines(list(line7),ID="7"),
-                               Lines(list(line8),ID="8"),
-                               Lines(list(line9),ID="9"),
-                               Lines(list(line10),ID="10"),
-                               Lines(list(line11),ID="11"),
-                               Lines(list(line12),ID="12"),
-                               Lines(list(line13),ID="13"),
-                               Lines(list(line14),ID="14"),
-                               Lines(list(line15),ID="15"),
-                               Lines(list(line16),ID="16"),
-                               Lines(list(line17),ID="17"),
-                               Lines(list(line18),ID="18"),
-                               Lines(list(line19),ID="19"),
-                               Lines(list(line20),ID="20"),
-                               Lines(list(line21),ID="21"),
-                               Lines(list(line22),ID="22"),
-                               Lines(list(line23),ID="23"),
-                               Lines(list(line24),ID="24"),
-                               Lines(list(line25),ID="25"),
-                               Lines(list(line26),ID="26"),
-                               Lines(list(line27),ID="27"),
-                               Lines(list(line28),ID="28"),
-                               Lines(list(line29),ID="29"),
-                               Lines(list(line30),ID="30"),
-                               Lines(list(line31),ID="31"),
-                               Lines(list(line32),ID="32"),
-                               Lines(list(line33),ID="33"),
-                               Lines(list(line34),ID="34"),
-                               Lines(list(line35),ID="35"),
-                               Lines(list(line36),ID="36"),
-                               Lines(list(line37),ID="37"))))
+  return(list(line1,
+                               line2,
+                               line3,
+                               line4,
+                               line5,
+                               line6,
+                               line7,
+                               line8,
+                               line9,
+                               line10,
+                               line11,
+                               line12,
+                               line13,
+                               line14,
+                               line15,
+                               line16,
+                               line17,
+                               line18,
+                               line19,
+                               line20,
+                               line21,
+                               line22,
+                               line23,
+                               line24,
+                               line25,
+                               line26,
+                               line27,
+                               line28,
+                               line29,
+                               line30,
+                               line31,
+                               line32,
+                               line33,
+                               line34,
+                               line35,
+                               line36,
+                               line37))
 }
 
 
@@ -1004,4 +1004,45 @@ msg_progress_bar <-
 
 get_vertex_pos_in_line <- function(V, coords_line){
     return(which.min(sapply(1:nrow(coords_line), function(i){norm(as.matrix(V - coords_line[i,]))})))
+}
+
+
+#' @noRd 
+#' 
+
+check_lines_input <- function(lines){
+  is_matrix <- sapply(lines, function(i){is.matrix(i)})
+  is_data_frame <- sapply(lines, function(i){is.data.frame(i)})
+  if(!all(is_matrix | is_data_frame)) {
+    stop("The list must contain either matrices of data.frames!")
+  }
+    n_cols <- sapply(lines, function(i){nrow(i)})
+  if(any(n_cols != 2)){
+    stop("The elements in the list must have two columns!")
+  }
+  lines <- lapply(lines, function(i){as.matrix(i)})
+  return(lines)
+}
+
+#' @noRd 
+#' 
+
+compute_line_lengths <- function(edge, longlat, unit, crs){
+    if(longlat){
+      linestring <- st_sfc(st_linestring(edge), crs = crs)
+      length <- st_length(linestring)
+      units(length) <- unit
+      return(units::drop_units(length))
+    }
+}
+
+#' @noRd
+#' 
+
+dist_function <- function(p1, p2, longlat){
+    if(longlat){
+
+    } else{
+      return(dist)
+    }
 }
