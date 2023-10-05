@@ -63,6 +63,9 @@ graph_lgcp <- function(n = 1, intercept = 0, sigma, range, alpha, graph) {
     result[[i]] <- list(u = u, edge_numbers = edge_numbers, edge_loc = edge_loc)
   }
 
+  if(n == 1){
+    return(result[[1]])
+  }
 
   return(result)
 }

@@ -1,7 +1,7 @@
 ---
 title: "inlabru interface of Whittle--Matérn fields"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{inlabru interface of Whittle--Matérn fields}

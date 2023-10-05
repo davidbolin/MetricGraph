@@ -1,7 +1,7 @@
 ---
 title: "MetricGraph: Random Fields on Metric Graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-26. Last modified: `r Sys.Date()`."
 output:
   rmarkdown::html_vignette:
     number_sections: true
