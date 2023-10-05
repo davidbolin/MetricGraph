@@ -2017,17 +2017,19 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(!project || !longlat){
         fact <- process_factor_unit(vertex_unit, length_unit)
-          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact)
+          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat)
     } else if (which_longlat == "sf"){
         str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 2:3, crs = crs)
         sf_points_eucl <- sf::st_transform(sf_points, crs=st_crs(str_proj))
-        dists <- dist(sf::st_coordinates(sf_points_eucl))
+        fact <- process_factor_unit("m", length_unit)
+        dists <- dist(sf::st_coordinates(sf_points_eucl)) * fact
     } else{
         str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
         sp_points <- sp::SpatialPoints(coords = lines[,2:3], proj4string = proj4string) 
         sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
-        dists <- dist(sp_points_eucl@coords)
+        fact <- process_factor_unit("m", length_unit)
+        dists <- dist(sp_points_eucl@coords) * fact
     }
 
 
