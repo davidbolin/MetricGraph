@@ -759,20 +759,20 @@ logo_lines <- function(){
 #' @noRd
 
 projectVecLine2 <- function(lines, points, normalized = FALSE){
-  lines <- lines@lines[[1]]@Lines[[1]]@coords
-  points <- points@coords
   return(projectVecLine(lines, points, normalized))
 }
 
 #' @noRd
 
 distance2 <- function(points, lines, byid=FALSE){
-  rownames(points@coords) <- 1:nrow(points@coords)
-  points_sf <- sf::st_as_sf(points)
-  lines_sf <- sf::st_as_sf(lines)
+  sf_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
+  if(!is.list(lines)){
+    lines <- list(lines)
+  }
+  lines_sf <- sf::st_sfc(sapply(lines, function(i){sf::st_linestring(i)}))
   dist_result <- sf::st_distance(points_sf, lines_sf)
   if(byid){
-    ID_names <- sapply(slot(lines, "lines"), function(x) slot(x, "ID"))
+    ID_names <- 1:length(lines)
     dist_result <- t(dist_result)
     row.names(dist_result) <- ID_names
     return(dist_result)
@@ -802,7 +802,6 @@ intersection3 <- function(lines1_sf, lines2_sf){
 #' @noRd
 
 interpolate2 <- function(lines, pos, normalized = FALSE){
-    lines <- lines@lines[[1]]@Lines[[1]]@coords
     return(interpolate2_aux(lines, pos, normalized))
 }
 
@@ -1044,3 +1043,30 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
     }
 }
 
+
+#' @noRd 
+#' 
+
+compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL){
+    if(!longlat){
+        dists <- as.matrix(dist(lines) * fact)
+    } else if (which_longlat == "sf") {
+        sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
+        if(is.null(points)){
+          dists <- sf::st_distance(sf_points, which = "Great Circle")
+        } else{
+          sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
+          dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle")
+        }
+        units(dists) <- length_unit
+        dists <- units::drop_units(dists)
+    } else{
+        sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string) 
+        if(is.null(points)){
+          dists <- sp::spDists(sp_points, longlat = TRUE) * fact
+        } else{
+          sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
+          dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE) * fact
+        }
+    }
+}

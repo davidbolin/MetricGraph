@@ -262,7 +262,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     t <- system.time(
-      points_add <- private$find_line_line_points(tol = tolerance$line_line, verbose=verbose)
+      points_add <- private$find_line_line_points(tol = tolerance$line_line, verbose=verbose,
+      crs=crs, proj4string = proj4string, longlat=longlat)
       )
 
     if(verbose){
@@ -2005,17 +2006,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       message("Computing auxiliary distances")
     }
 
-    if(!longlat){
-        dists <- as.matrix(dist(lines[, 2:3, drop = FALSE]) * fact)
-    } else if (which_longlat == "sf") {
-        sf_points <- sf::st_as_sf(as.data.frame(lines), coords = c(2,3), crs = crs)
-        dists <- sf::st_distance(sf_points, which = "Great Circle")
-        units(dists) <- length_unit
-        dists <- units::drop_units(dists)
-    } else{
-        sp_points <- sp::SpatialPoints(coords = lines[,c(2,3)], proj4string = proj4string) 
-        dists <- sp::spDists(sp_points, longlat = TRUE) * fact
-    }
+    dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string)
 
 
     if(verbose){
@@ -2062,6 +2053,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
+    units(self$edge_lengths) <- length_unit
     self$nV <- dim(self$V)[1]
     self$nE <- dim(self$E)[1]
   },
@@ -3001,8 +2993,8 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(Laplacian)
   },
 
-  find_line_line_points = function(tol,verbose) {
-  lines_sf <- sf::st_as_sf(self$lines)
+  find_line_line_points = function(tol,verbose, crs, proj4string, longlat) {
+  lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}))
   # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
@@ -3011,7 +3003,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   if(verbose){
     bar_line_line <- msg_progress_bar(length(self$lines)-1)
   }
-  for(i in 1:(length(self$lines)-1)) {
+  for(i in 1:(length(self$edges)-1)) {
     if(verbose){
       bar_line_line$increment()
     }
@@ -3021,7 +3013,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       for(j in inds) {
         #first check if there are intersections
         # intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
-        intersect_tmp <- intersection2(self$lines[i], self$lines[j])
+        intersect_tmp <- intersection3(lines_sf[i], lines_sf[j])
 
         if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
           intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
@@ -3037,7 +3029,8 @@ metric_graph <-  R6::R6Class("metric_graph",
             coord_tmp <- coord_tmp[,1:2]
           # } else if ("SpatialLines"%in%is(intersect_tmp)){
           } else if ( ("LINESTRING"%in%sf::st_geometry_type(intersect_tmp)) || ("MULTILINESTRING"%in%sf::st_geometry_type(intersect_tmp))){
-            intersect_tmp <- sf::as_Spatial(intersect_tmp$geom)
+            intersect_tmp <- sf::st_coordinates(intersect_tmp)
+            intersect_tmp[,1:2]
             # coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
             coord_tmp <- interpolate2(intersect_tmp, pos=0.5, normalized = TRUE)
             coord_tmp <- matrix(coordinates(coord_tmp),1,2)
@@ -3048,26 +3041,27 @@ metric_graph <-  R6::R6Class("metric_graph",
             for(k in 1:nrow(coord_tmp)){
               p <- matrix(coord_tmp[k,],1,2)
               #add points if they are not close to V or previous points
-              if(min(spDists(self$V, p))>tol) {
+              if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p))>tol) {
                 p_cur <- rbind(p_cur,p)
-                p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
-                points_add <- rbind(points_add, p, coordinates(p2))
+                p2 <- snapPointsToLines(p,self$edges[i])
+                p2 <- p2[["coords"]]
+                points_add <- rbind(points_add, p, p2)
                 # points_add_PtE <- rbind(points_add_PtE,
                 #                         c(i,gProject(self$lines[i],
                 #                                      SpatialPoints(p))),
                 #                         c(j,gProject(self$lines[j],SpatialPoints(p))))
                 points_add_PtE <- rbind(points_add_PtE,
-                                        c(i,projectVecLine2(self$lines[i],
-                                                     SpatialPoints(p))),
-                                        c(j,projectVecLine2(self$lines[j],SpatialPoints(p))))
+                                        c(i,projectVecLine2(self$edges[i],
+                                                     p)),
+                                        c(j,projectVecLine2(self$edges[j],p)))
 
               }
             }
         }
         #now check if there are intersections with buffer
         # tmp_line <- gBuffer(self$lines[i], width = tol)
-        lines_tmp_sf <- sf::st_as_sf(self$lines[i])
-        lines2_tmp_sf <- sf::st_as_sf(self$lines[j])
+        lines_tmp_sf <- lines_sf[i]
+        lines2_tmp_sf <- lines_sf[j]
         tmp_line <- sf::st_buffer(lines_tmp_sf, dist = tol)
         # intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
         # intersect_tmp <- intersection2(tmp_line, self$lines[j])
@@ -3077,29 +3071,27 @@ metric_graph <-  R6::R6Class("metric_graph",
         }
         # if(!is.null(intersect_tmp)) {
         if(nrow(sf::st_coordinates(intersect_tmp))>0){
-            # for(k in 1:length(intersect_tmp)) {
-            intersect_tmp <- sf::as_Spatial(intersect_tmp$geom)
-            # for(k in 1:nrow(coord_tmp)){
             for(k in 1:length(intersect_tmp)) {
-            if(inherits(intersect_tmp, "SpatialLines")) {
+              if ( ("LINESTRING"%in%sf::st_geometry_type(intersect_tmp)) || ("MULTILINESTRING"%in%sf::st_geometry_type(intersect_tmp))){
               # coord_tmp <-gInterpolate(intersect_tmp[k], d=0.5, normalized = TRUE)
-              coord_tmp <- interpolate2(intersect_tmp[k], pos=0.5, normalized = TRUE)
-              p <- matrix(coordinates(coord_tmp),1,2)
+              coord_tmp <- interpolate2(sf::st_coordinates(intersect_tmp[k]), pos=0.5, normalized = TRUE)
+              p <- matrix(coord_tmp,1,2)
             } else {
-              p <- matrix(coordinates(intersect_tmp[k]),1,2)
+              p <- matrix(sf::st_coordinates(intersect_tmp[k]),1,2)
             }
             #add points if they are not close to V or previous points
-            if(min(spDists(self$V, p))>tol) {
+            if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p))>tol) {
               # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
-              if(is.null(p_cur) || distance2(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
-                p2 <- snapPointsToLines(SpatialPoints(p),self$lines[i])
-                points_add <- rbind(points_add, p, coordinates(p2))
+                
+              if(is.null(p_cur) || sf::distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = crs), intersect_tmp[k])>tol) {
+                p2 <- snapPointsToLines(p,self$edges[i])
+                points_add <- rbind(points_add, p, p2[["coords"]])
                 # points_add_PtE <- rbind(points_add_PtE,
                 #                         c(i,gProject(self$lines[i],SpatialPoints(p))),
                 #                         c(j,gProject(self$lines[j],SpatialPoints(p))))
                 points_add_PtE <- rbind(points_add_PtE,
-                                        c(i,projectVecLine2(self$lines[i],SpatialPoints(p))),
-                                        c(j,projectVecLine2(self$lines[j],SpatialPoints(p))))
+                                        c(i,projectVecLine2(self$edges[i],p)),
+                                        c(j,projectVecLine2(self$edges[j], p)))
 
               }
             }
