@@ -80,6 +80,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`. 
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
+  #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
+  #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson` and `Winkel tripel`. The default is `Winkel tripel`.
   #' @param tolerance List that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged
@@ -114,6 +116,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                         crs = NULL, 
                         proj4string = NULL,
                         which_longlat = "sp",
+                        project = TRUE,
+                        which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
                                          vertex_line = 1e-7,
                                          line_line = 0),
@@ -248,11 +252,14 @@ metric_graph <-  R6::R6Class("metric_graph",
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = longlat, factor_unit, verbose=verbose,
-                           crs, proj4string, which_longlat, length_unit, vertex_unit)
+                           crs, proj4string, which_longlat, length_unit, vertex_unit,
+                           project, which_projection)
       )
+      
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
+
 
     if (tolerance$line_line > 0) {
     private$addinfo <- TRUE
@@ -265,6 +272,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       points_add <- private$find_line_line_points(tol = tolerance$line_line, verbose=verbose,
       crs=crs, proj4string = proj4string, longlat=longlat)
       )
+
+      stop("Cheguei aqui")
 
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1983,7 +1992,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   private = list(
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit) {
+  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit, project, which_projection) {
 
     if(verbose){
       message("Part 1/2")
@@ -2006,7 +2015,20 @@ metric_graph <-  R6::R6Class("metric_graph",
       message("Computing auxiliary distances")
     }
 
-    dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string)
+    if(!project || !longlat){
+        fact <- process_factor_unit(vertex_unit, length_unit)
+          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact)
+    } else if (which_longlat == "sf"){
+        str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
+        sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 2:3, crs = crs)
+        sf_points_eucl <- sf::st_transform(sf_points, crs=st_crs(str_proj))
+        dists <- dist(sf::st_coordinates(sf_points_eucl))
+    } else{
+        str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
+        sp_points <- sp::SpatialPoints(coords = lines[,2:3], proj4string = proj4string) 
+        sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
+        dists <- dist(sp_points_eucl@coords)
+    }
 
 
     if(verbose){
@@ -2018,8 +2040,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       bar_line_vertex <- msg_progress_bar(dim(lines)[1]-1 + max(lines[, 1]))
     }
 
-    idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
-    vertex2 <- lines[idx_keep,]
+    if(!inherits(dists,"dist")){
+      idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
+      vertex <- lines[idx_keep,]
+    } else{
+      idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[ nrow(lines)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)] > tolerance))})
+      vertex <- lines[idx_keep,]
+    }
+
 
 
     lvl <- matrix(0, nrow = max(lines[,1]), 4)

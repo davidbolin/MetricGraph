@@ -1047,9 +1047,9 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 #' @noRd 
 #' 
 
-compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL){
+compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact){
     if(!longlat){
-        dists <- as.matrix(dist(lines) * fact)
+        dists <- dist(lines) * fact
     } else if (which_longlat == "sf") {
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
         if(is.null(points)){
