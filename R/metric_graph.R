@@ -38,21 +38,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field edge_lengths Vector with the lengths of the edges in the graph.
   edge_lengths = NULL,
 
-  #' @field EID Vector with the IDs of the edges in the graph.
-  EID = NULL,
-
-
-  #' @field LtE Matrix with edge positions on the lines.
-  LtE = NULL,
-
-  #' @field ELend Vector with the locations of the end points of the edges on
-  #' the lines in the graph. The locations are normalized on the line.
-  ELend = NULL,
-
-  #' @field ELstart Vector with the locations of the starting points of the
-  #' edges on the lines in the graph. The locations are normalized on the line.
-  ELstart = NULL,
-
   #' @field C Constraint matrix used to set Kirchhoff constraints.
   C = NULL,
 
@@ -69,8 +54,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @field mesh Mesh object used for plotting.
   mesh = NULL,
 
-  #' @field lines The lines in the graph.
-  lines = NULL,
+  #' @field edges The coordinates of the edges in the graph.
+  edges = NULL,
 
   #' @field geo_dist Geodesic distances between the vertices in the graph.
   geo_dist = NULL,
@@ -143,6 +128,10 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       valid_units_vertex <- c("m", "km", "miles", "degrees")
       valid_units_length <- c("m", "km", "miles")
+
+      if(!(which_longlat %in% c("sp", "sf"))){
+        stop("The options for 'which_longlat' are 'sp' and 'sf'!")
+      }
 
       if(longlat && (which_longlat == "sp") && is.null(proj4string)){
         proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
@@ -263,7 +252,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = longlat, factor_unit, verbose=verbose,
-                           crs, proj4string, which_longlat)
+                           crs, proj4string, which_longlat, length_unit, vertex_unit)
       )
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -2005,7 +1994,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   private = list(
   #function for creating Vertex and Edges from self$lines
-  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat) {
+  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit) {
     lines <- matrix(nrow = 2*length(self$edges), ncol = 3)
 
     if(verbose){
@@ -2030,13 +2019,15 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(!longlat){
         dists <- as.matrix(dist(lines[, 2:3, drop = FALSE]) * fact)
-    } else {
+    } else if (which_longlat == "sf") {
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = c(2,3), crs = crs)
         dists <- sf::st_distance(sf_points, which = "Great Circle")
         units(dists) <- length_unit
         dists <- units::drop_units(dists)
+    } else{
+        sp_points <- sp::SpatialPoints(coords = lines[,c(2,3)], proj4string = proj4string) 
+        dists <- sp::spDists(sp_points, longlat = TRUE) * fact
     }
-
 
     vertex <- matrix(nrow = nrow(lines), ncol = 3)
     vertex[1,] <- lines[1, , drop = FALSE]
@@ -2077,7 +2068,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
                           (vertex[, 3] - line[2, 3])^2)
-      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs) * fact
+      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit)
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
         k=k+1

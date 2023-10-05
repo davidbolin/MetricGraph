@@ -205,3 +205,24 @@ Eigen::MatrixXd interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int
 
     return(out_mat);
 }
+
+
+//' @name compute_length
+//' @title Compute length
+//' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
+//' @param coords [nx2 matrix] Matrix of the points of the lines
+// [[Rcpp::export]]
+double compute_length(Eigen::MatrixXd coords) {
+    
+    double arclength = 0;
+    
+    int i;
+
+    for(i = coords.rows()-1; i > 0; i--){
+         Eigen::VectorXd v = coords.row(i) - coords.row(i-1);
+         arclength = arclength + v.norm();
+     }  
+
+    return(arclength);
+
+}

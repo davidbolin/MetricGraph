@@ -1027,12 +1027,20 @@ check_lines_input <- function(lines){
 #' @noRd 
 #' 
 
-compute_line_lengths <- function(edge, longlat, unit, crs){
-    if(longlat){
-      linestring <- st_sfc(st_linestring(edge), crs = crs)
-      length <- st_length(linestring)
+compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit){
+    if(!longlat){
+      fact <- process_factor_unit(vertex_unit, unit)
+      return(compute_length(edge) * fact)
+    } else if(which_longlat == "sf"){
+      linestring <- sf::st_sfc(st_linestring(edge), crs = crs)
+      length <- sf::st_length(linestring)
       units(length) <- unit
       return(units::drop_units(length))
+    } else{
+      Line <- sp::Line(edge)
+      length <- sp::LineLength(Line, longlat = longlat)
+      fact <- process_factor_unit(vertex_unit, unit)
+      return(length * fact)
     }
 }
 
