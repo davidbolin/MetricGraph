@@ -436,6 +436,11 @@ metric_graph <-  R6::R6Class("metric_graph",
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
     }
   },
+
+
+  #' @description Prints various characteristics of the graph
+  #' @return No return value. Called for its side effects. 
+
   print = function() {
     cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
     if(!is.null(self$characteristics)) {

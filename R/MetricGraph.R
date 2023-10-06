@@ -36,7 +36,7 @@
 #' @export Cholesky t
 #' @importFrom igraph graph distances is_tree
 #' @importFrom rSPDE matern.covariance gg_df
-#' @importFrom methods is slot
+#' @importFrom methods is slot new
 #' @export gg_df
 #' @importFrom stats predict approx lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif
 #' @importFrom sp Line Lines SpatialPoints SpatialPointsDataFrame CRS Polygon Polygons SpatialPolygons coordinates SpatialLines LineLength spDists

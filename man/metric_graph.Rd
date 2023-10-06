@@ -203,10 +203,14 @@ A \code{metric_graph} object.
 \if{html}{\out{<a id="method-metric_graph-print"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-print}{}}}
 \subsection{Method \code{print()}}{
+Prints various characteristics of the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$print()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-compute_characteristics"></a>}}

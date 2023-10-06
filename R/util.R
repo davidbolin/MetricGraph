@@ -886,7 +886,6 @@ process_factor_unit <- function(vertex_unit, length_unit){
 }
 
 
-#' @noRd 
 #' code from https://gist.github.com/MansMeg/1ec56b54e1d9d238b4fd
 #' 
 #' Message progress bar
@@ -913,6 +912,7 @@ process_factor_unit <- function(vertex_unit, length_unit){
 #'   
 #' @author Mans Magnusson (MansMeg @ github)
 #'   
+#' @noRd 
 msg_progress_bar <- 
   setRefClass(
     Class = "msg_progress_bar", 
