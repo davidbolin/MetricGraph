@@ -314,12 +314,15 @@ viewed as a vertex.</p>
 
 </div><p></p><hr><a id="method-metric_graph-print"></a><div class="section">
 <h3 id="method-print-">Method <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code><a class="anchor" aria-label="anchor" href="#method-print-"></a></h3>
-
-<div class="section">
+<p>Prints various characteristics of the graph</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<p>No return value. Called for its side effects.</p>
+</div>
 
 </div><p></p><hr><a id="method-metric_graph-compute_characteristics"></a><div class="section">
 <h3 id="method-compute-characteristics-">Method <code>compute_characteristics()</code><a class="anchor" aria-label="anchor" href="#method-compute-characteristics-"></a></h3>
@@ -329,7 +332,7 @@ viewed as a vertex.</p>
 </div>
 
 <div class="section">
-<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
 <p>No return value. Called for its side effects. The computed characteristics
 are stored in the <code>characteristics</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -363,7 +366,7 @@ for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
+<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
 <p>No return value. Called for its side effects. The computed geodesic
 distances are stored in the <code>geo_dist</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -398,7 +401,7 @@ distance matrix?</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
+<h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
 <p>A matrix containing the geodesic distances.</p>
 </div>
 
@@ -411,7 +414,7 @@ mesh.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
+<h4 id="returns-5">Returns<a class="anchor" aria-label="anchor" href="#returns-5"></a></h4>
 <p>No return value. Called for its side effects. The geodesic distances
 on the mesh are stored in <code>mesh$geo_dist</code> in the <code>metric_graph</code> object.</p>
 </div>
@@ -445,7 +448,7 @@ for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-5">Returns<a class="anchor" aria-label="anchor" href="#returns-5"></a></h4>
+<h4 id="returns-6">Returns<a class="anchor" aria-label="anchor" href="#returns-6"></a></h4>
 <p>No return value. Called for its side effects. The geodesic distances
 are stored in the <code>res_dist</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -480,7 +483,7 @@ Laplacian matrix?</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-6">Returns<a class="anchor" aria-label="anchor" href="#returns-6"></a></h4>
+<h4 id="returns-7">Returns<a class="anchor" aria-label="anchor" href="#returns-7"></a></h4>
 <p>A matrix containing the resistance distances.</p>
 </div>
 
@@ -492,7 +495,7 @@ Laplacian matrix?</p></dd>
 </div>
 
 <div class="section">
-<h4 id="returns-7">Returns<a class="anchor" aria-label="anchor" href="#returns-7"></a></h4>
+<h4 id="returns-8">Returns<a class="anchor" aria-label="anchor" href="#returns-8"></a></h4>
 <p>A vector containing the degrees of the vertices.</p>
 </div>
 
@@ -505,7 +508,7 @@ mesh.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="returns-8">Returns<a class="anchor" aria-label="anchor" href="#returns-8"></a></h4>
+<h4 id="returns-9">Returns<a class="anchor" aria-label="anchor" href="#returns-9"></a></h4>
 <p>No return value. Called for its side effects. The geodesic distances
 on the mesh are stored in the <code>mesh$res_dist</code> element in the <code>metric_graph</code>
 object.</p>
@@ -539,7 +542,7 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-9">Returns<a class="anchor" aria-label="anchor" href="#returns-9"></a></h4>
+<h4 id="returns-10">Returns<a class="anchor" aria-label="anchor" href="#returns-10"></a></h4>
 <p>No reutrn value. Called for its side effects. The Laplacian is stored
 in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</p>
 </div>
@@ -566,7 +569,7 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="returns-10">Returns<a class="anchor" aria-label="anchor" href="#returns-10"></a></h4>
+<h4 id="returns-11">Returns<a class="anchor" aria-label="anchor" href="#returns-11"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
@@ -578,7 +581,7 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="returns-11">Returns<a class="anchor" aria-label="anchor" href="#returns-11"></a></h4>
+<h4 id="returns-12">Returns<a class="anchor" aria-label="anchor" href="#returns-12"></a></h4>
 <p>A matrix with two columns, where the first column contains the edge
 number and the second column contains the distance on edge of the
 observation locations.</p>
@@ -592,7 +595,7 @@ observation locations.</p>
 </div>
 
 <div class="section">
-<h4 id="returns-12">Returns<a class="anchor" aria-label="anchor" href="#returns-12"></a></h4>
+<h4 id="returns-13">Returns<a class="anchor" aria-label="anchor" href="#returns-13"></a></h4>
 <p>A <code>SpatialPoints</code> object of the observation locations.</p>
 </div>
 
@@ -618,7 +621,7 @@ they are closer than this number (given in relative edge distance between
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-13">Returns<a class="anchor" aria-label="anchor" href="#returns-13"></a></h4>
+<h4 id="returns-14">Returns<a class="anchor" aria-label="anchor" href="#returns-14"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
@@ -648,7 +651,7 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-14">Returns<a class="anchor" aria-label="anchor" href="#returns-14"></a></h4>
+<h4 id="returns-15">Returns<a class="anchor" aria-label="anchor" href="#returns-15"></a></h4>
 <p>A list or a matrix containing the mesh locations.</p>
 </div>
 
@@ -660,7 +663,7 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="returns-15">Returns<a class="anchor" aria-label="anchor" href="#returns-15"></a></h4>
+<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
@@ -753,7 +756,7 @@ This helps detecting mistakes on the input locations when adding new data.</p></
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
+<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
 <p>No return value. Called for its side effects. The observations are
 stored in the <code>data</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -784,7 +787,7 @@ in the same vertex)</p>
 </div>
 
 <div class="section">
-<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
+<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
@@ -821,7 +824,7 @@ provided).</p></dd>
 </ul></div>
 
 <div class="section">
-<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
+<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
 <p>No return value. Called for its side effects. The mesh is stored in
 the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -844,7 +847,7 @@ elements \(B_{ij} = &lt;d\phi_i, \phi_j&gt;\), the matrix <code>D</code> with el
 </div>
 
 <div class="section">
-<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
+<h4 id="returns-20">Returns<a class="anchor" aria-label="anchor" href="#returns-20"></a></h4>
 <p>No return value. Called for its side effects. The finite element
 matrices <code>C</code>, <code>G</code> and <code>B</code> are stored in the <code>mesh</code> element in the
 <code>metric_graph</code> object.</p>
@@ -873,7 +876,7 @@ elements \(A_{ij} = \phi_j(s_i)\).</p>
 </div>
 
 <div class="section">
-<h4 id="returns-20">Returns<a class="anchor" aria-label="anchor" href="#returns-20"></a></h4>
+<h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
 <p>The observation matrix.</p>
 </div>
 
@@ -885,7 +888,7 @@ elements \(A_{ij} = \phi_j(s_i)\).</p>
 </div>
 
 <div class="section">
-<h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
+<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
 <p>A nV x 2 matrix the first element of the <code>i</code>th row is the edge
 number corresponding to the <code>i</code>th vertex and the second value is 0
 if the vertex is at the start of the edge and 1 if the vertex
@@ -985,7 +988,7 @@ requires the 'plotly' package.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
+<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
 <p>A <code>plot_ly</code> (if <code>plotly = TRUE</code>) or <code>ggplot</code> object.</p>
 </div>
 
@@ -997,7 +1000,7 @@ requires the 'plotly' package.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
+<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
@@ -1009,7 +1012,7 @@ requires the 'plotly' package.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
+<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
 <p>TRUE if the graph is a tree and FALSE otherwise.</p>
 </div>
 
@@ -1089,7 +1092,7 @@ the package 'plotly'.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
+<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
 <p>Either a <code>ggplot</code> (if <code>plotly = FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
@@ -1153,7 +1156,7 @@ package 'plotly'.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
+<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
 <p>Either a <code>ggplot</code> (if <code>plotly=FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
@@ -1181,7 +1184,7 @@ in which the group indices are stored.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
+<h4 id="returns-28">Returns<a class="anchor" aria-label="anchor" href="#returns-28"></a></h4>
 <p>No return value. Called for its side effects. The observations are
 stored in the <code>data</code> element in the <code>metric_graph</code> object.</p>
 </div>
@@ -1194,7 +1197,7 @@ stored in the <code>data</code> element in the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-28">Returns<a class="anchor" aria-label="anchor" href="#returns-28"></a></h4>
+<h4 id="returns-29">Returns<a class="anchor" aria-label="anchor" href="#returns-29"></a></h4>
 <p>A <code>metric_graph</code> object.</p>
 </div>
 
@@ -1226,7 +1229,7 @@ included?</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-29">Returns<a class="anchor" aria-label="anchor" href="#returns-29"></a></h4>
+<h4 id="returns-30">Returns<a class="anchor" aria-label="anchor" href="#returns-30"></a></h4>
 <p>The observation or prediction matrix.</p>
 </div>
 
@@ -1258,7 +1261,7 @@ normalized locations.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-30">Returns<a class="anchor" aria-label="anchor" href="#returns-30"></a></h4>
+<h4 id="returns-31">Returns<a class="anchor" aria-label="anchor" href="#returns-31"></a></h4>
 <p>If <code>PtE</code> is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If <code>XY</code> is provided, then a matrix with the
 closest locations on the graph is returned.</p>
