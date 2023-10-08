@@ -346,6 +346,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         PtE_tmp <- na.omit(PtE_tmp)
 
+        print(PtE_tmp)
+
         t <- system.time(
           private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line, verbose=verbose)
           )
@@ -2716,9 +2718,9 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$E[Ei, 2] <- newV
         self$nV <- dim(self$V)[1]
         coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
-                         matrix(val_line,ncol=2))
+                         matrix(self$V[closest_vertex,],ncol=2))
 
-        coords2 <- rbind(matrix(val_line, ncol=2),
+        coords2 <- rbind(matrix(self$V[closest_vertex,], ncol=2),
                          matrix(edge[(idx_pos+1):nrow(edge),],
                                 ncol=2))
 
