@@ -120,6 +120,7 @@ double proj_vec_line(Eigen::MatrixXd line, Eigen::VectorXd point, int normalized
     }
     dist_vec(i+1) = dist_vec(i) + v.norm();
   }
+
   Eigen::MatrixXd line_temp = line.block(min_index,0,2,2);
   double proj_dist = proj_vec_dist(line_temp, point);
   double dist_return = dist_vec(min_index) + proj_dist;

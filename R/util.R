@@ -764,12 +764,18 @@ projectVecLine2 <- function(lines, points, normalized = FALSE){
 
 #' @noRd
 
-distance2 <- function(points, lines, byid=FALSE){
-  sf_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
+distance2 <- function(points, lines, byid=FALSE, longlat, crs){
+  if(!longlat){
+    points_sf <- sf::st_as_sf(as.data.frame(points), coords = 1:2)
+  } else{
+    points_sf <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
+  }
   if(!is.list(lines)){
     lines <- list(lines)
   }
-  lines_sf <- sf::st_sfc(sapply(lines, function(i){sf::st_linestring(i)}))
+
+  lines_sf <- sf::st_sfc(lapply(lines, function(i){sf::st_linestring(i)}))
+
   dist_result <- sf::st_distance(points_sf, lines_sf)
   if(byid){
     ID_names <- 1:length(lines)
@@ -796,7 +802,7 @@ intersection2 <- function(lines1, lines2){
 intersection3 <- function(lines1_sf, lines2_sf){
   inter_lines <- sf::st_intersection(lines1_sf, lines2_sf)
   inter_lines <- unique(inter_lines)
-  return(inter_lines)
+  return(sf::st_as_sfc(inter_lines))
 }
 
 #' @noRd
@@ -1032,7 +1038,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
       return(compute_length(edge) * fact)
     } else if(which_longlat == "sf"){
       if(!is.null(edge)){
-        linestring <- sf::st_sfc(st_linestring(edge), crs = crs)
+        linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
         length <- sf::st_length(linestring)
         units(length) <- unit
         return(units::drop_units(length))
@@ -1053,7 +1059,16 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 
 compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat){
     if(!longlat){
+      if(is.null(points)){
         dists <- dist(lines) * fact
+      } else{
+        if(nrow(lines)>nrow(points)){
+          if(nrow(points)>1){
+            stop("Points must have either the same number of rows as lines, or only 1 row!")
+          }
+        }
+        dists <- sqrt((lines[,1] - points[,1])^2 + (lines[,2]-points[,2])^2) * fact
+      }
     } else if (which_longlat == "sf") {
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
         if(is.null(points)){
@@ -1073,4 +1088,5 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
           dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE) * fact
         }
     }
+    return(dists)
 }

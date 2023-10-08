@@ -35,12 +35,13 @@
 #' point was snapped to.
 #'
 #' @noRd
-snapPointsToLines <- function( points, lines ) {
+snapPointsToLines <- function( points, lines, longlat, crs) {
     if(!is.list(lines)){
       lines <- list(lines)
     }
     # d = rgeos::gDistance(points, lines, byid=TRUE)
-    d = distance2(points, lines, byid=TRUE)
+    d = distance2(points, lines, byid=TRUE, longlat, crs)
+
 
     distToLine = apply(d, 2, min, na.rm = TRUE)
 
@@ -53,11 +54,8 @@ snapPointsToLines <- function( points, lines ) {
                 points[x,]), FUN.VALUE=c(0,0))
 
     # Recover lines' Ids (If no id field has been specified, take the sp-lines id)
-    if (!is.na(idField)) {
-      nearest_line_id = lines@data[,idField][nearest_line_index]
-    }  else {
-      nearest_line_id = nearest_line_index
-    }
+
+    nearest_line_id = nearest_line_index
     # Create data frame and sp points
     df = data.frame(nearest_line_index = nearest_line_index, snap_dist = distToLine)
 
