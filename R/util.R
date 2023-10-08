@@ -807,8 +807,12 @@ intersection3 <- function(lines1_sf, lines2_sf){
 
 #' @noRd
 
-interpolate2 <- function(lines, pos, normalized = FALSE){
+interpolate2 <- function(lines, pos, normalized = FALSE, get_idx = FALSE){
+  if(!get_idx){
+    return(interpolate2_aux(lines, pos, normalized)[["coords"]])
+  } else{
     return(interpolate2_aux(lines, pos, normalized))
+  }
 }
 
 #' @noRd

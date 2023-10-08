@@ -1,6 +1,6 @@
 
 
-## Functions snapPointsToLines, nearestPointOnLine and nearestPointOnSegment are
+## Functions snapPointsToLines, nearestPointOnLine and nearestPointOnSegment are either obtained or modifications
 ## from maptools package - under GPL-2 license
 ##
 ## We are providing them here since the maptools package will be deprecated in 2023
@@ -35,7 +35,7 @@
 #' point was snapped to.
 #'
 #' @noRd
-snapPointsToLines <- function( points, lines, longlat, crs) {
+snapPointsToLines <- function( points, lines, longlat, crs, idx = NULL) {
     if(!is.list(lines)){
       lines <- list(lines)
     }
@@ -53,9 +53,10 @@ snapPointsToLines <- function( points, lines, longlat, crs) {
             nearestPointOnLine(lines[[nearest_line_index[x]]],
                 points[x,]), FUN.VALUE=c(0,0))
 
-    # Recover lines' Ids (If no id field has been specified, take the sp-lines id)
 
-    nearest_line_id = nearest_line_index
+    if(!is.null(idx)){
+      nearest_line_index <- idx
+    }
     # Create data frame and sp points
     df = data.frame(nearest_line_index = nearest_line_index, snap_dist = distToLine)
 

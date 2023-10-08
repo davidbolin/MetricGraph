@@ -167,11 +167,12 @@ Eigen::VectorXd projectVecLine(Eigen::MatrixXd lines, Eigen::MatrixXd points, in
 //'
 // [[Rcpp::export]]
 
-Eigen::MatrixXd interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int normalized = 0){
+Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int normalized = 0){
     int size_return = pos.size();
     int i,j;
     Eigen::MatrixXd out_mat(size_return,2);
     Eigen::VectorXd dist_vec(lines.rows());
+    Eigen::VectorXd idx_pos(pos.size());
     dist_vec(0) = 0;
     for(i=0; i<lines.rows()-1; i++){
         Eigen::VectorXd p0 = lines.row(i);
@@ -202,9 +203,13 @@ Eigen::MatrixXd interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int
         double dist_pos = (pos_rel(i) - dist_vec(tmp_ind))/(dist_vec(tmp_ind+1)-dist_vec(tmp_ind)); 
 
         out_mat.row(i) = lines.row(tmp_ind) + (lines.row(tmp_ind+1) - lines.row(tmp_ind))*dist_pos;
+        idx_pos(i) = tmp_ind+1;
     }
 
-    return(out_mat);
+    return  Rcpp::List::create(
+      Rcpp::Named("coords")        = out_mat,
+      Rcpp::Named("idx") = idx_pos
+    );
 }
 
 

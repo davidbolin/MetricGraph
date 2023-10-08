@@ -307,24 +307,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
 
-    if(!is.null(private$initial_added_vertex)){
-      if(verbose){
-        message(sprintf("Split %d lines", length(private$initial_added_vertex)))
-      }
-
-      t <- system.time(
-      for(i in 1:length(private$initial_added_vertex)){
-
-          private$split_line_at_added_vertex(private$initial_line_added[i],
-                                            private$initial_added_vertex[i],
-                                            private$initial_edges_added[i,],
-                                            verbose=verbose)
-      })
-
-      if(verbose){
-        message(sprintf("time: %.3f s", t[["elapsed"]]))
-      }
-    } 
     private$clear_initial_info()
     }
 
@@ -336,7 +318,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       t <- system.time(
         PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
-                                              tolerance = tolerance$vertex_line, verbose = verbose)
+                                              tolerance = tolerance$vertex_line, verbose = verbose,
+      crs=crs, proj4string = proj4string, longlat=longlat, fact = factor_unit, which_longlat = which_longlat)
         )
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -370,27 +353,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         if(verbose){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
         }
-      }
-
-      if(!is.null(private$initial_added_vertex) && adjust_lines){
-
-        if(verbose){
-          message(sprintf("Split %d lines: ", length(private$initial_added_vertex)))
-        }
-
-        t <- system.time(
-          for(i in 1:length(private$initial_added_vertex)){
-            private$split_line_at_added_vertex(private$initial_line_added[i],
-                                               private$initial_added_vertex[i],
-                                               private$initial_edges_added[i,],
-                                               verbose=verbose)
-          })
-
-        if(verbose){
-          message(sprintf("time: %.3f s", t[["elapsed"]]))
-        }
-      } else if (!adjust_lines && verbose) {
-        message("The lines object is not updated, so plots might not be accurate")
       }
       private$clear_initial_info()
     }
@@ -2041,7 +2003,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[ nrow(lines)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)] > tolerance))})
       vertex <- lines[idx_keep,]
     }
-
       # if(inherits(dists,"dist")) dists <- dist2mat(dists,256)
       # idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
       # vertex <- lines[idx_keep,]
@@ -2341,79 +2302,67 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   ## Coordinates function to return all the lines intersecting within a tolerance
 
-    coordinates_multiple_snaps = function(XY, tolerance, verbose = verbose){
-      Spoints <- SpatialPoints(XY)
+    coordinates_multiple_snaps = function(XY, tolerance, verbose = verbose, crs, proj4string, longlat, fact, which_longlat) {
+      # Spoints <- SpatialPoints(XY)
       coords_line <- c()
       coords_tmp <- c()
-      Spoints_sf <- sf::st_as_sf(Spoints)
-      lines_sf <- sf::st_as_sf(self$lines)
+      # Spoints_sf <- sf::st_as_sf(Spoints)
+      # lines_sf <- sf::st_as_sf(self$lines)
+
+      if(!longlat){
+      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}))
+          points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2)
+      crs <- NULL
+    } else if (which_longlat == "sf"){
+      points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = crs)
+      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
+    } else{
+      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
+      crs <- sf::st_crs(proj4string)
+      points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = crs)
+    }
 
       if(verbose){
         message("Computing auxiliary distances")
       }
+
       # within_dist <- gWithinDistance(Spoints, self$lines, dist = tolerance, byid = TRUE)
-      within_dist <- t(as.matrix(sf::st_is_within_distance(Spoints_sf, lines_sf, dist = tolerance)))
+      within_dist <- t(as.matrix(sf::st_is_within_distance(points_sf, lines_sf, dist = tolerance)))
       if(verbose){
         message("Done!")
       }
 
       if(verbose){
         message("Part 1/2")
-        bar_multiple_snaps <- msg_progress_bar(length(self$lines))
+        bar_multiple_snaps <- msg_progress_bar(length(self$edges))
       }
 
-
-      for(i in 1:length(self$lines)){
+      for(i in 1:length(self$edges)){
         if(verbose){
           bar_multiple_snaps$increment()
         }
         select_points <- matrix(XY[within_dist[i,],], ncol=2)
         if(nrow(select_points) > 0){
-          SP_tmp <- SpatialPoints(select_points)
-          SP <- snapPointsToLines(SP_tmp, self$lines[i])
-          idx_tol <- (SP@data[["snap_dist"]] <= tolerance)
-          coords_line <- c(coords_line, SP@data[["nearest_line_id"]][idx_tol])
-          coords_tmp <- rbind(coords_tmp, SP@coords[idx_tol,])
+          SP <- snapPointsToLines(select_points, self$edges[i], longlat, crs, i)
+          idx_tol <- (SP[["df"]][["snap_dist"]] <= tolerance)
+          coords_line <- c(coords_line, SP[["df"]][["nearest_line_index"]][idx_tol])
+          coords_tmp <- rbind(coords_tmp, (t(SP[["coords"]]))[idx_tol,])
         }
       }
 
-      Spoints@coords = coords_tmp
+      XY <- coords_tmp
 
-      LtE = cbind(match(coords_line, self$EID), 0)
+      PtE = cbind(match(coords_line, 1:length(self$edges)), 0)
 
-      if(verbose){
-        message("Part 2/2")
-        bar_multiple_snaps <- msg_progress_bar(2*length(unique(LtE[, 1])))
-      }
-
-      for (ind in unique(LtE[, 1])) {
+      for (ind in unique(PtE[, 1])) {
         if(verbose){
           bar_multiple_snaps$increment()
         }
-        index.p <- LtE[, 1] == ind
+        index.p <- PtE[, 1] == ind
         # LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
         #                                normalized=TRUE)
-
-        LtE[index.p,2]=projectVecLine2(self$lines[ind,], Spoints[index.p,],
+        PtE[index.p,2] <- projectVecLine2(self$edges[[ind]], XY[index.p,,drop=FALSE],
                                        normalized=TRUE)
-      }
-      PtE <- LtE
-
-      for (ind in unique(LtE[, 1])) {
-        if(verbose){
-          bar_multiple_snaps$increment()
-        }        
-        Es_ind <- which(self$LtE[ind, ] > 0)
-
-        index.p <- which(LtE[, 1] == ind)
-
-        for (j in index.p) {
-          E_ind <- which.min(replace(self$ELend[Es_ind],
-                                     self$ELend[Es_ind] < LtE[j,2], NA))
-          PtE[j, 1] <- Es_ind[E_ind]
-          PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
-            (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
-        }
       }
       return(PtE)
       },
@@ -2758,145 +2707,23 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$conjugate_initial_line = NULL
   },
 
-  get_list_coords = function(pos, line1, line2){
-          new_lines <- c()
-          for(i in 1:length(self$lines)){
-            if(i!=pos){
-              line_coords <- coordinates(self$lines[i])[[1]][[1]]
-              id_line <- self$lines[i]@lines[[1]]@ID
-              new_lines <- c(new_lines, Lines(list(Line(line_coords)), ID = id_line))
-            } else{
-              new_lines <- c(new_lines, line1)
-            }
-          }
-          if(!is.null(line2)){
-            new_lines <- c(new_lines, line2)
-          }
-          return(new_lines)
-  },
-
-  split_line_at_added_vertex = function(integer_id_line,
-                                        added_vertex_id,
-                                        added_edges_id, verbose){
-
-      id_conjugate_line <- which(private$conjugate_initial_line[, 1] == integer_id_line)
-      id_lines_of_interest <- c(integer_id_line,
-                                private$conjugate_initial_line[id_conjugate_line, 2])
-
-
-      distances_lines <- c()
-      idx_min <- c()
-
-      if(verbose){
-        bar_split_line_vertex <- msg_progress_bar(length(id_lines_of_interest))
-      }
-
-      for(id_ in id_lines_of_interest){
-        if(verbose){
-          bar_split_line_vertex$increment()
-        }
-          line <- self$lines@lines[id_]
-          # tmp_dist <- rgeos::gDistance(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
-          tmp_dist <- distance2(SpatialPoints(coords = matrix(self$V[added_vertex_id,],ncol=2)), SpatialLines(line))
-          distances_lines <- c(distances_lines, tmp_dist)
-        }
-
-        min_idx <- which.min(distances_lines)
-
-        private$conjugate_initial_line <- rbind(private$conjugate_initial_line,
-                                                      cbind(integer_id_line, nrow(self$LtE)+1))
-
-        integer_id_line <- id_lines_of_interest[min_idx][[1]]
-        line_coords <- self$lines@lines[integer_id_line][[1]]@Lines[[1]]@coords
-
-        tmp_dist <- sapply(1:nrow(line_coords), function(j){
-              (self$V[added_vertex_id,1]-line_coords[j,1])^2 + (self$V[added_vertex_id,2] - line_coords[j,2])^2
-          })
-        idx_tmp <-  which.min(tmp_dist)
-
-        closest_coord <- idx_tmp
-
-        if(closest_coord == nrow(line_coords)){
-          closest_coord <- closest_coord - 1
-        }
-
-
-      slot_id_lines <- sapply(slot(self$lines,"lines"), function(x) slot(x, "ID"))
-      id_line <- slot_id_lines[integer_id_line]
-
-      times_split <- sum(which(private$split_lines_ids_times[,1] == integer_id_line))
-      private$split_lines_ids_times <- rbind(private$split_lines_ids_times,
-                                             cbind(integer_id_line, 1))
-
-        coords1 <- rbind(matrix(line_coords[1:closest_coord,],ncol=2),
-                         matrix(self$V[added_vertex_id,],ncol=2))
-                    line1 <- Lines(list(Line(coords1)), ID = id_line)
-
-        coords2 <- rbind(matrix(self$V[added_vertex_id,], ncol=2),
-                         matrix(line_coords[(closest_coord+1):nrow(line_coords),],
-                                ncol=2))
-                line2 <- Lines(list(Line(coords2)),
-                               ID = paste0(id_line, "__",
-                                           as.character(times_split+1)))
-
-        self$lines <- SpatialLines(private$get_list_coords(integer_id_line,
-                                                           line1,
-                                                           line2))
-
-        self$LtE <- rbind(self$LtE, rep(0, self$nE))
-        self$LtE[nrow(self$LtE), added_edges_id[2]] <- 1
-        if(length(id_conjugate_line) == 0){
-          id_original_line <- integer_id_line
-        } else{
-          id_original_line <- private$conjugate_initial_line[id_conjugate_line, 1]
-        }
-
-        self$LtE[id_original_line, added_edges_id[2]] <- 0
-        self$ELend[added_edges_id[1]] <- 1
-        self$ELstart[added_edges_id[2]] <- 0
-        self$ELend[added_edges_id[2]] <- 1
-        
-        self$edge_lengths[added_edges_id[1]] <- LineLength(line1@Lines[[1]])
-        self$edge_lengths[added_edges_id[2]] <- LineLength(line2@Lines[[1]])
-        self$EID <- c(self$EID, paste0(id_line, "__", as.character(times_split+1)))
-  },
-
   # @description function for splitting lines in the graph
   # @param Ei index of line to split
   # @param t  position on line to split (normalized)
   # @param tolerance tolerance for merging overlapping vertices
   split_edge = function(Ei, t, tolerance = 0) {
 
-    index <- (self$LtE@p[Ei] + 1):(self$LtE@p[Ei + 1])
-    LinesPos <- cbind(self$LtE@i[index] + 1, self$LtE@x[index])
-    LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
-    j <- min(which(t <= LinesPos[, 2]))
-    t_mod <- t
-    if (j == 1) {
-      t_mod <- t_mod/LinesPos[j, 2]
-    } else {
-      t_mod <- (t_mod - LinesPos[j - 1, 2]) /
-        (LinesPos[j, 2] - LinesPos[j - 1, 2])
-    }
-    mult_ <- 1
-    if(j== dim(LinesPos)[1] ){
-      mult_ <- self$ELend[Ei]
-    }
-    if(j==1)
-      mult_ = mult_ - self$ELstart[Ei]
-    t_mod = mult_ * t_mod
+    edge <- self$edges[[Ei]]
+  
+     val_line <- interpolate2(edge, pos = t, normalized = TRUE, get_idx = TRUE)
 
-    if(j==1){
-      t_mod = t_mod + self$ELstart[Ei]
-    }
-
-    Line <- self$lines[LinesPos[j,1], ]
-    # val_line <- rgeos::gInterpolate(Line, t_mod, normalized = TRUE)@coords
-     val_line <- interpolate2(Line, pos = t_mod, normalized = TRUE)
+     idx_pos <- val_line[["idx"]]
+     val_line <- val_line[["coords"]]
 
     closest_vertex <- which.min(sapply(1:nrow(self$V), function(i){
       (self$V[i,1]-val_line[1])^2 + (self$V[i,2] - val_line[2])^2
     }))
+
     min_dist <- sqrt(sum((val_line - self$V[closest_vertex,])^2))
     add_V <- FALSE
     if(min_dist <= tolerance){
@@ -2907,53 +2734,30 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     if((newV != self$E[Ei, 1]) && newV != self$E[Ei,2]){
-        #change LtE
-        self$ELend <- c(self$ELend, self$ELend[Ei])
-        self$ELend[Ei] <- t_mod
-        self$ELstart <- c(self$ELstart, t_mod)
-        LtE.i <- self$LtE@i
-        LtE.p <- self$LtE@p
-        LtE.x <- self$LtE@x
-        LtE.dim <- self$LtE@Dim
-        LtE.dim[2] <- LtE.dim[2] + 1
-        # add the new column
-        LtE.i_new <- LinesPos[j,1] - 1
-        LtE.x_new <- LinesPos[j,2]
-        large <- LtE.x[index] > t
-
         if(private$addinfo){
           private$initial_added_vertex <- c(private$initial_added_vertex, newV)
-          private$initial_line_added <- c(private$initial_line_added, LtE.i_new+1)
         }
-
-
-        n.p <- length(self$LtE@p)
-        if(sum(large)>1){
-          index.rem = index[large]
-          index.rem <- index.rem[-length(index.rem)]
-          LtE.i_new = c(LtE.i_new,LtE.i[index.rem])
-          LtE.x_new = c(LtE.x_new,LtE.x[index.rem])
-          LtE.i <- LtE.i[-index.rem]
-          LtE.x <- LtE.x[-index.rem]
-          self$LtE@p[(Ei+1):n.p] <- self$LtE@p[(Ei+1):n.p] - sum(large) - 1
-        }
-        LtE.p_new <- self$LtE@p[n.p] + sum(large)
-        self$LtE <- Matrix::sparseMatrix(i = c(LtE.i, LtE.i_new)+1,
-                                         p = c(LtE.p, LtE.p_new),
-                                         x = c(LtE.x, LtE.x_new),
-                                         dims = LtE.dim)
 
         if(add_V){
           self$V <- rbind(self$V, c(val_line))
         }
-        l_e <- self$edge_lengths[Ei]
-        self$edge_lengths[Ei] <- t * l_e
-        self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
         self$nE <- self$nE + 1
         self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
         self$E[Ei, 2] <- newV
         self$nV <- dim(self$V)[1]
+        coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
+                         matrix(val_line,ncol=2))
 
+        coords2 <- rbind(matrix(val_line, ncol=2),
+                         matrix(edge[(idx_pos+1):nrow(edge),],
+                                ncol=2))
+
+        self$edges[[Ei]] <- coords1
+        length(self$edges) <- length(self$edges)+1
+        self$edges[[length(self$edges)]] <- coords2
+        l_e <- self$edge_lengths[Ei]
+        self$edge_lengths[Ei] <- t * l_e
+        self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
         if(private$addinfo){
             private$initial_edges_added <- rbind(private$initial_edges_added,cbind(Ei, nrow(self$E)))
         }

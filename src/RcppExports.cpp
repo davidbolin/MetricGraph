@@ -50,7 +50,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // interpolate2_aux
-Eigen::MatrixXd interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int normalized);
+Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int normalized);
 RcppExport SEXP _MetricGraph_interpolate2_aux(SEXP linesSEXP, SEXP posSEXP, SEXP normalizedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
