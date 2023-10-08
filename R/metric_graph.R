@@ -133,12 +133,18 @@ metric_graph <-  R6::R6Class("metric_graph",
         stop("The options for 'which_longlat' are 'sp' and 'sf'!")
       }
 
+      if(longlat){
+        private$longlat <- TRUE
+      }
+
       if(longlat && (which_longlat == "sp") && is.null(proj4string)){
         proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
+        private$crs <- sf::st_crs(proj4string)
       }
 
       if(longlat && (which_longlat == "sf") && is.null(crs)){
         crs <- sf::st_crs(4326)
+        private$crs <- crs
       }
 
     # private$longlat <- longlat
@@ -1915,15 +1921,15 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       return(Points)
     } else {
-      SP <- snapPointsToLines(XY, self$edges, longlat, crs)
+      SP <- snapPointsToLines(XY, self$edges, longlat = private$longlat, crs = private$crs)
       # coords.old <- XY
       # colnames(coords.old) <- paste(colnames(coords.old), '_old', sep="")
-      XY = SP[["coords"]]
+      XY = t(SP[["coords"]])
       PtE <- cbind(match(SP[["df"]][["nearest_line_index"]], 1:length(self$edges)), 0)
 
       for (ind in unique(PtE[, 1])) {
         index.p <- PtE[, 1] == ind
-        PtE[index.p,2]=projectVecLine2(self$edges[[ind]], XY[index.p,],
+        PtE[index.p,2]=projectVecLine2(self$edges[[ind]], XY[index.p, , drop=FALSE],
                                        normalized=TRUE)
 
       }
@@ -2672,6 +2678,14 @@ metric_graph <-  R6::R6Class("metric_graph",
   # Length unit
 
   length_unit = NULL,
+
+  # longlat
+
+  longlat = FALSE,
+
+  # crs 
+  
+  crs = NULL,
 
   clear_initial_info = function(){
     private$initial_added_vertex = NULL
