@@ -2708,6 +2708,14 @@ metric_graph <-  R6::R6Class("metric_graph",
           private$initial_added_vertex <- c(private$initial_added_vertex, newV)
         }
 
+          coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
+                         matrix(self$V[closest_vertex,],ncol=2))
+
+          coords2 <- rbind(matrix(self$V[closest_vertex,], ncol=2),
+                         matrix(edge[(idx_pos+1):nrow(edge),],
+                                ncol=2))
+
+
         if(add_V){
           self$V <- rbind(self$V, c(val_line))
         }
@@ -2715,12 +2723,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
         self$E[Ei, 2] <- newV
         self$nV <- dim(self$V)[1]
-        coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
-                         matrix(self$V[closest_vertex,],ncol=2))
-
-        coords2 <- rbind(matrix(self$V[closest_vertex,], ncol=2),
-                         matrix(edge[(idx_pos+1):nrow(edge),],
-                                ncol=2))
 
         self$edges[[Ei]] <- coords1
         length(self$edges) <- length(self$edges)+1
@@ -2808,7 +2810,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       crs <- sf::st_crs(proj4string)
     }
 
-  
   # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
@@ -2910,7 +2911,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                 } else if (!is.null(p_cur)) {
                   dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = crs), intersect_tmp[k])
                 }
-              if(is.null(p_cur) || dist_tmp >tol) {
+              if(is.null(p_cur) || min(dist_tmp) >tol) {
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                 p2 <- t(p2[["coords"]])
                 points_add <- rbind(points_add, p, p2)
@@ -2942,7 +2943,9 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
       bar_eu$increment()
     }
     dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
+    if(length(dists) > 0){
     private$split_edge(e.u[i], dists[1], tolerance)
+    }
     if(length(dists)>1) {
       dists_up <- dists
       for(j in 2:length(dists)){
