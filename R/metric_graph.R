@@ -2682,7 +2682,6 @@ metric_graph <-  R6::R6Class("metric_graph",
   # @param t  position on line to split (normalized)
   # @param tolerance tolerance for merging overlapping vertices
   split_edge = function(Ei, t, tolerance = 0) {
-
     edge <- self$edges[[Ei]]
   
      val_line <- interpolate2(edge, pos = t, normalized = TRUE, get_idx = TRUE)
@@ -2704,20 +2703,22 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     if((newV != self$E[Ei, 1]) && newV != self$E[Ei,2]){
-        if(private$addinfo){
-          private$initial_added_vertex <- c(private$initial_added_vertex, newV)
-        }
 
+        if(add_V){
+          self$V <- rbind(self$V, c(val_line))
+          coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
+                         matrix(val_line,ncol=2))
+
+          coords2 <- rbind(matrix(val_line, ncol=2),
+                         matrix(edge[(idx_pos+1):nrow(edge),],
+                                ncol=2))
+        } else{
           coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
                          matrix(self$V[closest_vertex,],ncol=2))
 
           coords2 <- rbind(matrix(self$V[closest_vertex,], ncol=2),
                          matrix(edge[(idx_pos+1):nrow(edge),],
                                 ncol=2))
-
-
-        if(add_V){
-          self$V <- rbind(self$V, c(val_line))
         }
         self$nE <- self$nE + 1
         self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
