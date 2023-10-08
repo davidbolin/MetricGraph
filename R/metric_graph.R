@@ -1983,10 +1983,10 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     if(!inherits(dists,"dist")){
       idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
-      vertex <- lines[idx_keep,]
+      vertex <- lines[idx_keep,, drop=FALSE]
     } else{
       idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[ nrow(lines)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)] > tolerance))})
-      vertex <- lines[idx_keep,]
+      vertex <- lines[idx_keep,, drop=FALSE]
     }
       # if(inherits(dists,"dist")) dists <- dist2mat(dists,256)
       # idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
@@ -2008,17 +2008,18 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
 
       which.line <- sort(which(lines[, 1] == i))
-      line <- lines[which.line, ]
+      line <- lines[which.line, , drop=FALSE]
+
       #index of vertex corresponding to the start of the line
       ind1 <- which.min((vertex[, 2] - line[1, 2])^2 +
                           (vertex[, 3] - line[1, 3])^2)
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
-                          (vertex[, 3] - line[2, 3])^2)
+                          (vertex[, 3] - line[2, 3])^2)                      
 
-      self$edges[[i]][1,] <- vertex[ind1, 2:3]
+      self$edges[[i]][1,] <- vertex[ind1, 2:3, drop=FALSE]
       i.e <- dim(self$edges[[i]])[1]
-      self$edges[[i]][i.e,] <- vertex[ind2, 2:3]
+      self$edges[[i]][i.e,] <- vertex[ind2, 2:3, drop=FALSE]
       ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit)
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
@@ -2859,6 +2860,9 @@ metric_graph <-  R6::R6Class("metric_graph",
             for(k in 1:nrow(coord_tmp)){
               p <- matrix(coord_tmp[k,],1,2)
               #add points if they are not close to V or previous points
+              if(!is.matrix(self$V)){
+                self$V <- matrix(self$V,ncol=2)
+              }
               if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat))>tol) {
                 p_cur <- rbind(p_cur,p)
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
@@ -2900,7 +2904,7 @@ metric_graph <-  R6::R6Class("metric_graph",
               p <- matrix(coord_tmp,1,2)
             } else {
               coord_int <- sf::st_coordinates(intersect_tmp[k])
-              p <- coord_int[,c("X","Y")]        
+              p <- matrix(coord_int[,c("X","Y")],1,2)
               # p <- matrix(sf::st_coordinates(intersect_tmp[k]),1,2)
             }
 
