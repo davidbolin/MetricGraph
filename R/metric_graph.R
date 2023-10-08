@@ -346,8 +346,6 @@ metric_graph <-  R6::R6Class("metric_graph",
 
         PtE_tmp <- na.omit(PtE_tmp)
 
-        print(PtE_tmp)
-
         t <- system.time(
           private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line, verbose=verbose)
           )
@@ -2809,6 +2807,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
       crs <- sf::st_crs(proj4string)
     }
+
+  
   # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
@@ -2883,6 +2883,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         # intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
         # intersect_tmp <- intersection2(tmp_line, self$lines[j])
         intersect_tmp <- intersection3(tmp_line, lines2_tmp_sf)
+
         if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
           intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
         }
@@ -2900,10 +2901,16 @@ metric_graph <-  R6::R6Class("metric_graph",
               p <- coord_int[,c("X","Y")]        
               # p <- matrix(sf::st_coordinates(intersect_tmp[k]),1,2)
             }
+
             #add points if they are not close to V or previous points
             if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat))>tol) {
               # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
-              if(is.null(p_cur) || sf::distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = crs), intersect_tmp[k])>tol) {
+                if(!longlat && !is.null(p_cur)){
+                  dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2), intersect_tmp[k])
+                } else if (!is.null(p_cur)) {
+                  dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = crs), intersect_tmp[k])
+                }
+              if(is.null(p_cur) || dist_tmp >tol) {
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                 p2 <- t(p2[["coords"]])
                 points_add <- rbind(points_add, p, p2)
