@@ -1015,7 +1015,7 @@ check_lines_input <- function(lines){
   if(!all(is_matrix | is_data_frame)) {
     stop("The list must contain either matrices of data.frames!")
   }
-    n_cols <- sapply(lines, function(i){nrow(i)})
+    n_cols <- sapply(lines, ncol)
   if(any(n_cols != 2)){
     stop("The elements in the list must have two columns!")
   }
@@ -1031,10 +1031,14 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
       fact <- process_factor_unit(vertex_unit, unit)
       return(compute_length(edge) * fact)
     } else if(which_longlat == "sf"){
-      linestring <- sf::st_sfc(st_linestring(edge), crs = crs)
-      length <- sf::st_length(linestring)
-      units(length) <- unit
-      return(units::drop_units(length))
+      if(!is.null(edge)){
+        linestring <- sf::st_sfc(st_linestring(edge), crs = crs)
+        length <- sf::st_length(linestring)
+        units(length) <- unit
+        return(units::drop_units(length))
+      } else{
+        return(0)
+      }
     } else{
       Line <- sp::Line(edge)
       length <- sp::LineLength(Line, longlat = longlat)

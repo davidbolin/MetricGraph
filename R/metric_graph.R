@@ -138,7 +138,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
 
       if(longlat && (which_longlat == "sf") && is.null(crs)){
-        proj4string <- sf::st_crs(4326)
+        crs <- sf::st_crs(4326)
       }
 
     # private$longlat <- longlat
@@ -252,10 +252,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = longlat, factor_unit, verbose=verbose,
-                           crs, proj4string, which_longlat, length_unit, vertex_unit,
+                           crs, proj4string, which_longlat, private$length_unit, private$vertex_unit,
                            project, which_projection)
       )
-      
+
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
@@ -309,7 +309,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
 
-    if(!is.null(private$initial_added_vertex) && adjust_lines){
+    if(!is.null(private$initial_added_vertex)){
       if(verbose){
         message(sprintf("Split %d lines", length(private$initial_added_vertex)))
       }
@@ -326,9 +326,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
-    } else if (!adjust_lines && verbose) {
-      message("The lines object is not updated, so plots might not be accurate")
-    }
+    } 
     private$clear_initial_info()
     }
 
@@ -2037,10 +2035,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       message("Done!")
     }
 
-    if(verbose){
-      message("Part 2/2")
-      bar_line_vertex <- msg_progress_bar(dim(lines)[1]-1 + max(lines[, 1]))
-    }
 
     if(!inherits(dists,"dist")){
       idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
@@ -2050,7 +2044,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       vertex <- lines[idx_keep,]
     }
 
+      # if(inherits(dists,"dist")) dists <- dist2mat(dists,256)
+      # idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
+      # vertex <- lines[idx_keep,]
 
+    if(verbose){
+      message("Part 2/2")
+      bar_line_vertex <- msg_progress_bar(max(lines[, 1]))
+    }
 
     lvl <- matrix(0, nrow = max(lines[,1]), 4)
     k=1
@@ -3024,31 +3025,41 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   find_line_line_points = function(tol,verbose, crs, proj4string, longlat) {
-  lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}))
+  
+    if(!longlat){
+      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}))
+    } else if (which_longlat == "sf"){
+      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
+    } else{
+      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
+    }
   # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
   points_add_PtE <- NULL
 
   if(verbose){
-    bar_line_line <- msg_progress_bar(length(self$lines)-1)
+    bar_line_line <- msg_progress_bar(length(self$edges)-1)
   }
   for(i in 1:(length(self$edges)-1)) {
     if(verbose){
       bar_line_line$increment()
     }
     #lines within tol of line i
-    inds <- i+which(as.vector(dists[i, (i+1):length(self$lines)]))
+    inds <- i+which(as.vector(dists[i, (i+1):length(self$edges)]))
     if(length(inds)>0) {
       for(j in inds) {
         #first check if there are intersections
         # intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
-        intersect_tmp <- intersection3(lines_sf[i], lines_sf[j])
+        intersect_tmp <<- intersection3(lines_sf[i], lines_sf[j])
 
         if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
           intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
           tmp_inter <- 1
         }
+
+        print("Bla")
+
         p_cur <- NULL
         # if(!is.null(intersect_tmp)) {
         if(nrow(sf::st_coordinates(intersect_tmp))>0){
