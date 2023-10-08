@@ -245,6 +245,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$edges <- lines
     }
 
+
     if(verbose){
       message("Setup lines and merge close vertices")
     }
@@ -255,6 +256,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                            crs, proj4string, which_longlat, private$length_unit, private$vertex_unit,
                            project, which_projection)
       )
+
 
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -321,6 +323,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                                               tolerance = tolerance$vertex_line, verbose = verbose,
       crs=crs, proj4string = proj4string, longlat=longlat, fact = factor_unit, which_longlat = which_longlat)
         )
+
       if(verbose){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
@@ -2299,14 +2302,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       # lines_sf <- sf::st_as_sf(self$lines)
 
       if(!longlat){
-      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}))
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
           points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2)
       crs <- NULL
     } else if (which_longlat == "sf"){
       points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = crs)
-      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
     } else{
-      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
       crs <- sf::st_crs(proj4string)
       points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = crs)
     }
