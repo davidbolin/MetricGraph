@@ -2806,12 +2806,12 @@ metric_graph <-  R6::R6Class("metric_graph",
   find_line_line_points = function(tol,verbose, crs, proj4string, longlat, fact, which_longlat) {
   
     if(!longlat){
-      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}))
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
       crs <- NULL
     } else if (which_longlat == "sf"){
-      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
     } else{
-      lines_sf <- sf::st_sfc(sapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
       crs <- sf::st_crs(proj4string)
     }
 
