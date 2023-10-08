@@ -224,8 +224,8 @@ double compute_length(Eigen::MatrixXd coords) {
     
     int i;
 
-    for(i = coords.rows()-1; i > 0; i--){
-         Eigen::VectorXd v = coords.row(i) - coords.row(i-1);
+    for(i = 0 ; i < coords.rows()-1; i++){
+         Eigen::VectorXd v = coords.row(i+1) - coords.row(i);
          arclength = arclength + v.norm();
      }  
 

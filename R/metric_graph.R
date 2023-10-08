@@ -357,6 +357,9 @@ metric_graph <-  R6::R6Class("metric_graph",
       private$clear_initial_info()
     }
 
+    #####
+    print("REMEMBER HERE!!!!")
+
 
     # private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
     # if(is.logical(remove_circles)){
@@ -1903,50 +1906,32 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       Points <- matrix(NA, nrow=nrow(PtE), ncol=ncol(PtE))
 
-      LT <- private$edge_pos_to_line_pos2(PtE[, 1], PtE[, 2])
       for (i in 1:dim(PtE)[1]) {
-        Points[i,] <- interpolate2(self$lines[LT[i, 1], ] ,
-                                   pos = LT[i, 2], normalized = TRUE)
+        Points[i,] <- interpolate2(self$edges[[PtE[i, 1]]] ,
+                                   pos = PtE[i, 2], normalized = TRUE)
       }
       return(Points)
     } else {
-      Spoints <- SpatialPoints(XY)
-      SP <- snapPointsToLines(Spoints, self$lines)
-      coords.old <- as.data.frame(Spoints@coords)
-      colnames(coords.old) <- paste(colnames(coords.old), '_old', sep="")
-      Spoints@coords = SP@coords
-      Spoints@bbox   = SP@bbox
-      LtE <- cbind(match(SP@data[,1], self$EID), 0)
+      SP <- snapPointsToLines(XY, self$edges, longlat, crs)
+      # coords.old <- XY
+      # colnames(coords.old) <- paste(colnames(coords.old), '_old', sep="")
+      XY = SP[["coords"]]
+      PtE <- cbind(match(SP[["df"]][["nearest_line_index"]], 1:length(self$edges)), 0)
 
-      for (ind in unique(LtE[, 1])) {
-        index.p <- LtE[, 1] == ind
-        LtE[index.p,2]=projectVecLine2(self$lines[ind,], Spoints[index.p,],
+      for (ind in unique(PtE[, 1])) {
+        index.p <- PtE[, 1] == ind
+        PtE[index.p,2]=projectVecLine2(self$edges[[ind]], XY[index.p,],
                                        normalized=TRUE)
 
       }
 
-      PtE <- LtE
-      for (ind in unique(LtE[, 1])) {
-        Es_ind <- which(self$LtE[ind, ] > 0)
-        index.p <- which(LtE[, 1] == ind)
-        for (j in index.p) {
-          E_ind <- which.min(replace(self$ELend[Es_ind],
-                                     self$ELend[Es_ind] < LtE[j,2], NA))
-
-          if(length(E_ind)>0){
-            PtE[j, 1] <- Es_ind[E_ind]
-            PtE[j, 2] <- (LtE[j, 2] - self$ELstart[PtE[j, 1]]) /
-              (self$ELend[PtE[j, 1]] - self$ELstart[PtE[j, 1]])
-          }
-        }
-      }
       if (!normalized) {
         PtE <- cbind(PtE[, 1], PtE[, 2] * self$edge_lengths[PtE[, 1]])
       }
       return(PtE)
     }
   }
-    ),
+  ),
 
   private = list(
   #function for creating Vertex and Edges from self$lines
@@ -2030,6 +2015,10 @@ metric_graph <-  R6::R6Class("metric_graph",
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
                           (vertex[, 3] - line[2, 3])^2)
+
+      self$edges[[i]][1,] <- vertex[ind1, 2:3]
+      i.e <- dim(self$edges[[i]])[1]
+      self$edges[[i]][i.e,] <- vertex[ind2, 2:3]
       ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit)
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
@@ -2104,9 +2093,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                      ...){
     xyl <- c()
 
-    coords <- lapply(coordinates(self$lines), function(x) x[[1]])
-    nc <- do.call(rbind,lapply(coords, function(x) dim(x)[1]))
-    xyl <- cbind(do.call(rbind,coords), rep(1:length(nc), times = nc))
+    nc <- do.call(rbind,lapply(self$edges, function(x) dim(x)[1]))
+    xyl <- cbind(do.call(rbind,self$edges), rep(1:length(nc), times = nc))
 
     if(is.null(p)){
         p <- ggplot() + geom_path(data = data.frame(x = xyl[, 1],
@@ -2366,24 +2354,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
       return(PtE)
       },
-
-  # Version 2 edge_pos_to_line_pos
-  # Gets relative position on the line
-  edge_pos_to_line_pos2 = function(E_i, t_i){
-    stopifnot(length(E_i) == length(t_i))
-    tmp_matrix <- matrix(NA, nrow=length(E_i), ncol=2)
-
-    for(i in 1:length(E_i)){
-      tmp_matrix[i,1] <- which(self$LtE[,E_i[i]] == 1)
-    }
-      start_points <- self$ELstart[E_i]
-      tmp_matrix[,2] <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
-    return(tmp_matrix)
-    # line_E_i <- which(self$LtE[,E_i] == 1)
-    # start_point <- self$ELstart[E_i]
-    # exact_point <- t_i * (self$ELend[E_i] - self$ELstart[E_i]) + self$ELstart[E_i]
-    # return(cbind(line_E_i, exact_point))
-  },
 
   #utility function to merge close vertices
   merge_close_vertices = function(tolerance, longlat, fact) {
