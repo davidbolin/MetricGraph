@@ -1040,8 +1040,8 @@ check_lines_input <- function(lines){
 #' @noRd 
 #' 
 
-compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit){
-    if(!longlat){
+compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
+    if(!longlat || project_data){
       fact <- process_factor_unit(vertex_unit, unit)
       return(compute_length(edge) * fact)
     } else if(which_longlat == "sf"){

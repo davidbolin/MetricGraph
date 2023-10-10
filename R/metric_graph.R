@@ -79,9 +79,10 @@ metric_graph <-  R6Class("metric_graph",
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`. 
-  #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sf`.
+  #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
   #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
-  #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson` and `Winkel tripel`. The default is `Winkel tripel`.
+  #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
+  #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
   #' @param tolerance List that provides tolerances during the construction of
   #' the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged
@@ -118,8 +119,9 @@ metric_graph <-  R6Class("metric_graph",
                         longlat = FALSE,
                         crs = NULL, 
                         proj4string = NULL,
-                        which_longlat = "sf",
+                        which_longlat = "sp",
                         project = TRUE,
+                        project_data = FALSE,
                         which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
                                          vertex_edge = 1e-7,
@@ -305,7 +307,7 @@ metric_graph <-  R6Class("metric_graph",
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = longlat, factor_unit, verbose=verbose,
                            crs, proj4string, which_longlat, private$length_unit, private$vertex_unit,
-                           project, which_projection)
+                           project, which_projection, project_data)
       )
 
 
@@ -415,10 +417,10 @@ metric_graph <-  R6Class("metric_graph",
     private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
     if(is.logical(remove_circles)){
       if(remove_circles){
-        private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit)
+        private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
       }
     } else {
-        private$remove_circles(remove_circles, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit)
+        private$remove_circles(remove_circles, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
     }
 
     if (remove_deg2) {
@@ -456,6 +458,7 @@ metric_graph <-  R6Class("metric_graph",
               tmp_edge <- unique(tmp_edge)
               tmp_edge <- rbind(edge[1,,drop=FALSE], tmp_edge)
             }
+            rownames(tmp_edge) <- NULL
             return(tmp_edge)
           }
             )
@@ -2035,12 +2038,54 @@ metric_graph <-  R6Class("metric_graph",
 
   private = list(
   #function for creating Vertex and Edges from self$edges
-  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit, project, which_projection) {
+  line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit, project, which_projection, project_data) {
+
+
+
+    if(project_data && longlat){
+     if(verbose){
+      message("Projecting edges")
+      bar_edges_proj <- msg_progress_bar(length(self$edges))
+    }
+      private$vertex_unit <- length_unit
+      if(which_longlat == "sf"){
+        if(which_projection == "Robinson"){
+          str_proj <- "+proj=robin +datum=WGS84 +no_defs +over"
+        } else if (which_projection == "Winkel tripel") {
+          str_proj <- "+proj=wintri +datum=WGS84 +no_defs +over"
+        } else{
+          str_proj <- which_projection
+        }
+        fact <- process_factor_unit("m", length_unit)
+        for(i in 1:length(self$edges)){
+          bar_edges_proj$increment()
+          sf_points <- sf::st_as_sf(as.data.frame(self$edges[[i]]), coords = 1:2, crs = crs)
+          sf_points_eucl <- sf::st_transform(sf_points, crs=sf::st_crs(str_proj))
+          self$edges[[i]] <- sf::st_coordinates(sf_points_eucl) * fact
+        }
+      } else{
+        if(which_projection == "Robinson"){
+          str_proj <- "+proj=robin +datum=WGS84 +no_defs +over"
+        } else if (which_projection == "Winkel tripel") {
+          str_proj <- "+proj=wintri +datum=WGS84 +no_defs +over"
+        } else{
+          str_proj <- which_projection
+        }
+        fact <- process_factor_unit("km", length_unit)
+        for(i in 1:length(self$edges)){
+          bar_edges_proj$increment()
+          sf_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string) 
+          sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
+          self$edges[[i]] <- sp::coordinates(sp_points_eucl) * fact
+        }        
+      }
+    }
 
     if(verbose){
       message("Part 1/2")
       bar_line_vertex <- msg_progress_bar(length(self$edges))
     }
+
 
     lines <- matrix(nrow = 2*length(self$edges), ncol = 3)
     for(i in 1:length(self$edges)){
@@ -2058,21 +2103,38 @@ metric_graph <-  R6Class("metric_graph",
       message("Computing auxiliary distances")
     }
 
+    if(!project_data || !longlat){
     if(!project || !longlat){
         fact <- process_factor_unit(vertex_unit, length_unit)
           dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit)
     } else if (which_longlat == "sf"){
-        str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
+        if(which_projection == "Robinson"){
+          str_proj <- "+proj=robin +datum=WGS84 +no_defs +over"
+        } else if (which_projection == "Winkel tripel") {
+          str_proj <- "+proj=wintri +datum=WGS84 +no_defs +over"
+        } else{
+          str_proj <- which_projection
+        }
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 2:3, crs = crs)
         sf_points_eucl <- sf::st_transform(sf_points, crs=sf::st_crs(str_proj))
         fact <- process_factor_unit("m", length_unit)
         dists <- dist(sf::st_coordinates(sf_points_eucl)) * fact
     } else{
-        str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
+        if(which_projection == "Robinson"){
+          str_proj <- "+proj=robin +datum=WGS84 +no_defs +over"
+        } else if (which_projection == "Winkel tripel") {
+          str_proj <- "+proj=wintri +datum=WGS84 +no_defs +over"
+        } else{
+          str_proj <- which_projection
+        }
         sp_points <- sp::SpatialPoints(coords = lines[,2:3], proj4string = proj4string) 
         sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
         fact <- process_factor_unit("m", length_unit)
         dists <- dist(sp_points_eucl@coords) * fact
+    }
+    } else{
+      fact <- process_factor_unit(vertex_unit, length_unit)
+      dists <- dist(lines[,2:3,drop=FALSE]) * fact
     }
 
 
@@ -2120,7 +2182,7 @@ metric_graph <-  R6Class("metric_graph",
       self$edges[[i]][1,] <- vertex[ind1, 2:3, drop=FALSE]
       i.e <- dim(self$edges[[i]])[1]
       self$edges[[i]][i.e,] <- vertex[ind2, 2:3, drop=FALSE]
-      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit)
+      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
         k=k+1
@@ -2496,7 +2558,7 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   # utility function to remove small circles
-  remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit) {
+  remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data) {
     if(verbose){
       message("Small circles found!")
       message("Removing small circles")
@@ -2531,7 +2593,7 @@ metric_graph <-  R6Class("metric_graph",
         message("Recomputing edge lengths")
       }
       t <- system.time({
-        self$edge_lengths <- private$compute_lengths(longlat, private$length_unit, crs, proj4string, which_longlat, private$vertex_unit)
+        self$edge_lengths <- private$compute_lengths(longlat, private$length_unit, crs, proj4string, which_longlat, private$vertex_unit, project_data)
       })
        if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -2621,9 +2683,9 @@ metric_graph <-  R6Class("metric_graph",
 
   # Compute lengths
 
-  compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit){
+  compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
           ll <- sapply(self$edges, 
-          function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit)})
+          function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)})
           return(ll)
   },
 
