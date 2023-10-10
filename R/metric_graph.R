@@ -804,6 +804,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     #' would be merged are compatible in terms of direction.
     #'
   prune_vertices = function(verbose = FALSE){
+start <- Sys.time()
     degrees <- self$get_degrees()
     start.deg <- end.deg <- rep(0,self$nV)
     for(i in 1:self$nV) {
@@ -832,9 +833,17 @@ metric_graph <-  R6::R6Class("metric_graph",
      }
      res <- private$remove.first.deg2(res)
    }
+end <- Sys.time()
+    if(verbose){
+          message(sprintf("time: %.3f s", end-start))
+    }
     # if(verbose && to.prune > 0){
     #   close(pb)
     # }
+    if(verbose){
+      message("Updating data locations.")
+    }
+start <- Sys.time()
    if(!is.null(self$data)){
       x_coord <- self$data[["__coord_x"]]
       y_coord <- self$data[["__coord_y"]]
@@ -852,6 +861,10 @@ metric_graph <-  R6::R6Class("metric_graph",
     self$build_mesh(h = max_h)
    }
    private$pruned <- TRUE
+end <- Sys.time()
+    if(verbose){
+          message(sprintf("time: %.3f s", end-start))
+    }
   },
 
   #' @description Gets PtE from the data.
@@ -1973,7 +1986,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   ),
 
   private = list(
-  #function for creating Vertex and Edges from self$lines
+  #function for creating Vertex and Edges from self$edges
   line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit, project, which_projection) {
 
     if(verbose){
@@ -2331,11 +2344,10 @@ metric_graph <-  R6::R6Class("metric_graph",
   ## Coordinates function to return all the lines intersecting within a tolerance
 
     coordinates_multiple_snaps = function(XY, tolerance, verbose = verbose, crs, proj4string, longlat, fact, which_longlat) {
-      # Spoints <- SpatialPoints(XY)
+
       coords_line <- c()
       coords_tmp <- c()
-      # Spoints_sf <- sf::st_as_sf(Spoints)
-      # lines_sf <- sf::st_as_sf(self$lines)
+
 
       if(!longlat){
       lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
@@ -2354,7 +2366,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         message("Computing auxiliary distances")
       }
 
-      # within_dist <- gWithinDistance(Spoints, self$lines, dist = tolerance, byid = TRUE)
       within_dist <- t(as.matrix(sf::st_is_within_distance(points_sf, lines_sf, dist = tolerance)))
       if(verbose){
         message("Done!")
@@ -2387,8 +2398,7 @@ metric_graph <-  R6::R6Class("metric_graph",
           bar_multiple_snaps$increment()
         }
         index.p <- PtE[, 1] == ind
-        # LtE[index.p,2]=rgeos::gProject(self$lines[ind,], Spoints[index.p,],
-        #                                normalized=TRUE)
+
         PtE[index.p,2] <- projectVecLine2(self$edges[[ind]], XY[index.p,,drop=FALSE],
                                        normalized=TRUE)
       }
@@ -2544,7 +2554,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
       self$E <- self$E[-e_rem[2],,drop=FALSE]
       self$E[e_rem[1],] <- E_new
-      # self$EID <- self$EID[-ind]
 
       self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
@@ -2562,13 +2571,6 @@ metric_graph <-  R6::R6Class("metric_graph",
           return(ll)
   },
 
-  # Vertex added in the initial processing
-
-  initial_added_vertex = NULL,
-
-  # Initial lines added
-
-  initial_line_added = NULL,
 
   # Initial edges added
 
@@ -2578,17 +2580,9 @@ metric_graph <-  R6::R6Class("metric_graph",
 
   initial_graph = NULL,
 
-  # Conjugate_line
-
-  conjugate_initial_line = NULL,
-
   # pruned
 
   pruned = FALSE,
-
-  # Split lines
-
-  split_lines_ids_times = NULL,
 
   # should the information be saved when splitting edges?
 
@@ -2611,11 +2605,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   crs = NULL,
 
   clear_initial_info = function(){
-    private$initial_added_vertex = NULL
-    private$initial_line_added = NULL
     private$addinfo = FALSE
     private$initial_edges_added = NULL
-    private$conjugate_initial_line = NULL
   },
 
   # @description function for splitting lines in the graph
@@ -2752,7 +2743,6 @@ metric_graph <-  R6::R6Class("metric_graph",
       crs <- sf::st_crs(proj4string)
     }
 
-  # dists <- gWithinDistance(self$lines, dist = tol, byid = TRUE)
   dists <- t(as.matrix(sf::st_is_within_distance(lines_sf, dist = tol)))
   points_add <- NULL
   points_add_PtE <- NULL
@@ -2769,7 +2759,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(length(inds)>0) {
       for(j in inds) {
         #first check if there are intersections
-        # intersect_tmp <- rgeos::gIntersection(self$lines[i], self$lines[j])
+
         intersect_tmp <- intersection3(lines_sf[i], lines_sf[j])
 
         if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
@@ -2810,10 +2800,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                 # p2 <- cbind(p2["X",], p2["Y",])
 
                 points_add <- rbind(points_add, p, p2)
-                # points_add_PtE <- rbind(points_add_PtE,
-                #                         c(i,gProject(self$lines[i],
-                #                                      SpatialPoints(p))),
-                #                         c(j,gProject(self$lines[j],SpatialPoints(p))))
+
                 points_add_PtE <- rbind(points_add_PtE,
                                         c(i,projectVecLine2(self$edges[[i]],
                                                      p)),
@@ -2822,12 +2809,11 @@ metric_graph <-  R6::R6Class("metric_graph",
             }
         }
         #now check if there are intersections with buffer
-        # tmp_line <- gBuffer(self$lines[i], width = tol)
+
         lines_tmp_sf <- lines_sf[i]
         lines2_tmp_sf <- lines_sf[j]
         tmp_line <- sf::st_buffer(lines_tmp_sf, dist = tol)
-        # intersect_tmp <- rgeos::gIntersection(tmp_line, self$lines[j])
-        # intersect_tmp <- intersection2(tmp_line, self$lines[j])
+
         intersect_tmp <- intersection3(tmp_line, lines2_tmp_sf)
 
         if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
@@ -2860,9 +2846,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                 p2 <- t(p2[["coords"]])
                 points_add <- rbind(points_add, p, p2)
-                # points_add_PtE <- rbind(points_add_PtE,
-                #                         c(i,gProject(self$lines[i],SpatialPoints(p))),
-                #                         c(j,gProject(self$lines[j],SpatialPoints(p))))
+
                 points_add_PtE <- rbind(points_add_PtE,
                                         c(i,projectVecLine2(self$edges[[i]],p)),
                                         c(j,projectVecLine2(self$edges[[j]], p)))
