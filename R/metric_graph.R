@@ -412,14 +412,21 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
 
-    # private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
-    # if(is.logical(remove_circles)){
-    #   if(remove_circles){
-    #     private$remove_circles(tolerance$vertex_vertex)
-    #   }
-    # } else {
-    #   private$remove_circles(remove_circles)
-    # }
+    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
+    if(is.logical(remove_circles)){
+      if(remove_circles){
+      t <- system.time(
+        private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit)
+      )
+      }
+    } else {
+      t <- system.time(
+        private$remove_circles(remove_circles, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit)
+      )
+    }
+    if(verbose){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+    }
 
     if (remove_deg2) {
       if (verbose) {
@@ -2431,7 +2438,11 @@ metric_graph <-  R6::R6Class("metric_graph",
   },
 
   # utility function to remove small circles
-  remove_circles = function(threshold) {
+  remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit) {
+    if(verbose){
+      message("Small circles found!")
+      message("Removing small circles.")
+    }
     if(threshold > 0) {
       loop.ind <- which(self$E[,1] == self$E[,2])
       if(length(loop.ind)>0) {
@@ -2453,17 +2464,12 @@ metric_graph <-  R6::R6Class("metric_graph",
             }
           }
 
-          self$lines <- self$lines[-ind]
+          self$edges <- self$edges[-ind]
           self$E <- self$E[-ind,]
-          # self$EID <- self$EID[-ind]
-          self$EID <- as.vector(sapply(slot(self$lines,"lines"), function(x) slot(x, "ID")))
-          self$edge_lengths <- self$edge_lengths[-ind]
-          self$ELend <- self$ELend[-ind]
-          self$ELstart <- self$ELstart[-ind]
           self$nE <- self$nE - length(ind)
-          self$LtE <- self$LtE[-ind,-ind]
         }
       }
+      self$edge_lengths <- private$compute_lengths(longlat, unit, crs, proj4string, which_longlat, vertex_unit)
     }
   },
 
@@ -2671,6 +2677,14 @@ metric_graph <-  R6::R6Class("metric_graph",
       self$nE <- self$nE - 1
     }
     return(res.out)
+  },
+
+  # Compute lengths
+
+  compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit){
+          ll <- sapply(self$edges, 
+          function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit)})
+          return(ll)
   },
 
   # Vertex added in the initial processing
