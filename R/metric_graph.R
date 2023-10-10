@@ -100,7 +100,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
   #' @param remove_circles All circlular edges with a length smaller than this number
-  #' are removed. The default is the `vertex_vertex` tolerance.
+  #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
   #' @param verbose Print progress of graph creation.
   #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
   #' @details A graph object can be initialized in two ways. The first method
@@ -411,13 +411,12 @@ metric_graph <-  R6::R6Class("metric_graph",
       private$clear_initial_info()
     }
 
-    #####
-    print("REMEMBER HERE!!!!")
-
 
     # private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
     # if(is.logical(remove_circles)){
-    #   private$remove_circles(tolerance$vertex_vertex)
+    #   if(remove_circles){
+    #     private$remove_circles(tolerance$vertex_vertex)
+    #   }
     # } else {
     #   private$remove_circles(remove_circles)
     # }
@@ -439,6 +438,22 @@ metric_graph <-  R6::R6Class("metric_graph",
     # Cloning again to add the initial graph to the initial graph
     private$initial_graph <- self$clone()
 
+
+
+    # Cleaning the edges
+
+    if(verbose){
+      message("Post-processing the edges:")
+    }
+
+    t <- system.time(
+          self$edges <- lapply(self$edges, unique)
+    )
+
+    if(verbose){
+          message(sprintf("time: %.3f s", t[["elapsed"]]))
+    }    
+
     # Checking if graph is connected
     if (check_connected) {
       g <- graph(edges = c(t(self$E)), directed = FALSE)
@@ -453,6 +468,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     if(any(!is.finite(self$edge_lengths))){
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
     }
+    
   },
 
   #' @description Computes shortest path distances between the vertices in the
@@ -1718,38 +1734,12 @@ metric_graph <-  R6::R6Class("metric_graph",
                       c(1, XV[Ve,]))
 
       }
-      index <- (self$LtE@p[i] + 1) : (self$LtE@p[i + 1])
-      LinesPos <- cbind(self$LtE@i[index] + 1,
-                       self$LtE@x[index])
-      LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
-      for (j in 1:length(index)) {
-        if (j==1) {
-          index_j <- vals[, 1] <= LinesPos[j, 2]
-        } else {
-          index_j <- (vals[, 1] <= LinesPos[j, 2]) &
-            (vals[, 1] > LinesPos[j - 1, 2])
-        }
-        if (sum(index_j) == 0)
-          next
-        rel.pos = vals[index_j, 1]
-        if (j == 1) {
-          rel.pos <- rel.pos / LinesPos[j, 2]
-        } else {
-          rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
-            (LinesPos[j, 2] - LinesPos[j - 1, 2])
-        }
-        if (j == dim(LinesPos)[1])
-          rel.pos = self$ELend[i] * rel.pos
-        if (j==1)
-          rel.pos = rel.pos + self$ELstart[i]
 
-        data.to.plot <- cbind(rel.pos,vals[index_j, 2:(frames+1)])
-        Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
-
+        data.to.plot <- vals
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
 
-        coords <- interpolate2(Line_edge,
+        coords <- interpolate2(self$edges[[i]],
                                pos = data.to.plot.order[, 1, drop = TRUE],
                                normalized = TRUE)
         x.loc <- c(x.loc, rep(coords[, 1], frames))
@@ -1758,7 +1748,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         i.loc <- c(i.loc, rep(rep(kk, length(coords[, 1])), frames))
         f.loc <- c(f.loc, rep(1:frames, each = length(coords[, 1])))
         kk = kk+1
-      }
     }
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc, f = f.loc)
 
@@ -1766,8 +1755,8 @@ metric_graph <-  R6::R6Class("metric_graph",
       requireNamespace("plotly")
       x <- y <- ei <- NULL
       for (i in 1:self$nE) {
-        xi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 1]
-        yi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 2]
+        xi <- self$edges[[i]][, 1]
+        yi <- self$edges[[i]][, 2]
         ii <- rep(i,length(xi))
         x <- c(x, xi)
         y <- c(y, yi)
@@ -2412,6 +2401,17 @@ metric_graph <-  R6::R6Class("metric_graph",
             v.merge[v.merge == v.rem] <- v.keep
             v.merge[v.merge > v.rem] <- v.merge[v.merge > v.rem] - 1
           }
+
+          idx_E1 <- which(self$E[,1] == v.rem)
+          idx_E2 <- which(self$E[,2] == v.rem)
+
+          for(k in idx_E1){
+            self$edges[[k]][1,] <- self$V[v.rem,]
+          }
+          for(k in idx_E2){
+            self$edges[[k]][nrow(self$edges[[k]]),] <- self$V[v.rem,]
+          }
+
           self$V <- self$V[-v.rem,]
           self$nV <- self$nV - 1
           self$E[self$E == v.rem] <- v.keep
