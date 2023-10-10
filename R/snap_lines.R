@@ -40,7 +40,10 @@ snapPointsToLines <- function( points, lines, longlat, crs, idx = NULL) {
       lines <- list(lines)
     }
     # d = rgeos::gDistance(points, lines, byid=TRUE)
-    d = distance2(points, lines, byid=TRUE, longlat, crs)
+    # d = distance2(points, lines, byid=TRUE, longlat, crs)
+
+    # Not using longlat, since all the projections (to get the "closest" point on the graph) are considering the Euclidean distances.
+    d = distance2(points, lines, byid=TRUE, longlat = FALSE, crs)
 
 
     distToLine = apply(d, 2, min, na.rm = TRUE)

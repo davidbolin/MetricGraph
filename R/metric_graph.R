@@ -130,7 +130,7 @@ metric_graph <-  R6Class("metric_graph",
                         verbose = FALSE,
                         lines = deprecated()) {
 
-
+      start_construction_time <- Sys.time()
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
            lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(lines)", "metric_graph$new(edges)",
@@ -465,16 +465,6 @@ metric_graph <-  R6Class("metric_graph",
           message(sprintf("time: %.3f s", t[["elapsed"]]))
     }    
 
-    # Checking if graph is connected
-    if (check_connected) {
-      g <- graph(edges = c(t(self$E)), directed = FALSE)
-      components <- igraph::clusters(g, mode="weak")
-      nc <- components$no
-      if(nc>1){
-        message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
-      }
-    }
-
     # Checking if there is some edge with infinite length
     if(any(!is.finite(self$edge_lengths))){
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
@@ -483,6 +473,24 @@ metric_graph <-  R6Class("metric_graph",
     # Checking if there is some edge with zero length
     if(any(self$edge_lengths == 0)){
       warning("There is at least one edge of length zero. Please, consider redefining the graph.")
+    }
+
+    end_construction_time <- Sys.time()
+    construction_time <- end_construction_time - start_construction_time
+
+    if(verbose){
+      message(sprintf('Total construction time: %.2f %s', construction_time, units(construction_time)))
+      
+    }
+
+    # Checking if graph is connected
+    if (check_connected) {
+      g <- graph(edges = c(t(self$E)), directed = FALSE)
+      components <- igraph::clusters(g, mode="weak")
+      nc <- components$no
+      if(nc>1){
+        message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+      }
     }
     
   },
@@ -1088,10 +1096,12 @@ metric_graph <-  R6Class("metric_graph",
 
     ## convert everything to PtE
     if(verbose){
-      message("Converting data to PtE if necessary")
+      if(data_coords == "spatial" || !is.null(Spoints)){
+      message("Converting data to PtE")
       if(private$longlat){
-        message("This step may be long if 'data_coords' is 'spatial'. If this step is taking too long consider setting 'project_data' to 'TRUE' to project the coordinates in the plane and obtain a significant speed up.")
+        message("This step may take long. If this step is taking too long consider pruning the vertices, and if it still takes long, consider setting 'project_data' to 'TRUE' to project the coordinates in the plane and obtain a significant speed up.")
       } 
+      }
     }
 
     t <- system.time({
@@ -1099,7 +1109,6 @@ metric_graph <-  R6Class("metric_graph",
         PtE <- self$coordinates(XY = Spoints@coords)
         XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
         norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-        print(which(is.nan(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))))
         if(norm_XY > tolerance){
           warning("There was at least one point whose location is far from the graph,
           please consider checking the input.")
@@ -2522,7 +2531,7 @@ metric_graph <-  R6Class("metric_graph",
         message("Recomputing edge lengths")
       }
       t <- system.time({
-        self$edge_lengths <- private$compute_lengths(longlat, unit, crs, proj4string, which_longlat, vertex_unit)
+        self$edge_lengths <- private$compute_lengths(longlat, private$length_unit, crs, proj4string, which_longlat, private$vertex_unit)
       })
        if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
