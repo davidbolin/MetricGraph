@@ -68,7 +68,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   Laplacian = NULL,
 
   #' @description Create a new `metric_graph` object.
-  #' @param lines A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
+  #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
   #' @param E m x 2 matrix where each row represents one of the m edges.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
@@ -86,11 +86,13 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged
   #' (default = 1e-7).
-  #' - `vertex_line` If a vertex at the end of one line is closer than this
-  #' number to another line, this vertex is connected to that line
-  #' (default = 1e-7).
-  #' - `line_line` If two lines at some point are closer than this number, a new
-  #' vertex is added at that point and the two lines are connected (default = 0).
+  #' - `vertex_edge` If a vertex at the end of one edge is closer than this
+  #' number to another line, this vertex is connected to that edge
+  #' (default = 1e-7). Previously `vertex_line`, which is now `r lifecycle::badge("deprecated")`.
+  #' - `edge_edge` If two edges at some point are closer than this number, a new
+  #' vertex is added at that point and the two edges are connected (default = 0).
+  #' - `vertex_line`, `r lifecycle::badge("deprecated")` Use `vertex_edge` instead. 
+  #' - `line_line`, `r lifecycle::badge("deprecated")` Use `edge_edge` instead.
   #'
   #' If `longlat = TRUE`, the tolerances are given in km.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
@@ -100,6 +102,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. The default is the `vertex_vertex` tolerance.
   #' @param verbose Print progress of graph creation.
+  #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
   #' lines. The second option is to specify the graph via the `lines` input.
@@ -107,7 +110,7 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' Thus, if two lines are intersecting somewhere else, this will not be
   #' viewed as a vertex.
   #' @return A `metric_graph` object.
-  initialize = function(lines = NULL,
+  initialize = function(edges = NULL,
                         V = NULL,
                         E = NULL,
                         vertex_unit = NULL,
@@ -119,12 +122,59 @@ metric_graph <-  R6::R6Class("metric_graph",
                         project = TRUE,
                         which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
-                                         vertex_line = 1e-7,
-                                         line_line = 0),
+                                         vertex_edge = 1e-7,
+                                         edge_edge = 0,
+                                         vertex_line = deprecated(),
+                                         line_line = deprecated()),
                         check_connected = TRUE,
                         remove_deg2 = FALSE,
                         remove_circles = TRUE,
-                        verbose = FALSE) {
+                        verbose = FALSE,
+                        lines = deprecated()) {
+
+
+      if (lifecycle::is_present(lines)) {
+         if (is.null(edges)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(lines)", "metric_graph$new(edges)",
+             details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
+           )
+           edges <- lines
+         } else {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(lines)", "metric_graph$new(edges)",
+             details = c("Both `edges` and `lines` were provided. Only `edges` will be considered.")
+           )
+         }
+         lines <- NULL
+       }            
+
+
+      if (lifecycle::is_present(tolerance$vertex_line)) {
+         if (is.null(tolerance$vertex_edge)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$vertex_line)", "metric_graph$new(tolerance$vertex_edge)",
+             details = c("`tolerance$vertex_line` was provided but not `tolerance$vertex_edge`. Setting `tolerance$vertex_edge <- tolerance$vertex_line`.")
+           )
+           tolerance$vertex_edge <- tolerance$vertex_line
+         } else {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$vertex_line)", "metric_graph$new(tolerance$vertex_edge)",
+             details = c("Both `tolerance$vertex_edge` and `tolerance$vertex_line` were provided. Only `tolerance$vertex_edge` will be considered.")
+           )
+         }
+         tolerance$vertex_line <- NULL
+       }             
+
+      if (lifecycle::is_present(tolerance$line_line)) {
+         if (is.null(tolerance$edge_edge)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$line_line)", "metric_graph$new(tolerance$edge_edge)",
+             details = c("`tolerance$line_line` was provided but not `tolerance$edge_edge`. Setting `tolerance$edge_edge <- tolerance$line_line`.")
+           )
+           tolerance$edge_edge <- tolerance$line_line
+         } else {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$line_line)", "metric_graph$new(tolerance$edge_edge)",
+             details = c("Both `tolerance$edge_edge` and `tolerance$line_line` were provided. Only `tolerance$edge_edge` will be considered.")
+           )
+         }
+         tolerance$line_line <- NULL
+       }          
 
       valid_units_vertex <- c("m", "km", "miles", "degrees")
       valid_units_length <- c("m", "km", "miles")
@@ -215,26 +265,26 @@ metric_graph <-  R6::R6Class("metric_graph",
     PtE_tmp_line_line <- NULL
     PtE_tmp_line_vertex <- NULL
 
-    if(is.null(lines) && is.null(V) && is.null(E)) {
-      self$lines <- logo_lines()
+    if(is.null(edges) && is.null(V) && is.null(E)) {
+      self$edges <- logo_lines()
     }
-    if(!is.null(lines)){
+    if(!is.null(edges)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from lines, then E and V are ignored")
       }
-      if (inherits(lines,"SpatialLinesDataFrame")) {
-        tmp_lines = SpatialLines(lines@lines)
-        self$edges <- lapply(1:length(tmp_lines), function(i){lines@lines[[i]]@Lines[[1]]@coords})
-      } else if (inherits(lines,"SpatialLines")) {
-        self$edges = lapply(1:length(lines), function(i){lines@lines[[i]]@Lines[[1]]@coords})
-      } else if(inherits(lines, "MULTILINESTRING")) {
-        coords_multilinestring <- sf::st_coordinates(lines)
+      if (inherits(edges,"SpatialLinesDataFrame")) {
+        tmp_lines = SpatialLines(edges@lines)
+        self$edges <- lapply(1:length(tmp_lines), function(i){tmp_lines@lines[[i]]@Lines[[1]]@coords})
+      } else if (inherits(edges,"SpatialLines")) {
+        self$edges = lapply(1:length(edges), function(i){edges@lines[[i]]@Lines[[1]]@coords})
+      } else if(inherits(edges, "MULTILINESTRING")) {
+        coords_multilinestring <- sf::st_coordinates(edges)
         lines_ids <- unique(coords_multilinestring[,"L1"])
         self$edges <- lapply(1:length(lines_ids), function(i){coords_multilinestring[coords_multilinestring[,"L1"]==i ,1:2]})
-      } else if(is.list(lines)){
-        self$edges <- check_lines_input(lines)
+      } else if(is.list(edges)){
+        self$edges <- check_lines_input(edges)
       } else {
-        stop("lines should be of class SpatialLines or SpatialLinesDataFrame")
+        stop("edges should either be a list, or of class MULTILINESTRING, SpatialLines or SpatialLinesDataFrame")
       }
 
     } else {
@@ -244,16 +294,16 @@ metric_graph <-  R6::R6Class("metric_graph",
       if(ncol(V)!=2 || ncol(E)!=2){
         stop("V and E must have two columns!")
       }
-      lines <- list()
+      edges <- list()
       for(i in 1:dim(E)[1]) {
-        lines[[i]] <- rbind(V[E[i,1], ], V[E[i,2], ])
+        edges[[i]] <- rbind(V[E[i,1], ], V[E[i,2], ])
       }
-      self$edges <- lines
+      self$edges <- edges
     }
 
 
     if(verbose){
-      message("Setup lines and merge close vertices")
+      message("Setup edges and merge close vertices")
     }
 
     t <- system.time(
