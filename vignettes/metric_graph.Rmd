@@ -34,27 +34,20 @@ For details about Gaussian processes and inference on metric graphs, we refer to
 
 ## Basic constructions and properties
 A metric graph can be constructed in two ways. The first is to specify all edges
-in the graph as a `SpatialLines` object using the `sp` package. To illustrate
-this, we first load the `sp` package
+in the graph as a `list` object, where each entry is a matrix. To illustrate
+this, we first construct the following lines
 ```{r}
-library(sp)
-```
-and construct the following lines
-```{r}
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 50)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
 ```
-We can now create the graph based on the `Lines` object as follows
+We can now create the graph based on the `edges` object as follows
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph <- metric_graph$new(lines = Lines)
+graph <- metric_graph$new(edges = edges)
 graph$plot()
 ```
 
@@ -149,20 +142,13 @@ graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
 graph3$plot(degree = TRUE)
 ```
 
-We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `lines` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. This modification might take some time for large graphs with many lines, because of this, the `lines` object is by default modified if the graph has less than 100 lines, and otherwise it is not modified. Whether or not it should be modified can be set via the argument `adjust_lines`:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
-                                                           vertex_line = 0.1),
-                           adjust_lines = FALSE)
-graph3$plot(degree = TRUE)
-```
+We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `edges` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. 
 
-If the `lines` object is not modified, then the graph is correct but the plot might not show the graph as connected even though it is. 
-Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
+Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
-                                                           vertex_line = 0.1,
-                                                           line_line = 0.001))
+                                                           vertex_edge = 0.1,
+                                                           edge_edge = 0.001))
 graph3$plot(degree = TRUE)
 ```
 
@@ -236,7 +222,7 @@ graph, and it also makes it difficult to interpret results (unless one has a
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
 ```{r}
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = FALSE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
 Latitude and that distances should be calculated in km. So if we now look at the
@@ -250,7 +236,7 @@ the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = FALSE)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -276,7 +262,7 @@ meters. Let us increase the tolerances so that vertices that are at most
 a distance of 20 meters (0.02km) apart should be merged, and that vertices that
 are withing 20 meters of other lines should be merged with them:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = FALSE,
                                tolerance = list(vertex_vertex = 0.02,
                                                 vertex_line = 0.02))
 graphs$plot(vertex_size = 0)

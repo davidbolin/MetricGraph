@@ -18,7 +18,7 @@
 #' graph$plot()
 #'
 #' @export
-metric_graph <-  R6::R6Class("metric_graph",
+metric_graph <-  R6Class("metric_graph",
   public = list(
   #' @field V Matrix with positions in Euclidean space of the vertices of the
   #' graph.

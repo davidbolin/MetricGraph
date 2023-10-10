@@ -178,14 +178,14 @@ lines <- SpatialLines(data$osm_lines@lines)
 
 We can now create the metric graph as follows. In the command we set the argument `longlat = TRUE` since the coordinates of the vertices are given in Longitude and Latitude.
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph <- metric_graph$new(lines, longlat = TRUE)
+graph <- metric_graph$new(lines, longlat = FALSE)
 graph$plot(vertex_size = 0.5)
 ```
 
 We can note the warning that the graph is not connected, so let us create a 
 `graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graphs <- graph_components$new(lines = lines, longlat = TRUE)
+graphs <- graph_components$new(lines = lines, longlat = FALSE)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
 ```
