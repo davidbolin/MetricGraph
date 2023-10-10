@@ -2060,7 +2060,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if(!project || !longlat){
         fact <- process_factor_unit(vertex_unit, length_unit)
-          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat)
+          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit)
     } else if (which_longlat == "sf"){
         str_proj <- ifelse(which_projection == "Robinson", "+proj=robin +datum=WGS84 +no_defs +over", "+proj=wintri +datum=WGS84 +no_defs +over")
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 2:3, crs = crs)
@@ -2849,7 +2849,7 @@ metric_graph <-  R6Class("metric_graph",
               if(!is.matrix(self$V)){
                 self$V <- matrix(self$V,ncol=2)
               }
-              if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat))>tol) {
+              if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit))>tol) {
                 p_cur <- rbind(p_cur,p)
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                 p2 <- t(p2[["coords"]])
@@ -2891,7 +2891,7 @@ metric_graph <-  R6Class("metric_graph",
             }
 
             #add points if they are not close to V or previous points
-            if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat))>tol) {
+            if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit))>tol) {
               # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
                 if(!longlat && !is.null(p_cur)){
                   dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2), intersect_tmp[k])
