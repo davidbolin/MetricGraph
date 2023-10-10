@@ -123,9 +123,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                         which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
                                          vertex_edge = 1e-7,
-                                         edge_edge = 0,
-                                         vertex_line = deprecated(),
-                                         line_line = deprecated()),
+                                         edge_edge = 0),
                         check_connected = TRUE,
                         remove_deg2 = FALSE,
                         remove_circles = TRUE,
@@ -147,34 +145,31 @@ metric_graph <-  R6::R6Class("metric_graph",
          lines <- NULL
        }            
 
-
-      if (lifecycle::is_present(tolerance$vertex_line)) {
-         if (is.null(tolerance$vertex_edge)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$vertex_line)", "metric_graph$new(tolerance$vertex_edge)",
+      if (is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("`tolerance$vertex_line` was provided but not `tolerance$vertex_edge`. Setting `tolerance$vertex_edge <- tolerance$vertex_line`.")
            )
            tolerance$vertex_edge <- tolerance$vertex_line
-         } else {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$vertex_line)", "metric_graph$new(tolerance$vertex_edge)",
+           tolerance$vertex_line <- NULL
+         } else if(!is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
+           lifecycle::deprecate_warn("1.1.2.9000","metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("Both `tolerance$vertex_edge` and `tolerance$vertex_line` were provided. Only `tolerance$vertex_edge` will be considered.")
            )
-         }
-         tolerance$vertex_line <- NULL
-       }             
+            tolerance$vertex_line <- NULL
+         }           
 
-      if (lifecycle::is_present(tolerance$line_line)) {
-         if (is.null(tolerance$edge_edge)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$line_line)", "metric_graph$new(tolerance$edge_edge)",
+        if (is.null(tolerance$edge_edge) && !is.null(tolerance$line_line)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("`tolerance$line_line` was provided but not `tolerance$edge_edge`. Setting `tolerance$edge_edge <- tolerance$line_line`.")
            )
            tolerance$edge_edge <- tolerance$line_line
-         } else {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance$line_line)", "metric_graph$new(tolerance$edge_edge)",
+           tolerance$line_line <- NULL
+         } else if(!is.null(tolerance$edge_edge) && !is.null(tolerance$line_line)) {
+           lifecycle::deprecate_warn("1.1.2.9000","metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("Both `tolerance$edge_edge` and `tolerance$line_line` were provided. Only `tolerance$edge_edge` will be considered.")
            )
+          tolerance$line_line <- NULL
          }
-         tolerance$line_line <- NULL
-       }          
 
       valid_units_vertex <- c("m", "km", "miles", "degrees")
       valid_units_length <- c("m", "km", "miles")
@@ -242,8 +237,8 @@ metric_graph <-  R6::R6Class("metric_graph",
 
 
     tolerance_default = list(vertex_vertex = 1e-7,
-                             vertex_line = 1e-7,
-                             line_line = 0)
+                             vertex_edge = 1e-7,
+                              edge_edge = 0)
 
 
 
@@ -253,20 +248,20 @@ metric_graph <-  R6::R6Class("metric_graph",
       }
     }
 
-    if(is.null(tolerance$buffer_line_line)){
-      tolerance$buffer_line_line <- max(tolerance$line_line/2 - 1e-10,0)
+    if(is.null(tolerance$buffer_edge_edge)){
+      tolerance$buffer_edge_edge <- max(tolerance$edge_edge/2 - 1e-10,0)
     }
     max_tol <- max(c(tolerance$vertex_vertex,
-                     tolerance$vertex_line,
-                     tolerance$line_line))
+                     tolerance$vertex_edge,
+                     tolerance$edge_edge))
 
     private$tolerance <- tolerance
 
-    PtE_tmp_line_line <- NULL
-    PtE_tmp_line_vertex <- NULL
+    PtE_tmp_edge_edge <- NULL
+    PtE_tmp_edge_vertex <- NULL
 
     if(is.null(edges) && is.null(V) && is.null(E)) {
-      self$edges <- logo_lines()
+      edges <- logo_lines()
     }
     if(!is.null(edges)){
       if(!is.null(V) || !is.null(E)){
@@ -289,7 +284,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     } else {
       if(is.null(V) || is.null(E)){
-        stop("You must supply lines or V and E")
+        stop("You must supply edges or V and E")
       }
       if(ncol(V)!=2 || ncol(E)!=2){
         stop("V and E must have two columns!")
@@ -319,15 +314,15 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
 
-    if (tolerance$line_line > 0) {
+    if (tolerance$edge_edge > 0) {
     private$addinfo <- TRUE
 
     if(verbose){
-      message("Find line-line intersections")
+      message("Find edge-edge intersections")
     }
 
     t <- system.time(
-      points_add <- private$find_line_line_points(tol = tolerance$line_line, verbose=verbose,
+      points_add <- private$find_edge_edge_points(tol = tolerance$edge_edge, verbose=verbose,
       crs=crs, proj4string = proj4string, longlat=longlat, fact = factor_unit, which_longlat = which_longlat)
       )
 
@@ -357,7 +352,7 @@ metric_graph <-  R6::R6Class("metric_graph",
       PtE <- na.omit(PtE)
 
       t <- system.time(
-      private$add_vertices(PtE, tolerance = tolerance$line_line, verbose = verbose)
+      private$add_vertices(PtE, tolerance = tolerance$edge_edge, verbose = verbose)
       )
 
       if(verbose){
@@ -368,7 +363,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     private$clear_initial_info()
     }
 
-    if(tolerance$vertex_line > 0){
+    if(tolerance$vertex_edge > 0){
       private$addinfo <- TRUE
       if(verbose){
         message("Snap vertices to close lines")
@@ -376,7 +371,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
       t <- system.time(
         PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
-                                              tolerance = tolerance$vertex_line, verbose = verbose,
+                                              tolerance = tolerance$vertex_edge, verbose = verbose,
       crs=crs, proj4string = proj4string, longlat=longlat, fact = factor_unit, which_longlat = which_longlat)
         )
 
@@ -406,7 +401,7 @@ metric_graph <-  R6::R6Class("metric_graph",
         PtE_tmp <- na.omit(PtE_tmp)
 
         t <- system.time(
-          private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_line, verbose=verbose)
+          private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge, verbose=verbose)
           )
 
         if(verbose){
@@ -843,16 +838,18 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(PtE)
   },
 
-  #' @description Gets the spatial points from the data.
-  #' @return A `SpatialPoints` object of the observation locations.
-  get_Spoints = function(){
+  #' @description Gets the spatial locations from the data.
+  #' @return A `data.frame` object with observation locations. If `longlat = TRUE`, the column names are lon and lat, otherwise the column names are x and y.
+  get_locations = function(){
      if(is.null(self$data)){
       stop("There is no data!")
     }
     group <- self$data[["__group"]]
     group <- which(group == group[1])
-    Spoints <- SpatialPoints(cbind(self$data[["__coord_x"]][group],
-                                   self$data[["__coord_y"]][group]))
+    Spoints <- data.frame(x = self$data[["__coord_x"]][group], y = self$data[["__coord_y"]][group])
+    if(private$longlat){
+      colnames(Spoints) <- c("lon", "lat")
+    }
     return(Spoints)
   },
 
@@ -986,8 +983,8 @@ metric_graph <-  R6::R6Class("metric_graph",
   #' `PtE`.
   #' @param data_coords To be used only if `Spoints` is `NULL`. It decides which
   #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
-  #' `distance_on_edge`, otherwise if `euclidean`, the user must provide
-  #' `coord_x` and `coord_y`.
+  #' `distance_on_edge`, otherwise if `spatial`, the user must provide
+  #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
   #' @param group If the data is grouped (for example measured at different time
   #' points), this argument specifies the the column (or entry on the list) in
   #' which the group varialbe is stored.
@@ -1006,11 +1003,15 @@ metric_graph <-  R6::R6Class("metric_graph",
                               distance_on_edge = "distance_on_edge",
                               coord_x = "coord_x",
                               coord_y = "coord_y",
-                              data_coords = c("PtE", "euclidean"),
+                              data_coords = c("PtE", "spatial"),
                               group = NULL,
                               normalized = FALSE,
                               tolerance = max(self$edge_lengths)/2) {
     data_coords <- data_coords[[1]]
+    if(data_coords == "euclidean"){
+      lifecycle::deprecate_warn("1.1.2.9000", "add_observations(data_coords = 'must be either PtE or spatial')")
+      data_coords <- "spatial"
+    }
     if(is.null(data)){
       if(is.null(Spoints)){
         stop("No data provided!")
@@ -1039,7 +1040,7 @@ metric_graph <-  R6::R6Class("metric_graph",
             if(!normalized){
               PtE[, 2] <- PtE[,2] / self$edge_lengths[PtE[, 1]]
             }
-          } else if(data_coords == "euclidean"){
+          } else if(data_coords == "spatial"){
             point_coords <- cbind(data[[coord_x]], data[[coord_y]])
             PtE <- self$coordinates(XY = point_coords)
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
@@ -1049,7 +1050,7 @@ metric_graph <-  R6::R6Class("metric_graph",
                 please consider checking the input.")
               }
         } else{
-            stop("The options for 'data_coords' are 'PtE' and 'euclidean'.")
+            stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
         }
       }
      if(!is.null(group)){
@@ -1213,7 +1214,7 @@ metric_graph <-  R6::R6Class("metric_graph",
 
     self$mesh$V <- self$V
 
-    for (i in 1:(dim(self$LtE)[2])) {
+    for (i in 1:length(self$edges)) {
       if (is.null(n)) {
         #remove boundary points
         self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2
@@ -2867,7 +2868,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     return(Laplacian)
   },
 
-  find_line_line_points = function(tol,verbose, crs, proj4string, longlat, fact, which_longlat) {
+  find_edge_edge_points = function(tol,verbose, crs, proj4string, longlat, fact, which_longlat) {
   
     if(!longlat){
       lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
