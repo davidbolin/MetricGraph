@@ -1096,7 +1096,7 @@ metric_graph <-  R6Class("metric_graph",
         PtE <- self$coordinates(XY = Spoints@coords)
         XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
         norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-        print(which(is.nan(norm_XY)))
+        print(which(is.nan(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))))
         if(norm_XY > tolerance){
           warning("There was at least one point whose location is far from the graph,
           please consider checking the input.")
@@ -2515,7 +2515,15 @@ metric_graph <-  R6Class("metric_graph",
           self$nE <- self$nE - length(ind)
         }
       }
-      self$edge_lengths <- private$compute_lengths(longlat, unit, crs, proj4string, which_longlat, vertex_unit)
+      if(verbose){
+        message("Recomputing edge lengths")
+      }
+      t <- system.time({
+        self$edge_lengths <- private$compute_lengths(longlat, unit, crs, proj4string, which_longlat, vertex_unit)
+      })
+       if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }     
     }
   },
 
