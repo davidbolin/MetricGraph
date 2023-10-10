@@ -450,7 +450,14 @@ metric_graph <-  R6Class("metric_graph",
           self$edges <- lapply(self$edges, function(edge){
             tmp_edge <- edge[1:(nrow(edge)-1),]
             tmp_edge <- unique(tmp_edge)
-            tmp_edge <- rbind(tmp_edge, edge[nrow(edge),,drop=FALSE])}
+            tmp_edge <- rbind(tmp_edge, edge[nrow(edge),,drop=FALSE])
+            if(nrow(tmp_edge)>2){
+              tmp_edge <- tmp_edge[2:nrow(tmp_edge),]
+              tmp_edge <- unique(tmp_edge)
+              tmp_edge <- rbind(edge[1,,drop=FALSE], tmp_edge)
+            }
+            return(tmp_edge)
+          }
             )
     )
 
