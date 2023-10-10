@@ -415,17 +415,10 @@ metric_graph <-  R6Class("metric_graph",
     private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
     if(is.logical(remove_circles)){
       if(remove_circles){
-      t <- system.time(
         private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit)
-      )
       }
     } else {
-      t <- system.time(
         private$remove_circles(remove_circles, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit)
-      )
-    }
-    if(verbose){
-        message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
 
     if (remove_deg2) {
@@ -1088,7 +1081,10 @@ metric_graph <-  R6Class("metric_graph",
 
     ## convert everything to PtE
     if(verbose){
-      message("Converting data to PtE if necessary, this step may be long if 'data_coords' is 'spatial', 'longlat' is 'TRUE' and 'project_data' is 'FALSE'.")
+      message("Converting data to PtE if necessary")
+      if(private$longlat){
+        message("This step may be long if 'data_coords' is 'spatial'. If this step is taking too long consider setting 'project_data' to 'TRUE' to project the coordinates in the plane and obtain a significant speed up.")
+      } 
     }
 
     t <- system.time({
