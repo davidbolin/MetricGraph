@@ -187,6 +187,7 @@ metric_graph <-  R6Class("metric_graph",
       if(longlat && (which_longlat == "sp") && is.null(proj4string)){
         proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
         private$crs <- sf::st_crs(proj4string)
+        private$proj4string <- proj4string
       }
 
       if(longlat && (which_longlat == "sf") && is.null(crs)){
@@ -305,8 +306,8 @@ metric_graph <-  R6Class("metric_graph",
 
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
-                           longlat = longlat, factor_unit, verbose=verbose,
-                           crs, proj4string, which_longlat, private$length_unit, private$vertex_unit,
+                           longlat = private$longlat, factor_unit, verbose=verbose,
+                           private$crs, private$proj4string, which_longlat, private$length_unit, private$vertex_unit,
                            project, which_projection, project_data)
       )
 
@@ -325,7 +326,7 @@ metric_graph <-  R6Class("metric_graph",
 
     t <- system.time(
       points_add <- private$find_edge_edge_points(tol = tolerance$edge_edge, verbose=verbose,
-      crs=crs, proj4string = proj4string, longlat=longlat, fact = factor_unit, which_longlat = which_longlat)
+      crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
       )
 
     if(verbose){
@@ -374,7 +375,7 @@ metric_graph <-  R6Class("metric_graph",
       t <- system.time(
         PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
                                               tolerance = tolerance$vertex_edge, verbose = verbose,
-      crs=crs, proj4string = proj4string, longlat=longlat, fact = factor_unit, which_longlat = which_longlat)
+      crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
         )
 
       if(verbose){
@@ -414,13 +415,13 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
-    private$merge_close_vertices(tolerance$vertex_vertex, longlat = longlat, factor_unit)
+    private$merge_close_vertices(tolerance$vertex_vertex, longlat = private$longlat, factor_unit)
     if(is.logical(remove_circles)){
       if(remove_circles){
-        private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
       }
     } else {
-        private$remove_circles(remove_circles, verbose=verbose,longlat = longlat, unit=length_unit, crs=crs, proj4string=proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        private$remove_circles(remove_circles, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
     }
 
     if (remove_deg2) {
@@ -2074,11 +2075,14 @@ metric_graph <-  R6Class("metric_graph",
         fact <- process_factor_unit("km", length_unit)
         for(i in 1:length(self$edges)){
           bar_edges_proj$increment()
-          sf_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string) 
+          sp_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string) 
           sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
           self$edges[[i]] <- sp::coordinates(sp_points_eucl) * fact
         }        
       }
+      private$longlat <- FALSE
+      private$crs <- NULL
+      private$proj4string <- NULL      
     }
 
     if(verbose){
@@ -2721,6 +2725,10 @@ metric_graph <-  R6Class("metric_graph",
   # crs 
   
   crs = NULL,
+
+  # proj4string
+
+  proj4string = NULL,
 
   clear_initial_info = function(){
     private$addinfo = FALSE
