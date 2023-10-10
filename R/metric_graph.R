@@ -1054,6 +1054,7 @@ metric_graph <-  R6Class("metric_graph",
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
+  #' @param verbose If `TRUE`, report steps and times.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
   add_observations = function(Spoints = NULL,
@@ -1065,7 +1066,8 @@ metric_graph <-  R6Class("metric_graph",
                               data_coords = c("PtE", "spatial"),
                               group = NULL,
                               normalized = FALSE,
-                              tolerance = max(self$edge_lengths)/2) {
+                              tolerance = max(self$edge_lengths)/2,
+                              verbose = FALSE) {
     data_coords <- data_coords[[1]]
     if(data_coords == "euclidean"){
       lifecycle::deprecate_warn("1.1.2.9000", "add_observations(data_coords = 'must be either PtE or spatial')")
@@ -1085,11 +1087,16 @@ metric_graph <-  R6Class("metric_graph",
     data <- as.list(data)
 
     ## convert everything to PtE
+    if(verbose){
+      message("Converting data to PtE if necessary, this step may be long if 'data_coords' is 'spatial', 'longlat' is 'TRUE' and 'project_data' is 'FALSE'.")
+    }
+
+    t <- system.time({
       if(!is.null(Spoints)){
         PtE <- self$coordinates(XY = Spoints@coords)
         XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
         norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-        print(norm_XY)
+        print(which(is.nan(norm_XY)))
         if(norm_XY > tolerance){
           warning("There was at least one point whose location is far from the graph,
           please consider checking the input.")
@@ -1113,6 +1120,16 @@ metric_graph <-  R6Class("metric_graph",
             stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
         }
       }
+    })
+
+      if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+
+      message("Processing data")
+    }  
+
+    
+    t <- system.time({
      if(!is.null(group)){
        group_vector <- data[[group]]
      } else{
@@ -1154,6 +1171,10 @@ metric_graph <-  R6Class("metric_graph",
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
     self$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
     self$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
+    })
+          if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+          }
   },
 
 
