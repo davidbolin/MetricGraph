@@ -450,7 +450,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     # Cleaning the edges
 
     if(verbose){
-      message("Post-processing the edges:")
+      message("Post-processing the edges")
     }
 
     t <- system.time(
@@ -804,7 +804,7 @@ metric_graph <-  R6::R6Class("metric_graph",
     #' would be merged are compatible in terms of direction.
     #'
   prune_vertices = function(verbose = FALSE){
-start <- Sys.time()
+    t <- system.time({
     degrees <- self$get_degrees()
     start.deg <- end.deg <- rep(0,self$nV)
     for(i in 1:self$nV) {
@@ -832,19 +832,20 @@ start <- Sys.time()
        k <- k + 1
      }
      res <- private$remove.first.deg2(res)
-   }
-end <- Sys.time()
+   } 
+   })
     if(verbose){
-          message(sprintf("time: %.3f s", end-start))
+          message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
     # if(verbose && to.prune > 0){
     #   close(pb)
     # }
+
+   if(!is.null(self$data)){
     if(verbose){
       message("Updating data locations.")
-    }
-start <- Sys.time()
-   if(!is.null(self$data)){
+    }    
+      t <- system.time({
       x_coord <- self$data[["__coord_x"]]
       y_coord <- self$data[["__coord_y"]]
       new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
@@ -853,6 +854,10 @@ start <- Sys.time()
       self$data[["__distance_on_edge"]] <- new_PtE[,2]
       order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
       self$data <- lapply(self$data, function(dat){dat[order_idx]})
+      })
+      if(verbose){
+            message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }      
    }
 
    if(!is.null(self$mesh)){
@@ -861,10 +866,6 @@ start <- Sys.time()
     self$build_mesh(h = max_h)
    }
    private$pruned <- TRUE
-end <- Sys.time()
-    if(verbose){
-          message(sprintf("time: %.3f s", end-start))
-    }
   },
 
   #' @description Gets PtE from the data.
@@ -2372,7 +2373,7 @@ end <- Sys.time()
       }
 
       if(verbose){
-        message("Part 1/2")
+        message("Snapping vertices")
         bar_multiple_snaps <- msg_progress_bar(length(self$edges))
       }
 
@@ -2451,7 +2452,7 @@ end <- Sys.time()
   remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit) {
     if(verbose){
       message("Small circles found!")
-      message("Removing small circles.")
+      message("Removing small circles")
     }
     if(threshold > 0) {
       loop.ind <- which(self$E[,1] == self$E[,2])
@@ -2935,7 +2936,7 @@ graph_components <-  R6::R6Class("graph_components",
 
    #' Create metric graphs for connected components
    #'
-   #' @param lines Object of type `SpatialLinesDataFrame` or `SpatialLines`.
+  #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
    #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
    #' @param E m x 2 matrix where each row represents an edge.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
@@ -2950,13 +2951,31 @@ graph_components <-  R6::R6Class("graph_components",
    #' @param by_length Sort the components by total edge length? If `FALSE`,
    #' the components are sorted by the number of vertices.
    #' @param ... Additional arguments used when specifying the graphs
+   #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
    #' @return A `graph_components` object.
-   initialize = function(lines = NULL,
+   initialize = function(edges = NULL,
                          V = NULL,
                          E = NULL,
                          by_length = TRUE,
-                         ...) {
-     graph <- metric_graph$new(lines = lines, V = V, E = E,
+                         ...,
+                         lines = deprecated()) {
+      
+
+      if (lifecycle::is_present(lines)) {
+         if (is.null(edges)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "mgraph_components$new(lines)", "graph_components$new(edges)",
+             details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
+           )
+           edges <- lines
+         } else {
+           lifecycle::deprecate_warn("1.1.2.9000", "graph_components$new(lines)", "graph_components$new(edges)",
+             details = c("Both `edges` and `lines` were provided. Only `edges` will be considered.")
+           )
+         }
+         lines <- NULL
+       }             
+
+     graph <- metric_graph$new(edges = edges, V = V, E = E,
                                check_connected = FALSE, ...)
 
      g <- graph(edges = c(t(graph$E)), directed = FALSE)
@@ -2976,8 +2995,7 @@ graph_components <-  R6::R6Class("graph_components",
          edge_keep <- setdiff(1:graph$nE, edge_rem)
          ind_keep <- rep(0,graph$nE)
          ind_keep[edge_keep] <- 1
-         ind_keep <- graph$LtE%*%ind_keep
-         self$graphs[[k]] = metric_graph$new(lines = graph$lines[which(ind_keep!=0)],
+         self$graphs[[k]] = metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
                                              check_connected = FALSE, ...)
        }
        self$sizes <- components$csize
