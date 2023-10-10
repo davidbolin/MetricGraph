@@ -1573,38 +1573,13 @@ metric_graph <-  R6::R6Class("metric_graph",
           }
         }
       }
-      index <- (self$LtE@p[i] + 1) : (self$LtE@p[i + 1])
-      LinesPos <- cbind(self$LtE@i[index] + 1,
-                        self$LtE@x[index])
-      LinesPos <- LinesPos[order(LinesPos[, 2]), , drop = FALSE]
-      for (j in 1:length(index)) {
-        if (j==1) {
-          index_j <- vals[, 1] <= LinesPos[j, 2]
-        } else {
-          index_j <- (vals[, 1] <= LinesPos[j, 2]) &
-            (vals[, 1] > LinesPos[j - 1, 2])
-        }
-        if (sum(index_j) == 0)
-          next
-        rel.pos = vals[index_j, 1]
-        if (j == 1) {
-          rel.pos <- rel.pos / LinesPos[j, 2]
-        } else {
-          rel.pos <- (rel.pos - LinesPos[j - 1, 2]) /
-            (LinesPos[j, 2] - LinesPos[j - 1, 2])
-        }
-        if (j == dim(LinesPos)[1])
-          rel.pos = self$ELend[i] * rel.pos
-        if (j==1)
-          rel.pos = rel.pos + self$ELstart[i]
 
-        data.to.plot <- cbind(rel.pos,vals[index_j, 2])
-        Line_edge <- SpatialLines(list(self$lines@lines[[LinesPos[j, 1]]]))
+        data.to.plot <- vals
 
-        data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
+        data.to.plot.order <- data.to.plot[order(vals[, 1]), ,
                                            drop = FALSE]
 
-        coords <- interpolate2(Line_edge,
+        coords <- interpolate2(self$edges[[i]],
                                pos = data.to.plot.order[, 1, drop = TRUE],
                                normalized = TRUE)
 
@@ -1613,7 +1588,6 @@ metric_graph <-  R6::R6Class("metric_graph",
         z.loc <- c(z.loc, data.to.plot.order[, 2])
         i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
         kk = kk+1
-      }
     }
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
 
@@ -2280,8 +2254,8 @@ metric_graph <-  R6::R6Class("metric_graph",
                      ...){
       x <- y <- ei <- NULL
       for (i in 1:self$nE) {
-        xi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 1]
-        yi <- self$lines@lines[[i]]@Lines[[1]]@coords[, 2]
+        xi <- self$edges[[i]][, 1]
+        yi <- self$edges[[i]][, 2]
         ii <- rep(i,length(xi))
         x <- c(x, xi)
         y <- c(y, yi)

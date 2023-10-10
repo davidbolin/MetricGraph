@@ -152,9 +152,9 @@ As an illustration of the model, let us compute the covariance function between 
 $$
   \overline{\boldsymbol{\mathrm{A}}} \boldsymbol{\mathrm{Q}}^{-1}\overline{\boldsymbol{\mathrm{v}}}.
 $$
-Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the rational approximation, $\boldsymbol{\mathrm{A}}$ is an identity matrix since we are evaluating the approximation in the nodes of the FEM mesh, $\overline{\boldsymbol{\mathrm{v}}}$ is the $(m+1)$-fold vertical concatenation of the vector $\boldsymbol{\mathrm{v}}$, where $\boldsymbol{\mathrm{v}}$ is a vector with all basis functions evaluated in $s=0.5$.
+Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the rational approximation, $\boldsymbol{\mathrm{A}}$ is an identity matrix since we are evaluating the approximation in the nodes of the FEM mesh, $\overline{\boldsymbol{\mathrm{v}}}$ is the $(m+1)$-fold vertical concatenation of the vector $\boldsymbol{\mathrm{v}}$, where $\boldsymbol{\mathrm{v}}$ is a vector with all basis functions evaluated in $s=(2,0.1)$.
 ```{r}
-  v <- t(graph$mesh_A(matrix(c(2,0.5),1,2)))
+  v <- t(graph$mesh_A(matrix(c(2,0.1),1,2)))
   v_bar <- kronecker(matrix(1, nrow = rspde.order + 1),
                      v)
   A_bar <- kronecker(matrix(1, ncol = rspde.order + 1), 
