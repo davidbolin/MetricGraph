@@ -447,7 +447,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     }
 
     t <- system.time(
-          self$edges <- lapply(self$edges, unique)
+          self$edges <- lapply(self$edges, function(edge){
+            tmp_edge <- edge[1:(nrow(edge)-1),]
+            tmp_edge <- unique(tmp_edge)
+            tmp_edge <- rbind(tmp_edge, edge[nrow(edge),,drop=FALSE])}
+            )
     )
 
     if(verbose){
@@ -467,6 +471,11 @@ metric_graph <-  R6::R6Class("metric_graph",
     # Checking if there is some edge with infinite length
     if(any(!is.finite(self$edge_lengths))){
       warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
+    }
+
+    # Checking if there is some edge with zero length
+    if(any(self$edge_lengths == 0)){
+      warning("There is at least one edge of length zero. Please, consider redefining the graph.")
     }
     
   },
