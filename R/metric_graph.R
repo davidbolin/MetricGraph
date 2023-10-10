@@ -79,7 +79,7 @@ metric_graph <-  R6Class("metric_graph",
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`. 
-  #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
+  #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sf`.
   #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson` and `Winkel tripel`. The default is `Winkel tripel`.
   #' @param tolerance List that provides tolerances during the construction of
@@ -118,7 +118,7 @@ metric_graph <-  R6Class("metric_graph",
                         longlat = FALSE,
                         crs = NULL, 
                         proj4string = NULL,
-                        which_longlat = "sp",
+                        which_longlat = "sf",
                         project = TRUE,
                         which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
@@ -884,6 +884,19 @@ metric_graph <-  R6Class("metric_graph",
     return(PtE)
   },
 
+  #' @description Gets the edge lengths with the corresponding unit.
+  #' @param unit If non-NULL, changes from `length_unit` from the graph construction to `unit`.
+  #' @return a vector with the length unit (if the graph was constructed with a length unit).
+  
+  get_edge_lengths = function(unit = NULL){
+    el <- self$edge_lengths
+    units(el) <- private$length_unit
+    if(!is.null(unit)){
+      units(el) <- unit
+    }
+    return(el)
+  },
+
   #' @description Gets the spatial locations from the data.
   #' @return A `data.frame` object with observation locations. If `longlat = TRUE`, the column names are lon and lat, otherwise the column names are x and y.
   get_locations = function(){
@@ -1076,6 +1089,7 @@ metric_graph <-  R6Class("metric_graph",
         PtE <- self$coordinates(XY = Spoints@coords)
         XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
         norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
+        print(norm_XY)
         if(norm_XY > tolerance){
           warning("There was at least one point whose location is far from the graph,
           please consider checking the input.")
@@ -1434,7 +1448,7 @@ metric_graph <-  R6Class("metric_graph",
                            direction = direction,
                            ...)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "longlat"){
+        if(private$vertex_unit == "degrees"){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
@@ -1455,7 +1469,7 @@ metric_graph <-  R6Class("metric_graph",
                            p = p,
                            ...)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "longlat"){
+        if(private$vertex_unit == "degrees"){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -2086,7 +2100,7 @@ metric_graph <-  R6Class("metric_graph",
     self$V <- vertex[, 2:3]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
-    units(self$edge_lengths) <- length_unit
+    # units(self$edge_lengths) <- length_unit
     self$nV <- dim(self$V)[1]
     self$nE <- dim(self$E)[1]
   },

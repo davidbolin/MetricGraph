@@ -178,21 +178,21 @@ lines <- SpatialLines(data$osm_lines@lines)
 
 We can now create the metric graph as follows. In the command we set the argument `longlat = TRUE` since the coordinates of the vertices are given in Longitude and Latitude.
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph <- metric_graph$new(lines, longlat = FALSE)
+graph <- metric_graph$new(lines, longlat = TRUE)
 graph$plot(vertex_size = 0.5)
 ```
 
 We can note the warning that the graph is not connected, so let us create a 
 `graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graphs <- graph_components$new(lines = lines, longlat = FALSE)
+graphs <- graph_components$new(edges = lines, longlat = TRUE)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
 ```
 
-The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$edge_lengths` given in the unit km (since we specified `longlat = TRUE` in the construction). Thus, we can obtain the range of the edge lengths in the unit m as:
+The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$get_edge_lengths()` given in the unit km (since we specified `longlat = TRUE` in the construction). Thus, we can obtain the range of the edge lengths in the unit m as:
 ```{r}
-range(graph$edge_lengths) * 1000
+range(graph$get_edge_lengths(unit="m")) 
 ```
 
 We will also remove the vertices of degree 2 by using the `prune_vertices()` method:

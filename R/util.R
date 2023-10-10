@@ -774,7 +774,11 @@ distance2 <- function(points, lines, byid=FALSE, longlat, crs){
     lines <- list(lines)
   }
 
-  lines_sf <- sf::st_sfc(lapply(lines, function(i){sf::st_linestring(i)}))
+  if(!longlat){
+    lines_sf <- sf::st_sfc(lapply(lines, function(i){sf::st_linestring(i)}))
+  } else{
+    lines_sf <- sf::st_sfc(lapply(lines, function(i){sf::st_linestring(i)}), crs = crs)
+  }
 
   dist_result <- sf::st_distance(points_sf, lines_sf)
   if(byid){
@@ -1045,7 +1049,8 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
         linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
         length <- sf::st_length(linestring)
         units(length) <- unit
-        return(units::drop_units(length))
+        units(length) <- NULL
+        return(length)
       } else{
         return(0)
       }
