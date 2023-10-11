@@ -2567,10 +2567,10 @@ metric_graph <-  R6Class("metric_graph",
           idx_E2 <- which(self$E[,2] == v.rem)
 
           for(k1 in idx_E1){
-            self$edges[[k1]] <- rbind(self$V[v.keep,], self$edges[[k1]])
+            self$edges[[k1]] <- rbind(self$V[v.rem,], self$edges[[k1]])
           }
           for(k2 in idx_E2){
-            self$edges[[k2]] <- rbind(self$edges[[k2]],self$V[v.keep,])
+            self$edges[[k2]] <- rbind(self$edges[[k2]],self$V[v.rem,])
           }
 
           self$V <- self$V[-v.rem,]
