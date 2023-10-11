@@ -72,16 +72,13 @@ We begin by loading the `rSPDE` and `MetricGraph` packages:
 As an example, we consider the following metric graph
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
   library(sp)
-  line1 <- Line(rbind(c(0,0),c(1,0)))
-  line2 <- Line(rbind(c(0,0),c(0,1)))
-  line3 <- Line(rbind(c(0,1),c(-1,1)))
+  edge1 <- rbind(c(0,0),c(1,0))
+  edge2 <- rbind(c(0,0),c(0,1))
+  edge3 <- rbind(c(0,1),c(-1,1))
   theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-  line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-  Lines = SpatialLines(list(Lines(list(line1),ID="1"),
-                                Lines(list(line2),ID="2"),
-                                Lines(list(line3),ID="3"),
-                                Lines(list(line4),ID="4")))
-  graph <- metric_graph$new(lines = Lines)
+  edge4 <- cbind(sin(theta),1+ cos(theta))
+  edges = list(edge1, edge2, edge3, edge4)
+  graph <- metric_graph$new(edges = edges)
   graph$plot()
 ```
 
@@ -481,24 +478,24 @@ graph_rep$add_observations(data = data.frame(y=as.vector(Y.rep),
                           normalized = TRUE)
 ```
 
+Let us create a new `rspde` model object:
+
+```{r}
+rspde_model_rep <- rspde.metric_graph(graph_rep)
+```
+
 To fit the model with replicates we need to create the corresponding `A` matrix and
-`index` object:
+`index` object. Observe that we are using the helper functions `graph_index_rspde()` and `graph_repl_rspde()` from the `rSPDE` package to construct the index needed to build the `A` matrix and the replicates vector.
 ```{r}
 Abar.rep <- rspde.make.A(
-  mesh = graph_rep, index = rep(1:n.obs, times = n.rep),
-  repl = rep(1:n.rep, each = n.obs)
+  mesh = graph_rep, index = graph_index_rspde(rspde_model_rep, n.repl = n.rep),
+  repl = graph_repl_rspde(rspde_model_rep, repl = "__all")
 )
 
 mesh.index.rep <- rspde.make.index(
   name = "field", mesh = graph_rep,
   n.repl = n.rep
 )
-```
-
-Similarly, let us create a new `rspde` model object:
-
-```{r}
-rspde_model_rep <- rspde.metric_graph(graph_rep)
 ```
 
 Let us now create the corresponding `inla.stack` object, where we set the `repl` argument
@@ -535,7 +532,7 @@ rspde_fit_rep <-
 
 We can obtain the estimates in the original scale with the `rspde.result()` function:
 ```{r}
-  result_fit_rep <- rspde.result(rspde_fit_rep, "field", rspde_model)
+  result_fit_rep <- rspde.result(rspde_fit_rep, "field", rspde_model_rep)
   summary(result_fit_rep)
 ```
 Let us compare with the true values of the parameters:
