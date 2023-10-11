@@ -36,7 +36,7 @@
 #' @export Cholesky t
 #' @importFrom igraph graph distances is_tree
 #' @importFrom rSPDE matern.covariance gg_df
-#' @importFrom methods is slot
+#' @importFrom methods is slot new
 #' @export gg_df
 #' @importFrom stats predict approx lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete

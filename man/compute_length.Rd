@@ -7,7 +7,7 @@
 compute_length(coords)
 }
 \arguments{
-\item{coords}{\link{nx2 matrix} Matrix of the points of the lines}
+\item{coords}{nx2 matrix Matrix of the points of the lines}
 }
 \description{
 Computes the length of a piecewise-linear function whose coordinates are given in a matrix.

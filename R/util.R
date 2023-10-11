@@ -899,7 +899,6 @@ process_factor_unit <- function(vertex_unit, length_unit){
 }
 
 
-#' @noRd 
 #' code from https://gist.github.com/MansMeg/1ec56b54e1d9d238b4fd
 #' 
 #' Message progress bar
@@ -925,7 +924,7 @@ process_factor_unit <- function(vertex_unit, length_unit){
 #'  test_bar(100)
 #'   
 #' @author Mans Magnusson (MansMeg @ github)
-#'   
+#' @noRd 
 msg_progress_bar <- 
   setRefClass(
     Class = "msg_progress_bar", 
@@ -1087,7 +1086,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
           dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle")
         }
         units(dists) <- length_unit
-        dists <- units::drop_units(dists)
+        units(dists) <- NULL
     } else{
         sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string) 
         if(is.null(points)){

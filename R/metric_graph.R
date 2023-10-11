@@ -6,9 +6,9 @@
 #' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graphs.
 #' @examples
-#' edge1 <- (rbind(c(0, 0), c(2, 0))
-#' edge2 <- (rbind(c(2, 0), c(1, 1))
-#' edge3 <- (rbind(c(1, 1), c(0, 0))
+#' edge1 <- rbind(c(0, 0), c(2, 0))
+#' edge2 <- rbind(c(2, 0), c(1, 1))
+#' edge3 <- rbind(c(1, 1), c(0, 0))
 #' edges <- list(edge1, edge2, edge3) 
 #' graph <- metric_graph$new(edges)
 #' graph$plot()
@@ -79,19 +79,17 @@ metric_graph <-  R6Class("metric_graph",
   #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
-  #' @param tolerance List that provides tolerances during the construction of
-  #' the graph:
-  #' - `vertex_vertex` Vertices that are closer than this number are merged
-  #' (default = 1e-7).
+  #' @param tolerance List that provides tolerances during the construction of the graph:
+  #' - `vertex_vertex` Vertices that are closer than this number are merged (default = 1e-7).
   #' - `vertex_edge` If a vertex at the end of one edge is closer than this
-  #' number to another line, this vertex is connected to that edge
-  #' (default = 1e-7). Previously `vertex_line`, which is now `r lifecycle::badge("deprecated")`.
+  #' number to another edge, this vertex is connected to that edge
+  #' (default = 1e-7). Previously `vertex_line`, which is now deprecated.
   #' - `edge_edge` If two edges at some point are closer than this number, a new
   #' vertex is added at that point and the two edges are connected (default = 0).
-  #' - `vertex_line`, `r lifecycle::badge("deprecated")` Use `vertex_edge` instead. 
-  #' - `line_line`, `r lifecycle::badge("deprecated")` Use `edge_edge` instead.
-  #'
-  #' If `longlat = TRUE`, the tolerances are given in km.
+  #' - `vertex_line`, Deprecated. Use `vertex_edge` instead. 
+  #' - `line_line`, Deprecated. Use `edge_edge` instead.
+  #' 
+  #' In case `longlat = TRUE`, the tolerances are given in `length_unit`.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
   #' connected and a warning is given if this is not the case.
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
@@ -820,6 +818,9 @@ metric_graph <-  R6Class("metric_graph",
       start.deg[i] <- sum(self$E[,1]==i)
       end.deg[i] <- sum(self$E[,2]==i)
     }
+
+    # Finding problematic vertices, that is, vertices with incompatible directions
+    # They will not be pruned.
     problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
     res <- list(degrees = degrees, problematic = problematic)
     if(verbose){
@@ -2629,6 +2630,8 @@ metric_graph <-  R6Class("metric_graph",
       order_edges <- order(c(e1,e2))
       e_rem <- c(e1,e2)[order_edges]
 
+      # Finding the right order, so the edges can be merged.
+
       which_line_starts <- which(order_edges == 1)
 
       v1 <- setdiff(self$E[e_rem[1],],ind)
@@ -2640,6 +2643,8 @@ metric_graph <-  R6Class("metric_graph",
       if(v2 > ind) {
         v2 <- v2 - 1
       }
+
+      # Making sure it is not a single circle
 
       if( e_rem[1] != e_rem[2]){        
 
@@ -2657,18 +2662,20 @@ metric_graph <-  R6Class("metric_graph",
         self$edges[[e_rem[1]]] <- coords
 
         self$edges <- self$edges[-e_rem[2]]
-      } else{
-        E_new1 <- self$E[e1,1]
-        E_new2 <- self$E[e2,2]
+      # } else{
+      #   E_new1 <- self$E[e1,1]
+      #   E_new2 <- self$E[e2,2]
 
-        if(E_new1 > ind){
-          E_new1 <- E_new1 - 1
-        }
-        if(E_new2 > ind){
-          E_new2 <- E_new2 -1
-        }
-        E_new <- matrix(c(E_new1, E_new2),1,2)
-      }
+      #   if(E_new1 > ind){
+      #     E_new1 <- E_new1 - 1
+      #   }
+      #   if(E_new2 > ind){
+      #     E_new2 <- E_new2 -1
+      #   }
+      #   E_new <- matrix(c(E_new1, E_new2),1,2)
+      # }
+
+      # Updating the merged graph
 
       res.out$degrees <- res$degrees[-ind]
       res.out$problematic <- res$problematic[-ind]
@@ -2686,6 +2693,7 @@ metric_graph <-  R6Class("metric_graph",
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
 
       self$nE <- self$nE - 1
+      } 
     }
     return(res.out)
   },
@@ -2735,6 +2743,10 @@ metric_graph <-  R6Class("metric_graph",
 
   proj4string = NULL,
 
+  # which_longlat
+
+  which_longlat = NULL,
+
   clear_initial_info = function(){
     private$addinfo = FALSE
     private$initial_edges_added = NULL
@@ -2767,6 +2779,10 @@ metric_graph <-  R6Class("metric_graph",
 
     if((newV != self$E[Ei, 1]) && newV != self$E[Ei,2]){
 
+        # Val_line is in the current edge and closest_vertex is elsewhere
+        # So, if we need to add V, we will consider val_line in the edge split,
+        # but if we have already added V, then we consider the closest_vertex in the 
+        # edge split.
         if(add_V){
           self$V <- rbind(self$V, c(val_line))
           coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),

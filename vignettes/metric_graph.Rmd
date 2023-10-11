@@ -35,7 +35,7 @@ For details about Gaussian processes and inference on metric graphs, we refer to
 ## Basic constructions and properties
 A metric graph can be constructed in two ways. The first is to specify all edges
 in the graph as a `list` object, where each entry is a matrix. To illustrate
-this, we first construct the following lines
+this, we first construct the following edges
 ```{r}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0),c(0,1))
@@ -86,7 +86,7 @@ specifies the Euclidian coordinates of the vertices is
 graph$V
 ```
 and the edge matrix that specified the edges of the graph (i.e., which vertices
-that are connected by lines) is
+that are connected by edges) is
 ```{r}
 graph$E
 ```
@@ -98,7 +98,7 @@ graph$geo_dist
 ```
 The second option it to construct the graph using two matrices `V` and `E` that
 specify the locations (in Euclidean space) of the vertices and the edges. In this
-case, it is assumed that the graph only has straight lines:
+case, it is assumed that the graph only has straight edges:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1))
 E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 1))
@@ -106,47 +106,45 @@ graph2 <- metric_graph$new(V = V, E = E)
 graph2$plot()
 ```
 
-## Tolerances for the merging vertices and lines
-The constructor of the graph has one argument `tolerance` which is used for connecting lines that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
+## Tolerances for the merging vertices and edges
+The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
 * `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
-* `vertex_line` if a vertex at the end of one line is closer than this number to another line, this vertex is connected to that line (the default value is `1e-7`)
-* `line_line` if two lines at some point are closer than this number, a new
-vertex is added at that point and the two lines are connected (the default value is `0` which means that the option is not used)
+* `vertex_edge` if a vertex at the end of one edge is closer than this number to another edge, this vertex is connected to that edge (the default value is `1e-7`)
+* `edge_edge` if two edges at some point are closer than this number, a new
+vertex is added at that point and the two edges are connected (the default value is `0` which means that the option is not used)
 
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
-following three lines:
+following three edges:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0.03),c(0,1)))
-line3 <- Line(rbind(c(-1,1),c(0.5,0.03)))
-lines = SpatialLines(list(Lines(list(line1),ID="1"),
-                          Lines(list(line2),ID="2"),
-                          Lines(list(line3),ID="3")))
-graph3 <- metric_graph$new(lines = lines)
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0.03),c(0,1))
+edge3 <- rbind(c(-1,1),c(0.5,0.03))
+edges =  list(edge1, edge2, edge3)
+graph3 <- metric_graph$new(edges = edges)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
 ```
 
-We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three lines are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two lines are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
+We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three edges are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two edges are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05))
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
-One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first line, so that the two lines there are connected. This can be done by adjusting the `vertex_line` tolerance: 
+One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first edge, so that the two edges there are connected. This can be done by adjusting the `vertex_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
-                                                           vertex_line = 0.1))
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05,
+                                                           vertex_edge = 0.1))
 graph3$plot(degree = TRUE)
 ```
 
-We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `edges` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. 
+We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `edges` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected edges. 
 
 Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001))
 graph3$plot(degree = TRUE)
@@ -156,9 +154,9 @@ Now, the structure of the metric graph does not change if we add or remove verti
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
-                                                           vertex_line = 0.1,
-                                                           line_line = 0.001),
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+                                                           vertex_edge = 0.1,
+                                                           edge_edge = 0.001),
                            remove_deg2 = TRUE)
 graph3$plot(degree = TRUE)
 ```
@@ -222,7 +220,7 @@ graph, and it also makes it difficult to interpret results (unless one has a
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
 ```{r}
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = FALSE)
+graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
 Latitude and that distances should be calculated in km. So if we now look at the
@@ -260,11 +258,11 @@ min(graph5$edge_lengths) * 1000
 ```
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 20 meters (0.02km) apart should be merged, and that vertices that
-are withing 20 meters of other lines should be merged with them:
+are withing 20 meters of other edges should be merged with them:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = FALSE,
                                tolerance = list(vertex_vertex = 0.02,
-                                                vertex_line = 0.02))
+                                                vertex_edge = 0.02))
 graphs$plot(vertex_size = 0)
 ```
 

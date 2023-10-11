@@ -80,7 +80,7 @@ interpolate2_aux <- function(lines, pos, normalized = 0L) {
 #' @name compute_length
 #' @title Compute length
 #' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
-#' @param coords [nx2 matrix] Matrix of the points of the lines
+#' @param coords nx2 matrix Matrix of the points of the lines
 compute_length <- function(coords) {
     .Call(`_MetricGraph_compute_length`, coords)
 }

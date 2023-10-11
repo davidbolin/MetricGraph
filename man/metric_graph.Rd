@@ -16,9 +16,9 @@ see the vignette:
 \code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
-edge1 <- (rbind(c(0, 0), c(2, 0))
-edge2 <- (rbind(c(2, 0), c(1, 1))
-edge3 <- (rbind(c(1, 1), c(0, 0))
+edge1 <- rbind(c(0, 0), c(2, 0))
+edge2 <- rbind(c(2, 0), c(1, 1))
+edge3 <- rbind(c(1, 1), c(0, 0))
 edges <- list(edge1, edge2, edge3) 
 graph <- metric_graph$new(edges)
 graph$plot()
@@ -157,21 +157,19 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{which_projection}}{Which projection should be used in case \code{project} is \code{TRUE}? The options are \code{Robinson}, \verb{Winkel tripel} or a proj4string. The default is \verb{Winkel tripel}.}
 
-\item{\code{tolerance}}{List that provides tolerances during the construction of
-the graph:
+\item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
-\item \code{vertex_vertex} Vertices that are closer than this number are merged
-(default = 1e-7).
+\item \code{vertex_vertex} Vertices that are closer than this number are merged (default = 1e-7).
 \item \code{vertex_edge} If a vertex at the end of one edge is closer than this
-number to another line, this vertex is connected to that edge
-(default = 1e-7). Previously \code{vertex_line}, which is now \verb{r lifecycle::badge("deprecated")}.
+number to another edge, this vertex is connected to that edge
+(default = 1e-7). Previously \code{vertex_line}, which is now deprecated.
 \item \code{edge_edge} If two edges at some point are closer than this number, a new
 vertex is added at that point and the two edges are connected (default = 0).
-\item \code{vertex_line}, \verb{r lifecycle::badge("deprecated")} Use \code{vertex_edge} instead.
-\item \code{line_line}, \verb{r lifecycle::badge("deprecated")} Use \code{edge_edge} instead.
+\item \code{vertex_line}, Deprecated. Use \code{vertex_edge} instead.
+\item \code{line_line}, Deprecated. Use \code{edge_edge} instead.
 }
 
-If \code{longlat = TRUE}, the tolerances are given in km.}
+In case \code{longlat = TRUE}, the tolerances are given in \code{length_unit}.}
 
 \item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
 connected and a warning is given if this is not the case.}
