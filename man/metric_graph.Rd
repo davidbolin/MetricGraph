@@ -16,14 +16,11 @@ see the vignette:
 \code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
-library(sp)
-line1 <- Line(rbind(c(0, 0), c(2, 0)))
-line2 <- Line(rbind(c(2, 0), c(1, 1)))
-line3 <- Line(rbind(c(1, 1), c(0, 0)))
-lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
-                           Lines(list(line2), ID = "2"),
-                           Lines(list(line3), ID = "3")))
-graph <- metric_graph$new(lines)
+edge1 <- (rbind(c(0, 0), c(2, 0))
+edge2 <- (rbind(c(2, 0), c(1, 1))
+edge3 <- (rbind(c(1, 1), c(0, 0))
+edges <- list(edge1, edge2, edge3) 
+graph <- metric_graph$new(edges)
 graph$plot()
 
 }
@@ -43,16 +40,6 @@ the vertex at the end of the edge.}
 
 \item{\code{edge_lengths}}{Vector with the lengths of the edges in the graph.}
 
-\item{\code{EID}}{Vector with the IDs of the edges in the graph.}
-
-\item{\code{LtE}}{Matrix with edge positions on the lines.}
-
-\item{\code{ELend}}{Vector with the locations of the end points of the edges on
-the lines in the graph. The locations are normalized on the line.}
-
-\item{\code{ELstart}}{Vector with the locations of the starting points of the
-edges on the lines in the graph. The locations are normalized on the line.}
-
 \item{\code{C}}{Constraint matrix used to set Kirchhoff constraints.}
 
 \item{\code{CoB}}{Change-of-basis object used for Kirchhoff constraints.}
@@ -64,7 +51,7 @@ locations.}
 
 \item{\code{mesh}}{Mesh object used for plotting.}
 
-\item{\code{lines}}{The lines in the graph.}
+\item{\code{edges}}{The coordinates of the edges in the graph.}
 
 \item{\code{geo_dist}}{Geodesic distances between the vertices in the graph.}
 
@@ -89,7 +76,8 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
-\item \href{#method-metric_graph-get_Spoints}{\code{metric_graph$get_Spoints()}}
+\item \href{#method-metric_graph-get_edge_lengths}{\code{metric_graph$get_edge_lengths()}}
+\item \href{#method-metric_graph-get_locations}{\code{metric_graph$get_locations()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
 \item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
@@ -101,6 +89,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
+\item \href{#method-metric_graph-is_tree}{\code{metric_graph$is_tree()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-metric_graph-plot_movie}{\code{metric_graph$plot_movie()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
@@ -117,41 +106,69 @@ graph. The weights are given by the edge lengths.}
 Create a new \code{metric_graph} object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(
-  lines = NULL,
+  edges = NULL,
   V = NULL,
   E = NULL,
+  vertex_unit = NULL,
+  length_unit = vertex_unit,
   longlat = FALSE,
-  tolerance = list(vertex_vertex = 1e-07, vertex_line = 1e-07, line_line = 0),
+  crs = NULL,
+  proj4string = NULL,
+  which_longlat = "sp",
+  project = TRUE,
+  project_data = FALSE,
+  which_projection = "Winkel tripel",
+  tolerance = list(vertex_vertex = 1e-07, vertex_edge = 1e-07, edge_edge = 0),
   check_connected = TRUE,
-  adjust_lines = NULL,
   remove_deg2 = FALSE,
   remove_circles = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  lines = deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{lines}}{Object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}.}
+\item{\code{edges}}{A list containing coordinates as \verb{m x 2} matrices (that is, of \code{matrix} type) or m x 2 data frames (\code{data.frame} type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type \code{SpatialLinesDataFrame} or \code{SpatialLines} (from \code{sp} package) or \code{MULTILINESTRING} (from \code{sf} package).}
 
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
 
 \item{\code{E}}{m x 2 matrix where each row represents one of the m edges.}
 
-\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
-in Longitude/Latitude and that distances should be computed in km.}
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
+
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
+If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+
+\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
+in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
+
+\item{\code{crs}}{Coordinate reference system to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sf}. Object of class crs. The default is \code{sf::st_crs(4326)}.}
+
+\item{\code{proj4string}}{Projection string of class CRS-class to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sp}. The default is \code{sp::CRS("+proj=longlat +datum=WGS84")}.}
+
+\item{\code{which_longlat}}{Compute the distance using which package? The options are \code{sp} and \code{sf}. The default is \code{sp}.}
+
+\item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{TRUE}. When \code{TRUE}, the construction of the graph is faster.}
+
+\item{\code{project_data}}{If \code{longlat} is \code{TRUE} should the vertices be project to planar coordinates? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
+
+\item{\code{which_projection}}{Which projection should be used in case \code{project} is \code{TRUE}? The options are \code{Robinson}, \verb{Winkel tripel} or a proj4string. The default is \verb{Winkel tripel}.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of
 the graph:
 \itemize{
 \item \code{vertex_vertex} Vertices that are closer than this number are merged
 (default = 1e-7).
-\item \code{vertex_line} If a vertex at the end of one line is closer than this
-number to another line, this vertex is connected to that line
-(default = 1e-7).
-\item \code{line_line} If two lines at some point are closer than this number, a new
-vertex is added at that point and the two lines are connected (default = 0).
+\item \code{vertex_edge} If a vertex at the end of one edge is closer than this
+number to another line, this vertex is connected to that edge
+(default = 1e-7). Previously \code{vertex_line}, which is now \verb{r lifecycle::badge("deprecated")}.
+\item \code{edge_edge} If two edges at some point are closer than this number, a new
+vertex is added at that point and the two edges are connected (default = 0).
+\item \code{vertex_line}, \verb{r lifecycle::badge("deprecated")} Use \code{vertex_edge} instead.
+\item \code{line_line}, \verb{r lifecycle::badge("deprecated")} Use \code{edge_edge} instead.
 }
 
 If \code{longlat = TRUE}, the tolerances are given in km.}
@@ -159,17 +176,15 @@ If \code{longlat = TRUE}, the tolerances are given in km.}
 \item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
 connected and a warning is given if this is not the case.}
 
-\item{\code{adjust_lines}}{Set to \code{TRUE} to adjust the lines object to match the graph
-connections. This can take some time for large graphs, so by default it is \code{TRUE}
-for graphs with at most 100 lines, and \code{FALSE} for larger graphs.}
-
 \item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
 initialization. Default is \code{FALSE}.}
 
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
-are removed. The default is the \code{vertex_vertex} tolerance.}
+are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}
 
 \item{\code{verbose}}{Print progress of graph creation.}
+
+\item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -385,7 +400,19 @@ in the \code{Laplacian} element in the \code{metric_graph} object.
 \subsection{Method \code{prune_vertices()}}{
 Removes vertices of degree 2 from the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(verbose = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{Show progress? Default is \code{FALSE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Vertices of degree 2 are removed as long as the corresponding edges that
+would be merged are compatible in terms of direction.
 }
 
 \subsection{Returns}{
@@ -408,16 +435,36 @@ observation locations.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-get_Spoints"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-get_Spoints}{}}}
-\subsection{Method \code{get_Spoints()}}{
-Gets the spatial points from the data.
+\if{html}{\out{<a id="method-metric_graph-get_edge_lengths"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_edge_lengths}{}}}
+\subsection{Method \code{get_edge_lengths()}}{
+Gets the edge lengths with the corresponding unit.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_Spoints()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_lengths(unit = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{unit}}{If non-NULL, changes from \code{length_unit} from the graph construction to \code{unit}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector with the length unit (if the graph was constructed with a length unit).
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_locations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_locations}{}}}
+\subsection{Method \code{get_locations()}}{
+Gets the spatial locations from the data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_locations()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A \code{SpatialPoints} object of the observation locations.
+A \code{data.frame} object with observation locations. If \code{longlat = TRUE}, the column names are lon and lat, otherwise the column names are x and y.
 }
 }
 \if{html}{\out{<hr>}}
@@ -496,10 +543,11 @@ Add observations to the metric graph.
   distance_on_edge = "distance_on_edge",
   coord_x = "coord_x",
   coord_y = "coord_y",
-  data_coords = c("PtE", "euclidean"),
+  data_coords = c("PtE", "spatial"),
   group = NULL,
   normalized = FALSE,
-  tolerance = max(self$edge_lengths)/2
+  tolerance = max(self$edge_lengths)/2,
+  verbose = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -536,8 +584,8 @@ chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_c
 
 \item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
 coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
-\code{distance_on_edge}, otherwise if \code{euclidean}, the user must provide
-\code{coord_x} and \code{coord_y}.}
+\code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
+\code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
 
 \item{\code{group}}{If the data is grouped (for example measured at different time
 points), this argument specifies the the column (or entry on the list) in
@@ -551,6 +599,8 @@ assumed to be normalized to (0,1). Default FALSE. Will not be used if
 If the distance of some location and the closest point on the graph is
 greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.}
+
+\item{\code{verbose}}{If \code{TRUE}, report steps and times.}
 }
 \if{html}{\out{</div>}}
 }
@@ -770,6 +820,19 @@ Plots the connections in the graph
 
 \subsection{Returns}{
 No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-is_tree"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-is_tree}{}}}
+\subsection{Method \code{is_tree()}}{
+Checks if the graph is a tree (without considering directions)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$is_tree()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+TRUE if the graph is a tree and FALSE otherwise.
 }
 }
 \if{html}{\out{<hr>}}

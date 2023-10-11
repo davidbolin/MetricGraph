@@ -149,11 +149,10 @@ test_that("test likelihood",{
   sigma_e <- 0.1
   sigma   <- 1
   theta <-  c(sigma_e,sigma,kappa)
-  line2 <- Line(rbind(c(30, 80), c(140, 80)))
-  line1 <- Line(rbind(c(30, 00), c(30, 80)))
-  Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                                 Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(lines = Lines)
+  edge2 <- rbind(c(30, 80), c(140, 80))
+  edge1 <- rbind(c(30, 00), c(30, 80))
+  edges <- list(edge1, edge2)
+  graph <- metric_graph$new(edges = edges)
   Q <- spde_precision(kappa = kappa, tau = 1/sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
@@ -203,7 +202,6 @@ test_that("test likelihood",{
 })
 
 test_that("test posterior mean",{
-  library(sp)
   library(Matrix)
   set.seed(13)
   nt <- 90
@@ -211,11 +209,10 @@ test_that("test posterior mean",{
   sigma_e <- 0.1
   sigma   <- 2
   theta <-  c(sigma_e,sigma,kappa)
-  line2 <- Line(rbind(c(30, 80), c(140, 80)))
-  line1 <- Line(rbind(c(30, 00), c(30, 80)))
-  Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                                 Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(lines = Lines)
+  edge2 <- rbind(c(30, 80), c(140, 80))
+  edge1 <- rbind(c(30, 00), c(30, 80))
+  edges <- list(edge1, edge2)
+  graph <- metric_graph$new(edges = edges)
   Q <- spde_precision(kappa = kappa, tau = 1/sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)

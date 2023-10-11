@@ -8,16 +8,13 @@ testthat::skip_on_cran()
   INLA::inla.setOption(num.threads = "1:1")
 
 
-line1 <- sp::Line(rbind(c(0,0),c(1,0)))
-line2 <- sp::Line(rbind(c(0,0),c(0,1)))
-line3 <- sp::Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- sp::Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(sp::Lines(list(line1),ID="1"),
-                              sp::Lines(list(line2),ID="2"),
-                              sp::Lines(list(line4),ID="3"),
-                              sp::Lines(list(line3),ID="4")))
-graph <- metric_graph$new(lines = Lines)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
 
 obs.per.edge <- 250
 obs.loc <- NULL

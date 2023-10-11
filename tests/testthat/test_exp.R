@@ -30,12 +30,10 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
 
   #line1 <- Line(rbind(c(30, 80), c(120, 80)))
   #line2 <- Line(rbind(c(30, 00), c(30, 80)))
-  line1 <- Line(rbind(c(0, 0), c(1e-0, 0)))
-  line2 <- Line(rbind(c(0, 1e-0), c(0, 0)))
+  edge1 <- rbind(c(0, 0), c(1e-0, 0))
+  edge2 <- rbind(c(0, 1e-0), c(0, 0))
 
-  graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line1), ID = "1"),
-                                                   Lines(list(line2), ID = "2")
-                                                   )))
+  graph <-  metric_graph$new(list(edge1, edge2))
 
   n.obs.per.edge <- 10
   PtE <- NULL

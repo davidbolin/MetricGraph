@@ -178,6 +178,7 @@ metric_graph <-  R6Class("metric_graph",
 
       if(longlat){
         private$longlat <- TRUE
+        private$which_longlat <- which_longlat
       }
 
       if(longlat && (which_longlat == "sp") && is.null(proj4string)){
@@ -411,7 +412,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
-    private$merge_close_vertices(tolerance$vertex_vertex, longlat = private$longlat, factor_unit)
+    private$merge_close_vertices(tolerance$vertex_vertex, factor_unit)
     if(is.logical(remove_circles)){
       if(remove_circles){
         private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
@@ -2516,14 +2517,22 @@ metric_graph <-  R6Class("metric_graph",
       },
 
   #utility function to merge close vertices
-  merge_close_vertices = function(tolerance, longlat, fact) {
+  merge_close_vertices = function(tolerance, fact) {
     if(tolerance > 0) {
-      dists <- spDists(self$V, longlat = longlat) * fact
+      dists <- compute_aux_distances(lines = self$V, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
       v.merge <- NULL
       k <- 0
       for (i in 2:self$nV) {
-        i.min <- which.min(dists[i, 1:(i-1)])
-        if (dists[i, i.min] < tolerance) {
+            if(!inherits(dists,"dist")){
+                i.min <- which.min(dists[i, 1:(i-1)])
+                cond_tmp <- (dists[i, i.min] < tolerance)
+            } else{
+                i.min <- which.min(dists[ nrow(self$V)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)])
+                cond_tmp <- (dists[ nrow(self$V)*(i.min-1) - (i.min)*(i.min -1)/2 + i -i.min] < tolerance)
+            }
+
+        # i.min <- which.min(dists[i, 1:(i-1)])
+        if (cond_tmp) {
           k <- k + 1
           v.merge <- rbind(v.merge, sort(c(i, i.min)))
         }
