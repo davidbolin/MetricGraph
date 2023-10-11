@@ -106,6 +106,39 @@ graph2 <- metric_graph$new(V = V, E = E)
 graph2$plot()
 ```
 
+A third option is to create a graph from a `SpatialLines` object:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
+library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 50)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+
+graph <- metric_graph$new(edges = Lines)                    
+graph$plot()
+```
+
+A final option is to create from a `MULTILINESTRING` object:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
+library(sf)
+line1 <- st_linestring(rbind(c(0,0),c(1,0)))
+line2 <- st_linestring(rbind(c(0,0),c(0,1)))
+line3 <- st_linestring(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 50)
+line4 <- st_linestring(cbind(sin(theta),1+ cos(theta)))
+multilinestring = st_multilinestring(list(line1, line2, line3, line4))
+
+graph <- metric_graph$new(edges = multilinestring)                    
+graph$plot()
+```
+
 ## Tolerances for the merging vertices and edges
 The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
@@ -119,9 +152,10 @@ To illustrate these options, suppose that we want to construct a graph from the
 following three edges:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 edge1 <- rbind(c(0,0),c(1,0))
-edge2 <- rbind(c(0,0.03),c(0,1))
+edge2 <- rbind(c(0,0.03),c(0,0.75))
 edge3 <- rbind(c(-1,1),c(0.5,0.03))
-edges =  list(edge1, edge2, edge3)
+edge4 <- rbind(c(0,0.75), c(0,1))
+edges =  list(edge1, edge2, edge3, edge4)
 graph3 <- metric_graph$new(edges = edges)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
@@ -159,6 +193,12 @@ graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
                                                            edge_edge = 0.001),
                            remove_deg2 = TRUE)
 graph3$plot(degree = TRUE)
+```
+
+Observe that one vertex of degree 2 was not removed. This is due to the fact that if we consider the direction, this vertex has directions incompatible for removal. We can see this by setting the argument `direction=TRUE` in the `plot()` method:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+graph3$plot(direction = TRUE)
 ```
 
 ## Understanding coordinates on graphs
@@ -213,7 +253,7 @@ coordinates are given in Longitude and Latitude. Because of this, the edge
 lengths are by default given in degrees, which may result in very small 
 numbers:
 ```{r}
-range(graph5$edge_lengths)
+range(graph5$get_edge_lengths())
 ```
 This may cause numerical instabilities when dealing with random fields on the
 graph, and it also makes it difficult to interpret results (unless one has a 
@@ -226,7 +266,7 @@ This tells the constructor that the coordinates are given in Longitude and
 Latitude and that distances should be calculated in km. So if we now look at the
 edge lengths, they are given in km:
 ```{r}
-range(graph5$edge_lengths)
+range(graph5$get_edge_lengths())
 ```
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
@@ -234,7 +274,8 @@ the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = FALSE)
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), 
+                                                    longlat = TRUE)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -254,15 +295,13 @@ One reason for having multiple components here might be that we set the toleranc
 by looking at the edge lengths we see that we have vertices that are as close 
 as 
 ```{r}
-min(graph5$edge_lengths) * 1000
+min(graph5$get_edge_lengths(unit='m'))
 ```
 meters. Let us increase the tolerances so that vertices that are at most
-a distance of 20 meters (0.02km) apart should be merged, and that vertices that
-are withing 20 meters of other edges should be merged with them:
+a distance of 350 meters (0.35km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = FALSE,
-                               tolerance = list(vertex_vertex = 0.02,
-                                                vertex_edge = 0.02))
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
+                               tolerance = list(vertex_vertex = 0.35))
 graphs$plot(vertex_size = 0)
 ```
 
@@ -270,9 +309,8 @@ With this choice, we see that the graph is connected:
 ```{r}
 graphs$n
 ```
-However, since the `adjust_vertices` argument by default is `FALSE` for this size
-of graphs, the plot of the graph might look disconnected in places where vertices
-have been merged. We can retrieve the graphas a standard `metric_graph` object to work 
+
+We can retrieve the graph as a standard `metric_graph` object to work 
 with in further analysis via the `get_largest` command:
 ```{r}
 graph5 <- graphs$get_largest()

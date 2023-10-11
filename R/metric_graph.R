@@ -94,6 +94,7 @@ metric_graph <-  R6Class("metric_graph",
   #' connected and a warning is given if this is not the case.
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
+  #' @param merge_close_vertices should an additional step to merge close vertices be done?
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
   #' @param verbose Print progress of graph creation.
@@ -122,6 +123,7 @@ metric_graph <-  R6Class("metric_graph",
                                          edge_edge = 0),
                         check_connected = TRUE,
                         remove_deg2 = FALSE,
+                        merge_close_vertices = TRUE,
                         remove_circles = TRUE,
                         verbose = FALSE,
                         lines = deprecated()) {
@@ -410,7 +412,10 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
-    private$merge_close_vertices(tolerance$vertex_vertex, factor_unit)
+    if(merge_close_vertices){
+      private$merge_close_vertices(tolerance$vertex_vertex, factor_unit)
+    }
+    
     if(is.logical(remove_circles)){
       if(remove_circles){
         private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
@@ -2057,7 +2062,9 @@ metric_graph <-  R6Class("metric_graph",
         }
         fact <- process_factor_unit("m", length_unit)
         for(i in 1:length(self$edges)){
-          bar_edges_proj$increment()
+          if(verbose){
+            bar_edges_proj$increment()
+          }
           sf_points <- sf::st_as_sf(as.data.frame(self$edges[[i]]), coords = 1:2, crs = crs)
           sf_points_eucl <- sf::st_transform(sf_points, crs=sf::st_crs(str_proj))
           self$edges[[i]] <- sf::st_coordinates(sf_points_eucl) * fact
@@ -2072,7 +2079,9 @@ metric_graph <-  R6Class("metric_graph",
         }
         fact <- process_factor_unit("km", length_unit)
         for(i in 1:length(self$edges)){
-          bar_edges_proj$increment()
+          if(verbose){
+            bar_edges_proj$increment()
+          }
           sp_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string) 
           sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
           self$edges[[i]] <- sp::coordinates(sp_points_eucl) * fact
@@ -2180,10 +2189,15 @@ metric_graph <-  R6Class("metric_graph",
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
                           (vertex[, 3] - line[2, 3])^2)                      
-
-      self$edges[[i]][1,] <- vertex[ind1, 2:3, drop=FALSE]
-      i.e <- dim(self$edges[[i]])[1]
-      self$edges[[i]][i.e,] <- vertex[ind2, 2:3, drop=FALSE]
+      if(length(ind1)>0){
+        self$edges[[i]][1,] <- vertex[ind1, 2:3, drop=FALSE]
+        i.e <- dim(self$edges[[i]])[1]
+      } else{
+        i.e <- 1
+      }
+      if(length(ind2)>0){
+        self$edges[[i]][i.e,] <- vertex[ind2, 2:3, drop=FALSE]
+      }
       ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
@@ -2194,7 +2208,7 @@ metric_graph <-  R6Class("metric_graph",
 
     lvl <- lvl[1:(k-1),,drop = FALSE]
     self$edges <- self$edges[lines_keep_id]
-    self$V <- vertex[, 2:3]
+    self$V <- vertex[, 2:3, drop = FALSE]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
     # units(self$edge_lengths) <- length_unit
@@ -2461,17 +2475,17 @@ metric_graph <-  R6Class("metric_graph",
       coords_tmp <- c()
 
 
-      if(!longlat){
+      if(!private$longlat){
       lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
           points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2)
       crs <- NULL
-    } else if (which_longlat == "sf"){
-      points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = crs)
-      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
+    } else if (private$which_longlat == "sf"){
+      points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = private$crs)
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = private$crs)
     } else{
-      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
-      crs <- sf::st_crs(proj4string)
-      points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = crs)
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(private$proj4string))
+      crs <- sf::st_crs(private$proj4string)
+      points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = private$crs)
     }
 
       if(verbose){
@@ -2479,6 +2493,7 @@ metric_graph <-  R6Class("metric_graph",
       }
 
       within_dist <- t(as.matrix(sf::st_is_within_distance(points_sf, lines_sf, dist = tolerance)))
+
       if(verbose){
         message("Done!")
       }
@@ -2551,11 +2566,11 @@ metric_graph <-  R6Class("metric_graph",
           idx_E1 <- which(self$E[,1] == v.rem)
           idx_E2 <- which(self$E[,2] == v.rem)
 
-          for(k in idx_E1){
-            self$edges[[k]][1,] <- self$V[v.rem,]
+          for(k1 in idx_E1){
+            self$edges[[k1]] <- rbind(self$V[v.keep,], self$edges[[k1]])
           }
-          for(k in idx_E2){
-            self$edges[[k]][nrow(self$edges[[k]]),] <- self$V[v.rem,]
+          for(k2 in idx_E2){
+            self$edges[[k2]] <- rbind(self$edges[[k2]],self$V[v.keep,])
           }
 
           self$V <- self$V[-v.rem,]
@@ -2880,13 +2895,13 @@ metric_graph <-  R6Class("metric_graph",
 
   find_edge_edge_points = function(tol,verbose, crs, proj4string, longlat, fact, which_longlat) {
   
-    if(!longlat){
+    if(!private$longlat){
       lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
       crs <- NULL
-    } else if (which_longlat == "sf"){
-      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = crs)
+    } else if (private$which_longlat == "sf"){
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = private$crs)
     } else{
-      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(proj4string))
+      lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(private$proj4string))
       crs <- sf::st_crs(proj4string)
     }
 
@@ -2909,10 +2924,15 @@ metric_graph <-  R6Class("metric_graph",
 
         intersect_tmp <- intersection3(lines_sf[i], lines_sf[j])
 
-        if( "GEOMETRYCOLLECTION" %in% sf::st_geometry_type(intersect_tmp)){
-          intersect_tmp <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
-          tmp_inter <- 1
-        }
+        if( any(c("GEOMETRYCOLLECTION","GEOMETRY") %in% sf::st_geometry_type(intersect_tmp)) || (length(sf::st_geometry_type(intersect_tmp)) > 1)){
+          intersect_tmp1 <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
+          intersect_tmp2 <- sf::st_collection_extract(intersect_tmp, type = "POINT")          
+          if(nrow(sf::st_coordinates(intersect_tmp1))>0){
+            intersect_tmp <- intersect_tmp1
+          } else{
+            intersect_tmp <- intersect_tmp2
+          }
+        } 
 
         p_cur <- NULL
         # if(!is.null(intersect_tmp)) {
@@ -2925,7 +2945,7 @@ metric_graph <-  R6Class("metric_graph",
           # } else if ("SpatialLines"%in%is(intersect_tmp)){
           } else if ( ("LINESTRING"%in%sf::st_geometry_type(intersect_tmp)) || ("MULTILINESTRING"%in%sf::st_geometry_type(intersect_tmp))){
             intersect_tmp <- sf::st_coordinates(intersect_tmp)
-            intersect_tmp[,1:2]
+            intersect_tmp <- intersect_tmp[,1:2]
             # coord_tmp <-gInterpolate(intersect_tmp, d=0.5, normalized = TRUE)
             coord_tmp <- interpolate2(intersect_tmp, pos=0.5, normalized = TRUE)
             coord_tmp <- matrix(coordinates(coord_tmp),1,2)
@@ -2940,14 +2960,13 @@ metric_graph <-  R6Class("metric_graph",
               if(!is.matrix(self$V)){
                 self$V <- matrix(self$V,ncol=2)
               }
-              if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit))>tol) {
+              if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit))>tol) {
                 p_cur <- rbind(p_cur,p)
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                 p2 <- t(p2[["coords"]])
                 # p2 <- cbind(p2["X",], p2["Y",])
 
                 points_add <- rbind(points_add, p, p2)
-
                 points_add_PtE <- rbind(points_add_PtE,
                                         c(i,projectVecLine2(self$edges[[i]],
                                                      p)),
@@ -2982,18 +3001,20 @@ metric_graph <-  R6Class("metric_graph",
             }
 
             #add points if they are not close to V or previous points
-            if(min(compute_aux_distances(lines = self$V, crs=crs, longlat=longlat, proj4string = proj4string, points = p, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit))>tol) {
+            if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit))>tol) {
               # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
-                if(!longlat && !is.null(p_cur)){
+                if(!private$longlat && !is.null(p_cur)){
                   dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2), intersect_tmp[k])
                 } else if (!is.null(p_cur)) {
-                  dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = crs), intersect_tmp[k])
+                  intersect_tmp_sfc <- sf::st_sfc(intersect_tmp[k], crs = private$crs)
+                  dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = private$crs), intersect_tmp_sfc)
+                  units(dist_tmp) <- private$length_unit
+                  units(dist_tmp) <- NULL
                 }
               if(is.null(p_cur) || min(dist_tmp) >tol) {
-                p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
+                p2 <- snapPointsToLines(p,self$edges[i], private$longlat, private$crs)
                 p2 <- t(p2[["coords"]])
                 points_add <- rbind(points_add, p, p2)
-
                 points_add_PtE <- rbind(points_add_PtE,
                                         c(i,projectVecLine2(self$edges[[i]],p)),
                                         c(j,projectVecLine2(self$edges[[j]], p)))
@@ -3119,8 +3140,22 @@ graph_components <-  R6::R6Class("graph_components",
          lines <- NULL
        }             
 
-     graph <- metric_graph$new(edges = edges, V = V, E = E,
+
+      dots_args <- list(...)
+      dots_list <- as.list(dots_args)
+      if(!is.null(dots_list[["project_data"]])){
+        warning("The argument project_data is not compatible with graph_components. Setting project_data to FALSE.")
+        dots_list[["project_data"]] <- FALSE
+        dots_list[["edges"]] <- edges
+        dots_list[["V"]] <- V
+        dots_list[["E"]] <- E
+        dots_list[["check_connected"]] <- FALSE
+        graph <- do.call(metric_graph$new, dots_list)
+      } else{
+            graph <- metric_graph$new(edges = edges, V = V, E = E,
                                check_connected = FALSE, ...)
+      }
+
 
      g <- graph(edges = c(t(graph$E)), directed = FALSE)
      igraph::E(g)$weight <- graph$edge_lengths
@@ -3139,16 +3174,27 @@ graph_components <-  R6::R6Class("graph_components",
          edge_keep <- setdiff(1:graph$nE, edge_rem)
          ind_keep <- rep(0,graph$nE)
          ind_keep[edge_keep] <- 1
-         self$graphs[[k]] = metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
+         if(length(graph$edges[which(ind_keep!=0)]) > 0){
+          self$graphs[[k]] = metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
                                              check_connected = FALSE, ...)
+         } 
+       }
+       for(i in self$n:1){
+        if(is.null(self$graphs[[i]])){
+          self$graphs[[i]] <- NULL
+          self$n <- self$n - 1
+        }
        }
        self$sizes <- components$csize
        self$lengths <- unlist(lapply(1:self$n,
                                      function(x) sum(self$graphs[[x]]$edge_lengths)))
+
+       units(self$lengths) <- units(self$graphs[[1]]$get_edge_lengths())
+
        if(by_length) {
-         reo <- sort(self$lengths, decreasing = TRUE, index.return = TRUE)$ix
+         reo <- order(self$lengths, decreasing = TRUE)
        } else {
-         reo <- sort(self$sizes, decreasing = TRUE, index.return = TRUE)$ix
+         reo <- sort(self$sizes, decreasing = TRUE)
        }
        self$graphs <- self$graphs[reo]
        self$lengths <- self$lengths[reo]
