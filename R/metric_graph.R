@@ -422,6 +422,19 @@ metric_graph <-  R6Class("metric_graph",
       }
     } else {
         private$remove_circles(remove_circles, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        remove_circles <- TRUE
+    }
+
+    if(merge_close_vertices || remove_circles){
+      if(verbose){
+        message("Recomputing edge lengths")
+      }
+      t <- system.time({
+        self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data)
+      })
+       if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }  
     }
 
     if (remove_deg2) {
@@ -2567,10 +2580,10 @@ metric_graph <-  R6Class("metric_graph",
           idx_E2 <- which(self$E[,2] == v.rem)
 
           for(k1 in idx_E1){
-            self$edges[[k1]] <- rbind(self$V[v.rem,], self$edges[[k1]])
+            self$edges[[k1]][1,] <- self$V[v.keep,]
           }
           for(k2 in idx_E2){
-            self$edges[[k2]] <- rbind(self$edges[[k2]],self$V[v.rem,])
+            self$edges[[k2]][nrow(self$edges[[k2]]),] <- self$V[v.keep,]
           }
 
           self$V <- self$V[-v.rem,]
@@ -2613,16 +2626,7 @@ metric_graph <-  R6Class("metric_graph",
           self$E <- self$E[-ind,]
           self$nE <- self$nE - length(ind)
         }
-      }
-      if(verbose){
-        message("Recomputing edge lengths")
-      }
-      t <- system.time({
-        self$edge_lengths <- private$compute_lengths(longlat, private$length_unit, crs, proj4string, which_longlat, private$vertex_unit, project_data)
-      })
-       if(verbose){
-      message(sprintf("time: %.3f s", t[["elapsed"]]))
-       }     
+      }   
     }
   },
 
