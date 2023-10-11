@@ -71,7 +71,6 @@ We begin by loading the `rSPDE` and `MetricGraph` packages:
 
 As an example, we consider the following metric graph
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  library(sp)
   edge1 <- rbind(c(0,0),c(1,0))
   edge2 <- rbind(c(0,0),c(0,1))
   edge3 <- rbind(c(0,1),c(-1,1))

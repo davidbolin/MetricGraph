@@ -6,15 +6,11 @@
 #' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graphs.
 #' @examples
-#' library(sp)
-#' line1 <- Line(rbind(c(0, 0), c(2, 0)))
-#' line2 <- Line(rbind(c(2, 0), c(1, 1)))
-#' line3 <- Line(rbind(c(1, 1), c(0, 0)))
-
-#' lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
-#'                            Lines(list(line2), ID = "2"),
-#'                            Lines(list(line3), ID = "3")))
-#' graph <- metric_graph$new(lines)
+#' edge1 <- (rbind(c(0, 0), c(2, 0))
+#' edge2 <- (rbind(c(2, 0), c(1, 1))
+#' edge3 <- (rbind(c(1, 1), c(0, 0))
+#' edges <- list(edge1, edge2, edge3) 
+#' graph <- metric_graph$new(edges)
 #' graph$plot()
 #'
 #' @export
@@ -3035,14 +3031,12 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 #' @examples
 #' library(sp)
-#' line1 <- Line(rbind(c(0, 0), c(1, 0)))
-#' line2 <- Line(rbind(c(1, 0), c(2, 0)))
-#' line3 <- Line(rbind(c(1, 1), c(2, 1)))
-
-#' Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
-#'                            Lines(list(line2), ID = "2"),
-#'                            Lines(list(line3), ID = "3")))
-#' graphs <- graph_components$new(Lines)
+#' edge1 <- rbind(c(0, 0), c(1, 0))
+#' edge2 <- rbind(c(1, 0), c(2, 0))
+#' edge3 <- rbind(c(1, 1), c(2, 1))
+#' edges <- list(edge1, edge2, edge3)
+#' 
+#' graphs <- graph_components$new(edges)
 #' graphs$plot()
 #' @export
 graph_components <-  R6::R6Class("graph_components",

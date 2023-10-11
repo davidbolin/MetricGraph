@@ -367,32 +367,6 @@ graph_data_spde <- function (graph_spde, repl = NULL,
   return(ret)
 }
 
-#' Extraction of vector of replicates for 'inlabru'
-#'
-#' Extracts the vector of replicates from an 'rSPDE'
-#' model object for 'inlabru'
-#'
-#' @param graph_spde An `rspde_metric_graph` object built with the
-#' `rspde.metric_graph()` function from the 'rSPDE' package.
-#' @param repl Which replicates? If there is no replicates, one
-#' can set `repl` to `NULL`. If one wants all replicates,
-#' then one sets to `repl` to `__all`.
-#' @return The vector of replicates.
-#' @export
-
-graph_repl_spde <- function (graph_spde, repl = NULL){
-  graph_tmp <- graph_spde$graph_spde$clone()
-  if(is.null(repl)){
-    groups <- graph_tmp$data[["__group"]]
-    repl <- groups[1]
-    ret <- select_group(graph_tmp$data, repl)
-  } else if(repl[1] == "__all") {
-    ret <- graph_tmp$data
-  } else {
-    ret <- select_group(graph_tmp$data, repl)
-  }
-  return(ret[["__group"]])
-}
 
 
 
