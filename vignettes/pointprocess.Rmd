@@ -92,7 +92,7 @@ library(INLA)
 As an example, we consider the default graph in the package:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE}
-graph <- metric_graph$new(tolerance = list(vertex_vertex = 1e-1, vertex_line = 1e-3, line_line = 1e-3),
+graph <- metric_graph$new(tolerance = list(vertex_vertex = 1e-1, vertex_edge = 1e-3, edge_edge = 1e-3),
                           remove_deg2 = TRUE)
 graph$plot()
 ```
@@ -131,9 +131,9 @@ graph$plot_function(exp(lgcp_sample$u), vertex_size = 0)
 
 To plot the simulated points, we can add them to the graph and then plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)),
-                                         edge_number = lgcp_sample$edge_number,
-                                         distance_on_edge = lgcp_sample$edge_loc),
+graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)+1),
+                                         edge_number = c(lgcp_sample$edge_number[1],lgcp_sample$edge_number),
+                                         distance_on_edge = c(lgcp_sample$edge_loc[1],lgcp_sample$edge_loc)),
                        normalized = TRUE)
 graph$plot(vertex_size = 0, data = "y")
 ```

@@ -1119,9 +1119,28 @@ metric_graph <-  R6Class("metric_graph",
       if(data_coords == "spatial" || !is.null(Spoints)){
       message("Converting data to PtE")
       if(private$longlat){
-        message("This step may take long. If this step is taking too long consider pruning the vertices, and if it still takes long, consider setting 'project_data' to 'TRUE' to project the coordinates in the plane and obtain a significant speed up.")
+        message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
       } 
       }
+    }
+
+    ## Check data for repeated observations
+    if(data_coords == "spatial"){
+      if(is.null(group)){
+        data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
+      } else{
+        data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[group]])
+      }
+    } else{
+      if(is.null(group)){
+        data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
+      } else{
+        data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[group]])
+      }
+    }
+
+    if(nrow(unique(data_tmp)) != nrow(data_tmp)){
+      warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
     }
 
     t <- system.time({
