@@ -59,10 +59,9 @@ reference:
     - spde_metric_graph_result
     - summary.metric_graph_spde_result
     - gg_df.metric_graph_spde_result
+    - graph_data_spde
     - graph_spde_make_A
     - graph_spde_make_index
-    - graph_data_spde
-    - graph_repl_spde
   - title: inlabru and SPDE approach on metric graphs
     contents:
     - bru_mapper.inla_metric_graph_spde

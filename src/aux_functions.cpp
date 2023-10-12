@@ -217,6 +217,8 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
 //' @title Compute length
 //' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
 //' @param coords nx2 matrix Matrix of the points of the lines
+//' @noRd
+//' 
 // [[Rcpp::export]]
 double compute_length(Eigen::MatrixXd coords) {
     
