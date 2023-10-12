@@ -17,7 +17,6 @@ For more details, see the vignette:
 \code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
-library(sp)
 edge1 <- rbind(c(0, 0), c(1, 0))
 edge2 <- rbind(c(1, 0), c(2, 0))
 edge3 <- rbind(c(1, 1), c(2, 1))

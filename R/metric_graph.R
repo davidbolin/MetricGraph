@@ -3192,8 +3192,9 @@ graph_components <-  R6::R6Class("graph_components",
        self$sizes <- components$csize
        self$lengths <- unlist(lapply(1:self$n,
                                      function(x) sum(self$graphs[[x]]$edge_lengths)))
-
-       units(self$lengths) <- units(self$graphs[[1]]$get_edge_lengths())
+       if(inherits(self$graphs[[1]]$get_edge_lengths(), "units")){
+        units(self$lengths) <- units(self$graphs[[1]]$get_edge_lengths())
+       }
 
        if(by_length) {
          reo <- order(self$lengths, decreasing = TRUE)
