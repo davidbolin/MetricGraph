@@ -120,13 +120,20 @@ Create metric graphs for connected components</p></dd>
 
 <div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/graph_components.html">graph_components</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>lines <span class="op">=</span> <span class="cn">NULL</span>, V <span class="op">=</span> <span class="cn">NULL</span>, E <span class="op">=</span> <span class="cn">NULL</span>, by_length <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/graph_components.html">graph_components</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  edges <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  V <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  E <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  by_length <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>lines</code></dt>
-<dd><p>Object of type <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code>.</p></dd>
+<p></p><div class="arguments"><dl><dt><code>edges</code></dt>
+<dd><p>A list containing coordinates as <code>m x 2</code> matrices (that is, of <code>matrix</code> type) or m x 2 data frames (<code>data.frame</code> type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code> (from <code>sp</code> package) or <code>MULTILINESTRING</code> (from <code>sf</code> package).</p></dd>
 
 
 <dt><code>V</code></dt>
@@ -144,6 +151,10 @@ the components are sorted by the number of vertices.</p></dd>
 
 <dt><code>...</code></dt>
 <dd><p>Additional arguments used when specifying the graphs</p></dd>
+
+
+<dt><code>lines</code></dt>
+<dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>edges</code> instead.</p></dd>
 
 
 <dt><code>vertex_unit</code></dt>
@@ -239,13 +250,12 @@ be used when plotting each graph.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/edzer/sp/" class="external-link">sp</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">line3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Line</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">Lines</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/sp/man/SpatialLines.html" class="external-link">SpatialLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line1</span><span class="op">)</span>, ID <span class="op">=</span> <span class="st">"1"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                           <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line2</span><span class="op">)</span>, ID <span class="op">=</span> <span class="st">"2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                           <span class="fu"><a href="https://rdrr.io/pkg/sp/man/Line.html" class="external-link">Lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line3</span><span class="op">)</span>, ID <span class="op">=</span> <span class="st">"3"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">graphs</span> <span class="op">&lt;-</span> <span class="va">graph_components</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">Lines</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">edge1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">edge2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">edge3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">edges</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">edge1</span>, <span class="va">edge2</span>, <span class="va">edge3</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">graphs</span> <span class="op">&lt;-</span> <span class="va">graph_components</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">edges</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">graphs</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="graph_components-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>

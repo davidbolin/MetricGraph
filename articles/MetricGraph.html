@@ -98,7 +98,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
-modified: 2023-10-06.</h4>
+modified: 2023-10-12.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -193,7 +193,7 @@ create a <code>graph_components</code> object that contains all
 connected components as graphs and then extract the largest connected
 component to work with</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graphs</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/graph_components.html">graph_components</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>lines <span class="op">=</span> <span class="va">lines</span>, longlat <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">graphs</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/graph_components.html">graph_components</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">lines</span>, longlat <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va">graphs</span><span class="op">$</span><span class="fu">get_largest</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-3-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -201,12 +201,13 @@ component to work with</p>
 the graph, such as the vertex matrix <code>graph$V</code>, the number of
 vertices <code>graph$nV</code>, the edge matrix <code>graph$E</code>,
 the number of edges <code>graph$nE</code>, and the vector of all edge
-lengths <code>graph$edge_lengths</code> given in the unit km (since we
-specified <code>longlat = TRUE</code> in the construction). Thus, we can
-obtain the range of the edge lengths in the unit m as:</p>
+lengths <code>graph$get_edge_lengths()</code> given in the unit km
+(since we specified <code>longlat = TRUE</code> in the construction).
+Thus, we can obtain the range of the edge lengths in the unit m as:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">edge_lengths</span><span class="op">)</span> <span class="op">*</span> <span class="fl">1000</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1]    5.64704 2141.41501</span></span></code></pre>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="fu">get_edge_lengths</span><span class="op">(</span>unit<span class="op">=</span><span class="st">"m"</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
+<pre><code><span><span class="co">## Units: [m]</span></span>
+<span><span class="co">## [1]    5.650044 2141.415006</span></span></code></pre>
 <p>We will also remove the vertices of degree 2 by using the
 <code>prune_vertices()</code> method:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -465,19 +466,19 @@ illustrate:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
-<span><span class="co">## (Intercept) -1.27445    0.07878 -16.177   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          0.77389    0.08029   9.638   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          2.06517    0.08029  25.721   &lt;2e-16 ***</span></span></code></pre>
+<span><span class="co">## (Intercept) -1.38351    0.07211  -19.19   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          0.83383    0.07355   11.34   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          2.41976    0.07355   32.90   &lt;2e-16 ***</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## No random effects.</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">## std. dev </span></span>
-<span><span class="co">## 1.761565 </span></span>
+<span><span class="co">## 1.612321 </span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -991.0661</span></span></code></pre>
+<span><span class="co">## Log-Likelihood:  -946.8021</span></span></code></pre>
 <p>Let us now fit the linear mixed-effects model with a Whittle-Mat'ern
 latent model with <span class="math inline">\(\alpha=1\)</span>. To this
 end, we can either specify the <code>model</code> argument as
@@ -499,31 +500,31 @@ the simplified form:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.2821    0.1381  -9.283  &lt; 2e-16 ***</span></span>
-<span><span class="co">## lon           0.8352    0.1372   6.085 1.16e-09 ***</span></span>
-<span><span class="co">## lat           2.0855    0.1436  14.526  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.3594    0.1272 -10.685  &lt; 2e-16 ***</span></span>
+<span><span class="co">## lon           0.8758    0.1283   6.828 8.64e-12 ***</span></span>
+<span><span class="co">## lat           2.3910    0.1316  18.172  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
-<span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau   0.108325  0.004575  23.675</span></span>
-<span><span class="co">## kappa 9.855022  1.389730   7.091</span></span>
+<span><span class="co">##        Estimate Std.error z-value</span></span>
+<span><span class="co">## tau    0.114627  0.005552  20.645</span></span>
+<span><span class="co">## kappa 10.350071  1.577623   6.561</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   2.0793    0.1101  18.883</span></span>
-<span><span class="co">## range   0.2029    0.0286   7.096</span></span>
+<span><span class="co">## sigma  1.91746   0.10332  18.558</span></span>
+<span><span class="co">## range  0.19324   0.02854   6.772</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
-<span><span class="co">##           Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev 0.0002677 0.0827854   0.003</span></span>
+<span><span class="co">##          Estimate Std.error z-value</span></span>
+<span><span class="co">## std. dev  0.11661   0.05103   2.285</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -838.4862 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 50</span></span>
+<span><span class="co">## Log-Likelihood:  -806.3518 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  1.80814 mins</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  57.30561 secs</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -534,9 +535,9 @@ the simplified form:</p>
 <span>                      range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">range</span>, <span class="va">range_est</span><span class="op">)</span>,</span>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Truth"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##               sigma_e    sigma     range</span></span>
-<span><span class="co">## Truth    0.1000000000 2.000000 0.2000000</span></span>
-<span><span class="co">## Estimate 0.0002677332 2.079354 0.2029422</span></span></code></pre>
+<pre><code><span><span class="co">##            sigma_e    sigma     range</span></span>
+<span><span class="co">## Truth    0.1000000 2.000000 0.2000000</span></span>
+<span><span class="co">## Estimate 0.1166095 1.917463 0.1932354</span></span></code></pre>
 <p>Given these estimated parameters, we can now do kriging to estimate
 the field at locations in the graph. As an example, we now obtain
 predictions on the regular mesh that we previously constructed. First,
@@ -629,26 +630,26 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.2191    0.2091  -5.831 5.52e-09 ***</span></span>
-<span><span class="co">## lon           0.8701    0.1607   5.413 6.19e-08 ***</span></span>
-<span><span class="co">## lat           2.1212    0.1846  11.494  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.4432    0.1946  -7.417 1.20e-13 ***</span></span>
+<span><span class="co">## lon           0.9153    0.1501   6.099 1.07e-09 ***</span></span>
+<span><span class="co">## lat           2.3467    0.1722  13.628  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau     1.8863    0.1033   18.26</span></span>
-<span><span class="co">## kappa  13.0866    2.0448    6.40</span></span>
+<span><span class="co">## tau     1.7710    0.1003  17.650</span></span>
+<span><span class="co">## kappa  13.5315    2.3612   5.731</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
-<span><span class="co">##           Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev 0.0002883 0.0606787   0.005</span></span>
+<span><span class="co">##          Estimate Std.error z-value</span></span>
+<span><span class="co">## std. dev  0.09844   0.05884   1.673</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -841.8644 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 48</span></span>
+<span><span class="co">## Log-Likelihood:  -813.865 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 42</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  1.07343 mins</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  1.04054 mins</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -718,31 +719,31 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.2911    0.1431  -9.021  &lt; 2e-16 ***</span></span>
-<span><span class="co">## lon           0.7760    0.1483   5.232 1.68e-07 ***</span></span>
-<span><span class="co">## lat           2.0668    0.1474  14.020  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.3653    0.1245 -10.965  &lt; 2e-16 ***</span></span>
+<span><span class="co">## lon           0.8334    0.1302   6.403 1.52e-10 ***</span></span>
+<span><span class="co">## lat           2.4153    0.1281  18.853  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau   0.106212  0.004812  22.073</span></span>
-<span><span class="co">## kappa 2.449601  0.305190   8.026</span></span>
+<span><span class="co">## tau   0.110756  0.005869  18.870</span></span>
+<span><span class="co">## kappa 2.712862  0.349507   7.762</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   4.2537    0.1850  22.997</span></span>
-<span><span class="co">## range   0.8165    0.1017   8.027</span></span>
+<span><span class="co">## sigma  3.87617   0.16019  24.197</span></span>
+<span><span class="co">## range  0.73723   0.09109   8.093</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
-<span><span class="co">##           Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev 0.0001805 0.0628872   0.003</span></span>
+<span><span class="co">##          Estimate Std.error z-value</span></span>
+<span><span class="co">## std. dev  0.10653   0.05509   1.934</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -842.9008 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 44</span></span>
+<span><span class="co">## Log-Likelihood:  -806.2016 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 22</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.3398 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  4.90333 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -807,31 +808,31 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept) -1.27808   0.11168 -11.444   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          0.78898   0.09283   8.499   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          2.05216   0.09417  21.793   &lt;2e-16 ***</span></span>
+<span><span class="co">## (Intercept) -1.35121   0.10113  -13.36   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          0.80131   0.08552    9.37   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          2.39125   0.08474   28.22   &lt;2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.13712   0.03391   4.043</span></span>
-<span><span class="co">## kappa  1.90463   0.70777   2.691</span></span>
+<span><span class="co">## tau    0.15589   0.02466   6.322</span></span>
+<span><span class="co">## kappa  1.87510   0.48935   3.832</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   3.7367    0.2260  16.534</span></span>
-<span><span class="co">## range   1.0501    0.2468   4.255</span></span>
+<span><span class="co">## sigma   3.3124    0.2043  16.213</span></span>
+<span><span class="co">## range   1.0666    0.2358   4.524</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev   1.0586    0.1848   5.727</span></span>
+<span><span class="co">## std. dev   1.0023    0.1062   9.438</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -967.7993 </span></span>
+<span><span class="co">## Log-Likelihood:  -922.4641 </span></span>
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  9.5741 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  10.09974 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -910,9 +911,9 @@ parameters. To view the estimates we can use the
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.119020 0.1195540   1.899160 2.114530   2.363250 2.101290</span></span>
-<span><span class="co">## range 0.215087 0.0313508   0.160926 0.212472   0.283832 0.206785</span></span></code></pre>
+<pre><code><span><span class="co">##           mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.948120 0.109137   1.748010 1.945430   2.173430 1.951630</span></span>
+<span><span class="co">## range 0.189709 0.028116   0.140733 0.187542   0.250962 0.183055</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -931,9 +932,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 2.1190216 2.1012878</span></span>
-<span><span class="co">## 2     range  0.2 0.2150875 0.2067854</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 1.948121 1.9516314</span></span>
+<span><span class="co">## 2     range  0.2 0.189709 0.1830554</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
@@ -979,7 +980,7 @@ standard <code><a href="https://rdrr.io/r/stats/predict.html" class="external-li
 <p>Let us plot the predictions of the latent field:</p>
 <div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_field_prd</span> <span class="op">&lt;-</span> <span class="va">field_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_field_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_field_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-49-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Fin §ally, let us plot predictions of the observed data at the mesh
 locations:</p>
@@ -992,7 +993,7 @@ locations:</p>
 <p>Let us plot the predictions:</p>
 <div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_obs_prd</span> <span class="op">&lt;-</span> <span class="va">obs_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_obs_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_obs_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-51-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
 </div>

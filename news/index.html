@@ -68,8 +68,12 @@
 <h2 class="pkg-version" data-toc-text="development version" id="metricgraph-development-version">MetricGraph (development version)<a class="anchor" aria-label="anchor" href="#metricgraph-development-version"></a></h2>
 <ul><li>Changed argument <code>data</code> to <code>newdata</code> in <code>predict</code> methods. The argument <code>data</code> was deprecated.</li>
 <li>Bugfixes on sample_spde and when adding observations based on Euclidean positions.</li>
-<li>Added options <code>vertex_unit</code> and <code>length_unit</code> on graph creations.</li>
+<li>Added options <code>vertex_unit</code> and <code>length_unit</code> on graph creations. Units are given in edge lengths with the <code>get_edge_lengths()</code> method.</li>
 <li>Added a method to check if the graph is a tree.</li>
+<li>The graph construction was thoroughly refactored. The resulting construction is faster and cleaner.</li>
+<li>The graph constructions now accepts list of coordinates (where the coordinates are given as either matrices or data frames), <code>SpatialLines</code>, <code>SpatialLinesDataFrames</code> or <code>MULTILINESTRING</code>.</li>
+<li>Adding two options (<code>sf</code> package or <code>sp</code> package) for handling <code>longlat</code> by using the <code>which_longlat</code> option.</li>
+<li>Adding <code>crs</code> (if using <code>sf</code>) and <code>proj4string</code> (if using <code>sp</code>) for handling general coordinate reference systems.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.2" id="metricgraph-112">MetricGraph 1.1.2<a class="anchor" aria-label="anchor" href="#metricgraph-112"></a></h2><p class="text-muted">CRAN release: 2023-07-04</p>
