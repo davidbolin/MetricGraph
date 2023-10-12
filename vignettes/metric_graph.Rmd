@@ -1,7 +1,7 @@
 ---
 title: "Working with metric graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Working with metric graphs}

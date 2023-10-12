@@ -1,7 +1,7 @@
 ---
 title: "Log-Gaussian Cox processes on metric graphs"
 author: "David Bolin, Alexandre B. Simas"
-date: "`r Sys.Date()`"
+date: "Created: 2023-01-30. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Log-Gaussian Cox processes on metric graphs}

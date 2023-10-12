@@ -924,6 +924,7 @@ process_factor_unit <- function(vertex_unit, length_unit){
 #'  test_bar(100)
 #'   
 #' @author Mans Magnusson (MansMeg @ github)
+#'   
 #' @noRd 
 msg_progress_bar <- 
   setRefClass(

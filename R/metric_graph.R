@@ -63,6 +63,9 @@ metric_graph <-  R6Class("metric_graph",
   #' graph. The weights are given by the edge lengths.
   Laplacian = NULL,
 
+  #' @field characteristics List with various characteristics of the graph.
+  characteristics = NULL,
+
   #' @description Create a new `metric_graph` object.
   #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
@@ -509,7 +512,66 @@ metric_graph <-  R6Class("metric_graph",
         message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
       }
     }
-    
+
+  },
+
+
+  #' @description Prints various characteristics of the graph
+  #' @return No return value. Called for its side effects. 
+
+  print = function() {
+    cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
+    if(!is.null(self$characteristics)) {
+      cat("Some characteristics of the graph:\n")
+      if(self$characteristics$has_loops){
+        cat("  Has loops: TRUE\n")
+      } else {
+        cat("  Has loops: FALSE\n")
+      }
+      if(self$characteristics$has_multiple_edges){
+        cat("  Has multiple edges: TRUE\n")
+      } else {
+        cat("  Has multiple edges: FALSE\n")
+      }
+      if(self$characteristics$is_tree){
+        cat("  Is a tree: TRUE\n")
+      } else {
+        cat("  Is a tree: FALSE\n")
+      }
+    }
+    invisible(self)
+  },
+  #' @description Computes various characteristics of the graph
+  #' @return No return value. Called for its side effects. The computed characteristics
+  #' are stored in the `characteristics` element of the `metric_graph` object.
+  compute_characteristics = function() {
+    self$characteristics <- list()
+
+    #check for loops
+    if(sum(self$E[,1]==self$E[,2])>0) {
+      self$characteristics$has_loops <- TRUE
+    } else {
+      self$characteristics$has_loops <- FALSE
+    }
+
+    #check for multiple edges
+    self$characteristics$has_multiple_edges <- FALSE
+    k <- 1
+    while(k < self$nV && self$characteristics$has_multiple_edges == FALSE) {
+      ind <- which(self$E[,1]==k | self$E[,2]==k) #edges starting or ending in k
+      if(length(ind) > length(unique(rowSums(self$E[ind,,drop=FALSE])))) {
+        self$characteristics$has_multiple_edges <- TRUE
+      } else {
+        k <- k + 1
+      }
+    }
+
+    #check for tree structure
+    if(!self$characteristics$has_loops && !self$characteristics$has_multiple_edges){
+      self$characteristics$is_tree <- self$is_tree()
+    } else {
+      self$characteristics$is_tree <- FALSE
+    }
   },
 
   #' @description Computes shortest path distances between the vertices in the
@@ -1568,7 +1630,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @return TRUE if the graph is a tree and FALSE otherwise.
   is_tree = function(){
         g <- graph(edges = c(t(self$E)), directed = FALSE)
-        return(is_tree(g, mode = "all"))
+        return(igraph::is_tree(g, mode = "all"))
   },
 
   #' @description Plots continuous function on the graph.
@@ -2213,7 +2275,7 @@ metric_graph <-  R6Class("metric_graph",
     lines_keep_id <- NULL
 
     for (i in 1:max(lines[, 1])) {
-      
+
       if(verbose){
         bar_line_vertex$increment()
       }

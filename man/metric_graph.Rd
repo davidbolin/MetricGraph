@@ -59,6 +59,8 @@ locations.}
 
 \item{\code{Laplacian}}{The weighted graph Laplacian of the vertices in the
 graph. The weights are given by the edge lengths.}
+
+\item{\code{characteristics}}{List with various characteristics of the graph.}
 }
 \if{html}{\out{</div>}}
 }
@@ -66,6 +68,8 @@ graph. The weights are given by the edge lengths.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-print}{\code{metric_graph$print()}}
+\item \href{#method-metric_graph-compute_characteristics}{\code{metric_graph$compute_characteristics()}}
 \item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
 \item \href{#method-metric_graph-compute_geodist_PtE}{\code{metric_graph$compute_geodist_PtE()}}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
@@ -200,6 +204,33 @@ viewed as a vertex.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-print"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-print}{}}}
+\subsection{Method \code{print()}}{
+Prints various characteristics of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$print()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_characteristics"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_characteristics}{}}}
+\subsection{Method \code{compute_characteristics()}}{
+Computes various characteristics of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_characteristics()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects. The computed characteristics
+are stored in the \code{characteristics} element of the \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}

@@ -1,7 +1,7 @@
 ---
 title: "Whittle--Matérn fields with general smoothness"
 author: "David Bolin, Alexandre B. Simas"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Whittle--Matérn fields with general smoothness}
