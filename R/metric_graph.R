@@ -1074,7 +1074,7 @@ metric_graph <-  R6Class("metric_graph",
   #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
   #' @param group If the data is grouped (for example measured at different time
   #' points), this argument specifies the the column (or entry on the list) in
-  #' which the group varialbe is stored.
+  #' which the group variable is stored.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
@@ -1125,7 +1125,13 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     ## Check data for repeated observations
-    if(data_coords == "spatial"){
+    if (!is.null(Spoints)){
+        if(is.null(group)){
+        data_tmp <- Spoints@coords
+      } else{
+        data_tmp <- cbind(Spoints@coords, data[[group]])
+      }
+    } else if(data_coords == "spatial"){
       if(is.null(group)){
         data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
       } else{
