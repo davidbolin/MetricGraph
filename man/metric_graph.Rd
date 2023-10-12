@@ -590,7 +590,7 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 
 \item{\code{group}}{If the data is grouped (for example measured at different time
 points), this argument specifies the the column (or entry on the list) in
-which the group varialbe is stored.}
+which the group variable is stored.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE. Will not be used if
