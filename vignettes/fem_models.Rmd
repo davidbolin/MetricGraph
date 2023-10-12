@@ -674,7 +674,7 @@ replicates, since we want all replicates.
 ```{r}
   cmp_rep <-
     y ~ -1 + field(loc, model = rspde_model_rep,
-                              replicate = graph_repl_spde(rspde_model_rep, "__all"))
+                              replicate = graph_repl_rspde(rspde_model_rep, "__all"))
 ```
 Now, we are ready to fit the model. Observe that we set the `repl` argument to `__all` since we will use all replicates and the `loc` argument
 to `loc`, which is the name we gave to the locations.
@@ -691,7 +691,7 @@ to `loc`, which is the name we gave to the locations.
 
 We can obtain the estimates in the original scale with the `rspde.result()` function:
 ```{r}
-  result_bru_fit_rep <- rspde.result(rspde_bru_fit_rep, "field", rspde_model)
+  result_bru_fit_rep <- rspde.result(rspde_bru_fit_rep, "field", rspde_model_rep)
   summary(result_bru_fit_rep)
 ```
 Let us compare with the true values of the parameters:

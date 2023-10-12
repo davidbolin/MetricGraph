@@ -121,6 +121,7 @@ Create a new \code{metric_graph} object.
   tolerance = list(vertex_vertex = 1e-07, vertex_edge = 1e-07, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
+  merge_close_vertices = TRUE,
   remove_circles = TRUE,
   verbose = FALSE,
   lines = deprecated()
@@ -176,6 +177,8 @@ connected and a warning is given if this is not the case.}
 
 \item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
 initialization. Default is \code{FALSE}.}
+
+\item{\code{merge_close_vertices}}{should an additional step to merge close vertices be done?}
 
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
 are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}
