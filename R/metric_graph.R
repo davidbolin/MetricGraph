@@ -3219,7 +3219,7 @@ graph_components <-  R6::R6Class("graph_components",
 
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "mgraph_components$new(lines)", "graph_components$new(edges)",
+           lifecycle::deprecate_warn("1.1.2.9000", "graph_components$new(lines)", "graph_components$new(edges)",
              details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
            )
            edges <- lines
