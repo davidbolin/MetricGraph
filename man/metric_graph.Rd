@@ -59,15 +59,6 @@ locations.}
 graph. The weights are given by the edge lengths.}
 
 \item{\code{characteristics}}{List with various characteristics of the graph.}
-
-\item{\code{data}}{List containing data on the metric graph.}
-}
-\if{html}{\out{</div>}}
-}
-\section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{data}}{List containing data on the metric graph.}
 }
 \if{html}{\out{</div>}}
 }
@@ -662,7 +653,13 @@ stored in the \code{data} element of the \code{metric_graph} object.
 \subsection{Method \code{mutate()}}{
 Use \code{dplyr::mutate} function on the internal metric graph data object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate(..., update = TRUE, return_tibble = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate(
+  ...,
+  .update = TRUE,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  .return_tibble = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -670,9 +667,13 @@ Use \code{dplyr::mutate} function on the internal metric graph data object.
 \describe{
 \item{\code{...}}{Arguments to be passed to \code{dplyr::mutate()}.}
 
-\item{\code{update}}{Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{TRUE}.}
+\item{\code{.update}}{Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{TRUE}.}
 
-\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{.return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
 }
 \if{html}{\out{</div>}}
 }
@@ -690,7 +691,13 @@ A \code{tidyr::tibble} object containing the resulting data list after the mutat
 \subsection{Method \code{select()}}{
 Use \code{dplyr::select} function on the internal metric graph data object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select(..., update = FALSE, return_tibble = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select(
+  ...,
+  .update = FALSE,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  .return_tibble = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -698,9 +705,13 @@ Use \code{dplyr::select} function on the internal metric graph data object.
 \describe{
 \item{\code{...}}{Arguments to be passed to \code{dplyr::select()}.}
 
-\item{\code{update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
+\item{\code{.update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
 
-\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{.return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
 }
 \if{html}{\out{</div>}}
 }
@@ -718,7 +729,13 @@ A \code{tidyr::tibble} object containing the resulting data list after the selec
 \subsection{Method \code{filter()}}{
 Use \code{dplyr::filter} function on the internal metric graph data object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter(..., update = FALSE, return_tibble = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter(
+  ...,
+  .update = FALSE,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  .return_tibble = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -726,9 +743,13 @@ Use \code{dplyr::filter} function on the internal metric graph data object.
 \describe{
 \item{\code{...}}{Arguments to be passed to \code{dplyr::filter()}.}
 
-\item{\code{update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
+\item{\code{.update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
 
-\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{.return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
 }
 \if{html}{\out{</div>}}
 }
@@ -748,10 +769,12 @@ Use \code{dplyr::summarise} function on the internal metric graph data object gr
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$summarise(
   ...,
-  include_graph_groups = TRUE,
-  groups = NULL,
-  update = FALSE,
-  return_tibble = TRUE
+  .include_graph_groups = FALSE,
+  .groups = NULL,
+  .update = FALSE,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  .return_tibble = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -760,18 +783,22 @@ Use \code{dplyr::summarise} function on the internal metric graph data object gr
 \describe{
 \item{\code{...}}{Arguments to be passed to \code{dplyr::summarise()}.}
 
-\item{\code{include_graph_groups}}{Should the internal graph groups be included in the grouping variables? The default is \code{TRUE}. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.}
+\item{\code{.include_graph_groups}}{Should the internal graph groups be included in the grouping variables? The default is \code{FALSE}. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.}
 
-\item{\code{groups}}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
+\item{\code{.groups}}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
 
-\item{\code{update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
+\item{\code{.update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
 
-\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn into false if the goal is to update the internal dataset.}
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{.return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn into false if the goal is to update the internal dataset.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations.
+A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called \verb{__group}, will be added, with the same value 1 for all rows.
 }
 
 \subsection{Returns}{
@@ -784,7 +811,12 @@ A \code{tidyr::tibble} object containing the resulting data list after the summa
 \subsection{Method \code{get_data()}}{
 Return the internal data with the option to filter by groups.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_data(group = NULL, tibble = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_data(
+  group = NULL,
+  tibble = TRUE,
+  drop_na = FALSE,
+  drop_all_na = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -793,6 +825,10 @@ Return the internal data with the option to filter by groups.
 \item{\code{group}}{A vector contaning which groups should be returned? The default is \code{NULL}, which gives the result for the all groups.}
 
 \item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1231,6 +1267,7 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned.
+data List containing data on the metric graph.
 }
 }
 \if{html}{\out{<hr>}}

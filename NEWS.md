@@ -7,6 +7,7 @@
 * The graph constructions now accepts list of coordinates (where the coordinates are given as either matrices or data frames), `SpatialLines`, `SpatialLinesDataFrames` or `MULTILINESTRING`.
 * Adding two options (`sf` package or `sp` package) for handling `longlat` by using the `which_longlat` option.
 * Adding `crs` (if using `sf`) and `proj4string` (if using `sp`) for handling general coordinate reference systems.
+* Moving `data` to the `private` environment.
 
 
 # MetricGraph 1.1.2

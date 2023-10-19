@@ -1305,20 +1305,20 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Use `dplyr::mutate` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::mutate()`.
-  #' @param update Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `TRUE`.
-   #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
- #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @param .update Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `TRUE`.
+   #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::mutate()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the mutate.
-  mutate = function(..., update = TRUE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+  mutate = function(..., .update = TRUE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
       data_res <- private$data
     }
 
-    if(drop_all_na){
+    if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
@@ -1327,7 +1327,7 @@ metric_graph <-  R6Class("metric_graph",
         }
     }    
 
-    if(drop_na){
+    if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
         idx_temp <- idx_not_any_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]})
@@ -1343,10 +1343,10 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(update){
+    if(.update){
       private$data <- data_res
     }
-    if(return_tibble){
+    if(.return_tibble){
       return(data_res)
     } else{
       return(invisible(NULL))
@@ -1355,13 +1355,13 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Use `dplyr::select` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::select()`.
-  #' @param update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
- #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
- #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
+ #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::select()` within the internal metric graph data object. Observe that it is a bit different from directly using `dplyr::select()` since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
   #' @return A `tidyr::tibble` object containing the resulting data list after the selection.
-  select = function(..., update = FALSE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+  select = function(..., .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1375,7 +1375,7 @@ metric_graph <-  R6Class("metric_graph",
     data_res[["__coord_y"]] <- private$data[["__coord_y"]]
 
 
-    if(drop_all_na){
+    if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
@@ -1384,7 +1384,7 @@ metric_graph <-  R6Class("metric_graph",
         }
     }    
 
-    if(drop_na){
+    if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
         idx_temp <- idx_not_any_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]})
@@ -1397,10 +1397,10 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(update){
+    if(.update){
       private$data <- data_res
     }
-    if(return_tibble){
+    if(.return_tibble){
       return(data_res)
     } else{
       return(invisible(NULL))
@@ -1409,13 +1409,13 @@ metric_graph <-  R6Class("metric_graph",
 
     #' @description Use `dplyr::filter` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::filter()`.
-  #' @param update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
-   #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
- #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
+   #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::filter()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the filter.
-  filter = function(..., update = FALSE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+  filter = function(..., .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1423,7 +1423,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
-    if(drop_all_na){
+    if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
@@ -1432,7 +1432,7 @@ metric_graph <-  R6Class("metric_graph",
         }
     }    
 
-    if(drop_na){
+    if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
         idx_temp <- idx_not_any_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]})
@@ -1448,10 +1448,10 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(update()){
+    if(.update){
       private$data <- data_res
     }
-    if(return_tibble){
+    if(.return_tibble){
       return(data_res)
     } else{
       return(invisible(NULL))
@@ -1461,15 +1461,15 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Use `dplyr::summarise` function on the internal metric graph data object grouped by the spatial locations and the internal group variable.
   #' @param ... Arguments to be passed to `dplyr::summarise()`.
-  #' @param include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `TRUE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
-  #' @param groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
-  #' @param update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
-   #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
- #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn into false if the goal is to update the internal dataset.
-  #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations.
+  #' @param .include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
+  #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
+  #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
+   #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn into false if the goal is to update the internal dataset.
+  #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `__group`, will be added, with the same value 1 for all rows.
   #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
-  summarise = function(..., include_graph_groups = TRUE, groups = NULL, update = FALSE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1477,7 +1477,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
-    if(drop_all_na){
+    if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
@@ -1486,7 +1486,7 @@ metric_graph <-  R6Class("metric_graph",
         }
     }    
 
-    if(drop_na){
+    if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
         idx_temp <- idx_not_any_NA(data_res)
         data_res <- lapply(data_res, function(dat){dat[idx_temp]})
@@ -1496,24 +1496,28 @@ metric_graph <-  R6Class("metric_graph",
     }    
 
 
-    group_vars <- c("__edge_number", "__distance_on_edge")
-    if(include_graph_groups){
+    group_vars <- c("__edge_number", "__distance_on_edge", "__coord_x", "__coord_y")
+    if(.include_graph_groups){
       group_vars <- c("__group", group_vars)
     }
-    group_vars <- c(groups, group_vars)
+    group_vars <- c(.groups, group_vars)
     data_res <- dplyr::group_by_at(.tbl = data_res, .vars = group_vars)
     data_res <- dplyr::summarise(.data = data_res, ...)
     data_res <- dplyr::ungroup(data_res)
+    if(is.null(data_res[["__group"]])){
+      data_res[["__group"]] <- 1
+    }
+
     data_res <- dplyr::arrange(.data = data_res, `__group`, `__edge_number`, `__distance_on_edge`)  
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
     }    
 
-    if(add){
+    if(.update){
       private$data <- data_res
     }
-    if(return_tibble){
+    if(.return_tibble){
       return(data_res)
     } else{
       return(invisible(NULL))
@@ -1526,7 +1530,7 @@ metric_graph <-  R6Class("metric_graph",
  #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
 
-  get_data = function(group = NULL, tibble = FALSE, drop_na = FALSE, drop_all_na = TRUE){
+  get_data = function(group = NULL, tibble = TRUE, drop_na = FALSE, drop_all_na = TRUE){
     if(!is.null(group)){
       data_temp <- select_group(private$data, group)
     } else{
@@ -2805,7 +2809,7 @@ metric_graph <-  R6Class("metric_graph",
     if (!is.null(data)) {
       x <- y <- NULL
       data_group <- select_group(private$data, group)
-      y_plot <- private$data_group[[data]]
+      y_plot <- data_group[[data]]
       PtE <- self$get_PtE()
       points_xy <- self$coordinates(PtE = PtE)
 
@@ -2816,6 +2820,7 @@ metric_graph <-  R6Class("metric_graph",
                               y = y[!is.na(as.vector(y_plot))],
                               z = rep(0,length(x[!is.na(as.vector(y_plot))])),
                               val = as.vector(y_plot[!is.na(as.vector(y_plot))]))
+
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
@@ -3083,7 +3088,7 @@ metric_graph <-  R6Class("metric_graph",
   },
 
 
-  #' @field data List containing data on the metric graph.
+  #' data List containing data on the metric graph.
   
   data = NULL,
 

@@ -46,5 +46,6 @@
 #' @importFrom R6 R6Class
 #' @importFrom graphics layout
 #' @importFrom lifecycle deprecated
+#' @importFrom dplyr mutate filter select summarise
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL
