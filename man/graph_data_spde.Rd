@@ -2,9 +2,17 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_data_spde}
 \alias{graph_data_spde}
-\title{Data extraction for 'rSPDE' models}
+\title{Data extraction for 'spde' or 'rSPDE' models}
 \usage{
-graph_data_spde(graph_spde, repl = NULL, only_pred = FALSE, loc = NULL)
+graph_data_spde(
+  graph_spde,
+  repl = NULL,
+  group = NULL,
+  group_col = NULL,
+  only_pred = FALSE,
+  loc = NULL,
+  tibble = FALSE
+)
 }
 \arguments{
 \item{graph_spde}{An \code{inla_metric_graph_spde} object built with the
@@ -19,6 +27,8 @@ then one sets to \code{repl} to \verb{__all}.}
 
 \item{loc}{Character with the name of the location variable to be used in
 'inlabru' prediction.}
+
+\item{tibble}{Should the data be returned as a \code{tidyr::tibble}?}
 }
 \value{
 An 'INLA' and 'inlabru' friendly list with the data.

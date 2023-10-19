@@ -326,7 +326,7 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 }
 
 
-#' Data extraction for 'rSPDE' models
+#' Data extraction for 'spde' or 'rSPDE' models
 #'
 #' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 #'
@@ -339,12 +339,15 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc Character with the name of the location variable to be used in
 #' 'inlabru' prediction.
+#' @param tibble Should the data be returned as a `tidyr::tibble`?
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
-graph_data_spde <- function (graph_spde, repl = NULL,
+graph_data_spde <- function (graph_spde, repl = NULL, group = NULL, 
+                                group_col = NULL,
                                 only_pred = FALSE,
-                                loc = NULL){
+                                loc = NULL,
+                                tibble = FALSE){
   graph_tmp <- graph_spde$graph_spde$clone()
   if(only_pred){
     idx_allNA <- !idx_not_all_NA(graph_tmp$data)
@@ -364,6 +367,10 @@ graph_data_spde <- function (graph_spde, repl = NULL,
     ret[[loc]] <- cbind(ret[["__edge_number"]],
                           ret[["__distance_on_edge"]])
   }
+  if(tibble){
+    ret <-tidyr::as_tibble(ret)
+  }
+  class(ret) <- c("metric_graph_data", class(ret))
   return(ret)
 }
 

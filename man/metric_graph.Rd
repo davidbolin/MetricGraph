@@ -44,8 +44,6 @@ the vertex at the end of the edge.}
 
 \item{\code{CoB}}{Change-of-basis object used for Kirchhoff constraints.}
 
-\item{\code{data}}{List containing data on the metric graph.}
-
 \item{\code{PtV}}{Vector with the indices of the vertices which are observation
 locations.}
 
@@ -61,6 +59,15 @@ locations.}
 graph. The weights are given by the edge lengths.}
 
 \item{\code{characteristics}}{List with various characteristics of the graph.}
+
+\item{\code{data}}{List containing data on the metric graph.}
+}
+\if{html}{\out{</div>}}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{data}}{List containing data on the metric graph.}
 }
 \if{html}{\out{</div>}}
 }
@@ -86,6 +93,11 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
+\item \href{#method-metric_graph-mutate}{\code{metric_graph$mutate()}}
+\item \href{#method-metric_graph-select}{\code{metric_graph$select()}}
+\item \href{#method-metric_graph-filter}{\code{metric_graph$filter()}}
+\item \href{#method-metric_graph-summarise}{\code{metric_graph$summarise()}}
+\item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
@@ -578,6 +590,7 @@ Add observations to the metric graph.
   data_coords = c("PtE", "spatial"),
   group = NULL,
   normalized = FALSE,
+  tibble = FALSE,
   tolerance = max(self$edge_lengths)/2,
   verbose = FALSE
 )}\if{html}{\out{</div>}}
@@ -627,6 +640,8 @@ which the group variable is stored.}
 assumed to be normalized to (0,1). Default FALSE. Will not be used if
 \code{Spoints} is not \code{NULL}.}
 
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
 \item{\code{tolerance}}{Parameter to control a warning when adding observations.
 If the distance of some location and the closest point on the graph is
 greater than the tolerance, the function will display a warning.
@@ -639,6 +654,147 @@ This helps detecting mistakes on the input locations when adding new data.}
 \subsection{Returns}{
 No return value. Called for its side effects. The observations are
 stored in the \code{data} element of the \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-mutate"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-mutate}{}}}
+\subsection{Method \code{mutate()}}{
+Use \code{dplyr::mutate} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate(..., update = TRUE, return_tibble = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::mutate()}.}
+
+\item{\code{update}}{Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{TRUE}.}
+
+\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::mutate()} within the internal metric graph data object.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the mutate.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-select"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-select}{}}}
+\subsection{Method \code{select()}}{
+Use \code{dplyr::select} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select(..., update = FALSE, return_tibble = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::select()}.}
+
+\item{\code{update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
+
+\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::select()} within the internal metric graph data object. Observe that it is a bit different from directly using \code{dplyr::select()} since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the selection.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-filter"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-filter}{}}}
+\subsection{Method \code{filter()}}{
+Use \code{dplyr::filter} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter(..., update = FALSE, return_tibble = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::filter()}.}
+
+\item{\code{update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
+
+\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn it into \code{FALSE} if the goal is to update the internal dataset.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::filter()} within the internal metric graph data object.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the filter.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-summarise"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-summarise}{}}}
+\subsection{Method \code{summarise()}}{
+Use \code{dplyr::summarise} function on the internal metric graph data object grouped by the spatial locations and the internal group variable.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$summarise(
+  ...,
+  include_graph_groups = TRUE,
+  groups = NULL,
+  update = FALSE,
+  return_tibble = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::summarise()}.}
+
+\item{\code{include_graph_groups}}{Should the internal graph groups be included in the grouping variables? The default is \code{TRUE}. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.}
+
+\item{\code{groups}}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
+
+\item{\code{update}}{Should internal data object be updated to the resulting \code{tidyr::tibble}? This will convert the internal data structure to a \code{tidyr::tibble} if it is not already one. The default is \code{FALSE}.}
+
+\item{\code{return_tibble}}{Should the \code{tidyr::tibble} be returned? The default is \code{TRUE}. It might be useful to turn into false if the goal is to update the internal dataset.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the summarise.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_data"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_data}{}}}
+\subsection{Method \code{get_data()}}{
+Return the internal data with the option to filter by groups.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_data(group = NULL, tibble = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{group}}{A vector contaning which groups should be returned? The default is \code{NULL}, which gives the result for the all groups.}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -793,6 +949,12 @@ Plots the metric graph.
   p = NULL,
   degree = FALSE,
   direction = FALSE,
+  mutate = NULL,
+  select = NULL,
+  filter = NULL,
+  summarise = NULL,
+  summarise_group_by = NULL,
+  summarise_by_graph_group = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }

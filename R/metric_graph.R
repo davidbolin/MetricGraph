@@ -40,9 +40,6 @@ metric_graph <-  R6Class("metric_graph",
   #' @field CoB Change-of-basis object used for Kirchhoff constraints.
   CoB = NULL,
 
-  #' @field data List containing data on the metric graph.
-  data = NULL,
-
   #' @field PtV Vector with the indices of the vertices which are observation
   #' locations.
   PtV  = NULL,
@@ -268,7 +265,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     if(!is.null(edges)){
       if(!is.null(V) || !is.null(E)){
-        warning("object initialized from lines, then E and V are ignored")
+        warning("object initialized from edges, then E and V are ignored")
       }
       if (inherits(edges,"SpatialLinesDataFrame")) {
         tmp_lines = SpatialLines(edges@lines)
@@ -369,7 +366,7 @@ metric_graph <-  R6Class("metric_graph",
     if(tolerance$vertex_edge > 0){
       private$addinfo <- TRUE
       if(verbose){
-        message("Snap vertices to close lines")
+        message("Snap vertices to close edges")
       }
 
       t <- system.time(
@@ -588,7 +585,7 @@ metric_graph <-  R6Class("metric_graph",
   compute_geodist = function(full = FALSE, obs = TRUE, group = NULL) {
     self$geo_dist <- list()
 
-    if(is.null(self$data)){
+    if(is.null(private$data)){
       obs <- FALSE
     }
     if(!obs){
@@ -601,10 +598,10 @@ metric_graph <-  R6Class("metric_graph",
                                                               normalized = TRUE)
     } else{
       if(is.null(group)){
-          group <- unique(self$data[["__group"]])
+          group <- unique(private$data[["__group"]])
       }
       for(grp in group){
-          data_grp <- select_group(self$data, grp)
+          data_grp <- select_group(private$data, grp)
           idx_notna <- idx_not_all_NA(data_grp)
           PtE_group <- cbind(data_grp[["__edge_number"]][idx_notna],
                      data_grp[["__distance_on_edge"]][idx_notna])
@@ -691,7 +688,7 @@ metric_graph <-  R6Class("metric_graph",
   #' are stored in the `res_dist` element of the `metric_graph` object.
   compute_resdist = function(full = FALSE, obs = TRUE, group = NULL) {
     self$res_dist <- list()
-    if(is.null(self$data)){
+    if(is.null(private$data)){
       obs <- FALSE
     }
     if(!obs){
@@ -708,10 +705,10 @@ metric_graph <-  R6Class("metric_graph",
                                                                 normalized=TRUE)
     } else{
       if(is.null(group)){
-          group <- unique(self$data[["__group"]])
+          group <- unique(private$data[["__group"]])
       }
       for(grp in group){
-        data_grp <- select_group(self$data, grp)
+        data_grp <- select_group(private$data, grp)
         idx_notna <- idx_not_all_NA(data_grp)
         if(sum(idx_notna) == 0){
           stop("There are no non-NA observations.")
@@ -850,7 +847,7 @@ metric_graph <-  R6Class("metric_graph",
   #' in the `Laplacian` element in the `metric_graph` object.
   compute_laplacian = function(full = FALSE, obs = TRUE, group = NULL) {
     self$Laplacian <- list()
-    if(is.null(self$data)){
+    if(is.null(private$data)){
       obs <- FALSE
     }
     if(!obs){
@@ -867,10 +864,10 @@ metric_graph <-  R6Class("metric_graph",
                                                             normalized = TRUE)
     } else{
       if(is.null(group)){
-          group <- unique(self$data[["__group"]])
+          group <- unique(private$data[["__group"]])
       }
       for(grp in group){
-          data_grp <- select_group(self$data, grp)
+          data_grp <- select_group(private$data, grp)
           idx_notna <- idx_not_all_NA(data_grp)
           PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
                        data_grp[["__distance_on_edge"]][idx_notna])
@@ -931,19 +928,19 @@ metric_graph <-  R6Class("metric_graph",
     #   close(pb)
     # }
 
-   if(!is.null(self$data)){
+   if(!is.null(private$data)){
     if(verbose){
       message("Updating data locations.")
     }    
       t <- system.time({
-      x_coord <- self$data[["__coord_x"]]
-      y_coord <- self$data[["__coord_y"]]
+      x_coord <- private$data[["__coord_x"]]
+      y_coord <- private$data[["__coord_y"]]
       new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
-      group_vec <- self$data[["__group"]]
-      self$data[["__edge_number"]] <- new_PtE[,1]
-      self$data[["__distance_on_edge"]] <- new_PtE[,2]
+      group_vec <- private$data[["__group"]]
+      private$data[["__edge_number"]] <- new_PtE[,1]
+      private$data[["__distance_on_edge"]] <- new_PtE[,2]
       order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
-      self$data <- lapply(self$data, function(dat){dat[order_idx]})
+      private$data <- lapply(private$data, function(dat){dat[order_idx]})
       })
       if(verbose){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -963,13 +960,13 @@ metric_graph <-  R6Class("metric_graph",
   #' number and the second column contains the distance on edge of the
   #' observation locations.
   get_PtE = function() {
-    if(is.null(self$data)){
+    if(is.null(private$data)){
       stop("There is no data!")
     }
-    group <- self$data[["__group"]]
+    group <- private$data[["__group"]]
     group <- which(group == group[1])
-    PtE <- cbind(self$data[["__edge_number"]][group],
-                 self$data[["__distance_on_edge"]][group])
+    PtE <- cbind(private$data[["__edge_number"]][group],
+                 private$data[["__distance_on_edge"]][group])
 
     return(PtE)
   },
@@ -990,12 +987,12 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Gets the spatial locations from the data.
   #' @return A `data.frame` object with observation locations. If `longlat = TRUE`, the column names are lon and lat, otherwise the column names are x and y.
   get_locations = function(){
-     if(is.null(self$data)){
+     if(is.null(private$data)){
       stop("There is no data!")
     }
-    group <- self$data[["__group"]]
+    group <- private$data[["__group"]]
     group <- which(group == group[1])
-    Spoints <- data.frame(x = self$data[["__coord_x"]][group], y = self$data[["__coord_y"]][group])
+    Spoints <- data.frame(x = private$data[["__coord_x"]][group], y = private$data[["__coord_y"]][group])
     if(private$longlat){
       colnames(Spoints) <- c("lon", "lat")
     }
@@ -1013,7 +1010,7 @@ metric_graph <-  R6Class("metric_graph",
       stop("tolerance should be between 0 and 1.")
     }
     private$temp_PtE <- self$get_PtE()
-    n_group <- length(unique(self$data[["__group"]]))
+    n_group <- length(unique(private$data[["__group"]]))
     l <- length(private$temp_PtE[, 1])
     self$PtV <- rep(NA, l)
     self$nE <- nrow(self$E)
@@ -1036,16 +1033,16 @@ metric_graph <-  R6Class("metric_graph",
     }
     self$PtV <- self$PtV[!is.na(self$PtV)]
 
-    self$data[["__edge_number"]] <- rep(private$temp_PtE[,1],
+    private$data[["__edge_number"]] <- rep(private$temp_PtE[,1],
                                         times = n_group)
-    self$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2],
+    private$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2],
                                              times = n_group)
 
-    tmp_df <- data.frame(PtE1 = self$data[["__edge_number"]],
-              PtE2 = self$data[["__distance_on_edge"]],
-              group = self$data[["__group"]])
+    tmp_df <- data.frame(PtE1 = private$data[["__edge_number"]],
+              PtE2 = private$data[["__distance_on_edge"]],
+              group = private$data[["__group"]])
     index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
-    self$data <- lapply(self$data, function(dat){ dat[index_order]})
+    private$data <- lapply(private$data, function(dat){ dat[index_order]})
 
     self$PtV <- self$PtV[index_order[1:length(self$PtV)]]
 
@@ -1101,7 +1098,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Clear all observations from the `metric_graph` object.
   #' @return No return value. Called for its side effects.
   clear_observations = function() {
-    self$data <- NULL
+    private$data <- NULL
     self$geo_dist <- NULL
     self$res_dist <- NULL
     self$PtV <- NULL
@@ -1140,6 +1137,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
+  #' @param tibble Should the data be returned as a `tidyr::tibble`?
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
@@ -1156,6 +1154,7 @@ metric_graph <-  R6Class("metric_graph",
                               data_coords = c("PtE", "spatial"),
                               group = NULL,
                               normalized = FALSE,
+                              tibble = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE) {
     data_coords <- data_coords[[1]]
@@ -1209,6 +1208,9 @@ metric_graph <-  R6Class("metric_graph",
 
     if(nrow(unique(data_tmp)) != nrow(data_tmp)){
       warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+      if(data_coords == "spatial" || !is.null(Spoints)){
+        warning("It is also possible that two different points were projected to the same location on the metric graph.")
+      }
     }
 
     t <- system.time({
@@ -1261,8 +1263,8 @@ metric_graph <-  R6Class("metric_graph",
                    coordinates!"))
        }})
 
-    if(!is.null(self$data[["__group"]])){
-      group_vals <- unique(self$data[["__group"]])
+    if(!is.null(private$data[["__group"]])){
+      group_vals <- unique(private$data[["__group"]])
       group_vals <- unique(union(group_vals, group_vector))
     } else{
       group_vals <- unique(group_vector)
@@ -1277,23 +1279,285 @@ metric_graph <-  R6Class("metric_graph",
     data[[coord_x]] <- NULL
     data[[coord_y]] <- NULL
     data[[group]] <- NULL
-    self$data[["__coord_x"]] <- NULL
-    self$data[["__coord_y"]] <- NULL
+    private$data[["__coord_x"]] <- NULL
+    private$data[["__coord_y"]] <- NULL
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
-    self$data <- process_data_add_obs(PtE, new_data = data, self$data,
+    private$data <- process_data_add_obs(PtE, new_data = data, private$data,
                                         group_vector)
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
-    self$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
-    self$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
+    private$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
+    private$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
+    if(tibble){
+      private$data <- tidyr::as_tibble(private$data)
+    }
+    class(private$data) <- c("metric_graph_data", class(private$data))
     })
           if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
+  },
+  
+
+  #' @description Use `dplyr::mutate` function on the internal metric graph data object.
+  #' @param ... Arguments to be passed to `dplyr::mutate()`.
+  #' @param update Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `TRUE`.
+   #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @details A wrapper to use `dplyr::mutate()` within the internal metric graph data object.
+  #' @return A `tidyr::tibble` object containing the resulting data list after the mutate.
+  mutate = function(..., update = TRUE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+    if(!inherits(private$data, "tbl_df")){
+      data_res <- tidyr::as_tibble(private$data)
+    } else{
+      data_res <- private$data
+    }
+
+    if(drop_all_na){
+      is_tbl <- inherits(data_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        if(is_tbl){
+          data_res <- tidyr::as_tibble(data_res)
+        }
+    }    
+
+    if(drop_na){
+      if(!inherits(data_res, "tbl_df")){
+        idx_temp <- idx_not_any_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
+      } else{
+        data_res <- tidyr::drop_na(data_res)
+      }
+    }    
+
+
+    data_res <- dplyr::mutate(.data = data_res, ...)
+
+    if(!inherits(data_res, "metric_graph_data")){
+      class(data_res) <- c("metric_graph_data", class(data_res))
+    }
+
+    if(update){
+      private$data <- data_res
+    }
+    if(return_tibble){
+      return(data_res)
+    } else{
+      return(invisible(NULL))
+    }
+  },
+
+  #' @description Use `dplyr::select` function on the internal metric graph data object.
+  #' @param ... Arguments to be passed to `dplyr::select()`.
+  #' @param update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
+ #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @details A wrapper to use `dplyr::select()` within the internal metric graph data object. Observe that it is a bit different from directly using `dplyr::select()` since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
+  #' @return A `tidyr::tibble` object containing the resulting data list after the selection.
+  select = function(..., update = FALSE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+    if(!inherits(private$data, "tbl_df")){
+      data_res <- tidyr::as_tibble(private$data)
+    } else{
+      data_res <- private$data
+    }
+    data_res <- dplyr::select(.data = data_res, ...)
+    data_res[["__group"]] <- private$data[["__group"]] 
+    data_res[["__edge_number"]] <- private$data[["__edge_number"]]
+    data_res[["__distance_on_edge"]] <- private$data[["__distance_on_edge"]]
+    data_res[["__coord_x"]] <- private$data[["__coord_x"]]
+    data_res[["__coord_y"]] <- private$data[["__coord_y"]]
+
+
+    if(drop_all_na){
+      is_tbl <- inherits(data_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        if(is_tbl){
+          data_res <- tidyr::as_tibble(data_res)
+        }
+    }    
+
+    if(drop_na){
+      if(!inherits(data_res, "tbl_df")){
+        idx_temp <- idx_not_any_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
+      } else{
+        data_res <- tidyr::drop_na(data_res)
+      }
+    }        
+
+    if(!inherits(data_res, "metric_graph_data")){
+      class(data_res) <- c("metric_graph_data", class(data_res))
+    }
+
+    if(update){
+      private$data <- data_res
+    }
+    if(return_tibble){
+      return(data_res)
+    } else{
+      return(invisible(NULL))
+    }
+  },
+
+    #' @description Use `dplyr::filter` function on the internal metric graph data object.
+  #' @param ... Arguments to be passed to `dplyr::filter()`.
+  #' @param update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
+   #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @details A wrapper to use `dplyr::filter()` within the internal metric graph data object.
+  #' @return A `tidyr::tibble` object containing the resulting data list after the filter.
+  filter = function(..., update = FALSE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+    if(!inherits(private$data, "tbl_df")){
+      data_res <- tidyr::as_tibble(private$data)
+    } else{
+      data_res <- private$data
+    }
+
+
+    if(drop_all_na){
+      is_tbl <- inherits(data_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        if(is_tbl){
+          data_res <- tidyr::as_tibble(data_res)
+        }
+    }    
+
+    if(drop_na){
+      if(!inherits(data_res, "tbl_df")){
+        idx_temp <- idx_not_any_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
+      } else{
+        data_res <- tidyr::drop_na(data_res)
+      }
+    }    
+
+    data_res <- dplyr::filter(.data = data_res, ...)
+    data_res <- dplyr::arrange(.data = data_res, `__group`, `__edge_number`, `__distance_on_edge`)
+
+    if(!inherits(data_res, "metric_graph_data")){
+      class(data_res) <- c("metric_graph_data", class(data_res))
+    }
+
+    if(update()){
+      private$data <- data_res
+    }
+    if(return_tibble){
+      return(data_res)
+    } else{
+      return(invisible(NULL))
+    }
+  },
+
+
+  #' @description Use `dplyr::summarise` function on the internal metric graph data object grouped by the spatial locations and the internal group variable.
+  #' @param ... Arguments to be passed to `dplyr::summarise()`.
+  #' @param include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `TRUE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
+  #' @param groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
+  #' @param update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
+   #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn into false if the goal is to update the internal dataset.
+  #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations.
+  #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
+  summarise = function(..., include_graph_groups = TRUE, groups = NULL, update = FALSE, drop_na = FALSE, drop_all_na = TRUE, return_tibble = TRUE) {
+    if(!inherits(private$data, "tbl_df")){
+      data_res <- tidyr::as_tibble(private$data)
+    } else{
+      data_res <- private$data
+    }
+
+
+    if(drop_all_na){
+      is_tbl <- inherits(data_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        if(is_tbl){
+          data_res <- tidyr::as_tibble(data_res)
+        }
+    }    
+
+    if(drop_na){
+      if(!inherits(data_res, "tbl_df")){
+        idx_temp <- idx_not_any_NA(data_res)
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
+      } else{
+        data_res <- tidyr::drop_na(data_res)
+      }
+    }    
+
+
+    group_vars <- c("__edge_number", "__distance_on_edge")
+    if(include_graph_groups){
+      group_vars <- c("__group", group_vars)
+    }
+    group_vars <- c(groups, group_vars)
+    data_res <- dplyr::group_by_at(.tbl = data_res, .vars = group_vars)
+    data_res <- dplyr::summarise(.data = data_res, ...)
+    data_res <- dplyr::ungroup(data_res)
+    data_res <- dplyr::arrange(.data = data_res, `__group`, `__edge_number`, `__distance_on_edge`)  
+
+    if(!inherits(data_res, "metric_graph_data")){
+      class(data_res) <- c("metric_graph_data", class(data_res))
+    }    
+
+    if(add){
+      private$data <- data_res
+    }
+    if(return_tibble){
+      return(data_res)
+    } else{
+      return(invisible(NULL))
+    }
+  },
+
+ #' @description Return the internal data with the option to filter by groups.
+ #' @param group A vector contaning which groups should be returned? The default is `NULL`, which gives the result for the all groups.
+ #' @param tibble Should the data be returned as a `tidyr::tibble`? 
+ #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+ #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+
+  get_data = function(group = NULL, tibble = FALSE, drop_na = FALSE, drop_all_na = TRUE){
+    if(!is.null(group)){
+      data_temp <- select_group(private$data, group)
+    } else{
+      data_temp <- private$data
+    }
+    if(tibble){
+      data_temp <- tidyr::as_tibble(data_temp)
+    }
+
+    if(drop_all_na){
+      is_tbl <- inherits(data_temp, "tbl_df")
+        idx_temp <- idx_not_all_NA(data_temp)
+        data_temp <- lapply(data_temp, function(dat){dat[idx_temp]}) 
+        if(is_tbl){
+          data_temp <- tidyr::as_tibble(data_temp)
+        }
+    }    
+
+    if(drop_na){
+      if(!inherits(data_temp, "tbl_df")){
+        idx_temp <- idx_not_any_NA(data_temp)
+        data_temp <- lapply(data_temp, function(dat){dat[idx_temp]})
+      } else{
+        data_temp <- tidyr::drop_na(data_temp)
+      }
+    }
+
+    if(!inherits(data_temp, "metric_graph_data")){
+      class(data_temp) <- c("metric_graph_data", class(data_temp))
+    }
+    return(data_temp)
   },
 
 
@@ -1564,12 +1828,18 @@ metric_graph <-  R6Class("metric_graph",
                   p = NULL,
                   degree = FALSE,
                   direction = FALSE,
+                  mutate = NULL,
+                  select = NULL,
+                  filter = NULL,
+                  summarise = NULL,
+                  summarise_group_by = NULL,
+                  summarise_by_graph_group = FALSE,
                   ...) {
-    if(!is.null(data) && is.null(self$data)) {
+    if(!is.null(data) && is.null(private$data)) {
       stop("The graph does not contain data.")
     }
     if(is.numeric(group) && !is.null(data)) {
-      unique_group <- unique(self$data[["__group"]])
+      unique_group <- unique(private$data[["__group"]])
       group <- unique_group[group]
     }
     if(!plotly) {
@@ -2037,10 +2307,10 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(is.null(group)){
-      group <- unique(self$data[["__group"]])
+      group <- unique(private$data[["__group"]])
       group <- group[1]
     } else if (group[1] == "__all"){
-      group <- unique(self$data[["__group"]])
+      group <- unique(private$data[["__group"]])
     }
     n_group <- length(unique(group))
 
@@ -2052,12 +2322,12 @@ metric_graph <-  R6Class("metric_graph",
         A <- Matrix::Diagonal(self$nV)[self$PtV, ]
         return(A)
       } else {
-        data_group <- select_group(self$data, group[1])
+        data_group <- select_group(private$data, group[1])
         idx_notna <- idx_not_all_NA(data_group)
         nV_tmp <- sum(idx_notna)
         A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
         for (i in 2:length(group)) {
-          data_group <- select_group(self$data, group[i])
+          data_group <- select_group(private$data, group[i])
           idx_notna <- idx_not_all_NA(data_group)
           nV_tmp <- sum(idx_notna)
           A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
@@ -2441,7 +2711,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     if (!is.null(data)) {
       x <- y <- NULL
-      data_group <- select_group(self$data, group)
+      data_group <- select_group(private$data, group)
       y_plot <-data_group[[data]]
       points_xy <- self$coordinates(PtE = self$get_PtE())
       x <- points_xy[,1]
@@ -2534,8 +2804,8 @@ metric_graph <-  R6Class("metric_graph",
 
     if (!is.null(data)) {
       x <- y <- NULL
-      data_group <- select_group(self$data, group)
-      y_plot <- self$data_group[[data]]
+      data_group <- select_group(private$data, group)
+      y_plot <- private$data_group[[data]]
       PtE <- self$get_PtE()
       points_xy <- self$coordinates(PtE = PtE)
 
@@ -2813,6 +3083,10 @@ metric_graph <-  R6Class("metric_graph",
   },
 
 
+  #' @field data List containing data on the metric graph.
+  
+  data = NULL,
+
   # Initial edges added
 
   initial_edges_added = NULL,
@@ -2920,7 +3194,7 @@ metric_graph <-  R6Class("metric_graph",
             private$initial_edges_added <- rbind(private$initial_edges_added,cbind(Ei, nrow(self$E)))
         }
 
-        if(!is.null(self$data)){
+        if(!is.null(private$data)){
           ind <- which(private$temp_PtE[, 1] %in% Ei)
           for (i in ind) {
             if (private$temp_PtE[i, 2] >= t - tolerance) {

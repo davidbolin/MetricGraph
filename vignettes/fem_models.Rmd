@@ -96,7 +96,7 @@ graph$build_mesh(h = 0.01)
 
 We are now ready to specify the model
 $$
-(\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
+(\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}
 $$
 for the Whittle--Matérn field $u$. For this, we use the `matern.operators` function from 
 the `rSPDE` package:
