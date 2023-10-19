@@ -1531,6 +1531,9 @@ metric_graph <-  R6Class("metric_graph",
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
 
   get_data = function(group = NULL, tibble = TRUE, drop_na = FALSE, drop_all_na = TRUE){
+    if(is.null(private$data)){
+      stop("The graph does not contain data.")
+    }
     if(!is.null(group)){
       data_temp <- select_group(private$data, group)
     } else{
@@ -1799,6 +1802,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Plots the metric graph.
   #' @param data Which column of the data to plot? If `NULL`, no data will be
   #' plotted.
+  #' @param newdata Another data list or `data.frame` from which the column of the data will be taken.
   #' @param group If there are groups, which group to plot? If `group` is a
   #' number, it will be the index of the group as stored internally. If `group`
   #' is a character, then the group will be chosen by its name.
@@ -1816,9 +1820,15 @@ metric_graph <-  R6Class("metric_graph",
   #' @param p Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to
   #' @param degree Show the degrees of the vertices?
   #' @param direction Show the direction of the edges?
+##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
+##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
+##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
+##  # ' @param summarise_group_by A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
+##  # ' @param summarise_by_graph_group Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
   #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
   #' @return A `plot_ly` (if `plotly = TRUE`) or `ggplot` object.
   plot = function(data = NULL,
+                  newdata = NULL,
                   group = 1,
                   plotly = FALSE,
                   vertex_size = 3,
@@ -1832,12 +1842,11 @@ metric_graph <-  R6Class("metric_graph",
                   p = NULL,
                   degree = FALSE,
                   direction = FALSE,
-                  mutate = NULL,
-                  select = NULL,
-                  filter = NULL,
-                  summarise = NULL,
-                  summarise_group_by = NULL,
-                  summarise_by_graph_group = FALSE,
+                  # mutate = NULL,
+                  # filter = NULL,
+                  # summarise = NULL,
+                  # summarise_group_by = NULL,
+                  # summarise_by_graph_group = FALSE,
                   ...) {
     if(!is.null(data) && is.null(private$data)) {
       stop("The graph does not contain data.")
@@ -1846,12 +1855,14 @@ metric_graph <-  R6Class("metric_graph",
       unique_group <- unique(private$data[["__group"]])
       group <- unique_group[group]
     }
+
     if(!plotly) {
       p <- private$plot_2d(line_width = edge_width,
                            marker_size = vertex_size,
                            vertex_color = vertex_color,
                            edge_color = edge_color,
                            data = data,
+                           newdata = newdata,
                            data_size = data_size,
                            group = group,
                            mesh = mesh,
@@ -1875,6 +1886,7 @@ metric_graph <-  R6Class("metric_graph",
                            vertex_color = vertex_color,
                            edge_color = edge_color,
                            data = data,
+                           newdata = newdata,
                            data_size = data_size,
                            group = group,
                            mesh = mesh,
@@ -2635,6 +2647,7 @@ metric_graph <-  R6Class("metric_graph",
                      vertex_color = 'black',
                      edge_color = 'black',
                      data,
+                     newdata,
                      data_size = 1,
                      group = 1,
                      mesh = FALSE,
@@ -2715,11 +2728,21 @@ metric_graph <-  R6Class("metric_graph",
     }
     if (!is.null(data)) {
       x <- y <- NULL
-      data_group <- select_group(private$data, group)
+
+      if(!is.null(newdata)){
+        data_group <- select_group(newdata, group)
+      } else{
+        data_group <- select_group(private$data, group)
+      }
+
+      if(!(data%in%names(data_group))){
+        stop(paste(data,"is not an existing column name of the dataset."))
+      }
+
       y_plot <-data_group[[data]]
-      points_xy <- self$coordinates(PtE = self$get_PtE())
-      x <- points_xy[,1]
-      y <- points_xy[,2]
+
+      x <- data_group[["__coord_x"]]
+      y <- data_group[["__coord_y"]]        
 
       p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(y_plot))],
                                             y = y[!is.na(as.vector(y_plot))],
@@ -2765,6 +2788,7 @@ metric_graph <-  R6Class("metric_graph",
                      vertex_color = 'rgb(0,0,0)',
                      edge_color = 'rgb(0,0,0)',
                      data,
+                     newdata,
                      data_size = 1,
                      group = 1,
                      mesh = FALSE,
@@ -2808,13 +2832,15 @@ metric_graph <-  R6Class("metric_graph",
 
     if (!is.null(data)) {
       x <- y <- NULL
-      data_group <- select_group(private$data, group)
+      if(!is.null(newdata)){
+        data_group <- select_group(newdata, group)
+      } else{
+        data_group <- select_group(private$data, group)
+      }
       y_plot <- data_group[[data]]
-      PtE <- self$get_PtE()
-      points_xy <- self$coordinates(PtE = PtE)
 
-      x <- points_xy[,1]
-      y <- points_xy[,2]
+      x <- data_group[["__coord_x"]]
+      y <- data_group[["__coord_y"]]    
 
       data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
                               y = y[!is.na(as.vector(y_plot))],

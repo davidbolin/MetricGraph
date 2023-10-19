@@ -201,6 +201,28 @@ Observe that one vertex of degree 2 was not removed. This is due to the fact tha
 graph3$plot(direction = TRUE)
 ```
 
+## Characteristics of the graph
+
+A brief summary of the main characteristics of the graph can be obtained by the `compute_characteristics()` method:
+
+```{r}
+graph3$compute_characteristics()
+```
+
+We can, then, view those characteristics by simply printing the `metric_graph` object:
+
+```{r}
+graph3
+```
+
+Further, the individual characteristics can be accessed (after running the `compute_characteristics()` method) through the `characteristics` component of the graph object:
+
+```{r}
+graph3$characteristics
+```
+
+
+
 ## Understanding coordinates on graphs
 
 The locations of the vertices are specified in Euclidean coordinates. However, 
