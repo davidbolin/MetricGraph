@@ -1,0 +1,68 @@
+---
+title: "Data manipulation on metric graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data manipulation on metric graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MetricGraph)
+set.seed(1)
+```
+
+# Introduction
+
+
+
+# Adding data to metric graphs
+
+# Adding grouped data to metric graphs
+
+# Extracting the data from metric graphs
+
+# Manipulating data from metric graphs in the tidyverse style
+
+(select)
+
+behavior
+
+NA behavior
+
+update
+
+(filter)
+
+behavior
+
+NA behavior
+
+update
+
+
+(mutate)
+
+behavior
+
+NA behavior
+
+update
+
+(summarise)
+
+behavior
+
+NA behavior
+
+update
+
+
+(show how to obtain the result of several operations using the methods + update)
+
+(or a single concatenated operation followed by the add_observations)
+
+

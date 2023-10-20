@@ -122,7 +122,7 @@ graph$plot_function(u, plotly = TRUE)
 ```
 
 If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to multiply the weights with the FEM basis functions $\varphi_i(s)$ evaluated at the locations. For this, we can construct the observation matrix $\boldsymbol{\mathrm{A}}$, with elements $A_{ij} = \varphi_j(s_i)$, which links the FEM basis functions to the locations. This can be done
-by the function `mesh_A` in the metric graph object. To illustrate this, let us simulate 
+by the function `fem_basis` in the metric graph object. To illustrate this, let us simulate 
 some observation locations on the graph and construct the matrix:
 ```{r} 
 obs.per.edge <- 100
@@ -132,7 +132,7 @@ for(i in 1:graph$nE) {
                    cbind(rep(i,obs.per.edge), runif(obs.per.edge)))
 }
 n.obs <- obs.per.edge*graph$nE
-A <- graph$mesh_A(obs.loc)
+A <- graph$fem_basis(obs.loc)
 ```
 In the code, we generate $50$ observation locations per edge in the graph, drawn at random. It can be noted that we assume that the observation locations are given in the format $(e, d)$ where $e$ denotes the edge of the observation and $d$ is the position on the edge, i.e.,
 the relative distance from the first vertex of the edge. 
@@ -150,7 +150,7 @@ $$
 $$
 Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the rational approximation, $\boldsymbol{\mathrm{A}}$ is an identity matrix since we are evaluating the approximation in the nodes of the FEM mesh, $\overline{\boldsymbol{\mathrm{v}}}$ is the $(m+1)$-fold vertical concatenation of the vector $\boldsymbol{\mathrm{v}}$, where $\boldsymbol{\mathrm{v}}$ is a vector with all basis functions evaluated in $s=(2,0.1)$.
 ```{r}
-  v <- t(graph$mesh_A(matrix(c(2,0.1),1,2)))
+  v <- t(graph$fem_basis(matrix(c(2,0.1),1,2)))
   v_bar <- kronecker(matrix(1, nrow = rspde.order + 1),
                      v)
   A_bar <- kronecker(matrix(1, ncol = rspde.order + 1), 

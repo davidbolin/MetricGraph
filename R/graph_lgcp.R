@@ -52,7 +52,7 @@ graph_lgcp <- function(n = 1, intercept = 0, sigma, range, alpha, graph) {
     points <- cbind(edge_numbers, edge_loc)
 
     #Thin the sample
-    lambda_loc <- exp(graph$mesh_A(points)%*%u)
+    lambda_loc <- exp(graph$fem_basis(points)%*%u)
     p_loc <- as.double(lambda_loc/lambda_max)
     ind_keep <- runif(N) < p_loc
     edge_numbers <- edge_loc <- NULL

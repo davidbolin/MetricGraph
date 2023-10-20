@@ -93,6 +93,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
+\item \href{#method-metric_graph-fem_basis}{\code{metric_graph$fem_basis()}}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
@@ -926,9 +927,37 @@ matrices \code{C}, \code{G} and \code{B} are stored in the \code{mesh} element i
 \if{html}{\out{<a id="method-metric_graph-mesh_A"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-mesh_A}{}}}
 \subsection{Method \code{mesh_A()}}{
-Computes observation matrix for mesh.
+Deprecated - Computes observation matrix for mesh.
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} in favour of \code{\link[=metric_graph$fem_basis]{metric_graph$fem_basis()}}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$mesh_A(PtE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{Locations given as (edge number in graph, normalized location on
+edge)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+For n locations and a mesh with m nodes, \code{A} is an n x m matrix with
+elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
+}
+
+\subsection{Returns}{
+The observation matrix.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-fem_basis"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-fem_basis}{}}}
+\subsection{Method \code{fem_basis()}}{
+Computes observation matrix for mesh.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$fem_basis(PtE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -972,6 +1001,7 @@ Plots the metric graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   data = NULL,
+  newdata = NULL,
   group = 1,
   plotly = FALSE,
   vertex_size = 3,
@@ -985,12 +1015,6 @@ Plots the metric graph.
   p = NULL,
   degree = FALSE,
   direction = FALSE,
-  mutate = NULL,
-  select = NULL,
-  filter = NULL,
-  summarise = NULL,
-  summarise_group_by = NULL,
-  summarise_by_graph_group = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -1000,6 +1024,8 @@ Plots the metric graph.
 \describe{
 \item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be
 plotted.}
+
+\item{\code{newdata}}{Another data list or \code{data.frame} from which the column of the data will be taken.}
 
 \item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
 number, it will be the index of the group as stored internally. If \code{group}

@@ -11,7 +11,9 @@ graph_data_spde(
   group_col = NULL,
   only_pred = FALSE,
   loc = NULL,
-  tibble = FALSE
+  tibble = FALSE,
+  drop_na = FALSE,
+  drop_all_na = TRUE
 )
 }
 \arguments{
@@ -29,6 +31,10 @@ then one sets to \code{repl} to \verb{__all}.}
 'inlabru' prediction.}
 
 \item{tibble}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{drop_na}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}. This option is turned to \code{FALSE} if \code{only_pred} is \code{TRUE}.}
+
+\item{drop_all_na}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}. This option is turned to \code{FALSE} if \code{only_pred} is \code{TRUE}.}
 }
 \value{
 An 'INLA' and 'inlabru' friendly list with the data.

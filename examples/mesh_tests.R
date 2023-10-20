@@ -64,6 +64,6 @@ graph$plot(mesh=TRUE)
 
 PtE <- rbind(c(1,0.99),c(4,0.7))
 
-A <- graph$mesh_A(PtE)
+A <- graph$fem_basis(PtE)
 
 graph$plot_function_mesh(A[1,],plotly=FALSE)

@@ -1157,91 +1157,102 @@ metric_graph <-  R6Class("metric_graph",
                               tibble = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE) {
-    data_coords <- data_coords[[1]]
-    if(data_coords == "euclidean"){
-      lifecycle::deprecate_warn("1.1.2.9000", "add_observations(data_coords = 'must be either PtE or spatial')")
-      data_coords <- "spatial"
-    }
-    if(is.null(data)){
-      if(is.null(Spoints)){
-        stop("No data provided!")
-      }
-      if("SpatialPointsDataFrame"%in%is(Spoints)){
-        data <- Spoints@data
+
+    if(inherits(data, "metric_graph_data")){
+      if(!any(c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y") %in% names(data))){
+        warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
+        class(data) <- setdiff(class(data), "metric_graph_data")
       } else{
-        stop("No data provided!")
+        private$data <- data
       }
-    }
-
-    data <- as.list(data)
-
-    ## convert everything to PtE
-    if(verbose){
-      if(data_coords == "spatial" || !is.null(Spoints)){
-      message("Converting data to PtE")
-      if(private$longlat){
-        message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
-      } 
-      }
-    }
-
-    ## Check data for repeated observations
-    if (!is.null(Spoints)){
-        if(is.null(group)){
-        data_tmp <- Spoints@coords
-      } else{
-        data_tmp <- cbind(Spoints@coords, data[[group]])
-      }
-    } else if(data_coords == "spatial"){
-      if(is.null(group)){
-        data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
-      } else{
-        data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[group]])
-      }
-    } else{
-      if(is.null(group)){
-        data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
-      } else{
-        data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[group]])
-      }
-    }
-
-    if(nrow(unique(data_tmp)) != nrow(data_tmp)){
-      warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
-      if(data_coords == "spatial" || !is.null(Spoints)){
-        warning("It is also possible that two different points were projected to the same location on the metric graph.")
-      }
-    }
-
-    t <- system.time({
-      if(!is.null(Spoints)){
-        PtE <- self$coordinates(XY = Spoints@coords)
-        XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-        norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-        if(norm_XY > tolerance){
-          warning("There was at least one point whose location is far from the graph,
-          please consider checking the input.")
+    } 
+    
+    if(!inherits(data, "metric_graph_data")) {
+        data_coords <- data_coords[[1]]
+        if(data_coords == "euclidean"){
+          lifecycle::deprecate_warn("1.1.2.9000", "add_observations(data_coords = 'must be either PtE or spatial')")
+          data_coords <- "spatial"
         }
-      } else{
-        if(data_coords == "PtE"){
-            PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
-            if(!normalized){
-              PtE[, 2] <- PtE[,2] / self$edge_lengths[PtE[, 1]]
-            }
-          } else if(data_coords == "spatial"){
-            point_coords <- cbind(data[[coord_x]], data[[coord_y]])
-            PtE <- self$coordinates(XY = point_coords)
+        if(is.null(data)){
+          if(is.null(Spoints)){
+            stop("No data provided!")
+          }
+          if("SpatialPointsDataFrame"%in%is(Spoints)){
+            data <- Spoints@data
+          } else{
+            stop("No data provided!")
+          }
+        }
+
+        data <- as.list(data)
+
+        ## convert everything to PtE
+        if(verbose){
+          if(data_coords == "spatial" || !is.null(Spoints)){
+          message("Converting data to PtE")
+          if(private$longlat){
+            message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
+          } 
+          }
+        }
+
+        ## Check data for repeated observations
+        if (!is.null(Spoints)){
+            if(is.null(group)){
+            data_tmp <- Spoints@coords
+          } else{
+            data_tmp <- cbind(Spoints@coords, data[[group]])
+          }
+        } else if(data_coords == "spatial"){
+          if(is.null(group)){
+            data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
+          } else{
+            data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[group]])
+          }
+        } else{
+          if(is.null(group)){
+            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
+          } else{
+            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[group]])
+          }
+        }
+
+        if(nrow(unique(data_tmp)) != nrow(data_tmp)){
+          warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+          if(data_coords == "spatial" || !is.null(Spoints)){
+            warning("It is also possible that two different points were projected to the same location on the metric graph.")
+          }
+        }
+
+        t <- system.time({
+          if(!is.null(Spoints)){
+            PtE <- self$coordinates(XY = Spoints@coords)
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-            norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+            norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
             if(norm_XY > tolerance){
               warning("There was at least one point whose location is far from the graph,
-                please consider checking the input.")
-              }
-        } else{
-            stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
-        }
-      }
-    })
+              please consider checking the input.")
+            }
+          } else{
+            if(data_coords == "PtE"){
+                PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
+                if(!normalized){
+                  PtE[, 2] <- PtE[,2] / self$edge_lengths[PtE[, 1]]
+                }
+              } else if(data_coords == "spatial"){
+                point_coords <- cbind(data[[coord_x]], data[[coord_y]])
+                PtE <- self$coordinates(XY = point_coords)
+                XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
+                norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+                if(norm_XY > tolerance){
+                  warning("There was at least one point whose location is far from the graph,
+                    please consider checking the input.")
+                  }
+            } else{
+                stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
+            }
+          }
+        })
 
       if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1300,6 +1311,8 @@ metric_graph <-  R6Class("metric_graph",
           if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
+
+    }
   },
   
 
@@ -1567,7 +1580,6 @@ metric_graph <-  R6Class("metric_graph",
     return(data_temp)
   },
 
-
   #' @description Build Kirchoff constraint matrix from edges.
   #' @param alpha the type of constraint (currently only supports 2)
   #' @param edge_constraint if TRUE, add constraints on vertices of degree 1
@@ -1746,13 +1758,28 @@ metric_graph <-  R6Class("metric_graph",
     self$mesh$weights <- rowSums(self$mesh$C)
   },
 
+  #' @description Deprecated - Computes observation matrix for mesh.
+  #'
+  #'  `r lifecycle::badge("deprecated")` in favour of [metric_graph$fem_basis()].
+  #' @param PtE Locations given as (edge number in graph, normalized location on
+  #' edge)
+  #' @details For n locations and a mesh with m nodes, `A` is an n x m matrix with
+  #' elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
+  #' @return The observation matrix.
+  #' 
+  
+  mesh_A = function(PtE){
+    lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$mesh_A()", "metric_graph$fem_basis()")
+    self$fem_basis(PtE)
+  },
+
   #' @description Computes observation matrix for mesh.
   #' @param PtE Locations given as (edge number in graph, normalized location on
   #' edge)
   #' @details For n locations and a mesh with m nodes, `A` is an n x m matrix with
   #' elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
   #' @return The observation matrix.
-  mesh_A = function(PtE) {
+  fem_basis = function(PtE) {
     if(ncol(PtE)!= 2){
       stop("PtE must have two columns!")
     }

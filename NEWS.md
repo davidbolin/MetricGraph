@@ -9,6 +9,7 @@
 * Adding `crs` (if using `sf`) and `proj4string` (if using `sp`) for handling general coordinate reference systems.
 * Moving `data` to the `private` environment.
 * Several data manipulation helper tools and methods were introduced, together with a vignette with a brief tutorial on these tools.
+* The method `mesh_A()` has been deprecated, use `fem_basis()` instead.
 
 
 # MetricGraph 1.1.2

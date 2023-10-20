@@ -157,7 +157,7 @@ we can write the integral as $\widetilde{\alpha}^T\exp(\widetilde{A}u)$ where
 $\widetilde{A}_{ij} = \varphi_j(\widetilde{s}_i)$ and $\widetilde{a}$ is a vector
 with integration weights. These quantities can be obtained as
 ```{r}
-Atilde <- graph$mesh_A(graph$mesh$VtE)
+Atilde <- graph$fem_basis(graph$mesh$VtE)
 atilde <- graph$mesh$weights
 ```
 The weights are used as exposure terms in the Poisson likelihiood in R-INLA. Because 

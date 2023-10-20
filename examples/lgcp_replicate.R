@@ -25,7 +25,7 @@ df <- data.frame(edge_number = unlist(sapply(lgcp_sample, function(x) x$edge_num
 df$y <- rep(1,length(df$edge_number))
 n.samp <- unlist(sapply(lgcp_sample, function(x) length(x$edge_numbers)))
 
-Atilde <- kronecker(diag(n.rep),graph$mesh_A(graph$mesh$VtE))
+Atilde <- kronecker(diag(n.rep),graph$fem_basis(graph$mesh$VtE))
 atilde <- rep(graph$mesh$weights, n.rep)
 ind.tilde <- kronecker(1:n.rep,rep(1,length(graph$mesh$weights)))
 ind <- NULL
