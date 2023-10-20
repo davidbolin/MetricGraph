@@ -340,6 +340,8 @@ graph_spde_make_A <- function (graph_spde, repl = NULL) {
 #' @param loc Character with the name of the location variable to be used in
 #' 'inlabru' prediction.
 #' @param tibble Should the data be returned as a `tidyr::tibble`?
+#' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
+#' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
@@ -347,22 +349,28 @@ graph_data_spde <- function (graph_spde, repl = NULL, group = NULL,
                                 group_col = NULL,
                                 only_pred = FALSE,
                                 loc = NULL,
-                                tibble = FALSE){
+                                tibble = FALSE,
+                                drop_na = FALSE, drop_all_na = TRUE){
   graph_tmp <- graph_spde$graph_spde$clone()
   if(only_pred){
     idx_allNA <- !idx_not_all_NA(graph_tmp$data)
     graph_tmp$data <- lapply(graph_tmp$data, function(dat){return(dat[idx_allNA])})
+    drop_na <- FALSE
+    drop_all_na <- FALSE
   }
 
   if(is.null(repl)){
     groups <- graph_tmp$data[["__group"]]
     repl <- groups[1]
-    ret <- select_group(graph_tmp$data, repl)
   } else if(repl[1] == "__all") {
-    ret <- graph_tmp$data
-  } else {
-    ret <- select_group(graph_tmp$data, repl)
-  }
+    groups <- graph_tmp$data[["__group"]]
+    repl <- unique(groups)
+  } 
+
+   ret <- select_group(graph_tmp$data, repl = repl, group = group, group_col = group_col)    
+
+
+  
   if(!is.null(loc)){
     ret[[loc]] <- cbind(ret[["__edge_number"]],
                           ret[["__distance_on_edge"]])
@@ -370,11 +378,53 @@ graph_data_spde <- function (graph_spde, repl = NULL, group = NULL,
   if(tibble){
     ret <-tidyr::as_tibble(ret)
   }
-  class(ret) <- c("metric_graph_data", class(ret))
+
+  if(drop_all_na){
+    is_tbl <- inherits(ret, "tbl_df")
+      idx_temp <- idx_not_all_NA(ret)
+      ret <- lapply(ret, function(dat){dat[idx_temp]}) 
+      if(is_tbl){
+        ret <- tidyr::as_tibble(ret)
+      }
+  }    
+  if(drop_na){
+    if(!inherits(ret, "tbl_df")){
+      idx_temp <- idx_not_any_NA(ret)
+      ret <- lapply(ret, function(dat){dat[idx_temp]})
+    } else{
+      ret <- tidyr::drop_na(ret)
+    }
+  }
+
+  if(!inherits(ret, "metric_graph_data")){
+    class(ret) <- c("metric_graph_data", class(ret))
+  }
   return(ret)
 }
 
 
+#' Select replicate and group
+#' @noRd
+#'
+select_repl_group <- function(data_list, repl, group, group_col){
+    if(!is.null(group) && is.null(group_col)){
+      stop("If you specify group, you need to specify group_col!")
+    }
+    if(!is.null(group)){
+      grp <- data_list[[group_col]]
+      grp <- which(grp %in% group)
+      data_result <- lapply(data_list, function(dat){dat[grp]})
+      replicates <- data_result[["__group"]]
+      replicates <- which(replicates %in% repl)
+      data_result <- lapply(data_result, function(dat){dat[replicates]})
+      return(data_result)
+    } else{
+      replicates <- data_list[["__group"]]
+      replicates <- which(replicates %in% repl)
+      data_result <- lapply(data_list, function(dat){dat[replicates]})
+      return(data_result)
+    }
+}
 
 
 #' @name spde_metric_graph_result
