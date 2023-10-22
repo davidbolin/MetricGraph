@@ -1432,7 +1432,7 @@ metric_graph <-  R6Class("metric_graph",
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
   #' @details A wrapper to use `dplyr::filter()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the filter.
-  filter = function(..., .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE) {
+  filter = function(..., .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1477,7 +1477,7 @@ metric_graph <-  R6Class("metric_graph",
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
   #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `__group`, will be added, with the same value 1 for all rows.
   #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
-  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE) {
+  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -3077,15 +3077,15 @@ metric_graph <-  R6Class("metric_graph",
           return(ll)
   },
 
- ##' @description Get the observation/prediction matrix A
- ##' @param group A vector. If `NULL`, the A matrix for the first group will be
- ##' returned. One can use all groups by simply setting the `group` variable
- ##' to `__all`. Otherwise, the A matrix for the groups in the vector will be
- ##' returned.
- ##' @param obs_to_vert Should the observations be turned into vertices?
- ##' @param include_NA Should the locations for which all observations are NA be
- ##' included?
- ##' @return The observation or prediction matrix.
+ ## @description Get the observation/prediction matrix A
+ ## @param group A vector. If `NULL`, the A matrix for the first group will be
+ ## returned. One can use all groups by simply setting the `group` variable
+ ## to `__all`. Otherwise, the A matrix for the groups in the vector will be
+ ## returned.
+ ## @param obs_to_vert Should the observations be turned into vertices?
+ ## @param include_NA Should the locations for which all observations are NA be
+ ## included?
+ ## @return The observation or prediction matrix.
   A = function(group = NULL,
                obs_to_vert = FALSE,
                drop_na = FALSE,

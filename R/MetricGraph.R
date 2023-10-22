@@ -47,5 +47,6 @@
 #' @importFrom graphics layout
 #' @importFrom lifecycle deprecated
 #' @importFrom dplyr mutate filter select summarise
+#' @importFrom tidyr drop_na
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

@@ -130,21 +130,21 @@ posterior_crossvalidation_covariance_manual <- function(theta,
   diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
 
   if(is.null(ind)){
-    ind <- 1:length(graph$data[[data_name]])
+    ind <- 1:length(graph$.__enclos_env__$private$data[[data_name]])
   }
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$data[[data_name]]))
-  mae <- rmse <- rep(0, length(graph$data[[data_name]]))
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
+  mae <- rmse <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
   for (j in 1:length(unique(ind))) {
     i <- which(ind == j)
-    mu.p[i] <-Sigma[i, -i] %*% solve(Sigma.o[-i, -i], graph$data[[data_name]][-i])
+    mu.p[i] <-Sigma[i, -i] %*% solve(Sigma.o[-i, -i], graph$.__enclos_env__$private$data[[data_name]][-i])
     Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                         Sigma.o[-i, i])
     var.p[i] <- diag(Sigma.p)
-    logscore[i] <- LS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(graph$data[[data_name]][i] - mu.p[i])
-    rmse[i] <- (graph$data[[data_name]][i] - mu.p[i])^2
+    logscore[i] <- LS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])
+    rmse[i] <- (graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])^2
   }
   return(list(mu = mu.p,
               var = var.p,
@@ -223,16 +223,16 @@ posterior_crossvalidation_manual <- function(theta,
   }
 
   if(is.null(ind)){
-    ind <- 1:length(graph$data[[data_name]])
+    ind <- 1:length(graph$.__enclos_env__$private$data[[data_name]])
   }
 
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$data[[data_name]]))
-  mae <- rmse <- rep(0, length(graph$data[[data_name]]))
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
+  mae <- rmse <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
 
   for (j in 1:length(unique(ind))) {
     i <- which(ind == j)
     if(model == "isoExp" || model == "alpha2"){
-      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], graph$data[[data_name]][-i])
+      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], graph$.__enclos_env__$private$data[[data_name]][-i])
       Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                           Sigma.o[-i, i])
       var.p[i] <- diag(Sigma.p)
@@ -240,16 +240,16 @@ posterior_crossvalidation_manual <- function(theta,
       A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
       Q.p <- Q + t(A) %*% A / sigma_e^2
       mu.p[i] <- solve(Q.p,
-                       as.vector(t(A) %*% graph$data[[data_name]][-i] / sigma_e^2))[graph$PtV[i]]
+                       as.vector(t(A) %*% graph$.__enclos_env__$private$data[[data_name]][-i] / sigma_e^2))[graph$PtV[i]]
       v <- rep(0,dim(Q.p)[1])
       v[graph$PtV[i]] <- 1
       var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
     }
-    logscore[i] <- LS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(graph$data[[data_name]][i] - mu.p[i])
-    rmse[i] <- (graph$data[[data_name]][i] - mu.p[i])^2
+    logscore[i] <- LS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])
+    rmse[i] <- (graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])^2
   }
   return(list(mu = mu.p,
               var = var.p,

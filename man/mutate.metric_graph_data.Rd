@@ -2,12 +2,12 @@
 % Please edit documentation in R/util.R
 \name{mutate.metric_graph_data}
 \alias{mutate.metric_graph_data}
-\title{A version of \code{dplyr::mutate} function for datasets on metric graphs}
+\title{A version of \code{dplyr::mutate()} function for datasets on metric graphs}
 \usage{
 \method{mutate}{metric_graph_data}(.data, ...)
 }
 \arguments{
-\item{...}{Additional parameters to be passed to \code{dplyr::mutate}.}
+\item{...}{Additional parameters to be passed to \code{dplyr::mutate()}.}
 
 \item{.dat}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
 }

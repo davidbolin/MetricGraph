@@ -2,12 +2,12 @@
 % Please edit documentation in R/util.R
 \name{filter.metric_graph_data}
 \alias{filter.metric_graph_data}
-\title{A version of \code{dplyr::filter} function for datasets on metric graphs}
+\title{A version of \code{dplyr::filter()} function for datasets on metric graphs}
 \usage{
 \method{filter}{metric_graph_data}(.data, ...)
 }
 \arguments{
-\item{...}{Additional parameters to be passed to \code{dplyr::filter}.}
+\item{...}{Additional parameters to be passed to \code{dplyr::filter()}.}
 
 \item{.dat}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
 }

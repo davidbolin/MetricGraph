@@ -2,12 +2,12 @@
 % Please edit documentation in R/util.R
 \name{summarise.metric_graph_data}
 \alias{summarise.metric_graph_data}
-\title{A version of \code{dplyr::summarise} function for datasets on metric graphs}
+\title{A version of \code{dplyr::summarise()} function for datasets on metric graphs}
 \usage{
 \method{summarise}{metric_graph_data}(.data, ..., .include_graph_groups = FALSE, .groups = NULL)
 }
 \arguments{
-\item{...}{Additional parameters to be passed to \code{dplyr::summarise}.}
+\item{...}{Additional parameters to be passed to \code{dplyr::summarise()}.}
 
 \item{.include_graph_groups}{Should the internal graph groups be included in the grouping variables? The default is \code{FALSE}. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.}
 
