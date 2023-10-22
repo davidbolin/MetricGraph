@@ -309,7 +309,25 @@ graph_spde_make_index <- function (name,
 }
 
 
-#' Observation/prediction matrices for 'rSPDE' models
+#' Observation/prediction matrices for 'SPDE' models
+#'
+#' Constructs observation/prediction weight matrices
+#' for metric graph models.
+#'
+#' @param graph_spde An `inla_metric_graph_spde` object built with the
+#' `graph_spde()` function.
+#' @param repl Which replicates? If there is no replicates, or to
+#' use all replicates, one can set to `NULL`.
+#' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @return The observation matrix.
+#' @export
+
+graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all_na = TRUE) {
+   return(graph_spde$graph_spde$.__enclos_env__$private$A(group = repl, drop_na = drop_na, drop_all_na = drop_all_na))
+}
+
+#' Deprecated - Observation/prediction matrices for 'SPDE' models
 #'
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
@@ -321,8 +339,9 @@ graph_spde_make_index <- function (name,
 #' @return The observation matrix.
 #' @export
 
-graph_spde_make_A <- function (graph_spde, repl = NULL) {
-   return(graph_spde$graph_spde$A(group = repl))
+graph_spde_make_A <- function(graph_spde, repl = NULL){
+  lifecycle::deprecate_warn("1.1.2.9000", "graph_spde_make_A", "graph_spde_basis")
+  return(graph_spde_basis(graph_spde, repl = repl, drop_na = FALSE, drop_all_na = FALSE))
 }
 
 
@@ -774,7 +793,7 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   input_list <- lapply(1:nrow(input), function(i){input[i,]})
   pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
   idx_tmp <- match(input_list, pte_tmp_list)
-  A_tmp <- model$graph_spde$A()
+  A_tmp <- model$graph_spde$.__enclos_env__$private$A()
   return(A_tmp[idx_tmp,])
 }
 

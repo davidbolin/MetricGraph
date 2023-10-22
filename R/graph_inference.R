@@ -218,8 +218,6 @@ posterior_crossvalidation_manual <- function(theta,
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
       Q <- K %*% K * tau^2
     }
-    A <- graph$A()
-    Q.p <- Q  + t(A)%*%A/sigma_e^2
   } else {
     stop("Wrong model choice.")
   }
@@ -345,8 +343,6 @@ posterior_crossvalidation <- function(object)
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
       Q <- K %*% K * tau^2
     }
-    A <- graph$A()
-    Q.p <- Q  + t(A)%*%A/sigma_e^2
   } else {
     stop("Wrong model choice.")
   }
@@ -356,6 +352,8 @@ posterior_crossvalidation <- function(object)
   }
 
   y_graph <- object$model_matrix[,1]
+
+  repl <- graph$
 
   ind <- 1:length(y_graph)
 

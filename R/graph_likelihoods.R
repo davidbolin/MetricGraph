@@ -829,7 +829,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     y_resp <- y_graph
 
     l <- 0
-    A <- graph$A(group = "__all")
+    A <- graph$.__enclos_env__$private$A(group = "__all", drop_all_na = FALSE, drop_na = FALSE)
 
     u_repl <- unique(graph$data[["__group"]])
     for(repl_y in 1:length(u_repl)){

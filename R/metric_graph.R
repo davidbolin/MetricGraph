@@ -956,6 +956,8 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   #' @description Gets PtE from the data.
+  #' @param group For which group, should the PtE be returned? `NULL` means that all PtEs available will be returned.
+  #' @param include_group Should the group be included as a column? If `TRUE`, the PtEs for each group will be concatenated, otherwise a single matrix containing the unique PtEs will be returned.
   #' @return A matrix with two columns, where the first column contains the edge
   #' number and the second column contains the distance on edge of the
   #' observation locations.
@@ -967,7 +969,6 @@ metric_graph <-  R6Class("metric_graph",
     group <- which(group == group[1])
     PtE <- cbind(private$data[["__edge_number"]][group],
                  private$data[["__distance_on_edge"]][group])
-
     return(PtE)
   },
 
@@ -1318,13 +1319,11 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Use `dplyr::mutate` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::mutate()`.
-  #' @param .update Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `TRUE`.
    #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::mutate()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the mutate.
-  mutate = function(..., .update = TRUE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
+  mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1356,24 +1355,15 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(.update){
-      private$data <- data_res
-    }
-    if(.return_tibble){
-      return(data_res)
-    } else{
-      return(invisible(NULL))
-    }
+    return(data_res)
   },
 
 
   #' @description Use `tidyr::drop_na()` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `tidyr::drop_na()`.
-  #' @param .update Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `TRUE`.
-  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::drop_na()` within the internal metric graph data object.
-  #' @return A `tidyr::tibble` object containing the resulting data list after the mutate.
-  drop_na = function(..., .update = TRUE, .return_tibble = TRUE) {
+  #' @return A `tidyr::tibble` object containing the resulting data list after the drop_na.
+  drop_na = function(...) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1386,27 +1376,18 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(.update){
-      private$data <- data_res
-    }
-    if(.return_tibble){
-      return(data_res)
-    } else{
-      return(invisible(NULL))
-    }
+    return(data_res)
   },
 
 
 
   #' @description Use `dplyr::select` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::select()`.
-  #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
  #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::select()` within the internal metric graph data object. Observe that it is a bit different from directly using `dplyr::select()` since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
   #' @return A `tidyr::tibble` object containing the resulting data list after the selection.
-  select = function(..., .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
+  select = function(..., .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1442,32 +1423,16 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(.update){
-      private$data <- data_res
-    }
-    if(.return_tibble){
-      return(data_res)
-    } else{
-      return(invisible(NULL))
-    }
-  },
-
-
-  add description
-
-  drop_na = function(){
-
+    return(data_res)
   },
 
     #' @description Use `dplyr::filter` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::filter()`.
-  #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
    #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::filter()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the filter.
-  filter = function(..., .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
+  filter = function(..., .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1500,14 +1465,7 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    if(.update){
-      private$data <- data_res
-    }
-    if(.return_tibble){
-      return(data_res)
-    } else{
-      return(invisible(NULL))
-    }
+    return(data_res)
   },
 
 
@@ -1515,13 +1473,11 @@ metric_graph <-  R6Class("metric_graph",
   #' @param ... Arguments to be passed to `dplyr::summarise()`.
   #' @param .include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
   #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
-  #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
    #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn into false if the goal is to update the internal dataset.
   #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `__group`, will be added, with the same value 1 for all rows.
   #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
-  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE, .return_tibble = TRUE) {
+  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .update = FALSE, .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -1566,14 +1522,8 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }    
 
-    if(.update){
-      private$data <- data_res
-    }
-    if(.return_tibble){
-      return(data_res)
-    } else{
-      return(invisible(NULL))
-    }
+    return(data_res)
+
   },
 
  #' @description Return the internal data with the option to filter by groups.
@@ -2367,58 +2317,6 @@ metric_graph <-  R6Class("metric_graph",
     return(tmp_graph)
   },
 
-  #' @description Get the observation/prediction matrix A
-  #' @param group A vector. If `NULL`, the A matrix for the first group will be
-  #' returned. One can use all groups by simply setting the `group` variable
-  #' to `__all`. Otherwise, the A matrix for the groups in the vector will be
-  #' returned.
-  #' @param obs_to_vert Should the observations be turned into vertices?
-  #' @param include_NA Should the locations for which all observations are NA be
-  #' included?
-  #' @return The observation or prediction matrix.
-  A = function(group = NULL,
-               obs_to_vert = FALSE,
-               include_NA = TRUE){
-
-    if(is.null(self$PtV) && !obs_to_vert){
-        stop("The A matrix was not computed. If you want to compute rerun this
-             method with 'obs_to_vertex=TRUE', in which the observations will be
-             turned to vertices and the A matrix will then be computed")
-    } else if(is.null(self$PtV)){
-      self$observation_to_vertex(mesh_warning=FALSE)
-    }
-
-    if(is.null(group)){
-      group <- unique(private$data[["__group"]])
-      group <- group[1]
-    } else if (group[1] == "__all"){
-      group <- unique(private$data[["__group"]])
-    }
-    n_group <- length(unique(group))
-
-    if(include_NA){
-      A <- Matrix::Diagonal(self$nV)[self$PtV, ]
-      return(Matrix::kronecker(Diagonal(n_group),A))
-    } else{
-      if(length(group) == 1){
-        A <- Matrix::Diagonal(self$nV)[self$PtV, ]
-        return(A)
-      } else {
-        data_group <- select_group(private$data, group[1])
-        idx_notna <- idx_not_all_NA(data_group)
-        nV_tmp <- sum(idx_notna)
-        A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
-        for (i in 2:length(group)) {
-          data_group <- select_group(private$data, group[i])
-          idx_notna <- idx_not_all_NA(data_group)
-          nV_tmp <- sum(idx_notna)
-          A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
-        }
-        return(A)
-      }
-    }
-  },
-
   #' @description Convert between locations on the graph and Euclidean
   #' coordinates.
   #' @param PtE Matrix with locations on the graph (edge number and normalized
@@ -3177,6 +3075,64 @@ metric_graph <-  R6Class("metric_graph",
           ll <- sapply(self$edges, 
           function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)})
           return(ll)
+  },
+
+ ##' @description Get the observation/prediction matrix A
+ ##' @param group A vector. If `NULL`, the A matrix for the first group will be
+ ##' returned. One can use all groups by simply setting the `group` variable
+ ##' to `__all`. Otherwise, the A matrix for the groups in the vector will be
+ ##' returned.
+ ##' @param obs_to_vert Should the observations be turned into vertices?
+ ##' @param include_NA Should the locations for which all observations are NA be
+ ##' included?
+ ##' @return The observation or prediction matrix.
+  A = function(group = NULL,
+               obs_to_vert = FALSE,
+               drop_na = FALSE,
+               drop_all_na = FALSE){
+
+    if(is.null(self$PtV) && !obs_to_vert){
+        stop("The A matrix was not computed. If you want to compute rerun this
+             method with 'obs_to_vertex=TRUE', in which the observations will be
+             turned to vertices and the A matrix will then be computed")
+    } else if(is.null(self$PtV)){
+      self$observation_to_vertex(mesh_warning=FALSE)
+    }
+
+    if(is.null(group)){
+      group <- unique(private$data[["__group"]])
+      group <- group[1]
+    } else if (group[1] == "__all"){
+      group <- unique(private$data[["__group"]])
+    }
+    n_group <- length(unique(group))
+
+    if(!drop_na && !drop_all_na){
+      A <- Matrix::Diagonal(self$nV)[self$PtV, ]
+      return(Matrix::kronecker(Diagonal(n_group),A))
+    } else {
+        data_group <- select_group(private$data, group[1])
+        if(drop_na){
+          idx_notna <- idx_not_any_NA(data_group)
+        } else{
+          idx_notna <- idx_not_all_NA(data_group)
+        }
+        nV_tmp <- sum(idx_notna)
+        A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
+        if(n_group > 1){
+          for (i in 2:length(group)) {
+            data_group <- select_group(private$data, group[i])
+            if(drop_na){
+              idx_notna <- idx_not_any_NA(data_group)
+            } else{
+              idx_notna <- idx_not_all_NA(data_group)
+            }
+            nV_tmp <- sum(idx_notna)
+            A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
+          }
+        }
+        return(A)
+      } 
   },
 
 
