@@ -1366,6 +1366,38 @@ metric_graph <-  R6Class("metric_graph",
     }
   },
 
+
+  #' @description Use `tidyr::drop_na()` function on the internal metric graph data object.
+  #' @param ... Arguments to be passed to `tidyr::drop_na()`.
+  #' @param .update Should the new variable be added to the internal metric graph data object? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `TRUE`.
+  #' @param .return_tibble Should the `tidyr::tibble` be returned? The default is `TRUE`. It might be useful to turn it into `FALSE` if the goal is to update the internal dataset.
+  #' @details A wrapper to use `dplyr::drop_na()` within the internal metric graph data object.
+  #' @return A `tidyr::tibble` object containing the resulting data list after the mutate.
+  drop_na = function(..., .update = TRUE, .return_tibble = TRUE) {
+    if(!inherits(private$data, "tbl_df")){
+      data_res <- tidyr::as_tibble(private$data)
+    } else{
+      data_res <- private$data
+    }
+
+    data_res <- tidyr::drop_na(data = data_res, ...)
+
+    if(!inherits(data_res, "metric_graph_data")){
+      class(data_res) <- c("metric_graph_data", class(data_res))
+    }
+
+    if(.update){
+      private$data <- data_res
+    }
+    if(.return_tibble){
+      return(data_res)
+    } else{
+      return(invisible(NULL))
+    }
+  },
+
+
+
   #' @description Use `dplyr::select` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::select()`.
   #' @param .update Should internal data object be updated to the resulting `tidyr::tibble`? This will convert the internal data structure to a `tidyr::tibble` if it is not already one. The default is `FALSE`.
@@ -1418,6 +1450,13 @@ metric_graph <-  R6Class("metric_graph",
     } else{
       return(invisible(NULL))
     }
+  },
+
+
+  add description
+
+  drop_na = function(){
+
   },
 
     #' @description Use `dplyr::filter` function on the internal metric graph data object.
