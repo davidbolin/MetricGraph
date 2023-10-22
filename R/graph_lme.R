@@ -272,10 +272,15 @@ graph_lme <- function(formula, graph,
         nu <- NULL
       }
 
-      fit <- rSPDE::rspde_lme(formula = formula, model = rspde_object,
+      fit <- rSPDE::rspde_lme(formula = formula, 
+                            loc = cbind(graph$.__enclos_env__$private$data[["__edge_number"]],
+                            graph$.__enclos_env__$private$data[["__distance_on_edge"]]),
+                            model = rspde_object,
+                            repl = graph$.__enclos_env__$private$data[["__group"]],
                             nu = nu, which_repl = which_repl,
                             optim_method = optim_method,
-                            use_data_from_graph = TRUE,
+                            data = graph$.__enclos_env__$private$data,
+                            use_data_from_graph = FALSE,
                             parallel = parallel,
                             n_cores = n_cores,
                             starting_values_latent = starting_values_latent,

@@ -386,14 +386,8 @@ graph_data_spde <- function (graph_spde, repl = NULL, group = NULL,
     repl <- unique(groups)
   } 
 
-   ret <- select_group(graph_tmp$.__enclos_env__$private$data, repl = repl, group = group, group_col = group_col)    
+   ret <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, group = group, group_col = group_col)    
 
-
-  
-  if(!is.null(loc)){
-    ret[[loc]] <- cbind(ret[["__edge_number"]],
-                          ret[["__distance_on_edge"]])
-  }
   if(tibble){
     ret <-tidyr::as_tibble(ret)
   }
@@ -414,6 +408,12 @@ graph_data_spde <- function (graph_spde, repl = NULL, group = NULL,
       ret <- tidyr::drop_na(ret)
     }
   }
+  
+  if(!is.null(loc)){
+      ret[[loc]] <- cbind(ret[["__edge_number"]],
+                          ret[["__distance_on_edge"]])
+  }
+
 
   if(!inherits(ret, "metric_graph_data")){
     class(ret) <- c("metric_graph_data", class(ret))

@@ -1164,11 +1164,15 @@ metric_graph <-  R6Class("metric_graph",
         warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
         class(data) <- setdiff(class(data), "metric_graph_data")
       } else{
-        private$data <- data
+        data_coords <- "PtE"
+        edge_number <- "__edge_number"
+        distance_on_edge <- "__distance_on_edge"
+        group <- "__group"
+        normalized <- TRUE
       }
     } 
     
-    if(!inherits(data, "metric_graph_data")) {
+
         data_coords <- data_coords[[1]]
         if(data_coords == "euclidean"){
           lifecycle::deprecate_warn("1.1.2.9000", "add_observations(data_coords = 'must be either PtE or spatial')")
@@ -1313,7 +1317,6 @@ metric_graph <-  R6Class("metric_graph",
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
 
-    }
   },
   
 
