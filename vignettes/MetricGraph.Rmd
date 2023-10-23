@@ -314,7 +314,7 @@ obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 # The graph has very small edges, so we will use the 
 # Q method to improve numerical stability
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                 graph = graph, PtE = obs.loc, method = "Q")
+                 graph = graph, PtE = obs.loc)
 graph$clear_observations()
 graph$add_observations(data = data.frame(edge_number = obs.loc[, 1],
                                          distance_on_edge = obs.loc[, 2],
@@ -326,7 +326,7 @@ graph$plot(data = "u", vertex_size = 0)
 We can also sample the field at the mesh on the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                 graph = graph, type = "mesh", method = "Q")
+                 graph = graph, type = "mesh")
 graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
 ```
 
@@ -375,7 +375,7 @@ long.edges <- graph$edge_lengths > 0.5
 obs.loc <- rbind(obs.loc, cbind(sample(which(long.edges), n.obs.2, replace=TRUE), runif(n.obs.2)))
 
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                 graph = graph, PtE = obs.loc, method = "Q")
+                 graph = graph, PtE = obs.loc)
 
 beta0 = -1
 beta1 = 1

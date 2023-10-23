@@ -1138,6 +1138,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
+  #' @param clear_obs Should the existing observations be removed before adding the data?
   #' @param tibble Should the data be returned as a `tidyr::tibble`?
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
@@ -1155,9 +1156,14 @@ metric_graph <-  R6Class("metric_graph",
                               data_coords = c("PtE", "spatial"),
                               group = NULL,
                               normalized = FALSE,
+                              clear_obs = FALSE,
                               tibble = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE) {
+
+    if(clear_obs){
+      graph$clear_observations()
+    }
 
     if(inherits(data, "metric_graph_data")){
       if(!any(c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y") %in% names(data))){
@@ -3117,21 +3123,22 @@ metric_graph <-  R6Class("metric_graph",
         data_group <- select_group(private$data, group[1])
         if(drop_na){
           idx_notna <- idx_not_any_NA(data_group)
-        } else{
+        } else if(drop_all_na){
           idx_notna <- idx_not_all_NA(data_group)
         }
-        nV_tmp <- sum(idx_notna)
-        A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
+        # nV_tmp <- sum(idx_notna)
+        # A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
+        A <- Matrix::Diagonal(self$nV)[self$PtV[idx_notna], ]
         if(n_group > 1){
           for (i in 2:length(group)) {
             data_group <- select_group(private$data, group[i])
             if(drop_na){
               idx_notna <- idx_not_any_NA(data_group)
-            } else{
+            } else if(drop_all_na){
               idx_notna <- idx_not_all_NA(data_group)
             }
-            nV_tmp <- sum(idx_notna)
-            A <- bdiag(A, Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ])
+            # nV_tmp <- sum(idx_notna)
+            A <- Matrix::bdiag(A, Matrix::Diagonal(self$nV)[self$PtV[idx_notna], ])
           }
         }
         return(A)

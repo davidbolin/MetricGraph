@@ -338,7 +338,7 @@ graph_lme <- function(formula, graph,
   names_temp <- c(as.character(y_term), names_temp, c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y"))
 
   graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
-  names(graph_bkp) <- names_temp
+  names(graph_bkp$.__enclos_env__$private$data) <- names_temp
 
   time_build_likelihood_start <- Sys.time()
 

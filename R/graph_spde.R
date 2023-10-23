@@ -292,7 +292,7 @@ return(model)
 #' @param ... Currently not being used.
 #'
 #' @return A list of indexes.
-#' @export
+#' @noRd
 graph_spde_make_index <- function (name,
                                    graph_spde,
                                    n.group = 1,
@@ -340,7 +340,7 @@ graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all
 #' @export
 
 graph_spde_make_A <- function(graph_spde, repl = NULL){
-  lifecycle::deprecate_warn("1.1.2.9000", "graph_spde_make_A", "graph_spde_basis")
+  lifecycle::deprecate_warn("1.1.2.9000", "graph_spde_make_A()", "graph_spde_basis()")
   return(graph_spde_basis(graph_spde, repl = repl, drop_na = FALSE, drop_all_na = FALSE))
 }
 
@@ -352,6 +352,7 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @param graph_spde An `inla_metric_graph_spde` object built with the
 #' `graph_spde()` function or an `rspde_metric_graph` object built with the
 #' `rspde.metric_graph()` function from the 'rSPDE' package.
+#' @param name A character string with the base name of the effect.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
@@ -364,12 +365,15 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
-graph_data_spde <- function (graph_spde, repl = NULL, group = NULL, 
+graph_data_spde <- function (graph_spde, name, repl = NULL, group = NULL, 
                                 group_col = NULL,
                                 only_pred = FALSE,
                                 loc = NULL,
                                 tibble = FALSE,
                                 drop_na = FALSE, drop_all_na = TRUE){
+
+  ret <- list()
+
   graph_tmp <- graph_spde$graph_spde$clone()
   if(only_pred){
     idx_allNA <- !idx_not_all_NA(graph_tmp$.__enclos_env__$private$data)
@@ -386,38 +390,75 @@ graph_data_spde <- function (graph_spde, repl = NULL, group = NULL,
     repl <- unique(groups)
   } 
 
-   ret <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, group = group, group_col = group_col)    
+   ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, group = group, group_col = group_col)   
+
+
+  n.repl <- length(unique(repl))
+
+  if(is.null(group)){
+    n.group <- 1
+  } else if (group[1] == "__all"){
+    n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
+  } else{
+    n.group <- length(unique(group))
+  }
+
+   A <- Matrix::Diagonal(0)  
+
+   for(i in 1:n.repl){
+    for(j in 1:n.group){
+        data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], group = group[j], group_col = group_col)
+        if(drop_na){
+          idx_notna <- idx_not_any_NA(data_group_repl)
+        } else if(drop_all_na){
+          idx_notna <- idx_not_all_NA(data_group_repl)
+        } else{
+          idx_notna <- rep(TRUE, length(data_group_repl[["__group"]]))
+        }
+        # nV_tmp <- sum(idx_notna)
+        A <- Matrix::bdiag(A, Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ])
+    }
+   }
 
   if(tibble){
-    ret <-tidyr::as_tibble(ret)
+    ret[["data"]] <-tidyr::as_tibble(ret[["data"]])
   }
 
   if(drop_all_na){
     is_tbl <- inherits(ret, "tbl_df")
-      idx_temp <- idx_not_all_NA(ret)
-      ret <- lapply(ret, function(dat){dat[idx_temp]}) 
+      idx_temp <- idx_not_all_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]}) 
       if(is_tbl){
-        ret <- tidyr::as_tibble(ret)
+        ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
       }
   }    
   if(drop_na){
-    if(!inherits(ret, "tbl_df")){
-      idx_temp <- idx_not_any_NA(ret)
-      ret <- lapply(ret, function(dat){dat[idx_temp]})
+    if(!inherits(ret[["data"]], "tbl_df")){
+      idx_temp <- idx_not_any_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]})
     } else{
-      ret <- tidyr::drop_na(ret)
+      ret[["data"]] <- tidyr::drop_na(ret[["data"]])
     }
   }
   
   if(!is.null(loc)){
-      ret[[loc]] <- cbind(ret[["__edge_number"]],
-                          ret[["__distance_on_edge"]])
+      ret[[loc]] <- cbind(ret[["data"]][["__edge_number"]],
+                          ret[["data"]][["__distance_on_edge"]])
   }
 
 
-  if(!inherits(ret, "metric_graph_data")){
-    class(ret) <- c("metric_graph_data", class(ret))
+  if(!inherits(ret[["data"]], "metric_graph_data")){
+    class(ret[["data"]]) <- c("metric_graph_data", class(ret))
   }
+
+   ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
+                                   n.group = n.group,
+                                   n.repl = n.repl)
+  
+  ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
+
+  ret[["basis"]] <- A
+
   return(ret)
 }
 
@@ -889,7 +930,7 @@ create_summary_from_density <- function(density_df, name) {
 #' for all replicates will be generated.
 #' @param graph_spde Name of the field.
 #' @return A vector of replicates to be used with 'inlabru'.
-#' @export
+#' @noRd
 
 bru_graph_rep <- function(repl, graph_spde){
   groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[["__group"]])
