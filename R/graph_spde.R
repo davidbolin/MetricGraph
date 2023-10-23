@@ -345,21 +345,20 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 }
 
 
-#' Data extraction for 'spde' or 'rSPDE' models
+#' Data extraction for 'spde' models
 #'
 #' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 #'
 #' @param graph_spde An `inla_metric_graph_spde` object built with the
-#' `graph_spde()` function or an `rspde_metric_graph` object built with the
-#' `rspde.metric_graph()` function from the 'rSPDE' package.
+#' `graph_spde()` function.
 #' @param name A character string with the base name of the effect.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
 #' @param only_pred Should only return the `data.frame` to the prediction data?
-#' @param loc Character with the name of the location variable to be used in
+#' @param loc `r lifecycle::badge("deprecated")` Use `loc_name` instead.
+#' @param loc_name Character with the name of the location variable to be used in
 #' 'inlabru' prediction.
-#' @param bru Should the results be given to be passed to `inlabru`?
 #' @param tibble Should the data be returned as a `tidyr::tibble`?
 #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
@@ -370,15 +369,30 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
                                 group_col = NULL,
                                 only_pred = FALSE,
                                 loc = NULL,
+                                loc_name = NULL,
                                 tibble = FALSE,
                                 drop_na = FALSE, drop_all_na = TRUE){
+
+        if (lifecycle::is_present(loc)) {
+         if (is.null(loc_name)) {
+           lifecycle::deprecate_warn("1.1.2.9000", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+             details = c("`loc` was provided but not `loc_name`. Setting `loc_name <- loc`.")
+           )
+           loc_name <- loc
+         } else {
+           lifecycle::deprecate_warn("1.1.2.9000", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+             details = c("Both `loc_name` and `loc` were provided. Only `loc_name` will be considered.")
+           )
+         }
+         loc <- NULL
+       }  
 
   ret <- list()
 
   graph_tmp <- graph_spde$graph_spde$clone()
   if(only_pred){
-    idx_allNA <- !idx_not_all_NA(graph_tmp$.__enclos_env__$private$data)
-    graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat){return(dat[idx_allNA])})
+    idx_anyNA <- !idx_not_any_NA(graph_tmp$.__enclos_env__$private$data)
+    graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat){return(dat[idx_anyNA])})
     drop_na <- FALSE
     drop_all_na <- FALSE
   }
@@ -442,8 +456,8 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
     }
   }
   
-  if(!is.null(loc)){
-      ret[["data"]][[loc]] <- cbind(ret[["data"]][["__edge_number"]],
+  if(!is.null(loc_name)){
+      ret[["data"]][[loc_name]] <- cbind(ret[["data"]][["__edge_number"]],
                           ret[["data"]][["__distance_on_edge"]])
   }
 

@@ -665,7 +665,7 @@ cmp <- y ~ Intercept(1) + lon + lat + field(loc, model = spde_model)
 This formula is very simple since we are not assuming mean zero, so that we do not need an intercept, and we do not have any other covariates or model components. However, the setup is exactly  the same for more complicated models, with the only exception that we would have more terms in the formla. Now, we directly fit the model:
 
 ```{r}
-spde_bru_fit <- bru(cmp, data=graph_data_spde(spde_model, loc = "loc"))
+spde_bru_fit <- bru(cmp, data=graph_data_spde(spde_model, loc = "loc")[["data"]])
 ```
 
 The advantage / difference between the estimates we obtain here and those above is that the `bru` function does full Bayesian inference (assuming priors for the model parameters). We used the default priors when creating the `graph_spde` model (see the help text for that function). The advantage now is that we do not only obtain point estimates but entire posterior distributions for the parameters. To view the estimates we can use the `spde_metric_graph_result()` function, then
