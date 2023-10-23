@@ -6,11 +6,13 @@
 \usage{
 graph_data_spde(
   graph_spde,
+  name,
   repl = NULL,
   group = NULL,
   group_col = NULL,
   only_pred = FALSE,
   loc = NULL,
+  bru = TRUE,
   tibble = FALSE,
   drop_na = FALSE,
   drop_all_na = TRUE
@@ -21,6 +23,8 @@ graph_data_spde(
 \code{graph_spde()} function or an \code{rspde_metric_graph} object built with the
 \code{rspde.metric_graph()} function from the 'rSPDE' package.}
 
+\item{name}{A character string with the base name of the effect.}
+
 \item{repl}{Which replicates? If there is no replicates, one
 can set \code{repl} to \code{NULL}. If one wants all replicates,
 then one sets to \code{repl} to \verb{__all}.}
@@ -29,6 +33,8 @@ then one sets to \code{repl} to \verb{__all}.}
 
 \item{loc}{Character with the name of the location variable to be used in
 'inlabru' prediction.}
+
+\item{bru}{Should the results be given to be passed to \code{inlabru}?}
 
 \item{tibble}{Should the data be returned as a \code{tidyr::tibble}?}
 

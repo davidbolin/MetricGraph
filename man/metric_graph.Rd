@@ -591,6 +591,7 @@ Add observations to the metric graph.
   data_coords = c("PtE", "spatial"),
   group = NULL,
   normalized = FALSE,
+  clear_obs = FALSE,
   tibble = FALSE,
   tolerance = max(self$edge_lengths)/2,
   verbose = FALSE
@@ -640,6 +641,8 @@ which the group variable is stored.}
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE. Will not be used if
 \code{Spoints} is not \code{NULL}.}
+
+\item{\code{clear_obs}}{Should the existing observations be removed before adding the data?}
 
 \item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
 

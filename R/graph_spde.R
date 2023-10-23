@@ -359,13 +359,14 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc Character with the name of the location variable to be used in
 #' 'inlabru' prediction.
+#' @param bru Should the results be given to be passed to `inlabru`?
 #' @param tibble Should the data be returned as a `tidyr::tibble`?
 #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
-graph_data_spde <- function (graph_spde, name, repl = NULL, group = NULL, 
+graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NULL, 
                                 group_col = NULL,
                                 only_pred = FALSE,
                                 loc = NULL,
@@ -442,7 +443,7 @@ graph_data_spde <- function (graph_spde, name, repl = NULL, group = NULL,
   }
   
   if(!is.null(loc)){
-      ret[[loc]] <- cbind(ret[["data"]][["__edge_number"]],
+      ret[["data"]][[loc]] <- cbind(ret[["data"]][["__edge_number"]],
                           ret[["data"]][["__distance_on_edge"]])
   }
 
@@ -451,14 +452,16 @@ graph_data_spde <- function (graph_spde, name, repl = NULL, group = NULL,
     class(ret[["data"]]) <- c("metric_graph_data", class(ret))
   }
 
+  ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
+
+
    ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
                                    n.group = n.group,
                                    n.repl = n.repl)
   
-  ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
 
   ret[["basis"]] <- A
-
+  
   return(ret)
 }
 
@@ -1109,7 +1112,7 @@ predict.inla_metric_graph_spde <- function(object,
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
   bru_fit_new <- inlabru::bru(cmp,
-          data = graph_data_spde(spde____model, loc = name_locations))
+          data = graph_data_spde(spde____model, loc = name_locations, drop_all_na = FALSE, drop_na = FALSE)[["data"]])
   pred <- predict(object = bru_fit_new,
                     newdata = new_data_list,
                     formula = formula,
