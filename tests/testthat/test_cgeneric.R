@@ -34,7 +34,7 @@ graph$add_observations(data = df_temp, normalized = FALSE)
 
 graph$observation_to_vertex()
 
-A <- graph$A()
+A <- graph$.__enclos_env__$private$A()
 
 tau <- 0.05
 
@@ -67,7 +67,7 @@ u <- solve(LQ, Z)
 
 y <- A%*%u + sigma.e * eps
 
-graph$data$y <- as.vector(y)
+graph$.__enclos_env__$private$data$y <- as.vector(y)
 
 # graph$plot(line_width = 0.3, data=TRUE)
 

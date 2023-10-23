@@ -27,25 +27,25 @@ test_that("Check likelihoods for alternative models", {
 
   graph$add_observations(data=df_temp, normalized = TRUE)
   graph$compute_resdist()
-  lik.exp.v1 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, repl = NULL, X_cov = NULL, y_graph = graph$data$y)
+  lik.exp.v1 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, repl = NULL, X_cov = NULL, y_graph = graph$get_data()$y)
   lik.exp.v1 <- lik.exp.v1(theta)
 
 
   graph$observation_to_vertex()
   graph$compute_geodist()
   graph$compute_resdist()
-  lik.exp.v2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, y_graph = graph$data$y, X_cov = NULL, repl = NULL)
+  lik.exp.v2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, y_graph = graph$get_data()$y, X_cov = NULL, repl = NULL)
   lik.exp.v2 <- lik.exp.v2(theta)
 
   graph$compute_laplacian(full=TRUE)
-  lik.gl1.v1 <- likelihood_graph_covariance(graph, model = "GL1", log_scale = FALSE, y_graph = graph$data$y, repl = NULL, X_cov = NULL)
+  lik.gl1.v1 <- likelihood_graph_covariance(graph, model = "GL1", log_scale = FALSE, y_graph = graph$get_data()$y, repl = NULL, X_cov = NULL)
   lik.gl1.v1 <- lik.gl1.v1(theta)
-  lik.gl2.v1 <- likelihood_graph_covariance(graph, model = "GL2", log_scale = FALSE, y_graph = graph$data$y, repl = NULL, X_cov = NULL)
+  lik.gl2.v1 <- likelihood_graph_covariance(graph, model = "GL2", log_scale = FALSE, y_graph = graph$get_data()$y, repl = NULL, X_cov = NULL)
   lik.gl2.v1 <- lik.gl2.v1(theta)
 
-  lik.gl1.v2 <- likelihood_graph_laplacian(graph, alpha = 1, y_graph = graph$data$y, repl = NULL, X_cov = NULL, parameterization = "spde")
+  lik.gl1.v2 <- likelihood_graph_laplacian(graph, alpha = 1, y_graph = graph$get_data()$y, repl = NULL, X_cov = NULL, parameterization = "spde")
   lik.gl1.v2 <- lik.gl1.v2(log(theta))
-  lik.gl2.v2 <- likelihood_graph_laplacian(graph, alpha = 2, y_graph = graph$data$y, repl = NULL, X_cov = NULL, parameterization = "spde")
+  lik.gl2.v2 <- likelihood_graph_laplacian(graph, alpha = 2, y_graph = graph$get_data()$y, repl = NULL, X_cov = NULL, parameterization = "spde")
   lik.gl2.v2 <- lik.gl2.v2(log(theta))
 
   expect_equal(lik.exp.v1, lik.exp.v2, tolerance = 1e-10)
