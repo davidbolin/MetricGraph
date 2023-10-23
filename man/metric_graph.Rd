@@ -418,7 +418,7 @@ the available locations. If \code{FALSE}, it will be computed
 separately for the locations of each group.}
 
 \item{\code{obs}}{Should the resistance distances be computed at the observation
-locations?}
+locations? It will only compute for locations in which there is at least one observations that is not NA.}
 
 \item{\code{group}}{Vector or list containing which groups to compute the
 Laplacian for. If \code{NULL}, it will be computed for all groups.}
@@ -929,7 +929,7 @@ matrices \code{C}, \code{G} and \code{B} are stored in the \code{mesh} element i
 \subsection{Method \code{mesh_A()}}{
 Deprecated - Computes observation matrix for mesh.
 
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} in favour of \code{\link[=metric_graph$fem_basis]{metric_graph$fem_basis()}}.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} in favour of \code{metric_graph$fem_basis()}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$mesh_A(PtE)}\if{html}{\out{</div>}}
 }

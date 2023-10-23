@@ -7,9 +7,9 @@
 \method{filter}{metric_graph_data}(.data, ...)
 }
 \arguments{
-\item{...}{Additional parameters to be passed to \code{dplyr::filter()}.}
+\item{.data}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
 
-\item{.dat}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
+\item{...}{Additional parameters to be passed to \code{dplyr::filter()}.}
 }
 \value{
 A \code{tidyr::tibble} with the resulting selected columns.

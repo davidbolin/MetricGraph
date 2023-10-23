@@ -1759,7 +1759,7 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Deprecated - Computes observation matrix for mesh.
   #'
-  #'  `r lifecycle::badge("deprecated")` in favour of [metric_graph$fem_basis()].
+  #'  `r lifecycle::badge("deprecated")` in favour of `metric_graph$fem_basis()`.
   #' @param PtE Locations given as (edge number in graph, normalized location on
   #' edge)
   #' @details For n locations and a mesh with m nodes, `A` is an n x m matrix with

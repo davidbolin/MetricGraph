@@ -7,13 +7,13 @@
 \method{summarise}{metric_graph_data}(.data, ..., .include_graph_groups = FALSE, .groups = NULL)
 }
 \arguments{
+\item{.data}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
+
 \item{...}{Additional parameters to be passed to \code{dplyr::summarise()}.}
 
 \item{.include_graph_groups}{Should the internal graph groups be included in the grouping variables? The default is \code{FALSE}. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.}
 
 \item{.groups}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
-
-\item{.dat}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
 }
 \value{
 A \code{tidyr::tibble} with the resulting selected columns.

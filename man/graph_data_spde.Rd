@@ -2,17 +2,17 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_data_spde}
 \alias{graph_data_spde}
-\title{Data extraction for 'spde' or 'rSPDE' models}
+\title{Data extraction for 'spde' models}
 \usage{
 graph_data_spde(
   graph_spde,
-  name,
+  name = "field",
   repl = NULL,
   group = NULL,
   group_col = NULL,
   only_pred = FALSE,
   loc = NULL,
-  bru = TRUE,
+  loc_name = NULL,
   tibble = FALSE,
   drop_na = FALSE,
   drop_all_na = TRUE
@@ -20,8 +20,7 @@ graph_data_spde(
 }
 \arguments{
 \item{graph_spde}{An \code{inla_metric_graph_spde} object built with the
-\code{graph_spde()} function or an \code{rspde_metric_graph} object built with the
-\code{rspde.metric_graph()} function from the 'rSPDE' package.}
+\code{graph_spde()} function.}
 
 \item{name}{A character string with the base name of the effect.}
 
@@ -29,12 +28,18 @@ graph_data_spde(
 can set \code{repl} to \code{NULL}. If one wants all replicates,
 then one sets to \code{repl} to \verb{__all}.}
 
+\item{group}{Which groups? If there is no groups, one
+can set \code{group} to \code{NULL}. If one wants all groups,
+then one sets to \code{group} to \verb{__all}.}
+
+\item{group_col}{Which "column" of the data contains the group variable?}
+
 \item{only_pred}{Should only return the \code{data.frame} to the prediction data?}
 
-\item{loc}{Character with the name of the location variable to be used in
-'inlabru' prediction.}
+\item{loc}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{loc_name} instead.}
 
-\item{bru}{Should the results be given to be passed to \code{inlabru}?}
+\item{loc_name}{Character with the name of the location variable to be used in
+'inlabru' prediction.}
 
 \item{tibble}{Should the data be returned as a \code{tidyr::tibble}?}
 

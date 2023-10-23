@@ -83,7 +83,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     graph$buildC(2)
   }
 
-  repl_vec <- graph[["data"]][["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[["__group"]]
 
   if(is.null(repl)){
     repl <- unique(repl_vec)
@@ -337,7 +337,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' @noRd
 likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterization) {
 
-  repl_vec <- graph[["data"]][["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[["__group"]]
 
   if(is.null(repl)){
     repl <- unique(repl_vec)
@@ -420,7 +420,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   sigma_e <- exp(theta[1])
   #build Q
 
-  repl_vec <- graph[["data"]][["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[["__group"]]
 
   if(is.null(repl)){
     repl <- unique(repl_vec)
@@ -809,7 +809,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
   # }
 
   loglik <- function(theta){
-    repl_vec <- graph[["data"]][["__group"]]
+    repl_vec <- graph$.__enclos_env__$private$data[["__group"]]
 
     if(is.null(repl)){
       u_repl <- unique(graph$.__enclos_env__$private$data[["__group"]])

@@ -1130,7 +1130,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
 #'
 #' Selects columns on metric graphs, while keeps the spatial positions.
 #'
-#' @param .dat The data list or `tidyr::tibble` obtained from a metric graph object.
+#' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::select()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @export
@@ -1160,7 +1160,7 @@ select.metric_graph_data <- function(.data, ...){
 #'
 #' Applies `dplyr::mutate()` function for datasets obtained from a metric graph object.
 #'
-#' @param .dat The data list or `tidyr::tibble` obtained from a metric graph object.
+#' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::mutate()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @export
@@ -1179,14 +1179,14 @@ mutate.metric_graph_data <- function(.data, ...){
 #'
 #' Applies `tidyr::drop_na()` function for datasets obtained from a metric graph object.
 #'
-#' @param .dat The data list or `tidyr::tibble` obtained from a metric graph object.
+#' @param data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `tidyr::drop_na()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @export
 #' @method drop_na metric_graph_data
 #' 
 drop_na.metric_graph_data <- function(data, ...){
-    data_res <- tidyr::drop_na(data = tidyr::as_tibble(.data), ...)
+    data_res <- tidyr::drop_na(data = tidyr::as_tibble(data), ...)
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
     }    
@@ -1198,7 +1198,7 @@ drop_na.metric_graph_data <- function(data, ...){
 #'
 #' Applies `dplyr::filter()` function for datasets obtained from a metric graph object.
 #'
-#' @param .dat The data list or `tidyr::tibble` obtained from a metric graph object.
+#' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::filter()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @export
@@ -1217,7 +1217,7 @@ filter.metric_graph_data <- function(.data, ...){
 #'
 #' Creates summaries, while keeps the spatial positions.
 #'
-#' @param .dat The data list or `tidyr::tibble` obtained from a metric graph object.
+#' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::summarise()`.
 #' @param .include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
 #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
@@ -1241,7 +1241,9 @@ summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALS
       data_res[["__group"]] <- 1
     }
 
-    data_res <- dplyr::arrange(.data = data_res, `__group`, `__edge_number`, `__distance_on_edge`)  
+    ord_data <- order(data_res[["__group"]], data_res[["__edge_number"]], data_res[["__distance_on_edge"]])
+
+    data_res <- data_res[ord_data,]
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))

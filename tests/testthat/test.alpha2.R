@@ -190,7 +190,7 @@ test_that("test likelihood",{
   #covariance likelihood
 
   lik2 <-likelihood_graph_covariance(graph = graph2,
-                                     model = "WM2", repl = NULL, y_graph = graph2$data[["y"]],
+                                     model = "WM2", repl = NULL, y_graph = graph2$get_data()[["y"]],
                                      log_scale = FALSE, X_cov = NULL)
   lik2 <- lik2(exp(theta))
   #likelihood with extended graph
@@ -250,7 +250,6 @@ test_that("test posterior mean",{
   graph2 <- graph$clone()
   graph2$observation_to_vertex()
   graph2$buildC(2, FALSE)
-  n.o <- length(graph2$y)
   n.v <- dim(graph2$V)[1]
   n.c <- 1:length(graph2$CoB$S)
   Q <- spde_precision(kappa = kappa_est, tau = tau_est,
@@ -266,12 +265,12 @@ test_that("test posterior mean",{
   Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   Sigma.Y <- Sigma
   diag(Sigma.Y) <- diag(Sigma.Y) + theta_est[1]^2
-  pm2 <- Sigma %*% solve(Sigma.Y, graph2$data$y)
+  pm2 <- Sigma %*% solve(Sigma.Y, graph2$get_data()$y)
 
   pm2 <- as.vector(pm2)
 
-  ord1 <- order(graph$data[["__coord_x"]], graph$data[["__coord_y"]])
-  ord2 <- order(graph2$data[["__coord_x"]], graph2$data[["__coord_y"]])
+  ord1 <- order(graph$get_data()[["__coord_x"]], graph$get_data()[["__coord_y"]])
+  ord2 <- order(graph2$get_data()[["__coord_x"]], graph2$get_data()[["__coord_y"]])
 
   expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-10)
 })

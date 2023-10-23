@@ -7,9 +7,9 @@
 \method{drop_na}{metric_graph_data}(data, ...)
 }
 \arguments{
-\item{...}{Additional parameters to be passed to \code{tidyr::drop_na()}.}
+\item{data}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
 
-\item{.dat}{The data list or \code{tidyr::tibble} obtained from a metric graph object.}
+\item{...}{Additional parameters to be passed to \code{tidyr::drop_na()}.}
 }
 \value{
 A \code{tidyr::tibble} with the resulting selected columns.

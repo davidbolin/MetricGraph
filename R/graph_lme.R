@@ -1207,7 +1207,7 @@ predict.graph_lme <- function(object,
   n <- sum(graph_bkp$.__enclos_env__$private$data[["__group"]] == graph_bkp$.__enclos_env__$private$data[["__group"]][1])
 
   ##
-  repl_vec <- graph_bkp[["data"]][["__group"]]
+  repl_vec <- graph_bkp$.__enclos_env__$private$data[["__group"]]
 
   if(is.null(repl)){
     u_repl <- unique(graph_bkp$.__enclos_env__$private$data[["__group"]])
