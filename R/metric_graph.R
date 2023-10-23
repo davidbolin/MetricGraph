@@ -658,7 +658,7 @@ metric_graph <-  R6Class("metric_graph",
       geodist_temp <- distances(g)
       geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
       #Ordering back in the input order
-      geodist_temp[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- geodist_temp
+      geodist_temp[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- geodist_temp
       if(!include_vertices){
         geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp), (nV_new+1):nrow(geodist_temp)]
       }
@@ -771,6 +771,7 @@ metric_graph <-  R6Class("metric_graph",
         geodist_temp[graph.temp$PtV, graph.temp$PtV] <- geodist_temp
 
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
+
       for (i in 1:graph.temp$nE) {
         tmp <- -1 / geodist_temp[graph.temp$E[i, 1],
                                                          graph.temp$E[i, 2]]
@@ -787,7 +788,7 @@ metric_graph <-  R6Class("metric_graph",
         t(rep(1, graph.temp$nV)) %x% diag(Li)
 
       R <- R[graph.temp$PtV, graph.temp$PtV]
-      R[graph.temp$data[["__dummy"]],graph.temp$data[["__dummy"]]] <- R
+      R[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- R
 
       if(!include_vertices){
         R <- R[(nV_new+1):nrow(R), (nV_new+1):nrow(R)]
@@ -840,7 +841,7 @@ metric_graph <-  R6Class("metric_graph",
   #' the available locations. If `FALSE`, it will be computed
   #' separately for the locations of each group.
   #' @param obs Should the resistance distances be computed at the observation
-  #' locations?
+  #' locations? It will only compute for locations in which there is at least one observations that is not NA.
   #' @param group Vector or list containing which groups to compute the
   #' Laplacian for. If `NULL`, it will be computed for all groups.
   #' @return No reutrn value. Called for its side effects. The Laplacian is stored
@@ -3314,7 +3315,7 @@ metric_graph <-  R6Class("metric_graph",
     # Reordering from vertices to points
     Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
     # Order back to the input order
-    Laplacian[graph.temp$data[["__dummy"]], graph.temp$data[["__dummy"]]] <- Laplacian
+    Laplacian[graph.temp$.__enclos_env__$private$data[["__dummy"]], graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- Laplacian
 
     attr(Laplacian, "nV_idx") <- nV_new
 

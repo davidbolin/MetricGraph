@@ -1260,18 +1260,21 @@ predict.graph_lme <- function(object,
     if(graph_bkp$nV > nV_temp){
       warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
     }
-    graph_bkp$compute_laplacian()
+    graph_bkp$compute_laplacian(full=TRUE)
     # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
     # } else{
     #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
     # }
       if(model_type$alpha == 1){
+    print(graph_bkp$nV)
+    print(dim(graph_bkp$Laplacian[[1]]))
         Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
       } else{
         Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- Q %*% Q * tau^2
       }
+
 
   } else if(tolower(model_type$type) == "isocov"){
       if(is.character(model_type$cov_function)){
@@ -1303,7 +1306,7 @@ predict.graph_lme <- function(object,
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
-              graph_bkp$compute_laplacian()
+              graph_bkp$compute_laplacian(full=TRUE)
               Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
         } else if(model_type$cov_function == "GL2"){
               #nV before
@@ -1313,7 +1316,7 @@ predict.graph_lme <- function(object,
               if(graph_bkp$nV > nV_temp){
                 warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
               }
-              graph_bkp$compute_laplacian()
+              graph_bkp$compute_laplacian(full=TRUE)
               Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
               Q <- Q %*% Q * tau^2
         # } else if(model_type$cov_function == "exp_covariance"){
