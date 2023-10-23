@@ -477,28 +477,18 @@ Let us create a new `rspde` model object:
 rspde_model_rep <- rspde.metric_graph(graph_rep)
 ```
 
-To fit the model with replicates we need to create the corresponding `A` matrix and
-`index` object. Observe that we are using the helper functions `graph_index_rspde()` and `graph_repl_rspde()` from the `rSPDE` package to construct the index needed to build the `A` matrix and the replicates vector.
-```{r}
-Abar.rep <- rspde.make.A(
-  mesh = graph_rep, index = graph_index_rspde(rspde_model_rep, n.repl = n.rep),
-  repl = graph_repl_rspde(rspde_model_rep, repl = "__all")
-)
-
-mesh.index.rep <- rspde.make.index(
-  name = "field", mesh = graph_rep,
-  n.repl = n.rep
-)
-```
-
-Let us now create the corresponding `inla.stack` object, where we set the `repl` argument
+To fit the model with replicates we need to create the auxiliary quantities with the `graph_data_rspde()` function, where we set the `repl` argument
 in the function `graph_data_spde` to `__all` since we want to use all replicates:
 ```{r}
+data_rspde_rep <- graph_data_rspde(rspde_model_rep, name = "field", repl = "__all")
+```
+
+Let us now create the corresponding `inla.stack` object:
+```{r}
 st.dat.rep <- inla.stack(
-  data = graph_data_spde(rspde_model_rep,
-                            repl = "__all"),
-  A = Abar.rep,
-  effects = mesh.index.rep
+  data = data_rspde_rep[["data"]],
+  A = data_rspde_rep[["basis"]],
+  effects = data_rspde_rep[["index"]]
 )
 ```
 Observe that we need the response variable `y` to be a vector.
@@ -584,12 +574,18 @@ case we will use the name `loc`:
     y ~ -1 + Intercept(1) + x1 + x2 + field(loc, 
                           model = rspde_model)                   
 ```
-Now, we can directly fit the model, where we pass the name of the location variable as the `loc` argument of the
+
+Let us now build the auxiliary data to be used with the `graph_data_rspde()` function, where we pass the name of the location variable in the above formula as the `loc_name` argument, which in this case is `"loc"`:
+```{r}
+data_rspde_bru <- graph_data_rspde(rspde_model, loc_name = "loc")
+```
+
+Now, we can directly fit the model of the
 `graph_data_spde()` function:
 ```{r}
   rspde_bru_fit <-
     bru(cmp,
-        data=graph_data_spde(rspde_model, loc = "loc"),
+        data=data_rspde_bru[["data"]],
       options=list(
       family = "gaussian")
     )
@@ -639,19 +635,19 @@ use the `get_mesh_locations()` method. We also set `bru=TRUE` and `loc="loc"` to
 ```{r}
   data_prd_list <- graph$get_mesh_locations(bru = TRUE,
                                             loc = "loc")
-  data_prd_list[["x1"]] <- data_prd_list$loc[,2]
-  data_prd_list[["x2"]] <- data_prd_list$loc[,2]^2
+  data_prd_list[["x1"]] <- data_prd_list$loc[,1]
+  data_prd_list[["x2"]] <- data_prd_list$loc[,2]
 ```
 Now, we can simply provide these locations to the `predict` method
 along with the fitted object `rspde_bru_fit`:
 ```{r}
-  field_pred <- predict(rspde_model, cmp, rspde_bru_fit, newdata=data_prd_list, ~field)
+  y_pred <- predict(rspde_model, cmp, rspde_bru_fit, newdata=data_prd_list, ~Intercept + x1 + x2 + field)
 ```
 
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  plot(field_pred, plotly = TRUE)  
+  plot(y_pred, plotly = TRUE)  
 ```
 
 ## Using inlabru to fit models with replicates
@@ -662,22 +658,23 @@ consider the same data that was generated above, where the number of replicates 
 For this implementation we will use the `rspde_model_rep` object.
 
 We can now create the component, passing the vector with the indices of the replicates
-as the `replicate` argument. For the `replicate` argument we use the function
-`graph_repl_spde()` to extract the vector of replicates, where we set choose `__all` as the
-replicates, since we want all replicates.
+as the `replicate` argument. To obtain the auxiliary data, we will pass `repl` argument we use the function
+`graph_data_rspde()`, where we set it to `__all`, since we want all replicates. Further, we also pass the `loc_name` argument.
+```{r}
+data_rspde_rep <- graph_data_rspde(rspde_model_rep, repl = "__all", loc_name = "loc")
+```
+
+We can now define the `bru` component formula, passing the `repl` component of `data_rspde_rep` as the `replicate` argument:
 ```{r}
   cmp_rep <-
     y ~ -1 + field(loc, model = rspde_model_rep,
-                              replicate = graph_repl_rspde(rspde_model_rep, "__all"))
+                              replicate = data_rspde_rep[["repl"]])
 ```
-Now, we are ready to fit the model. Observe that we set the `repl` argument to `__all` since we will use all replicates and the `loc` argument
-to `loc`, which is the name we gave to the locations.
+Now, we are ready to fit the model:
 ```{r}
   rspde_bru_fit_rep <-
     bru(cmp_rep,
-        data=graph_data_spde(rspde_model_rep, 
-                         repl = "__all",
-                         loc = "loc"),
+        data=data_rspde_rep[["data"]],
       options=list(
       family = "gaussian")
     )

@@ -353,7 +353,7 @@ posterior_crossvalidation <- function(object)
 
   y_graph <- object$model_matrix[,1]
 
-  repl <- graph$
+  # repl <- graph$
 
   ind <- 1:length(y_graph)
 

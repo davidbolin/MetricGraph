@@ -355,6 +355,10 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `__all`.
+#' @param group Which groups? If there is no groups, one
+#' can set `group` to `NULL`. If one wants all groups,
+#' then one sets to `group` to `__all`.
+#' @param group_col Which "column" of the data contains the group variable?
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc `r lifecycle::badge("deprecated")` Use `loc_name` instead.
 #' @param loc_name Character with the name of the location variable to be used in
@@ -1256,7 +1260,7 @@ predict.rspde_metric_graph <- function(object,
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }
-  graph_tmp <- object$graph_spde$get_initial_graph()
+  graph_tmp <- object$mesh$get_initial_graph()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
 
   if(data_coords == "PtE"){

@@ -191,11 +191,10 @@ to the true value in the model.
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 ```
 
-Next, we create the index object and the observation matrix:
+Next, we compute the auxiliary data:
 
 ```{r}
-spde_index <- rspde.make.index(name="field", mesh=graph, nu = alpha - 1/2)
-A <- rspde.make.A(mesh = graph, nu = alpha - 1/2)
+data_rspde <- graph_data_rspde(rspde_model, name="field", nu = alpha - 1/2)
 ```
 
 We now create the `inla.stack` object with the `inla.stack()` function. 
@@ -203,14 +202,14 @@ At this stage, it is important that the data has been added to the `graph` since
 it is supplied to the stack by using the `graph_spde_data()` function. 
 
 ```{r}
-stk <- inla.stack(data = graph_data_spde(rspde_model), 
-                  A = A, 
-                  effects = c(spde_index, list(Intercept = 1)))
+stk <- inla.stack(data = data_rspde[["data"]], 
+                  A = data_rspde[["basis"]], 
+                  effects = c(data_rspde[["index"]], list(Intercept = 1)))
 ```
 
 We can now fit the model using `R-INLA`:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),

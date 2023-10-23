@@ -504,7 +504,7 @@ df_cv <- data.frame(y = y, edge_number = PtE[,1],
                       distance_on_edge = PtE[,2])
 
 graph$add_observations(data=df_cv, normalized = TRUE)
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 We now fit the different models to this data: 
