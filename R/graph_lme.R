@@ -327,6 +327,13 @@ graph_lme <- function(formula, graph,
 
   X_cov <- stats::model.matrix(cov_term, data)
 
+  cov_names <- NULL
+
+  if(!is.null(X_cov)){
+    cov_names <- as.character(attr(cov_term, "variables"))
+    cov_names <- cov_names[-1]
+  } 
+
   names_temp <- NULL
 
   if(all(dim(X_cov) == c(0,1))){
@@ -335,7 +342,7 @@ graph_lme <- function(formula, graph,
     colnames(X_cov) <- names_temp
   }
 
-  names_temp <- c(as.character(y_term), names_temp, c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y"))
+  names_temp <- c(as.character(y_term), cov_names, c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y"))
 
   graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
   names(graph_bkp$.__enclos_env__$private$data) <- names_temp
@@ -1156,6 +1163,7 @@ predict.graph_lme <- function(object,
 
   graph_bkp$clear_observations()
 
+
   graph_bkp$add_observations(data = data, edge_number = edge_number,
                              distance_on_edge = distance_on_edge,
                              normalized = TRUE, group = "__group")
@@ -1196,6 +1204,7 @@ predict.graph_lme <- function(object,
 
   sigma.e <- coeff_meas[[1]]
   sigma_e <- sigma.e
+
 
   if(!is.null(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]])){
       idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]][1:n])
