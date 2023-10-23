@@ -312,17 +312,9 @@ Let us create the model object:
 
 By default, the order of the rational approximation is 2.
 
-We can now create the `A` matrix and the index object by using
-the same functions as for the rational SPDE approach, namely,
-`rspde.make.A()` and `rspde.make.index()`, supplying the 
-graph object as the mesh argument. Here we create the `A` matrix:
+We can now create the auxiliary quantities that will be needed with the `graph_data_rspde()` function:
 ```{r}
-  Abar <- rspde.make.A(graph)
-```
-
-Now, let us create the index object:
-```{r}
-  rspde.index <- rspde.make.index(name="field", mesh=graph)
+  data_rspde <- graph_data_rspde(rspde_model, name = "field")
 ```
 
 The remaining is standard: we create the formula object, the 
@@ -331,15 +323,15 @@ So, first we create the formula object:
 ```{r}
   f.s <- y ~ -1 + Intercept + x1 + x2 + f(field, model = rspde_model)
 ```
-Now we create the `inla.stack` object:
+Now we create the `inla.stack` object. To such an end, observe that `data_rspde` contains the dataset as the `data` component, the index as the `index` component and the so-called `A` matrix as the `basis` component. We will now create the stack using these components:
 ```{r}
   stk.dat <- inla.stack(
-    data = data.frame(y = graph_data_spde(rspde_model)$y), A = list(Abar,1), tag = "est",
+    data = data_rspde[["data"]]["y"], A = list(data_rspde[["basis"]],1), tag = "est",
     effects =
       list(c(
-        rspde.index,
-        list(Intercept = 1)), list(x1 = graph_data_spde(rspde_model)$x1 ,
-                                      x2 = graph_data_spde(rspde_model)$x2)
+        data_rspde[["index"]],
+        list(Intercept = 1)), list(x1 = data_rspde[["data"]]["x1"] ,
+                                      x2 = data_rspde[["data"]]["x2"])
       )
     )
 ```
@@ -401,29 +393,31 @@ Let us now add the observations for prediction:
 
 ```{r}
 graph$add_observations(data = data.frame(y=rep(NA,nrow(pred_loc)), 
+                                x1 = graph$mesh$VtE[,1],
+                                x2 = graph$mesh$VtE[,2],
                                 edge_number = pred_loc[,1], 
                                 distance_on_edge = pred_loc[,2]), 
                                 normalized = TRUE)
 ```
 
-Let us compute the `A` matrix at the prediction locations:
+Let us now create a new model and, then, compute the auxiliary components at the prediction locations. To this end, we set the argument `only_pred` to `TRUE`, in which it will return the `data.frame` containing the 
+`NA` data.
 
 ```{r}
-  Abar_prd <- rspde.make.A(graph, loc=pred_loc)
+  rspde_model_prd <- rspde.metric_graph(graph) 
+  data_rspde_prd <- graph_data_rspde(rspde_model_prd, only_pred = TRUE)
 ```
 
-Let us build the prediction stack and gather it with the estimation
-stack. To this end, we set the argument `only_pred` to `TRUE`, in which it will return the `data.frame` containing the 
-`NA` data.
+Let us build the prediction stack using the components of `data_rspde_prd` and gather it with the estimation
+stack. 
 ```{r}
-data_pred <- graph_data_spde(rspde_model, only_pred=TRUE)
   ef.prd <- 
-    list(c(rspde.index, list(Intercept = 1)), 
-          list(x1 = data_pred[["__distance_on_edge"]],
-                x2 = data_pred[["__distance_on_edge"]]^2))
+    list(c(data_rspde_prd[["index"]], list(Intercept = 1)), 
+          list(x1 = data_rspde_prd[["data"]][["x1"]],
+                x2 = data_rspde_prd[["data"]][["x2"]]))
   stk.prd <- inla.stack(
-    data = data.frame(y = data_pred$y),
-    A = list(Abar_prd,1), tag = "prd",
+    data = data.frame(y = data_rspde_prd[["data"]][["y"]]),
+    A = list(data_rspde_prd[["basis"]],1), tag = "prd",
     effects = ef.prd
   )
   stk.all <- inla.stack(stk.dat, stk.prd)

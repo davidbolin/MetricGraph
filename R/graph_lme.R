@@ -272,14 +272,38 @@ graph_lme <- function(formula, graph,
         nu <- NULL
       }
 
+      df_data <- graph$.__enclos_env__$private$data
+
+      y_term <- stats::terms(formula)[[2]]
+
+      cov_term <- stats::delete.response(terms(formula))
+
+      X_cov <- stats::model.matrix(cov_term, df_data)
+
+      cov_names <- NULL
+
+      if(!is.null(X_cov)){
+        cov_names <- as.character(attr(cov_term, "variables"))
+        cov_names <- cov_names[-1]
+      }       
+      
+      names_temp <- c(as.character(y_term), cov_names, c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y"))
+
+      df_data <- lapply(names_temp, function(i){df_data[[i]]})
+      names(df_data) <- names_temp
+
+      idx_notanyNA <- idx_not_any_NA(df_data)
+
+      df_data <- lapply(df_data, function(dat){dat[idx_notanyNA]})      
+
       fit <- rSPDE::rspde_lme(formula = formula, 
-                            loc = cbind(graph$.__enclos_env__$private$data[["__edge_number"]],
-                            graph$.__enclos_env__$private$data[["__distance_on_edge"]]),
+                            loc = cbind(df_data[["__edge_number"]],
+                            df_data[["__distance_on_edge"]]),
                             model = rspde_object,
-                            repl = graph$.__enclos_env__$private$data[["__group"]],
+                            repl = df_data[["__group"]],
                             nu = nu, which_repl = which_repl,
                             optim_method = optim_method,
-                            data = graph$.__enclos_env__$private$data,
+                            data = df_data,
                             use_data_from_graph = FALSE,
                             parallel = parallel,
                             n_cores = n_cores,
