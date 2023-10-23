@@ -723,7 +723,7 @@ likelihood_graph_covariance <- function(graph,
 
       loglik_val <- 0
 
-      repl_vec <- graph[["data"]][["__group"]]
+      repl_vec <- graph$.__enclos_env__$private$data[["__group"]]
 
       if(is.null(repl)){
         u_repl <- unique(graph$.__enclos_env__$private$data[["__group"]])
