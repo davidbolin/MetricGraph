@@ -738,6 +738,10 @@ graph_lme <- function(formula, graph,
       object$model_matrix <- y_graph
     }
   # }
+  rm(graph_bkp)
+  graph_bkp <- graph$clone()
+  graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
+  names(graph_bkp$.__enclos_env__$private$data) <- names_temp
   object$graph <- graph_bkp
 
 
@@ -1088,6 +1092,7 @@ predict.graph_lme <- function(object,
 
   graph_bkp <- object$graph$clone()
 
+
   X_cov_initial <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
   if(ncol(X_cov_initial) > 0){
     if(mesh){
@@ -1125,6 +1130,7 @@ predict.graph_lme <- function(object,
     data[[distance_on_edge]] <- graph_bkp$mesh$VtE[,2]
     normalized <- TRUE
   }
+
 
     ord_idx <- order(data[[edge_number]], data[[distance_on_edge]])
 
@@ -1267,8 +1273,6 @@ predict.graph_lme <- function(object,
     #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
     # }
       if(model_type$alpha == 1){
-    print(graph_bkp$nV)
-    print(dim(graph_bkp$Laplacian[[1]]))
         Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
       } else{
         Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
