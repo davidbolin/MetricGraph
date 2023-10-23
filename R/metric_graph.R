@@ -1163,7 +1163,7 @@ metric_graph <-  R6Class("metric_graph",
                               verbose = FALSE) {
 
     if(clear_obs){
-      graph$clear_observations()
+      self$clear_observations()
     }
 
     if(inherits(data, "metric_graph_data")){
