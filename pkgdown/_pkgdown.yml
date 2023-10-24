@@ -62,15 +62,14 @@ reference:
     - summary.metric_graph_spde_result
     - gg_df.metric_graph_spde_result
     - graph_data_spde
+    - graph_spde_basis
     - graph_spde_make_A
-    - graph_spde_make_index
   - title: inlabru and SPDE approach on metric graphs
     contents:
     - bru_mapper.inla_metric_graph_spde
     - predict.inla_metric_graph_spde
     - predict.rspde_metric_graph
     - plot.graph_bru_pred
-    - bru_graph_rep
     - graph_bru_process_data
   - title: Linear mixed-effects models
     contents:
@@ -90,6 +89,13 @@ reference:
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
+  - title: Data manipulation on metric graphs
+    contents:
+    - select.metric_graph_data
+    - filter.metric_graph_data
+    - mutate.metric_graph_data
+    - summarise.metric_graph_data
+    - drop_na.metric_graph_data
   - title: Precision matrices
     contents:
     - spde_precision
