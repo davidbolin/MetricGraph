@@ -29,6 +29,7 @@
   <div class="dropdown-menu" aria-labelledby="dropdown-vignettes">
     <a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a>
     <a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a>
+    <a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a>
     <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matérn fields</a>
     <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matérn fields</a>
     <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matérn fields with general smoothness</a>
@@ -74,6 +75,9 @@
 <li>The graph constructions now accepts list of coordinates (where the coordinates are given as either matrices or data frames), <code>SpatialLines</code>, <code>SpatialLinesDataFrames</code> or <code>MULTILINESTRING</code>.</li>
 <li>Adding two options (<code>sf</code> package or <code>sp</code> package) for handling <code>longlat</code> by using the <code>which_longlat</code> option.</li>
 <li>Adding <code>crs</code> (if using <code>sf</code>) and <code>proj4string</code> (if using <code>sp</code>) for handling general coordinate reference systems.</li>
+<li>Moving <code>data</code> to the <code>private</code> environment.</li>
+<li>Several data manipulation helper tools and methods were introduced, together with a vignette with a brief tutorial on these tools.</li>
+<li>The method <code>mesh_A()</code> has been deprecated, use <code>fem_basis()</code> instead.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.2" id="metricgraph-112">MetricGraph 1.1.2<a class="anchor" aria-label="anchor" href="#metricgraph-112"></a></h2><p class="text-muted">CRAN release: 2023-07-04</p>
@@ -97,7 +101,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by David Bolin, Jonas Wallin, Alexandre Simas.</p>
+  <p></p><p>Developed by David Bolin, Alexandre Simas, Jonas Wallin.</p>
 </div>
 
 <div class="pkgdown-footer-right">

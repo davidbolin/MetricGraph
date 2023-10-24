@@ -29,6 +29,7 @@
   <div class="dropdown-menu" aria-labelledby="dropdown-vignettes">
     <a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a>
     <a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a>
+    <a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a>
     <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matérn fields</a>
     <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matérn fields</a>
     <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matérn fields with general smoothness</a>
@@ -141,17 +142,17 @@ model from a <code>rspde.result</code> object</dd>
           
           <code><a href="graph_data_spde.html">graph_data_spde()</a></code> 
         </dt>
-        <dd>Data extraction for 'rSPDE' models</dd>
+        <dd>Data extraction for 'spde' models</dd>
+      </dl><dl><dt>
+          
+          <code><a href="graph_spde_basis.html">graph_spde_basis()</a></code> 
+        </dt>
+        <dd>Observation/prediction matrices for 'SPDE' models</dd>
       </dl><dl><dt>
           
           <code><a href="graph_spde_make_A.html">graph_spde_make_A()</a></code> 
         </dt>
-        <dd>Observation/prediction matrices for 'rSPDE' models</dd>
-      </dl><dl><dt>
-          
-          <code><a href="graph_spde_make_index.html">graph_spde_make_index()</a></code> 
-        </dt>
-        <dd>Model index vector generation for metric graph models</dd>
+        <dd>Deprecated - Observation/prediction matrices for 'SPDE' models</dd>
       </dl></div><div class="section level2">
       <h2 id="inlabru-and-spde-approach-on-metric-graphs">inlabru and SPDE approach on metric graphs<a class="anchor" aria-label="anchor" href="#inlabru-and-spde-approach-on-metric-graphs"></a></h2>
       
@@ -183,11 +184,6 @@ model from a <code>rspde.result</code> object</dd>
           <code><a href="plot.graph_bru_pred.html">plot(<i>&lt;graph_bru_pred&gt;</i>)</a></code> 
         </dt>
         <dd>Plot of predicted values with 'inlabru'</dd>
-      </dl><dl><dt>
-          
-          <code><a href="bru_graph_rep.html">bru_graph_rep()</a></code> 
-        </dt>
-        <dd>Creates a vector of replicates to be used with 'inlabru'</dd>
       </dl><dl><dt>
           
           <code><a href="graph_bru_process_data.html">graph_bru_process_data()</a></code> 
@@ -291,6 +287,42 @@ fields on metric graphs</dd>
         </dt>
         <dd>Samples a Whittle-Matérn field on a metric graph</dd>
       </dl></div><div class="section level2">
+      <h2 id="data-manipulation-on-metric-graphs">Data manipulation on metric graphs<a class="anchor" aria-label="anchor" href="#data-manipulation-on-metric-graphs"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="select.metric_graph_data.html">select(<i>&lt;metric_graph_data&gt;</i>)</a></code> 
+        </dt>
+        <dd>A version of <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select()</a></code> function for datasets on metric graphs</dd>
+      </dl><dl><dt>
+          
+          <code><a href="filter.metric_graph_data.html">filter(<i>&lt;metric_graph_data&gt;</i>)</a></code> 
+        </dt>
+        <dd>A version of <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter()</a></code> function for datasets on metric graphs</dd>
+      </dl><dl><dt>
+          
+          <code><a href="mutate.metric_graph_data.html">mutate(<i>&lt;metric_graph_data&gt;</i>)</a></code> 
+        </dt>
+        <dd>A version of <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate()</a></code> function for datasets on metric graphs</dd>
+      </dl><dl><dt>
+          
+          <code><a href="summarise.metric_graph_data.html">summarise(<i>&lt;metric_graph_data&gt;</i>)</a></code> 
+        </dt>
+        <dd>A version of <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">dplyr::summarise()</a></code> function for datasets on metric graphs</dd>
+      </dl><dl><dt>
+          
+          <code><a href="drop_na.metric_graph_data.html">drop_na(<i>&lt;metric_graph_data&gt;</i>)</a></code> 
+        </dt>
+        <dd>A version of <code><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">tidyr::drop_na()</a></code> function for datasets on metric graphs</dd>
+      </dl></div><div class="section level2">
       <h2 id="precision-matrices">Precision matrices<a class="anchor" aria-label="anchor" href="#precision-matrices"></a></h2>
       
       
@@ -349,7 +381,7 @@ fields on metric graphs</dd>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by David Bolin, Jonas Wallin, Alexandre Simas.</p>
+  <p></p><p>Developed by David Bolin, Alexandre Simas, Jonas Wallin.</p>
 </div>
 
 <div class="pkgdown-footer-right">

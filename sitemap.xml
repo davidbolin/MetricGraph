@@ -22,6 +22,9 @@
     <loc>https://davidbolin.github.io/MetricGraph/articles/metric_graph.html</loc>
   </url>
   <url>
+    <loc>https://davidbolin.github.io/MetricGraph/articles/metric_graph_data.html</loc>
+  </url>
+  <url>
     <loc>https://davidbolin.github.io/MetricGraph/articles/pointprocess.html</loc>
   </url>
   <url>
@@ -40,13 +43,16 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/MetricGraph.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/bru_graph_rep.html</loc>
-  </url>
-  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc>
   </url>
   <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/drop_na.metric_graph_data.html</loc>
+  </url>
+  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/exp_covariance.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/filter.metric_graph_data.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.html</loc>
@@ -70,10 +76,10 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_make_A.html</loc>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_basis.html</loc>
   </url>
   <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_make_index.html</loc>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_make_A.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/graph_starting_values.html</loc>
@@ -92,6 +98,9 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/metric_graph.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/mutate.metric_graph_data.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/pems.html</loc>
@@ -115,6 +124,9 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/sample_spde.html</loc>
   </url>
   <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/select.metric_graph_data.html</loc>
+  </url>
+  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/simulate_spacetime.html</loc>
   </url>
   <url>
@@ -125,6 +137,9 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/spde_precision.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/summarise.metric_graph_data.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/summary.graph_lme.html</loc>
