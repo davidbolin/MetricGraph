@@ -1,7 +1,7 @@
 ---
 title: "Data manipulation on metric graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
+date: "Created: 2023-10-24. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Data manipulation on metric graphs}
