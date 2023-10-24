@@ -209,7 +209,7 @@ In this section we will present some data manipulation tools that are implemente
 
 The tools are based on `dplyr::select()`, `dplyr::mutate()`, `dplyr::filter()`, `dplyr::summarise()` and `tidyr::drop_na()`.
 
-Let us generate a dataset to be used throughout this section and add this to the metric graph object. Observe that we are replacing the existing data by setting `clear_obs` to `TRUE`:
+Let us generate a dataset that will be widely used throughout this section and add this to the metric graph object. Observe that we are replacing the existing data by setting `clear_obs` to `TRUE`:
 
 ```{r}
 df_tidy <- data.frame(y=y, y2 = exp(y), y3 = y^2, y4 = sin(y),
@@ -225,6 +225,7 @@ df_tidy[["y"]][1] <- df_tidy[["y2"]][1] <- NA
 df_tidy[["y3"]][1] <- df_tidy[["y4"]][1] <- NA
 
 df_tidy[["y2"]][2] <- NA
+df_tidy[["y3"]][3] <- NA
 
 graph$add_observations(data = df_tidy, clear_obs = TRUE, normalized = TRUE)
 ```
@@ -342,19 +343,78 @@ Let us modify the variable `y3` and at the same time remove all the `NA`:
 graph$mutate(y3 = ifelse(y>1,1,-1), .drop_na = TRUE)
 ```
 
-Finally, we can also apply the `mutate()` function the result of the `get_data()` method:
+Finally, we can also apply the `mutate()` function the result of the `get_data()` method, and also pipe it to the `plot()` method (we are also changing the scale to discrete):
 
-```{r}
-graph$get_data() %>% mutate(new_y = y+y2, y3=ifelse(y>1,1,-1))
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+graph$get_data() %>% mutate(new_y = y+y2, 
+                        y3=as.factor(ifelse(y>1,1,-1))) %>% 
+                        graph$plot(data = "y3") + 
+                        scale_colour_discrete()
 ```
 
 ## summarise
 
+The `summarise` verb creates summaries of selected columns based on groupings. For metric graphs, the groups always include the edge number (`__edge_number`) and relative distance on edge (`__distance_on_edge`). By using the argument `.include_graph_groups`, the internal metric graph group variable, namely `__group`, will also be added to the `summarise()` group. Finally, additional groups can be passed by the `.groups` argument.
 
+To illustrate, we will use the `data.frame` from the group example:
+
+```{r}
+graph$add_observations(data = df_data_repl, normalized = TRUE, clear_obs = TRUE, group = "repl")
+```
+
+We can see the data:
+
+```{r}
+graph$get_data()
+```
+
+Let us `summarise` the data by obtaining the mean of `y` at each location across all groups:
+
+```{r}
+graph$summarise(mean_y = mean(y))
+```
+
+Let us now obtain the standard deviation of `y` at each location and plot it:
+
+```{r}
+graph$summarise(sd_y = sd(y)) %>% graph$plot(data = "sd_y")
+```
 
 ## drop_na
 
+The `drop_na` verb removes rows that contain `NA` for the selected columns. To illustrate, let us add the `df_tidy` back to the metric graph, replacing the existing dataset:
+
+```{r}
+graph$add_observations(data = df_tidy, clear_obs=TRUE, normalized=TRUE)
+```
+
+Now, let us take a look at this dataset:
+
+```{r}
+graph$get_data(drop_all_na = FALSE)
+```
+For example, let us remove the rows such that `y3` is `NA`, we simply apply the `drop_na()` method passing the column `y3`:
+
+```{r}
+graph$drop_na(y3)
+```
+
+We can also remove the rows such that either `y2` or `y3` is `NA`:
+
+```{r}
+graph$drop_na(y2, y3)
+```
+
+If we simply run the `drop_na()` method, this is equivalent to run the `get_data()` method with the argument `drop_na` set to `TRUE`:
+```{r}
+identical(graph$drop_na(), graph$get_data(drop_na=TRUE))
+```
+
 ## Combining multiple verbs
+
+
 
 
 # Replacing the data in the metric graph by manipulated data
