@@ -59,7 +59,8 @@ df_data <- data.frame(y=y, edge = obs_loc[,1], pos = obs_loc[,2])
 We can now add the data to the graph by using the `add_mesh_observations()` method. We will add the data by providing the edge number and relative distance on the edge. To this end, when adding the data, we need to supply the names of the columns that contain the edge number and the distance on edge by entering the `edge_number` and `distance_on_edge` arguments. Further, since we are providing the relative distance, we need to set the `normalized` argument to `TRUE`:
 
 ```{r}
-graph$add_observations(data = df_data, edge_number = "edge", distance_on_edge = "pos", normalized = TRUE)
+graph$add_observations(data = df_data, edge_number = "edge", 
+                    distance_on_edge = "pos", normalized = TRUE)
 ```
 
 We can check that the data was successfully added by retrieving them from the metric graph using the `get_data()` method:
@@ -88,7 +89,8 @@ df_data2 <- data.frame(y2 = y2, coordx = coordx, coordy = coordy)
 Let us add this dataset. Now, we need to set `data_coords` to `"spatial"` and we need to supply the names of the columns of the `x` and `y` coordinates:
 
 ```{r}
-graph$add_observations(data = df_data2, data_coords = "spatial", coord_x = "coordx", coord_y = "coordy")
+graph$add_observations(data = df_data2, data_coords = "spatial", 
+                            coord_x = "coordx", coord_y = "coordy")
 ```
 
 Let us check that the data was successfully added:
@@ -145,7 +147,8 @@ df_data4 <- data.frame(y4 = exp(y2), coord_x = coordx, coord_y = coordy)
 ```
 and we add them (remember to set `data_coords` to `"spatial"`):
 ```{r}
-graph$add_observations(data = df_data4, clear_obs = TRUE, data_coords = "spatial")
+graph$add_observations(data = df_data4, clear_obs = TRUE, 
+                            data_coords = "spatial")
 ```
 and we can check it replaced:
 ```{r}
@@ -169,14 +172,17 @@ Let us now create the `data.frame` with the grouped data, where the grouping var
 
 ```{r}
 df_data_repl <- data.frame(y = y_repl, repl = repl, 
-                            edge_number = rep(obs_loc[,1], times = n.repl), 
-                            distance_on_edge = rep(obs_loc[,2], times = n.repl))
+                  edge_number = rep(obs_loc[,1], times = n.repl), 
+                  distance_on_edge = rep(obs_loc[,2], times = n.repl))
 ```
 
 We can now add this `data.frame` to the graph by using the `add_observations()` method. We need to set `normalized` to `TRUE`, since we have relative distances on edge. We also need to set the `group` argument to `repl`, since `repl` is our grouping variable. Finally, we will also set `clear_obs` to `TRUE` since we want to replace the existing data.
 
 ```{r}
-graph$add_observations(data = df_data_repl, normalized = TRUE, clear_obs = TRUE, group = "repl")
+graph$add_observations(data = df_data_repl, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = "repl")
 ```
 Let us check the graph data. Observe that the grouping variable is now `__group`.
 
@@ -360,7 +366,10 @@ The `summarise` verb creates summaries of selected columns based on groupings. F
 To illustrate, we will use the `data.frame` from the group example:
 
 ```{r}
-graph$add_observations(data = df_data_repl, normalized = TRUE, clear_obs = TRUE, group = "repl")
+graph$add_observations(data = df_data_repl, 
+                normalized = TRUE, 
+                clear_obs = TRUE, 
+                group = "repl")
 ```
 
 We can see the data:
@@ -424,7 +433,10 @@ The resulting data from applying the previous verbs are safe in the sense that t
 For this example we will consider the `df_data_repl` dataset. Let us add to the graph (replacing the existing data):
 
 ```{r}
-graph$add_observations(data = df_data_repl, normalized = TRUE, clear_obs = TRUE, group = "repl")
+graph$add_observations(data = df_data_repl, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = "repl")
 
 graph$get_data(drop_all_na = FALSE)
 ```
@@ -433,7 +445,8 @@ We will now create a new variable `new_y` which is the exponential of `y`, then 
 
 ```{r}
 graph$mutate(new_y = exp(y)) %>% filter(`__edge_number` %in% c(1,2)) %>% 
-            summarise(mean_new_y = mean(new_y)) %>% graph$plot(data = "mean_new_y")
+            summarise(mean_new_y = mean(new_y)) %>% 
+            graph$plot(data = "mean_new_y")
 ```
 
 # Replacing the data in the metric graph by manipulated data
