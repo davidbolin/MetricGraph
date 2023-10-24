@@ -525,7 +525,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  40.69059 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  41.21231 secs</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -650,7 +650,7 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## Number of function calls by 'optim' = 31</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  44.08857 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  45.62169 secs</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -744,7 +744,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.36011 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.44122 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -833,7 +833,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.12618 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  7.45122 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -919,9 +919,9 @@ parameters. To view the estimates we can use the
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## sigma 1.866180 0.1035950    1.67372 1.861250   2.079630 1.83859</span></span>
-<span><span class="co">## range 0.179368 0.0271822    0.13271 0.176991   0.239263 0.17185</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.866470 0.1036360   1.674340 1.861460    2.08036 1.837840</span></span>
+<span><span class="co">## range 0.179324 0.0271173   0.132705 0.176982    0.23900 0.171913</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -941,8 +941,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.8661811 1.8385892</span></span>
-<span><span class="co">## 2     range  0.2 0.1793681 0.1718497</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.8664699 1.8378396</span></span>
+<span><span class="co">## 2     range  0.2 0.1793236 0.1719131</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">

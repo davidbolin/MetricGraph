@@ -79,11 +79,11 @@
 <span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  only_pred <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  loc <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  loc_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tibble <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  drop_na <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  drop_all_na <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  drop_all_na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  loc <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,10 +118,6 @@ then one sets to <code>group</code> to <code>__all</code>.</p></dd>
 <dd><p>Should only return the <code>data.frame</code> to the prediction data?</p></dd>
 
 
-<dt>loc</dt>
-<dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>loc_name</code> instead.</p></dd>
-
-
 <dt>loc_name</dt>
 <dd><p>Character with the name of the location variable to be used in
 'inlabru' prediction.</p></dd>
@@ -137,6 +133,10 @@ then one sets to <code>group</code> to <code>__all</code>.</p></dd>
 
 <dt>drop_all_na</dt>
 <dd><p>Should the rows with all variables being NA be removed? DEFAULT is <code>TRUE</code>. This option is turned to <code>FALSE</code> if <code>only_pred</code> is <code>TRUE</code>.</p></dd>
+
+
+<dt>loc</dt>
+<dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>loc_name</code> instead.</p></dd>
 
 </dl></div>
     <div class="section level2">
