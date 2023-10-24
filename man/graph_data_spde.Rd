@@ -11,11 +11,11 @@ graph_data_spde(
   group = NULL,
   group_col = NULL,
   only_pred = FALSE,
-  loc = NULL,
   loc_name = NULL,
   tibble = FALSE,
   drop_na = FALSE,
-  drop_all_na = TRUE
+  drop_all_na = TRUE,
+  loc = deprecated()
 )
 }
 \arguments{
@@ -36,8 +36,6 @@ then one sets to \code{group} to \verb{__all}.}
 
 \item{only_pred}{Should only return the \code{data.frame} to the prediction data?}
 
-\item{loc}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{loc_name} instead.}
-
 \item{loc_name}{Character with the name of the location variable to be used in
 'inlabru' prediction.}
 
@@ -46,6 +44,8 @@ then one sets to \code{group} to \verb{__all}.}
 \item{drop_na}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}. This option is turned to \code{FALSE} if \code{only_pred} is \code{TRUE}.}
 
 \item{drop_all_na}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}. This option is turned to \code{FALSE} if \code{only_pred} is \code{TRUE}.}
+
+\item{loc}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{loc_name} instead.}
 }
 \value{
 An 'INLA' and 'inlabru' friendly list with the data.

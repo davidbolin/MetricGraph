@@ -2,6 +2,7 @@
 % Please edit documentation in R/util.R
 \name{summarise.metric_graph_data}
 \alias{summarise.metric_graph_data}
+\alias{summarise}
 \title{A version of \code{dplyr::summarise()} function for datasets on metric graphs}
 \usage{
 \method{summarise}{metric_graph_data}(.data, ..., .include_graph_groups = FALSE, .groups = NULL)

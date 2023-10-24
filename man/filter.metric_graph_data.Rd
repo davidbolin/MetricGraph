@@ -2,6 +2,7 @@
 % Please edit documentation in R/util.R
 \name{filter.metric_graph_data}
 \alias{filter.metric_graph_data}
+\alias{filter}
 \title{A version of \code{dplyr::filter()} function for datasets on metric graphs}
 \usage{
 \method{filter}{metric_graph_data}(.data, ...)

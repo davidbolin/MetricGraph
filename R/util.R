@@ -1130,6 +1130,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
 #'
 #' Selects columns on metric graphs, while keeps the spatial positions.
 #'
+#' @aliases select select.metric_graph_data
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::select()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
@@ -1160,6 +1161,7 @@ select.metric_graph_data <- function(.data, ...){
 #'
 #' Applies `dplyr::mutate()` function for datasets obtained from a metric graph object.
 #'
+#' @aliases mutate mutate.metric_graph_data
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::mutate()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
@@ -1179,6 +1181,7 @@ mutate.metric_graph_data <- function(.data, ...){
 #'
 #' Applies `tidyr::drop_na()` function for datasets obtained from a metric graph object.
 #'
+#' @aliases drop_na drop_na.metric_graph_data
 #' @param data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `tidyr::drop_na()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
@@ -1198,6 +1201,7 @@ drop_na.metric_graph_data <- function(data, ...){
 #'
 #' Applies `dplyr::filter()` function for datasets obtained from a metric graph object.
 #'
+#' @aliases filter filter.metric_graph_data
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::filter()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
@@ -1217,6 +1221,7 @@ filter.metric_graph_data <- function(.data, ...){
 #'
 #' Creates summaries, while keeps the spatial positions.
 #'
+#' @aliases summarise summarise.metric_graph_data
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::summarise()`.
 #' @param .include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
@@ -1250,3 +1255,15 @@ summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALS
     }        
     return(data_res)
 }
+
+
+#' Pipe operator
+#'
+#' See \code{\link[magrittr]{%>%}} for more details.
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @usage lhs \%>\% rhs
+NULL

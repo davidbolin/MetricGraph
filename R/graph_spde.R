@@ -372,10 +372,10 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NULL, 
                                 group_col = NULL,
                                 only_pred = FALSE,
-                                loc = NULL,
                                 loc_name = NULL,
                                 tibble = FALSE,
-                                drop_na = FALSE, drop_all_na = TRUE){
+                                drop_na = FALSE, drop_all_na = TRUE,
+                                loc = deprecated()){
 
         if (lifecycle::is_present(loc)) {
          if (is.null(loc_name)) {

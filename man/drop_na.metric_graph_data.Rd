@@ -2,6 +2,7 @@
 % Please edit documentation in R/util.R
 \name{drop_na.metric_graph_data}
 \alias{drop_na.metric_graph_data}
+\alias{drop_na}
 \title{A version of \code{tidyr::drop_na()} function for datasets on metric graphs}
 \usage{
 \method{drop_na}{metric_graph_data}(data, ...)

@@ -2,6 +2,7 @@
 % Please edit documentation in R/util.R
 \name{mutate.metric_graph_data}
 \alias{mutate.metric_graph_data}
+\alias{mutate}
 \title{A version of \code{dplyr::mutate()} function for datasets on metric graphs}
 \usage{
 \method{mutate}{metric_graph_data}(.data, ...)
