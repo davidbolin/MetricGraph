@@ -264,16 +264,38 @@ posterior_crossvalidation_manual <- function(theta,
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
 #' the vertices of metric graphs
 #'
-#' @param object A fitted model using the `graph_lme()` function.
+#' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
+#' @param factor Which factor to multiply the scores. The default is 1.
+#' @param tibble Return the scores as a `tidyr::tibble()`
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
 #' @export
-posterior_crossvalidation <- function(object)
+posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
 {
+  if(!inherits(object,"graph_lme") && !is.list(object)){
+    stop("object should be of class graph_lme or a list of objects of class graph_lme.")
+  }
+
   if(!inherits(object,"graph_lme")){
-    stop("object should be of class graph_lme.")
+    if(is.null(names(object))){
+      warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
+    }
+    results_list <- lapply(object, function(obj){posterior_crossvalidation(obj, factor=factor, tibble=FALSE)})
+    res <- list()
+    res[["mu"]] <- lapply(results_list, function(dat){dat[["mu"]]})
+    res[["var"]] <- lapply(results_list, function(dat){dat[["var"]]})
+    res[["scores"]] <- lapply(results_list, function(dat){dat[["scores"]]})
+    scores <- do.call(rbind, res[["scores"]])
+    row.names(scores) <- names(res[["scores"]])
+    if(tibble){
+      scores[["Model"]] <- row.names(scores)
+      scores <- tidyr::as_tibble(scores)
+      scores <- scores[, c("Model", "logscore", "crps", "scrps", "mae", "rmse")]
+    }
+    res[["scores"]] <- scores
+    return(res)
   }
 
   graph <- object$graph$clone()
@@ -438,13 +460,20 @@ posterior_crossvalidation <- function(object)
         }
     }
   }
-  return(list(mu = mu.p,
-              var = var.p,
-              logscore = -mean(logscore/length(repl), na.rm = TRUE),
-              crps = -mean(crps/length(repl), na.rm = TRUE),
-              scrps = -mean(scrps/length(repl), na.rm = TRUE),
-              mae = mean(mae/length(repl), na.rm = TRUE),
-              rmse = sqrt(mean(rmse/length(repl), na.rm = TRUE))))
+  res <- list(mu = mu.p,
+              var = var.p)
+  res[["scores"]] <- data.frame(logscore = -factor * mean(logscore/length(repl), na.rm = TRUE),
+              crps = -factor * mean(crps/length(repl), na.rm = TRUE),
+              scrps = -factor * mean(scrps/length(repl), na.rm = TRUE),
+              mae = factor * mean(mae/length(repl), na.rm = TRUE),
+              rmse = factor * sqrt(mean(rmse/length(repl), na.rm = TRUE)))
+  attr(res[["scores"]], "factor") <- factor
+  if(tibble){
+    res[["scores"]] <- tidyr::as_tibble(res[["scores"]])
+    return(res)
+  } else{
+    return(res)
+  }
 }
 
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
