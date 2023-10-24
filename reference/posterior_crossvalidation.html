@@ -78,13 +78,21 @@ the vertices of metric graphs</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">posterior_crossvalidation</span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">posterior_crossvalidation</span><span class="op">(</span><span class="va">object</span>, factor <span class="op">=</span> <span class="fl">1</span>, tibble <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>object</dt>
-<dd><p>A fitted model using the <code><a href="graph_lme.html">graph_lme()</a></code> function.</p></dd>
+<dd><p>A fitted model using the <code><a href="graph_lme.html">graph_lme()</a></code> function or a named list of fitted objects using the <code><a href="graph_lme.html">graph_lme()</a></code> function.</p></dd>
+
+
+<dt>factor</dt>
+<dd><p>Which factor to multiply the scores. The default is 1.</p></dd>
+
+
+<dt>tibble</dt>
+<dd><p>Return the scores as a <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble()</a></code></p></dd>
 
 </dl></div>
     <div class="section level2">
