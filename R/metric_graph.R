@@ -1163,7 +1163,9 @@ metric_graph <-  R6Class("metric_graph",
                               verbose = FALSE) {
 
     if(clear_obs){
+      df_temp <- data
       self$clear_observations()
+      data <- df_temp
     }
 
     if(inherits(data, "metric_graph_data")){

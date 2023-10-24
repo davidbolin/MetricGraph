@@ -412,9 +412,58 @@ If we simply run the `drop_na()` method, this is equivalent to run the `get_data
 identical(graph$drop_na(), graph$get_data(drop_na=TRUE))
 ```
 
+Finally, we can also directly apply the `drop_na()` function to the result of the `get_data()` method:
+
+```{r}
+graph$get_data(drop_all_na = FALSE) %>% drop_na(y3)
+```
+
 ## Combining multiple verbs
 
+The resulting data from applying the previous verbs are safe in the sense that they are friendly to the metric graph environment. Thus, the result after applying one verb can be used as input of any of the remaining verbs. 
 
+For this example we will consider the `df_data_repl` dataset. Let us add to the graph (replacing the existing data):
 
+```{r}
+graph$add_observations(data = df_data_repl, normalized = TRUE, clear_obs = TRUE, group = "repl")
+
+graph$get_data(drop_all_na = FALSE)
+```
+
+We will now create a new variable `new_y` which is the exponential of `y`, then filter the data to be on edges `1` and `2`, summarise to get the means of `new_y` at all positions (across the different groups, from the `___group` variable) and plot it:
+
+```{r}
+graph$mutate(new_y = exp(y)) %>% filter(`__edge_number` %in% c(1,2)) %>% 
+                                summarise(mean_new_y = mean(new_y)) %>% graph$plot(data = "mean_new_y")
+```
 
 # Replacing the data in the metric graph by manipulated data
+
+Let us suppose we want to replace the internal data by the data obtained from these manipulations. This is very simple, all we need to do is to pass the resulting data to the `data` argument from the `add_observations()` method. It is important to note that if the input is the result of those verbs, `mutate`, `select`, `filter`, `summarise` or `drop_na`, or any combination of them, then there is no need to set any of the other arguments of the `add_observations()` method, one should simply supply the `data` argument with such dataset.
+For example, let us consider the dataset from the previous section. We will replace the data, so we will set `clear_obs` to `TRUE`:
+
+```{r}
+graph$add_observations(data = graph$mutate(new_y = exp(y)) %>% 
+                        filter(`__edge_number` %in% c(1,2)) %>% 
+                                summarise(mean_new_y = mean(new_y)),
+                                clear_obs = TRUE)
+```
+
+We can now observe the result:
+
+```{r}
+graph$get_data()
+```
+
+We can also save it to a separate variable and use as input:
+
+```{r}
+df_temp <- graph$mutate(even_newer_y = mean_new_y^2)
+graph$add_observations(data = df_temp, clear_obs = TRUE)
+```
+
+We can check that it was properly added:
+
+```{r}
+graph$get_data()
+```
