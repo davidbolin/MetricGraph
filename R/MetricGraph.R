@@ -48,5 +48,12 @@
 #' @importFrom lifecycle deprecated
 #' @importFrom dplyr mutate filter select summarise
 #' @importFrom tidyr drop_na
+#' @importFrom magrittr `%>%`
+#' @export `%>%`
+#' @export summarise
+#' @export mutate
+#' @export filter
+#' @export select
+#' @export drop_na
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

@@ -269,7 +269,6 @@ graph$select(-y2)
 Alternatively, we can combine the `select()` function with the output of `get_data()` to obtain the same results:
 
 ```{r}
-library(dplyr)
 graph$get_data() %>% select(y,y2)
 ```
 
@@ -434,7 +433,7 @@ We will now create a new variable `new_y` which is the exponential of `y`, then 
 
 ```{r}
 graph$mutate(new_y = exp(y)) %>% filter(`__edge_number` %in% c(1,2)) %>% 
-                                summarise(mean_new_y = mean(new_y)) %>% graph$plot(data = "mean_new_y")
+            summarise(mean_new_y = mean(new_y)) %>% graph$plot(data = "mean_new_y")
 ```
 
 # Replacing the data in the metric graph by manipulated data

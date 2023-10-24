@@ -1133,8 +1133,8 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::select()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
-#' @export
 #' @method select metric_graph_data
+#' @export
 #' 
 select.metric_graph_data <- function(.data, ...){
     bkp <- list()
@@ -1163,8 +1163,8 @@ select.metric_graph_data <- function(.data, ...){
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::mutate()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
-#' @export
 #' @method mutate metric_graph_data
+#' @export
 #' 
 mutate.metric_graph_data <- function(.data, ...){
     data_res <- dplyr::mutate(.data = tidyr::as_tibble(.data), ...)
@@ -1182,8 +1182,8 @@ mutate.metric_graph_data <- function(.data, ...){
 #' @param data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `tidyr::drop_na()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
-#' @export
 #' @method drop_na metric_graph_data
+#' @export
 #' 
 drop_na.metric_graph_data <- function(data, ...){
     data_res <- tidyr::drop_na(data = tidyr::as_tibble(data), ...)
@@ -1201,8 +1201,8 @@ drop_na.metric_graph_data <- function(data, ...){
 #' @param .data The data list or `tidyr::tibble` obtained from a metric graph object.
 #' @param ... Additional parameters to be passed to `dplyr::filter()`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
-#' @export
 #' @method filter metric_graph_data
+#' @export
 #' 
 filter.metric_graph_data <- function(.data, ...){
     data_res <- dplyr::filter(.data = tidyr::as_tibble(.data), ...)
@@ -1222,8 +1222,8 @@ filter.metric_graph_data <- function(.data, ...){
 #' @param .include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
 #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
 #' @return A `tidyr::tibble` with the resulting selected columns.
-#' @export
 #' @method summarise metric_graph_data
+#' @export
 #' 
 summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALSE, .groups = NULL){
     group_vars <- c("__edge_number", "__distance_on_edge", "__coord_x", "__coord_y")
