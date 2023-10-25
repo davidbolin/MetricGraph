@@ -312,8 +312,6 @@ sigma_e <- 0.1
 n.obs <- 200
 obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 
-# The graph has very small edges, so we will use the 
-# Q method to improve numerical stability
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, PtE = obs.loc)
 graph$clear_observations()
@@ -356,9 +354,6 @@ $\varepsilon_i$ are independent centered Gaussian variables $N(0,\sigma_e^2)$ re
 
 Let us create such observations, clear the current data in the graph, and finally add the data on the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-# The graph has very small edges, so we will use the 
-# Q method to improve numerical stability
-
 sigma <- 2
 range <- 0.2 # range parameter
 sigma_e <- 0.1
