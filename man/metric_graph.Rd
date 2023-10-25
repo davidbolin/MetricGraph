@@ -1012,6 +1012,8 @@ Plots the metric graph.
   edge_width = 0.3,
   edge_color = "black",
   data_size = 1,
+  support_width = 0.5,
+  support_color = "gray",
   mesh = FALSE,
   X = NULL,
   X_loc = NULL,
@@ -1028,7 +1030,7 @@ Plots the metric graph.
 \item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be
 plotted.}
 
-\item{\code{newdata}}{Another data list or \code{data.frame} from which the column of the data will be taken.}
+\item{\code{newdata}}{A dataset of class \code{metric_graph_data}, obtained by any \code{get_data()}, \code{mutate()}, \code{filter()}, \code{summarise()}, \code{drop_na()} methods of metric graphs, see the vignette on data manipulation for more details.}
 
 \item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
 number, it will be the index of the group as stored internally. If \code{group}
@@ -1046,6 +1048,10 @@ requires the 'plotly' package.}
 \item{\code{edge_color}}{Color of edges.}
 
 \item{\code{data_size}}{Size of markers for data.}
+
+\item{\code{support_width}}{For 3D plot, width of support lines.}
+
+\item{\code{support_color}}{For 3D plot, color of support lines.}
 
 \item{\code{mesh}}{Plot the mesh locations?}
 
@@ -1101,7 +1107,10 @@ TRUE if the graph is a tree and FALSE otherwise.
 Plots continuous function on the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
-  X,
+  data = NULL,
+  newdata = NULL,
+  group = 1,
+  X = NULL,
   plotly = FALSE,
   vertex_size = 5,
   vertex_color = "black",
@@ -1119,8 +1128,16 @@ Plots continuous function on the graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
-curve (in length), value) or a vector with values for the function
+\item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be
+plotted.}
+
+\item{\code{newdata}}{A dataset of class \code{metric_graph_data}, obtained by any \code{get_data()}, \code{mutate()}, \code{filter()}, \code{summarise()}, \code{drop_na()} methods of metric graphs, see the vignette on data manipulation for more details.}
+
+\item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
+number, it will be the index of the group as stored internally. If \code{group}
+is a character, then the group will be chosen by its name.}
+
+\item{\code{X}}{A vector with values for the function
 evaluated at the mesh in the graph}
 
 \item{\code{plotly}}{If \code{TRUE}, then the plot is shown in 3D. This option requires

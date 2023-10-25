@@ -10,6 +10,8 @@
 * Moving `data` to the `private` environment.
 * Several data manipulation helper tools and methods were introduced, together with a vignette with a brief tutorial on these tools.
 * The method `mesh_A()` has been deprecated, use `fem_basis()` instead.
+* Several quality of life improvements.
+* Improved the `plot()` method with the option `plotly=TRUE`.
 
 
 # MetricGraph 1.1.2

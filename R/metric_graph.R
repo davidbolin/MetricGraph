@@ -1837,7 +1837,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Plots the metric graph.
   #' @param data Which column of the data to plot? If `NULL`, no data will be
   #' plotted.
-  #' @param newdata Another data list or `data.frame` from which the column of the data will be taken.
+  #' @param newdata A dataset of class `metric_graph_data`, obtained by any `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods of metric graphs, see the vignette on data manipulation for more details.
   #' @param group If there are groups, which group to plot? If `group` is a
   #' number, it will be the index of the group as stored internally. If `group`
   #' is a character, then the group will be chosen by its name.
@@ -1893,6 +1893,11 @@ metric_graph <-  R6Class("metric_graph",
     if(is.numeric(group) && !is.null(data)) {
       unique_group <- unique(private$data[["__group"]])
       group <- unique_group[group]
+    }
+    if(!is.null(newdata)){
+      if(!inherits(newdata, "metric_graph_data")){
+        stop("'newdata' must be of class 'metric_graph_data'!")
+      }
     }
 
     if(!plotly) {
@@ -1961,8 +1966,13 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   #' @description Plots continuous function on the graph.
-  #' @param X Either an m x 3 matrix with (edge number, position on
-  #' curve (in length), value) or a vector with values for the function
+  #' @param data Which column of the data to plot? If `NULL`, no data will be
+  #' plotted.
+  #' @param newdata A dataset of class `metric_graph_data`, obtained by any `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods of metric graphs, see the vignette on data manipulation for more details.
+  #' @param group If there are groups, which group to plot? If `group` is a
+  #' number, it will be the index of the group as stored internally. If `group`
+  #' is a character, then the group will be chosen by its name.
+  #' @param X A vector with values for the function
   #' evaluated at the mesh in the graph
   #' @param plotly If `TRUE`, then the plot is shown in 3D. This option requires
   #' the package 'plotly'.
@@ -1977,7 +1987,10 @@ metric_graph <-  R6Class("metric_graph",
   #' @param p Previous plot to which the new plot should be added.
   #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
   #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
-  plot_function = function(X,
+  plot_function = function(data = NULL,
+                           newdata = NULL,
+                           group = 1,
+                           X = NULL,
                            plotly = FALSE,
                            vertex_size = 5,
                            vertex_color = "black",
@@ -1995,8 +2008,24 @@ metric_graph <-  R6Class("metric_graph",
 
     mesh <- FALSE
 
-    if(!is.matrix(X) || is.matrix(X) && dim(X)[1] == 1) {
+    if(is.null(data) && is.null(X)){
+      stop("You should provide either 'data' or 'X'.")
+    }
+
+    if(!is.null(data) && !is.null(X)){
+      warning("Both 'data' and 'X' were provided. Only 'data' will be considered.")
+      X <- NULL
+    }
+
+    if(!is.null(X)){
       mesh <- TRUE
+      if(!is.vector(X) && !is.matrix(X)){
+        stop("'X' should be a vector, or a row-matrix or a column-matrix!")
+      }
+      if(is.matrix(X) && min(dim(X)) > 1){
+        stop("If 'X' is a matrix, it needs to be either a row matrix or a column matrix!")
+      }
+      X <- as.vector(X)
     }
 
     if (mesh) {
@@ -2028,11 +2057,19 @@ metric_graph <-  R6Class("metric_graph",
           X <- X_temp
         }
       }
-    }
 
-    if (mesh) {
       n.v <- dim(self$V)[1]
       XV <- X[1:n.v]
+    } else{
+      if(is.null(newdata)){
+        X <- self$get_data(group = group)
+        X <- X[,c("__edge_number", "__distance_on_edge", data)]
+      } else{
+        if(!inherits(newdata, "metric_graph_data")){
+          stop("'newdata' must be of class 'metric_graph_data'!")
+        }
+        X <- newdata[,c("__edge_number", "__distance_on_edge", data)]
+      }
     }
 
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
@@ -2058,44 +2095,94 @@ metric_graph <-  R6Class("metric_graph",
         if (max(vals[, 1]) < 1) {
           #check if we can add end value from other edge
           Ei <- self$E[, 1] == Ve #edges that start in Ve
+          Ei <- which(Ei)
           if (sum(Ei) > 0) {
-            ind <- which(X[Ei, 2] == 0)[1]
-          } else {
+            ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+            if(sum(ind)>0){
+              ind <- ind[1]
+            } else {
             ind <- NULL
+            ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+            min.val <- X[ind.val, 2,drop=TRUE]
+          }} else{
+            ind <- NULL
+            ind.val <- integer(0)
           }
           if (length(ind) > 0) {
-            vals <- rbind(vals, c(1, X[ind, 3]))
+            vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
           } else {
             Ei <- self$E[, 2] == Ve #edges that end in Ve
+            Ei <- which(Ei)
             if (sum(Ei)  > 0) {
-              ind <- which(X[Ei, 2] == 1)[1]
-            } else {
-              ind <- NULL
+              ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+              if(sum(ind)>0){
+                ind <- ind[1]
+              } else {
+              ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+              max.val <- X[ind.val.max, 2,drop=TRUE]
+              if(length(ind.val) == 0){
+                ind <- ind.val.max
+              } else if (length(ind.val.max) == 0){
+                ind <- ind.val
+              } else{
+                ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+              }
+            } } else{
+              if(length(ind.val)>0){
+                ind <- ind.val
+              } else{
+                ind <- NULL
+              }
             }
             if (length(ind) > 0){
-              vals <- rbind(vals, c(1, X[ind, 3]))
+              vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
             }
           }
         }
         if (min(vals[, 1] > 0)) {
           #check if we can add start value from other edge
           Ei <- self$E[, 1] == Vs #edges that start in Vs
+          Ei <- which(Ei)
           if (sum(Ei) > 0) {
-            ind <- which(X[Ei, 2] == 0)[1]
-          } else {
+              ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+            if(sum(ind)>0){
+                ind <- ind[1]
+              } else {
             ind <- NULL
+            ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+            min.val <- X[ind.val, 2,drop=TRUE]
+          }} else{
+            ind <- NULL
+            ind.val <- integer(0)
           }
           if (length(ind) > 0) {
             vals <- rbind(c(0, X[ind, 3]), vals)
           } else {
             Ei <- self$E[, 2] == Vs #edges that end in Vs
+            Ei <- which(Ei)
             if (sum(Ei) > 0) {
-              ind <- which(X[Ei, 2] == 1)[1]
-            } else {
-              ind <- NULL
+              ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+              if(sum(ind)>0){
+                ind <- ind[1]
+              } else {
+              ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+              max.val <- X[ind.val.max, 2,drop=TRUE]
+              if(length(ind.val) == 0){
+                ind <- ind.val.max
+              } else if (length(ind.val.max) == 0){
+                ind <- ind.val
+              } else{
+                ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+              }
+            } } else{
+              if(length(ind.val)>0){
+                ind <- ind.val
+              } else{
+                ind <- NULL
+              }
             }
             if (length(ind) > 0) {
-              vals <- rbind(c(0, X[ind, 3]), vals)
+              vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
             }
           }
         }
@@ -2103,7 +2190,7 @@ metric_graph <-  R6Class("metric_graph",
 
         data.to.plot <- vals
 
-        data.to.plot.order <- data.to.plot[order(vals[, 1]), ,
+        data.to.plot.order <- data.to.plot[order(vals[, 1,drop=TRUE]), ,
                                            drop = FALSE]
 
         coords <- interpolate2(self$edges[[i]],
@@ -2112,11 +2199,12 @@ metric_graph <-  R6Class("metric_graph",
 
         x.loc <- c(x.loc, coords[, 1])
         y.loc <- c(y.loc, coords[, 2])
-        z.loc <- c(z.loc, data.to.plot.order[, 2])
+        z.loc <- c(z.loc, data.to.plot.order[, 2, drop=TRUE])
         i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
         kk = kk+1
     }
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
+
 
     if(plotly){
       requireNamespace("plotly")

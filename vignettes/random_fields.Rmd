@@ -147,7 +147,7 @@ result as a function as follows:
 ```{r}
 u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function(u)
+graph$plot_function(X = u)
 ```
 
 Let us construct a finer mesh, simulate the field, and visualize the simulation
@@ -158,7 +158,7 @@ graph$build_mesh(h = 0.01)
 
 u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function(u, plotly = TRUE)
+graph$plot_function(X = u, plotly = TRUE)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
