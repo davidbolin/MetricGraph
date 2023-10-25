@@ -312,7 +312,7 @@ the vertices of the mesh and then use the function
 <code class="sourceCode R"><span><span class="va">lon</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">V</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">lat</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">V</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="va">lon</span> <span class="op">-</span> <span class="va">lat</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">f</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">f</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-12-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Alternatively, we can set <code>plotly = TRUE</code> in the plot
 command to get a 3D visualization of the function by using the
@@ -375,7 +375,7 @@ the result</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_spde.html">sample_spde</a></span><span class="op">(</span>range <span class="op">=</span> <span class="va">range</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                 graph <span class="op">=</span> <span class="va">graph</span>, type <span class="op">=</span> <span class="st">"mesh"</span><span class="op">)</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-14-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Since <span class="math inline">\(\alpha=1\)</span>, these sample
 paths are continuous but not differentiable. To visualize the
@@ -385,7 +385,7 @@ follows:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">C</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_covariance.html">spde_covariance</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">0.1</span><span class="op">)</span>, range <span class="op">=</span> <span class="va">range</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                            graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">C</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">C</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-15-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>To obtain a field with differentiable sample paths, we can change to
 <span class="math inline">\(\alpha=2\)</span> in the code above.</p>
@@ -521,7 +521,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  44.93645 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  40.14374 secs</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -567,7 +567,7 @@ latent field by setting <code>only_latent</code> to
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res</span>, newdata<span class="op">=</span><span class="va">data_mesh_pred</span>, normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">u_est</span> <span class="op">&lt;-</span> <span class="va">pred</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-24-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, let us obtain predictions for the observed values on the
 mesh. In this case we set <code>only_latent</code> to
@@ -575,7 +575,7 @@ mesh. In this case we set <code>only_latent</code> to
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res</span>, newdata<span class="op">=</span><span class="va">data_mesh_pred</span>, normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">y_est</span> <span class="op">&lt;-</span> <span class="va">pred_y</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-25-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>The same procedure can be done with <span class="math inline">\(\alpha = 2\)</span>. One can also estimate <span class="math inline">\(\alpha\)</span> from data as described in the
 vignette <a href="fem_models.html">Whittle–Matérn fields with general
@@ -646,7 +646,7 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## Number of function calls by 'optim' = 31</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  48.52181 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  43.79576 secs</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -664,7 +664,7 @@ We start by obtaining predictions for the latent model:</p>
 <code class="sourceCode R"><span><span class="va">pred_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">u_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est_exp</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est_exp</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-29-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, let us estimated the observed values at the mesh
 locations:</p>
@@ -672,7 +672,7 @@ locations:</p>
 <code class="sourceCode R"><span><span class="va">pred_exp_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">y_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp_y</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est_exp</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est_exp</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-30-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
@@ -740,7 +740,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  4.00797 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.33277 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -765,7 +765,7 @@ the model to obtain proper predictions:</p>
 <span><span class="co">## Refit the model with all the locations you want to obtain predictions.</span></span></code></pre>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">u_est_GL</span> <span class="op">&lt;-</span> <span class="va">pred_GL</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-33-1.png" width="700" style="display: block; margin: auto;">
 and here the (incorrect way of obtaining) predictions of the observed
 data:</p>
@@ -777,7 +777,7 @@ data:</p>
 <span><span class="co">## Refit the model with all the locations you want to obtain predictions.</span></span></code></pre>
 <div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y_est_GL</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-34-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Let us now refit the model with all the locations we want to obtain
 predictions. Let us create a new data set with all the original
@@ -829,7 +829,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.93117 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  7.0937 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -843,7 +843,7 @@ posterior means at the observation locations:</p>
 <code class="sourceCode R"><span><span class="va">pred_GL_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">u_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_full</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_est_GL_full</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est_GL_full</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-39-1.png" width="700" style="display: block; margin: auto;">
 and here the correct way of obtaining predictions of the observed data
 at the desired locations:</p>
@@ -851,7 +851,7 @@ at the desired locations:</p>
 <code class="sourceCode R"><span><span class="va">pred_GL_y_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span>, only_latent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">y_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y_full</span><span class="op">$</span><span class="va">mean</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">y_est_GL_full</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est_GL_full</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-40-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
 </div>
@@ -916,8 +916,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.866400 0.1035510   1.674360 1.861340   2.080230 1.837370</span></span>
-<span><span class="co">## range 0.179333 0.0271257   0.132763 0.176964   0.239093 0.171833</span></span></code></pre>
+<span><span class="co">## sigma 1.864560 0.1042080   1.674470 1.862310   2.079840 1.885750</span></span>
+<span><span class="co">## range 0.179167 0.0269748   0.132335 0.177031   0.238061 0.172539</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -936,9 +936,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean     mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.866400 1.837365</span></span>
-<span><span class="co">## 2     range  0.2 0.179333 0.171833</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 1.8645610 1.8857493</span></span>
+<span><span class="co">## 2     range  0.2 0.1791675 0.1725394</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
@@ -984,7 +984,7 @@ standard <code><a href="https://rdrr.io/r/stats/predict.html" class="external-li
 <p>Let us plot the predictions of the latent field:</p>
 <div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_field_prd</span> <span class="op">&lt;-</span> <span class="va">field_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_field_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">mean_field_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-49-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Fin §ally, let us plot predictions of the observed data at the mesh
 locations:</p>
@@ -997,7 +997,7 @@ locations:</p>
 <p>Let us plot the predictions:</p>
 <div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_obs_prd</span> <span class="op">&lt;-</span> <span class="va">obs_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">mean_obs_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">mean_obs_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-51-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
 </div>

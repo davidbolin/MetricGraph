@@ -161,7 +161,7 @@ follows:</p>
 Gaussian process and the points on the graph. We can plot the simulated
 intensity function as</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span><span class="op">)</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span><span class="op">)</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-6-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>To plot the simulated points, we can add them to the graph and then
 plot:</p>
@@ -249,8 +249,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.351736 0.0891501   0.198780 0.345303   0.545636 0.333059</span></span>
-<span><span class="co">## range   2.103140 1.3037500   0.696186 1.744360   5.601770 1.272860</span></span></code></pre>
+<span><span class="co">## std.dev 0.351736 0.0891497   0.198781 0.345303   0.545635 0.333059</span></span>
+<span><span class="co">## range   2.103160 1.3037900   0.696180 1.744360   5.601900 1.272860</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -268,8 +268,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3517358 0.3330589</span></span>
-<span><span class="co">## 2     range  1.5 2.1031377 1.2728607</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3517361 0.3330592</span></span>
+<span><span class="co">## 2     range  1.5 2.1031564 1.2728581</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
@@ -285,12 +285,12 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <code class="sourceCode R"><span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="va">n.field</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">u_posterior</span> <span class="op">&lt;-</span> <span class="va">spde_fit</span><span class="op">$</span><span class="va">summary.linear.predictor</span><span class="op">$</span><span class="va">mean</span><span class="op">[</span><span class="op">(</span><span class="va">n.obs</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="op">(</span><span class="va">n.obs</span><span class="op">+</span><span class="va">n.field</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">u_posterior</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_posterior</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-17-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>This can be compared with the field that was used to generate the
 data:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-18-1.png" width="700" style="display: block; margin: auto;"></p>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
