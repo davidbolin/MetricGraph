@@ -316,6 +316,8 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
+    if(length(self$edges) > 1){
+    
     if (tolerance$edge_edge > 0) {
     private$addinfo <- TRUE
 
@@ -331,6 +333,7 @@ metric_graph <-  R6Class("metric_graph",
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
+
     PtE <- points_add$PtE
 
     PtE[,2] <- PtE[,2]/self$edge_lengths[PtE[,1]]
@@ -437,6 +440,8 @@ metric_graph <-  R6Class("metric_graph",
        if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
        }  
+    }
+    # End of cond of having more than 1 edge
     }
 
     if (remove_deg2) {
@@ -1843,6 +1848,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edge_width Line width for edges.
   #' @param edge_color Color of edges.
   #' @param data_size Size of markers for data.
+  #' @param support_width For 3D plot, width of support lines.
+  #' @param support_color For 3D plot, color of support lines.
   #' @param mesh Plot the mesh locations?
   #' @param X Additional values to plot.
   #' @param X_loc Locations of the additional values in the format
@@ -1866,6 +1873,8 @@ metric_graph <-  R6Class("metric_graph",
                   edge_width = 0.3,
                   edge_color = 'black',
                   data_size = 1,
+                  support_width = 0.5,
+                  support_color = "gray",
                   mesh = FALSE,
                   X = NULL,
                   X_loc = NULL,
@@ -1922,6 +1931,8 @@ metric_graph <-  R6Class("metric_graph",
                            mesh = mesh,
                            X = X,
                            X_loc = X_loc,
+                           support_color = support_color,
+                           support_width = support_width,
                            p = p,
                            ...)
       if(!is.null(private$vertex_unit)){
@@ -2519,18 +2530,10 @@ metric_graph <-  R6Class("metric_graph",
 
 
     if(!inherits(dists,"dist")){
-      if(nrow(lines)>1){
         idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
-      } else {
-        idx_keep <- 1
-      }
       vertex <- lines[idx_keep,, drop=FALSE]
     } else{
-      if(nrow(lines)>2){
         idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[ nrow(lines)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)] > tolerance))})
-      } else { 
-        idx_keep <- 1
-      }
       vertex <- lines[idx_keep,, drop=FALSE]
     }
       # if(inherits(dists,"dist")) dists <- dist2mat(dists,256)
@@ -2779,6 +2782,8 @@ metric_graph <-  R6Class("metric_graph",
                      group = 1,
                      mesh = FALSE,
                      p = NULL,
+                     support_width = 0.5,
+                    support_color = "gray",
                      ...){
       x <- y <- ei <- NULL
       for (i in 1:self$nE) {
@@ -2831,15 +2836,26 @@ metric_graph <-  R6Class("metric_graph",
       data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
                               y = y[!is.na(as.vector(y_plot))],
                               z = rep(0,length(x[!is.na(as.vector(y_plot))])),
-                              val = as.vector(y_plot[!is.na(as.vector(y_plot))]))
+                              val = as.vector(y_plot[!is.na(as.vector(y_plot))]),
+                              i =rep(1:length(y_plot), 2))
 
-      p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
+      p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~val,
                            type = "scatter3d", mode = "markers",
                            marker = list(size = marker_size,
                                          color = ~val,
                                          colorbar=list(title='', len = 0.5),
                                          colorscale='Viridis'),
                            showlegend=FALSE)
+      if(support_width > 0) {
+          data.support <- data.frame(x = c(data.plot$x, data.plot$x), y = c(data.plot$y, data.plot$y),
+                                z = c(rep(0, length(data.plot$z)), data.plot$val),
+                                i = rep(1:length(data.plot$val), 2))
+        p <- plotly::add_trace(p, data = data.support, x = ~y, y = ~x, z = ~z,
+                             mode = "lines", type = "scatter3d",
+                             line = list(width = support_width,
+                                         color = support_color),
+                             split = ~i, showlegend = FALSE)
+      }                           
     }
     if (mesh) {
       data.plot <- data.frame(x = self$mesh$V[, 1],
@@ -2925,7 +2941,6 @@ metric_graph <-  R6Class("metric_graph",
       dists <- compute_aux_distances(lines = self$V, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
       v.merge <- NULL
       k <- 0
-      if(self$nV > 1){
       for (i in 2:self$nV) {
             if(!inherits(dists,"dist")){
                 i.min <- which.min(dists[i, 1:(i-1)])
@@ -2967,7 +2982,6 @@ metric_graph <-  R6Class("metric_graph",
           self$E[self$E > v.rem] <- self$E[self$E > v.rem] - 1
         }
       }
-    }
     }
   },
 
