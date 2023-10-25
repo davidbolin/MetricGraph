@@ -1164,26 +1164,152 @@ metric_graph <-  R6Class("metric_graph",
                               data_coords = c("PtE", "spatial"),
                               group = NULL,
                               normalized = FALSE,
-                              tibble = FALSE,
+                              tibble = TRUE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE) {
 
-                                graph_temp <- self$clone()
-                                graph_temp$add_observations(Spoints = Spoints,
-                                        data=data, edge_number = edge_number,
-                                        distance_on_edge = distance_on_edge,
-                                        coord_x = coord_x,
-                                        coord_y = coord_y,
-                                        data_coords = data_coords,
-                                        group = group,
-                                        normalized = normalized,
-                                        clear_obs = TRUE,
-                                        tibble = tibble,
-                                        tolerance = tolerance,
-                                        verbose=verbose)
-                                data_return <- graph_temp$get_data(drop_all_na = FALSE)
-                                rm(graph_temp)
-                                return(data_return)
+
+        data_coords <- data_coords[[1]]
+
+        if(is.null(data)){
+          if(is.null(Spoints)){
+            stop("No data provided!")
+          }
+          if("SpatialPointsDataFrame"%in%is(Spoints)){
+            data <- Spoints@data
+          } else{
+            stop("No data provided!")
+          }
+        }
+
+        data <- as.list(data)
+
+        ## convert everything to PtE
+        if(verbose){
+          if(data_coords == "spatial" || !is.null(Spoints)){
+          message("Converting data to PtE")
+          if(private$longlat){
+            message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
+          } 
+          }
+        }
+
+        ## Check data for repeated observations
+        if (!is.null(Spoints)){
+            if(is.null(group)){
+            data_tmp <- Spoints@coords
+          } else{
+            data_tmp <- cbind(Spoints@coords, data[[group]])
+          }
+        } else if(data_coords == "spatial"){
+          if(is.null(group)){
+            data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
+          } else{
+            data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[group]])
+          }
+        } else{
+          if(is.null(group)){
+            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
+          } else{
+            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[group]])
+          }
+        }
+
+        if(nrow(unique(data_tmp)) != nrow(data_tmp)){
+          warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+          if(data_coords == "spatial" || !is.null(Spoints)){
+            warning("It is also possible that two different points were projected to the same location on the metric graph.")
+          }
+        }
+
+        t <- system.time({
+          if(!is.null(Spoints)){
+            PtE <- self$coordinates(XY = Spoints@coords)
+            XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
+            norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
+            if(norm_XY > tolerance){
+              warning("There was at least one point whose location is far from the graph,
+              please consider checking the input.")
+            }
+          } else{
+            if(data_coords == "PtE"){
+                PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
+                if(!normalized){
+                  PtE[, 2] <- PtE[,2] / self$edge_lengths[PtE[, 1]]
+                }
+              } else if(data_coords == "spatial"){
+                point_coords <- cbind(data[[coord_x]], data[[coord_y]])
+                PtE <- self$coordinates(XY = point_coords)
+                XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
+                norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+                if(norm_XY > tolerance){
+                  warning("There was at least one point whose location is far from the graph,
+                    please consider checking the input.")
+                  }
+            } else{
+                stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
+            }
+          }
+        })
+
+      if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+
+      message("Processing data")
+    }  
+
+    
+    t <- system.time({
+     if(!is.null(group)){
+       group_vector <- data[[group]]
+     } else{
+       group <- "__group"
+       group_vector <- NULL
+     }
+
+    lapply(data, function(dat){if(nrow(matrix(PtE, ncol=2)) != length(dat)){
+        stop(paste(dat,"has a different number of elements than the number of
+                   coordinates!"))
+       }})
+
+
+    group_vals <- unique(group_vector)
+
+
+    # n_group <- length(unique(group_vector))
+    n_group <- length(group_vals)
+    n_group <- ifelse(n_group == 0, 1, n_group)
+
+    data[[edge_number]] <- NULL
+    data[[distance_on_edge]] <- NULL
+    data[[coord_x]] <- NULL
+    data[[coord_y]] <- NULL
+    data[[group]] <- NULL
+    data[["__coord_x"]] <- NULL
+    data[["__coord_y"]] <- NULL
+
+    # Process the data (find all the different coordinates
+    # across the different replicates, and also merge the new data to the old data)
+    data <- process_data_add_obs(PtE, new_data = data, old_data = NULL,
+                                        group_vector)
+    ## convert to Spoints and add
+    group_1 <- data[["__group"]]
+    group_1 <- which(group_1 == group_1[1])
+    PtE <- cbind(data[["__edge_number"]][group_1],
+                 data[["__distance_on_edge"]][group_1])
+    spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
+    data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
+    data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
+    if(tibble){
+      data <- tidyr::as_tibble(data)
+    }
+    class(data) <- c("metric_graph_data", class(data))
+    })
+          if(verbose){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+          }
+          return(data)
+
                               },
 
   #' @description Add observations to the metric graph.
