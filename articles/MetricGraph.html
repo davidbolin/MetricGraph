@@ -99,7 +99,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
-modified: 2023-10-24.</h4>
+modified: 2023-10-25.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -250,8 +250,9 @@ the returned value should be given in normalized distance or not.</p>
 <h3 id="adding-data-to-the-graph">Adding data to the graph<a class="anchor" aria-label="anchor" href="#adding-data-to-the-graph"></a>
 </h3>
 <p>Given that we have constructed the metric graph, we can now add data
-to it. As an example, let us sample some locations on edges at random
-and add data to them in the graph:</p>
+to it. For further details on data manipulation on metric graphs, see <a href="metric_graph_data.html">Data manipulation on metric graphs</a>. As
+an example, let us sample some locations on edges at random and add data
+to them in the graph:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>edge_number <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span>, <span class="va">n.obs</span><span class="op">)</span>,</span>
@@ -361,8 +362,6 @@ the result</p>
 <span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
 <span><span class="va">obs.loc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span>, <span class="va">n.obs</span>, replace<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># The graph has very small edges, so we will use the </span></span>
-<span><span class="co"># Q method to improve numerical stability</span></span>
 <span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_spde.html">sample_spde</a></span><span class="op">(</span>range <span class="op">=</span> <span class="va">range</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                 graph <span class="op">=</span> <span class="va">graph</span>, PtE <span class="op">=</span> <span class="va">obs.loc</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
@@ -409,10 +408,7 @@ representing measurement noise.</p>
 <p>Let us create such observations, clear the current data in the graph,
 and finally add the data on the graph:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># The graph has very small edges, so we will use the </span></span>
-<span><span class="co"># Q method to improve numerical stability</span></span>
-<span></span>
-<span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<code class="sourceCode R"><span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span><span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="co"># range parameter</span></span>
 <span><span class="va">sigma_e</span> <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
 <span></span>
@@ -525,7 +521,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  34.27449 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  34.11432 secs</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -650,7 +646,7 @@ can also write <code>model = 'isoExp'</code>):</p>
 <span><span class="co">## Number of function calls by 'optim' = 31</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  45.43932 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  45.34711 secs</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -744,7 +740,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.16962 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.16874 secs</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -833,7 +829,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.39846 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  7.34759 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -919,9 +915,9 @@ parameters. To view the estimates we can use the
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.86380 0.1040170   1.673640 1.860880   2.079300 1.868000</span></span>
-<span><span class="co">## range 0.17922 0.0271018   0.132291 0.177023   0.238506 0.172356</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.866730 0.1034510   1.675020 1.861480   2.081160 1.838170</span></span>
+<span><span class="co">## range 0.179384 0.0271741   0.133016 0.176909   0.239487 0.171479</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -941,8 +937,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.8637959 1.8680017</span></span>
-<span><span class="co">## 2     range  0.2 0.1792205 0.1723556</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.8667299 1.8381703</span></span>
+<span><span class="co">## 2     range  0.2 0.1793837 0.1714793</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">

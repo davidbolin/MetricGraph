@@ -216,6 +216,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  check_connected <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  remove_deg2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  merge_close_vertices <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  factor_merge_close_vertices <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  remove_circles <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
@@ -299,6 +300,10 @@ initialization. Default is <code>FALSE</code>.</p></dd>
 
 <dt><code>merge_close_vertices</code></dt>
 <dd><p>should an additional step to merge close vertices be done?</p></dd>
+
+
+<dt><code>factor_merge_close_vertices</code></dt>
+<dd><p>Which factor to be multiplied by tolerance <code>vertex_vertex</code> when merging close vertices at the additional step?</p></dd>
 
 
 <dt><code>remove_circles</code></dt>
