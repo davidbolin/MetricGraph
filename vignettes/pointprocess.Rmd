@@ -126,7 +126,7 @@ For this we can use the function `graph_lgcp` as follows:
 ```
 The object returned by the function is a list with the simulated Gaussian process and the points on the graph. We can plot the simulated intensity function as
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$plot_function(exp(lgcp_sample$u), vertex_size = 0)
+graph$plot_function(X = exp(lgcp_sample$u), vertex_size = 0)
 ```
 
 To plot the simulated points, we can add them to the graph and then plot:
@@ -262,12 +262,12 @@ Finally, we can plot the estimated field $u$:
 n.obs <- length(graph$data$y)
 n.field <- dim(graph$mesh$VtE)[1]
 u_posterior <- spde_fit$summary.linear.predictor$mean[(n.obs+1):(n.obs+n.field)]
-graph$plot_function(u_posterior, vertex_size = 0)
+graph$plot_function(X = u_posterior, vertex_size = 0)
 ```
 
 This can be compared with the field that was used to generate the data:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$plot_function(lgcp_sample$u, vertex_size = 0)
+graph$plot_function(X = lgcp_sample$u, vertex_size = 0)
 ```
 
 

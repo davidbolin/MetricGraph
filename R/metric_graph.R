@@ -1113,6 +1113,79 @@ metric_graph <-  R6Class("metric_graph",
     self$PtV <- NULL
   },
 
+  #' @description Process data to the metric graph data format.
+  #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
+  #' observations. It may include the coordinates of the observations only, or
+  #' the coordinates as well as the observations.
+  #' @param data A `data.frame` or named list containing the observations. In
+  #' case of groups, the data.frames for the groups should be stacked vertically,
+  #' with a column indicating the index of the group. If `data` is not `NULL`,
+  #' it takes priority over any eventual data in `Spoints`.
+  #' @param edge_number Column (or entry on the list) of the `data` that
+  #' contains the edge numbers. If not supplied, the column with name
+  #' "edge_number" will be chosen. Will not be used if `Spoints` is not `NULL`.
+  #' @param distance_on_edge Column (or entry on the list) of the `data` that
+  #' contains the edge numbers. If not supplied, the column with name
+  #' "distance_on_edge" will be chosen.  Will not be used if `Spoints` is not
+  #' `NULL`.
+  #' @param coord_x Column (or entry on the list) of the `data` that contains
+  #' the x coordinate. If not supplied, the column with name "coord_x" will be
+  #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
+  #' `PtE`.
+  #' @param coord_y Column (or entry on the list) of the `data` that contains
+  #' the y coordinate. If not supplied, the column with name "coord_x" will be
+  #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
+  #' `PtE`.
+  #' @param data_coords To be used only if `Spoints` is `NULL`. It decides which
+  #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
+  #' `distance_on_edge`, otherwise if `spatial`, the user must provide
+  #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
+  #' @param group If the data is grouped (for example measured at different time
+  #' points), this argument specifies the the column (or entry on the list) in
+  #' which the group variable is stored.
+  #' @param normalized if TRUE, then the distances in `distance_on_edge` are
+  #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
+  #' `Spoints` is not `NULL`.
+  #' @param tibble Should the data be returned as a `tidyr::tibble`?
+  #' @param tolerance Parameter to control a warning when adding observations.
+  #' If the distance of some location and the closest point on the graph is
+  #' greater than the tolerance, the function will display a warning.
+  #' This helps detecting mistakes on the input locations when adding new data.
+  #' @param verbose If `TRUE`, report steps and times.
+  #' @return No return value. Called for its side effects. The observations are
+  #' stored in the `data` element of the `metric_graph` object.
+
+  process_data = function(Spoints = NULL,
+                              data = NULL,
+                              edge_number = "edge_number",
+                              distance_on_edge = "distance_on_edge",
+                              coord_x = "coord_x",
+                              coord_y = "coord_y",
+                              data_coords = c("PtE", "spatial"),
+                              group = NULL,
+                              normalized = FALSE,
+                              tibble = FALSE,
+                              tolerance = max(self$edge_lengths)/2,
+                              verbose = FALSE) {
+
+                                graph_temp <- self$clone()
+                                graph_temp$add_observations(Spoints = Spoints,
+                                        data=data, edge_number = edge_number,
+                                        distance_on_edge = distance_on_edge,
+                                        coord_x = coord_x,
+                                        coord_y = coord_y,
+                                        data_coords = data_coords,
+                                        group = group,
+                                        normalized = normalized,
+                                        clear_obs = TRUE,
+                                        tibble = tibble,
+                                        tolerance = tolerance,
+                                        verbose=verbose)
+                                data_return <- graph_temp$get_data(drop_all_na = FALSE)
+                                rm(graph_temp)
+                                return(data_return)
+                              },
+
   #' @description Add observations to the metric graph.
   #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
   #' observations. It may include the coordinates of the observations only, or

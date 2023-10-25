@@ -167,7 +167,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r}
 C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
-graph$plot_function(C, plotly = TRUE)
+graph$plot_function(X = C, plotly = TRUE)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
@@ -175,14 +175,14 @@ The corresponding covariance function then looks as follows:
 ```{r}
 C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 2,
                             graph = graph)
-graph$plot_function(C, plotly = TRUE)
+graph$plot_function(X = C, plotly = TRUE)
 ```
 
 Let us simulate a process with $\alpha=2$ as well:
 ```{r}
 u <- sample_spde(range = range, sigma = sigma, alpha = 2,
                  graph = graph, type = "mesh")
-graph$plot_function(u, plotly = TRUE)
+graph$plot_function(X = u, plotly = TRUE)
 ```
 
 ## Inference
@@ -261,7 +261,7 @@ on the regular mesh that we previously constructed.
 u_est <- predict(res, data.frame(edge_number = graph$mesh$VtE[,1],
                         distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
 
-graph$plot_function(u_est$mean, plotly = TRUE)
+graph$plot_function(X = u_est$mean, plotly = TRUE)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -296,7 +296,7 @@ We can now construct the covariance matrix for the process:
 sigma <- 1
 kappa <- 5
 Sigma <- sigma^2*exp(-kappa*graph$mesh$res_dist)
-graph$plot_function(Sigma[20,], plotly = TRUE)
+graph$plot_function(X = Sigma[20,], plotly = TRUE)
 ```
 
 One can note that this covariance function looks quite similar to that of the 
@@ -305,8 +305,8 @@ Whittle--Matérn covariance to compare:
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
 C.wm <- spde_covariance(P,range=2/kappa, sigma=sigma, graph=graph, alpha = 1)
-p <- graph$plot_function(Sigma[20,], plotly = TRUE)
-graph$plot_function(C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
+p <- graph$plot_function(X = Sigma[20,], plotly = TRUE)
+graph$plot_function(X = C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
                     support_width = 0)
 ```
 

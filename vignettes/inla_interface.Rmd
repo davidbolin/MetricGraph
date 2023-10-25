@@ -310,7 +310,7 @@ m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
 To improve visualization, we will plot the posterior means
 using the `plot()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$plot_function(m_prd, vertex_size = 0, edge_width = 2)
+graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 2)
 ```
 
 Finally, we can plot the predictions together with

@@ -12,6 +12,7 @@
 * The method `mesh_A()` has been deprecated, use `fem_basis()` instead.
 * Several quality of life improvements.
 * Improved the `plot()` method with the option `plotly=TRUE`.
+* Improved the `plot_function()` method to accept `data` and `newdata`.
 
 
 # MetricGraph 1.1.2

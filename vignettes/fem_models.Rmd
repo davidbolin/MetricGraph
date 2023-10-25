@@ -121,7 +121,7 @@ The object `op_cov` contains the matrices needed for evaluating the distribution
 Let us simulate the field $u$ at the mesh locations and plot the result:
 ```{r, message=FALSE} 
 u <- simulate(op)
-graph$plot_function(u, plotly = TRUE)
+graph$plot_function(X = u, plotly = TRUE)
 ```
 
 If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to multiply the weights with the FEM basis functions $\varphi_i(s)$ evaluated at the locations. For this, we can construct the observation matrix $\boldsymbol{\mathrm{A}}$, with elements $A_{ij} = \varphi_j(s_i)$, which links the FEM basis functions to the locations. This can be done
@@ -231,7 +231,7 @@ We will perform kriging with the `predict()` method. To this end, we need to pro
 The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function(as.vector(u.krig$mean))  
+  graph$plot_function(X = as.vector(u.krig$mean))  
 ```
 
 ## Fitting a model with replicates
@@ -451,7 +451,7 @@ m.prd <- rspde_fitprd$summary.fitted.values$mean[id.prd]
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method. 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function(m.prd, plotly = TRUE)  
+  graph$plot_function(X = m.prd, plotly = TRUE)  
 ```
 
 ## Using `R-INLA` implementation to fit models with replicates
@@ -648,7 +648,7 @@ along with the fitted object `rspde_bru_fit`:
 ```
 
 Finally, let us plot the predicted values. To this end 
-we will use the `plot_function()` graph method: 
+we will use the `plot()` method on `y_pred`: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
   plot(y_pred, plotly = TRUE)  
 ```

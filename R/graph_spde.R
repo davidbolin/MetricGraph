@@ -1167,15 +1167,19 @@ predict.inla_metric_graph_spde <- function(object,
 #' @param x A predicted object obtained with the `predict` method.
 #' @param y Not used.
 #' @param vertex_size Size of the vertices.
-#' @param ... Additional parameters to be passed to the plot function.
+#' @param ... Additional parameters to be passed to plot_function.
 #' @return A 'ggplot2' object.
 #' @export
 
 plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
   m_prd_bru <- x$pred$mean
   PtE_prd <- x$PtE_pred
-  p <- x$initial_graph$plot_function(X = cbind(PtE_prd, m_prd_bru),
-                                      vertex_size = vertex_size, ...)
+  newdata <- data.frame("edge_number" = PtE_prd[,1],
+                        "distance_on_edge" = PtE_prd[,2],
+                        "pred_y" = m_prd_bru)
+  newdata <- x$process_data(data = newdata, normalized = TRUE)
+  
+  p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, ...)
   p
 }
 

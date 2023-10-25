@@ -13,7 +13,7 @@
 
 \item{vertex_size}{Size of the vertices.}
 
-\item{...}{Additional parameters to be passed to the plot function.}
+\item{...}{Additional parameters to be passed to plot_function.}
 }
 \value{
 A 'ggplot2' object.

@@ -83,6 +83,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
 \item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
+\item \href{#method-metric_graph-process_data}{\code{metric_graph$process_data()}}
 \item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
 \item \href{#method-metric_graph-mutate}{\code{metric_graph$mutate()}}
 \item \href{#method-metric_graph-drop_na}{\code{metric_graph$drop_na()}}
@@ -576,6 +577,88 @@ Clear all observations from the \code{metric_graph} object.
 
 \subsection{Returns}{
 No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-process_data"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-process_data}{}}}
+\subsection{Method \code{process_data()}}{
+Process data to the metric graph data format.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$process_data(
+  Spoints = NULL,
+  data = NULL,
+  edge_number = "edge_number",
+  distance_on_edge = "distance_on_edge",
+  coord_x = "coord_x",
+  coord_y = "coord_y",
+  data_coords = c("PtE", "spatial"),
+  group = NULL,
+  normalized = FALSE,
+  tibble = FALSE,
+  tolerance = max(self$edge_lengths)/2,
+  verbose = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Spoints}}{\code{SpatialPoints} or \code{SpatialPointsDataFrame} containing the
+observations. It may include the coordinates of the observations only, or
+the coordinates as well as the observations.}
+
+\item{\code{data}}{A \code{data.frame} or named list containing the observations. In
+case of groups, the data.frames for the groups should be stacked vertically,
+with a column indicating the index of the group. If \code{data} is not \code{NULL},
+it takes priority over any eventual data in \code{Spoints}.}
+
+\item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that
+contains the edge numbers. If not supplied, the column with name
+"edge_number" will be chosen. Will not be used if \code{Spoints} is not \code{NULL}.}
+
+\item{\code{distance_on_edge}}{Column (or entry on the list) of the \code{data} that
+contains the edge numbers. If not supplied, the column with name
+"distance_on_edge" will be chosen.  Will not be used if \code{Spoints} is not
+\code{NULL}.}
+
+\item{\code{coord_x}}{Column (or entry on the list) of the \code{data} that contains
+the x coordinate. If not supplied, the column with name "coord_x" will be
+chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
+\code{PtE}.}
+
+\item{\code{coord_y}}{Column (or entry on the list) of the \code{data} that contains
+the y coordinate. If not supplied, the column with name "coord_x" will be
+chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
+\code{PtE}.}
+
+\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
+\code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
+\code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
+
+\item{\code{group}}{If the data is grouped (for example measured at different time
+points), this argument specifies the the column (or entry on the list) in
+which the group variable is stored.}
+
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
+assumed to be normalized to (0,1). Default FALSE. Will not be used if
+\code{Spoints} is not \code{NULL}.}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{tolerance}}{Parameter to control a warning when adding observations.
+If the distance of some location and the closest point on the graph is
+greater than the tolerance, the function will display a warning.
+This helps detecting mistakes on the input locations when adding new data.}
+
+\item{\code{verbose}}{If \code{TRUE}, report steps and times.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects. The observations are
+stored in the \code{data} element of the \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}

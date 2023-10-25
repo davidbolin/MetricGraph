@@ -445,28 +445,37 @@ function `plot_function` to display it:
 x <- graph$mesh$V[, 1]
 y <- graph$mesh$V[, 2]
 f <- x^2 - y^2
-graph$plot_function(f)
+graph$plot_function(X = f)
 ```
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
 visualization of the function:
 ```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
-graph$plot_function(f, plotly = TRUE)
+graph$plot_function(X = f, plotly = TRUE)
 ```
 
 When the first argument of `plot_function` is a vector, the function assumes that 
 the values in the vector are the values of the function evaluated at the vertices
-of the mesh. As an alternative, one can also provide the first argument as a 
-matrix consisting of the triplets $(i, t, f(i, t))$. Here $i$ denotes the 
-edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point.
+of the mesh. As an alternative, one can also provide a new dataset.
 To illustrate this, let us first construct a set of locations that are evenly 
-spaced over each edge, then convert these to Euclidean coordinates so that we
-can evaluate the function above, and finally plot the result:
+spaced over each edge. Then, we will convert the data to Euclidean coordinates 
+so that we can evaluate the function above. Then, process the data and finally plot the result:
 ```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
 n.e <- 30
 PtE <- cbind(rep(1:graph$nE, each = n.e), 
-             rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))
+             rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))        
 XY <- graph$coordinates(PtE)
 f <- XY[, 1]^2 - XY[, 2]^2
-graph$plot_function(cbind(PtE, f), plotly = TRUE)
+data_f <- data.frame(f = f, "edge_number" = PtE[,1], 
+            "distance_on_edge" = PtE[,2])
+data_f <- graph$process_data(data = data_f, normalized=TRUE)            
+graph$plot_function(data = "f", newdata = data_f, plotly = TRUE)
+```
+
+Alternatively, we can add the data to the graph, and directly plot by using the `data` argument.
+To illustration purposes, we will build this next plot as a 2d plot:
+
+```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
+graph$add_observations(data = data_f, clear_obs = TRUE, normalized = TRUE)
+graph$plot_function(data = "f")
 ```

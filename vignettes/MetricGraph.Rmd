@@ -275,7 +275,7 @@ Suppose now that we want to display the function $f(s) = \text{Longitude}(s) - \
 lon <- graph$mesh$V[, 1]
 lat <- graph$mesh$V[, 2]
 f <- lon - lat
-graph$plot_function(f, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5)
 ```
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
@@ -326,7 +326,7 @@ We can also sample the field at the mesh on the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, type = "mesh")
-graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u, vertex_size = 0, edge_width = 0.5)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -335,7 +335,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 C <- spde_covariance(c(200, 0.1), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
-graph$plot_function(C, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = C, vertex_size = 0, edge_width = 0.5)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$ in the code above.
@@ -462,7 +462,7 @@ Now, let us obtain the predictions. We can obtain estimates for the latent field
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred <- predict(res, newdata=data_mesh_pred, normalized=TRUE, only_latent=TRUE)
 u_est <- pred$mean
-graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u_est, vertex_size = 0, edge_width = 0.5)
 ```
 
 Finally, let us obtain predictions for the observed values on the mesh. In this case we set
@@ -471,7 +471,7 @@ Finally, let us obtain predictions for the observed values on the mesh. In this 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 pred_y <- predict(res, newdata=data_mesh_pred, normalized=TRUE, only_latent=FALSE)
 y_est <- pred_y$mean
-graph$plot_function(y_est, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est, vertex_size = 0, edge_width = 0.5)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -525,7 +525,7 @@ We start by obtaining predictions for the latent model:
 pred_exp <- predict(res_exp, newdata = data_mesh_pred, 
                     normalized=TRUE, only_latent = TRUE)
 u_est_exp <- pred_exp$mean
-graph$plot_function(u_est_exp, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u_est_exp, vertex_size = 0, edge_width = 0.5)
 ```
 
 Finally, let us estimated the observed values at the mesh locations:
@@ -534,7 +534,7 @@ Finally, let us estimated the observed values at the mesh locations:
 pred_exp_y <- predict(res_exp, newdata = data_mesh_pred, 
                     normalized=TRUE, only_latent = FALSE)
 y_est_exp <- pred_exp_y$mean
-graph$plot_function(y_est_exp, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_exp, vertex_size = 0, edge_width = 0.5)
 ```
 
 ## Models based on the Graph Laplacian
@@ -577,14 +577,14 @@ Now, if we do predictions outside of the observation locations on a graph Laplac
 pred_GL <- predict(res_gl, newdata = data_mesh_pred, 
                     normalized=TRUE, only_latent = TRUE)
 u_est_GL <- pred_GL$mean
-graph$plot_function(u_est_GL, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u_est_GL, vertex_size = 0, edge_width = 0.5)
 ```
 and here the (incorrect way of obtaining) predictions of the observed data:
 ```{r, fig.align = "center",echo=TRUE}
 pred_GL_y <- predict(res_gl, newdata = data_mesh_pred, 
                     normalized=TRUE, only_latent = FALSE)
 y_est_GL <- pred_GL_y$mean
-graph$plot_function(y_est_GL, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_GL, vertex_size = 0, edge_width = 0.5)
 ```
 
 Let us now refit the model with all the locations we want to obtain predictions. Let us create a new 
@@ -627,14 +627,14 @@ Let us now obtain predictions at the desired locations:
 pred_GL_full <- predict(res_gl_pred, newdata = data_mesh_pred, 
                     normalized=TRUE, only_latent = TRUE)
 u_est_GL_full <- pred_GL_full$mean
-graph$plot_function(u_est_GL_full, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u_est_GL_full, vertex_size = 0, edge_width = 0.5)
 ```
 and here the correct way of obtaining predictions of the observed data at the desired locations: 
 ```{r, fig.align = "center",echo=TRUE}
 pred_GL_y_full <- predict(res_gl_pred, newdata = data_mesh_pred, 
                     normalized=TRUE, only_latent = FALSE)
 y_est_GL_full <- pred_GL_y_full$mean
-graph$plot_function(y_est_GL_full, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_GL_full, vertex_size = 0, edge_width = 0.5)
 ```
 
 
@@ -743,7 +743,7 @@ field_pred <- predict(spde_model,
 Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_field_prd <- field_pred$pred[,1]
-graph$plot_function(mean_field_prd, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = mean_field_prd, vertex_size = 0, edge_width = 0.5)
 ```
 
 Fin §ally, let us plot predictions of the observed data at the mesh locations:
@@ -759,7 +759,7 @@ obs_pred <- predict(spde_model,
 Let us plot the predictions:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_obs_prd <- obs_pred$pred[,1]
-graph$plot_function(mean_obs_prd, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = mean_obs_prd, vertex_size = 0, edge_width = 0.5)
 ```
 
 # References {-}
