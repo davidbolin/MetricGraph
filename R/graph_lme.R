@@ -317,7 +317,7 @@ graph_lme <- function(formula, graph,
       #   names(fit$coeff$random_effects)[1] <- "alpha"
       #   fit$coeff$random_effects[1] <- fit$coeff$random_effects[1] + 0.5
       # }
-      class(fit) <- c(class(fit), "graph_lme")
+      class(fit) <- c("graph_lme", class(fit))
       return(fit)
     } else{
       if(!(model[["alpha"]] %in% c(1,2))){
@@ -733,17 +733,18 @@ graph_lme <- function(formula, graph,
         std_fixed = std_fixed, std_random = std_random)
   object$call <- call_graph_lme
   object$terms <- list(fixed_effects = X_cov)
-  object$response <- list(y = y_graph)
+  object$response_data <- list(y = y_graph)
   object$formula <- formula
   object$estimation_method <- optim_method
   # object$parameterization_latent <- parameterization_latent
   object$which_repl <- which_repl
+  object$nobs <- length(graph$.__enclos_env__$private$data[["__group"]])
   object$optim_controls <- optim_controls
   object$latent_model <- model
   object$loglik <- loglik
   object$BC <- BC
   object$niter <- res$counts
-  object$response <- y_term
+  object$response_var <- y_term
   object$matern_coeff <- matern_coeff
   object$time_matern_par <- time_matern_par
   object$optim_method <- optim_method
@@ -785,7 +786,44 @@ graph_lme <- function(formula, graph,
 #' @method logLik graph_lme
 #' @export
 logLik.graph_lme <- function(object, ...){
-  return(object$loglik)
+  ll <- object$loglik
+  attr(ll, "df") <- 1 + length(object$coeff$fixed_effects) + length(object$coeff$random_effects)
+  return(ll)
+}
+
+#' @name nobs.graph_lme
+#' @title Number of observations for \code{graph_lme} objects
+#' @description Gets the number of observations of the fitted object.
+#' @param x Object of class `graph_lme` containing results from the fitted model.
+#' @param ... further arguments passed to or from other methods.
+#' @return The number of observations.
+#' @noRd
+#' @method nobs graph_lme
+#' @export
+nobs.graph_lme <- function(object, ...){
+  return(object$nobs)
+}
+
+
+#' @name deviance.graph_lme
+#' @title Deviance for \code{graph_lme} objects
+#' @description Gets the number of observations of the fitted object.
+#' @param x Object of class `graph_lme` containing results from the fitted model.
+#' @param ... further arguments passed to or from other methods.
+#' @return Deviance
+#' @noRd
+#' @method deviance graph_lme
+#' @export
+deviance.graph_lme <- function(object, ...){
+  if(length(object$coeff$random_effects) > 0){
+    return(-2*object$loglik)
+  } else{
+    df_temp <- as.data.frame(object$model_matrix)
+    colnames(df_temp)[1] <- as.character(object$response_var)
+
+    fit_lm <- stats::lm(object$formula, data = df_temp)
+    return(stats::deviance(fit_lm))
+  }
 }
 
 

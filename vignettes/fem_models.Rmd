@@ -650,7 +650,14 @@ along with the fitted object `rspde_bru_fit`:
 Finally, let us plot the predicted values. To this end 
 we will use the `plot()` method on `y_pred`: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  plot(y_pred, plotly = TRUE, support_width=0)  
+  plot(y_pred)  
+```
+
+We can also create the 3d plot, together with the true data:
+
+```{r}
+p <- graph$plot(data = "y", plotly=TRUE)
+plot(y_pred, plotly = TRUE, p = p)
 ```
 
 ## Using inlabru to fit models with replicates
