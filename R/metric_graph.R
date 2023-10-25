@@ -95,6 +95,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
   #' @param merge_close_vertices should an additional step to merge close vertices be done?
+  #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance `vertex_vertex` when merging close vertices at the additional step?
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
   #' @param verbose Print progress of graph creation.
@@ -124,6 +125,7 @@ metric_graph <-  R6Class("metric_graph",
                         check_connected = TRUE,
                         remove_deg2 = FALSE,
                         merge_close_vertices = TRUE,
+                        factor_merge_close_vertices = 1,
                         remove_circles = TRUE,
                         verbose = FALSE,
                         lines = deprecated()) {
@@ -413,7 +415,7 @@ metric_graph <-  R6Class("metric_graph",
 
 
     if(merge_close_vertices){
-      private$merge_close_vertices(tolerance$vertex_vertex, factor_unit)
+      private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
     }
     
     if(is.logical(remove_circles)){
@@ -2517,10 +2519,18 @@ metric_graph <-  R6Class("metric_graph",
 
 
     if(!inherits(dists,"dist")){
-      idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
+      if(nrow(lines)>1){
+        idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
+      } else {
+        idx_keep <- 1
+      }
       vertex <- lines[idx_keep,, drop=FALSE]
     } else{
-      idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[ nrow(lines)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)] > tolerance))})
+      if(nrow(lines)>2){
+        idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[ nrow(lines)*(1:(i-1)-1) - (1:(i-1))*(1:(i-1) -1)/2 + i -1:(i-1)] > tolerance))})
+      } else { 
+        idx_keep <- 1
+      }
       vertex <- lines[idx_keep,, drop=FALSE]
     }
       # if(inherits(dists,"dist")) dists <- dist2mat(dists,256)
@@ -2915,6 +2925,7 @@ metric_graph <-  R6Class("metric_graph",
       dists <- compute_aux_distances(lines = self$V, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
       v.merge <- NULL
       k <- 0
+      if(self$nV > 1){
       for (i in 2:self$nV) {
             if(!inherits(dists,"dist")){
                 i.min <- which.min(dists[i, 1:(i-1)])
@@ -2956,6 +2967,7 @@ metric_graph <-  R6Class("metric_graph",
           self$E[self$E > v.rem] <- self$E[self$E > v.rem] - 1
         }
       }
+    }
     }
   },
 

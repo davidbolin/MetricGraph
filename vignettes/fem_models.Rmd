@@ -58,8 +58,11 @@ the details about the exact models we refer to the vignettes
 * [Whittle--Matérn fields on metric graphs](random_fields.html)
 * [INLA and inlabru interfaces](inla_interface.html)
 
-For further details on the construction of metric graphs, see 
+For details on the construction of metric graphs, see 
 [Working with metric graphs](metric_graphs.html)
+
+For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html)
 
 ## Constructing the graph and the mesh
 We begin by loading the `rSPDE` and `MetricGraph` packages:

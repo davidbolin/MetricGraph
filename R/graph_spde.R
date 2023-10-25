@@ -1130,7 +1130,7 @@ predict.inla_metric_graph_spde <- function(object,
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
   bru_fit_new <- inlabru::bru(cmp,
-          data = graph_data_spde(spde____model, loc = name_locations, drop_all_na = FALSE, drop_na = FALSE)[["data"]])
+          data = graph_data_spde(spde____model, loc_name = name_locations, drop_all_na = FALSE, drop_na = FALSE)[["data"]])
   pred <- predict(object = bru_fit_new,
                     newdata = new_data_list,
                     formula = formula,

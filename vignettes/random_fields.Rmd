@@ -204,7 +204,8 @@ independent centered Gaussian variables $N(0,\sigma_e^2)$ representing
 measurement noise. 
 
 Let us start by generating some data like this and adding it to the 
-metric graph:
+metric graph. For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html).
 
 ```{r}
 range <- 0.2

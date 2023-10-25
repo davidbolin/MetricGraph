@@ -139,7 +139,7 @@ graph <- metric_graph$new(edges = multilinestring)
 graph$plot()
 ```
 
-## Tolerances for the merging vertices and edges
+## Tolerances for merging vertices and edges
 The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
 * `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
@@ -323,7 +323,7 @@ meters. Let us increase the tolerances so that vertices that are at most
 a distance of 350 meters (0.35km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
-                               tolerance = list(vertex_vertex = 0.35))
+                               tolerance = list(vertex_vertex = 0.3), factor_merge_close_vertices = 1)
 graphs$plot(vertex_size = 0)
 ```
 
@@ -340,7 +340,8 @@ graph5 <- graphs$get_largest()
 
 # Adding data to the graph 
 
-Given that we have constructed the metric graph, we can now add data to it. 
+Given that we have constructed the metric graph, we can now add data to it. For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html). 
 As an example, let us consider the first graph again and suppose that we have 
 observations at a distance 0.5 from the start of each edge. One way of specifying
 this is as follows 

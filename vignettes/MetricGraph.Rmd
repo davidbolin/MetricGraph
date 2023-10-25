@@ -228,7 +228,8 @@ should be given in normalized distance or not.
 
 ## Adding data to the graph 
 
-Given that we have constructed the metric graph, we can now add data to it. 
+Given that we have constructed the metric graph, we can now add data to it. For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html). 
 As an example, let us sample some locations on edges at random and add data to them in the graph: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 n.obs <- 10

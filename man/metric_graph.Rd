@@ -130,6 +130,7 @@ Create a new \code{metric_graph} object.
   check_connected = TRUE,
   remove_deg2 = FALSE,
   merge_close_vertices = TRUE,
+  factor_merge_close_vertices = 1,
   remove_circles = TRUE,
   verbose = FALSE,
   lines = deprecated()
@@ -187,6 +188,8 @@ connected and a warning is given if this is not the case.}
 initialization. Default is \code{FALSE}.}
 
 \item{\code{merge_close_vertices}}{should an additional step to merge close vertices be done?}
+
+\item{\code{factor_merge_close_vertices}}{Which factor to be multiplied by tolerance \code{vertex_vertex} when merging close vertices at the additional step?}
 
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
 are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}

@@ -52,6 +52,9 @@ for this approach is provided in
 For an introduction to the `metric_graph` class, please see 
 the [Working with metric graphs](metric_graph.html) vignette.
 
+For handling data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html)
+
 For a simplification of the `R-INLA` interface, see
 the [inlabru interface of Whittle--Matérn fields](inlabru_interface.html) vignette.
 
