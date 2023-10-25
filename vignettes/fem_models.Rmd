@@ -231,7 +231,7 @@ We will perform kriging with the `predict()` method. To this end, we need to pro
 The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function(X = as.vector(u.krig$mean))  
+  graph$plot_function(as.vector(u.krig$mean))  
 ```
 
 ## Fitting a model with replicates
@@ -451,7 +451,7 @@ m.prd <- rspde_fitprd$summary.fitted.values$mean[id.prd]
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method. 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  graph$plot_function(X = m.prd, plotly = TRUE)  
+  graph$plot_function(m.prd, plotly = TRUE)  
 ```
 
 ## Using `R-INLA` implementation to fit models with replicates
@@ -650,7 +650,7 @@ along with the fitted object `rspde_bru_fit`:
 Finally, let us plot the predicted values. To this end 
 we will use the `plot()` method on `y_pred`: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-  plot(y_pred, plotly = TRUE)  
+  plot(y_pred, plotly = TRUE, support_width=0)  
 ```
 
 ## Using inlabru to fit models with replicates

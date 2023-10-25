@@ -2090,12 +2090,16 @@ metric_graph <-  R6Class("metric_graph",
       X <- NULL
     }
 
+    if(!is.character(data) && (is.vector(data) || !is.null(dim(data)))){
+      X <- data
+    }
+
     if(!is.null(X)){
       mesh <- TRUE
-      if(!is.vector(X) && !is.matrix(X)){
+      if(!is.vector(X) && is.null(dim(X))){
         stop("'X' should be a vector, or a row-matrix or a column-matrix!")
       }
-      if(is.matrix(X) && min(dim(X)) > 1){
+      if(!is.null(dim(X)) && min(dim(X)) > 1){
         stop("If 'X' is a matrix, it needs to be either a row matrix or a column matrix!")
       }
       X <- as.vector(X)
@@ -2212,6 +2216,7 @@ metric_graph <-  R6Class("metric_graph",
             }
           }
         }
+
         if (min(vals[, 1] > 0)) {
           #check if we can add start value from other edge
           Ei <- self$E[, 1] == Vs #edges that start in Vs
@@ -2229,7 +2234,7 @@ metric_graph <-  R6Class("metric_graph",
             ind.val <- integer(0)
           }
           if (length(ind) > 0) {
-            vals <- rbind(c(0, X[ind, 3]), vals)
+            vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
           } else {
             Ei <- self$E[, 2] == Vs #edges that end in Vs
             Ei <- which(Ei)
