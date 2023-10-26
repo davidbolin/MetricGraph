@@ -963,6 +963,17 @@ metric_graph <-  R6Class("metric_graph",
    private$pruned <- TRUE
   },
 
+  #' @description Gets the groups from the data.
+  #' @return A vector containing the available groups in the internal data.
+  
+  get_groups = function(){
+    if(is.null(private$data)){
+      warning("There is no data!")
+      return(invisible(NULL))
+    }
+    return(unique(private$data[["__group"]]))
+  },
+
   #' @description Gets PtE from the data.
   #' @param group For which group, should the PtE be returned? `NULL` means that all PtEs available will be returned.
   #' @param include_group Should the group be included as a column? If `TRUE`, the PtEs for each group will be concatenated, otherwise a single matrix containing the unique PtEs will be returned.
@@ -971,7 +982,8 @@ metric_graph <-  R6Class("metric_graph",
   #' observation locations.
   get_PtE = function() {
     if(is.null(private$data)){
-      stop("There is no data!")
+      warning("There is no data!")
+      return(invisible(NULL))
     }
     group <- private$data[["__group"]]
     group <- which(group == group[1])
@@ -997,7 +1009,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @return A `data.frame` object with observation locations. If `longlat = TRUE`, the column names are lon and lat, otherwise the column names are x and y.
   get_locations = function(){
      if(is.null(private$data)){
-      stop("There is no data!")
+      warning("There is no data!")
+      return(invisible(NULL))
     }
     group <- private$data[["__group"]]
     group <- which(group == group[1])
@@ -1085,7 +1098,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @return A list or a matrix containing the mesh locations.
   get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE) {
     if(is.null(self$mesh)){
-      stop("There is no mesh!")
+      warning("There is no mesh!")
+      return(invisible(NULL))
     }
 
     if(!bru){
@@ -1113,6 +1127,7 @@ metric_graph <-  R6Class("metric_graph",
     self$PtV <- NULL
   },
 
+  
   #' @description Process data to the metric graph data format.
   #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
   #' observations. It may include the coordinates of the observations only, or

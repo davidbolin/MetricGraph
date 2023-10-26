@@ -225,7 +225,7 @@ We will perform kriging with the `predict()` method. To this end, we need to pro
                         x1 = graph$mesh$VtE[,1],
                         x2 = graph$mesh$VtE[,2])
 
-  u.krig <- predict(fit, data = df_pred, normalized = TRUE)
+  u.krig <- predict(fit, newdata = df_pred, normalized = TRUE)
 ```
 
 The estimate is shown in the following figure
@@ -257,7 +257,7 @@ one replicate. We need to turn `y` into a vector and create an auxiliary vector 
 y_vec <- as.vector(Y.rep)
 repl <- rep(1:n.rep, each = n.obs)                       
 
-df_data_repl <- data.frame(y = y_vec, 
+df_data_repl <- data.frame(y = y_vec,
                               edge_number = rep(obs.loc[,1], n.rep),
                               distance_on_edge = rep(obs.loc[,2], n.rep), 
                               repl = repl)
