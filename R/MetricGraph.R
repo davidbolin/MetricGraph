@@ -55,5 +55,9 @@
 #' @export filter
 #' @export select
 #' @export drop_na
+#' @importFrom broom glance augment tidy
+#' @export glance
+#' @export augment
+#' @export tidy
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL

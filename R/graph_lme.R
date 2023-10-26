@@ -768,6 +768,7 @@ graph_lme <- function(formula, graph,
   graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
   names(graph_bkp$.__enclos_env__$private$data) <- names_temp
   object$graph <- graph_bkp
+  object$df.residual <- object$nobs -(1 + length(object$coeff$fixed_effects) + length(object$coeff$random_effects))
 
 
   class(object) <- "graph_lme"
@@ -826,6 +827,42 @@ deviance.graph_lme <- function(object, ...){
   }
 }
 
+
+#' @name glance.graph_lme
+#' @title Glance at a \code{graph_lme} object
+#' @aliases glance glance.graph_lme
+#' @description Glance accepts a \code{graph_lme} object and returns a
+#' [tidyr::tibble()] with exactly one row of model summaries.
+#' The summaries are the square root of the estimated variance of the measurement error, residual
+#' degrees of freedom, AIC, BIC, log-likelihood,
+#' the type of latent model used in the fit and the total number of observations.
+#' @param x A \code{graph_lme} object.
+#' @param ... Additional arguments. Currently not used.
+#' @return A [tidyr::tibble()] with exactly one row and columns:
+#' \itemize{
+#'   \item `nobs` Number of observations used.
+#'   \item `sigma` the square root of the estimated residual variance
+#'   \item `logLik` The log-likelihood of the model.
+#'   \item `AIC` Akaike's Information Criterion for the model.
+#'   \item `BIC` Bayesian Information Criterion for the model.
+#'   \item `deviance` Deviance of the model.
+#'   \item `df.residual` Residual degrees of freedom.
+#'   \item `model.type` Type of latent model fitted.
+#'   }
+#' @seealso [augment.graph_lme], [tidy.graph_lme]
+#' @method glance graph_lme
+#' @export
+
+glance.graph_lme <- function(x, ...){
+  tidyr::tibble(nobs = stats::nobs(x), 
+                  sigma = as.numeric(x$coeff$measurement_error[[1]]), 
+                   logLik = as.numeric(stats::logLik(x)), AIC = stats::AIC(x),
+                   BIC = stats::BIC(x), deviance = stats::deviance(x), 
+                   df.residual = stats::df.residual(x),
+                   model = x$latent_model$type,
+                   alpha = x$latent_model$alpha,
+                   cov_function = x$latent_model$cov_function_name)
+}
 
 #' @name print.graph_lme
 #' @title Print Method for \code{graph_lme} Objects

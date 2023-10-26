@@ -13,7 +13,7 @@
 * Several quality of life improvements.
 * Improved the `plot()` method with the option `plotly=TRUE`.
 * Improved the `plot_function()` method to accept `data` and `newdata`.
-
+* Included a `process_data()` method for metric graphs
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.

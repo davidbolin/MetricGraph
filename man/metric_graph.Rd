@@ -595,7 +595,7 @@ Process data to the metric graph data format.
   data_coords = c("PtE", "spatial"),
   group = NULL,
   normalized = FALSE,
-  tibble = FALSE,
+  tibble = TRUE,
   tolerance = max(self$edge_lengths)/2,
   verbose = FALSE
 )}\if{html}{\out{</div>}}
