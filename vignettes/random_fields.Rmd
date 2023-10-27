@@ -346,10 +346,30 @@ graph$add_observations(data = df_isocov, normalized=TRUE)
 graph$plot(data = "y")
 ```
 
-We can now fit the model with the `graph_lme()` function. We need the model to `list(type="isoCov")`, by default the exponential covariance
-will be used.
+We can now fit the model with the `graph_lme()` function. We need to set model to `list(type="isoCov")`, by default the exponential covariance
+will be used. Alternatively, if one wants to directly use the isotropic exponential covariance function, one can simply set the model
+to `isoexp`.
 ```{r}
 res_exp <- graph_lme(y ~ -1, graph = graph, model = list(type = "isoCov"))
+```
+
+Observe that we received a warning saying that we did not check if the graph has Euclidean edges. This is due to the fact that the isotropic covariance models are only known to work for graphs with Euclidean edges. Let us check if the graph has Euclidean edges. To this end, we need to use the `check_euclidean()` method:
+
+```{r}
+graph$check_euclidean()
+```
+
+Now, we simply call the graph to print its characteristics:
+
+```{r}
+graph
+```
+
+We can see that this is a graph with Euclidean edges. Let us run the fit again, and this time no warning will appear. 
+Further, this time we will set the model to `isoexp` for conveniency:
+
+```{r}
+res_exp <- graph_lme(y ~ -1, graph = graph, model = "isoexp")
 summary(res_exp)
 
 sigma_e_est <- res_exp$coeff$measurement_error

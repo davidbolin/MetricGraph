@@ -126,6 +126,16 @@ graph_lme <- function(formula, graph,
             model_type
             )
 
+  if(model_type == "isocov"){
+    if(is.null(graph$characteristics)){
+      warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method.")
+    } else if(is.null(graph$characteristics$euclidean)){
+            warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method.")
+    } else if(!graph$characteristics$euclidean){
+                  warning("This graph DOES NOT have Euclidean edges. The isotropic covariance models are NOT guaranteed to work for this graph!")
+    }
+  }
+
   # parameterization_latent <- parameterization_latent[[1]]
 
   # if(!(parameterization_latent%in%c("matern", "spde"))){
@@ -222,6 +232,7 @@ graph_lme <- function(formula, graph,
         }
       }
 
+
       if(!is.null(model[["B.tau"]]) && !is.null(model[["B.kappa"]])){
               rspde_object <- rSPDE::spde.matern.operators(graph = graph,
                                                 m = rspde_order,
@@ -240,7 +251,8 @@ graph_lme <- function(formula, graph,
        (!is.null(model[["B.sigma"]]) && is.null(model[["B.range"]])) ||
        (is.null(model[["B.sigma"]]) && !is.null(model[["B.range"]]))){
         stop("You must either define both B.tau and B.kappa or both B.sigma and B.range.")
-      } else{ rspde_object <- rSPDE::matern.operators(graph = graph,
+      } else{ 
+        rspde_object <- rSPDE::matern.operators(graph = graph,
                                                 m = rspde_order,
                                                 parameterization = "spde")
       }
@@ -295,7 +307,7 @@ graph_lme <- function(formula, graph,
 
       idx_notanyNA <- idx_not_any_NA(df_data)
 
-      df_data <- lapply(df_data, function(dat){dat[idx_notanyNA]})      
+      df_data <- lapply(df_data, function(dat){dat[idx_notanyNA]})   
 
       fit <- rSPDE::rspde_lme(formula = formula, 
                             loc = cbind(df_data[[".edge_number"]],
@@ -1020,6 +1032,10 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
 #' @export
 print.graph_lme <- function(x, ...) {
   #
+  if(inherits(x, "rspde_lme")){
+    class(x) <- "rspde_lme"
+    return(print(x))
+  }
   model_type <- tolower(x$latent_model$type)
   call_name <- switch(model_type,
                       "whittlematern" = {paste0("Latent model - Whittle-Matern with alpha = ",x$latent_model$alpha)},
@@ -1072,6 +1088,10 @@ print.graph_lme <- function(x, ...) {
 #' @method summary graph_lme
 #' @export
 summary.graph_lme <- function(object, all_times = FALSE, ...) {
+  if(inherits(object, "rspde_lme")){
+    class(object) <- "rspde_lme"
+    return(summary(object))
+  }
   ans <- list()
 
   nfixed <- length(object$coeff$fixed_effects)

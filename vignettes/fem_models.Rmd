@@ -194,6 +194,12 @@ Let us obtain a summary of the model:
 summary(fit)
 ```
 
+We can also obtain additional information by using the function `glance()`:
+
+```{r}
+glance(fit)
+```
+
 Let us compare the values of the parameters of the latent model with the true ones:
 
 ```{r}    
@@ -223,6 +229,16 @@ The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
   graph$plot_function(as.vector(u.krig$mean))  
+```
+
+We can also use the `augment()` function to easily plot the predictions. Let us a build a 3d plot now
+and add the observed values on top of the predictions:
+
+```{r}
+p <- augment(fit, newdata = df_pred, normalized = TRUE) %>% 
+          graph$plot_function(data = ".fitted", plotly = TRUE)
+
+graph$plot(data = "y", p = p, plotly = TRUE)          
 ```
 
 ## Fitting a model with replicates
@@ -257,8 +273,8 @@ df_data_repl <- data.frame(y = y_vec,
 
 Let us clear the previous observations and add the new data to the graph:
 ```{r}
-graph$clear_observations()
-graph$add_observations(data = df_data_repl, normalized = TRUE, group = "repl")
+graph$add_observations(data = df_data_repl, normalized = TRUE, 
+                            group = "repl", clear_obs = TRUE)
 ```
 
 We can now fit the model in the same way as before by using the `rspde_lme()` function. Note that we can optimize in parallel by setting `parallel` to `TRUE`. If we do not specify which replicate to consider, in the `which_repl` argument, all replicates will be considered.
@@ -273,6 +289,12 @@ Let us see a summary of the fit:
 summary(fit_repl)
 ```
 
+Let us take a glance of the fit:
+
+```{r}
+glance(fit_repl)
+```
+
 Let us compare the values of the parameters of the latent model with the true ones:
 
 ```{r}    
@@ -280,6 +302,15 @@ print(data.frame(sigma = c(sigma, fit_repl$matern_coeff$random_effects[2]),
                    range = c(range, fit_repl$matern_coeff$random_effects[3]),
                    nu = c(nu, fit_repl$matern_coeff$random_effects[1]),
                    row.names = c("Truth", "Estimates")))
+```
+
+Let us do kriging. We will use the same prediction locations as in the previous example. Let us get prediction for replicate 10, then add the original observations on top of them:
+
+```{r}
+p <- augment(fit_repl, which_repl = 10, newdata = df_pred, normalized = TRUE) %>% 
+          graph$plot_function(data = ".fitted", plotly = TRUE)
+
+graph$plot(data = "y", group = 10, plotly = TRUE, p = p)
 ```
 
 ## Using the R-INLA implementation
@@ -665,11 +696,11 @@ as the `replicate` argument. To obtain the auxiliary data, we will pass `repl` a
 data_rspde_rep <- graph_data_rspde(rspde_model_rep, repl = ".all", loc_name = "loc")
 ```
 
-We can now define the `bru` component formula, passing the `repl` component of `data_rspde_rep` as the `replicate` argument:
+We can now define the `bru` component formula, passing the `repl` as the `replicate` argument:
 ```{r}
   cmp_rep <-
     y ~ -1 + field(loc, model = rspde_model_rep,
-                              replicate = data_rspde_rep[["repl"]])
+                              replicate = repl)
 ```
 Now, we are ready to fit the model:
 ```{r}
@@ -715,7 +746,27 @@ help of the `gg_df()` function:
 ```
 
 
+Let us now do prediction for observations of replicate `10`. We start by building the data list with the prediction locations:
 
+```{r}
+  data_prd_list_repl <- graph$get_mesh_locations(bru = TRUE,
+                                            loc = "loc")
+  data_prd_list_repl[["repl"]] <- rep(10, nrow(data_prd_list$loc))
+```
+
+Let us now obtain predictions for this replicate:
+
+```{r}
+  y_pred <- predict(rspde_model_rep, cmp_rep, rspde_bru_fit_rep, 
+                      newdata=data_prd_list_repl, ~field_eval(loc, replicate = repl))
+```
+
+We can now plot the predictions along with the observed values for replicate `10`:
+
+```{r}
+p <- plot(y_pred, plotly=TRUE)
+graph_rep$plot(data = "y", group = 10, plotly=TRUE, p = p)
+```
 
 
 ## References

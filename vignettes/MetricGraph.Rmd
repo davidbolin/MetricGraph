@@ -507,8 +507,28 @@ However, if the goal is to fit a model using this covariance function, there is 
 
 ```{r}
 res_exp <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "isoCov"))
+```
+
+Observe that we received a warning saying that we did not check if the graph has Euclidean edges. This is due to the fact that the isotropic covariance models are only known to work for graphs with Euclidean edges. Let us check if the graph has Euclidean edges. To this end, we need to use the `check_euclidean()` method:
+
+```{r}
+graph$check_euclidean()
+```
+
+Now, we simply call the graph to print its characteristics to check the information:
+
+```{r}
+graph
+```
+
+Observe that this graph DOES NOT have Euclidean edges. This means that the model with isotropic exponential covariance is not guaranteed to work for this graph. In any case, we can try to fit it anyway. Observe that we will now receive a different warning, since now we know for fact that the graph does not have Euclidean edges. In this case, we will set `model` to `isoexp` for conveniency.
+
+```{r}
+res_exp <- graph_lme(y ~ lon + lat, graph = graph, model = "isoexp")
 summary(res_exp)
 ```
+
+
 
 Let us now compute the posterior mean for the field at the observation 
 locations and plot the residuals between the field and the posterior means of the field:

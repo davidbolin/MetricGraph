@@ -629,7 +629,7 @@ metric_graph <-  R6Class("metric_graph",
   check_euclidean = function(){
     self$compute_characteristics()
     if(!is.null(self$characteristics$euclidean)){
-      return(self$characteristics$euclidean)
+      return(invisible(NULL))
     }
 
     if(is.null(self$characteristics$distance_consistency)){
@@ -679,7 +679,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @return No return value. Called for its side effects. The computed geodesic
   #' distances are stored in the `geo_dist` element of the `metric_graph` object.
   compute_geodist = function(full = FALSE, obs = TRUE, group = NULL) {
-    self$geo_dist <- list()
+    if(is.null(self$geo_dist)){
+      self$geo_dist <- list()
+    }
 
     if(is.null(private$data)){
       obs <- FALSE
