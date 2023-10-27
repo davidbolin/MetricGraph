@@ -1006,6 +1006,9 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
   newdata
 }
 
+
+
+
 #' @name print.graph_lme
 #' @title Print Method for \code{graph_lme} Objects
 #' @description Provides a brief description of results related to mixed effects

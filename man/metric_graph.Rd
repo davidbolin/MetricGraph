@@ -77,6 +77,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
+\item \href{#method-metric_graph-get_groups}{\code{metric_graph$get_groups()}}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
 \item \href{#method-metric_graph-get_edge_lengths}{\code{metric_graph$get_edge_lengths()}}
 \item \href{#method-metric_graph-get_locations}{\code{metric_graph$get_locations()}}
@@ -457,6 +458,19 @@ would be merged are compatible in terms of direction.
 
 \subsection{Returns}{
 No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_groups"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_groups}{}}}
+\subsection{Method \code{get_groups()}}{
+Gets the groups from the data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_groups()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A vector containing the available groups in the internal data.
 }
 }
 \if{html}{\out{<hr>}}
@@ -885,7 +899,7 @@ Use \code{dplyr::summarise} function on the internal metric graph data object gr
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called \verb{.group}, will be added, with the same value 1 for all rows.
+A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called \code{.group}, will be added, with the same value 1 for all rows.
 }
 
 \subsection{Returns}{

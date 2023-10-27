@@ -27,7 +27,7 @@
 \item{object}{The fitted object with the \code{graph_lme()} function.}
 
 \item{newdata}{A \code{data.frame} or a \code{list} containing the covariates, the edge
-number and the distance on edge for the locations to obtain the prediction.}
+number and the distance on edge for the locations to obtain the prediction. Observe that you should not provide the locations for each replicate. Only a single set of locations and covariates, and the predictions for the different replicates will be obtained for this same set of locations.}
 
 \item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh,
 and either \code{only_latent} is set to TRUE or the model does not have covariates.}

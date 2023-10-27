@@ -80,7 +80,7 @@ A \code{\link[tibble:tibble]{tibble::tibble()}} with columns:
 \item \code{.fixed} Prediction of the fixed effects.
 \item \code{.random} Prediction of the random effects.
 \item \code{.resid}} The ordinary residuals, that is, the difference between observed and fitted values.
-\item \code{.se.fit} Standard errors of fitted values, if se_fit = TRUE.
+\item \code{.se_fit} Standard errors of fitted values, if se_fit = TRUE.
 }
 }
 \description{
