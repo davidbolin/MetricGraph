@@ -131,7 +131,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
           Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
         } else if(type == "obs"){
           Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
-          n_obs_tmp <- length(graph$data[["__group"]])
+          n_obs_tmp <- length(graph$data[[".group"]])
           order_PtE <- 1:n_obs_tmp
         } else if(type == "mesh"){
           graph_tmp <- graph$get_initial_graph()

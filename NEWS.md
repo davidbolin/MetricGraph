@@ -14,6 +14,7 @@
 * Improved the `plot()` method with the option `plotly=TRUE`.
 * Improved the `plot_function()` method to accept `data` and `newdata`.
 * Included a `process_data()` method for metric graphs
+* Renamed the data internal structure from "__group", "__edge_number", "__distance_on_edge", "__coord_x", "__coord_y" to ".group", ".edge_number", ".distance_on_edge", ".coord_x" and ".coord_y".
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.

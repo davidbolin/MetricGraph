@@ -402,10 +402,10 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
   }
 
   if(is.null(repl)){
-    groups <- graph_tmp$.__enclos_env__$private$data[["__group"]]
+    groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
     repl <- groups[1]
   } else if(repl[1] == "__all") {
-    groups <- graph_tmp$.__enclos_env__$private$data[["__group"]]
+    groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
     repl <- unique(groups)
   } 
 
@@ -432,7 +432,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
         } else if(drop_all_na){
           idx_notna <- idx_not_all_NA(data_group_repl)
         } else{
-          idx_notna <- rep(TRUE, length(data_group_repl[["__group"]]))
+          idx_notna <- rep(TRUE, length(data_group_repl[[".group"]]))
         }
         # nV_tmp <- sum(idx_notna)
         A <- Matrix::bdiag(A, Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ])
@@ -461,8 +461,8 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
   }
   
   if(!is.null(loc_name)){
-      ret[["data"]][[loc_name]] <- cbind(ret[["data"]][["__edge_number"]],
-                          ret[["data"]][["__distance_on_edge"]])
+      ret[["data"]][[loc_name]] <- cbind(ret[["data"]][[".edge_number"]],
+                          ret[["data"]][[".distance_on_edge"]])
   }
 
 
@@ -495,12 +495,12 @@ select_repl_group <- function(data_list, repl, group, group_col){
       grp <- data_list[[group_col]]
       grp <- which(grp %in% group)
       data_result <- lapply(data_list, function(dat){dat[grp]})
-      replicates <- data_result[["__group"]]
+      replicates <- data_result[[".group"]]
       replicates <- which(replicates %in% repl)
       data_result <- lapply(data_result, function(dat){dat[replicates]})
       return(data_result)
     } else{
-      replicates <- data_list[["__group"]]
+      replicates <- data_list[[".group"]]
       replicates <- which(replicates %in% repl)
       data_result <- lapply(data_list, function(dat){dat[replicates]})
       return(data_result)
@@ -840,7 +840,7 @@ bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   model <- mapper[["model"]]
-  n_groups <- length(unique(model$graph_spde$.__enclos_env__$private$data[["__group"]]))
+  n_groups <- length(unique(model$graph_spde$.__enclos_env__$private$data[[".group"]]))
   return(model$f$n)
 }
 #' @rdname bru_mapper.inla_metric_graph_spde
@@ -954,12 +954,12 @@ create_summary_from_density <- function(density_df, name) {
 #' @noRd
 
 bru_graph_rep <- function(repl, graph_spde){
-  groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[["__group"]])
+  groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]])
   if(repl[1] == "__all"){
     repl <- groups
   }
   n_groups <- length(groups)
-  length_resp <- sum(graph_spde$graph_spde$.__enclos_env__$private$data[["__group"]] == groups[1])
+  length_resp <- sum(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]] == groups[1])
   return(rep(repl, each = length_resp ))
 }
 
@@ -1050,12 +1050,12 @@ predict.inla_metric_graph_spde <- function(object,
   # graph_tmp <- object$graph_spde$clone()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
   original_data <- object$graph_spde$.__enclos_env__$private$data
-  original_data[["__edge_number"]] <- object$data_PtE[,1]
-  original_data[["__distance_on_edge"]] <- object$data_PtE[,2]
+  original_data[[".edge_number"]] <- object$data_PtE[,1]
+  original_data[[".distance_on_edge"]] <- object$data_PtE[,2]
 
   graph_tmp$add_observations(data = original_data,
-                  edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge",
+                  edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge",
                   data_coords = "PtE",
                   normalized = TRUE)
 
@@ -1063,27 +1063,27 @@ predict.inla_metric_graph_spde <- function(object,
   new_data[[name_locations]] <- NULL
   n_locations <- nrow(data[[name_locations]])
   names_columns <- names(original_data)
-  names_columns <- setdiff(names_columns, c("__group", "__coord_x",
-                                            "__coord_y", "__edge_number",
-                                            "__distance_on_edge"))
+  names_columns <- setdiff(names_columns, c(".group", ".coord_x",
+                                            ".coord_y", ".edge_number",
+                                            ".distance_on_edge"))
   # for(name_column in names_columns){
   #   new_data[[name_column]] <- rep(NA, n_locations)
   # }
   if(data_coords == "PtE"){
-    new_data[["__edge_number"]] <- data[[name_locations]][,1]
-    new_data[["__distance_on_edge"]] <- data[[name_locations]][,2]
+    new_data[[".edge_number"]] <- data[[name_locations]][,1]
+    new_data[[".distance_on_edge"]] <- data[[name_locations]][,2]
   } else{
-    new_data[["__coord_x"]] <- data[[name_locations]][,1]
-    new_data[["__coord_y"]] <- data[[name_locations]][,2]
+    new_data[[".coord_x"]] <- data[[name_locations]][,1]
+    new_data[[".coord_y"]] <- data[[name_locations]][,2]
   }
 
-  new_data[["__dummy_var"]] <- 1:length(new_data[["__edge_number"]])
+  new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
 
   graph_tmp$add_observations(data = new_data,
-                  edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge",
-                  coord_x = "__coord_x",
-                  coord_y = "__coord_y",
+                  edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge",
+                  coord_x = ".coord_x",
+                  coord_y = ".coord_y",
                   data_coords = data_coords,
                   normalized = normalized)
 
@@ -1091,22 +1091,22 @@ predict.inla_metric_graph_spde <- function(object,
 
   graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]] <- 1:length(graph_tmp$.__enclos_env__$private$data[["__dummy_var"]])
 
-  pred_PtE <- cbind(graph_tmp$.__enclos_env__$private$data[["__edge_number"]],
-                          graph_tmp$.__enclos_env__$private$data[["__distance_on_edge"]])
+  pred_PtE <- cbind(graph_tmp$.__enclos_env__$private$data[[".edge_number"]],
+                          graph_tmp$.__enclos_env__$private$data[[".distance_on_edge"]])
 
   # pred_PtE <- pred_PtE[!is.na(dummy1),]
 
   # Adding the original data
 
   # graph_tmp$add_observations(data = original_data,
-  #                   coord_x = "__coord_x",
-  #                   coord_y = "__coord_y",
+  #                   coord_x = ".coord_x",
+  #                   coord_y = ".coord_y",
   #                   data_coords = "euclidean")
 
   graph_tmp$observation_to_vertex(mesh_warning=FALSE)
 
-  # tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
-  #                                       graph_tmp$data[["__coord_y"]])
+  # tmp_list2 <- cbind(graph_tmp$data[[".coord_x"]],
+  #                                       graph_tmp$data[[".coord_y"]])
   # tmp_list2 <- lapply(1:nrow(tmp_list2), function(i){tmp_list2[i,]})
   # idx_list <- match(tmp_list, tmp_list2)
 
@@ -1118,11 +1118,11 @@ predict.inla_metric_graph_spde <- function(object,
 
   pred_PtE <- pred_PtE[graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]],][idx_list,]
 
-  # new_data_list[[name_locations]] <- cbind(graph_tmp$data[["__edge_number"]][idx_list],
-  #                                             graph_tmp$data[["__distance_on_edge"]][idx_list])
+  # new_data_list[[name_locations]] <- cbind(graph_tmp$data[[".edge_number"]][idx_list],
+  #                                             graph_tmp$data[[".distance_on_edge"]][idx_list])
 
-  new_data_list[[name_locations]] <- cbind(new_data_list[["__edge_number"]],
-                                              new_data_list[["__distance_on_edge"]])
+  new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
+                                              new_data_list[[".distance_on_edge"]])
 
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)

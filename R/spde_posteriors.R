@@ -152,6 +152,7 @@ posterior_mean_obs_alpha2 <- function(theta,
                                       type = "PtE",
                                       leave.edge.out = FALSE) {
 
+
   if(type == "obs" && leave.edge.out) {
     stop("leave.edge.out only possible for type = 'obs'.")
   }
@@ -163,7 +164,7 @@ posterior_mean_obs_alpha2 <- function(theta,
     PtE <- graph$get_PtE()
   }
   if(is.null(resp)){
-    resp <- graph$data$y
+    stop("Please, provide 'resp'")
   }
 
   if(leave.edge.out == FALSE)
@@ -364,8 +365,10 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const,]
+
   Q <- spde_precision(kappa = theta[3], tau = 1/theta[2],
                       alpha = 2, graph = graph)
+
 
   #build BSIGMAB
   Qpmu <- rep(0, 4 * graph$nE)
@@ -500,6 +503,7 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
                                j = j_,
                                x = x_,
                                dims = dim(Q))
+
   Qp <- Q + BtSB
   Qp <- Tc%*%Qp%*%t(Tc)
   R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)

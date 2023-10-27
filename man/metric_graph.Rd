@@ -885,7 +885,7 @@ Use \code{dplyr::summarise} function on the internal metric graph data object gr
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called \verb{__group}, will be added, with the same value 1 for all rows.
+A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called \verb{.group}, will be added, with the same value 1 for all rows.
 }
 
 \subsection{Returns}{

@@ -184,7 +184,7 @@ graph$add_observations(data = df_data_repl,
                         clear_obs = TRUE, 
                         group = "repl")
 ```
-Let us check the graph data. Observe that the grouping variable is now `__group`.
+Let us check the graph data. Observe that the grouping variable is now `.group`.
 
 ```{r}
 graph$get_data()
@@ -302,7 +302,7 @@ graph$get_data() %>% dplyr:::select.data.frame(y,y2)
 The `filter` verb selects rows based on conditions on the variables. For example, let us select the variables that are on `edge_number` 3, with `distance_on_edge` greater than 0.5:
 
 ```{r}
-filtered_data <- graph$filter(`__edge_number` == 3, `__distance_on_edge` > 0.5)
+filtered_data <- graph$filter(`.edge_number` == 3, `.distance_on_edge` > 0.5)
 ```
 
 We can plot the result using the `plot()` method together with the `newdata` argument to supply the modified dataset:
@@ -361,7 +361,7 @@ graph$get_data() %>% mutate(new_y = y+y2,
 
 ## summarise
 
-The `summarise` verb creates summaries of selected columns based on groupings. For metric graphs, the groups always include the edge number (`__edge_number`) and relative distance on edge (`__distance_on_edge`). By using the argument `.include_graph_groups`, the internal metric graph group variable, namely `__group`, will also be added to the `summarise()` group. Finally, additional groups can be passed by the `.groups` argument.
+The `summarise` verb creates summaries of selected columns based on groupings. For metric graphs, the groups always include the edge number (`.edge_number`) and relative distance on edge (`.distance_on_edge`). By using the argument `.include_graph_groups`, the internal metric graph group variable, namely `.group`, will also be added to the `summarise()` group. Finally, additional groups can be passed by the `.groups` argument.
 
 To illustrate, we will use the `data.frame` from the group example:
 
@@ -441,10 +441,10 @@ graph$add_observations(data = df_data_repl,
 graph$get_data(drop_all_na = FALSE)
 ```
 
-We will now create a new variable `new_y` which is the exponential of `y`, then filter the data to be on edges `1` and `2`, summarise to get the means of `new_y` at all positions (across the different groups, from the `___group` variable) and plot it:
+We will now create a new variable `new_y` which is the exponential of `y`, then filter the data to be on edges `1` and `2`, summarise to get the means of `new_y` at all positions (across the different groups, from the `_.group` variable) and plot it:
 
 ```{r}
-graph$mutate(new_y = exp(y)) %>% filter(`__edge_number` %in% c(1,2)) %>% 
+graph$mutate(new_y = exp(y)) %>% filter(`.edge_number` %in% c(1,2)) %>% 
             summarise(mean_new_y = mean(new_y)) %>% 
             graph$plot(data = "mean_new_y")
 ```
@@ -456,7 +456,7 @@ For example, let us consider the dataset from the previous section. We will repl
 
 ```{r}
 graph$add_observations(data = graph$mutate(new_y = exp(y)) %>% 
-                        filter(`__edge_number` %in% c(1,2)) %>% 
+                        filter(`.edge_number` %in% c(1,2)) %>% 
                                 summarise(mean_new_y = mean(new_y)),
                                 clear_obs = TRUE)
 ```

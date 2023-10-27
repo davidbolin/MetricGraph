@@ -605,13 +605,13 @@ metric_graph <-  R6Class("metric_graph",
                                                               normalized = TRUE)
     } else{
       if(is.null(group)){
-          group <- unique(private$data[["__group"]])
+          group <- unique(private$data[[".group"]])
       }
       for(grp in group){
           data_grp <- select_group(private$data, grp)
           idx_notna <- idx_not_all_NA(data_grp)
-          PtE_group <- cbind(data_grp[["__edge_number"]][idx_notna],
-                     data_grp[["__distance_on_edge"]][idx_notna])
+          PtE_group <- cbind(data_grp[[".edge_number"]][idx_notna],
+                     data_grp[[".distance_on_edge"]][idx_notna])
           self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group,
                                                               normalized = TRUE)
       }
@@ -712,7 +712,7 @@ metric_graph <-  R6Class("metric_graph",
                                                                 normalized=TRUE)
     } else{
       if(is.null(group)){
-          group <- unique(private$data[["__group"]])
+          group <- unique(private$data[[".group"]])
       }
       for(grp in group){
         data_grp <- select_group(private$data, grp)
@@ -720,8 +720,8 @@ metric_graph <-  R6Class("metric_graph",
         if(sum(idx_notna) == 0){
           stop("There are no non-NA observations.")
         }
-        PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
-                     data_grp[["__distance_on_edge"]][idx_notna])
+        PtE <- cbind(data_grp[[".edge_number"]][idx_notna],
+                     data_grp[[".distance_on_edge"]][idx_notna])
         self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE,
                                                                        normalized=TRUE)
       }
@@ -872,13 +872,13 @@ metric_graph <-  R6Class("metric_graph",
                                                             normalized = TRUE)
     } else{
       if(is.null(group)){
-          group <- unique(private$data[["__group"]])
+          group <- unique(private$data[[".group"]])
       }
       for(grp in group){
           data_grp <- select_group(private$data, grp)
           idx_notna <- idx_not_all_NA(data_grp)
-          PtE <- cbind(data_grp[["__edge_number"]][idx_notna],
-                       data_grp[["__distance_on_edge"]][idx_notna])
+          PtE <- cbind(data_grp[[".edge_number"]][idx_notna],
+                       data_grp[[".distance_on_edge"]][idx_notna])
           if(nrow(PtE) == 0){
             stop("All the observations are NA.")
           }
@@ -941,12 +941,12 @@ metric_graph <-  R6Class("metric_graph",
       message("Updating data locations.")
     }    
       t <- system.time({
-      x_coord <- private$data[["__coord_x"]]
-      y_coord <- private$data[["__coord_y"]]
+      x_coord <- private$data[[".coord_x"]]
+      y_coord <- private$data[[".coord_y"]]
       new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
-      group_vec <- private$data[["__group"]]
-      private$data[["__edge_number"]] <- new_PtE[,1]
-      private$data[["__distance_on_edge"]] <- new_PtE[,2]
+      group_vec <- private$data[[".group"]]
+      private$data[[".edge_number"]] <- new_PtE[,1]
+      private$data[[".distance_on_edge"]] <- new_PtE[,2]
       order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
       private$data <- lapply(private$data, function(dat){dat[order_idx]})
       })
@@ -971,7 +971,7 @@ metric_graph <-  R6Class("metric_graph",
       warning("There is no data!")
       return(invisible(NULL))
     }
-    return(unique(private$data[["__group"]]))
+    return(unique(private$data[[".group"]]))
   },
 
   #' @description Gets PtE from the data.
@@ -985,10 +985,10 @@ metric_graph <-  R6Class("metric_graph",
       warning("There is no data!")
       return(invisible(NULL))
     }
-    group <- private$data[["__group"]]
+    group <- private$data[[".group"]]
     group <- which(group == group[1])
-    PtE <- cbind(private$data[["__edge_number"]][group],
-                 private$data[["__distance_on_edge"]][group])
+    PtE <- cbind(private$data[[".edge_number"]][group],
+                 private$data[[".distance_on_edge"]][group])
     return(PtE)
   },
 
@@ -1012,9 +1012,9 @@ metric_graph <-  R6Class("metric_graph",
       warning("There is no data!")
       return(invisible(NULL))
     }
-    group <- private$data[["__group"]]
+    group <- private$data[[".group"]]
     group <- which(group == group[1])
-    Spoints <- data.frame(x = private$data[["__coord_x"]][group], y = private$data[["__coord_y"]][group])
+    Spoints <- data.frame(x = private$data[[".coord_x"]][group], y = private$data[[".coord_y"]][group])
     if(private$longlat){
       colnames(Spoints) <- c("lon", "lat")
     }
@@ -1032,7 +1032,7 @@ metric_graph <-  R6Class("metric_graph",
       stop("tolerance should be between 0 and 1.")
     }
     private$temp_PtE <- self$get_PtE()
-    n_group <- length(unique(private$data[["__group"]]))
+    n_group <- length(unique(private$data[[".group"]]))
     l <- length(private$temp_PtE[, 1])
     self$PtV <- rep(NA, l)
     self$nE <- nrow(self$E)
@@ -1055,14 +1055,14 @@ metric_graph <-  R6Class("metric_graph",
     }
     self$PtV <- self$PtV[!is.na(self$PtV)]
 
-    private$data[["__edge_number"]] <- rep(private$temp_PtE[,1],
+    private$data[[".edge_number"]] <- rep(private$temp_PtE[,1],
                                         times = n_group)
-    private$data[["__distance_on_edge"]] <- rep(private$temp_PtE[,2],
+    private$data[[".distance_on_edge"]] <- rep(private$temp_PtE[,2],
                                              times = n_group)
 
-    tmp_df <- data.frame(PtE1 = private$data[["__edge_number"]],
-              PtE2 = private$data[["__distance_on_edge"]],
-              group = private$data[["__group"]])
+    tmp_df <- data.frame(PtE1 = private$data[[".edge_number"]],
+              PtE2 = private$data[[".distance_on_edge"]],
+              group = private$data[[".group"]])
     index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
     private$data <- lapply(private$data, function(dat){ dat[index_order]})
 
@@ -1278,7 +1278,7 @@ metric_graph <-  R6Class("metric_graph",
      if(!is.null(group)){
        group_vector <- data[[group]]
      } else{
-       group <- "__group"
+       group <- ".group"
        group_vector <- NULL
      }
 
@@ -1300,21 +1300,21 @@ metric_graph <-  R6Class("metric_graph",
     data[[coord_x]] <- NULL
     data[[coord_y]] <- NULL
     data[[group]] <- NULL
-    data[["__coord_x"]] <- NULL
-    data[["__coord_y"]] <- NULL
+    data[[".coord_x"]] <- NULL
+    data[[".coord_y"]] <- NULL
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
     data <- process_data_add_obs(PtE, new_data = data, old_data = NULL,
                                         group_vector)
     ## convert to Spoints and add
-    group_1 <- data[["__group"]]
+    group_1 <- data[[".group"]]
     group_1 <- which(group_1 == group_1[1])
-    PtE <- cbind(data[["__edge_number"]][group_1],
-                 data[["__distance_on_edge"]][group_1])
+    PtE <- cbind(data[[".edge_number"]][group_1],
+                 data[[".distance_on_edge"]][group_1])
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
-    data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
-    data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
+    data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
+    data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
     if(tibble){
       data <- tidyr::as_tibble(data)
     }
@@ -1390,14 +1390,14 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(inherits(data, "metric_graph_data")){
-      if(!any(c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y") %in% names(data))){
+      if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
         warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
         class(data) <- setdiff(class(data), "metric_graph_data")
       } else{
         data_coords <- "PtE"
-        edge_number <- "__edge_number"
-        distance_on_edge <- "__distance_on_edge"
-        group <- "__group"
+        edge_number <- ".edge_number"
+        distance_on_edge <- ".distance_on_edge"
+        group <- ".group"
         normalized <- TRUE
       }
     } 
@@ -1500,7 +1500,7 @@ metric_graph <-  R6Class("metric_graph",
      if(!is.null(group)){
        group_vector <- data[[group]]
      } else{
-       group <- "__group"
+       group <- ".group"
        group_vector <- NULL
      }
 
@@ -1509,8 +1509,8 @@ metric_graph <-  R6Class("metric_graph",
                    coordinates!"))
        }})
 
-    if(!is.null(private$data[["__group"]])){
-      group_vals <- unique(private$data[["__group"]])
+    if(!is.null(private$data[[".group"]])){
+      group_vals <- unique(private$data[[".group"]])
       group_vals <- unique(union(group_vals, group_vector))
     } else{
       group_vals <- unique(group_vector)
@@ -1525,8 +1525,8 @@ metric_graph <-  R6Class("metric_graph",
     data[[coord_x]] <- NULL
     data[[coord_y]] <- NULL
     data[[group]] <- NULL
-    private$data[["__coord_x"]] <- NULL
-    private$data[["__coord_y"]] <- NULL
+    private$data[[".coord_x"]] <- NULL
+    private$data[[".coord_y"]] <- NULL
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
@@ -1536,8 +1536,8 @@ metric_graph <-  R6Class("metric_graph",
     ## convert to Spoints and add
     PtE <- self$get_PtE()
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
-    private$data[["__coord_x"]] <- rep(spatial_points[,1], times = n_group)
-    private$data[["__coord_y"]] <- rep(spatial_points[,2], times = n_group)
+    private$data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
+    private$data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
     if(tibble){
       private$data <- tidyr::as_tibble(private$data)
     }
@@ -1627,11 +1627,11 @@ metric_graph <-  R6Class("metric_graph",
       data_res <- private$data
     }
     data_res <- dplyr::select(.data = data_res, ...)
-    data_res[["__group"]] <- private$data[["__group"]] 
-    data_res[["__edge_number"]] <- private$data[["__edge_number"]]
-    data_res[["__distance_on_edge"]] <- private$data[["__distance_on_edge"]]
-    data_res[["__coord_x"]] <- private$data[["__coord_x"]]
-    data_res[["__coord_y"]] <- private$data[["__coord_y"]]
+    data_res[[".group"]] <- private$data[[".group"]] 
+    data_res[[".edge_number"]] <- private$data[[".edge_number"]]
+    data_res[[".distance_on_edge"]] <- private$data[[".distance_on_edge"]]
+    data_res[[".coord_x"]] <- private$data[[".coord_x"]]
+    data_res[[".coord_y"]] <- private$data[[".coord_y"]]
 
 
     if(.drop_all_na){
@@ -1692,7 +1692,7 @@ metric_graph <-  R6Class("metric_graph",
     }    
 
     data_res <- dplyr::filter(.data = data_res, ...)
-    data_res <- dplyr::arrange(.data = data_res, `__group`, `__edge_number`, `__distance_on_edge`)
+    data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
@@ -1708,7 +1708,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
    #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `__group`, will be added, with the same value 1 for all rows.
+  #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `.group`, will be added, with the same value 1 for all rows.
   #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
   summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE) {
     if(!inherits(private$data, "tbl_df")){
@@ -1737,19 +1737,19 @@ metric_graph <-  R6Class("metric_graph",
     }    
 
 
-    group_vars <- c("__edge_number", "__distance_on_edge", "__coord_x", "__coord_y")
+    group_vars <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y")
     if(.include_graph_groups){
-      group_vars <- c("__group", group_vars)
+      group_vars <- c(".group", group_vars)
     }
     group_vars <- c(.groups, group_vars)
     data_res <- dplyr::group_by_at(.tbl = data_res, .vars = group_vars)
     data_res <- dplyr::summarise(.data = data_res, ...)
     data_res <- dplyr::ungroup(data_res)
-    if(is.null(data_res[["__group"]])){
-      data_res[["__group"]] <- 1
+    if(is.null(data_res[[".group"]])){
+      data_res[[".group"]] <- 1
     }
 
-    data_res <- dplyr::arrange(.data = data_res, `__group`, `__edge_number`, `__distance_on_edge`)  
+    data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)  
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
@@ -2105,7 +2105,7 @@ metric_graph <-  R6Class("metric_graph",
       stop("The graph does not contain data.")
     }
     if(is.numeric(group) && !is.null(data)) {
-      unique_group <- unique(private$data[["__group"]])
+      unique_group <- unique(private$data[[".group"]])
       group <- unique_group[group]
     }
     if(!is.null(newdata)){
@@ -2281,12 +2281,12 @@ metric_graph <-  R6Class("metric_graph",
     } else{
       if(is.null(newdata)){
         X <- self$get_data(group = group)
-        X <- X[,c("__edge_number", "__distance_on_edge", data)]
+        X <- X[,c(".edge_number", ".distance_on_edge", data)]
       } else{
         if(!inherits(newdata, "metric_graph_data")){
           stop("'newdata' must be of class 'metric_graph_data'!")
         }
-        X <- newdata[,c("__edge_number", "__distance_on_edge", data)]
+        X <- newdata[,c(".edge_number", ".distance_on_edge", data)]
       }
     }
 
@@ -2631,11 +2631,11 @@ metric_graph <-  R6Class("metric_graph",
       stop("You should have a mesh!")
     }
     PtE_mesh <- self$mesh$PtE
-    data[["__edge_number"]] <- PtE_mesh[,1]
-    data[["__distance_on_edge"]] <- PtE_mesh[,2]
+    data[[".edge_number"]] <- PtE_mesh[,1]
+    data[[".distance_on_edge"]] <- PtE_mesh[,2]
     self$add_observations(data = data, group = group,
-                          edge_number = "__edge_number",
-                          distance_on_edge = "__distance_on_edge",
+                          edge_number = ".edge_number",
+                          distance_on_edge = ".distance_on_edge",
                           normalized = TRUE)
   },
 
@@ -3037,8 +3037,8 @@ metric_graph <-  R6Class("metric_graph",
 
       y_plot <-data_group[[data]]
 
-      x <- data_group[["__coord_x"]]
-      y <- data_group[["__coord_y"]]        
+      x <- data_group[[".coord_x"]]
+      y <- data_group[[".coord_y"]]        
 
       p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(y_plot))],
                                             y = y[!is.na(as.vector(y_plot))],
@@ -3137,8 +3137,8 @@ metric_graph <-  R6Class("metric_graph",
       }
       y_plot <- data_group[[data]]
 
-      x <- data_group[["__coord_x"]]
-      y <- data_group[["__coord_y"]]    
+      x <- data_group[[".coord_x"]]
+      y <- data_group[[".coord_y"]]    
 
       data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
                               y = y[!is.na(as.vector(y_plot))],
@@ -3445,10 +3445,10 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(is.null(group)){
-      group <- unique(private$data[["__group"]])
+      group <- unique(private$data[[".group"]])
       group <- group[1]
     } else if (group[1] == "__all"){
-      group <- unique(private$data[["__group"]])
+      group <- unique(private$data[[".group"]])
     }
     n_group <- length(unique(group))
 

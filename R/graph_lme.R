@@ -141,7 +141,7 @@ graph_lme <- function(formula, graph,
   }
 
   if(is.null(which_repl)){
-    which_repl <- unique(graph$.__enclos_env__$private$data[["__group"]])
+    which_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
   }
 
   if(model_type%in% c("whittlematern", "graphlaplacian")){
@@ -288,7 +288,7 @@ graph_lme <- function(formula, graph,
         cov_names <- attr(cov_term, "term.labels")
       }       
       
-      names_temp <- c(as.character(y_term), cov_names, c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y"))
+      names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
 
       df_data <- lapply(names_temp, function(i){df_data[[i]]})
       names(df_data) <- names_temp
@@ -298,10 +298,10 @@ graph_lme <- function(formula, graph,
       df_data <- lapply(df_data, function(dat){dat[idx_notanyNA]})      
 
       fit <- rSPDE::rspde_lme(formula = formula, 
-                            loc = cbind(df_data[["__edge_number"]],
-                            df_data[["__distance_on_edge"]]),
+                            loc = cbind(df_data[[".edge_number"]],
+                            df_data[[".distance_on_edge"]]),
                             model = rspde_object,
-                            repl = df_data[["__group"]],
+                            repl = df_data[[".group"]],
                             nu = nu, which_repl = which_repl,
                             optim_method = optim_method,
                             data = df_data,
@@ -372,7 +372,7 @@ graph_lme <- function(formula, graph,
     colnames(X_cov) <- names_temp
   }
 
-  names_temp <- c(as.character(y_term), cov_names, c("__edge_number", "__distance_on_edge", "__group", "__coord_x", "__coord_y"))
+  names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
 
   graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
   names(graph_bkp$.__enclos_env__$private$data) <- names_temp
@@ -744,7 +744,7 @@ graph_lme <- function(formula, graph,
   object$estimation_method <- optim_method
   # object$parameterization_latent <- parameterization_latent
   object$which_repl <- which_repl
-  object$nobs <- sum(graph$.__enclos_env__$private$data[["__group"]] %in% which_repl)
+  object$nobs <- sum(graph$.__enclos_env__$private$data[[".group"]] %in% which_repl)
   object$optim_controls <- optim_controls
   object$latent_model <- model
   object$loglik <- loglik
@@ -917,14 +917,19 @@ glance.graph_lme <- function(x, ...){
 #'   \item `.fixed` Prediction of the fixed effects.
 #'   \item `.random` Prediction of the random effects.
 #'   \item `.resid`} The ordinary residuals, that is, the difference between observed and fitted values.
-#'   \item `.se.fit` Standard errors of fitted values, if se_fit = TRUE.
+#'   \item `.se_fit` Standard errors of fitted values, if se_fit = TRUE.
 #'   }
 #'
 #' @seealso [glance.graph_lme], [tidy.graph_lme]
 #' @method augment graph_lme
 #' @export
 augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FALSE, conf_int = FALSE, pred_int = FALSE, level = 0.95, n_samples = 100, edge_number = "edge_number", distance_on_edge = "distance_on_edge", coord_x = "coord_x", coord_y = "coord_y", data_coords = c("PtE", "spatial"),  normalized = FALSE, ...) {
-  .resid <-  NULL
+  
+  .resid <- FALSE
+  if(is.null(newdata)){
+    .resid <-  TRUE
+  } 
+    
 
   level <- level[[1]]
   if(!is.numeric(level)){
@@ -946,30 +951,30 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
 
   if(pred_int){
     pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = TRUE,
-                  posterior_samples = TRUE, n_samples = n_samples, edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
+                  posterior_samples = TRUE, n_samples = n_samples, edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
   } else if(conf_int || se_fit){
     pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = TRUE,
-                  posterior_samples = FALSE, edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
+                  posterior_samples = FALSE, edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
   } else{
-      pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = FALSE, posterior_samples = FALSE, edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
+      pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = FALSE, posterior_samples = FALSE, edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
   }
 
   if(se_fit){
     newdata[[".fitted"]] <- pred$mean
-    newdata[[".se.fit"]] <- sqrt(pred$variance)
+    newdata[[".se_fit"]] <- sqrt(pred$variance)
     newdata[[".fixed"]] <- pred$fe_mean
     newdata[[".random"]] <- pred$re_mean
-    if(is.null(newdata)){
+    if(.resid){
       newdata[[".resid"]] <- pred$mean - newdata[[as.character(x$response_var)]]
     }
   } else{
     newdata[[".fitted"]] <- pred$mean
     newdata[[".fixed"]] <- pred$fe_mean
     newdata[[".random"]] <- pred$re_mean
-    if(is.null(newdata)){
+    if(.resid){
       newdata[[".resid"]] <- pred$mean - newdata[[as.character(x$response_var)]]
     }
   }
@@ -1378,9 +1383,9 @@ predict.graph_lme <- function(object,
   }
 
   data_graph_temp <- list()
-  idx_group1 <-  graph_bkp$.__enclos_env__$private$data[["__group"]] == graph_bkp$.__enclos_env__$private$data[["__group"]][1]
-  data_graph_temp[[edge_number]] <- graph_bkp$.__enclos_env__$private$data[["__edge_number"]][idx_group1]
-  data_graph_temp[[distance_on_edge]] <- graph_bkp$.__enclos_env__$private$data[["__distance_on_edge"]][idx_group1]
+  idx_group1 <-  graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1]
+  data_graph_temp[[edge_number]] <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][idx_group1]
+  data_graph_temp[[distance_on_edge]] <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][idx_group1]
   data_graph_temp[[as.character(object$response_var)]] <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]][idx_group1]
   # data_graph_temp <- as.data.frame(data_graph_temp)
   # colnames(data_graph_temp)[1:2] <- c(edge_number, distance_on_edge)
@@ -1390,20 +1395,7 @@ predict.graph_lme <- function(object,
   data_prd_temp[[distance_on_edge]] <- data[[distance_on_edge]]
   data_prd_temp[["included"]] <- TRUE
 
-
-  print("data_graph_temp")
-  print(head(data_graph_temp))
-
-  print("data_prd_temp")
-
-  print(head(data_prd_temp))
-
   temp_merge <- merge(data_prd_temp, data_graph_temp, all = TRUE)
-
-  print("temp_merge")
-  print(head(temp_merge))
-
-  stop("B")
 
   temp_merge <- temp_merge[!is.na(temp_merge[["included"]]),]
 
@@ -1417,30 +1409,27 @@ predict.graph_lme <- function(object,
 
   old_data <- graph_bkp$.__enclos_env__$private$data
 
-  data[["__group"]] <- old_data[["__group"]][1]
+  data[[".group"]] <- old_data[[".group"]][1]
 
   graph_bkp$clear_observations()
 
-  print(head(data))
-  stop("B")
-
   graph_bkp$add_observations(data = data, edge_number = edge_number,
                              distance_on_edge = distance_on_edge,
-                             normalized = TRUE, group = "__group")
+                             normalized = TRUE, group = ".group")
 
-  graph_bkp$add_observations(data = old_data, edge_number = "__edge_number",
-                             distance_on_edge = "__distance_on_edge",
-                             group = "__group", normalized = TRUE)
+  graph_bkp$add_observations(data = old_data, edge_number = ".edge_number",
+                             distance_on_edge = ".distance_on_edge",
+                             group = ".group", normalized = TRUE)
 
-  graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[["__edge_number"]])
+  graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
 
-  n <- sum(graph_bkp$.__enclos_env__$private$data[["__group"]] == graph_bkp$.__enclos_env__$private$data[["__group"]][1])
+  n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
 
   ##
-  repl_vec <- graph_bkp$.__enclos_env__$private$data[["__group"]]
+  repl_vec <- graph_bkp$.__enclos_env__$private$data[[".group"]]
 
   if(is.null(repl)){
-    u_repl <- unique(graph_bkp$.__enclos_env__$private$data[["__group"]])
+    u_repl <- unique(graph_bkp$.__enclos_env__$private$data[[".group"]])
   } else{
     u_repl <- unique(repl)
   }
@@ -1450,12 +1439,12 @@ predict.graph_lme <- function(object,
   X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
 
   if(all(dim(X_cov_pred) == c(0,1))){
-    X_cov_pred <- matrix(1, nrow = length(graph_bkp$.__enclos_env__$private$data[["__group"]]), ncol=1)
+    X_cov_pred <- matrix(1, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
   }
   if(ncol(X_cov_pred) > 0){
     mu <- X_cov_pred %*% coeff_fixed
   } else{
-    mu <- matrix(0, nrow = length(graph_bkp$.__enclos_env__$private$data[["__group"]]), ncol=1)
+    mu <- matrix(0, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
   }
 
   Y <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]] - mu
@@ -1474,8 +1463,8 @@ predict.graph_lme <- function(object,
 
   n_prd <- sum(idx_prd)
 
-  edge_nb <- graph_bkp$.__enclos_env__$private$data[["__edge_number"]][1:n][idx_prd]
-  dist_ed <- graph_bkp$.__enclos_env__$private$data[["__distance_on_edge"]][1:n][idx_prd]
+  edge_nb <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][1:n][idx_prd]
+  dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n][idx_prd]
 
   ## construct Q
 
@@ -1663,6 +1652,9 @@ predict.graph_lme <- function(object,
         Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 1, graph = graph_bkp2)
       } else{
+        if(is.null(graph_bkp2$CoB)){
+          graph_bkp2$buildC(2)
+        }
         PtE <- graph_bkp2$get_PtE()
         n.c <- 1:length(graph_bkp2$CoB$S)
         Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
@@ -1676,10 +1668,11 @@ predict.graph_lme <- function(object,
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
         Q <- solve(Sigma)
       }
-      A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp2$PtV, ]
+      A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
       rm(graph_bkp2)
     }
   }
+
 
 
   for(repl_y in u_repl){
@@ -1687,7 +1680,7 @@ predict.graph_lme <- function(object,
       out$distance_on_edge[[repl_y]] <- dist_ed
       out$edge_number[[repl_y]] <- edge_nb
     }
-    idx_repl <- graph_bkp$.__enclos_env__$private$data[["__group"]] == repl_y
+    idx_repl <- graph_bkp$.__enclos_env__$private$data[[".group"]] == repl_y
 
     idx_obs <- idx_obs_full[idx_repl]
 
@@ -1712,6 +1705,9 @@ predict.graph_lme <- function(object,
       PtE_obs <- PtE_full[idx_obs,]
 
       if(cond_alpha2){
+        if(is.null(graph_bkp$CoB)){
+          graph_bkp$buildC(2)
+        }
           mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]],
@@ -1787,7 +1783,8 @@ predict.graph_lme <- function(object,
     if (compute_variances) {
       if(!cond_isocov){
         post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
-        var_tmp <- max(diag(post_cov),0)
+        var_tmp <- diag(post_cov)
+        var_tmp <- var_tmp * (var_tmp > 0)
       } else{
         var_tmp <- diag(Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs])))
         var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors

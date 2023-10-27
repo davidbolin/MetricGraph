@@ -475,12 +475,12 @@ exp_covariance <- function(h, theta){
 #' Processing data to be used in add_observations
 #' @noRd
 process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
-  new_data[["__edge_number"]] <- PtE[,1]
-  new_data[["__distance_on_edge"]] <- PtE[,2]
+  new_data[[".edge_number"]] <- PtE[,1]
+  new_data[[".distance_on_edge"]] <- PtE[,2]
 
   if (is.null(group_vector)) {
     if(!is.null(old_data)){
-      group_vector <- rep(old_data[["__group"]][1], length(PtE[,1]))
+      group_vector <- rep(old_data[[".group"]][1], length(PtE[,1]))
     } else{
       group_vector <- rep(1, length(PtE[,1]))
     }
@@ -489,7 +489,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
   if(is.null(old_data)){
       group_val <- unique(group_vector)
   } else {
-      group_val <- unique(union(old_data[["__group"]], group_vector))
+      group_val <- unique(union(old_data[[".group"]], group_vector))
   }
 
   if (is.null(old_data)) {
@@ -517,9 +517,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
-    list_result[["__edge_number"]] <- NULL
-    list_result[["__distance_on_edge"]] <- NULL
-    list_result[["__group"]] <- NULL
+    list_result[[".edge_number"]] <- NULL
+    list_result[[".distance_on_edge"]] <- NULL
+    list_result[[".group"]] <- NULL
     new_data <- lapply(list_result, function(col_name){
           mode_vector <- typeof(new_data[[col_name]])
           tmp <- vector(mode=mode_vector, length = nrow(data_coords))
@@ -530,9 +530,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
             }
             return(tmp)
           })
-    new_data[["__edge_number"]] <- data_coords[["PtE1"]]
-    new_data[["__distance_on_edge"]] <- data_coords[["PtE2"]]
-    new_data[["__group"]] <- data_coords[["group"]]
+    new_data[[".edge_number"]] <- data_coords[["PtE1"]]
+    new_data[[".distance_on_edge"]] <- data_coords[["PtE2"]]
+    new_data[[".group"]] <- data_coords[["group"]]
     return(new_data)
   } else {
     old_colnames <- names(old_data)
@@ -541,8 +541,8 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
 
     new_df <- data.frame(PtE1 = PtE[,1], PtE2 = PtE[,2])
 
-    old_df <- data.frame(PtE1 = old_data[["__edge_number"]],
-                         PtE2 = old_data[["__distance_on_edge"]])
+    old_df <- data.frame(PtE1 = old_data[[".edge_number"]],
+                         PtE2 = old_data[[".distance_on_edge"]])
 
     data_coords <- unique(rbind(old_df, new_df))
     data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
@@ -560,7 +560,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     }
     data_coords <- as.data.frame(data_coords)
     new_df[["group"]] <- group_vector
-    old_df[["group"]] <- old_data[["__group"]]
+    old_df[["group"]] <- old_data[[".group"]]
     data_coords[["idx"]] <- 1:nrow(data_coords)
 
     idx_new_entries <- merge(new_df, data_coords, all = FALSE, sort = FALSE)
@@ -570,9 +570,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
-    list_result[["__edge_number"]] <- NULL
-    list_result[["__distance_on_edge"]] <- NULL
-    list_result[["__group"]] <- NULL
+    list_result[[".edge_number"]] <- NULL
+    list_result[[".distance_on_edge"]] <- NULL
+    list_result[[".group"]] <- NULL
     list_result <- lapply(list_result, function(col_name){
         if(!is.null(new_data[[col_name]])){
           mode_vector <- typeof(new_data[[col_name]])
@@ -600,9 +600,9 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
         }
         return(tmp)
       })
-  list_result[["__edge_number"]] <- data_coords[["PtE1"]]
-  list_result[["__distance_on_edge"]] <- data_coords[["PtE2"]]
-  list_result[["__group"]] <- data_coords[["group"]]
+  list_result[[".edge_number"]] <- data_coords[["PtE1"]]
+  list_result[[".distance_on_edge"]] <- data_coords[["PtE2"]]
+  list_result[[".group"]] <- data_coords[["group"]]
   return(list_result)
   }
 }
@@ -611,11 +611,11 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
 #' @noRd
 #'
 idx_not_all_NA <- function(data_list){
-     data_list[["__edge_number"]] <- NULL
-     data_list[["__distance_on_edge"]] <- NULL
-     data_list[["__coord_x"]] <- NULL
-     data_list[["__coord_y"]] <- NULL
-     data_list[["__group"]] <- NULL
+     data_list[[".edge_number"]] <- NULL
+     data_list[[".distance_on_edge"]] <- NULL
+     data_list[[".coord_x"]] <- NULL
+     data_list[[".coord_y"]] <- NULL
+     data_list[[".group"]] <- NULL
      data_names <- names(data_list)
      n_data <- length(data_list[[data_names[1]]])
      idx_non_na <- logical(n_data)
@@ -632,11 +632,11 @@ idx_not_all_NA <- function(data_list){
 #' @noRd
 #'
 idx_not_any_NA <- function(data_list){
-     data_list[["__edge_number"]] <- NULL
-     data_list[["__distance_on_edge"]] <- NULL
-     data_list[["__coord_x"]] <- NULL
-     data_list[["__coord_y"]] <- NULL
-     data_list[["__group"]] <- NULL
+     data_list[[".edge_number"]] <- NULL
+     data_list[[".distance_on_edge"]] <- NULL
+     data_list[[".coord_x"]] <- NULL
+     data_list[[".coord_y"]] <- NULL
+     data_list[[".group"]] <- NULL
      data_names <- names(data_list)
      n_data <- length(data_list[[data_names[1]]])
      idx_non_na <- logical(n_data)
@@ -654,7 +654,7 @@ idx_not_any_NA <- function(data_list){
 #' @noRd
 #'
 select_group <- function(data_list, group){
-    grp <- data_list[["__group"]]
+    grp <- data_list[[".group"]]
     grp <- which(grp %in% group)
     data_result <- lapply(data_list, function(dat){dat[grp]})
     return(data_result)
@@ -848,8 +848,8 @@ make_Aprd <- function(graph, edge_number, distance_on_edge){
   order_X <- order(X_loc[,1], X_loc[,2])
   X_loc <- X_loc[order_X,]
   edge_n <- sort(unique(edge_number))
-  idx_tmp <- (graph$data[["__edge_number"]] == edge_n[1])
-  mesh_tmp <- graph$data[["__distance_on_edge"]][idx_tmp]
+  idx_tmp <- (graph$data[[".edge_number"]] == edge_n[1])
+  mesh_tmp <- graph$data[[".distance_on_edge"]][idx_tmp]
   loc <- (X_loc[X_loc[,1] == edge_n[1], 2])
   A_prd <- rSPDE::rSPDE.A1d(mesh_tmp, )
 }
@@ -1139,18 +1139,18 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
 #' 
 select.metric_graph_data <- function(.data, ...){
     bkp <- list()
-    bkp[["__group"]] <- .data[["__group"]] 
-    bkp[["__edge_number"]] <- .data[["__edge_number"]]
-    bkp[["__distance_on_edge"]] <- .data[["__distance_on_edge"]]
-    bkp[["__coord_x"]] <- .data[["__coord_x"]]
-    bkp[["__coord_y"]] <- .data[["__coord_y"]]
+    bkp[[".group"]] <- .data[[".group"]] 
+    bkp[[".edge_number"]] <- .data[[".edge_number"]]
+    bkp[[".distance_on_edge"]] <- .data[[".distance_on_edge"]]
+    bkp[[".coord_x"]] <- .data[[".coord_x"]]
+    bkp[[".coord_y"]] <- .data[[".coord_y"]]
 
     data_res <- dplyr::select(.data = tidyr::as_tibble(.data), ...)
-    data_res[["__group"]] <- bkp[["__group"]] 
-    data_res[["__edge_number"]] <- bkp[["__edge_number"]]
-    data_res[["__distance_on_edge"]] <- bkp[["__distance_on_edge"]]
-    data_res[["__coord_x"]] <- bkp[["__coord_x"]]
-    data_res[["__coord_y"]] <- bkp[["__coord_y"]]
+    data_res[[".group"]] <- bkp[[".group"]] 
+    data_res[[".edge_number"]] <- bkp[[".edge_number"]]
+    data_res[[".distance_on_edge"]] <- bkp[[".distance_on_edge"]]
+    data_res[[".coord_x"]] <- bkp[[".coord_x"]]
+    data_res[[".coord_y"]] <- bkp[[".coord_y"]]
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
     }    
@@ -1231,9 +1231,9 @@ filter.metric_graph_data <- function(.data, ...){
 #' @export
 #' 
 summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALSE, .groups = NULL){
-    group_vars <- c("__edge_number", "__distance_on_edge", "__coord_x", "__coord_y")
+    group_vars <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y")
     if(.include_graph_groups){
-      group_vars <- c("__group", group_vars)
+      group_vars <- c(".group", group_vars)
     }
     group_vars <- c(.groups, group_vars)
     previous_groups <- as.character(dplyr::groups(.data))
@@ -1242,11 +1242,11 @@ summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALS
     data_res <- dplyr::group_by_at(.tbl = tidyr::as_tibble(.data), .vars = group_vars)
     data_res <- dplyr::summarise(.data = data_res, ...)
     data_res <- dplyr::ungroup(data_res)
-    if(is.null(data_res[["__group"]])){
-      data_res[["__group"]] <- 1
+    if(is.null(data_res[[".group"]])){
+      data_res[[".group"]] <- 1
     }
 
-    ord_data <- order(data_res[["__group"]], data_res[["__edge_number"]], data_res[["__distance_on_edge"]])
+    ord_data <- order(data_res[[".group"]], data_res[[".edge_number"]], data_res[[".distance_on_edge"]])
 
     data_res <- data_res[ord_data,]
 

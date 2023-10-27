@@ -383,7 +383,7 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     X_cov <- NULL
   }
 
-  repl_vec <- graph$.__enclos_env__$private$data[["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
   repl <- unique(repl_vec)
 
   n_obs <- sum(repl_vec == repl[1])
