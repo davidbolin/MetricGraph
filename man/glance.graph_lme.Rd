@@ -33,5 +33,5 @@ degrees of freedom, AIC, BIC, log-likelihood,
 the type of latent model used in the fit and the total number of observations.
 }
 \seealso{
-\link{augment.graph_lme}, \link{tidy.graph_lme}
+\link{augment.graph_lme}
 }

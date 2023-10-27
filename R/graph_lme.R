@@ -855,7 +855,7 @@ deviance.graph_lme <- function(object, ...){
 #'   \item `df.residual` Residual degrees of freedom.
 #'   \item `model.type` Type of latent model fitted.
 #'   }
-#' @seealso [augment.graph_lme], [tidy.graph_lme]
+#' @seealso [augment.graph_lme]
 #' @method glance graph_lme
 #' @export
 
@@ -903,7 +903,6 @@ glance.graph_lme <- function(x, ...){
 #' `distance_on_edge`, otherwise if `spatial`, the user must provide
 #' `coord_x` and `coord_y`.
 #' @param normalized Are the distances on edges normalized?
-#' @param type.predict Type of prediction. The options are 'response', 'link', 'precision' and 'variance'. The default is "response".
 #' @param se_fit Logical indicating whether or not a .se.fit column should be added to the augmented output. If TRUE, it only returns a non-NA value if type of prediction is 'link'.
 #' @param conf_int Logical indicating whether or not confidence intervals for the fitted variable should be built. 
 #' @param pred_int Logical indicating whether or not prediction intervals for future observations should be built.
@@ -911,7 +910,7 @@ glance.graph_lme <- function(x, ...){
 #' @param n_samples Number of samples when computing prediction intervals.
 #' @param ... Additional arguments. 
 #'
-#' @return A \code{\link[tibble:tibble]{tibble::tibble()}} with columns:
+#' @return A [tidyr::tibble()] with columns:
 #' \itemize{
 #'   \item `.fitted` Fitted or predicted value.
 #'   \item `.fittedlwrconf` Lower bound of the confidence interval, if conf_int = TRUE
@@ -920,11 +919,11 @@ glance.graph_lme <- function(x, ...){
 #'   \item `.fitteduprpred` Upper bound of the prediction interval, if pred_int = TRUE
 #'   \item `.fixed` Prediction of the fixed effects.
 #'   \item `.random` Prediction of the random effects.
-#'   \item `.resid`} The ordinary residuals, that is, the difference between observed and fitted values.
+#'   \item `.resid` The ordinary residuals, that is, the difference between observed and fitted values.
 #'   \item `.se_fit` Standard errors of fitted values, if se_fit = TRUE.
 #'   }
 #'
-#' @seealso [glance.graph_lme], [tidy.graph_lme]
+#' @seealso [glance.graph_lme]
 #' @method augment graph_lme
 #' @export
 augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FALSE, conf_int = FALSE, pred_int = FALSE, level = 0.95, n_samples = 100, edge_number = "edge_number", distance_on_edge = "distance_on_edge", coord_x = "coord_x", coord_y = "coord_y", data_coords = c("PtE", "spatial"),  normalized = FALSE, ...) {

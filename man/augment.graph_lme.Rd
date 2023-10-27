@@ -66,11 +66,9 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \item{normalized}{Are the distances on edges normalized?}
 
 \item{...}{Additional arguments.}
-
-\item{type.predict}{Type of prediction. The options are 'response', 'link', 'precision' and 'variance'. The default is "response".}
 }
 \value{
-A \code{\link[tibble:tibble]{tibble::tibble()}} with columns:
+A \code{\link[tidyr:reexports]{tidyr::tibble()}} with columns:
 \itemize{
 \item \code{.fitted} Fitted or predicted value.
 \item \code{.fittedlwrconf} Lower bound of the confidence interval, if conf_int = TRUE
@@ -79,7 +77,7 @@ A \code{\link[tibble:tibble]{tibble::tibble()}} with columns:
 \item \code{.fitteduprpred} Upper bound of the prediction interval, if pred_int = TRUE
 \item \code{.fixed} Prediction of the fixed effects.
 \item \code{.random} Prediction of the random effects.
-\item \code{.resid}} The ordinary residuals, that is, the difference between observed and fitted values.
+\item \code{.resid} The ordinary residuals, that is, the difference between observed and fitted values.
 \item \code{.se_fit} Standard errors of fitted values, if se_fit = TRUE.
 }
 }
@@ -89,5 +87,5 @@ predicted values in the \code{.fitted} column, residuals in the \code{.resid} co
 It also contains the New columns always begin with a . prefix to avoid overwriting columns in the original dataset.
 }
 \seealso{
-\link{glance.graph_lme}, \link{tidy.graph_lme}
+\link{glance.graph_lme}
 }

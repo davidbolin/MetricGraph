@@ -147,18 +147,9 @@ can use the `precision()` method on object returned by the `matern.operators()` 
   Q <- precision(op)
 ```
 
-As an illustration of the model, let us compute the covariance function between the process at the mid point of the second edge and all other locations in the mesh. The covariances can be calculated as
-$$
-  \overline{\boldsymbol{\mathrm{A}}} \boldsymbol{\mathrm{Q}}^{-1}\overline{\boldsymbol{\mathrm{v}}}.
-$$
-Here, $\boldsymbol{\mathrm{Q}}$ is the precision matrix obtained from the rational approximation, $\boldsymbol{\mathrm{A}}$ is an identity matrix since we are evaluating the approximation in the nodes of the FEM mesh, $\overline{\boldsymbol{\mathrm{v}}}$ is the $(m+1)$-fold vertical concatenation of the vector $\boldsymbol{\mathrm{v}}$, where $\boldsymbol{\mathrm{v}}$ is a vector with all basis functions evaluated in $s=(2,0.1)$.
+As an illustration of the model, let us compute the covariance function between the process at $s=(2,0.1)$, that is, the point at edge 2 and distance on edge 0.1, and all the other mesh points. To this end, we can use the helper function `cov_function_mesh` that is contained in the `op` object:
 ```{r}
-  v <- t(graph$fem_basis(matrix(c(2,0.1),1,2)))
-  v_bar <- kronecker(matrix(1, nrow = rspde.order + 1),
-                     v)
-  A_bar <- kronecker(matrix(1, ncol = rspde.order + 1), 
-                     Matrix::Diagonal(dim(graph$mesh$V)[1]))
-  c_cov <- (A_bar) %*% solve(Q, v_bar)
+  c_cov <- op$cov_function_mesh(matrix(c(2,0.1),1,2))
   graph$plot_function(c_cov, plotly = TRUE)
 ```
 
