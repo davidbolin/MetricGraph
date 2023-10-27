@@ -660,7 +660,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     geo_dist_edges <- self$geo_dist[[".vertices"]][self$E]
-    if(any(geo_dist_edges < self$edge_lengths)){
+    if(any(abs(geo_dist_edges - self$edge_lengths) > 1e-8)){
       self$characteristics$distance_consistency <- FALSE
     } else{
       self$characteristics$distance_consistency <- TRUE
@@ -2401,6 +2401,7 @@ metric_graph <-  R6Class("metric_graph",
         }
       } else {
         vals <- X[X[, 1]==i, 2:3, drop = FALSE]
+      if(nrow(vals)>0){
         if (max(vals[, 1]) < 1) {
           #check if we can add end value from other edge
           Ei <- self$E[, 1] == Ve #edges that start in Ve
@@ -2496,6 +2497,7 @@ metric_graph <-  R6Class("metric_graph",
             }
           }
         }
+      }
       }
 
         data.to.plot <- vals

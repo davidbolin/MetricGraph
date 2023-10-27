@@ -68,6 +68,8 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-print}{\code{metric_graph$print()}}
 \item \href{#method-metric_graph-compute_characteristics}{\code{metric_graph$compute_characteristics()}}
+\item \href{#method-metric_graph-check_euclidean}{\code{metric_graph$check_euclidean()}}
+\item \href{#method-metric_graph-check_distance_consistency}{\code{metric_graph$check_distance_consistency()}}
 \item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
 \item \href{#method-metric_graph-compute_geodist_PtE}{\code{metric_graph$compute_geodist_PtE()}}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
@@ -234,12 +236,49 @@ No return value. Called for its side effects.
 \subsection{Method \code{compute_characteristics()}}{
 Computes various characteristics of the graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_characteristics()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_characteristics(check_euclidean = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{check_euclidean}}{Also check if the graph has Euclidean edges? This essentially means that the distance consistency check will also be perfomed. If the graph does not have Euclidean edges due to another reason rather than the distance consistency, then it will already be indicated that the graph does not have Euclidean edges.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 No return value. Called for its side effects. The computed characteristics
 are stored in the \code{characteristics} element of the \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-check_euclidean"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-check_euclidean}{}}}
+\subsection{Method \code{check_euclidean()}}{
+Check if the graph has Euclidean edges.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$check_euclidean()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Returns \code{TRUE} if the graph has Euclidean edges, or \code{FALSE} otherwise.
+The result is stored in the \code{characteristics} element of the \code{metric_graph} object.
+The result is displayed when the graph is printed.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-check_distance_consistency"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-check_distance_consistency}{}}}
+\subsection{Method \code{check_distance_consistency()}}{
+Checks distance consistency of the graph.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$check_distance_consistency()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value.
+The result is stored in the \code{characteristics} element of the \code{metric_graph} object.
+The result is displayed when the graph is printed.
 }
 }
 \if{html}{\out{<hr>}}

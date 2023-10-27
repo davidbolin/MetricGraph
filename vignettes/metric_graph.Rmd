@@ -215,6 +215,24 @@ We can, then, view those characteristics by simply printing the `metric_graph` o
 graph3
 ```
 
+Observe that we do not know that the graph has Euclidean edges. We can check by using the `check_euclidean()` method:
+
+```{r}
+graph3$check_euclidean()
+```
+
+Let us view the characteristics again:
+
+```{r}
+graph3
+```
+
+It can happen that we have that the graph does not have Euclidean edges without the need to check the distance consistency. However, if one wants to check if the graph satisfies the distance consistency assumption, one can run the `check_distance_consistency()` function:
+
+```{r}
+graph3$check_distance_consistency()
+```
+
 Further, the individual characteristics can be accessed (after running the `compute_characteristics()` method) through the `characteristics` component of the graph object:
 
 ```{r}
@@ -320,14 +338,14 @@ as
 min(graph5$get_edge_lengths(unit='m'))
 ```
 meters. Let us increase the tolerances so that vertices that are at most
-a distance of 350 meters (0.35km) apart should be merged:
+a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
-                               tolerance = list(vertex_vertex = 0.3), factor_merge_close_vertices = 1)
+                               tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0)
 ```
 
-With this choice, we see that the graph is connected:
+With this choice, let us check the number of connected components:
 ```{r}
 graphs$n
 ```
@@ -336,6 +354,25 @@ We can retrieve the graph as a standard `metric_graph` object to work
 with in further analysis via the `get_largest` command:
 ```{r}
 graph5 <- graphs$get_largest()
+```
+
+Let us obtain the characteristics of this graph:
+
+```{r}
+graph5$compute_characteristics()
+```
+
+Let us now check the characteristics:
+
+```{r}
+graph5
+```
+
+We have that this graph does not have Euclidean edges. Let us also check if it satisfies the distance consistency assumption:
+
+```{r}
+graph5$check_distance_consistency()
+graph5
 ```
 
 # Adding data to the graph 

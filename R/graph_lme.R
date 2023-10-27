@@ -1277,8 +1277,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param object The fitted object with the `graph_lme()` function.
 #' @param newdata A `data.frame` or a `list` containing the covariates, the edge
 #' number and the distance on edge for the locations to obtain the prediction. Observe that you should not provide the locations for each replicate. Only a single set of locations and covariates, and the predictions for the different replicates will be obtained for this same set of locations.
-#' @param mesh Obtain predictions for mesh nodes? The graph must have a mesh,
-#' and either `only_latent` is set to TRUE or the model does not have covariates.
+#' @param mesh Obtain predictions for mesh nodes? The graph must have a mesh and should not have covariates.
 #' @param mesh_h If the graph does not have a mesh, one will be created with this
 #' value of 'h'.
 #' @param which_repl Which replicates to obtain the prediction. If `NULL` predictions
@@ -1371,7 +1370,7 @@ predict.graph_lme <- function(object,
   X_cov_initial <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
   if(ncol(X_cov_initial) > 0){
     if(mesh){
-      stop("In the presence of covariates, you should provide the data, including the covariates at the prediction locations. If you only want predictions for the latent model, set 'only_latent' to TRUE.")
+      stop("In the presence of covariates, you should provide the data, including the covariates at the prediction locations.")
     }
   }
 
