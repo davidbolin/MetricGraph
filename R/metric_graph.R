@@ -514,6 +514,7 @@ metric_graph <-  R6Class("metric_graph",
       nc <- components$no
       if(nc>1){
         message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+        private$connected = FALSE
       }
     }
 
@@ -527,6 +528,11 @@ metric_graph <-  R6Class("metric_graph",
     cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
     if(!is.null(self$characteristics)) {
       cat("Some characteristics of the graph:\n")
+      if(self$characteristics$connected){
+        cat("  Connected: TRUE\n")
+      } else {
+        cat("  Connected: FALSE\n")
+      }      
       if(self$characteristics$has_loops){
         cat("  Has loops: TRUE\n")
       } else {
@@ -542,39 +548,122 @@ metric_graph <-  R6Class("metric_graph",
       } else {
         cat("  Is a tree: FALSE\n")
       }
+      if(!is.null(self$characteristics$distance_consistency)){
+        if(self$characteristics$distance_consistency){
+          cat("  Distance consistent: TRUE\n")
+        } else {
+          cat("  Distance consistent: FALSE\n")
+        } 
+      } else{
+        cat("  Distance consistent: unknown\n")
+        message("To check if the graph satisfies the distance consistency, run the `check_distance_consistency()` method.")
+      }
+      if(!is.null(self$characteristics$euclidean)){
+        if(self$characteristics$euclidean){
+          cat("  Has Euclidean edges: TRUE\n")
+        } else {
+          cat("  Has Euclidean edges: FALSE\n")
+        } 
+      } else{
+        cat("  Has Euclidean edges: unknown\n")
+        message("To check if the graph has Euclidean edges, run the `check_euclidean()` method.")
+      }
     }
     invisible(self)
   },
   #' @description Computes various characteristics of the graph
+  #' @param check_euclidean Also check if the graph has Euclidean edges? This essentially means that the distance consistency check will also be perfomed. If the graph does not have Euclidean edges due to another reason rather than the distance consistency, then it will already be indicated that the graph does not have Euclidean edges.
   #' @return No return value. Called for its side effects. The computed characteristics
   #' are stored in the `characteristics` element of the `metric_graph` object.
-  compute_characteristics = function() {
-    self$characteristics <- list()
+  compute_characteristics = function(check_euclidean = FALSE) {
+    if(is.null(self$characteristics)){
+      self$characteristics <- list()
+    }
 
     #check for loops
-    if(sum(self$E[,1]==self$E[,2])>0) {
-      self$characteristics$has_loops <- TRUE
-    } else {
-      self$characteristics$has_loops <- FALSE
-    }
-
-    #check for multiple edges
-    self$characteristics$has_multiple_edges <- FALSE
-    k <- 1
-    while(k < self$nV && self$characteristics$has_multiple_edges == FALSE) {
-      ind <- which(self$E[,1]==k | self$E[,2]==k) #edges starting or ending in k
-      if(length(ind) > length(unique(rowSums(self$E[ind,,drop=FALSE])))) {
-        self$characteristics$has_multiple_edges <- TRUE
+    if(is.null(self$characteristics$has_loops)){
+      if(sum(self$E[,1]==self$E[,2])>0) {
+        self$characteristics$has_loops <- TRUE
       } else {
-        k <- k + 1
+        self$characteristics$has_loops <- FALSE
       }
     }
+
+    self$characteristics$connected <- private$connected
+
+    #check for multiple edges
+    if(is.null(self$characteristics$has_multiple_edges)){
+      self$characteristics$has_multiple_edges <- FALSE
+      k <- 1
+      while(k < self$nV && self$characteristics$has_multiple_edges == FALSE) {
+        ind <- which(self$E[,1]==k | self$E[,2]==k) #edges starting or ending in k
+        if(length(ind) > length(unique(rowSums(self$E[ind,,drop=FALSE])))) {
+          self$characteristics$has_multiple_edges <- TRUE
+        } else {
+          k <- k + 1
+        }
+      }
+    }
+
 
     #check for tree structure
     if(!self$characteristics$has_loops && !self$characteristics$has_multiple_edges){
       self$characteristics$is_tree <- self$is_tree()
     } else {
       self$characteristics$is_tree <- FALSE
+    }
+
+    if(!self$characteristics$connected || self$characteristics$has_loops || self$characteristics$has_multiple_edges){
+      self$characteristics$euclidean <- FALSE
+    } else if(self$characteristics$is_tree){
+      self$characteristics$euclidean <- TRUE
+    }
+
+  },
+
+  #' @description Check if the graph has Euclidean edges.
+  #' @return Returns `TRUE` if the graph has Euclidean edges, or `FALSE` otherwise.
+  #' The result is stored in the `characteristics` element of the `metric_graph` object.
+  #' The result is displayed when the graph is printed.
+  
+  check_euclidean = function(){
+    self$compute_characteristics()
+    if(!is.null(self$characteristics$euclidean)){
+      return(self$characteristics$euclidean)
+    }
+
+    if(is.null(self$characteristics$distance_consistency)){
+      self$check_distance_consistency()
+      if(self$characteristics$distance_consistency){
+        self$characteristics$euclidean <- TRUE
+      } else{
+        self$characteristics$euclidean <- FALSE
+      }
+    }    
+  },
+
+  #' @description Checks distance consistency of the graph.
+  #' @return No return value.
+  #' The result is stored in the `characteristics` element of the `metric_graph` object.
+  #' The result is displayed when the graph is printed.
+
+  check_distance_consistency = function(){
+    self$compute_characteristics()
+    if(is.null(self$geo_dist)){
+      self$geo_dist <- list()
+    }
+
+    if(is.null(self$geo_dist[[".vertices"]])){
+      g <- graph(edges = c(t(self$E)), directed = FALSE)
+      E(g)$weight <- self$edge_lengths
+      self$geo_dist[[".vertices"]] <- distances(g)
+    }
+
+    geo_dist_edges <- self$geo_dist[[".vertices"]][self$E]
+    if(any(geo_dist_edges < self$edge_lengths)){
+      self$characteristics$distance_consistency <- FALSE
+    } else{
+      self$characteristics$distance_consistency <- TRUE
     }
   },
 
@@ -598,10 +687,10 @@ metric_graph <-  R6Class("metric_graph",
     if(!obs){
       g <- graph(edges = c(t(self$E)), directed = FALSE)
       E(g)$weight <- self$edge_lengths
-      self$geo_dist[["__vertices"]] <- distances(g)
+      self$geo_dist[[".vertices"]] <- distances(g)
     } else if(full){
       PtE_full <- self$get_PtE()
-      self$geo_dist[["__complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
+      self$geo_dist[[".complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
                                                               normalized = TRUE)
     } else{
       if(is.null(group)){
@@ -704,11 +793,11 @@ metric_graph <-  R6Class("metric_graph",
 
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
-      self$res_dist[["__vertices"]] <- self$compute_resdist_PtE(PtE,
+      self$res_dist[[".vertices"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE)
     } else if(full){
       PtE <- self$get_PtE()
-      self$res_dist[["__complete"]] <- self$compute_resdist_PtE(PtE,
+      self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE)
     } else{
       if(is.null(group)){
@@ -774,7 +863,7 @@ metric_graph <-  R6Class("metric_graph",
 
         graph.temp$observation_to_vertex(mesh_warning=FALSE)
         graph.temp$compute_geodist(full=TRUE)
-        geodist_temp <- graph.temp$geo_dist[["__complete"]]
+        geodist_temp <- graph.temp$geo_dist[[".complete"]]
         geodist_temp[graph.temp$PtV, graph.temp$PtV] <- geodist_temp
 
       L <- Matrix(0, graph.temp$nV, graph.temp$nV)
@@ -864,11 +953,11 @@ metric_graph <-  R6Class("metric_graph",
 
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
-      self$Laplacian[["__vertices"]] <- private$compute_laplacian_PtE(PtE,
+      self$Laplacian[[".vertices"]] <- private$compute_laplacian_PtE(PtE,
                                                             normalized = TRUE)
     } else if(full){
       PtE <- self$get_PtE()
-      self$Laplacian[["__complete"]] <- private$compute_laplacian_PtE(PtE,
+      self$Laplacian[[".complete"]] <- private$compute_laplacian_PtE(PtE,
                                                             normalized = TRUE)
     } else{
       if(is.null(group)){
@@ -3425,7 +3514,7 @@ metric_graph <-  R6Class("metric_graph",
  ## @description Get the observation/prediction matrix A
  ## @param group A vector. If `NULL`, the A matrix for the first group will be
  ## returned. One can use all groups by simply setting the `group` variable
- ## to `__all`. Otherwise, the A matrix for the groups in the vector will be
+ ## to `.all`. Otherwise, the A matrix for the groups in the vector will be
  ## returned.
  ## @param obs_to_vert Should the observations be turned into vertices?
  ## @param include_NA Should the locations for which all observations are NA be
@@ -3447,7 +3536,7 @@ metric_graph <-  R6Class("metric_graph",
     if(is.null(group)){
       group <- unique(private$data[[".group"]])
       group <- group[1]
-    } else if (group[1] == "__all"){
+    } else if (group[1] == ".all"){
       group <- unique(private$data[[".group"]])
     }
     n_group <- length(unique(group))
@@ -3525,6 +3614,10 @@ metric_graph <-  R6Class("metric_graph",
   # which_longlat
 
   which_longlat = NULL,
+
+  # connected 
+
+  connected = TRUE,
 
   clear_initial_info = function(){
     private$addinfo = FALSE

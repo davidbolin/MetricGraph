@@ -474,11 +474,11 @@ Let us compare with the true values:
 Now, let us consider the case with all replicates. 
 We create a new data object by using the
 `graph_data_spde()` function with the
-argument `repl` set to `__all`:
+argument `repl` set to `.all`:
 ```{r}
 data_spde_rep <- graph_data_spde(graph_spde=spde_model_rep, 
                     name="field", 
-                    repl = "__all")
+                    repl = ".all")
 ```
 
 Now the stack:

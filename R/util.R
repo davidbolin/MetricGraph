@@ -345,8 +345,8 @@ graph_starting_values <- function(graph,
   if(is.null(graph$geo_dist)){
         graph$compute_geodist(obs=FALSE)
   }
-  finite_geodist <- is.finite(graph$geo_dist[["__vertices"]])
-  finite_geodist <- graph$geo_dist[["__vertices"]][finite_geodist]
+  finite_geodist <- is.finite(graph$geo_dist[[".vertices"]])
+  finite_geodist <- graph$geo_dist[[".vertices"]][finite_geodist]
   prior.range.nominal <- max(finite_geodist) * 0.2
 
   if (model == "alpha1") {

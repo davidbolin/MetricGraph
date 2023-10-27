@@ -354,10 +354,10 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @param name A character string with the base name of the effect.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
-#' then one sets to `repl` to `__all`.
+#' then one sets to `repl` to `.all`.
 #' @param group Which groups? If there is no groups, one
 #' can set `group` to `NULL`. If one wants all groups,
-#' then one sets to `group` to `__all`.
+#' then one sets to `group` to `.all`.
 #' @param group_col Which "column" of the data contains the group variable?
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc `r lifecycle::badge("deprecated")` Use `loc_name` instead.
@@ -404,7 +404,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
   if(is.null(repl)){
     groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
     repl <- groups[1]
-  } else if(repl[1] == "__all") {
+  } else if(repl[1] == ".all") {
     groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
     repl <- unique(groups)
   } 
@@ -416,7 +416,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
 
   if(is.null(group)){
     n.group <- 1
-  } else if (group[1] == "__all"){
+  } else if (group[1] == ".all"){
     n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
   } else{
     n.group <- length(unique(group))
@@ -947,7 +947,7 @@ create_summary_from_density <- function(density_df, name) {
 #' @title Creates a vector of replicates to be used with 'inlabru'
 #' @description Auxiliary function to create a vector of replicates to be used
 #' with 'inlabru'.
-#' @param repl A vector of replicates. If set to `__all`, a vector
+#' @param repl A vector of replicates. If set to `.all`, a vector
 #' for all replicates will be generated.
 #' @param graph_spde Name of the field.
 #' @return A vector of replicates to be used with 'inlabru'.
@@ -955,7 +955,7 @@ create_summary_from_density <- function(density_df, name) {
 
 bru_graph_rep <- function(repl, graph_spde){
   groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]])
-  if(repl[1] == "__all"){
+  if(repl[1] == ".all"){
     repl <- groups
   }
   n_groups <- length(groups)

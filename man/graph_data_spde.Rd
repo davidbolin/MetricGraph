@@ -26,11 +26,11 @@ graph_data_spde(
 
 \item{repl}{Which replicates? If there is no replicates, one
 can set \code{repl} to \code{NULL}. If one wants all replicates,
-then one sets to \code{repl} to \verb{__all}.}
+then one sets to \code{repl} to \verb{.all}.}
 
 \item{group}{Which groups? If there is no groups, one
 can set \code{group} to \code{NULL}. If one wants all groups,
-then one sets to \code{group} to \verb{__all}.}
+then one sets to \code{group} to \verb{.all}.}
 
 \item{group_col}{Which "column" of the data contains the group variable?}
 

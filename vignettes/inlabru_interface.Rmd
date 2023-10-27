@@ -422,12 +422,12 @@ Let us compare with the true values:
 
 We will now show how to fit the model considering all replicates.
 To this end, we simply set the `repl` argument in `graph_data_spde()`
-function to `__all`.
+function to `.all`.
 
 ```{r}
 data_spde_bru_rep <- graph_data_spde(spde_model_bru_rep, 
         loc_name = "loc",
-        repl="__all")
+        repl=".all")
 
 repl <- data_spde_bru_rep[["repl"]]
 
@@ -437,7 +437,7 @@ cmp_rep <-  y ~ -1 + Intercept(1) + field(loc,
 ```
 
 Similarly, we fit the model, by setting the `repl` argument 
-to "__all" inside the
+to ".all" inside the
 `graph_data_spde()` function:
 ```{r}
 spde_bru_fit_rep <-

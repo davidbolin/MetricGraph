@@ -472,9 +472,9 @@ rspde_model_rep <- rspde.metric_graph(graph_rep)
 ```
 
 To fit the model with replicates we need to create the auxiliary quantities with the `graph_data_rspde()` function, where we set the `repl` argument
-in the function `graph_data_spde` to `__all` since we want to use all replicates:
+in the function `graph_data_spde` to `.all` since we want to use all replicates:
 ```{r}
-data_rspde_rep <- graph_data_rspde(rspde_model_rep, name = "field", repl = "__all")
+data_rspde_rep <- graph_data_rspde(rspde_model_rep, name = "field", repl = ".all")
 ```
 
 Let us now create the corresponding `inla.stack` object:
@@ -660,9 +660,9 @@ For this implementation we will use the `rspde_model_rep` object.
 
 We can now create the component, passing the vector with the indices of the replicates
 as the `replicate` argument. To obtain the auxiliary data, we will pass `repl` argument we use the function
-`graph_data_rspde()`, where we set it to `__all`, since we want all replicates. Further, we also pass the `loc_name` argument.
+`graph_data_rspde()`, where we set it to `.all`, since we want all replicates. Further, we also pass the `loc_name` argument.
 ```{r}
-data_rspde_rep <- graph_data_rspde(rspde_model_rep, repl = "__all", loc_name = "loc")
+data_rspde_rep <- graph_data_rspde(rspde_model_rep, repl = ".all", loc_name = "loc")
 ```
 
 We can now define the `bru` component formula, passing the `repl` component of `data_rspde_rep` as the `replicate` argument:
