@@ -58,6 +58,6 @@
 #' @importFrom broom glance augment tidy
 #' @export glance
 #' @export augment
-#' @export tidy
+# @export tidy
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL
