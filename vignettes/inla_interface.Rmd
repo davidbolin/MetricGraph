@@ -188,7 +188,7 @@ data_stk <- inla.stack.data(stk_dat)
 
 Finally, we fit the model:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 spde_fit <- inla(f.s, data = data_stk)
 ```
 

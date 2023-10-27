@@ -328,6 +328,8 @@ Let us plot:
 ```{r}
 graph$plot(data = "y", newdata = filtered_data2)
 ```
+
+
 ## mutate
 
 The `mutate` verb creates new columns, or modify existing columns, as functions of the existing columns. Let us create a new column, `new_y`, obtained as the sum of `y` and `y2`:

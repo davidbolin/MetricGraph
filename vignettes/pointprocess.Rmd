@@ -142,8 +142,6 @@ graph$plot(vertex_size = 0, data = "y")
 ## Fitting LGCP models in R-INLA
 
 
-# `R-INLA` implementation
-
 We are now in a position to fit the model with our `R-INLA` implementation. 
 When working with log-Gaussian Cox processes, the likelihood has a term 
 $\int_\Gamma \exp(u(s)) ds$ that needs to be handled separately. 

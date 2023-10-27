@@ -143,7 +143,7 @@ to provide observation matrices, indices nor
 stack objects.
 
 We are now in a position to fit the model with our
-`inlabru` implementation. To this end,
+`inlabru` implementation. Because of this,
 we need to add the observations to the graph, which we 
 will do with the `add_observations()` method. 
 
@@ -187,7 +187,7 @@ data_spde_bru <- graph_data_spde(spde_model_bru, loc_name = "loc")
 
 we directly fit the model by providing the `data` component of the `data_spde_bru` list:
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 spde_bru_fit <-
     bru(cmp, data=data_spde_bru[["data"]])
 ```
