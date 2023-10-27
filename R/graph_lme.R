@@ -875,6 +875,8 @@ glance.graph_lme <- function(x, ...){
   alpha <- NULL
   if(x$latent_model$type == "Covariance-Based Matern SPDE Approximation"){
     alpha <- x$coeff$random_effects[[1]]
+  } else if(!is.null(x$latent_model$alpha)){
+    alpha <- x$latent_model$alpha
   }
   tidyr::tibble(nobs = stats::nobs(x), 
                   sigma = as.numeric(x$coeff$measurement_error[[1]]), 
@@ -882,7 +884,7 @@ glance.graph_lme <- function(x, ...){
                    BIC = stats::BIC(x), deviance = stats::deviance(x), 
                    df.residual = stats::df.residual(x),
                    model = x$latent_model$type,
-                   alpha = ifelse(is.null(alpha),x$latent_model$alpha, alpha),
+                   alpha = alpha,
                    cov_function = x$latent_model$cov_function_name)
 }
 

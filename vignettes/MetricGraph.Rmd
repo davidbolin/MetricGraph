@@ -564,13 +564,7 @@ graph$plot(X = pred_exp$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
 To perform kriging prediction to other locations, one can use the `predict()` method along with a `data.frame` containing the locations in which one wants to obtain predictions and the corresponding covariate values at these locations. In this example we will use the `data_mesh_pred` from the previous example.
-We start by obtaining predictions for the latent model:
-
-```{r, fig.align = "center",echo=TRUE}
-graph$plot_function(X = pred_exp$mean, vertex_size = 0, edge_width = 0.5)
-```
-
-Finally, let us estimated the observed values at the mesh locations:
+Let us estimate the observed values at the mesh locations:
 
 ```{r, fig.align = "center",echo=TRUE}
 pred_exp_y <- predict(res_exp, newdata = data_mesh_pred, 
@@ -619,13 +613,7 @@ pred_GL <- predict(res_gl, newdata = data, normalized = TRUE)
 graph$plot(X = pred_GL$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
-Now, if we do predictions outside of the observation locations on a graph Laplacian model, we need to modify the graph. This modifies the model in its entirety. Thus, we need to refit the model with all the observation locations we want to do predictions. However, if we use the `predict()` method with observations outside of the observation locations, the `predict()` will return predictions together with a `warning` that one should refit the model to obtain proper predictions:
-
-```{r, fig.align = "center",echo=TRUE}
-u_est_GL <- pred_GL$mean
-graph$plot_function(X = u_est_GL, vertex_size = 0, edge_width = 0.5)
-```
-and here the (incorrect way of obtaining) predictions of the observed data:
+Now, if we do predictions outside of the observation locations on a graph Laplacian model, we need to modify the graph. This modifies the model in its entirety. Thus, we need to refit the model with all the observation locations we want to do predictions. However, if we use the `predict()` method with observations outside of the observation locations, the `predict()` will return predictions together with a `warning` that one should refit the model to obtain proper predictions. Here, we will see the (incorrect way of obtaining) predictions of the observed data:
 ```{r, fig.align = "center",echo=TRUE}
 pred_GL_y <- predict(res_gl, newdata = data_mesh_pred, 
                     normalized=TRUE)
@@ -667,13 +655,7 @@ pred_GL_full <- predict(res_gl_pred, newdata = data, normalized = TRUE)
 graph$plot(X = pred_GL_full$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
-Let us now obtain predictions at the desired locations:
-
-```{r, fig.align = "center",echo=TRUE}
-u_est_GL_full <- pred_GL_full$mean
-graph$plot_function(X = u_est_GL_full, vertex_size = 0, edge_width = 0.5)
-```
-and here the correct way of obtaining predictions of the observed data at the desired locations: 
+Let us now obtain predictions at the desired locations (in the correct way) of the observed data: 
 ```{r, fig.align = "center",echo=TRUE}
 pred_GL_y_full <- predict(res_gl_pred, newdata = data_mesh_pred, 
                     normalized=TRUE)
