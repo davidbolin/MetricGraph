@@ -860,13 +860,17 @@ deviance.graph_lme <- function(object, ...){
 #' @export
 
 glance.graph_lme <- function(x, ...){
+  alpha <- NULL
+  if(x$latent_model$type == "Covariance-Based Matern SPDE Approximation"){
+    alpha <- x$coeff$random_effects[[1]]
+  }
   tidyr::tibble(nobs = stats::nobs(x), 
                   sigma = as.numeric(x$coeff$measurement_error[[1]]), 
                    logLik = as.numeric(stats::logLik(x)), AIC = stats::AIC(x),
                    BIC = stats::BIC(x), deviance = stats::deviance(x), 
                    df.residual = stats::df.residual(x),
                    model = x$latent_model$type,
-                   alpha = x$latent_model$alpha,
+                   alpha = ifelse(is.null(alpha),x$latent_model$alpha, alpha),
                    cov_function = x$latent_model$cov_function_name)
 }
 
@@ -962,7 +966,7 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
                   distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE)
   }
 
-  if(se_fit){
+  if(se_fit || pred_int || conf_int){
     newdata[[".fitted"]] <- pred$mean
     newdata[[".se_fit"]] <- sqrt(pred$variance)
     newdata[[".fixed"]] <- pred$fe_mean
@@ -981,15 +985,21 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
 
 
   if(conf_int){
-
-    df$.fittedlwrconf <- conf_int[, "lwr"] %>% unname()
-    df$.fitteduprconf <- conf_int[, "upr"] %>% unname()
+    newdata$.fittedlwrconf <- newdata[[".fitted"]] + stats::qnorm( (1-level)/2 )*newdata[[".se_fit"]]
+    newdata$.fitteduprconf <- newdata[[".fitted"]] + stats::qnorm( (1+level)/2 )*newdata[[".se_fit"]]
   }
 
   if(pred_int){
-    pred_int <- stats::predict(x, newdata = newdata, type = "response", interval = "prediction", ...)
-    df$.fittedlwrpred <- pred_int[, "lwr"] %>% unname()
-    df$.fitteduprpred <-pred_int[, "upr"] %>% unname()
+   list_pred_int <- lapply(1:nrow(pred$samples), function(i){
+      y_sim <- pred$samples[i,]
+      y_sim <- sort(y_sim)
+      idx_lwr <- max(1, round(n_samples * (1 - level) / 2))
+      idx_upr <- round(n_samples * (1 + level) / 2)
+      c(y_sim[idx_lwr], y_sim[idx_upr])})
+    list_pred_int <- unlist(list_pred_int)
+    list_pred_int <- t(matrix(list_pred_int, nrow = 2))
+    newdata$.fittedlwrpred <- list_pred_int[,1]
+    newdata$.fitteduprpred <- list_pred_int[,2]
   }
 
 
@@ -1651,6 +1661,7 @@ predict.graph_lme <- function(object,
       if(cond_alpha1){
         Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 1, graph = graph_bkp2)
+        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp2$PtV, ]
       } else{
         if(is.null(graph_bkp2$CoB)){
           graph_bkp2$buildC(2)
@@ -1667,8 +1678,8 @@ predict.graph_lme <- function(object,
           3.0 * (abs(PtE[, 2]) > 1e-14)
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
         Q <- solve(Sigma)
+        A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
       }
-      A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
       rm(graph_bkp2)
     }
   }
@@ -1712,6 +1723,7 @@ predict.graph_lme <- function(object,
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]],
                                          data_prd_temp[[distance_on_edge]]))
+                            
         
         mu_fe <- mu[idx_repl, , drop = FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
@@ -1724,7 +1736,7 @@ predict.graph_lme <- function(object,
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]],
                                          data_prd_temp[[distance_on_edge]]))
-                        # PtE_pred = cbind(edge_nb, dist_ed))
+                        # PtE_pred = cbind(edge_nb, dist_ed)) 
           mu_re <- mu_krig[ord_idx]                
           mu_fe <- mu[idx_repl, , drop = FALSE]          
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
