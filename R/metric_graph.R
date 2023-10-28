@@ -1713,11 +1713,9 @@ metric_graph <-  R6Class("metric_graph",
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
-    print(length(unique(group_vector)))
     private$data <- process_data_add_obs(PtE, new_data = data, private$data,
                                         group_vector)
 
-    print("Here 2")
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
