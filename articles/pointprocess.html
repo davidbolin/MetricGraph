@@ -244,8 +244,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.351736 0.0891499   0.198780 0.345303   0.545635 0.333059</span></span>
-<span><span class="co">## range   2.103150 1.3037700   0.696183 1.744360   5.601830 1.272860</span></span></code></pre>
+<span><span class="co">## std.dev 0.351736 0.0891499    0.19878 0.345303   0.545635 0.333059</span></span>
+<span><span class="co">## range   2.103160 1.3037900    0.69618 1.744360   5.601890 1.272860</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -262,9 +262,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean     mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.351736 0.333059</span></span>
-<span><span class="co">## 2     range  1.5 2.103146 1.272859</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.3517359 0.333059</span></span>
+<span><span class="co">## 2     range  1.5 2.1031562 1.272859</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
