@@ -97,7 +97,6 @@ reference:
     - mutate.metric_graph_data
     - summarise.metric_graph_data
     - drop_na.metric_graph_data
-    - pipe
   - title: Precision matrices
     contents:
     - spde_precision

@@ -350,6 +350,9 @@ graph_lme <- function(formula, graph,
 
   graph_bkp <- graph$clone()
 
+  likelihood_new <- NULL
+  new_likelihood <- NULL
+
   if(model_type %in% c("graphlaplacian", "isocov")){
     graph_bkp$observation_to_vertex(mesh_warning=FALSE)
     nV_orig <- graph_bkp$nV
@@ -584,8 +587,14 @@ graph_lme <- function(formula, graph,
             end_hessian <- Sys.time()
             time_hessian <- end_hessian-start_hessian
           }
+          eig_hes <- eigen(observed_fisher)$value
+          cond_pos_hes <- (min(eig_hes) > 1e-15)          
         } else{
           stop("Could not fit the model. Please, try another method with 'parallel' set to FALSE.")
+        }
+
+         if(min(eig_hes) < 1e-15){
+          warning("The optimization failed to provide a numerically positive-definite Hessian. You can try to obtain a positive-definite Hessian by setting 'improve_hessian' to TRUE or by setting 'parallel' to FALSE, which allows other optimization methods to be used.")        
         }
 
       } else{
@@ -888,7 +897,7 @@ graph_lme <- function(formula, graph,
   names(graph_bkp$.__enclos_env__$private$data) <- names_temp
   object$graph <- graph_bkp
   object$df.residual <- object$nobs -(1 + length(object$coeff$fixed_effects) + length(object$coeff$random_effects))
-  object$lik_fun <- likelihood
+  object$lik_fun <- likelihood_new
   object$par_lik_fun <- new_likelihood
 
 

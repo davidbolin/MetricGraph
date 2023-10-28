@@ -283,13 +283,26 @@ We can now fit the model in the same way as before by using the `rspde_lme()` fu
 fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", parallel = TRUE)
 ```
 
-Let us see a summary of the fit:
+Observe that we have received a warning saying that the Hessian was not positive-definite, which ended up creating `NaN`s for the standard errors. Indeed, let us see a summary of the fit:
 
 ```{r}
 summary(fit_repl)
 ```
 
-Let us take a glance of the fit:
+Let us, then, follow the suggestion from the warning and refit the model setting `improve_hessian` to `TRUE`. This will obtain a more precise estimate of the Hessian, which can possibly fix this issue:
+
+```{r}
+fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", 
+                      parallel = TRUE, improve_hessian = TRUE)
+```
+
+We see that we did not receive any warning now, and the Std. errors were computed accordingly:
+
+```{r}
+summary(fit_repl)
+```
+
+Let us also take a glance of the fit:
 
 ```{r}
 glance(fit_repl)
