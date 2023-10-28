@@ -131,9 +131,9 @@ graph$plot_function(X = exp(lgcp_sample$u), vertex_size = 0)
 
 To plot the simulated points, we can add them to the graph and then plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)+1),
-                                         edge_number = c(lgcp_sample$edge_number[1],lgcp_sample$edge_number),
-                                         distance_on_edge = c(lgcp_sample$edge_loc[1],lgcp_sample$edge_loc)),
+graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)),
+                                         edge_number = lgcp_sample$edge_numbers,
+                                         distance_on_edge = lgcp_sample$edge_loc),
                        normalized = TRUE)
 graph$plot(vertex_size = 0, data = "y")
 ```
@@ -192,7 +192,7 @@ rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 Next, we compute the auxiliary data:
 
 ```{r}
-data_rspde <- graph_data_rspde(rspde_model, name="field", nu = alpha - 1/2)
+data_rspde <- graph_data_rspde(rspde_model, name="field")
 ```
 
 We now create the `inla.stack` object with the `inla.stack()` function. 
@@ -268,5 +268,81 @@ This can be compared with the field that was used to generate the data:
 graph$plot_function(X = lgcp_sample$u, vertex_size = 0)
 ```
 
+# An example with replicates
+Let us now test show an example with replicates. Let us first simulate replicates of a latent field
+```{r}
+  n.rep <- 30
+  sigma <- 0.5
+  range <- 1.5
+  alpha <- 2
+  lgcp_sample <- graph_lgcp(n = n.rep, intercept = 1, sigma = sigma,
+                            range = range, alpha = alpha,
+                            graph = graph)
+```
+  We now clear the previous data and add the new data together with the exposure terms
+```{r}
+  graph$clear_observations()
+  df_rep <- data.frame(y=rep(1,length(lgcp_sample[[1]]$edge_loc)),
+                                             e = rep(0,length(lgcp_sample[[1]]$edge_loc)),
+                                         edge_number = lgcp_sample[[1]]$edge_number,
+                                         distance_on_edge = lgcp_sample[[1]]$edge_loc,
+                                         rep = rep(1,length(lgcp_sample[[1]]$edge_loc)))
 
+  df_rep <- rbind(df_rep, data.frame(y = rep(0,length(atilde)),
+                                         e = atilde,
+                                         edge_number = graph$mesh$VtE[,1],
+                                         distance_on_edge = graph$mesh$VtE[,2],
+                                         rep = rep(1,length(atilde))))
+  for(i in 2:n.rep){
+    df_rep <- rbind(df_rep, data.frame(y=rep(1,length(lgcp_sample[[i]]$edge_loc)),
+                                             e = rep(0,length(lgcp_sample[[i]]$edge_loc)),
+                                         edge_number = lgcp_sample[[i]]$edge_number,
+                                         distance_on_edge = lgcp_sample[[i]]$edge_loc,
+                                         rep = rep(i,length(lgcp_sample[[i]]$edge_loc))))
+    df_rep <- rbind(df_rep, data.frame(y = rep(0,length(atilde)),
+                                         e = atilde,
+                                         edge_number = graph$mesh$VtE[,1],
+                                         distance_on_edge = graph$mesh$VtE[,2],
+                                         rep = rep(i,length(atilde))))                                        
+
+  }
+
+      graph$add_observations(data = df_rep,
+                       normalized = TRUE,
+                        group = "rep")
+
+```
+We can now define and fit the model as previously
+```{r}
+rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
+
+data_rspde <- graph_data_rspde(rspde_model, name="field", repl = ".all")
+
+stk <- inla.stack(data = data_rspde[["data"]], 
+                  A = data_rspde[["basis"]], 
+                  effects = c(data_rspde[["index"]], list(Intercept = 1)))
+
+spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+                 family = "poisson", data = inla.stack.data(stk),
+                 control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
+                 E = inla.stack.data(stk)$e, verbose=TRUE)
+```
+Let's look at the summaries
+```{r}
+spde_result <- rspde.result(spde_fit, "field", rspde_model)
+summary(spde_result)
+result_df <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, range),
+    mean = c(
+      spde_result$summary.std.dev$mean,
+      spde_result$summary.range$mean
+    ),
+    mode = c(
+      spde_result$summary.std.dev$mode,
+      spde_result$summary.range$mode
+    )
+  )
+  print(result_df)
+```
 ## References

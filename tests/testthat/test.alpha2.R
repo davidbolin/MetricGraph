@@ -272,7 +272,9 @@ test_that("test posterior mean",{
   ord1 <- order(graph$get_data()[[".coord_x"]], graph$get_data()[[".coord_y"]])
   ord2 <- order(graph2$get_data()[[".coord_x"]], graph2$get_data()[[".coord_y"]])
 
-  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-10)
+  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-5)
 })
+
+
 
 

@@ -1277,6 +1277,11 @@ metric_graph <-  R6Class("metric_graph",
 
         data_coords <- data_coords[[1]]
 
+    if(length(tolerance)>1){
+      tolerance <- tolerance[[1]]
+      warning("'tolerance' had more than one element, only the first one will be used.")
+    }
+
         if(is.null(data)){
           if(is.null(Spoints)){
             stop("No data provided!")
@@ -1332,11 +1337,23 @@ metric_graph <-  R6Class("metric_graph",
           if(!is.null(Spoints)){
             PtE <- self$coordinates(XY = Spoints@coords)
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-            norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-            if(norm_XY > tolerance){
-              warning("There was at least one point whose location is far from the graph,
-              please consider checking the input.")
-            }
+            # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
+            fact <- process_factor_unit(private$vertex_unit, private$length_unit)                
+            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+            # norm_XY <- max(norm_XY)            
+            # if(norm_XY > tolerance){
+            #   warning("There was at least one point whose location is far from the graph,
+            #   please consider checking the input.")
+            # }
+            rm(Spoints)
+            far_points <- (norm_XY > tolerance)
+            rm(norm_XY)
+            data <- lapply(data, function(dat){dat[!far_points]})
+            if(any(far_points)){
+              warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+            }            
+            PtE <- PtE[!far_points,]
+            rm(far_points)
           } else{
             if(data_coords == "PtE"){
                 PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
@@ -1347,11 +1364,22 @@ metric_graph <-  R6Class("metric_graph",
                 point_coords <- cbind(data[[coord_x]], data[[coord_y]])
                 PtE <- self$coordinates(XY = point_coords)
                 XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-                norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                if(norm_XY > tolerance){
-                  warning("There was at least one point whose location is far from the graph,
-                    please consider checking the input.")
-                  }
+                # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+                fact <- process_factor_unit(private$vertex_unit, private$length_unit)                
+                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+                # norm_XY <- max(norm_XY)       
+                far_points <- (norm_XY > tolerance)
+                rm(norm_XY)
+                data <- lapply(data, function(dat){dat[!far_points]})
+                PtE <- PtE[!far_points,]
+                # if(norm_XY > tolerance){
+                #   warning("There was at least one point whose location is far from the graph,
+                #     please consider checking the input.")
+                #   }
+                if(any(far_points)){
+                  warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                }
+                rm(far_points)
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
             }
@@ -1363,7 +1391,6 @@ metric_graph <-  R6Class("metric_graph",
 
       message("Processing data")
     }  
-
     
     t <- system.time({
      if(!is.null(group)){
@@ -1480,6 +1507,11 @@ metric_graph <-  R6Class("metric_graph",
       data <- df_temp
     }
 
+    if(length(tolerance)>1){
+      tolerance <- tolerance[[1]]
+      warning("'tolerance' had more than one element, only the first one will be used.")
+    }
+
     if(inherits(data, "metric_graph_data")){
       if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
         warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
@@ -1545,20 +1577,29 @@ metric_graph <-  R6Class("metric_graph",
 
         if(nrow(unique(data_tmp)) != nrow(data_tmp)){
           warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
-          if(data_coords == "spatial" || !is.null(Spoints)){
-            warning("It is also possible that two different points were projected to the same location on the metric graph.")
-          }
         }
 
         t <- system.time({
           if(!is.null(Spoints)){
             PtE <- self$coordinates(XY = Spoints@coords)
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-            norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-            if(norm_XY > tolerance){
-              warning("There was at least one point whose location is far from the graph,
-              please consider checking the input.")
-            }
+            # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
+            fact <- process_factor_unit(private$vertex_unit, private$length_unit)
+            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+            rm(Spoints)
+            # norm_XY <- max(norm_XY)
+            # if(norm_XY > tolerance){
+            #   warning("There was at least one point whose location is far from the graph,
+            #   please consider checking the input.")
+            # }
+            far_points <- (norm_XY > tolerance)
+            rm(norm_XY)
+            data <- lapply(data, function(dat){dat[!far_points]})
+            if(any(far_points)){
+              warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+            }          
+            PtE <- PtE[!far_points,]
+            rm(far_points)         
           } else{
             if(data_coords == "PtE"){
                 PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
@@ -1569,11 +1610,22 @@ metric_graph <-  R6Class("metric_graph",
                 point_coords <- cbind(data[[coord_x]], data[[coord_y]])
                 PtE <- self$coordinates(XY = point_coords)
                 XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-                norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                if(norm_XY > tolerance){
-                  warning("There was at least one point whose location is far from the graph,
-                    please consider checking the input.")
-                  }
+                # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+                fact <- process_factor_unit(private$vertex_unit, private$length_unit)                
+                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+                # norm_XY <- max(norm_XY)
+                # if(norm_XY > tolerance){
+                #   warning("There was at least one point whose location is far from the graph,
+                #     please consider checking the input.")
+                #   }
+                far_points <- (norm_XY > tolerance)
+                rm(norm_XY)
+                data <- lapply(data, function(dat){dat[!far_points]})
+                if(any(far_points)){
+                  warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                }    
+                PtE <- PtE[!far_points,]
+                rm(far_points)                        
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
             }
@@ -1599,6 +1651,7 @@ metric_graph <-  R6Class("metric_graph",
         stop(paste(dat,"has a different number of elements than the number of
                    coordinates!"))
        }})
+
 
     if(!is.null(private$data[[".group"]])){
       group_vals <- unique(private$data[[".group"]])
@@ -1637,7 +1690,6 @@ metric_graph <-  R6Class("metric_graph",
           if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
-
   },
   
 
@@ -3018,6 +3070,11 @@ metric_graph <-  R6Class("metric_graph",
 
       #find the "edge" in the mesh on which the point is
       e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
+
+      # print("E[e,1]")
+      # print(self$mesh$E[e,1])
+      # print("E[e,2]")
+      # print(self$mesh$E[e,2])
 
       if (self$mesh$E[e, 1] == v1) { #edge starts in the vertex before
         d <- (PtE[i, 2] - d1)/(d2 - d1)

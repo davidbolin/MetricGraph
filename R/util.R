@@ -1106,7 +1106,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
           dists <- sf::st_distance(sf_points, which = "Great Circle")
         } else{
           sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
-          dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle")
+          dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle", by_element = TRUE)
         }
         units(dists) <- length_unit
         units(dists) <- NULL
@@ -1116,7 +1116,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
           dists <- sp::spDists(sp_points, longlat = TRUE) * fact
         } else{
           sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
-          dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE) * fact
+          dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) * fact
         }
     }
     return(dists)
