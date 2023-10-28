@@ -1376,7 +1376,7 @@ metric_graph <-  R6Class("metric_graph",
             if(any(far_points)){
               warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
             }            
-            PtE <- PtE[!far_points,]
+            PtE <- PtE[!far_points,,drop=FALSE]
             rm(far_points)
           } else{
             if(data_coords == "PtE"){
@@ -1395,7 +1395,7 @@ metric_graph <-  R6Class("metric_graph",
                 far_points <- (norm_XY > tolerance)
                 rm(norm_XY)
                 data <- lapply(data, function(dat){dat[!far_points]})
-                PtE <- PtE[!far_points,]
+                PtE <- PtE[!far_points,,drop=FALSE]
                 # if(norm_XY > tolerance){
                 #   warning("There was at least one point whose location is far from the graph,
                 #     please consider checking the input.")
@@ -1581,6 +1581,9 @@ metric_graph <-  R6Class("metric_graph",
           ord_tmp <- do.call(order, data_group_tmp)
           rm(data_group_tmp)
           data <- lapply(data, function(dat){dat[ord_tmp]})
+          if(!is.null(Spoints)){
+            Spoints@coords <- Spoints@coords[ord_tmp,]
+          }
           rm(ord_tmp)
           data[[".dummy_var"]] <- as.character(data[[group[1]]])
           if(length(group)>1){
@@ -1592,6 +1595,7 @@ metric_graph <-  R6Class("metric_graph",
           data[[".dummy_var"]] <- NULL
         }
 
+      
         ## convert everything to PtE
         if(verbose){
           if(data_coords == "spatial" || !is.null(Spoints)){
@@ -1601,6 +1605,8 @@ metric_graph <-  R6Class("metric_graph",
           } 
           }
         }
+
+          
 
         ## Check data for repeated observations
         if (!is.null(Spoints)){
@@ -1647,7 +1653,7 @@ metric_graph <-  R6Class("metric_graph",
             if(any(far_points)){
               warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
             }          
-            PtE <- PtE[!far_points,]
+            PtE <- PtE[!far_points, ,drop=FALSE]
             rm(far_points)         
           } else{
             if(data_coords == "PtE"){
@@ -1673,7 +1679,7 @@ metric_graph <-  R6Class("metric_graph",
                 if(any(far_points)){
                   warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
                 }    
-                PtE <- PtE[!far_points,]
+                PtE <- PtE[!far_points,,drop=FALSE]
                 rm(far_points)                        
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
@@ -1686,7 +1692,6 @@ metric_graph <-  R6Class("metric_graph",
 
       message("Processing data")
     }  
-
     
     t <- system.time({
      if(!is.null(group)){
@@ -1700,7 +1705,6 @@ metric_graph <-  R6Class("metric_graph",
         stop(paste(dat,"has a different number of elements than the number of
                    coordinates!"))
        }})
-
 
     if(!is.null(private$data[[".group"]])){
       group_vals <- unique(private$data[[".group"]])
@@ -1725,7 +1729,6 @@ metric_graph <-  R6Class("metric_graph",
     # across the different replicates, and also merge the new data to the old data)
     private$data <- process_data_add_obs(PtE, new_data = data, private$data,
                                         group_vector)
-
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
