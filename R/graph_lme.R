@@ -566,20 +566,11 @@ graph_lme <- function(formula, graph,
         end_fit <- Sys.time()
         time_fit <- end_fit-start_fit
         parallel::stopCluster(cl)
-      } else{
-        possible_methods <- c("CG", "BFGS", "L-BFGS-B", "Nelder-Mead")
-        start_fit <- Sys.time()
-            res <- tryCatch(optim(start_values,
-                        likelihood_new, method = optim_method,
-                        control = optim_controls,
-                        hessian = hessian), error = function(e){return(NA)})
-        end_fit <- Sys.time()
-        time_fit <- end_fit-start_fit
-        
-        cond_pos_hes <- FALSE
+
+
         time_hessian <- NULL
 
-        if(is.na(res[1])){
+        if(!is.na(res[1])){
           if(!improve_hessian){
             observed_fisher <- res$hessian
           } else{
@@ -588,46 +579,84 @@ graph_lme <- function(formula, graph,
             }
 
             start_hessian <- Sys.time()
-            observed_fisher <- numDeriv::hessian(likelihood, res$par,
+            observed_fisher <- numDeriv::hessian(likelihood_new, res$par,
+                                                 method.args = hessian_args)
+            end_hessian <- Sys.time()
+            time_hessian <- end_hessian-start_hessian
+          }
+        } else{
+          stop("Could not fit the model. Please, try another method with 'parallel' set to FALSE.")
+        }
+
+      } else{
+        possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
+        start_fit <- Sys.time()
+        res <- withCallingHandlers(tryCatch(optim(start_values, 
+                  likelihood_new, method = optim_method,
+                  control = optim_controls,
+                  hessian = hessian), error = function(e){return(NA)}), 
+                  warning = function(w){invokeRestart("muffleWarning")})
+        end_fit <- Sys.time()
+        time_fit <- end_fit-start_fit
+        
+        cond_pos_hes <- FALSE
+        time_hessian <- NULL
+
+        if(!is.na(res[1])){
+          if(!improve_hessian){
+            observed_fisher <- res$hessian
+          } else{
+            if(!is.list(hessian_args)){
+              stop("hessian_controls must be a list")
+            }
+
+            start_hessian <- Sys.time()
+            observed_fisher <- numDeriv::hessian(likelihood_new, res$par,
                                                  method.args = hessian_args)
             end_hessian <- Sys.time()
             time_hessian <- end_hessian-start_hessian
           }
           eig_hes <- eigen(observed_fisher)$value
-          cond_pos_hes <- (min(eig_hes) < 1e-15)
+          cond_pos_hes <- (min(eig_hes) > 1e-15)
         }
 
 
 
         problem_optim <- list()
 
-        if(is.na(res[1]) || cond_pos_hes){
+        if(is.na(res[1]) || !cond_pos_hes){
           problem_optim[[optim_method]] <- list()
           if(is.na(res[1])){
             problem_optim[[optim_method]][["lik"]] <- NA
             problem_optim[[optim_method]][["res"]] <- res
             problem_optim[[optim_method]][["hess"]] <- NA
             problem_optim[[optim_method]][["time_hessian"]] <- NA
+            problem_optim[[optim_method]][["time_fit"]] <- NA
           } else{
             problem_optim[[optim_method]][["lik"]] <- -res$value
             problem_optim[[optim_method]][["res"]] <- res
             problem_optim[[optim_method]][["hess"]] <- observed_fisher
             problem_optim[[optim_method]][["time_hessian"]] <- time_hessian
+            problem_optim[[optim_method]][["time_fit"]] <- time_fit
           }
         }
 
         ok_optim <- FALSE
+        orig_optim_method <- optim_method
+        test_other_optim <- (is.na(res[1]) || !cond_pos_hes)
 
-         if(is.na(res[1]) || cond_pos_hes){
+         if(test_other_optim){
               tmp_method <- optim_method
               while(length(possible_methods)>1){
                 possible_methods <- setdiff(possible_methods, tmp_method)
                 new_method <- possible_methods[1]
+                time_fit <- NULL
                 start_fit <- Sys.time()
-                  res <- tryCatch(optim(start_values, 
+                  res <- withCallingHandlers(tryCatch(optim(start_values, 
                             likelihood_new, method = new_method,
                             control = optim_controls,
-                            hessian = hessian), error = function(e){return(NA)})
+                            hessian = hessian), error = function(e){return(NA)}), 
+                            warning = function(w){invokeRestart("muffleWarning")})
                 end_fit <- Sys.time()
                 time_fit <- end_fit-start_fit
                 tmp_method <- new_method
@@ -637,6 +666,7 @@ graph_lme <- function(formula, graph,
                   problem_optim[[tmp_method]][["res"]] <- res
                   problem_optim[[tmp_method]][["hess"]] <- NA
                   problem_optim[[tmp_method]][["time_hessian"]] <- NA
+                  problem_optim[[tmp_method]][["time_fit"]] <- NA
                 } else{
                   if(!improve_hessian){
                     observed_fisher <- res$hessian
@@ -652,12 +682,13 @@ graph_lme <- function(formula, graph,
                     time_hessian <- end_hessian-start_hessian
                   }
                   eig_hes <- eigen(observed_fisher)$value
-                  cond_pos_hes <- (min(eig_hes) < 1e-15)
+                  cond_pos_hes <- (min(eig_hes) > 1e-15)
 
                   problem_optim[[tmp_method]][["lik"]] <- -res$value
                   problem_optim[[tmp_method]][["res"]] <- res
                   problem_optim[[tmp_method]][["hess"]] <- observed_fisher
                   problem_optim[[tmp_method]][["time_hessian"]] <- time_hessian
+                  problem_optim[[tmp_method]][["time_fit"]] <- time_fit
                 }
 
                 cond_ok <- ((!is.na(res[1])) && cond_pos_hes)
@@ -667,13 +698,9 @@ graph_lme <- function(formula, graph,
                   break
                 }
               }
-              if(length(possible_methods) == 1){
-                # stop("The model could not be fitted. All optimization methods failed.")
-                break
-              }
           }
 
-          if(orig_optim_method != optim_method){
+          if(test_other_optim){
               lik_val <- lapply(problem_optim, function(dat){dat[["lik"]]})
                 if(all(is.na(lik_val))){
                   stop("The model could not be fitted. All optimizations method failed.")
@@ -685,6 +712,8 @@ graph_lme <- function(formula, graph,
                   res <- problem_optim[[max_method]][["res"]]
                   observed_fisher <- problem_optim[[max_method]][["hess"]]
                   time_hessian <- problem_optim[[max_method]][["time_hessian"]]
+                  time_fit <- problem_optim[[max_method]][["time_fit"]]
+                  warning("All optimization methods failed to provide a positive-definite Hessian. The optimization method with largest likelihood was chosen. You can try to obtain a positive-definite Hessian by setting 'improve_hessian' to TRUE.")
                 }
           }
       }
@@ -752,7 +781,6 @@ graph_lme <- function(formula, graph,
       matern_coeff <- NULL
       time_matern_par <- NULL
     }
-
 
   inv_fisher <- tryCatch(solve(observed_fisher),
                          error = function(e) matrix(NA,
