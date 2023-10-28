@@ -524,9 +524,9 @@ data_rspde_rep <- graph_data_rspde(rspde_model_rep, name = "field", repl = ".all
 Let us now create the corresponding `inla.stack` object:
 ```{r}
 st.dat.rep <- inla.stack(
-  data = data_rspde_rep2[["data"]],
-  A = data_rspde_rep2[["basis"]],
-  effects = data_rspde_rep2[["index"]]
+  data = data_rspde_rep[["data"]],
+  A = data_rspde_rep[["basis"]],
+  effects = data_rspde_rep[["index"]]
 )
 ```
 Observe that we need the response variable `y` to be a vector.

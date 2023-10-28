@@ -501,18 +501,29 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     data_coords_tmp <- data_coords
     # group_val <- unique(group_vector)
     n_group <- length(group_val)
-    data_coords[["group"]] <- group_val[[1]]
-    if (n_group>1) {
-      for (i in 2:n_group) {
-        tmp_coords <- data_coords_tmp
-        tmp_coords[["group"]] <- group_val[[i]]
-        data_coords <- rbind(data_coords, tmp_coords)
-      }
-    }
+    # data_coords[["group"]] <- group_val[[1]]
+    # if (n_group>1) {
+    #   for (i in 2:n_group) {
+    #     tmp_coords <- data_coords_tmp
+    #     tmp_coords[["group"]] <- group_val[[i]]
+    #     data_coords <- rbind(data_coords, tmp_coords)
+    #   }
+    # }
+
+    data_coords_1 <- rep(data_coords_tmp[,1], times = n_group)
+    data_coords_2 <-  rep(data_coords_tmp[,2], times = n_group)
+    data_coords_3 <- rep(group_val, each = length(data_coords_tmp[,1]))
+
+    data_coords <- data.frame(PtE1 = data_coords_1, PtE2 = data_coords_2, group = data_coords_3)
+    rm(data_coords_1)
+    rm(data_coords_2)
+    rm(data_coords_3)
+
     data_coords_new[["group"]] <- group_vector
     data_coords[["idx"]] <- 1:nrow(data_coords)
     idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE,
                              sort = FALSE)
+
     idx_new_entries <- idx_new_entries[["idx"]]
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
@@ -530,6 +541,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
             }
             return(tmp)
           })
+
     new_data[[".edge_number"]] <- data_coords[["PtE1"]]
     new_data[[".distance_on_edge"]] <- data_coords[["PtE2"]]
     new_data[[".group"]] <- data_coords[["group"]]

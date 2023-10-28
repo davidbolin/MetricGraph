@@ -1246,9 +1246,10 @@ metric_graph <-  R6Class("metric_graph",
   #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
   #' `distance_on_edge`, otherwise if `spatial`, the user must provide
   #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
-  #' @param group If the data is grouped (for example measured at different time
-  #' points), this argument specifies the the column (or entry on the list) in
-  #' which the group variable is stored.
+  #' @param group Vector. If the data is grouped (for example measured at different time
+  #' points), this argument specifies the columns (or entries on the list) in
+  #' which the group variables are stored. It will be stored as a single column `.group` with the combined entries.
+  #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
@@ -1269,6 +1270,7 @@ metric_graph <-  R6Class("metric_graph",
                               coord_y = "coord_y",
                               data_coords = c("PtE", "spatial"),
                               group = NULL,
+                              group_sep = ".",
                               normalized = FALSE,
                               tibble = TRUE,
                               tolerance = max(self$edge_lengths)/2,
@@ -1276,6 +1278,9 @@ metric_graph <-  R6Class("metric_graph",
 
 
         data_coords <- data_coords[[1]]
+        if(!is.null(group)){
+          group <- unique(group)
+        }
 
     if(length(tolerance)>1){
       tolerance <- tolerance[[1]]
@@ -1295,6 +1300,20 @@ metric_graph <-  R6Class("metric_graph",
 
         data <- as.list(data)
 
+        if(!is.null(group)){
+          if(!all(group%in%names(data))){
+            stop("There were group variables that are not columns of 'data'!")
+          }
+          data[[".dummy_var"]] <- as.character(data[[group[1]]])
+          if(length(group)>1){
+            for(j in 2:length(group)){
+              data[[".dummy_var"]] <- sapply(1:length(data[[".dummy_var"]]), function(i){paste0(data[[".dummy_var"]][i], group_sep,data[[group[j]]][i])})
+            }
+          }
+          data[[".group"]] <- data[[".dummy_var"]]
+          data[[".dummy_var"]] <- NULL
+        }
+
         ## convert everything to PtE
         if(verbose){
           if(data_coords == "spatial" || !is.null(Spoints)){
@@ -1310,19 +1329,19 @@ metric_graph <-  R6Class("metric_graph",
             if(is.null(group)){
             data_tmp <- Spoints@coords
           } else{
-            data_tmp <- cbind(Spoints@coords, data[[group]])
+            data_tmp <- cbind(Spoints@coords, data[[".group"]])
           }
         } else if(data_coords == "spatial"){
           if(is.null(group)){
             data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
           } else{
-            data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[group]])
+            data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[".group"]])
           }
         } else{
           if(is.null(group)){
             data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
           } else{
-            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[group]])
+            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[".group"]])
           }
         }
 
@@ -1394,7 +1413,7 @@ metric_graph <-  R6Class("metric_graph",
     
     t <- system.time({
      if(!is.null(group)){
-       group_vector <- data[[group]]
+       group_vector <- data[[".group"]]
      } else{
        group <- ".group"
        group_vector <- NULL
@@ -1417,7 +1436,7 @@ metric_graph <-  R6Class("metric_graph",
     data[[distance_on_edge]] <- NULL
     data[[coord_x]] <- NULL
     data[[coord_y]] <- NULL
-    data[[group]] <- NULL
+    data[[".group"]] <- NULL
     data[[".coord_x"]] <- NULL
     data[[".coord_y"]] <- NULL
 
@@ -1472,9 +1491,10 @@ metric_graph <-  R6Class("metric_graph",
   #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
   #' `distance_on_edge`, otherwise if `spatial`, the user must provide
   #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
-  #' @param group If the data is grouped (for example measured at different time
-  #' points), this argument specifies the the column (or entry on the list) in
-  #' which the group variable is stored.
+  #' @param group Vector. If the data is grouped (for example measured at different time
+  #' points), this argument specifies the columns (or entries on the list) in
+  #' which the group variables are stored. It will be stored as a single column `.group` with the combined entries.
+  #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
@@ -1495,6 +1515,7 @@ metric_graph <-  R6Class("metric_graph",
                               coord_y = "coord_y",
                               data_coords = c("PtE", "spatial"),
                               group = NULL,
+                              group_sep = ".",
                               normalized = FALSE,
                               clear_obs = FALSE,
                               tibble = FALSE,
@@ -1512,6 +1533,10 @@ metric_graph <-  R6Class("metric_graph",
       warning("'tolerance' had more than one element, only the first one will be used.")
     }
 
+    if(!is.null(group)){
+      group <- unique(group)
+    }
+
     if(inherits(data, "metric_graph_data")){
       if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
         warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
@@ -1523,8 +1548,7 @@ metric_graph <-  R6Class("metric_graph",
         group <- ".group"
         normalized <- TRUE
       }
-    } 
-    
+    }
 
         data_coords <- data_coords[[1]]
         if(data_coords == "euclidean"){
@@ -1544,6 +1568,20 @@ metric_graph <-  R6Class("metric_graph",
 
         data <- as.list(data)
 
+        if(!is.null(group)){
+          if(!all(group%in%names(data))){
+            stop("There were group variables that are not columns of 'data'!")
+          }
+          data[[".dummy_var"]] <- as.character(data[[group[1]]])
+          if(length(group)>1){
+            for(j in 2:length(group)){
+              data[[".dummy_var"]] <- sapply(1:length(data[[".dummy_var"]]), function(i){paste0(data[[".dummy_var"]][i], group_sep,data[[group[j]]][i])})
+            }
+          }
+          data[[".group"]] <- data[[".dummy_var"]]
+          data[[".dummy_var"]] <- NULL
+        }
+
         ## convert everything to PtE
         if(verbose){
           if(data_coords == "spatial" || !is.null(Spoints)){
@@ -1559,19 +1597,20 @@ metric_graph <-  R6Class("metric_graph",
             if(is.null(group)){
             data_tmp <- Spoints@coords
           } else{
-            data_tmp <- cbind(Spoints@coords, data[[group]])
+            data_tmp <- Spoints@coords
+            data_tmp <- cbind(Spoints@coords, data[[".group"]])
           }
         } else if(data_coords == "spatial"){
           if(is.null(group)){
             data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
           } else{
-            data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[group]])
+            data_tmp <- cbind(data[[coord_x]], data[[coord_y]], data[[".group"]])
           }
         } else{
           if(is.null(group)){
             data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
           } else{
-            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[group]])
+            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[".group"]])
           }
         }
 
@@ -1641,7 +1680,7 @@ metric_graph <-  R6Class("metric_graph",
     
     t <- system.time({
      if(!is.null(group)){
-       group_vector <- data[[group]]
+       group_vector <- data[[".group"]]
      } else{
        group <- ".group"
        group_vector <- NULL
@@ -1668,14 +1707,17 @@ metric_graph <-  R6Class("metric_graph",
     data[[distance_on_edge]] <- NULL
     data[[coord_x]] <- NULL
     data[[coord_y]] <- NULL
-    data[[group]] <- NULL
+    data[[".group"]] <- NULL
     private$data[[".coord_x"]] <- NULL
     private$data[[".coord_y"]] <- NULL
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
+    print(length(unique(group_vector)))
     private$data <- process_data_add_obs(PtE, new_data = data, private$data,
                                         group_vector)
+
+    print("Here 2")
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
