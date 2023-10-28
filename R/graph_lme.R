@@ -575,13 +575,54 @@ graph_lme <- function(formula, graph,
                         hessian = hessian), error = function(e){return(NA)})
         end_fit <- Sys.time()
         time_fit <- end_fit-start_fit
+        
+        cond_pos_hes <- FALSE
+        time_hessian <- NULL
 
-         if(is.na(res[1])){
+        if(is.na(res[1])){
+          if(!improve_hessian){
+            observed_fisher <- res$hessian
+          } else{
+            if(!is.list(hessian_args)){
+              stop("hessian_controls must be a list")
+            }
+
+            start_hessian <- Sys.time()
+            observed_fisher <- numDeriv::hessian(likelihood, res$par,
+                                                 method.args = hessian_args)
+            end_hessian <- Sys.time()
+            time_hessian <- end_hessian-start_hessian
+          }
+          eig_hes <- eigen(observed_fisher)$value
+          cond_pos_hes <- (min(eig_hes) < 1e-15)
+        }
+
+
+
+        problem_optim <- list()
+
+        if(is.na(res[1]) || cond_pos_hes){
+          problem_optim[[optim_method]] <- list()
+          if(is.na(res[1])){
+            problem_optim[[optim_method]][["lik"]] <- NA
+            problem_optim[[optim_method]][["res"]] <- res
+            problem_optim[[optim_method]][["hess"]] <- NA
+            problem_optim[[optim_method]][["time_hessian"]] <- NA
+          } else{
+            problem_optim[[optim_method]][["lik"]] <- -res$value
+            problem_optim[[optim_method]][["res"]] <- res
+            problem_optim[[optim_method]][["hess"]] <- observed_fisher
+            problem_optim[[optim_method]][["time_hessian"]] <- time_hessian
+          }
+        }
+
+        ok_optim <- FALSE
+
+         if(is.na(res[1]) || cond_pos_hes){
               tmp_method <- optim_method
               while(length(possible_methods)>1){
                 possible_methods <- setdiff(possible_methods, tmp_method)
                 new_method <- possible_methods[1]
-                warning(paste("optim method",tmp_method,"failed. Another optimization method was used."))
                 start_fit <- Sys.time()
                   res <- tryCatch(optim(start_values, 
                             likelihood_new, method = new_method,
@@ -590,33 +631,63 @@ graph_lme <- function(formula, graph,
                 end_fit <- Sys.time()
                 time_fit <- end_fit-start_fit
                 tmp_method <- new_method
-                if(!is.na(res[1])){
+                cond_pos_hes <- FALSE
+                if(is.na(res[1])){
+                  problem_optim[[tmp_method]][["lik"]] <- NA
+                  problem_optim[[tmp_method]][["res"]] <- res
+                  problem_optim[[tmp_method]][["hess"]] <- NA
+                  problem_optim[[tmp_method]][["time_hessian"]] <- NA
+                } else{
+                  if(!improve_hessian){
+                    observed_fisher <- res$hessian
+                  } else{
+                    if(!is.list(hessian_args)){
+                      stop("hessian_controls must be a list")
+                    }
+
+                    start_hessian <- Sys.time()
+                    observed_fisher <- numDeriv::hessian(likelihood, res$par,
+                                                         method.args = hessian_args)
+                    end_hessian <- Sys.time()
+                    time_hessian <- end_hessian-start_hessian
+                  }
+                  eig_hes <- eigen(observed_fisher)$value
+                  cond_pos_hes <- (min(eig_hes) < 1e-15)
+
+                  problem_optim[[tmp_method]][["lik"]] <- -res$value
+                  problem_optim[[tmp_method]][["res"]] <- res
+                  problem_optim[[tmp_method]][["hess"]] <- observed_fisher
+                  problem_optim[[tmp_method]][["time_hessian"]] <- time_hessian
+                }
+
+                cond_ok <- ((!is.na(res[1])) && cond_pos_hes)
+                if(cond_ok){
                   optim_method <- new_method
+                  ok_optim <- TRUE
                   break
                 }
               }
               if(length(possible_methods) == 1){
-                stop("All optimization methods failed.")
+                # stop("The model could not be fitted. All optimization methods failed.")
+                break
               }
           }
+
+          if(orig_optim_method != optim_method){
+              lik_val <- lapply(problem_optim, function(dat){dat[["lik"]]})
+                if(all(is.na(lik_val))){
+                  stop("The model could not be fitted. All optimizations method failed.")
+                } else if(ok_optim){
+                  warning(paste("optim method",orig_optim_method,"failed to provide a positive-definite Hessian. Another optimization method was used."))
+                  rm(problem_optim)
+                } else{
+                  max_method <- which.max(lik_val)
+                  res <- problem_optim[[max_method]][["res"]]
+                  observed_fisher <- problem_optim[[max_method]][["hess"]]
+                  time_hessian <- problem_optim[[max_method]][["time_hessian"]]
+                }
+          }
       }
-
-
-  time_hessian <- NULL
-
-  if(!improve_hessian){
-    observed_fisher <- res$hessian
-  } else{
-    if(!is.list(hessian_args)){
-      stop("hessian_controls must be a list")
-    }
-
-    start_hessian <- Sys.time()
-    observed_fisher <- numDeriv::hessian(likelihood, res$par,
-                                         method.args = hessian_args)
-    end_hessian <- Sys.time()
-    time_hessian <- end_hessian-start_hessian
-  }
 
 
   # res <- optim(start_values,
@@ -645,6 +716,8 @@ graph_lme <- function(formula, graph,
 
   par_change <- diag(c(exp(-c(res$par[1:n_coeff_nonfixed])), rep(1,n_fixed)))
   observed_fisher <- par_change %*% observed_fisher %*% par_change
+
+  new_likelihood <- NULL
 
   if(model_type %in% c("graphlaplacian", "whittlematern")){
 
@@ -787,6 +860,8 @@ graph_lme <- function(formula, graph,
   names(graph_bkp$.__enclos_env__$private$data) <- names_temp
   object$graph <- graph_bkp
   object$df.residual <- object$nobs -(1 + length(object$coeff$fixed_effects) + length(object$coeff$random_effects))
+  object$lik_fun <- likelihood
+  object$par_lik_fun <- new_likelihood
 
 
   class(object) <- "graph_lme"

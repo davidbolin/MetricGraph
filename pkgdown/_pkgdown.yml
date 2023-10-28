@@ -45,7 +45,6 @@ home:
   - text: Our research group
     href: http://stochproc.kaust.edu.sa/
 
-
 reference:
   - title: MetricGraph package
     contents:
@@ -98,6 +97,7 @@ reference:
     - mutate.metric_graph_data
     - summarise.metric_graph_data
     - drop_na.metric_graph_data
+    - pipe
   - title: Precision matrices
     contents:
     - spde_precision
