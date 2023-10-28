@@ -78,14 +78,14 @@
 <span>  newdata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mesh <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  mesh_h <span class="op">=</span> <span class="fl">0.01</span>,</span>
-<span>  repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  compute_variances <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  posterior_samples <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_samples <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  only_latent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  edge_number <span class="op">=</span> <span class="st">"edge_number"</span>,</span>
 <span>  distance_on_edge <span class="op">=</span> <span class="st">"distance_on_edge"</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sample_latent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_as_list <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_original_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
@@ -101,12 +101,11 @@
 
 <dt>newdata</dt>
 <dd><p>A <code>data.frame</code> or a <code>list</code> containing the covariates, the edge
-number and the distance on edge for the locations to obtain the prediction.</p></dd>
+number and the distance on edge for the locations to obtain the prediction. Observe that you should not provide the locations for each replicate. Only a single set of locations and covariates, and the predictions for the different replicates will be obtained for this same set of locations.</p></dd>
 
 
 <dt>mesh</dt>
-<dd><p>Obtain predictions for mesh nodes? The graph must have a mesh,
-and either <code>only_latent</code> is set to TRUE or the model does not have covariates.</p></dd>
+<dd><p>Obtain predictions for mesh nodes? The graph must have a mesh and should not have covariates.</p></dd>
 
 
 <dt>mesh_h</dt>
@@ -114,13 +113,13 @@ and either <code>only_latent</code> is set to TRUE or the model does not have co
 value of 'h'.</p></dd>
 
 
-<dt>repl</dt>
+<dt>which_repl</dt>
 <dd><p>Which replicates to obtain the prediction. If <code>NULL</code> predictions
 will be obtained for all replicates. Default is <code>NULL</code>.</p></dd>
 
 
 <dt>compute_variances</dt>
-<dd><p>Set to also TRUE to compute the kriging variances.</p></dd>
+<dd><p>Set to TRUE to compute the kriging variances.</p></dd>
 
 
 <dt>posterior_samples</dt>
@@ -130,11 +129,6 @@ will be obtained for all replicates. Default is <code>NULL</code>.</p></dd>
 <dt>n_samples</dt>
 <dd><p>Number of samples to be returned. Will only be used if
 <code>sampling</code> is <code>TRUE</code>.</p></dd>
-
-
-<dt>only_latent</dt>
-<dd><p>Should the posterior samples and predictions be only given
-to the latent model?</p></dd>
 
 
 <dt>edge_number</dt>
@@ -149,6 +143,10 @@ edge, the default is <code>distance_on_edge</code>.</p></dd>
 
 <dt>normalized</dt>
 <dd><p>Are the distances on edges normalized?</p></dd>
+
+
+<dt>sample_latent</dt>
+<dd><p>Do posterior samples only for the random effects?</p></dd>
 
 
 <dt>return_as_list</dt>
@@ -174,7 +172,7 @@ samples be returned as a list, with each replicate being an element?</p></dd>
     
 
 <p>A list with elements <code>mean</code>, which contains the means of the
-predictions, <code>variance</code> (if <code>compute_variance</code> is <code>TRUE</code>), which contains the
+predictions, <code>fe_mean</code>, which is the prediction for the fixed effects, <code>re_mean</code>, which is the prediction for the random effects, <code>variance</code> (if <code>compute_variance</code> is <code>TRUE</code>), which contains the
 variances of the predictions, <code>samples</code> (if <code>posterior_samples</code> is <code>TRUE</code>),
 which contains the posterior samples.</p>
     </div>

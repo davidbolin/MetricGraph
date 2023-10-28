@@ -99,7 +99,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2023-10-25.</h4>
+modified: 2023-10-28.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -107,9 +107,9 @@ modified: 2023-10-25.</h4>
 
     
     
-<div class="section level3">
-<h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h3>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
 <p>In this vignette we will introduce how to work with log-Gaussian Cox
 processes based on Whittle–Matérn fields on metric graphs. To simplify
 the integration with <code>R-INLA</code> and <code>inlabru</code> hese
@@ -118,9 +118,9 @@ implemented in the <code>rSPDE</code> package. The theoretical details
 will be given in the forthcoming article <span class="citation">(Bolin,
 Simas, and Wallin 2023)</span>.</p>
 </div>
-<div class="section level3">
-<h3 id="constructing-the-graph-and-the-mesh">Constructing the graph and the mesh<a class="anchor" aria-label="anchor" href="#constructing-the-graph-and-the-mesh"></a>
-</h3>
+<div class="section level2">
+<h2 id="constructing-the-graph-and-the-mesh">Constructing the graph and the mesh<a class="anchor" aria-label="anchor" href="#constructing-the-graph-and-the-mesh"></a>
+</h2>
 <p>We begin by loading the <code>rSPDE</code>, <code>MetricGraph</code>
 and <code>INLA</code> packages:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -173,13 +173,8 @@ plot:</p>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>vertex_size <span class="op">=</span> <span class="fl">0</span>, data <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-7-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level3">
-<h3 id="fitting-lgcp-models-in-r-inla">Fitting LGCP models in R-INLA<a class="anchor" aria-label="anchor" href="#fitting-lgcp-models-in-r-inla"></a>
-</h3>
-</div>
 <div class="section level2">
-<h2 id="r-inla-implementation">
-<code>R-INLA</code> implementation<a class="anchor" aria-label="anchor" href="#r-inla-implementation"></a>
+<h2 id="fitting-lgcp-models-in-r-inla">Fitting LGCP models in R-INLA<a class="anchor" aria-label="anchor" href="#fitting-lgcp-models-in-r-inla"></a>
 </h2>
 <p>We are now in a position to fit the model with our
 <code>R-INLA</code> implementation. When working with log-Gaussian Cox
@@ -249,8 +244,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.351736 0.0891497   0.198781 0.345303   0.545635 0.333059</span></span>
-<span><span class="co">## range   2.103160 1.3037900   0.696180 1.744360   5.601900 1.272860</span></span></code></pre>
+<span><span class="co">## std.dev 0.351736 0.0891499   0.198780 0.345303   0.545635 0.333059</span></span>
+<span><span class="co">## range   2.103150 1.3037700   0.696183 1.744360   5.601830 1.272860</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -267,9 +262,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3517361 0.3330592</span></span>
-<span><span class="co">## 2     range  1.5 2.1031564 1.2728581</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true     mean     mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.351736 0.333059</span></span>
+<span><span class="co">## 2     range  1.5 2.103146 1.272859</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
@@ -292,9 +287,10 @@ data:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-18-1.png" width="700" style="display: block; margin: auto;"></p>
-<div class="section level3">
-<h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
-</h3>
+</div>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-BSW2023PPST" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023. <span>“Log-Cox
@@ -305,7 +301,6 @@ Graphs.”</span> <em>In Preparation</em>.
 Simpson, D, J. B. Illian, F. Lindgren, S. H. Sørbye, and H. Rue.
 <span>“Going Off Grid: Computationally Efficient Inference for
 Log-Gaussian Cox Processes.”</span> <em>Biometrika</em>.
-</div>
 </div>
 </div>
 </div>

@@ -43,6 +43,9 @@
     <loc>https://davidbolin.github.io/MetricGraph/reference/MetricGraph.html</loc>
   </url>
   <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/augment.graph_lme.html</loc>
+  </url>
+  <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc>
   </url>
   <url>
@@ -56,6 +59,9 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/graph_bru_process_data.html</loc>
