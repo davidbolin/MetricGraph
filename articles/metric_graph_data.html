@@ -338,54 +338,54 @@ since we want to replace the existing data.</p>
 now <code>.group</code>.</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 6</span></span></span>
-<span><span class="co">##         y .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
-<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.50             1            0.013<span style="text-decoration: underline;">4</span>      1   0.013<span style="text-decoration: underline;">4</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.79</span>             1            0.023<span style="text-decoration: underline;">3</span>      1   0.023<span style="text-decoration: underline;">3</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.488            1            0.061<span style="text-decoration: underline;">8</span>      1   0.061<span style="text-decoration: underline;">8</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">0.385</span>            1            0.108       1   0.108         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>  0.905            1            0.126       1   0.126         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.145</span>            1            0.177       1   0.177         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>  2.00             1            0.186       1   0.186         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> -<span style="color: #BB0000;">1.16</span>             1            0.202       1   0.202         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.879            1            0.206       1   0.206         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.816</span>            1            0.212       1   0.212         0</span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 7</span></span></span>
+<span><span class="co">##         y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
+<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.50      1            1            0.013<span style="text-decoration: underline;">4</span> 1        0.013<span style="text-decoration: underline;">4</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.79</span>      1            1            0.023<span style="text-decoration: underline;">3</span> 1        0.023<span style="text-decoration: underline;">3</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.488     1            1            0.061<span style="text-decoration: underline;">8</span> 1        0.061<span style="text-decoration: underline;">8</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">0.385</span>     1            1            0.108  1        0.108         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>  0.905     1            1            0.126  1        0.126         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.145</span>     1            1            0.177  1        0.177         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>  2.00      1            1            0.186  1        0.186         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> -<span style="color: #BB0000;">1.16</span>      1            1            0.202  1        0.202         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.879     1            1            0.206  1        0.206         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.816</span>     1            1            0.212  1        0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 990 more rows</span></span></span></code></pre>
 <p>We can obtain the data for a given group by setting the
 <code>group</code> argument in the <code>get_data()</code> method:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>group <span class="op">=</span> <span class="st">"3"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 6</span></span></span>
-<span><span class="co">##          y .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
-<span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.11              1            0.013<span style="text-decoration: underline;">4</span>      3   0.013<span style="text-decoration: underline;">4</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>  0.774             1            0.023<span style="text-decoration: underline;">3</span>      3   0.023<span style="text-decoration: underline;">3</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.464             1            0.061<span style="text-decoration: underline;">8</span>      3   0.061<span style="text-decoration: underline;">8</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.62</span>              1            0.108       3   0.108         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">1.48</span>              1            0.126       3   0.126         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.815</span>             1            0.177       3   0.177         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.25</span>              1            0.186       3   0.186         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>  0.064<span style="text-decoration: underline;">6</span>            1            0.202       3   0.202         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.129             1            0.206       3   0.206         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.881</span>             1            0.212       3   0.212         0</span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 7</span></span></span>
+<span><span class="co">##          y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
+<span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.11       3            1            0.013<span style="text-decoration: underline;">4</span> 3        0.013<span style="text-decoration: underline;">4</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>  0.774      3            1            0.023<span style="text-decoration: underline;">3</span> 3        0.023<span style="text-decoration: underline;">3</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.464      3            1            0.061<span style="text-decoration: underline;">8</span> 3        0.061<span style="text-decoration: underline;">8</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.62</span>       3            1            0.108  3        0.108         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">1.48</span>       3            1            0.126  3        0.126         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.815</span>      3            1            0.177  3        0.177         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.25</span>       3            1            0.186  3        0.186         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>  0.064<span style="text-decoration: underline;">6</span>     3            1            0.202  3        0.202         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.129      3            1            0.206  3        0.206         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.881</span>      3            1            0.212  3        0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 190 more rows</span></span></span></code></pre>
 <p>We can also provide the group argument as a vector:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"3"</span>,<span class="st">"5"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 400 × 6</span></span></span>
-<span><span class="co">##          y .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
-<span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.11              1            0.013<span style="text-decoration: underline;">4</span>      3   0.013<span style="text-decoration: underline;">4</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>  0.774             1            0.023<span style="text-decoration: underline;">3</span>      3   0.023<span style="text-decoration: underline;">3</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.464             1            0.061<span style="text-decoration: underline;">8</span>      3   0.061<span style="text-decoration: underline;">8</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.62</span>              1            0.108       3   0.108         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">1.48</span>              1            0.126       3   0.126         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.815</span>             1            0.177       3   0.177         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.25</span>              1            0.186       3   0.186         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>  0.064<span style="text-decoration: underline;">6</span>            1            0.202       3   0.202         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.129             1            0.206       3   0.206         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.881</span>             1            0.212       3   0.212         0</span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 400 × 7</span></span></span>
+<span><span class="co">##          y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
+<span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.11       3            1            0.013<span style="text-decoration: underline;">4</span> 3        0.013<span style="text-decoration: underline;">4</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>  0.774      3            1            0.023<span style="text-decoration: underline;">3</span> 3        0.023<span style="text-decoration: underline;">3</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.464      3            1            0.061<span style="text-decoration: underline;">8</span> 3        0.061<span style="text-decoration: underline;">8</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.62</span>       3            1            0.108  3        0.108         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">1.48</span>       3            1            0.126  3        0.126         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.815</span>      3            1            0.177  3        0.177         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.25</span>       3            1            0.186  3        0.186         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>  0.064<span style="text-decoration: underline;">6</span>     3            1            0.202  3        0.202         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.129      3            1            0.206  3        0.206         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.881</span>      3            1            0.212  3        0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 390 more rows</span></span></span></code></pre>
 <p>The <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method works similarly. We can plot the data
 from a specific group by specifying which group we would like to
@@ -747,19 +747,19 @@ example:</p>
 <p>We can see the data:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 6</span></span></span>
-<span><span class="co">##         y .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
-<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.50             1            0.013<span style="text-decoration: underline;">4</span>      1   0.013<span style="text-decoration: underline;">4</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.79</span>             1            0.023<span style="text-decoration: underline;">3</span>      1   0.023<span style="text-decoration: underline;">3</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.488            1            0.061<span style="text-decoration: underline;">8</span>      1   0.061<span style="text-decoration: underline;">8</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">0.385</span>            1            0.108       1   0.108         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>  0.905            1            0.126       1   0.126         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.145</span>            1            0.177       1   0.177         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>  2.00             1            0.186       1   0.186         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> -<span style="color: #BB0000;">1.16</span>             1            0.202       1   0.202         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.879            1            0.206       1   0.206         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.816</span>            1            0.212       1   0.212         0</span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 7</span></span></span>
+<span><span class="co">##         y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
+<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.50      1            1            0.013<span style="text-decoration: underline;">4</span> 1        0.013<span style="text-decoration: underline;">4</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.79</span>      1            1            0.023<span style="text-decoration: underline;">3</span> 1        0.023<span style="text-decoration: underline;">3</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.488     1            1            0.061<span style="text-decoration: underline;">8</span> 1        0.061<span style="text-decoration: underline;">8</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">0.385</span>     1            1            0.108  1        0.108         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>  0.905     1            1            0.126  1        0.126         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.145</span>     1            1            0.177  1        0.177         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>  2.00      1            1            0.186  1        0.186         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> -<span style="color: #BB0000;">1.16</span>      1            1            0.202  1        0.202         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.879     1            1            0.206  1        0.206         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.816</span>     1            1            0.212  1        0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 990 more rows</span></span></span></code></pre>
 <p>Let us <code>summarise</code> the data by obtaining the mean of
 <code>y</code> at each location across all groups:</p>
@@ -893,19 +893,19 @@ dataset. Let us add to the graph (replacing the existing data):</p>
 <span>                        group <span class="op">=</span> <span class="st">"repl"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 6</span></span></span>
-<span><span class="co">##         y .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
-<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.50             1            0.013<span style="text-decoration: underline;">4</span>      1   0.013<span style="text-decoration: underline;">4</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.79</span>             1            0.023<span style="text-decoration: underline;">3</span>      1   0.023<span style="text-decoration: underline;">3</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.488            1            0.061<span style="text-decoration: underline;">8</span>      1   0.061<span style="text-decoration: underline;">8</span>        0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">0.385</span>            1            0.108       1   0.108         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>  0.905            1            0.126       1   0.126         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.145</span>            1            0.177       1   0.177         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>  2.00             1            0.186       1   0.186         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> -<span style="color: #BB0000;">1.16</span>             1            0.202       1   0.202         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.879            1            0.206       1   0.206         0</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.816</span>            1            0.212       1   0.212         0</span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 7</span></span></span>
+<span><span class="co">##         y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
+<span><span class="co">##     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>  1.50      1            1            0.013<span style="text-decoration: underline;">4</span> 1        0.013<span style="text-decoration: underline;">4</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.79</span>      1            1            0.023<span style="text-decoration: underline;">3</span> 1        0.023<span style="text-decoration: underline;">3</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>  0.488     1            1            0.061<span style="text-decoration: underline;">8</span> 1        0.061<span style="text-decoration: underline;">8</span>        0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">0.385</span>     1            1            0.108  1        0.108         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>  0.905     1            1            0.126  1        0.126         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.145</span>     1            1            0.177  1        0.177         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>  2.00      1            1            0.186  1        0.186         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> -<span style="color: #BB0000;">1.16</span>      1            1            0.202  1        0.202         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>  0.879     1            1            0.206  1        0.206         0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.816</span>     1            1            0.212  1        0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 990 more rows</span></span></span></code></pre>
 <p>We will now create a new variable <code>new_y</code> which is the
 exponential of <code>y</code>, then filter the data to be on edges
@@ -944,17 +944,17 @@ to <code>TRUE</code>:</p>
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 100 × 6</span></span></span>
 <span><span class="co">##    .coord_x .coord_y mean_new_y .edge_number .distance_on_edge .group</span></span>
-<span><span class="co">##       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>   0.013<span style="text-decoration: underline;">4</span>        0      3.15             1            0.013<span style="text-decoration: underline;">4</span>      1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>   0.023<span style="text-decoration: underline;">3</span>        0      2.43             1            0.023<span style="text-decoration: underline;">3</span>      1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>   0.061<span style="text-decoration: underline;">8</span>        0      1.92             1            0.061<span style="text-decoration: underline;">8</span>      1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>   0.108         0      0.931            1            0.108       1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>   0.126         0      0.814            1            0.126       1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>   0.177         0      0.968            1            0.177       1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>   0.186         0      2.40             1            0.186       1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>   0.202         0      1.24             1            0.202       1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>   0.206         0      2.60             1            0.206       1</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span>   0.212         0      0.643            1            0.212       1</span></span>
+<span><span class="co">##       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>   0.013<span style="text-decoration: underline;">4</span>        0      3.15             1            0.013<span style="text-decoration: underline;">4</span> 1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>   0.023<span style="text-decoration: underline;">3</span>        0      2.43             1            0.023<span style="text-decoration: underline;">3</span> 1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>   0.061<span style="text-decoration: underline;">8</span>        0      1.92             1            0.061<span style="text-decoration: underline;">8</span> 1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>   0.108         0      0.931            1            0.108  1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>   0.126         0      0.814            1            0.126  1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>   0.177         0      0.968            1            0.177  1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>   0.186         0      2.40             1            0.186  1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>   0.202         0      1.24             1            0.202  1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>   0.206         0      2.60             1            0.206  1     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span>   0.212         0      0.643            1            0.212  1     </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 90 more rows</span></span></span></code></pre>
 <p>We can also save it to a separate variable and use as input:</p>
 <div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
@@ -977,7 +977,7 @@ to <code>TRUE</code>:</p>
 <span><span class="co">## <span style="color: #BCBCBC;"> 9</span>   0.206         0      2.60         6.73             1            0.206 </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span>   0.212         0      0.643        0.413            1            0.212 </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 90 more rows</span></span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: .group &lt;dbl&gt;</span></span></span></code></pre>
+<span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: .group &lt;chr&gt;</span></span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

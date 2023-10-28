@@ -107,9 +107,9 @@ modified: 2023-10-28.</h4>
 
     
     
-<div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h2>
+<div class="section level3">
+<h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h3>
 <p>In this vignette we will introduce how to work with log-Gaussian Cox
 processes based on Whittle–Matérn fields on metric graphs. To simplify
 the integration with <code>R-INLA</code> and <code>inlabru</code> hese
@@ -118,9 +118,9 @@ implemented in the <code>rSPDE</code> package. The theoretical details
 will be given in the forthcoming article <span class="citation">(Bolin,
 Simas, and Wallin 2023)</span>.</p>
 </div>
-<div class="section level2">
-<h2 id="constructing-the-graph-and-the-mesh">Constructing the graph and the mesh<a class="anchor" aria-label="anchor" href="#constructing-the-graph-and-the-mesh"></a>
-</h2>
+<div class="section level3">
+<h3 id="constructing-the-graph-and-the-mesh">Constructing the graph and the mesh<a class="anchor" aria-label="anchor" href="#constructing-the-graph-and-the-mesh"></a>
+</h3>
 <p>We begin by loading the <code>rSPDE</code>, <code>MetricGraph</code>
 and <code>INLA</code> packages:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -166,16 +166,16 @@ intensity function as</p>
 <p>To plot the simulated points, we can add them to the graph and then
 plot:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>,</span>
-<span>                                         edge_number <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_number</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,<span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_number</span><span class="op">)</span>,</span>
-<span>                                         distance_on_edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,<span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                         edge_number <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_numbers</span>,</span>
+<span>                                         distance_on_edge <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span>,</span>
 <span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>vertex_size <span class="op">=</span> <span class="fl">0</span>, data <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-7-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level2">
-<h2 id="fitting-lgcp-models-in-r-inla">Fitting LGCP models in R-INLA<a class="anchor" aria-label="anchor" href="#fitting-lgcp-models-in-r-inla"></a>
-</h2>
+<div class="section level3">
+<h3 id="fitting-lgcp-models-in-r-inla">Fitting LGCP models in R-INLA<a class="anchor" aria-label="anchor" href="#fitting-lgcp-models-in-r-inla"></a>
+</h3>
 <p>We are now in a position to fit the model with our
 <code>R-INLA</code> implementation. When working with log-Gaussian Cox
 processes, the likelihood has a term <span class="math inline">\(\int_\Gamma \exp(u(s)) ds\)</span> that needs to
@@ -221,7 +221,7 @@ value in the model.</p>
 <code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p>Next, we compute the auxiliary data:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name<span class="op">=</span><span class="st">"field"</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name<span class="op">=</span><span class="st">"field"</span><span class="op">)</span></span></code></pre></div>
 <p>We now create the <code>inla.stack</code> object with the
 <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack()</a></code> function. At this stage, it is important that
 the data has been added to the <code>graph</code> since it is supplied
@@ -244,8 +244,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.351736 0.0891499    0.19878 0.345303   0.545635 0.333059</span></span>
-<span><span class="co">## range   2.103160 1.3037900    0.69618 1.744360   5.601890 1.272860</span></span></code></pre>
+<span><span class="co">## std.dev 0.351736 0.0891498   0.198780 0.345303   0.545635 0.333059</span></span>
+<span><span class="co">## range   2.103150 1.3037700   0.696183 1.744360   5.601830 1.272860</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -262,9 +262,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3517359 0.333059</span></span>
-<span><span class="co">## 2     range  1.5 2.1031562 1.272859</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.351736 0.3330591</span></span>
+<span><span class="co">## 2     range  1.5 2.103147 1.2728599</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
@@ -288,9 +288,92 @@ data:</p>
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-18-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level2 unnumbered">
-<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<div class="section level2">
+<h2 id="an-example-with-replicates">An example with replicates<a class="anchor" aria-label="anchor" href="#an-example-with-replicates"></a>
 </h2>
+<p>Let us now test show an example with replicates. Let us first
+simulate replicates of a latent field</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">n.rep</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
+<span>  <span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
+<span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
+<span>  <span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span>  <span class="va">lgcp_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lgcp.html">graph_lgcp</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n.rep</span>, intercept <span class="op">=</span> <span class="fl">1</span>, sigma <span class="op">=</span> <span class="va">sigma</span>,</span>
+<span>                            range <span class="op">=</span> <span class="va">range</span>, alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>                            graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span></code></pre></div>
+<p>We now clear the previous data and add the new data together with the
+exposure terms</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="va">df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                             e <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                         edge_number <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_number</span>,</span>
+<span>                                         distance_on_edge <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span>,</span>
+<span>                                         rep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">df_rep</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">atilde</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                         e <span class="op">=</span> <span class="va">atilde</span>,</span>
+<span>                                         edge_number <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
+<span>                                         distance_on_edge <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>,</span>
+<span>                                         rep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">atilde</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">2</span><span class="op">:</span><span class="va">n.rep</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="va">df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">df_rep</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                             e <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                         edge_number <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_number</span>,</span>
+<span>                                         distance_on_edge <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span>,</span>
+<span>                                         rep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">i</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">df_rep</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">atilde</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                         e <span class="op">=</span> <span class="va">atilde</span>,</span>
+<span>                                         edge_number <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
+<span>                                         distance_on_edge <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>,</span>
+<span>                                         rep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">i</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">atilde</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>                                        </span>
+<span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>      <span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_rep</span>,</span>
+<span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                        group <span class="op">=</span> <span class="st">"rep"</span><span class="op">)</span></span></code></pre></div>
+<p>We can now define and fit the model as previously</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name<span class="op">=</span><span class="st">"field"</span>, repl <span class="op">=</span> <span class="st">".all"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>                  A <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>                  effects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">data_rspde</span><span class="op">[[</span><span class="st">"index"</span><span class="op">]</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Intercept <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                 family <span class="op">=</span> <span class="st">"poisson"</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>,</span>
+<span>                 control.predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>, compute <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span>, verbose<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Let’s look at the summaries</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
+<span><span class="co">## std.dev 0.485502 0.0159464   0.455343 0.485065   0.517977 0.48396</span></span>
+<span><span class="co">## range   1.571950 0.1196680   1.352000 1.566590   1.821690 1.55430</span></span></code></pre>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
+<span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
+<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      <span class="va">spde_result</span><span class="op">$</span><span class="va">summary.std.dev</span><span class="op">$</span><span class="va">mean</span>,</span>
+<span>      <span class="va">spde_result</span><span class="op">$</span><span class="va">summary.range</span><span class="op">$</span><span class="va">mean</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      <span class="va">spde_result</span><span class="op">$</span><span class="va">summary.std.dev</span><span class="op">$</span><span class="va">mode</span>,</span>
+<span>      <span class="va">spde_result</span><span class="op">$</span><span class="va">summary.range</span><span class="op">$</span><span class="va">mode</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.4855025 0.4839597</span></span>
+<span><span class="co">## 2     range  1.5 1.5719509 1.5542994</span></span></code></pre>
+<div class="section level3">
+<h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h3>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-BSW2023PPST" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023. <span>“Log-Cox
@@ -301,6 +384,7 @@ Graphs.”</span> <em>In Preparation</em>.
 Simpson, D, J. B. Illian, F. Lindgren, S. H. Sørbye, and H. Rue.
 <span>“Going Off Grid: Computationally Efficient Inference for
 Log-Gaussian Cox Processes.”</span> <em>Biometrika</em>.
+</div>
 </div>
 </div>
 </div>
