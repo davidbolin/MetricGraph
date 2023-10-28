@@ -1304,6 +1304,11 @@ metric_graph <-  R6Class("metric_graph",
           if(!all(group%in%names(data))){
             stop("There were group variables that are not columns of 'data'!")
           }
+          data_group_tmp <- lapply(group, function(lab){data[[lab]]})
+          ord_tmp <- do.call(order, data_group_tmp)
+          rm(data_group_tmp)
+          data <- lapply(data, function(dat){dat[ord_tmp]})
+          rm(ord_tmp)          
           data[[".dummy_var"]] <- as.character(data[[group[1]]])
           if(length(group)>1){
             for(j in 2:length(group)){
@@ -1572,6 +1577,11 @@ metric_graph <-  R6Class("metric_graph",
           if(!all(group%in%names(data))){
             stop("There were group variables that are not columns of 'data'!")
           }
+          data_group_tmp <- lapply(group, function(lab){data[[lab]]})
+          ord_tmp <- do.call(order, data_group_tmp)
+          rm(data_group_tmp)
+          data <- lapply(data, function(dat){dat[ord_tmp]})
+          rm(ord_tmp)
           data[[".dummy_var"]] <- as.character(data[[group[1]]])
           if(length(group)>1){
             for(j in 2:length(group)){
