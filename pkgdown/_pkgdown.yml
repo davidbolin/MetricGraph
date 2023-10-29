@@ -97,6 +97,9 @@ reference:
     - mutate.metric_graph_data
     - summarise.metric_graph_data
     - drop_na.metric_graph_data
+  - title: Methods for metric graphs
+    contents:
+    - summary.metric_graph
   - title: Precision matrices
     contents:
     - spde_precision
