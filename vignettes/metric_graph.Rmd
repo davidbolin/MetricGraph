@@ -463,6 +463,12 @@ graph$plot(data = "x", group = 1)
 One can note that the command adds all observation locations, from all groups
 as vertices. 
 
+Finally, let us obtain a summary of the graph containing data:
+
+```{r}
+summary(graph)
+```
+
 # Working with functions on metric graphs
 
 When working with data on metric graphs, one often wants to display functions

@@ -712,7 +712,7 @@ metric_graph <-  R6Class("metric_graph",
       cat("Data: \n")
       col_names_valid <- grepl("^[^.]+$", names(private$data))
       cat("\t Columns: ", names(private$data)[col_names_valid], "\n")
-      cat("\t Groups: ", private$group_col, "\n")
+      cat("\t Groups: ", ifelse(is.null(private$group_col), "None", private$group_col), "\n")
     }
     cat("\n")
     cat("Tolerances: \n")
@@ -726,7 +726,35 @@ metric_graph <-  R6Class("metric_graph",
   #' @return No return value. Called for its side effects. 
 
   print = function() {
-    cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
+    cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n\n")
+    cat("Vertices:\n")
+    degrees <- self$get_degrees()
+    cat("\t")
+    degrees_u <- sort(unique(degrees))
+    for(i in 1:length(degrees_u)){
+      if((i>1) && (i%%5 == 1)){
+        cat("\n\t")
+      }
+      cat(paste0(" Degree ", degrees_u[i],": ",sum(degrees == degrees_u[i]), "; "))
+    }
+    cat("\n")
+
+    cat("\t With incompatible directions: ", length(self$get_vertices_incomp_dir()), "\n\n")
+    cat("Edges: \n")
+    cat("\t Lengths: \n")
+    cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
+    cat("\t Weights: \n")
+    cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
+    cat("Graph units: \n")
+    cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
+    cat("Longitude and Latitude coordinates: ", private$longlat)
+    if(private$longlat){
+      cat("\n\t Which spatial package: ", private$which_longlat, "\n")
+      cat("\t CRS: ", private$crs$input)
+    }
+    cat("\n\n")
+
     if(!is.null(self$characteristics)) {
       cat("Some characteristics of the graph:\n")
       if(self$characteristics$connected){
@@ -835,6 +863,12 @@ metric_graph <-  R6Class("metric_graph",
 
     if(is.null(self$characteristics$distance_consistency)){
       self$check_distance_consistency()
+      if(self$characteristics$distance_consistency){
+        self$characteristics$euclidean <- TRUE
+      } else{
+        self$characteristics$euclidean <- FALSE
+      }
+    } else{
       if(self$characteristics$distance_consistency){
         self$characteristics$euclidean <- TRUE
       } else{
