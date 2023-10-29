@@ -1,7 +1,7 @@
 #' Precision matrix for Whittle-Matérn fields
-#' 
+#'
 #' Computes the precision matrix for all vertices for a Whittle-Matérn field.
-#' 
+#'
 #' @param kappa Range parameter.
 #' @param tau Precision parameter.
 #' @param alpha Smoothness parameter (1 or 2).
@@ -279,7 +279,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 #' @param graph metric_graph object
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 gives stationary boundary conditions
-#' @param w ([0,1]) how two weight the top edge
+#' @param w ([0,1]) how to weight the top edge
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list
