@@ -21,6 +21,9 @@
 * Added method `get_groups()` to get the unique groups, and also to retrieve the columns that were used to create the group variable.
 * Added the `get_data()` method to get the data in a user-friendly manner.
 * Added `glance()` and `augment()` methods for `graph_lme()` objects.
+* Added `get_vertices_incomp_dir()` method to return vertices with incompatible directions.
+* Added `print()`, `summary()`, `compute_characteristics()`, `check_euclidean()`, `check_distance_consistency()` methods.
+* Added support for edge weights.
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.

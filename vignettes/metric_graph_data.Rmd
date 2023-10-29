@@ -209,6 +209,61 @@ graph$plot(data = "y", group = "3")
 ```
 
 
+# More advanced grouping
+
+Besides being able to group data acoording to one column of the data, we can also group the data with respect to several columns of the data. Let us generate a new data set:
+
+```{r}
+n.repl <- 10
+
+y_repl <- rnorm(n.repl * graph$nE * obs_per_edge)
+repl_1 <- rep(1:n.repl, each = graph$nE * obs_per_edge)
+repl_2 <- rep(c("a","b","c","d","e"), times = 2 * graph$nE * obs_per_edge)
+
+df_adv_grp <- data.frame(data.frame(y = y_repl, 
+                  repl_1 = repl_1, repl_2 = repl_2,
+                  edge_number = rep(obs_loc[,1], times = n.repl), 
+                  distance_on_edge = rep(obs_loc[,2], times = n.repl)))
+```
+
+Let us now add these observations on the graph and group them by `c("repl_1","repl_2")`:
+
+```{r}
+graph$add_observations(data = df_adv_grp, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = c("repl_1", "repl_2"))
+```
+
+Let us take a look at the grouped variables. They are stored in the `.group` column:
+
+```{r}
+graph$get_data()
+```
+
+Observe that the `group` variable is created, by default, by pasting the group variables together with the `.` as separator. We can change the separator using the `group_sep` argument:
+
+```{r}
+graph$add_observations(data = df_adv_grp, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = c("repl_1", "repl_2"),
+                        group_sep = ":")
+```
+
+Then,
+
+```{r}
+graph$get_data()
+```
+
+To plot the data for a particular group, we simply select the group variable we want to plot. Let us plot `y` for `repl_1` equal to `3` and `repl_2` equal to `c`:
+
+```{r}
+graph$plot(data = "y", group = "3:c")
+```
+
+
 # Manipulating data from metric graphs in the tidyverse style
 
 In this section we will present some data manipulation tools that are implemented in metric graphs and can be safely used. 

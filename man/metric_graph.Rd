@@ -66,6 +66,8 @@ graph. The weights are given by the edge lengths.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-get_vertices_incomp_dir}{\code{metric_graph$get_vertices_incomp_dir()}}
+\item \href{#method-metric_graph-summary}{\code{metric_graph$summary()}}
 \item \href{#method-metric_graph-print}{\code{metric_graph$print()}}
 \item \href{#method-metric_graph-compute_characteristics}{\code{metric_graph$compute_characteristics()}}
 \item \href{#method-metric_graph-check_euclidean}{\code{metric_graph$check_euclidean()}}
@@ -215,6 +217,47 @@ viewed as a vertex.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_vertices_incomp_dir"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_vertices_incomp_dir}{}}}
+\subsection{Method \code{get_vertices_incomp_dir()}}{
+Gets vertices with incompatible directions
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_vertices_incomp_dir()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A vector containing the vertices with incompatible directions.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-summary}{}}}
+\subsection{Method \code{summary()}}{
+Prints a summary of various informations of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$summary(
+  messages = FALSE,
+  compute_characteristics = TRUE,
+  check_euclidean = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{messages}}{Should message explaining how to build the results be given for missing quantities?}
+
+\item{\code{compute_characteristics}}{Should the characteristics of the graph be computed?}
+
+\item{\code{check_euclidean}}{Check if the graph has Euclidean edges?}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
@@ -505,9 +548,16 @@ No return value. Called for its side effects.
 \subsection{Method \code{get_groups()}}{
 Gets the groups from the data.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_groups()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_groups(get_cols = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{get_cols}}{Should the names of the columns that created the group variable be returned?}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 A vector containing the available groups in the internal data.
 }
@@ -647,6 +697,7 @@ Process data to the metric graph data format.
   coord_y = "coord_y",
   data_coords = c("PtE", "spatial"),
   group = NULL,
+  group_sep = ".",
   normalized = FALSE,
   tibble = TRUE,
   tolerance = max(self$edge_lengths)/2,
@@ -690,9 +741,11 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
 \code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
 
-\item{\code{group}}{If the data is grouped (for example measured at different time
-points), this argument specifies the the column (or entry on the list) in
-which the group variable is stored.}
+\item{\code{group}}{Vector. If the data is grouped (for example measured at different time
+points), this argument specifies the columns (or entries on the list) in
+which the group variables are stored. It will be stored as a single column \code{.group} with the combined entries.}
+
+\item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE. Will not be used if
@@ -729,6 +782,7 @@ Add observations to the metric graph.
   coord_y = "coord_y",
   data_coords = c("PtE", "spatial"),
   group = NULL,
+  group_sep = ".",
   normalized = FALSE,
   clear_obs = FALSE,
   tibble = FALSE,
@@ -773,9 +827,11 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
 \code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
 
-\item{\code{group}}{If the data is grouped (for example measured at different time
-points), this argument specifies the the column (or entry on the list) in
-which the group variable is stored.}
+\item{\code{group}}{Vector. If the data is grouped (for example measured at different time
+points), this argument specifies the columns (or entries on the list) in
+which the group variables are stored. It will be stored as a single column \code{.group} with the combined entries.}
+
+\item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE. Will not be used if

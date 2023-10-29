@@ -517,7 +517,208 @@ metric_graph <-  R6Class("metric_graph",
         private$connected = FALSE
       }
     }
+    private$edge_weights <- rep(1, self$nE)
+  },
 
+  #' @description Sets the edge weights
+  #' @param weights Either a number or a numerical vector with length given by the number of edges, providing the edge weights.
+  #' @return No return value. Called for its side effects.
+  
+  set_edge_weights = function(weights = rep(1, self$nE)){
+    if(!is.numeric(weights)){
+      stop("'weights' must be numerical!")
+    }
+    if(!is.vector(weights)){
+      stop("'weights' must be a vector!")
+    }
+    if( (length(weigths) != 1) || (length(weights) != self$nE)){
+      stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+    }
+    if(length(weights)==1){
+      private$edge_weights <- rep(weights, self$nE)
+    } else{
+      private$edge_weights <- weights
+    }
+  },
+
+
+  #' @description Gets the edge weights
+  #' @return A vector containing the edge weights.
+  
+  get_edge_weights = function(){
+    return(private$edge_weights)
+  },
+
+  
+
+  #' @description Gets vertices with incompatible directions
+  #' @return A vector containing the vertices with incompatible directions.
+  
+  get_vertices_incomp_dir = function(){
+    start.deg <- end.deg <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+      start.deg[i] <- sum(self$E[,1]==i)
+      end.deg[i] <- sum(self$E[,2]==i)
+    }
+
+    degrees <- self$get_degrees()
+
+    # Finding problematic vertices, that is, vertices with incompatible directions
+    # They will not be pruned.
+    problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    return(which(problematic))
+  }, 
+
+  #' @description Prints a summary of various informations of the graph
+  #' @param messages Should message explaining how to build the results be given for missing quantities?
+  #' @param compute_characteristics Should the characteristics of the graph be computed?
+  #' @param check_euclidean Check if the graph has Euclidean edges?
+  #' @param check_distance_consistency Check the distance consistency assumption?
+  #' @return No return value. Called for its side effects. 
+  
+  summary = function(messages = FALSE, compute_characteristics = TRUE, check_euclidean = TRUE, check_distance_consistency = TRUE){
+    if(compute_characteristics){
+      self$compute_characteristics()
+    }
+    if(check_distance_consistency){
+      self$check_distance_consistency()
+    }    
+    if(check_euclidean){
+      self$check_euclidean()
+    }
+    cat("A metric graph object with:\n\n")
+    cat("Vertices:\n")
+    cat("\t Total:", self$nV,"\n")
+    degrees <- self$get_degrees()
+    cat("\t")
+    degrees_u <- sort(unique(degrees))
+    for(i in 1:length(degrees_u)){
+      if((i>1) && (i%%5 == 1)){
+        cat("\n\t")
+      }
+      cat(paste0(" Degree ", degrees_u[i],": ",sum(degrees == degrees_u[i]), "; "))
+    }
+    cat("\n")
+
+    cat("\t With incompatible directions: ", length(self$get_vertices_incomp_dir()), "\n\n")
+    cat("Edges: \n")
+    cat("\t Total:", self$nE,"\n")
+    cat("\t Lengths: \n")
+    cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
+    cat("\t Weights: \n")
+    cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
+    cat("Graph units: \n")
+    cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
+    cat("Longitude and Latitude coordinates: ", private$longlat)
+    if(private$longlat){
+      cat("\n\t Which spatial package: ", private$which_longlat, "\n")
+      cat("\t CRS: ", private$crs$input)
+    }
+    cat("\n\n")
+    if(!is.null(self$characteristics)) {
+      cat("Some characteristics of the graph:\n")
+      if(self$characteristics$connected){
+        cat("\t Connected: TRUE\n")
+      } else {
+        cat("\t Connected: FALSE\n")
+      }      
+      if(self$characteristics$has_loops){
+        cat("\t Has loops: TRUE\n")
+      } else {
+        cat("\t Has loops: FALSE\n")
+      }
+      if(self$characteristics$has_multiple_edges){
+        cat("\t Has multiple edges: TRUE\n")
+      } else {
+        cat("\t Has multiple edges: FALSE\n")
+      }
+      if(self$characteristics$is_tree){
+        cat("\t Is a tree: TRUE\n")
+      } else {
+        cat("\t Is a tree: FALSE\n")
+      }
+      if(!is.null(self$characteristics$distance_consistency)){
+        if(self$characteristics$distance_consistency){
+          cat("\t Distance consistent: TRUE\n")
+        } else {
+          cat("\t Distance consistent: FALSE\n")
+        } 
+      } else{
+        cat("\t Distance consistent: unknown\n")
+        if(messages){
+          message("To check if the graph satisfies the distance consistency, run the `check_distance_consistency()` method.")
+        }
+      }
+      if(!is.null(self$characteristics$euclidean)){
+        if(self$characteristics$euclidean){
+          cat("\t Has Euclidean edges: TRUE\n")
+        } else {
+          cat("\t Has Euclidean edges: FALSE\n")
+        } 
+      } else{
+        cat("\t Has Euclidean edges: unknown\n")
+        if(messages){
+          message("To check if the graph has Euclidean edges, run the `check_euclidean()` method.")
+        }
+      }
+    } else{
+      cat("Some characteristics of the graph: Not computed.\n")
+      if(messages){
+        message("To compute the characteristics, run the `compute_characteristics()` method.")
+      }
+    }
+    cat("\n")
+    cat("Computed quantities inside the graph: \n")
+    cat("\t Laplacian: ", !is.null(self$Laplacian), " ; Geodesic distances: ", !is.null(self$geo_dist), "\n")
+    if(is.null(self$Laplacian)){
+      if(messages){
+        message("To compute the Laplacian, run the 'compute_laplacian()' method.")
+      }
+    }
+    if(is.null(self$geo_dist)){
+      if(messages){
+        message("To compute the geodesic distances, run the 'compute_geodist()' method.")
+      }
+    }
+    cat("\t Resistance distances: ", !is.null(self$res_dist), " ; Finite element matrices: ", !is.null(self$mesh$C), "\n")
+    if(is.null(self$res_dist)){
+      if(messages){
+        message("To compute the resistance distances, run the 'compute_resdist()' method.")
+      }
+    }
+    if(is.null(self$mesh$C)){
+      if(messages){
+        message("To compute the finite element matrices, run the 'compute_fem()' method.")
+      }
+    }
+    cat("\n")
+    if(is.null(self$mesh)){
+      cat("Mesh: The graph has no mesh! \n")
+      if(messages){
+        message("To build the mesh, run the 'build_mesh()' method.")
+      }
+    } else{
+      cat("Mesh: \n")
+      cat("\t Max h_e: ", max(self$mesh$h_e), " ; Min n_e: ", min(self$mesh$n_e), "\n")
+    }
+    cat("\n")
+    if(is.null(private$data)){
+      cat("Data: The graph has no data!\n")
+      if(messages){
+        message("To add observations, use the 'add_observations()' method.")
+      }
+    } else{
+      cat("Data: \n")
+      col_names_valid <- grepl("^[^.]+$", names(private$data))
+      cat("\t Columns: ", names(private$data)[col_names_valid], "\n")
+      cat("\t Groups: ", private$group_col, "\n")
+    }
+    cat("\n")
+    cat("Tolerances: \n")
+    cat("\t vertex-vertex: ", private$tolerance$vertex_vertex, "\n")
+    cat("\t vertex-edge: ", private$tolerance$vertex_edge, "\n")
+    cat("\t edge-edge: ", private$tolerance$edge_edge, "\n")        
   },
 
 
@@ -4042,7 +4243,11 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 
   # tolerance
 
-  tolerance = NULL
+  tolerance = NULL,
+
+  # edge_weights
+
+  edge_weights = NULL
 
 ))
 

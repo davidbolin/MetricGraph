@@ -239,6 +239,26 @@ Further, the individual characteristics can be accessed (after running the `comp
 graph3$characteristics
 ```
 
+## Summaries of metric graphs
+
+We can also obtain a summary of the informations contained on a metric graph object by using the `summary()` method. 
+Let us obtain a summary of informations of `graph3`:
+
+```{r}
+summary(graph3)
+```
+
+Observe that there are some quantities that were not computed on the summary. We can see how to compute them by setting the argument `messages` to `TRUE`:
+
+```{r}
+summary(graph3, messages = TRUE)
+```
+
+Finally, the `summary()` can also be accessed from the metric graph object:
+
+```{r}
+graph3$summary()
+```
 
 
 ## Understanding coordinates on graphs
@@ -356,24 +376,13 @@ with in further analysis via the `get_largest` command:
 graph5 <- graphs$get_largest()
 ```
 
-Let us obtain the characteristics of this graph:
+Let us obtain a summary of this graph:
 
 ```{r}
-graph5$compute_characteristics()
+summary(graph5)
 ```
 
-Let us now check the characteristics:
-
-```{r}
-graph5
-```
-
-We have that this graph does not have Euclidean edges. Let us also check if it satisfies the distance consistency assumption:
-
-```{r}
-graph5$check_distance_consistency()
-graph5
-```
+We have that this graph does not have Euclidean edges. Also observe that we have the units for the vertices and lengths, and also the coordinate reference system being used by this object.
 
 # Adding data to the graph 
 
