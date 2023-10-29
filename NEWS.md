@@ -15,6 +15,12 @@
 * Improved the `plot_function()` method to accept `data` and `newdata`.
 * Included a `process_data()` method for metric graphs
 * Renamed the data internal structure from "__group", "__edge_number", "__distance_on_edge", "__coord_x", "__coord_y" to ".group", ".edge_number", ".distance_on_edge", ".coord_x" and ".coord_y".
+* Added an "advanced grouping" option, in which the group variable can be a combination of several columns.
+* Improved graph_lme() behavior to avoid having NaN as std.errors.
+* Added check for distance consistency and, more generally, check to see if the graph has euclidean edges.
+* Added method `get_groups()` to get the unique groups, and also to retrieve the columns that were used to create the group variable.
+* Added the `get_data()` method to get the data in a user-friendly manner.
+* Added `glance()` and `augment()` methods for `graph_lme()` objects.
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.

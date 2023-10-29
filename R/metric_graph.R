@@ -1055,12 +1055,16 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   #' @description Gets the groups from the data.
+  #' @param get_cols Should the names of the columns that created the group variable be returned?
   #' @return A vector containing the available groups in the internal data.
   
-  get_groups = function(){
+  get_groups = function(get_cols = FALSE){
     if(is.null(private$data)){
       warning("There is no data!")
       return(invisible(NULL))
+    }
+    if(get_cols){
+      return(private$group_col)
     }
     return(unique(private$data[[".group"]]))
   },
@@ -1697,7 +1701,6 @@ metric_graph <-  R6Class("metric_graph",
      if(!is.null(group)){
        group_vector <- data[[".group"]]
      } else{
-       group <- ".group"
        group_vector <- NULL
      }
 
@@ -1738,6 +1741,7 @@ metric_graph <-  R6Class("metric_graph",
     if(tibble){
       private$data <- tidyr::as_tibble(private$data)
     }
+    private$group_col <- group
     class(private$data) <- c("metric_graph_data", class(private$data))
     })
           if(verbose){
@@ -3732,6 +3736,10 @@ metric_graph <-  R6Class("metric_graph",
   # connected 
 
   connected = TRUE,
+
+  # group columns
+
+  group_col = NULL,
 
   clear_initial_info = function(){
     private$addinfo = FALSE
