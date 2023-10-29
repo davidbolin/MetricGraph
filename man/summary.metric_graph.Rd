@@ -9,6 +9,7 @@
   messages = FALSE,
   compute_characteristics = TRUE,
   check_euclidean = TRUE,
+  check_distance_consistency = TRUE,
   ...
 )
 }
@@ -20,6 +21,8 @@
 \item{compute_characteristics}{Should the characteristics of the graph be computed?}
 
 \item{check_euclidean}{Check if the graph has Euclidean edges?}
+
+\item{check_distance_consistency}{Check the distance consistency assumption?#'}
 
 \item{...}{not used.}
 }

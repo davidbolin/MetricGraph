@@ -66,6 +66,8 @@ graph. The weights are given by the edge lengths.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-set_edge_weights}{\code{metric_graph$set_edge_weights()}}
+\item \href{#method-metric_graph-get_edge_weights}{\code{metric_graph$get_edge_weights()}}
 \item \href{#method-metric_graph-get_vertices_incomp_dir}{\code{metric_graph$get_vertices_incomp_dir()}}
 \item \href{#method-metric_graph-summary}{\code{metric_graph$summary()}}
 \item \href{#method-metric_graph-print}{\code{metric_graph$print()}}
@@ -220,6 +222,39 @@ A \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-set_edge_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-set_edge_weights}{}}}
+\subsection{Method \code{set_edge_weights()}}{
+Sets the edge weights
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(weights = rep(1, self$nE))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{weights}}{Either a number or a numerical vector with length given by the number of edges, providing the edge weights.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_edge_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_edge_weights}{}}}
+\subsection{Method \code{get_edge_weights()}}{
+Gets the edge weights
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A vector containing the edge weights.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_vertices_incomp_dir"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-get_vertices_incomp_dir}{}}}
 \subsection{Method \code{get_vertices_incomp_dir()}}{
@@ -241,7 +276,8 @@ Prints a summary of various informations of the graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$summary(
   messages = FALSE,
   compute_characteristics = TRUE,
-  check_euclidean = TRUE
+  check_euclidean = TRUE,
+  check_distance_consistency = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -253,6 +289,8 @@ Prints a summary of various informations of the graph
 \item{\code{compute_characteristics}}{Should the characteristics of the graph be computed?}
 
 \item{\code{check_euclidean}}{Check if the graph has Euclidean edges?}
+
+\item{\code{check_distance_consistency}}{Check the distance consistency assumption?}
 }
 \if{html}{\out{</div>}}
 }
