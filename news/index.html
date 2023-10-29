@@ -83,6 +83,12 @@
 <li>Improved the <code>plot_function()</code> method to accept <code>data</code> and <code>newdata</code>.</li>
 <li>Included a <code>process_data()</code> method for metric graphs</li>
 <li>Renamed the data internal structure from “__group”, “__edge_number”, “__distance_on_edge”, “__coord_x”, “__coord_y” to “.group”, “.edge_number”, “.distance_on_edge”, “.coord_x” and “.coord_y”.</li>
+<li>Added an “advanced grouping” option, in which the group variable can be a combination of several columns.</li>
+<li>Improved graph_lme() behavior to avoid having NaN as std.errors.</li>
+<li>Added check for distance consistency and, more generally, check to see if the graph has euclidean edges.</li>
+<li>Added method <code>get_groups()</code> to get the unique groups, and also to retrieve the columns that were used to create the group variable.</li>
+<li>Added the <code>get_data()</code> method to get the data in a user-friendly manner.</li>
+<li>Added <code><a href="../reference/glance.graph_lme.html">glance()</a></code> and <code><a href="../reference/augment.graph_lme.html">augment()</a></code> methods for <code><a href="../reference/graph_lme.html">graph_lme()</a></code> objects.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.2" id="metricgraph-112">MetricGraph 1.1.2<a class="anchor" aria-label="anchor" href="#metricgraph-112"></a></h2><p class="text-muted">CRAN release: 2023-07-04</p>
