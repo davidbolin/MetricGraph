@@ -9,7 +9,7 @@
 #' edge1 <- rbind(c(0, 0), c(2, 0))
 #' edge2 <- rbind(c(2, 0), c(1, 1))
 #' edge3 <- rbind(c(1, 1), c(0, 0))
-#' edges <- list(edge1, edge2, edge3) 
+#' edges <- list(edge1, edge2, edge3)
 #' graph <- metric_graph$new(edges)
 #' graph$plot()
 #'
@@ -74,7 +74,7 @@ metric_graph <-  R6Class("metric_graph",
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
-  #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`. 
+  #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`.
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
   #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
@@ -86,9 +86,9 @@ metric_graph <-  R6Class("metric_graph",
   #' (default = 1e-7). Previously `vertex_line`, which is now deprecated.
   #' - `edge_edge` If two edges at some point are closer than this number, a new
   #' vertex is added at that point and the two edges are connected (default = 0).
-  #' - `vertex_line`, Deprecated. Use `vertex_edge` instead. 
+  #' - `vertex_line`, Deprecated. Use `vertex_edge` instead.
   #' - `line_line`, Deprecated. Use `edge_edge` instead.
-  #' 
+  #'
   #' In case `longlat = TRUE`, the tolerances are given in `length_unit`.
   #' @param check_connected If `TRUE`, it is checked whether the graph is
   #' connected and a warning is given if this is not the case.
@@ -113,7 +113,7 @@ metric_graph <-  R6Class("metric_graph",
                         vertex_unit = NULL,
                         length_unit = vertex_unit,
                         longlat = FALSE,
-                        crs = NULL, 
+                        crs = NULL,
                         proj4string = NULL,
                         which_longlat = "sp",
                         project = TRUE,
@@ -143,7 +143,7 @@ metric_graph <-  R6Class("metric_graph",
            )
          }
          lines <- NULL
-       }            
+       }
 
       if (is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
            lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
@@ -156,7 +156,7 @@ metric_graph <-  R6Class("metric_graph",
              details = c("Both `tolerance$vertex_edge` and `tolerance$vertex_line` were provided. Only `tolerance$vertex_edge` will be considered.")
            )
             tolerance$vertex_line <- NULL
-         }           
+         }
 
         if (is.null(tolerance$edge_edge) && !is.null(tolerance$line_line)) {
            lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
@@ -317,7 +317,7 @@ metric_graph <-  R6Class("metric_graph",
 
 
     if(length(self$edges) > 1){
-    
+
     if (tolerance$edge_edge > 0) {
     private$addinfo <- TRUE
 
@@ -420,7 +420,7 @@ metric_graph <-  R6Class("metric_graph",
     if(merge_close_vertices){
       private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
     }
-    
+
     if(is.logical(remove_circles)){
       if(remove_circles){
         private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
@@ -439,7 +439,7 @@ metric_graph <-  R6Class("metric_graph",
       })
        if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
-       }  
+       }
     }
     # End of cond of having more than 1 edge
     }
@@ -487,7 +487,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if(verbose){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
-    }    
+    }
 
     # Checking if there is some edge with infinite length
     if(any(!is.finite(self$edge_lengths))){
@@ -504,7 +504,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if(verbose){
       message(sprintf('Total construction time: %.2f %s', construction_time, units(construction_time)))
-      
+
     }
 
     # Checking if graph is connected
@@ -522,7 +522,7 @@ metric_graph <-  R6Class("metric_graph",
 
 
   #' @description Prints various characteristics of the graph
-  #' @return No return value. Called for its side effects. 
+  #' @return No return value. Called for its side effects.
 
   print = function() {
     cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n")
@@ -532,7 +532,7 @@ metric_graph <-  R6Class("metric_graph",
         cat("  Connected: TRUE\n")
       } else {
         cat("  Connected: FALSE\n")
-      }      
+      }
       if(self$characteristics$has_loops){
         cat("  Has loops: TRUE\n")
       } else {
@@ -553,7 +553,7 @@ metric_graph <-  R6Class("metric_graph",
           cat("  Distance consistent: TRUE\n")
         } else {
           cat("  Distance consistent: FALSE\n")
-        } 
+        }
       } else{
         cat("  Distance consistent: unknown\n")
         message("To check if the graph satisfies the distance consistency, run the `check_distance_consistency()` method.")
@@ -563,7 +563,7 @@ metric_graph <-  R6Class("metric_graph",
           cat("  Has Euclidean edges: TRUE\n")
         } else {
           cat("  Has Euclidean edges: FALSE\n")
-        } 
+        }
       } else{
         cat("  Has Euclidean edges: unknown\n")
         message("To check if the graph has Euclidean edges, run the `check_euclidean()` method.")
@@ -625,7 +625,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @return Returns `TRUE` if the graph has Euclidean edges, or `FALSE` otherwise.
   #' The result is stored in the `characteristics` element of the `metric_graph` object.
   #' The result is displayed when the graph is printed.
-  
+
   check_euclidean = function(){
     self$compute_characteristics()
     if(!is.null(self$characteristics$euclidean)){
@@ -639,7 +639,7 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         self$characteristics$euclidean <- FALSE
       }
-    }    
+    }
   },
 
   #' @description Checks distance consistency of the graph.
@@ -1018,7 +1018,7 @@ metric_graph <-  R6Class("metric_graph",
        k <- k + 1
      }
      res <- private$remove.first.deg2(res)
-   } 
+   }
    })
     if(verbose){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1030,7 +1030,7 @@ metric_graph <-  R6Class("metric_graph",
    if(!is.null(private$data)){
     if(verbose){
       message("Updating data locations.")
-    }    
+    }
       t <- system.time({
       x_coord <- private$data[[".coord_x"]]
       y_coord <- private$data[[".coord_y"]]
@@ -1043,7 +1043,7 @@ metric_graph <-  R6Class("metric_graph",
       })
       if(verbose){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
-      }      
+      }
    }
 
    if(!is.null(self$mesh)){
@@ -1057,7 +1057,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Gets the groups from the data.
   #' @param get_cols Should the names of the columns that created the group variable be returned?
   #' @return A vector containing the available groups in the internal data.
-  
+
   get_groups = function(get_cols = FALSE){
     if(is.null(private$data)){
       warning("There is no data!")
@@ -1090,7 +1090,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Gets the edge lengths with the corresponding unit.
   #' @param unit If non-NULL, changes from `length_unit` from the graph construction to `unit`.
   #' @return a vector with the length unit (if the graph was constructed with a length unit).
-  
+
   get_edge_lengths = function(unit = NULL){
     el <- self$edge_lengths
     units(el) <- private$length_unit
@@ -1222,7 +1222,7 @@ metric_graph <-  R6Class("metric_graph",
     self$PtV <- NULL
   },
 
-  
+
   #' @description Process data to the metric graph data format.
   #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
   #' observations. It may include the coordinates of the observations only, or
@@ -1312,7 +1312,7 @@ metric_graph <-  R6Class("metric_graph",
           ord_tmp <- do.call(order, data_group_tmp)
           rm(data_group_tmp)
           data <- lapply(data, function(dat){dat[ord_tmp]})
-          rm(ord_tmp)          
+          rm(ord_tmp)
           data[[".dummy_var"]] <- as.character(data[[group[1]]])
           if(length(group)>1){
             for(j in 2:length(group)){
@@ -1329,7 +1329,7 @@ metric_graph <-  R6Class("metric_graph",
           message("Converting data to PtE")
           if(private$longlat){
             message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
-          } 
+          }
           }
         }
 
@@ -1366,9 +1366,9 @@ metric_graph <-  R6Class("metric_graph",
             PtE <- self$coordinates(XY = Spoints@coords)
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
             # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-            fact <- process_factor_unit(private$vertex_unit, private$length_unit)                
+            fact <- process_factor_unit(private$vertex_unit, private$length_unit)
             norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
-            # norm_XY <- max(norm_XY)            
+            # norm_XY <- max(norm_XY)
             # if(norm_XY > tolerance){
             #   warning("There was at least one point whose location is far from the graph,
             #   please consider checking the input.")
@@ -1379,7 +1379,7 @@ metric_graph <-  R6Class("metric_graph",
             data <- lapply(data, function(dat){dat[!far_points]})
             if(any(far_points)){
               warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
-            }            
+            }
             PtE <- PtE[!far_points,,drop=FALSE]
             rm(far_points)
           } else{
@@ -1393,9 +1393,9 @@ metric_graph <-  R6Class("metric_graph",
                 PtE <- self$coordinates(XY = point_coords)
                 XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
                 # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                fact <- process_factor_unit(private$vertex_unit, private$length_unit)                
+                fact <- process_factor_unit(private$vertex_unit, private$length_unit)
                 norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
-                # norm_XY <- max(norm_XY)       
+                # norm_XY <- max(norm_XY)
                 far_points <- (norm_XY > tolerance)
                 rm(norm_XY)
                 data <- lapply(data, function(dat){dat[!far_points]})
@@ -1418,8 +1418,8 @@ metric_graph <-  R6Class("metric_graph",
       message(sprintf("time: %.3f s", t[["elapsed"]]))
 
       message("Processing data")
-    }  
-    
+    }
+
     t <- system.time({
      if(!is.null(group)){
        group_vector <- data[[".group"]]
@@ -1599,18 +1599,18 @@ metric_graph <-  R6Class("metric_graph",
           data[[".dummy_var"]] <- NULL
         }
 
-      
+
         ## convert everything to PtE
         if(verbose){
           if(data_coords == "spatial" || !is.null(Spoints)){
           message("Converting data to PtE")
           if(private$longlat){
             message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
-          } 
+          }
           }
         }
 
-          
+
 
         ## Check data for repeated observations
         if (!is.null(Spoints)){
@@ -1656,9 +1656,9 @@ metric_graph <-  R6Class("metric_graph",
             data <- lapply(data, function(dat){dat[!far_points]})
             if(any(far_points)){
               warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
-            }          
+            }
             PtE <- PtE[!far_points, ,drop=FALSE]
-            rm(far_points)         
+            rm(far_points)
           } else{
             if(data_coords == "PtE"){
                 PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
@@ -1670,7 +1670,7 @@ metric_graph <-  R6Class("metric_graph",
                 PtE <- self$coordinates(XY = point_coords)
                 XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
                 # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                fact <- process_factor_unit(private$vertex_unit, private$length_unit)                
+                fact <- process_factor_unit(private$vertex_unit, private$length_unit)
                 norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
                 # norm_XY <- max(norm_XY)
                 # if(norm_XY > tolerance){
@@ -1682,9 +1682,9 @@ metric_graph <-  R6Class("metric_graph",
                 data <- lapply(data, function(dat){dat[!far_points]})
                 if(any(far_points)){
                   warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
-                }    
+                }
                 PtE <- PtE[!far_points,,drop=FALSE]
-                rm(far_points)                        
+                rm(far_points)
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
             }
@@ -1695,8 +1695,8 @@ metric_graph <-  R6Class("metric_graph",
       message(sprintf("time: %.3f s", t[["elapsed"]]))
 
       message("Processing data")
-    }  
-    
+    }
+
     t <- system.time({
      if(!is.null(group)){
        group_vector <- data[[".group"]]
@@ -1748,7 +1748,7 @@ metric_graph <-  R6Class("metric_graph",
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
   },
-  
+
 
   #' @description Use `dplyr::mutate` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::mutate()`.
@@ -1766,11 +1766,11 @@ metric_graph <-  R6Class("metric_graph",
     if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
-        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
         if(is_tbl){
           data_res <- tidyr::as_tibble(data_res)
         }
-    }    
+    }
 
     if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
@@ -1779,7 +1779,7 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         data_res <- tidyr::drop_na(data_res)
       }
-    }    
+    }
 
 
     data_res <- dplyr::mutate(.data = data_res, ...)
@@ -1827,7 +1827,7 @@ metric_graph <-  R6Class("metric_graph",
       data_res <- private$data
     }
     data_res <- dplyr::select(.data = data_res, ...)
-    data_res[[".group"]] <- private$data[[".group"]] 
+    data_res[[".group"]] <- private$data[[".group"]]
     data_res[[".edge_number"]] <- private$data[[".edge_number"]]
     data_res[[".distance_on_edge"]] <- private$data[[".distance_on_edge"]]
     data_res[[".coord_x"]] <- private$data[[".coord_x"]]
@@ -1837,11 +1837,11 @@ metric_graph <-  R6Class("metric_graph",
     if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
-        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
         if(is_tbl){
           data_res <- tidyr::as_tibble(data_res)
         }
-    }    
+    }
 
     if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
@@ -1850,7 +1850,7 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         data_res <- tidyr::drop_na(data_res)
       }
-    }        
+    }
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
@@ -1876,11 +1876,11 @@ metric_graph <-  R6Class("metric_graph",
     if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
-        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
         if(is_tbl){
           data_res <- tidyr::as_tibble(data_res)
         }
-    }    
+    }
 
     if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
@@ -1889,7 +1889,7 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         data_res <- tidyr::drop_na(data_res)
       }
-    }    
+    }
 
     data_res <- dplyr::filter(.data = data_res, ...)
     data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)
@@ -1921,11 +1921,11 @@ metric_graph <-  R6Class("metric_graph",
     if(.drop_all_na){
       is_tbl <- inherits(data_res, "tbl_df")
         idx_temp <- idx_not_all_NA(data_res)
-        data_res <- lapply(data_res, function(dat){dat[idx_temp]}) 
+        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
         if(is_tbl){
           data_res <- tidyr::as_tibble(data_res)
         }
-    }    
+    }
 
     if(.drop_na){
       if(!inherits(data_res, "tbl_df")){
@@ -1934,7 +1934,7 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         data_res <- tidyr::drop_na(data_res)
       }
-    }    
+    }
 
 
     group_vars <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y")
@@ -1949,11 +1949,11 @@ metric_graph <-  R6Class("metric_graph",
       data_res[[".group"]] <- 1
     }
 
-    data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)  
+    data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
-    }    
+    }
 
     return(data_res)
 
@@ -1961,7 +1961,7 @@ metric_graph <-  R6Class("metric_graph",
 
  #' @description Return the internal data with the option to filter by groups.
  #' @param group A vector contaning which groups should be returned? The default is `NULL`, which gives the result for the all groups.
- #' @param tibble Should the data be returned as a `tidyr::tibble`? 
+ #' @param tibble Should the data be returned as a `tidyr::tibble`?
  #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
 
@@ -1981,11 +1981,11 @@ metric_graph <-  R6Class("metric_graph",
     if(drop_all_na){
       is_tbl <- inherits(data_temp, "tbl_df")
         idx_temp <- idx_not_all_NA(data_temp)
-        data_temp <- lapply(data_temp, function(dat){dat[idx_temp]}) 
+        data_temp <- lapply(data_temp, function(dat){dat[idx_temp]})
         if(is_tbl){
           data_temp <- tidyr::as_tibble(data_temp)
         }
-    }    
+    }
 
     if(drop_na){
       if(!inherits(data_temp, "tbl_df")){
@@ -2162,21 +2162,27 @@ metric_graph <-  R6Class("metric_graph",
   #' elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, the matrix `D` with elements
   #' \eqn{D_{ij} = \sum_{v\in V}\phi_i(v)\phi_j(v)}, and the vector with weights
   #' \eqn{<\phi_i, 1>}.
+  #' @param petrov Compute Petrov-Galerkin matrices? (default `FALSE`). These
+  #' are defined as \eqn{Cpet_{ij} = <\phi_i, \psi_j>} and \eqn{Gpet_{ij} = <d\phi_i, \psi_j>},
+  #' where \eqn{\psi_{i}} are piecewise constant basis functions on the edges of
+  #' the mesh.
   #' @return No return value. Called for its side effects. The finite element
   #' matrices `C`, `G` and `B` are stored in the `mesh` element in the
-  #' `metric_graph` object.
-  compute_fem = function() {
+  #' `metric_graph` object. If `petrov=TRUE`, the corresponding Petrov-Galerkin
+  #' matrices are stored in `Cpet` and `Gpet`.
+  compute_fem = function(petrov = FALSE) {
     if (is.null(self$mesh)) {
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV)
+    fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = petrov)
     self$mesh$C <- fem_temp$C
     self$mesh$G <- fem_temp$G
     self$mesh$B <- fem_temp$B
     self$mesh$D <- Diagonal(dim(self$mesh$C)[1],
                             c(rep(1, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
-
+    self$mesh$Cpet <- fem_temp$Cpet
+    self$mesh$Gpet <- fem_temp$Gpet
     self$mesh$weights <- rowSums(self$mesh$C)
   },
 
@@ -2188,8 +2194,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @details For n locations and a mesh with m nodes, `A` is an n x m matrix with
   #' elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
   #' @return The observation matrix.
-  #' 
-  
+  #'
+
   mesh_A = function(PtE){
     lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$mesh_A()", "metric_graph$fem_basis()")
     self$fem_basis(PtE)
@@ -2966,14 +2972,14 @@ metric_graph <-  R6Class("metric_graph",
           if(verbose){
             bar_edges_proj$increment()
           }
-          sp_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string) 
+          sp_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string)
           sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
           self$edges[[i]] <- sp::coordinates(sp_points_eucl) * fact
-        }        
+        }
       }
       private$longlat <- FALSE
       private$crs <- NULL
-      private$proj4string <- NULL      
+      private$proj4string <- NULL
     }
 
     if(verbose){
@@ -3022,7 +3028,7 @@ metric_graph <-  R6Class("metric_graph",
         } else{
           str_proj <- which_projection
         }
-        sp_points <- sp::SpatialPoints(coords = lines[,2:3], proj4string = proj4string) 
+        sp_points <- sp::SpatialPoints(coords = lines[,2:3], proj4string = proj4string)
         sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
         fact <- process_factor_unit("m", length_unit)
         dists <- dist(sp_points_eucl@coords) * fact
@@ -3072,7 +3078,7 @@ metric_graph <-  R6Class("metric_graph",
                           (vertex[, 3] - line[1, 3])^2)
       #index of vertex corresponding to the end of the line
       ind2 <- which.min((vertex[, 2] - line[2, 2])^2 +
-                          (vertex[, 3] - line[2, 3])^2)                      
+                          (vertex[, 3] - line[2, 3])^2)
       if(length(ind1)>0){
         self$edges[[i]][1,] <- vertex[ind1, 2:3, drop=FALSE]
         i.e <- dim(self$edges[[i]])[1]
@@ -3245,7 +3251,7 @@ metric_graph <-  R6Class("metric_graph",
       y_plot <-data_group[[data]]
 
       x <- data_group[[".coord_x"]]
-      y <- data_group[[".coord_y"]]        
+      y <- data_group[[".coord_y"]]
 
       p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(y_plot))],
                                             y = y[!is.na(as.vector(y_plot))],
@@ -3345,7 +3351,7 @@ metric_graph <-  R6Class("metric_graph",
       y_plot <- data_group[[data]]
 
       x <- data_group[[".coord_x"]]
-      y <- data_group[[".coord_y"]]    
+      y <- data_group[[".coord_y"]]
 
       data.plot <- data.frame(x = x[!is.na(as.vector(y_plot))],
                               y = y[!is.na(as.vector(y_plot))],
@@ -3369,7 +3375,7 @@ metric_graph <-  R6Class("metric_graph",
                              line = list(width = support_width,
                                          color = support_color),
                              split = ~i, showlegend = FALSE)
-      }                           
+      }
     }
     if (mesh) {
       data.plot <- data.frame(x = self$mesh$V[, 1],
@@ -3530,7 +3536,7 @@ metric_graph <-  R6Class("metric_graph",
           self$E <- self$E[-ind,]
           self$nE <- self$nE - length(ind)
         }
-      }   
+      }
     }
   },
 
@@ -3569,7 +3575,7 @@ metric_graph <-  R6Class("metric_graph",
 
       # Making sure it is not a single circle
 
-      if( e_rem[1] != e_rem[2]){        
+      if( e_rem[1] != e_rem[2]){
 
          coords <- self$edges[[e_rem[1]]] #line from v1 to v.rem
          tmp <- self$edges[[e_rem[2]]] #line from v.rem to v2
@@ -3616,7 +3622,7 @@ metric_graph <-  R6Class("metric_graph",
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
 
       self$nE <- self$nE - 1
-      } 
+      }
     }
     return(res.out)
   },
@@ -3624,7 +3630,7 @@ metric_graph <-  R6Class("metric_graph",
   # Compute lengths
 
   compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
-          ll <- sapply(self$edges, 
+          ll <- sapply(self$edges,
           function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)})
           return(ll)
   },
@@ -3685,12 +3691,12 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
         return(A)
-      } 
+      }
   },
 
 
   #' data List containing data on the metric graph.
-  
+
   data = NULL,
 
   # Initial edges added
@@ -3721,8 +3727,8 @@ metric_graph <-  R6Class("metric_graph",
 
   longlat = FALSE,
 
-  # crs 
-  
+  # crs
+
   crs = NULL,
 
   # proj4string
@@ -3733,7 +3739,7 @@ metric_graph <-  R6Class("metric_graph",
 
   which_longlat = NULL,
 
-  # connected 
+  # connected
 
   connected = TRUE,
 
@@ -3752,7 +3758,7 @@ metric_graph <-  R6Class("metric_graph",
   # @param tolerance tolerance for merging overlapping vertices
   split_edge = function(Ei, t, tolerance = 0) {
     edge <- self$edges[[Ei]]
-  
+
      val_line <- interpolate2(edge, pos = t, normalized = TRUE, get_idx = TRUE)
 
      idx_pos <- val_line[["idx"]]
@@ -3775,7 +3781,7 @@ metric_graph <-  R6Class("metric_graph",
 
         # Val_line is in the current edge and closest_vertex is elsewhere
         # So, if we need to add V, we will consider val_line in the edge split,
-        # but if we have already added V, then we consider the closest_vertex in the 
+        # but if we have already added V, then we consider the closest_vertex in the
         # edge split.
         if(add_V){
           self$V <- rbind(self$V, c(val_line))
@@ -3873,7 +3879,7 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   find_edge_edge_points = function(tol,verbose, crs, proj4string, longlat, fact, which_longlat) {
-  
+
     if(!private$longlat){
       lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
       crs <- NULL
@@ -3905,13 +3911,13 @@ metric_graph <-  R6Class("metric_graph",
 
         if( any(c("GEOMETRYCOLLECTION","GEOMETRY") %in% sf::st_geometry_type(intersect_tmp)) || (length(sf::st_geometry_type(intersect_tmp)) > 1)){
           intersect_tmp1 <- sf::st_collection_extract(intersect_tmp, type = "LINESTRING")
-          intersect_tmp2 <- sf::st_collection_extract(intersect_tmp, type = "POINT")          
+          intersect_tmp2 <- sf::st_collection_extract(intersect_tmp, type = "POINT")
           if(nrow(sf::st_coordinates(intersect_tmp1))>0){
             intersect_tmp <- intersect_tmp1
           } else{
             intersect_tmp <- intersect_tmp2
           }
-        } 
+        }
 
         p_cur <- NULL
         # if(!is.null(intersect_tmp)) {
@@ -4060,7 +4066,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 #' edge2 <- rbind(c(1, 0), c(2, 0))
 #' edge3 <- rbind(c(1, 1), c(2, 1))
 #' edges <- list(edge1, edge2, edge3)
-#' 
+#'
 #' graphs <- graph_components$new(edges)
 #' graphs$plot()
 #' @export
@@ -4103,7 +4109,7 @@ graph_components <-  R6::R6Class("graph_components",
                          by_length = TRUE,
                          ...,
                          lines = deprecated()) {
-      
+
 
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
@@ -4117,7 +4123,7 @@ graph_components <-  R6::R6Class("graph_components",
            )
          }
          lines <- NULL
-       }             
+       }
 
 
       dots_args <- list(...)
@@ -4156,7 +4162,7 @@ graph_components <-  R6::R6Class("graph_components",
          if(length(graph$edges[which(ind_keep!=0)]) > 0){
           self$graphs[[k]] = metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
                                              check_connected = FALSE, ...)
-         } 
+         }
        }
        for(i in self$n:1){
         if(is.null(self$graphs[[i]])){
