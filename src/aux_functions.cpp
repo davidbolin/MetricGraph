@@ -1,10 +1,10 @@
 #include <Rcpp.h>
 #include <iostream>
-using namespace Rcpp;              
+using namespace Rcpp;
 #include <RcppEigen.h>
 
 // [[Rcpp::depends(RcppEigen)]]
-// 
+//
 
 //' @name assemble_fem
 //' @title Construction of FEM matrices
@@ -16,16 +16,19 @@ using namespace Rcpp;
 //'
 // [[Rcpp::export]]
 
-Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV){
+Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool petrov){
 
     typedef Eigen::Triplet<double> Trip;
     std::vector<Trip> trp_C, trp_G, trp_B;
     int i;
     int v1,v2;
-
+    int nE  = E.rows();
     Eigen::SparseMatrix<double> C(nV,nV), G(nV,nV), B(nV,nV);
 
-    for(i=0; i<E.rows(); i++){
+    std::vector<Trip> trp_Cpet, trp_Gpet;
+    Eigen::SparseMatrix<double> Cpet(nV,nE), Gpet(nV,nE);
+
+    for(i=0; i<nE; i++){
         v1 = E(i, 0)-1;
         v2 = E(i, 1)-1;
 
@@ -36,28 +39,44 @@ Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV){
         trp_C.push_back(Trip(v2,v1,h_e(i)/6));
 
         // Assembling G
-        
         trp_G.push_back(Trip(v1,v1,1/h_e(i)));
         trp_G.push_back(Trip(v2,v2,1/h_e(i)));
         trp_G.push_back(Trip(v1,v2,-1/h_e(i)));
         trp_G.push_back(Trip(v2,v1,-1/h_e(i)));
 
         // Assembling B
-        
         trp_B.push_back(Trip(v1,v1,-0.5));
         trp_B.push_back(Trip(v1,v2,-0.5));
         trp_B.push_back(Trip(v2,v2,0.5));
-        trp_B.push_back(Trip(v2,v1,0.5));   
+        trp_B.push_back(Trip(v2,v1,0.5));
+
+        if(petrov){
+          // Assembling Cpet
+          trp_Cpet.push_back(Trip(v1,i,h_e(i)/2));
+          trp_Cpet.push_back(Trip(v2,i,h_e(i)/2));
+
+          // Assembling Gpet
+          trp_Gpet.push_back(Trip(v1,i,-1));
+          trp_Gpet.push_back(Trip(v2,i,1));
+        }
     }
 
     C.setFromTriplets(trp_C.begin(), trp_C.end());
-    G.setFromTriplets(trp_G.begin(), trp_G.end());          
-    B.setFromTriplets(trp_B.begin(), trp_B.end());      
+    G.setFromTriplets(trp_G.begin(), trp_G.end());
+    B.setFromTriplets(trp_B.begin(), trp_B.end());
 
     Rcpp::List out;
     out["C"] = C;
     out["G"] = G;
     out["B"] = B;
+
+    if(petrov){
+      Cpet.setFromTriplets(trp_Cpet.begin(), trp_Cpet.end());
+      Gpet.setFromTriplets(trp_Gpet.begin(), trp_Gpet.end());
+      out["Cpet"] = Cpet;
+      out["Gpet"] = Gpet;
+    }
+
     return(out);
 }
 
@@ -96,7 +115,7 @@ double proj_vec_dist(Eigen::MatrixXd line, Eigen::VectorXd point){
   return (proj-p0).norm();
 }
 
-// Obtain the distance of a point along a linestring. 
+// Obtain the distance of a point along a linestring.
 //' @name proj_vec_line
 //' @noRd
 
@@ -178,7 +197,7 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
         Eigen::VectorXd p0 = lines.row(i);
         Eigen::VectorXd v = lines.row(i+1) - lines.row(i);
         dist_vec(i+1) = dist_vec(i) + v.norm();
-    }  
+    }
     dist_vec = dist_vec/dist_vec(lines.rows()-1);
     Eigen::VectorXd pos_rel;
     if(normalized != 0){
@@ -200,7 +219,7 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
             }
         }
 
-        double dist_pos = (pos_rel(i) - dist_vec(tmp_ind))/(dist_vec(tmp_ind+1)-dist_vec(tmp_ind)); 
+        double dist_pos = (pos_rel(i) - dist_vec(tmp_ind))/(dist_vec(tmp_ind+1)-dist_vec(tmp_ind));
 
         out_mat.row(i) = lines.row(tmp_ind) + (lines.row(tmp_ind+1) - lines.row(tmp_ind))*dist_pos;
         idx_pos(i) = tmp_ind+1;
@@ -218,18 +237,18 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
 //' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
 //' @param coords nx2 matrix Matrix of the points of the lines
 //' @noRd
-//' 
+//'
 // [[Rcpp::export]]
 double compute_length(Eigen::MatrixXd coords) {
-    
+
     double arclength = 0;
-    
+
     int i;
 
     for(i = 0 ; i < coords.rows()-1; i++){
          Eigen::VectorXd v = coords.row(i+1) - coords.row(i);
          arclength = arclength + v.norm();
-     }  
+     }
 
     return(arclength);
 }

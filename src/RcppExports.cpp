@@ -24,15 +24,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // assemble_fem
-Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV);
-RcppExport SEXP _MetricGraph_assemble_fem(SEXP ESEXP, SEXP h_eSEXP, SEXP nVSEXP) {
+Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool petrov);
+RcppExport SEXP _MetricGraph_assemble_fem(SEXP ESEXP, SEXP h_eSEXP, SEXP nVSEXP, SEXP petrovSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type E(ESEXP);
     Rcpp::traits::input_parameter< Eigen::VectorXd >::type h_e(h_eSEXP);
     Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
-    rcpp_result_gen = Rcpp::wrap(assemble_fem(E, h_e, nV));
+    Rcpp::traits::input_parameter< bool >::type petrov(petrovSEXP);
+    rcpp_result_gen = Rcpp::wrap(assemble_fem(E, h_e, nV, petrov));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -76,7 +77,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
-    {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 3},
+    {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 4},
     {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},
     {"_MetricGraph_interpolate2_aux", (DL_FUNC) &_MetricGraph_interpolate2_aux, 3},
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
