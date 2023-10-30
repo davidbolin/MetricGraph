@@ -841,7 +841,7 @@ We are now in position to fit this model using the `graph_lme()` function:
 
 ```{r}
 fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", 
-                    B.sigma = B.sigma, B.range = B.range, fem = TRUE))
+                    B.sigma = B.sigma, B.range = B.range, fem = TRUE), improve_hessian = TRUE)
 ```
 
 Let us now obtain a summary of the fitted model:
