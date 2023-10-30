@@ -1812,6 +1812,7 @@ metric_graph <-  R6Class("metric_graph",
 
         data <- as.list(data)
 
+        if(is.null(Spoints)){
         if(data_coords == "PtE"){
           if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
             stop(paste("The data does not contain either the colum", edge_number,"or the column",distance_on_edge))
@@ -1820,6 +1821,7 @@ metric_graph <-  R6Class("metric_graph",
           if(any( !(c(coord_x, coord_y) %in% names(data)))){
             stop(paste("The data does not contain either the colum", coord_x,"or the column",coord_y))
           }
+        }
         }
 
         if(!is.null(group)){
