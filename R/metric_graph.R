@@ -1812,6 +1812,16 @@ metric_graph <-  R6Class("metric_graph",
 
         data <- as.list(data)
 
+        if(data_coords == "PtE"){
+          if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
+            stop(paste("The data does not contain either the colum", edge_number,"or the column",distance_on_edge))
+          }
+        } else{
+          if(any( !(c(coord_x, coord_y) %in% names(data)))){
+            stop(paste("The data does not contain either the colum", coord_x,"or the column",coord_y))
+          }
+        }
+
         if(!is.null(group)){
           if(!all(group%in%names(data))){
             stop("There were group variables that are not columns of 'data'!")
@@ -3367,19 +3377,25 @@ metric_graph <-  R6Class("metric_graph",
       d2 <- dists[ind2[2]] #distance on the edge of the point after
 
       #find the "edge" in the mesh on which the point is
-      e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
+      e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2) 
 
-      # print("E[e,1]")
-      # print(self$mesh$E[e,1])
-      # print("E[e,2]")
-      # print(self$mesh$E[e,2])
+      # Handle the case of multiple edges
+      # In the case the edge lengths are different, we can identify
+      # In the case they are equal, we cannot identify, but it does not matter, as there is no difference then.
+      if(length(e)>1){
+       ind <- which(self$edge_lengths[ei] == self$mesh$h_e[e])
+       e <- e[ind]
+       e <- e[1]
+      }
 
-      if (self$mesh$E[e, 1] == v1) { #edge starts in the vertex before
+    for(ei in e){
+      if (self$mesh$E[ei, 1] == v1) { #edge starts in the vertex before
         d <- (PtE[i, 2] - d1)/(d2 - d1)
       } else {
         d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
       }
-      PtE_update[i, ] <- c(e, d)
+        PtE_update[i, ] <- c(e, d)
+      }
     }
     return(PtE_update)
   },
