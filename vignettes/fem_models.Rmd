@@ -781,5 +781,126 @@ p <- plot(y_pred, plotly=TRUE)
 graph_rep$plot(data = "y", group = 10, plotly=TRUE, p = p)
 ```
 
+## An example with a non-stationary model
+
+Our goal now is to show how one can fit model with non-stationary $\sigma$ (std. deviation) and non-stationary $\rho$ (a range parameter).
+One can also use the parameterization in terms of non-stationary SPDE parameters $\kappa$ and $\tau$. 
+
+We follow the same structure as `INLA`. However, `INLA` only allows one to specify 
+`B.tau` and `B.kappa` matrices, and, in `INLA`, if one wants to parameterize in terms of range and
+standard deviation one needs to do it manually. Here we provide the option to directly provide
+the matrices `B.sigma` and `B.range`. 
+
+The usage of the matrices `B.tau` and `B.kappa` are identical to the corresponding ones in `inla.spde2.matern()` function.
+The matrices `B.sigma` and `B.range` work in the same way, but they parameterize the stardard deviation
+and range, respectively.
+
+The columns of the `B` matrices correspond to the same parameter. The first column does not
+have any parameter to be estimated, it is a constant column. 
+
+So, for instance, if one wants to share a parameter with both `sigma` and `range` (or with both `tau` and `kappa`),
+one simply let the corresponding column to be nonzero on both `B.sigma` and `B.range` (or on `B.tau` and `B.kappa`).
+
+### Creating the graph and adding data
+
+For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose,
+California. The variable `y` contains the traffic speeds.
+
+```{r}
+ pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
+ df_data_pems = data.frame(y = pems$Y, edge_number = pems$PtE[,1], distance_on_edge = pems$PtE[,2])
+ pems_graph$add_observations(data = df_data_pems, normalized=TRUE)
+ pems_graph$prune_vertices()
+ pems_graph$build_mesh(h=0.1)
+```
+
+Let us create as non-stationary covariates, the position on the edge, which will capture if the traffic speed was taken close to the intersections. We will apply the sine function so that we have the same behavior at the beginning and end of the edges.
+
+```{r}
+cov_pos <- sin(graph$mesh$VtE[,2] * pi)
+```
+
+We will now build the non-stationary matrices to be used:
+
+```{r}
+ B.sigma = cbind(0, 1, 0, cov_pos)
+ B.range = cbind(0, 0, 1, cov_pos)
+```
+
+### Fitting the model with `graph_lme`
+
+We are now in position to fit this model using the `graph_lme()` function:
+
+```{r}
+fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", B.sigma = B.sigma, B.range=B.range, fem=TRUE))
+```
+
+Let us now obtain a summary of the fitted model:
+
+```{r}
+summary(fit)
+```
+
+### Fitting the inlabru rSPDE model
+
+Let us then fit the same model using `inlabru` now. We start by defing the `rSPDE` model with the `rspde.metric_graph()` function:
+
+```{r}
+rspde_model_nonstat <- rspde.metric_graph(pems_graph,
+  B.sigma = B.sigma,
+  B.range = B.range,
+  parameterization = "matern") 
+```
+
+Let us now create the `data.frame()` and the vector with the replicates indexes:
+
+```{r}
+ data_rspde_bru_ns <- graph_data_rspde(rspde_model_nonstat, loc_name = "loc")
+```
+
+Let us create the component and fit. It is extremely important
+not to forget the `replicate` when fitting model with 
+the `bru()` function. It will not produce warning and might fit some
+meaningless model.
+
+```{r, message=FALSE, warning=FALSE}
+cmp_nonstat <-
+  y ~ -1 + Intercept(1) + field(loc,
+    model = rspde_model_nonstat
+  )
+
+
+rspde_fit_nonstat <-
+  bru(cmp_nonstat,
+    data = data_rspde_bru_ns[["data"]],
+    family = "gaussian",
+    options = list(verbose = FALSE)
+  )
+```
+
+We can get the summary:
+```{r}
+summary(rspde_fit_nonstat)
+```
+
+
+We can obtain outputs with respect to parameters in the original scale by
+using the function `rspde.result()`:
+
+```{r get_result_nonstat}
+result_fit_nonstat <- rspde.result(rspde_fit_nonstat, "field", rspde_model_nonstat)
+summary(result_fit_nonstat)
+```
+
+We can also plot the posterior densities. To this end we will use the `gg_df()` function, which creates `ggplot2` user-friendly data frames:
+
+```{r plot_post_nonstat, fig.align='center'}
+posterior_df_fit <- gg_df(result_fit_nonstat)
+
+ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+
 
 ## References
