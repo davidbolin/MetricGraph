@@ -530,7 +530,7 @@ graph_lme <- function(formula, graph,
         l_tmp <- tryCatch(likelihood(theta), 
                             error = function(e){return(NULL)})
           if(is.null(l_tmp)){
-              return(-10^100)
+              return(10^100)
           }
           return(l_tmp)
         }

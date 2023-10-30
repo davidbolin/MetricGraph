@@ -817,7 +817,7 @@ California. The variable `y` contains the traffic speeds.
 Let us create as non-stationary covariates, the position on the edge, which will capture if the traffic speed was taken close to the intersections. We will apply the sine function so that we have the same behavior at the beginning and end of the edges.
 
 ```{r}
-cov_pos <- sin(graph$mesh$VtE[,2] * pi)
+cov_pos <- sin(pems_graph$mesh$VtE[,2] * pi)
 ```
 
 We will now build the non-stationary matrices to be used:
@@ -832,7 +832,8 @@ We will now build the non-stationary matrices to be used:
 We are now in position to fit this model using the `graph_lme()` function:
 
 ```{r}
-fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", B.sigma = B.sigma, B.range=B.range, fem=TRUE))
+fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", 
+                    B.sigma = B.sigma, B.range = B.range, fem = TRUE))
 ```
 
 Let us now obtain a summary of the fitted model:
@@ -858,10 +859,7 @@ Let us now create the `data.frame()` and the vector with the replicates indexes:
  data_rspde_bru_ns <- graph_data_rspde(rspde_model_nonstat, loc_name = "loc")
 ```
 
-Let us create the component and fit. It is extremely important
-not to forget the `replicate` when fitting model with 
-the `bru()` function. It will not produce warning and might fit some
-meaningless model.
+Let us create the component and fit. 
 
 ```{r, message=FALSE, warning=FALSE}
 cmp_nonstat <-
