@@ -240,9 +240,9 @@ and should be supplied to the stack by the components of the
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            mean        sd 0.025quant  0.5quant 0.975quant      mode</span></span>
-<span><span class="co">## sigma 1.6535700 0.1343140   1.403630 1.6492000   1.930340 1.6462700</span></span>
-<span><span class="co">## range 0.0863347 0.0169354   0.058036 0.0846452   0.124332 0.0812021</span></span></code></pre>
+<pre><code><span><span class="co">##            mean        sd 0.025quant 0.5quant 0.975quant      mode</span></span>
+<span><span class="co">## sigma 1.6534100 0.1344580  1.4035400 1.648960   1.930650 1.6615200</span></span>
+<span><span class="co">## range 0.0863314 0.0169336  0.0580122 0.084651   0.124301 0.0812281</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -260,8 +260,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true       mean       mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.65356654 1.64626536</span></span>
-<span><span class="co">## 2     range 0.15 0.08633467 0.08120214</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 1.65341232 1.66152448</span></span>
+<span><span class="co">## 2     range 0.15 0.08633143 0.08122812</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
