@@ -814,6 +814,14 @@ California. The variable `y` contains the traffic speeds.
  pems_graph$build_mesh(h=0.1)
 ```
 
+The summary of this graph:
+
+```{r}
+summary(pems_graph)
+```
+
+Observe that it is a non-Euclidean graph.
+
 Let us create as non-stationary covariates, the position on the edge, which will capture if the traffic speed was taken close to the intersections. We will apply the sine function so that we have the same behavior at the beginning and end of the edges.
 
 ```{r}
@@ -840,6 +848,44 @@ Let us now obtain a summary of the fitted model:
 
 ```{r}
 summary(fit)
+```
+
+Let us plot the range parameter along the mesh, so we can see how it is varying:
+
+```{r}
+est_range <- exp(B.range[,-1]%*%fit$coeff$random_effects[2:4])
+pems_graph$plot_function(X = est_range, vertex_size = 0)
+```
+
+Similarly, we have for sigma:
+
+```{r}
+est_sigma <- exp(B.sigma[,-1]%*%fit$coeff$random_effects[2:4])
+pems_graph$plot_function(X = est_sigma, vertex_size = 0)
+```
+
+Our goal now is to plot the estimated marginal standard deviation of this model. To this end, we start by creating the non-stationary Matérn operator using the `rSPDE` package:
+
+```{r}
+rspde_object_ns <- rSPDE::spde.matern.operators(graph = pems_graph,
+                                                parameterization = "matern",
+                                                B.sigma = B.sigma,
+                                                B.range = B.range,
+                                                theta = fit$coeff$random_effects[2:4],
+                                                nu = fit$coeff$random_effects[1] - 0.5)
+```
+
+Now, we compute the estimated marginal standard deviation:
+
+```{r}
+est_cov_matrix <- rspde_object_ns$covariance_mesh()
+est_std_dev <- sqrt(diag(est_cov_matrix))
+```
+
+We can now plot:
+
+```{r}
+pems_graph$plot_function(X = est_cov_matrix)
 ```
 
 ### Fitting the inlabru rSPDE model
