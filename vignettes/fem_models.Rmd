@@ -885,7 +885,7 @@ est_std_dev <- sqrt(diag(est_cov_matrix))
 We can now plot:
 
 ```{r}
-pems_graph$plot_function(X = est_cov_matrix)
+pems_graph$plot_function(X = est_std_dev, vertex_size = 0)
 ```
 
 ### Fitting the inlabru rSPDE model
