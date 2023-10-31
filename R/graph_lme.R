@@ -899,6 +899,7 @@ graph_lme <- function(formula, graph,
   object$df.residual <- object$nobs -(1 + length(object$coeff$fixed_effects) + length(object$coeff$random_effects))
   object$lik_fun <- likelihood_new
   object$par_lik_fun <- new_likelihood
+  object$mle_par_orig <- res$par
 
 
   class(object) <- "graph_lme"
