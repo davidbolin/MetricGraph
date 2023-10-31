@@ -163,6 +163,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                     # We start by adding the parameters in the positive direction
                     z <- 0
                     while((z < cutoff) && count_par < maxpts){
+                        print(res_mat)
                         if(current_row == row_next_par){
                             if(base_par == 0){
                                 new_par <- 0.001
@@ -210,6 +211,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                     ## Adding parameters in the negative direction
 
                     ## Reordering
+                    count_par <- 1
 
                     res_mat[row_next_par:current_row, ] <- res_mat[current_row:row_next_par,]
                     
@@ -220,7 +222,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         numer <- res_mat[current_row, 1 + col_num_par] - res_mat[current_row - 1, 1 + col_num_par]
                         denom <- res_mat[current_row, 1] - res_mat[current_row - 1, 1]
                         if(denom == 0){
-                            step <- ministep
+                            step <- minstep
                         } else{
                             step <- delta * numer / denom
                         }
