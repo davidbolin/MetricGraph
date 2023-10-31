@@ -79,6 +79,7 @@ reference:
     - graph_starting_values
     - glance.graph_lme
     - augment.graph_lme
+    - profile.graph_lme
   - title: Log-Cox Gaussian processes
     contents:
     - graph_lgcp
