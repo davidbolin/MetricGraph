@@ -76,9 +76,9 @@
 
 # Inspired by lme4::profile.merMod
 
-#' @name profile.metric_graph
 #' @title Profile method for `graph_lme` objects
 #' @description Function providing a summary of several informations/characteristics of a metric graph object.
+#' @aliases profile profile.graph_lme
 #' @param fitted A fitted model using `graph_lme()`.
 #' @param which A character vector indicating which parameters to profile. `NULL` means all parameters. `.fixed` will act as a vector of all fixed effects, `.random` will act as a vector of all random effects.
 #' @param alphamax	a number in `(0,1)` such that `1 - alphamax` is the maximum alpha value for likelihood ratio confidence regions; used to establish the range of values to be profiled.
@@ -91,9 +91,8 @@
 #' @param parallel Should parallel optimization be used?
 #' @param n_cores Number of cores to be used in case of parallel optimization.
 #' @param maxmult maximum multiplier of the original step size allowed, defaults to 10.
-#' @return An object of class \code{summary_graph_lme} containing information
-#' about a *metric_graph* object.
-#' @method profile metric_graph
+#' @return A `data.frame` containing the profiled parameters.
+#' @method profile graph_lme
 #' @export
 
 profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts = 100,
@@ -168,7 +167,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                 col_par_names <- vector(mode = "character", length = maxpts)
 
                 if(verbose){
-                    message("Starting to computes the profiles...")
+                    message("Starting to compute the profiles...")
                 }
                 for(par_ in which_par){
                     if(verbose){
@@ -225,7 +224,23 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                             new_par <- current_par + step
                         }
 
-                        dev_list <-  dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls)
+                        dev_list <- withCallingHandlers(tryCatch(dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls), error = function(e){return(NA)}), 
+                                    warning = function(w){invokeRestart("muffleWarning")})
+
+                        possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
+                        possible_methods <- setdiff(possible_methods, optim_method)
+
+                        while(is.na(dev_list) && length(possible_methods) > 1){
+                            new_method <- possible_methods[1]
+                            dev_list <- withCallingHandlers(tryCatch(dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls), error = function(e){return(NA)}), 
+                                warning = function(w){invokeRestart("muffleWarning")})
+                            possible_methods <- setdiff(possible_methods, new_method)
+                        }
+
+                        if(is.na(dev_list)){
+                            stop("The profiling failed. Try changing the controls parameters.")
+                        }
+
                         initial_par <- dev_list[["par"]]
                         z <- dev_list[["score"]]
                         if(col_num_par == 1){

@@ -19,7 +19,7 @@ see the vignette:
 edge1 <- rbind(c(0, 0), c(2, 0))
 edge2 <- rbind(c(2, 0), c(1, 1))
 edge3 <- rbind(c(1, 1), c(0, 0))
-edges <- list(edge1, edge2, edge3) 
+edges <- list(edge1, edge2, edge3)
 graph <- metric_graph$new(edges)
 graph$plot()
 
@@ -1138,9 +1138,19 @@ the \code{mesh} element of the \code{metric_graph} object.
 \subsection{Method \code{compute_fem()}}{
 Build mass and stiffness matrices for given mesh object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem(petrov = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{petrov}}{Compute Petrov-Galerkin matrices? (default \code{FALSE}). These
+are defined as \eqn{Cpet_{ij} = <\phi_i, \psi_j>} and \eqn{Gpet_{ij} = <d\phi_i, \psi_j>},
+where \eqn{\psi_{i}} are piecewise constant basis functions on the edges of
+the mesh.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Details}{
 The function builds: The matrix \code{C} which is the mass matrix with
 elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix \code{G} which is the stiffness
@@ -1153,7 +1163,8 @@ elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, the matrix \code{D} with elements
 \subsection{Returns}{
 No return value. Called for its side effects. The finite element
 matrices \code{C}, \code{G} and \code{B} are stored in the \code{mesh} element in the
-\code{metric_graph} object.
+\code{metric_graph} object. If \code{petrov=TRUE}, the corresponding Petrov-Galerkin
+matrices are stored in \code{Cpet} and \code{Gpet}.
 }
 }
 \if{html}{\out{<hr>}}
