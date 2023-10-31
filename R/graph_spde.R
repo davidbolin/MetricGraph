@@ -1177,13 +1177,7 @@ predict.inla_metric_graph_spde <- function(object,
 
 plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
   m_prd_bru <- x$pred$mean
-  PtE_prd <- x$PtE_pred
-  newdata <- data.frame("edge_number" = PtE_prd[,1],
-                        "distance_on_edge" = PtE_prd[,2],
-                        "pred_y" = m_prd_bru)
-  newdata <- x$initial_graph$process_data(data = newdata, normalized = TRUE)
-  
-  p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, ...)
+  p <- x$initial_graph$plot_function(X = m_prd_bru, ...)
   p
 }
 

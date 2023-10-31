@@ -808,8 +808,7 @@ California. The variable `y` contains the traffic speeds.
 
 ```{r}
  pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
- df_data_pems = data.frame(y = pems$Y, edge_number = pems$PtE[,1], distance_on_edge = pems$PtE[,2])
- pems_graph$add_observations(data = df_data_pems, normalized=TRUE)
+ pems_graph$add_observations(data = pems$data, normalized=TRUE)
  pems_graph$prune_vertices()
  pems_graph$build_mesh(h=0.1)
 ```
