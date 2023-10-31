@@ -173,12 +173,20 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         } else{
                             numer <- res_mat[current_row, 1 + col_num_par] - res_mat[current_row - 1, 1 + col_num_par]
                             denom <- res_mat[current_row, 1] - res_mat[current_row - 1, 1]
-                            step <- delta * numer / denom
                             current_par <- res_mat[current_row, 1 + col_num_par]
-                            if(step < 0){
-                                step <- minstep
+                            if(numer == 0){
+                                numer <- minstep * sign(denom)
                             }
                             max_step <- abs(numer * maxmult)
+                            if(denom == 0){
+                                step <- max_step
+                            } else { 
+                                step <- delta * numer / denom
+                            }
+                             if(step < 0){
+                                step <- minstep
+                             }
+
                             if(abs(step) > max_step){
                                 step <- max_step
                             }
@@ -213,7 +221,6 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         }
                       count_par <- count_par + 1
                     }
-
                     ## Adding parameters in the negative direction
 
                     ## Reordering
@@ -228,8 +235,12 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         print(res_mat)
                         numer <- res_mat[current_row, 1 + col_num_par] - res_mat[current_row - 1, 1 + col_num_par]
                         denom <- res_mat[current_row, 1] - res_mat[current_row - 1, 1]
+                        if(numer == 0){
+                                numer <- minstep * sign(denom)
+                        }                        
+                        max_step <- abs(numer * maxmult)                        
                         if(denom == 0){
-                            step <- minstep
+                                step <- max_step  
                         } else{
                             step <- delta * numer / denom
                         }
@@ -237,7 +248,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         if(step < 0){
                             step <- minstep
                         }
-                        max_step <- abs(numer * maxmult)
+
                         if(abs(step) > max_step){
                             step <- sign(step) * max_step
                         }
