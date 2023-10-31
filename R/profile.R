@@ -225,6 +225,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
 
                     z <- 0
                     while((z > -cutoff) && count_par < maxpts){
+                        print(res_mat)
                         numer <- res_mat[current_row, 1 + col_num_par] - res_mat[current_row - 1, 1 + col_num_par]
                         denom <- res_mat[current_row, 1] - res_mat[current_row - 1, 1]
                         if(denom == 0){
@@ -238,7 +239,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         }
                         max_step <- abs(numer * maxmult)
                         if(abs(step) > max_step){
-                            step <- max_step
+                            step <- sign(step) * max_step
                         }
                         new_par <- current_par - step
 
