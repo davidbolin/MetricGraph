@@ -5,6 +5,8 @@
     # loglik_fun the log likelihood function
     # max_loglik the maximum value of the log likelihood
     # returns the signed square root of the deviance and the profile mle of the remaining parameters
+
+    #' @noRd 
     dev_fun_score <- function(initial_par, fixed_par, base_par, coord_fixed_par, loglik_fun, max_loglik, optim_method, optim_controls){
         n_par <- length(initial_par)
 
@@ -72,8 +74,31 @@
 # if which_par contains ".fixed", this stands for all fixed parameters
 # and ".random" contains stands for all the random effects.
 
+# Inspired by lme4::profile.merMod
+
+#' @name profile.metric_graph
+#' @title Profile method for `graph_lme` objects
+#' @description Function providing a summary of several informations/characteristics of a metric graph object.
+#' @param fitted A fitted model using `graph_lme()`.
+#' @param which A character vector indicating which parameters to profile. `NULL` means all parameters. `.fixed` will act as a vector of all fixed effects, `.random` will act as a vector of all random effects.
+#' @param alphamax	a number in `(0,1)` such that `1 - alphamax` is the maximum alpha value for likelihood ratio confidence regions; used to establish the range of values to be profiled.
+#' @param maxpts maximum number of points (in each direction, for each parameter) to evaluate in attempting to construct the profile.
+#' @param delta	stepping scale for deciding on next point to profile.
+#' @param delta.cutoff stepping scale (see delta) expressed as a fraction of the target maximum value of the profile on the square-root-deviance scale.
+#' @param verbose Should update messages be printed with updates?
+#' @param optim_method Which optimization method to pass to `optim`.
+#' @param optim_controls Additional controls to be passed to `optim`
+#' @param parallel Should parallel optimization be used?
+#' @param n_cores Number of cores to be used in case of parallel optimization.
+#' @param maxmult maximum multiplier of the original step size allowed, defaults to 10.
+#' @return An object of class \code{summary_graph_lme} containing information
+#' about a *metric_graph* object.
+#' @method profile metric_graph
+#' @export
+
 profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts = 100,
-            delta = NULL, delta_cutoff = 1/8, maxmult = 10, minstep = 1e-6, optim_method = "L-BFGS-B", parallel = FALSE, n_cores = parallel::detectCores()-1,optim_controls = list()){
+            delta = NULL, delta_cutoff = 1/8, maxmult = 10, minstep = 1e-6, verbose = FALSE,
+            optim_method = "L-BFGS-B", parallel = FALSE, n_cores = parallel::detectCores()-1,optim_controls = list()){
 
                 max_loglik <- logLik(fitted)
                 df_model <- attr(logLik(fitted),"df")
@@ -141,7 +166,15 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                 res_mat <- matrix(nrow = maxpts, ncol = length(par_names)+1)
                 row_next_par <- 1
                 col_par_names <- vector(mode = "character", length = maxpts)
+
+                if(verbose){
+                    message("Starting to computes the profiles...")
+                }
                 for(par_ in which_par){
+                    if(verbose){
+                        message(paste("Profiling parameter",par_))
+                    }
+
                     
                     # We start by filling the first row
                     # the first column is the quantile, the last column is the parameter name
@@ -163,7 +196,6 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                     # We start by adding the parameters in the positive direction
                     z <- 0
                     while((z < cutoff) && count_par < maxpts){
-                        print(res_mat)
                         if(current_row == row_next_par){
                             if(base_par == 0){
                                 new_par <- 0.001
@@ -222,7 +254,10 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                       count_par <- count_par + 1
                     }
                     ## Adding parameters in the negative direction
-
+                    
+                    if(verbose){
+                        message(paste("Profiling", par_, "in the negative direction."))
+                    }
                     ## Reordering
                     count_par <- 1
 
@@ -232,7 +267,6 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
 
                     z <- 0
                     while((z > -cutoff) && count_par < maxpts){
-                        print(res_mat)
                         numer <- res_mat[current_row, 1 + col_num_par] - res_mat[current_row - 1, 1 + col_num_par]
                         denom <- res_mat[current_row, 1] - res_mat[current_row - 1, 1]
                         if(numer == 0){
@@ -294,4 +328,5 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                 rownames(res_mat) <- 1:nrow(res_mat)
                 attr(res_mat, "max_loglik") <- max_loglik
                 attr(res_mat, "mle") <- mle_par
+                return(res_mat)
             }
