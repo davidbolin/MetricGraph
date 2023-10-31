@@ -831,8 +831,8 @@ cov_pos <- sin(pems_graph$mesh$VtE[,2] * pi)
 We will now build the non-stationary matrices to be used:
 
 ```{r}
- B.sigma = cbind(0, 1, 0, cov_pos)
- B.range = cbind(0, 0, 1, cov_pos)
+ B.sigma = cbind(0, 1, 0, cov_pos, 0)
+ B.range = cbind(0, 0, 1, 0, cov_pos)
 ```
 
 ### Fitting the model with `graph_lme`
@@ -841,7 +841,7 @@ We are now in position to fit this model using the `graph_lme()` function:
 
 ```{r}
 fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", 
-                    B.sigma = B.sigma, B.range = B.range, fem = TRUE), improve_hessian = TRUE)
+                    B.sigma = B.sigma, B.range = B.range, fem = TRUE))
 ```
 
 Let us now obtain a summary of the fitted model:
