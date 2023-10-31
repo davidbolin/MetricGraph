@@ -8,6 +8,7 @@
 \method{profile}{graph_lme}(
   fitted,
   which_par = NULL,
+  parameterization = "matern",
   alphamax = 0.01,
   maxpts = 100,
   delta = NULL,
@@ -23,6 +24,8 @@
 }
 \arguments{
 \item{fitted}{A fitted model using \code{graph_lme()}.}
+
+\item{parameterization}{For Matern and Graph Laplacian models. Which parameterization to use? \code{matern} or \code{spde}? The default is \code{matern}.}
 
 \item{alphamax}{a number in \verb{(0,1)} such that \code{1 - alphamax} is the maximum alpha value for likelihood ratio confidence regions; used to establish the range of values to be profiled.}
 
