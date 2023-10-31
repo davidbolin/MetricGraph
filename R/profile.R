@@ -27,8 +27,8 @@
                   hessian = FALSE)             
         lik1 <- -res$val
         dev <- -2*(lik1 - max_loglik)
-        dev <- max(0, dev)
-        return(list(score = sign(fixed_par - base_par) * sqrt(dev), par = res$par, deviance = dev, new_lik = lik1))
+        dev_0 <- max(0, dev)
+        return(list(score = sign(fixed_par - base_par) * sqrt(dev_0), par = res$par, deviance = dev, new_lik = lik1))
     }
 
 
@@ -45,6 +45,7 @@
 #' @aliases profile profile.graph_lme
 #' @param fitted A fitted model using `graph_lme()`.
 #' @param which A character vector indicating which parameters to profile. `NULL` means all parameters. `.fixed` will act as a vector of all fixed effects, `.random` will act as a vector of all random effects.
+#' @param parameterization For Matern and Graph Laplacian models. Which parameterization to use? `matern` or `spde`? The default is `matern`.
 #' @param alphamax	a number in `(0,1)` such that `1 - alphamax` is the maximum alpha value for likelihood ratio confidence regions; used to establish the range of values to be profiled.
 #' @param maxpts maximum number of points (in each direction, for each parameter) to evaluate in attempting to construct the profile.
 #' @param delta	stepping scale for deciding on next point to profile.
@@ -59,38 +60,100 @@
 #' @method profile graph_lme
 #' @export
 
-profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts = 100,
+profile.graph_lme <- function(fitted, which_par = NULL, parameterization = "matern", alphamax = 0.01, maxpts = 100,
             delta = NULL, delta_cutoff = 1/8, maxmult = 10, minstep = 1e-6, verbose = FALSE,
             optim_method = "L-BFGS-B", parallel = FALSE, n_cores = parallel::detectCores()-1,optim_controls = list()){
 
                 max_loglik <- logLik(fitted)
                 df_model <- attr(logLik(fitted),"df")
-                par_names <- c("std. dev", names(fitted$coeff$random_effects), names(fitted$coeff$fixed_effects))
+                par_names_fixed <- names(fitted$coeff$fixed_effects)
+                loglikfun <- fitted$lik_fun
 
-                n_par_full <- length(par_names)
+                change_par <- FALSE
+                include_nu <- FALSE
 
-                #### REMEMBER TO TAKE EXPONENTIAL IN THE END!!!!!!!
                 if(is.null(fitted$stationary)){
                     mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects), fitted$coeff$fixed_effects)
                     if(fitted$latent_model$type %in% c("graphLaplacian", "WhittleMatern")){
-                        mle_par[2] <- 1/mle_par[2]
+                        if(parameterization == "spde"){
+                            mle_par[2] <- 1/mle_par[2]
+                            par_names_random <- names(fitted$coeff$random_effects)
+                        } else{
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$matern_coeff$random_effects), fitted$coeff$fixed_effects)
+                            change_par <- TRUE
+                            par_names_random <- names(fitted$matern_coeff$random_effects)
+                        }
                     }
                 } else if(fitted$stationary){
                     if(fitted$estimate_nu){
-                        mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects[1]-0.5), log(fitted$coeff$random_effects[2:length(fitted$coeff$random_effects)]), fitted$coeff$fixed_effects)
+                        if(parameterization == "spde"){
+                            par_names_random <- names(fitted$coeff$random_effects)
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects[1]-0.5), log(fitted$coeff$random_effects[2:length(fitted$coeff$random_effects)]), fitted$coeff$fixed_effects)
+                        } else{
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$matern_coeff$random_effects[1]-0.5), log(fitted$matern_coeff$random_effects[2:length(fitted$matern_coeff$random_effects)]), fitted$coeff$fixed_effects)
+                            par_names_random <- names(fitted$matern_coeff$random_effects)                     
+                            change_par <- TRUE
+                            include_nu <- TRUE
+                        }
                     } else{
-                        mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects), fitted$coeff$fixed_effects)
+                        if(parameterization == "spde"){
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects), fitted$coeff$fixed_effects)
+                            par_names_random <- names(fitted$coeff$random_effects)                            
+                        } else{
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$matern_coeff$random_effects), fitted$coeff$fixed_effects)
+                            par_names_random <- names(fitted$matern_coeff$random_effects)           
+                            change_par <- TRUE                                      
+                        }
                     }                    
                 } else{
+                    par_names_random <- names(fitted$coeff$random_effects)                        
                     if(fitted$estimate_nu){
-                        mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects[1]-0.5), fitted$coeff$random_effects[2:length(fitted$coeff$random_effects)], fitted$coeff$fixed_effects)
+                        if(parameterization == "spde"){
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects[1]-0.5), fitted$coeff$random_effects[2:length(fitted$coeff$random_effects)], fitted$coeff$fixed_effects)
+                        } else{
+                            mle_par <- c(log(fitted$coeff$measurement_error), log(fitted$coeff$random_effects[1]), fitted$coeff$random_effects[2:length(fitted$coeff$random_effects)], fitted$coeff$fixed_effects)
+                            par_names_random[1] <- "nu"
+                        }
                     } else{
                         mle_par <- c(log(fitted$coeff$measurement_error), fitted$coeff$random_effects, fitted$coeff$fixed_effects)
                     }
                 }
 
+                if(change_par){
+                    if(include_nu){
+                        loglikfun <- function(theta){
+                            nu <- exp(theta[2])
+                            alpha <- nu + 0.5
+                            theta[2] <- log(alpha)
+                            sigma <- exp(theta[3])
+                            range <- exp(theta[4])
+                            kappa <- sqrt(8 * nu) / range
+                            theta[4] <- log(kappa)
+                            tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+                            theta[3] <- log(sigma)
+                            return(loglikfun(theta))
+                        }
+                    } else{
+                        loglikfun <- function(theta){
+                            if(!is.null(fitted$nu)){
+                                nu <- fitted$nu
+                            } else{
+                                alpha <- fitted$latent_model$alpha
+                                nu <- alpha - 0.5
+                            }
+                            sigma <- exp(theta[2])
+                            range <- exp(theta[3])
+                            kappa <- sqrt(8 * nu) / range
+                            theta[3] <- log(kappa)
+                            tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+                            theta[2] <- log(sigma)
+                            return(loglikfun(theta))                            
+                        }
+                    }
+                }
 
-                loglikfun <- fitted$lik_fun
+                par_names <- c("std. dev", par_names_random, par_names_fixed)
+                n_par_full <- length(par_names)
 
                 cutoff <- sqrt(qchisq(1 - alphamax, df_model)) 
 
@@ -112,8 +175,9 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                     }
                     if(".random"%in% which_par){
                          which_par <- setdiff(which_par, ".random")
-                         which_par <- c(which_par, names(fitted$coeff$random_effects))                       
-                    }
+                        which_par <- c(which_par, par_names_random)
+                            }
+
                     if(any(!(which_par %in% par_names))){
                         wrong_names <- which_par[!(which_par %in% par_names)]
                         which_par <- setdiff(which_par, wrong_names)
@@ -160,6 +224,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                     z <- 0
                     while((z < cutoff) && count_par < maxpts){
                         if(current_row == row_next_par){
+                            current_par <- base_par
                             if(base_par == 0){
                                 new_par <- 0.001
                             } else {
@@ -195,7 +260,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         possible_methods <- setdiff(possible_methods, optim_method)
                         new_method <- optim_method
 
-                        while(all(is.na(dev_list)) && (length(possible_methods) > 1)){
+                        while(all(is.na(dev_list)) && (length(possible_methods) >= 1)){
                             if(verbose){
                                 message(paste(new_method, "failed for one profile. Trying", possible_methods[1]))
                             }
@@ -206,8 +271,32 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         }
 
                         if(all(is.na(dev_list))){
+                            if(verbose){
+                                message("The optimizers failed, we will try again with a new step size.")
+                            }
+                                # Trying a very small step
+                                new_par <- current_par + minstep
+
+                                dev_list <- withCallingHandlers(tryCatch(dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls), error = function(e){return(NA)}), 
+                                        warning = function(w){invokeRestart("muffleWarning")})
+
+                                possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
+                                possible_methods <- setdiff(possible_methods, optim_method)
+                                new_method <- optim_method
+                                while(all(is.na(dev_list)) && (length(possible_methods) >= 1)){
+                                    if(verbose){
+                                        message(paste(new_method, "failed for one profile. Trying", possible_methods[1]))
+                                    }
+                                    new_method <- possible_methods[1]
+                                    dev_list <- withCallingHandlers(tryCatch(dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls), error = function(e){return(NA)}), 
+                                    warning = function(w){invokeRestart("muffleWarning")})
+                                    possible_methods <- setdiff(possible_methods, new_method)
+                            }
+                        }                        
+
+                        if(all(is.na(dev_list))){
                             stop("The profiling failed. Try changing the controls parameters.")
-                        }
+                        } 
 
                         initial_par <- dev_list[["par"]]
                         z <- dev_list[["score"]]
@@ -278,7 +367,7 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         possible_methods <- setdiff(possible_methods, optim_method)
                         new_method <- optim_method
 
-                        while(all(is.na(dev_list)) && (length(possible_methods) > 1)){
+                        while(all(is.na(dev_list)) && (length(possible_methods) >= 1)){
                             if(verbose){
                                 message(paste(new_method, "failed for one profile. Trying", possible_methods[1]))
                             }                            
@@ -289,8 +378,32 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         }
 
                         if(all(is.na(dev_list))){
+                            if(verbose){
+                                message("The optimizers failed, we will try again with a new step size.")
+                            }
+                                # Trying a very small step
+                                new_par <- current_par + minstep
+
+                                dev_list <- withCallingHandlers(tryCatch(dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls), error = function(e){return(NA)}), 
+                                        warning = function(w){invokeRestart("muffleWarning")})
+
+                                possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
+                                possible_methods <- setdiff(possible_methods, optim_method)
+                                new_method <- optim_method
+                                while(all(is.na(dev_list)) && (length(possible_methods) >= 1)){
+                                    if(verbose){
+                                        message(paste(new_method, "failed for one profile. Trying", possible_methods[1]))
+                                    }
+                                    new_method <- possible_methods[1]
+                                    dev_list <- withCallingHandlers(tryCatch(dev_fun_score(initial_par = initial_par, fixed_par = new_par, base_par = base_par, coord_fixed_par = col_num_par, loglik_fun = loglikfun, max_loglik = max_loglik, optim_method = optim_method, optim_controls = optim_controls), error = function(e){return(NA)}), 
+                                    warning = function(w){invokeRestart("muffleWarning")})
+                                    possible_methods <- setdiff(possible_methods, new_method)
+                            }
+                        }                              
+
+                        if(all(is.na(dev_list))){
                             stop("The profiling failed. Try changing the controls parameters.")
-                        }
+                        } 
 
                         initial_par <- dev_list[["par"]]
                         z <- dev_list[["score"]]
@@ -331,5 +444,30 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                 rownames(res_mat) <- 1:nrow(res_mat)
                 attr(res_mat, "max_loglik") <- max_loglik
                 attr(res_mat, "mle") <- mle_par
-                return(res_mat)
-            }
+
+                # Rescaling back
+                if(fitted$latent_model$type %in% c("graphLaplacian", "WhittleMatern")){
+                    res_mat[,2] <- exp(res_mat[,2])
+                    if(is.null(fitted$stationary)){
+                        res_mat[,3:(length(fitted$coeff$random_effects)+1)] <- exp(res_mat[,3:(length(fitted$coeff$random_effects)+1)])
+                        if(fitted$latent_model$type %in% c("graphLaplacian", "WhittleMatern")){
+                            res_mat[,3] <- 1/res_mat[,3]
+                        }
+                    } else if(fitted$stationary){
+                        if(fitted$estimate_nu){
+                            res_mat[,3] <- exp(res_mat[,3]) + 0.5
+                            res_mat[,4:(length(fitted$coeff$random_effects)+1)] <- exp( res_mat[,4:(length(fitted$coeff$random_effects)+1)])
+
+                        } else{
+                            res_mat[,3:(length(fitted$coeff$random_effects)+1)] <- exp( res_mat[,3:(length(fitted$coeff$random_effects)+1)])
+                        }                    
+                    } else{
+                        if(fitted$estimate_nu){
+                            res_mat[,3] <- exp(res_mat[,3]) + 0.5
+                        }
+                    }
+                } else{
+                    res_mat[,2:(length(fitted$coeff$random_effects)+1)] <- exp(res_mat[,2:(length(fitted$coeff$random_effects)+1)])
+                }
+            return(res_mat)
+        }
