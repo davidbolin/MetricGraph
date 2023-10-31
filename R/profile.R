@@ -26,7 +26,7 @@
         lik1 <- -res$val
         dev <- -2*(lik1 - max_loglik)
         dev <- max(0, dev)
-        return(list(score = sign(fixed_par - base_par) * sqrt(dev), par = res$par, deviance = dev))
+        return(list(score = sign(fixed_par - base_par) * sqrt(dev), par = res$par, deviance = dev, new_lik = lik1))
     }
 
 
@@ -195,6 +195,12 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         } else{
                             row_par <- c(initial_par[1:(col_num_par-1)], new_par, initial_par[col_num_par:(n_par_full-1)])
                         }
+                        dev <- dev_list[["deviance"]]
+                        if(dev < 0){
+                            warning("Larger likelihood found. Updating. The larger likelihood will be saved as an attribute.")
+                            mle_par <- row_par
+                            max_loglik <- dev_list[["new_lik"]]
+                        }
                         row_tmp <- c(z, row_par)
                         current_row <- current_row + 1
                    
@@ -246,6 +252,13 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
                         } else{
                             row_par <- c(initial_par[1:(col_num_par-1)], new_par, initial_par[col_num_par:(n_par_full-1)])
                         }
+
+                        dev <- dev_list[["deviance"]]
+                        if(dev < 0){
+                            warning("Larger likelihood found. Updating. The larger likelihood will be saved as an attribute.")
+                            mle_par <- row_par
+                            max_loglik <- dev_list[["new_lik"]]
+                        }                        
                         row_tmp <- c(z, row_par)
                         current_row <- current_row + 1
                    
@@ -261,5 +274,12 @@ profile.graph_lme <- function(fitted, which_par = NULL, alphamax = 0.01, maxpts 
 
                     row_next_par <- current_row + 1
                 }
-
+                colnames(res_mat) <- c(".zeta", par_names)
+                res_mat <- as.data.frame(res_mat)
+                res_mat[[".par"]] <- col_par_names
+                ord_idx <- order(res_mat[[".par"]], res_mat[[".zeta"]])
+                res_mat <- res_mat[ord_idx,]
+                rownames(res_mat) <- 1:nrow(res_mat)
+                attr(res_mat, "max_loglik") <- max_loglik
+                attr(res_mat, "mle") <- mle_par
             }
