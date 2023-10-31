@@ -32,42 +32,6 @@
     }
 
 
-
-
-# ### Estrategia para random effects
-
-# step_size -> comeca com 1.01 na primeira vez
-
-# na etapa seguinte: fix_{n+1} - fix_n -> numerador 
-#                    zeta_{n+1} - zeta_{n} -> denominador
-
-#                    absstep * num/denom
-
-# absstep <- cutoff.delta (ou seja 1/8) *  sqrt(qchisq(1 - alphamax, DFlogLik)) # usar o mesmo alphamax (isso eh delta) -> absstep eh delta
-
-
-
-
-# zeta = sgn(fix_{n+1} - fix_ORIGINAL) * sqrt(dev_diff) # Dev diff eh o deviance
-
-# nptot -> DF loglik
-
-# cutoff <- sqrt(qchisq(1 - alphamax, nptot)) -> Esse eh o cutoff verdadeiro
-
-
-
-# cap step at max step:  abs(maxmult * num) # num eh o numerador
-
-# maxmult = 10 eh um parametro
-
-# maxpts diz o tamanho inicial da matrix
-
-
-# minstep (se step for negativo)
-
-### Estrategia para fixed effects -> mesma
-
-
 # which_par can be a character vector with the names of the parameters, 
 # if which par is numeric it must obey the order c(measurement_error, random effects parameters, fixed_effects parameters)
 
