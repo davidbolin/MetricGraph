@@ -44,25 +44,27 @@
 #' @description Function providing a summary of several informations/characteristics of a metric graph object.
 #' @aliases profile profile.graph_lme
 #' @param fitted A fitted model using `graph_lme()`.
-#' @param which A character vector indicating which parameters to profile. `NULL` means all parameters. `.fixed` will act as a vector of all fixed effects, `.random` will act as a vector of all random effects.
+#' @param which_par A character vector indicating which parameters to profile. `NULL` means all parameters. `.fixed` will act as a vector of all fixed effects, `.random` will act as a vector of all random effects.
 #' @param parameterization For Matern and Graph Laplacian models. Which parameterization to use? `matern` or `spde`? The default is `matern`.
 #' @param alphamax	a number in `(0,1)` such that `1 - alphamax` is the maximum alpha value for likelihood ratio confidence regions; used to establish the range of values to be profiled.
 #' @param maxpts maximum number of points (in each direction, for each parameter) to evaluate in attempting to construct the profile.
 #' @param delta	stepping scale for deciding on next point to profile.
-#' @param delta.cutoff stepping scale (see delta) expressed as a fraction of the target maximum value of the profile on the square-root-deviance scale.
+#' @param delta_cutoff stepping scale (see delta) expressed as a fraction of the target maximum value of the profile on the square-root-deviance scale.
+#' @param minstep The minimum step to be taken.
 #' @param verbose Should update messages be printed with updates?
 #' @param optim_method Which optimization method to pass to `optim`.
 #' @param optim_controls Additional controls to be passed to `optim`
 #' @param parallel Should parallel optimization be used?
 #' @param n_cores Number of cores to be used in case of parallel optimization.
 #' @param maxmult maximum multiplier of the original step size allowed, defaults to 10.
+#' @param ... Currently not used.
 #' @return A `data.frame` containing the profiled parameters.
 #' @method profile graph_lme
-#' @export
+#' @noRd
 
 profile.graph_lme <- function(fitted, which_par = NULL, parameterization = "matern", alphamax = 0.01, maxpts = 100,
             delta = NULL, delta_cutoff = 1/8, maxmult = 10, minstep = 1e-6, verbose = FALSE,
-            optim_method = "L-BFGS-B", parallel = FALSE, n_cores = parallel::detectCores()-1,optim_controls = list()){
+            optim_method = "L-BFGS-B", parallel = FALSE, n_cores = parallel::detectCores()-1,optim_controls = list(),...){
 
                 max_loglik <- logLik(fitted)
                 df_model <- attr(logLik(fitted),"df")
