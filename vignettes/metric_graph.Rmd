@@ -260,6 +260,20 @@ Finally, the `summary()` can also be accessed from the metric graph object:
 graph3$summary()
 ```
 
+## Vertices and edges
+
+The metric graph object has the `edges` and `vertices` elements in its list. We can get a quick summary from them by calling these elements:
+
+```{r}
+graph3$vertices
+```
+
+and
+
+```{r}
+graph3$edges
+```
+
 
 ## Understanding coordinates on graphs
 
@@ -376,7 +390,19 @@ with in further analysis via the `get_largest` command:
 graph5 <- graphs$get_largest()
 ```
 
-Let us obtain a summary of this graph:
+Let us take a quick look at its vertices and edges:
+
+```{r}
+graph5$vertices
+```
+
+and
+
+```{r}
+graph5$edges
+```
+
+It is also relevant to obtain a summary of this graph:
 
 ```{r}
 summary(graph5)

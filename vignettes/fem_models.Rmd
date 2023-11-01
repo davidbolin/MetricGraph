@@ -852,14 +852,14 @@ summary(fit)
 Let us plot the range parameter along the mesh, so we can see how it is varying:
 
 ```{r}
-est_range <- exp(B.range[,-1]%*%fit$coeff$random_effects[2:4])
+est_range <- exp(B.range[,-1]%*%fit$coeff$random_effects[2:5])
 pems_graph$plot_function(X = est_range, vertex_size = 0)
 ```
 
 Similarly, we have for sigma:
 
 ```{r}
-est_sigma <- exp(B.sigma[,-1]%*%fit$coeff$random_effects[2:4])
+est_sigma <- exp(B.sigma[,-1]%*%fit$coeff$random_effects[2:5])
 pems_graph$plot_function(X = est_sigma, vertex_size = 0)
 ```
 
@@ -870,7 +870,7 @@ rspde_object_ns <- rSPDE::spde.matern.operators(graph = pems_graph,
                                                 parameterization = "matern",
                                                 B.sigma = B.sigma,
                                                 B.range = B.range,
-                                                theta = fit$coeff$random_effects[2:4],
+                                                theta = fit$coeff$random_effects[2:5],
                                                 nu = fit$coeff$random_effects[1] - 0.5)
 ```
 
@@ -878,7 +878,7 @@ Now, we compute the estimated marginal standard deviation:
 
 ```{r}
 est_cov_matrix <- rspde_object_ns$covariance_mesh()
-est_std_dev <- sqrt(diag(est_cov_matrix))
+est_std_dev <- sqrt(Matrix::diag(est_cov_matrix))
 ```
 
 We can now plot:

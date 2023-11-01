@@ -635,7 +635,15 @@ metric_graph <-  R6Class("metric_graph",
     cat("\t Lengths: \n")
     cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
     cat("\t Weights: \n")
-    cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    if(is.vector(private$edge_weights)){
+      cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    } else{
+      if(!is.null(colnames(private$edge_weights))){
+        cat("\t\t Columns:", colnames(private$edge_weights),"\n")
+      } else{
+        cat("\t\t Number of columns:", ncol(private$edge_weights), "\n")
+      }
+    }
     cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
     cat("Graph units: \n")
     cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
@@ -773,7 +781,15 @@ metric_graph <-  R6Class("metric_graph",
     cat("\t Lengths: \n")
     cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
     cat("\t Weights: \n")
-    cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    if(is.vector(private$edge_weights)){
+      cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    } else{
+      if(!is.null(colnames(private$edge_weights))){
+        cat("\t\t Columns:", colnames(private$edge_weights),"\n")
+      } else{
+        cat("\t\t Number of columns:", ncol(private$edge_weights), "\n")
+      }
+    }
     cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
     cat("Graph units: \n")
     cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
