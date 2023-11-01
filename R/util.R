@@ -1297,3 +1297,103 @@ NULL
 summary.metric_graph <- function(object, messages = FALSE, compute_characteristics = TRUE, check_euclidean = TRUE, check_distance_consistency = TRUE, ...){
   object$summary(messages = messages, compute_characteristics = compute_characteristics, check_euclidean = check_euclidean, check_distance_consistency = check_distance_consistency)
 }
+
+
+
+
+
+#' @name print.metric_graph_vertices
+#' @title Print Method for \code{metric_graph_vertices} Objects
+#' @description Provides a brief description of the vertices of a metric graph
+#' @param x object of class `metric_graph_vertices`.
+#' @param n number of rows to show
+#' @param ... Currently not used.
+#' @return No return value. Called for its side effects.
+#' @noRd
+#' @method print metric_graph_vertices
+#' @export
+print.metric_graph_vertices <- function(x, n = 10, ...) {
+  cat("Vertices of the metric graph\n\n")
+  cat("Longitude and Latitude coordinates:", attr(x[[1]], "longlat"), "\n")
+  if(attr(x[[1]], "longlat")){
+    cat("Coordinate reference system:",attr(x[[1]], "crs"), "\n")
+  }
+  if(attr(x[[1]], "longlat")){
+    lab_x = "Longitude"
+    lab_y = "Latitude"
+  } else{
+    lab_x <- "x"
+    lab_y <- "y"
+  }
+  cat("\nSummary: \n")
+  coord_tmp <- matrix(nrow = length(x), ncol = 6)
+  coord_tmp <- as.data.frame(coord_tmp)
+  for(i in 1:length(x)){
+    coord_tmp[i,1:5] <- c(x[[i]], attr(x[[i]], "degree"),attr(x[[i]], "edges_in"), attr(x[[i]], "edges_out"))
+    coord_tmp[i,6] <- attr(x[[i]], "problematic")
+  }
+  rownames(coord_tmp) <- 1:length(x)
+  colnames(coord_tmp) <- c(lab_x, lab_y, "Degree", "Indegree", "Outdegree", "Problematic")
+  print(coord_tmp[1:min(n, nrow(coord_tmp)),])
+  if(n < nrow(coord_tmp)){
+    message(paste("#", nrow(coord_tmp)-n,"more rows"))
+    message("# Use `print(n=...)` to see more rows")
+  }
+}
+
+
+
+
+#' @name print.metric_graph_edges
+#' @title Print Method for \code{metric_graph_edges} Objects
+#' @description Provides a brief description of the edges of a metric graph
+#' @param x object of class `metric_graph_edges`.
+#' @param n number of edges to show
+#' @param ... Currently not used.
+#' @return No return value. Called for its side effects.
+#' @noRd
+#' @method print metric_graph_edges
+#' @export
+print.metric_graph_edges <- function(x, n = 4, ...) {
+  cat("Edges of the metric graph\n\n")
+  cat("Longitude and Latitude coordinates:", attr(x[[1]], "longlat"), "\n")
+  if(attr(x[[1]], "longlat")){
+    cat("Coordinate reference system:",attr(x[[1]], "crs"), "\n")
+  }
+  if(attr(x[[1]], "longlat")){
+    lab_x = "Longitude"
+    lab_y = "Latitude"
+  } else{
+    lab_x <- "x"
+    lab_y <- "y"
+  }
+  edge_lengths <- 
+  cat("\nSummary: \n\n")
+  for(i in 1:min(n,length(x))){
+    edge <- x[[i]]
+    edge_df <- data.frame(x = edge[,1], y = edge[,2])
+    n_edge_df <- nrow(edge_df)
+    edge_df <- edge_df[c(1,n_edge_df),]
+    colnames(edge_df) <- c(lab_x,lab_y)
+    cat(paste0("Edge ",i," (first and last coordinates):"),"\n")
+    print(edge_df, row.names=FALSE)
+    cat("Total number of coordinates:",n_edge_df,"\n")
+    if(!is.null(attr(attr(x[[i]],"length"),"units"))){
+      cat("Edge length:", attr(x[[i]], "length"),units(attr(x[[i]], "length"))$numerator,"\n")
+    } else{
+      cat("Edge length:", attr(x[[i]], "length"),"\n")
+    }
+    if(is.data.frame(attr(x[[i]], "weight"))){
+      cat("Weights: \n")
+      print(attr(x[[i]], "weight"), row.names=FALSE)
+      cat("\n")
+    } else{
+      cat("Weight:", attr(x[[i]], "weight"),"\n\n")
+    }
+    
+  }
+  if(n < length(x)){
+    message(paste("#", length(x)-n,"more edges"))
+    message("# Use `print(n=...)` to see more edges")
+  }
+}

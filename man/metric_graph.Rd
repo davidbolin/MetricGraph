@@ -51,6 +51,8 @@ locations.}
 
 \item{\code{edges}}{The coordinates of the edges in the graph.}
 
+\item{\code{vertices}}{The coordinates of the vertices in the graph, along with several attributes.}
+
 \item{\code{geo_dist}}{Geodesic distances between the vertices in the graph.}
 
 \item{\code{res_dist}}{Resistance distances between the observation locations.}
@@ -127,6 +129,7 @@ Create a new \code{metric_graph} object.
   E = NULL,
   vertex_unit = NULL,
   length_unit = vertex_unit,
+  edge_weights = 1,
   longlat = FALSE,
   crs = NULL,
   proj4string = NULL,
@@ -158,6 +161,9 @@ Create a new \code{metric_graph} object.
 
 \item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
 If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+
+\item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
+each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}
 
 \item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
@@ -233,7 +239,8 @@ Sets the edge weights
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{weights}}{Either a number or a numerical vector with length given by the number of edges, providing the edge weights.}
+\item{\code{weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
+each row gives a vector of weights to its corresponding edge.}
 }
 \if{html}{\out{</div>}}
 }

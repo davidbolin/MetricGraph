@@ -50,6 +50,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @field edges The coordinates of the edges in the graph.
   edges = NULL,
 
+  #' @field vertices The coordinates of the vertices in the graph, along with several attributes.
+  vertices = NULL,
+
   #' @field geo_dist Geodesic distances between the vertices in the graph.
   geo_dist = NULL,
 
@@ -70,6 +73,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
   #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
+  #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
+  #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
@@ -112,6 +117,7 @@ metric_graph <-  R6Class("metric_graph",
                         E = NULL,
                         vertex_unit = NULL,
                         length_unit = vertex_unit,
+                        edge_weights = 1,
                         longlat = FALSE,
                         crs = NULL,
                         proj4string = NULL,
@@ -517,28 +523,51 @@ metric_graph <-  R6Class("metric_graph",
         private$connected = FALSE
       }
     }
-    private$edge_weights <- rep(1, self$nE)
+    self$set_edge_weights(weights = edge_weights)
+    private$create_update_vertices()
   },
 
   #' @description Sets the edge weights
-  #' @param weights Either a number or a numerical vector with length given by the number of edges, providing the edge weights.
+  #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
+  #' each row gives a vector of weights to its corresponding edge.
   #' @return No return value. Called for its side effects.
   
   set_edge_weights = function(weights = rep(1, self$nE)){
-    if(!is.numeric(weights)){
-      stop("'weights' must be numerical!")
+    if(!is.vector(weights) && !is.data.frame(weights)){
+      stop("'weights' must be either a vector or a data.frame!")
     }
-    if(!is.vector(weights)){
-      stop("'weights' must be a vector!")
-    }
-    if( (length(weigths) != 1) || (length(weights) != self$nE)){
-      stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
-    }
-    if(length(weights)==1){
-      private$edge_weights <- rep(weights, self$nE)
+
+    edge_lengths_ <- self$get_edge_lengths()
+
+    if(is.vector(weights)){
+      if ( (length(weights) != 1) && (length(weights) != self$nE)){
+        stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+      }
+      if(length(weights)==1){
+        private$edge_weights <- rep(weights, self$nE)
+      } else{
+        private$edge_weights <- weights
+      }
     } else{
+      if(nrow(weights) != self$nE){
+        stop("The number of rows of weights must be equal to the number of edges!")
+      }
       private$edge_weights <- weights
     }
+    self$edges <- lapply(1:self$nE, function(i){
+      edge <- self$edges[[i]]
+      if(is.vector(private$edge_weights)){
+        attr(edge,"weight") <- private$edge_weights[i]
+      } else{
+        attr(edge,"weight") <- private$edge_weights[i,]
+      }
+      attr(edge, "longlat") <- private$longlat
+      attr(edge, "crs") <- private$crs$input
+      attr(edge, "length") <- edge_lengths_[i]
+      return(edge)
+    })
+    class(self$edges) <- "metric_graph_edges"
+    
   },
 
 
@@ -1133,10 +1162,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Returns the degrees of the vertices in the metric graph.
   #' @return A vector containing the degrees of the vertices.
   get_degrees = function(){
-    degrees <- rep(0,self$nV)
-    for(i in 1:self$nV) {
-          degrees[i] <- sum(self$E[,1]==i) + sum(self$E[,2]==i)
-    }
+    degrees <- sapply(self$vertices, function(vert){attr(vert, "degree")})
     return(degrees)
   },
 
@@ -1224,15 +1250,16 @@ metric_graph <-  R6Class("metric_graph",
   prune_vertices = function(verbose = FALSE){
     t <- system.time({
     degrees <- self$get_degrees()
-    start.deg <- end.deg <- rep(0,self$nV)
-    for(i in 1:self$nV) {
-      start.deg[i] <- sum(self$E[,1]==i)
-      end.deg[i] <- sum(self$E[,2]==i)
-    }
+    # start.deg <- end.deg <- rep(0,self$nV)
+    # for(i in 1:self$nV) {
+    #   start.deg[i] <- sum(self$E[,1]==i)
+    #   end.deg[i] <- sum(self$E[,2]==i)
+    # }
 
     # Finding problematic vertices, that is, vertices with incompatible directions
     # They will not be pruned.
-    problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    # problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
     res <- list(degrees = degrees, problematic = problematic)
     if(verbose){
       to.prune <- sum(res$degrees==2 & !res$problematic)
@@ -1416,6 +1443,8 @@ metric_graph <-  R6Class("metric_graph",
         warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
       }
     }
+
+    private$create_update_vertices()
   },
 
   #' @description Returns a list or a matrix with the mesh locations.
@@ -3877,6 +3906,7 @@ metric_graph <-  R6Class("metric_graph",
 
       #update vertices
       self$V <- self$V[-ind,]
+      self$vertices[[ind]] <- NULL
       self$nV <- self$nV - 1
 
       #update edges
@@ -3888,8 +3918,21 @@ metric_graph <-  R6Class("metric_graph",
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
 
       self$nE <- self$nE - 1
+
+      attr(self$edges[[e_rem[1]]], "longlat") <- private$longlat
+      attr(self$edges[[e_rem[1]]], "crs") <- private$crs$input
+      attr(self$edges[[e_rem[1]]], "length") <- self$edge_lengths[e_rem[1]]
+      if(!is.null(private$length_unit)){
+        units(attr(self$edges[[e_rem[1]]], "length")) <- private$length_unit
+      }
+      if(is.vector(private$edge_weights)){
+        attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1]]
+      } else{
+        attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1],]
+      }
       }
     }
+    class(self$edges) <- "metric_graph_edges"
     return(res.out)
   },
 
@@ -4079,6 +4122,22 @@ metric_graph <-  R6Class("metric_graph",
         if(private$addinfo){
             private$initial_edges_added <- rbind(private$initial_edges_added,cbind(Ei, nrow(self$E)))
         }
+        attr(self$edges[[Ei]], "length") <- t * l_e
+        attr(self$edges[[length(self$edges)]], "length") <- (1 - t) * l_e
+        if(!is.null(private$length_unit)){
+          units(attr(self$edges[[Ei]], "length")) <- private$length_unit
+          units(attr(self$edges[[length(self$edges)]], "length")) <- private$length_unit
+        }
+        attr(self$edges[[Ei]], "longlat") <- private$longlat
+        attr(self$edges[[length(self$edges)]], "longlat") <- private$longlat
+        attr(self$edges[[Ei]], "crs") <- private$crs$input
+        attr(self$edges[[length(self$edges)]], "crs") <- private$crs$input
+        if(is.vector(private$edge_weights)){
+          attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei]
+        } else{
+          attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei,]
+        }
+        class(self$edges) <- "metric_graph_edges"
 
         if(!is.null(private$data)){
           ind <- which(private$temp_PtE[, 1] %in% Ei)
@@ -4304,6 +4363,38 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   }
   return(self)
 },
+
+ # Function to compute the degrees of the vertices, 
+
+  compute_degrees = function(){
+    degrees_in <- rep(0,self$nV)
+    degrees_out <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+          degrees_out[i] <- sum(self$E[,1]==i) 
+          degrees_in[i] <- sum(self$E[,2]==i)
+    }
+    degrees <- degrees_in + degrees_out
+    return(list(degrees = degrees, degrees_in = degrees_in,
+              degrees_out = degrees_out))
+  },
+
+  #  Creates/updates the vertices element of the metric graph list
+
+  create_update_vertices = function(){
+    degrees <- private$compute_degrees()
+    self$vertices <- lapply(1:nrow(self$V),
+        function(i){
+          vert <- self$V[i,]
+          attr(vert, "degree") <- degrees$degrees[i]
+          attr(vert, "edges_in") <- degrees$degrees_in[i]
+          attr(vert, "edges_out") <- degrees$degrees_out[i]
+          attr(vert, "problematic") <- ifelse((degrees$degrees[i]>1) && ((degrees$degrees_in[i] == 0) || (degrees$degrees_out[i] == 0)), TRUE, FALSE)
+          attr(vert, "longlat") <- private$longlat
+          attr(vert, "crs") <- private$crs$input
+          return(vert)
+        })
+    class(self$vertices) <- "metric_graph_vertices"
+  },
 
   # Temp PtE
 
