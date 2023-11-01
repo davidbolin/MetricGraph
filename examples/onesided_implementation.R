@@ -1,36 +1,41 @@
 # Function to detect starting points in graph
 find.mesh.starts <- function(graph){
-  V <- graph$mesh$V[1:graph$nV,]
-  deg1 <- which(graph$get_degrees() == 1)
-  return(deg1[deg1 %in% graph$E[,1]])
+  if(attr(graph$mesh,"continuous")) {
+    V <- graph$mesh$V[1:graph$nV,]
+    deg1 <- which(graph$get_degrees() == 1)
+    return(deg1[deg1 %in% graph$E[,1]])
+  } else {
+    return(which(graph$mesh$PtE[,2]==0))
+  }
 }
 
+num_in_out <- function(graph) {
+  outs <- rep(0,graph$nV)
+  ins <- rep(0, graph$nV)
+  for(i in 1:graph$nV) {
+    outs[i] <- sum(graph$E[,1] == i)
+    ins[i] <- sum(graph$E[,2] == i)
+  }
+  return(list(outs = outs, ins = ins))
+}
+mesh_merge_outs <- function(graph) {
+  outs <- num_in_out(graph)$outs
+  ind <- which(outs > 1)
+  while(length(ind)>0) {
+    #find edges going out
+    e.ind <- which(graph$E[,1]==ind[1])
+    V.keep <- which(graph$mesh$PtE[,1]==e.ind[1])[1]
+    V.rem <- which(graph$mesh$PtE[,1]==e.ind[2])[1]
+    graph$mesh$PtE <- graph$mesh$PtE[-V.rem,]
+    graph$mesh$V <- graph$mesh$V[-V.rem,]
+    graph$mesh$E[graph$mesh$E == V.rem] <- V.keep
+    graph$mesh$E[graph$mesh$E>V.rem] <- graph$mesh$E[graph$mesh$E>V.rem] - 1
+    outs[ind] <- outs[ind] - 1
+    ind <- which(outs > 1)
+  }
+}
 
-
-edge1 <- rbind(c(0,0),c(1,0))
-edge2 <- rbind(c(1,0),c(2,1))
-edge3 <- rbind(c(1,0),c(2,-1))
-edge4 <- rbind(c(2,-1),c(3,0))
-edge5 <- rbind(c(2,-1),c(3,-2))
-edges = list(edge1, edge2, edge3, edge4, edge5)
-graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=0.05)
-graph$plot(mesh=TRUE)
-
-mat <- set.petrov.matrices(graph)
-hfull <- c(1/(1+kappa),graph$mesh$h_e)
-
-L <- kappa*mat$C + mat$G
-Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
-graph$plot_function(diag(Sigma),plotly=TRUE)
-
-
-W <- rnorm(n=length(hfull),mean=0,sd = sqrt(hfull))
-u <- solve(L,W)
-graph$plot_function(u,plotly=TRUE)
-
-
-build_mesh = function(self, h=NULL,n=NULL, continuous = TRUE) {
+build_mesh = function(self, h=NULL,n=NULL, continuous = TRUE, merge.outs = FALSE) {
 
   if(is.null(h) && is.null(n)){
     stop("You should specify either h or n!")
@@ -144,32 +149,10 @@ build_mesh = function(self, h=NULL,n=NULL, continuous = TRUE) {
     }
     self$mesh$VtE <- self$mesh$PtE
     self$mesh$V <- self$coordinates(PtE = self$mesh$PtE)
-
-  }
-}
-
-#now test a reversed tree
-edge1 <- rbind(c(1,0), c(0,0))
-edge2 <- rbind(c(2,1), c(1,0))
-edge3 <- rbind(c(2,-1), c(1,0))
-edge4 <- rbind(c(3,0),c(2,-1))
-edge5 <- rbind(c(3,-2),c(2,-1))
-edges = list(edge1, edge2, edge3, edge4, edge5)
-graph <- metric_graph$new(edges = edges)
-build_mesh(graph,h=0.5, continuous = FALSE)
-graph$plot(mesh = TRUE, direction = TRUE)
-n <- dim(graph$mesh$V)[1]
-v <- rep(0,n); v[7] = 1; graph$plot_function(v,plotly=TRUE)
-
-
-# Function to detect starting points in graph
-find.mesh.starts <- function(graph){
-  if(attr(graph$mesh,"continuous")) {
-    V <- graph$mesh$V[1:graph$nV,]
-    deg1 <- which(graph$get_degrees() == 1)
-    return(deg1[deg1 %in% graph$E[,1]])
-  } else {
-    return(which(graph$mesh$PtE[,2]==0))
+   if(merge.outs) {
+     mesh_merge_outs(self)
+   }
+    move.V.first(self)
   }
 }
 
@@ -180,13 +163,12 @@ find.mesh.bc <- function(graph) {
   starts <- which(graph$mesh$PtE[,2]==0)
   edges <- graph$mesh$PtE[starts,1]
   degrees <- graph$get_degrees()
-  connections <- weight <- list()
+  connections <-list()
   for(i in 1:length(starts)) {
     vert <- graph$E[edges[i],1] #the vertex of the start point
-    deg.start <- degrees[vert[1]]
+    deg.start <- degrees[vert]
     if(deg.start == 1) {
       connections[[i]] <- 0 #true starting value
-      weight[[i]] <- 1
     } else {
       #find edges ending in the vertex
       edge.in <- which(graph$E[,2] == vert)
@@ -199,10 +181,9 @@ find.mesh.bc <- function(graph) {
         mesh.in <- c(mesh.in, tmp[length(tmp)])
       }
       connections[[i]] <- mesh.in
-      weight[[i]] <- 1/length(edge.out) #proportion out
     }
   }
-  return(list(connections = connections, weight = weight))
+  return(connections)
 }
 
 set.petrov.matrices <- function(graph) {
@@ -224,37 +205,104 @@ set.petrov.matrices <- function(graph) {
     }
   } else {
     bc <- find.mesh.bc(graph)
-    starts <- find.mesh.starts(graph)
+    starts <- which(graph$mesh$PtE[,2]==0)
     C <- t(graph$mesh$Cpet)
     G <- t(graph$mesh$Gpet)
 
-    for(i in 1:length(bc$connections)) {
-      G <- rbind(sparseMatrix(i=1,j=starts,x=0,dims=c(1,dim(graph$mesh$Cpet)[1])), G)
-      if(bc$connections[[i]] == 0) {
+    for(i in length(bc):1) {
+      G <- rbind(sparseMatrix(i=1,j=1,x=0,dims=c(1,dim(graph$mesh$Cpet)[1])), G)
+      if(bc[[i]][1] == 0) {
         C <- rbind(sparseMatrix(i=1,j=starts[i],x=1,dims=c(1,dim(graph$mesh$Cpet)[1])), C)
       } else {
-        C <- rbind(sparseMatrix(i = rep(1,length(bc$connections[[i]])+1),
-                                j = c(starts[i], bc$connections[[i]]),
-                                x = c(1, rep(bc$weight[[i]], length(bc$connections[[i]]))),
+        C <- rbind(sparseMatrix(i = rep(1,length(bc[[i]])+1),
+                                j = c(starts[i], bc[[i]]),
+                                x = c(1, rep(-1/length(bc[[i]]), length(bc[[i]]))),
                                 dims = c(1, dim(graph$mesh$Cpet)[1])), C)
       }
 
     }
   }
+  return(list(C = C, G = G, n.bc = length(starts), h0 = which(unlist(lapply(bc,length))>1)))
+}
 
-
-
-  return(list(C = C, G = G))
+#find one mesh node corresponding to each vertex and move it first
+move.V.first <- function(graph) {
+  nv <- dim(graph$mesh$V)[1]
+  for(i in 1:graph$nV) {
+    ind <- which(graph$mesh$V[,1] == graph$V[i,1] & graph$mesh$V[,2] == graph$V[i,2])[1]
+    cat(i, " ", ind,"\n")
+    if(ind > i && i < nv) {
+      if (i == 1) {
+        reo <- c(ind, setdiff(i:nv,ind))
+      } else {
+        reo <- c(1:(i-1), ind, setdiff(i:nv,ind))
+      }
+      cat(reo, "\n")
+      graph$mesh$V <- graph$mesh$V[reo,]
+      graph$mesh$PtE <- graph$mesh$PtE[reo,]
+      graph$mesh$VtE <- graph$mesh$VtE[reo,]
+      Etmp <- graph$mesh$E
+      ind1 <- Etmp == ind
+      ind2 <- Etmp >= i & Etmp < ind
+      graph$mesh$E[ind1] = i
+      graph$mesh$E[ind2] = graph$mesh$E[ind2] + 1
+      print(graph$mesh$E)
+    }
+  }
 }
 
 
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(1,0),c(2,1))
+edge3 <- rbind(c(1,0),c(2,-1))
+edge4 <- rbind(c(2,-1),c(3,0))
+edge5 <- rbind(c(2,-1),c(3,-2))
+edges = list(edge1, edge2, edge3, edge4, edge5)
+graph <- metric_graph$new(edges = edges)
+graph$build_mesh(h=0.05)
+graph$plot(mesh=TRUE)
 
-graph$compute_fem(petrov=TRUE)
-
-kappa <- 1
 mat <- set.petrov.matrices(graph)
 hfull <- c(1/(1+kappa),graph$mesh$h_e)
 
 L <- kappa*mat$C + mat$G
 Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
 graph$plot_function(diag(Sigma),plotly=TRUE)
+
+
+W <- rnorm(n=length(hfull),mean=0,sd = sqrt(hfull))
+u <- solve(L,W)
+graph$plot_function(u,plotly=TRUE)
+
+
+#now test a reversed tree
+edge1 <- rbind(c(1,0), c(0,0))
+edge2 <- rbind(c(2,1), c(1,0))
+edge3 <- rbind(c(2,-1), c(1,0))
+edge4 <- rbind(c(3,0),c(2,-1))
+edge5 <- rbind(c(3,-2),c(2,-1))
+edge6 <- rbind(c(2,-1), c(1,-2))
+edges = list(edge1, edge2, edge3, edge4, edge5, edge6)
+
+
+graph <- metric_graph$new(edges = edges)
+build_mesh(graph,h=0.05, continuous = FALSE, merge.outs = TRUE)
+graph$plot(mesh = TRUE, direction = TRUE)
+n <- dim(graph$mesh$V)[1]
+v <- rep(0,n); v[22] = 1; graph$plot_function(v,plotly=TRUE)
+
+
+graph$compute_fem(petrov=TRUE)
+
+kappa <- 1
+mat <- set.petrov.matrices(graph)
+hfull <- c(rep(1/(1+kappa), mat$n.bc),graph$mesh$h_e)
+hfull[mat$h0] = 0
+
+L <- kappa*mat$C + mat$G
+Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
+graph$plot_function(diag(Sigma))
+
+W <- rnorm(n=length(hfull),mean=0,sd = sqrt(hfull))
+u <- solve(L,W)
+graph$plot_function(u,plotly=TRUE)
