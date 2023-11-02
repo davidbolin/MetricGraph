@@ -532,7 +532,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge.
   #' @return No return value. Called for its side effects.
-  
+
   set_edge_weights = function(weights = rep(1, self$nE)){
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
@@ -574,16 +574,16 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Gets the edge weights
   #' @return A vector containing the edge weights.
-  
+
   get_edge_weights = function(){
     return(private$edge_weights)
   },
 
-  
+
 
   #' @description Gets vertices with incompatible directions
   #' @return A vector containing the vertices with incompatible directions.
-  
+
   get_vertices_incomp_dir = function(){
     start.deg <- end.deg <- rep(0,self$nV)
     for(i in 1:self$nV) {
@@ -597,22 +597,22 @@ metric_graph <-  R6Class("metric_graph",
     # They will not be pruned.
     problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
     return(which(problematic))
-  }, 
+  },
 
   #' @description Prints a summary of various informations of the graph
   #' @param messages Should message explaining how to build the results be given for missing quantities?
   #' @param compute_characteristics Should the characteristics of the graph be computed?
   #' @param check_euclidean Check if the graph has Euclidean edges?
   #' @param check_distance_consistency Check the distance consistency assumption?
-  #' @return No return value. Called for its side effects. 
-  
+  #' @return No return value. Called for its side effects.
+
   summary = function(messages = FALSE, compute_characteristics = TRUE, check_euclidean = TRUE, check_distance_consistency = TRUE){
     if(compute_characteristics){
       self$compute_characteristics()
     }
     if(check_distance_consistency){
       self$check_distance_consistency()
-    }    
+    }
     if(check_euclidean){
       self$check_euclidean()
     }
@@ -660,7 +660,7 @@ metric_graph <-  R6Class("metric_graph",
         cat("\t Connected: TRUE\n")
       } else {
         cat("\t Connected: FALSE\n")
-      }      
+      }
       if(self$characteristics$has_loops){
         cat("\t Has loops: TRUE\n")
       } else {
@@ -681,7 +681,7 @@ metric_graph <-  R6Class("metric_graph",
           cat("\t Distance consistent: TRUE\n")
         } else {
           cat("\t Distance consistent: FALSE\n")
-        } 
+        }
       } else{
         cat("\t Distance consistent: unknown\n")
         if(messages){
@@ -693,7 +693,7 @@ metric_graph <-  R6Class("metric_graph",
           cat("\t Has Euclidean edges: TRUE\n")
         } else {
           cat("\t Has Euclidean edges: FALSE\n")
-        } 
+        }
       } else{
         cat("\t Has Euclidean edges: unknown\n")
         if(messages){
@@ -756,7 +756,7 @@ metric_graph <-  R6Class("metric_graph",
     cat("Tolerances: \n")
     cat("\t vertex-vertex: ", private$tolerance$vertex_vertex, "\n")
     cat("\t vertex-edge: ", private$tolerance$vertex_edge, "\n")
-    cat("\t edge-edge: ", private$tolerance$edge_edge, "\n")        
+    cat("\t edge-edge: ", private$tolerance$edge_edge, "\n")
   },
 
 
@@ -920,7 +920,7 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         self$characteristics$euclidean <- FALSE
       }
-    }    
+    }
   },
 
   #' @description Checks distance consistency of the graph.
@@ -1621,7 +1621,7 @@ metric_graph <-  R6Class("metric_graph",
             stop(paste("The data does not contain either the column", coord_x,"or the column",coord_y))
           }
         }
-        }        
+        }
 
         if(!is.null(group)){
           if(!all(group%in%names(data))){
@@ -2463,7 +2463,7 @@ metric_graph <-  R6Class("metric_graph",
                       h_e = NULL,
                       ind = 1:self$nV,
                       VtE = NULL)
-
+    attr(self$mesh, 'continuous') <- TRUE
     self$mesh$V <- self$V
 
     for (i in 1:length(self$edges)) {
@@ -2812,7 +2812,7 @@ metric_graph <-  R6Class("metric_graph",
         PtE_dim <- dim(self$mesh$PtE)[1]
       }
 
-      if (length(X) == PtE_dim) {
+      if (length(X) == PtE_dim && attr(self$mesh, "continuous")) {
         X <- c(rep(NA, dim(self$V)[1]), X)
       }
 
@@ -2892,9 +2892,20 @@ metric_graph <-  R6Class("metric_graph",
                         c(1, XV[Ve]))
 
         } else {
-          vals <- rbind(c(0, XV[Vs]),
-                        cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
-                        c(1, XV[Ve]))
+          if(attr(self$mesh,"continuous")) {
+            vals <- rbind(c(0, XV[Vs]),
+                          cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
+                          c(1, XV[Ve]))
+          } else {
+            if(min(self$mesh$PtE[ind,2])==0) {
+              vals <- cbind(self$mesh$PtE[ind, 2], X[which(ind)])
+            } else {
+              vals <- rbind(c(0, XV[Vs]),
+                            cbind(self$mesh$PtE[ind, 2], X[which(ind)]))
+            }
+
+          }
+
 
         }
       } else {
@@ -3621,7 +3632,7 @@ metric_graph <-  R6Class("metric_graph",
       d2 <- dists[ind2[2]] #distance on the edge of the point after
 
       #find the "edge" in the mesh on which the point is
-      e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2) 
+      e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
 
       # Handle the case of multiple edges
       # In the case the edge lengths are different, we can identify
