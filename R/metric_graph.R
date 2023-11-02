@@ -1276,7 +1276,7 @@ metric_graph <-  R6Class("metric_graph",
     #'
   prune_vertices = function(verbose = FALSE){
     t <- system.time({
-    degrees <- self$get_degrees()
+    degrees <- private$compute_degrees()$degrees
     # start.deg <- end.deg <- rep(0,self$nV)
     # for(i in 1:self$nV) {
     #   start.deg[i] <- sum(self$E[,1]==i)
@@ -4006,6 +4006,7 @@ metric_graph <-  R6Class("metric_graph",
       message("Small circles found!")
       message("Removing small circles")
     }
+
     if(threshold > 0) {
       loop.ind <- which(self$E[,1] == self$E[,2])
       if(length(loop.ind)>0) {
@@ -4013,7 +4014,7 @@ metric_graph <-  R6Class("metric_graph",
         ind <- loop.ind[loop.size < threshold]
         if(length(ind)>0) {
           v.loop <- self$E[ind,1]
-          v.degrees <- self$get_degrees()[v.loop]
+          v.degrees <- private$compute_degrees()$degrees[v.loop]
 
           ind.rem <- v.loop[v.degrees == 2]
           ind.keep <- v.loop[v.degrees > 2]
@@ -4037,7 +4038,7 @@ metric_graph <-  R6Class("metric_graph",
 
   # utility function to merge lines connected by degree 2 vertices
   merge.all.deg2 = function() {
-   while(sum(self$get_degrees()==2)>0) {
+   while(sum(private$compute_degrees()$degrees==2)>0) {
      private$remove.first.deg2()
    }
   },
