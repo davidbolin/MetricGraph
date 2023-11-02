@@ -515,7 +515,7 @@ summary(spde_result_bru_pems)
 We can now get the mesh locations to do prediction. We start by creating a mesh and extracting the indexes of the mesh such that longitude is between `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`:
 
 ```{r}
-      pems_graph$build_mesh(h=0.05)
+      pems_graph$build_mesh(h=0.1)
 
       # Getting mesh coordinates
       mesh_coords <- pems_graph$mesh$V
@@ -535,7 +535,7 @@ We can now create the data list in which we want to do prediction:
       pred_coords[["loc"]] <- pems_graph$mesh$VtE[idx_xy,]
 ```
 
-Finally, we can do the prediction and plot:
+Finally, we can do the prediction and plot. Observe that we are setting `improve_plot=TRUE` to improve the quality of the plot, however, it increases to the computational cost, since it will call the `compute_PtE_edges()` method internally.
 
 ```{r}
       field_pred_pems <- predict(spde_model_bru_pems, cmp, 
@@ -543,6 +543,6 @@ Finally, we can do the prediction and plot:
                         newdata = pred_coords,
                         formula = ~ Intercept + field)
       plot(field_pred_pems, edge_width = 0.5, vertex_size = 0, 
-                    improve_plot=TRUE, splines=TRUE) +
+                    improve_plot=TRUE) +
             xlim(-121.905,-121.875) + ylim(37.316,37.328)
 ```
