@@ -639,4 +639,48 @@ graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
 
 ### Note about continuity
 
-However, it is important to observe that the argument `improve_plot` assumes continuity of the function. Let us see an example of a discontinuous function, and observe the effect of `improve_plot`:
+However, it is important to observe that `plot_function` assumes continuity of the function. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. In such a case, `improve_plot` does not affect the action on the discontinuity points.
+
+For example, let us consider the function that takes the edge number (normalized). Let us also refine the mesh a bit, so it is easier to observe what is happening.
+
+```{r}
+graph$build_mesh(h=0.2)
+f <- graph$mesh$VtE[,1]/4
+```
+
+Let us proceed with the creation of the `data.frame` and processing of the data:
+
+
+```{r}
+df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
+                    distance_on_edge = graph$mesh$VtE[,2],
+                    f = f)
+df_f <- graph$process_data(data = df_f, normalized=TRUE)
+```
+
+We will now plot this function with the default plot from `plot_function`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f)
+```
+
+Let us now, create the same plot with `improve_plot=TRUE`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+```
+
+The reason it refined a lot on the circular part is that it interpolates the values of the function at the edge coordinates, and the circular part has the most coordinates. All the other edges only have two coordinates, the start and end. 
+
+Let us now obtain a 3d plot. First, of the default version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+```
+
+Now, of the improved version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+                    improve_plot = TRUE)
+```
