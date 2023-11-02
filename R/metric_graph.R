@@ -2903,33 +2903,37 @@ metric_graph <-  R6Class("metric_graph",
       
         if(!improve_plot){
             if (max(vals[, 1]) < 1) {
-              #check if we can add end value from other edge
+              # #check if we can add end value from other edge
               Ei <- self$E[, 1] == Ve #edges that start in Ve
               Ei <- which(Ei)
               if (sum(Ei) > 0) {
                 ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
                 if(sum(ind)>0){
-                  ind <- ind[1]
+                  ind <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
                 } else {
                 ind <- NULL
                 ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                min.val <- X[ind.val, 2,drop=TRUE]
+                min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val]
               }} else{
                 ind <- NULL
                 ind.val <- integer(0)
               }
               if (length(ind) > 0) {
-                vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-              } else {
+                # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                vals <- rbind(vals, c(1, min.val))
+              } 
+              else {
                 Ei <- self$E[, 2] == Ve #edges that end in Ve
                 Ei <- which(Ei)
                 if (sum(Ei)  > 0) {
                   ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
                   if(sum(ind)>0){
-                    ind <- ind[1]
+                    ind <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                    max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
                   } else {
                   ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                  max.val <- X[ind.val.max, 2,drop=TRUE]
+                  max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val.max]
                   if(length(ind.val) == 0){
                     ind <- ind.val.max
                   } else if (length(ind.val.max) == 0){
@@ -2945,7 +2949,8 @@ metric_graph <-  R6Class("metric_graph",
                   }
                 }
                 if (length(ind) > 0){
-                  vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  # vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  vals <- rbind(vals, c(1, max.val))
                 }
               }
             }

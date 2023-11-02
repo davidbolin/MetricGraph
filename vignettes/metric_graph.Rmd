@@ -584,7 +584,7 @@ graph$compute_PtE_edges()
 Let us create a coarse mesh, so the improvement can be easily seen.
 
 ```{r}
-graph$build_mesh(h=0.5)
+graph$build_mesh(h=0.8)
 graph$plot(mesh=TRUE)
 ```
 
@@ -637,3 +637,6 @@ graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
                     improve_plot = TRUE)
 ```
 
+### Note about continuity
+
+However, it is important to observe that the argument `improve_plot` assumes continuity of the function. Let us see an example of a discontinuous function, and observe the effect of `improve_plot`:
