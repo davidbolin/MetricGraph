@@ -130,6 +130,10 @@ locations.</p></dd>
 <dd><p>The coordinates of the edges in the graph.</p></dd>
 
 
+<dt><code>vertices</code></dt>
+<dd><p>The coordinates of the vertices in the graph, along with several attributes.</p></dd>
+
+
 <dt><code>geo_dist</code></dt>
 <dd><p>Geodesic distances between the vertices in the graph.</p></dd>
 
@@ -170,6 +174,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <li><p><a href="#method-metric_graph-compute_resdist"><code>metric_graph$compute_resdist()</code></a></p></li>
 <li><p><a href="#method-metric_graph-compute_resdist_PtE"><code>metric_graph$compute_resdist_PtE()</code></a></p></li>
 <li><p><a href="#method-metric_graph-get_degrees"><code>metric_graph$get_degrees()</code></a></p></li>
+<li><p><a href="#method-metric_graph-compute_PtE_edges"><code>metric_graph$compute_PtE_edges()</code></a></p></li>
 <li><p><a href="#method-metric_graph-compute_resdist_mesh"><code>metric_graph$compute_resdist_mesh()</code></a></p></li>
 <li><p><a href="#method-metric_graph-compute_laplacian"><code>metric_graph$compute_laplacian()</code></a></p></li>
 <li><p><a href="#method-metric_graph-prune_vertices"><code>metric_graph$prune_vertices()</code></a></p></li>
@@ -213,6 +218,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  E <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  vertex_unit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  length_unit <span class="op">=</span> <span class="va">vertex_unit</span>,</span>
+<span>  edge_weights <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  longlat <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  crs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  proj4string <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -252,6 +258,11 @@ graph. The weights are given by the edge lengths.</p></dd>
 <dt><code>length_unit</code></dt>
 <dd><p>The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is <code>vertex_unit</code>. Observe that if <code>vertex_unit</code> is <code>NULL</code>, <code>length_unit</code> can only be <code>NULL</code>.
 If <code>vertex_unit</code> is 'degrees', then the default value for <code>length_unit</code> is 'km'.</p></dd>
+
+
+<dt><code>edge_weights</code></dt>
+<dd><p>Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a <code>data.frame</code> with the number of rows being equal to the number of edges, where
+each row gives a vector of weights to its corresponding edge. Can be changed by using the <code>set_edge_weights()</code> method.</p></dd>
 
 
 <dt><code>longlat</code></dt>
@@ -354,7 +365,8 @@ viewed as a vertex.</p>
 <div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>weights</code></dt>
-<dd><p>Either a number or a numerical vector with length given by the number of edges, providing the edge weights.</p></dd>
+<dd><p>Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a <code>data.frame</code> with the number of rows being equal to the number of edges, where
+each row gives a vector of weights to its corresponding edge.</p></dd>
 
 
 </dl><p></p></div>
@@ -648,16 +660,28 @@ Laplacian matrix?</p></dd>
 <p>A vector containing the degrees of the vertices.</p>
 </div>
 
-</div><p></p><hr><a id="method-metric_graph-compute_resdist_mesh"></a><div class="section">
-<h3 id="method-compute-resdist-mesh-">Method <code>compute_resdist_mesh()</code><a class="anchor" aria-label="anchor" href="#method-compute-resdist-mesh-"></a></h3>
-<p>Computes the resistance metric between the vertices in the
-mesh.</p><div class="section">
+</div><p></p><hr><a id="method-metric_graph-compute_PtE_edges"></a><div class="section">
+<h3 id="method-compute-pte-edges-">Method <code>compute_PtE_edges()</code><a class="anchor" aria-label="anchor" href="#method-compute-pte-edges-"></a></h3>
+<p>Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the <code>plot_function()</code> method, however it might be costly to compute.</p><div class="section">
 <h4 id="usage-15">Usage<a class="anchor" aria-label="anchor" href="#usage-15"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_resdist_mesh</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_PtE_edges</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="returns-15">Returns<a class="anchor" aria-label="anchor" href="#returns-15"></a></h4>
+<p>No return value, called for its side effects.</p>
+</div>
+
+</div><p></p><hr><a id="method-metric_graph-compute_resdist_mesh"></a><div class="section">
+<h3 id="method-compute-resdist-mesh-">Method <code>compute_resdist_mesh()</code><a class="anchor" aria-label="anchor" href="#method-compute-resdist-mesh-"></a></h3>
+<p>Computes the resistance metric between the vertices in the
+mesh.</p><div class="section">
+<h4 id="usage-16">Usage<a class="anchor" aria-label="anchor" href="#usage-16"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_resdist_mesh</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
 <p>No return value. Called for its side effects. The geodesic distances
 on the mesh are stored in the <code>mesh$res_dist</code> element in the <code>metric_graph</code>
 object.</p>
@@ -666,7 +690,7 @@ object.</p>
 </div><p></p><hr><a id="method-metric_graph-compute_laplacian"></a><div class="section">
 <h3 id="method-compute-laplacian-">Method <code>compute_laplacian()</code><a class="anchor" aria-label="anchor" href="#method-compute-laplacian-"></a></h3>
 <p>Computes the weigthed graph Laplacian for the graph.</p><div class="section">
-<h4 id="usage-16">Usage<a class="anchor" aria-label="anchor" href="#usage-16"></a></h4>
+<h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_laplacian</span><span class="op">(</span>full <span class="op">=</span> <span class="cn">FALSE</span>, obs <span class="op">=</span> <span class="cn">TRUE</span>, group <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -691,7 +715,7 @@ Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
+<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
 <p>No reutrn value. Called for its side effects. The Laplacian is stored
 in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</p>
 </div>
@@ -699,7 +723,7 @@ in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</
 </div><p></p><hr><a id="method-metric_graph-prune_vertices"></a><div class="section">
 <h3 id="method-prune-vertices-">Method <code>prune_vertices()</code><a class="anchor" aria-label="anchor" href="#method-prune-vertices-"></a></h3>
 <p>Removes vertices of degree 2 from the metric graph.</p><div class="section">
-<h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
+<h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span>verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -718,14 +742,14 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
+<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_groups"></a><div class="section">
 <h3 id="method-get-groups-">Method <code>get_groups()</code><a class="anchor" aria-label="anchor" href="#method-get-groups-"></a></h3>
 <p>Gets the groups from the data.</p><div class="section">
-<h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
+<h4 id="usage-19">Usage<a class="anchor" aria-label="anchor" href="#usage-19"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_groups</span><span class="op">(</span>get_cols <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -738,14 +762,14 @@ would be merged are compatible in terms of direction.</p>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-18">Returns<a class="anchor" aria-label="anchor" href="#returns-18"></a></h4>
+<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
 <p>A vector containing the available groups in the internal data.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_PtE"></a><div class="section">
 <h3 id="method-get-pte-">Method <code>get_PtE()</code><a class="anchor" aria-label="anchor" href="#method-get-pte-"></a></h3>
 <p>Gets PtE from the data.</p><div class="section">
-<h4 id="usage-19">Usage<a class="anchor" aria-label="anchor" href="#usage-19"></a></h4>
+<h4 id="usage-20">Usage<a class="anchor" aria-label="anchor" href="#usage-20"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_PtE</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -762,7 +786,7 @@ would be merged are compatible in terms of direction.</p>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-19">Returns<a class="anchor" aria-label="anchor" href="#returns-19"></a></h4>
+<h4 id="returns-20">Returns<a class="anchor" aria-label="anchor" href="#returns-20"></a></h4>
 <p>A matrix with two columns, where the first column contains the edge
 number and the second column contains the distance on edge of the
 observation locations.</p>
@@ -771,7 +795,7 @@ observation locations.</p>
 </div><p></p><hr><a id="method-metric_graph-get_edge_lengths"></a><div class="section">
 <h3 id="method-get-edge-lengths-">Method <code>get_edge_lengths()</code><a class="anchor" aria-label="anchor" href="#method-get-edge-lengths-"></a></h3>
 <p>Gets the edge lengths with the corresponding unit.</p><div class="section">
-<h4 id="usage-20">Usage<a class="anchor" aria-label="anchor" href="#usage-20"></a></h4>
+<h4 id="usage-21">Usage<a class="anchor" aria-label="anchor" href="#usage-21"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_edge_lengths</span><span class="op">(</span>unit <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -784,26 +808,26 @@ observation locations.</p>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-20">Returns<a class="anchor" aria-label="anchor" href="#returns-20"></a></h4>
+<h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
 <p>a vector with the length unit (if the graph was constructed with a length unit).</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_locations"></a><div class="section">
 <h3 id="method-get-locations-">Method <code>get_locations()</code><a class="anchor" aria-label="anchor" href="#method-get-locations-"></a></h3>
 <p>Gets the spatial locations from the data.</p><div class="section">
-<h4 id="usage-21">Usage<a class="anchor" aria-label="anchor" href="#usage-21"></a></h4>
+<h4 id="usage-22">Usage<a class="anchor" aria-label="anchor" href="#usage-22"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_locations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-21">Returns<a class="anchor" aria-label="anchor" href="#returns-21"></a></h4>
+<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
 <p>A <code>data.frame</code> object with observation locations. If <code>longlat = TRUE</code>, the column names are lon and lat, otherwise the column names are x and y.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-observation_to_vertex"></a><div class="section">
 <h3 id="method-observation-to-vertex-">Method <code>observation_to_vertex()</code><a class="anchor" aria-label="anchor" href="#method-observation-to-vertex-"></a></h3>
 <p>Adds observation locations as vertices in the graph.</p><div class="section">
-<h4 id="usage-22">Usage<a class="anchor" aria-label="anchor" href="#usage-22"></a></h4>
+<h4 id="usage-23">Usage<a class="anchor" aria-label="anchor" href="#usage-23"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">observation_to_vertex</span><span class="op">(</span>tolerance <span class="op">=</span> <span class="fl">1e-15</span>, mesh_warning <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -822,14 +846,14 @@ they are closer than this number (given in relative edge distance between
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-22">Returns<a class="anchor" aria-label="anchor" href="#returns-22"></a></h4>
+<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_mesh_locations"></a><div class="section">
 <h3 id="method-get-mesh-locations-">Method <code>get_mesh_locations()</code><a class="anchor" aria-label="anchor" href="#method-get-mesh-locations-"></a></h3>
 <p>Returns a list or a matrix with the mesh locations.</p><div class="section">
-<h4 id="usage-23">Usage<a class="anchor" aria-label="anchor" href="#usage-23"></a></h4>
+<h4 id="usage-24">Usage<a class="anchor" aria-label="anchor" href="#usage-24"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_mesh_locations</span><span class="op">(</span>bru <span class="op">=</span> <span class="cn">FALSE</span>, loc <span class="op">=</span> <span class="cn">NULL</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -852,26 +876,26 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-23">Returns<a class="anchor" aria-label="anchor" href="#returns-23"></a></h4>
+<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
 <p>A list or a matrix containing the mesh locations.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-clear_observations"></a><div class="section">
 <h3 id="method-clear-observations-">Method <code>clear_observations()</code><a class="anchor" aria-label="anchor" href="#method-clear-observations-"></a></h3>
 <p>Clear all observations from the <code>metric_graph</code> object.</p><div class="section">
-<h4 id="usage-24">Usage<a class="anchor" aria-label="anchor" href="#usage-24"></a></h4>
+<h4 id="usage-25">Usage<a class="anchor" aria-label="anchor" href="#usage-25"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-24">Returns<a class="anchor" aria-label="anchor" href="#returns-24"></a></h4>
+<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-process_data"></a><div class="section">
 <h3 id="method-process-data-">Method <code>process_data()</code><a class="anchor" aria-label="anchor" href="#method-process-data-"></a></h3>
 <p>Process data to the metric graph data format.</p><div class="section">
-<h4 id="usage-25">Usage<a class="anchor" aria-label="anchor" href="#usage-25"></a></h4>
+<h4 id="usage-26">Usage<a class="anchor" aria-label="anchor" href="#usage-26"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">process_data</span><span class="op">(</span></span>
 <span>  Spoints <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -972,7 +996,7 @@ This helps detecting mistakes on the input locations when adding new data.</p></
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-25">Returns<a class="anchor" aria-label="anchor" href="#returns-25"></a></h4>
+<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
 <p>No return value. Called for its side effects. The observations are
 stored in the <code>data</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -980,7 +1004,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div><p></p><hr><a id="method-metric_graph-add_observations"></a><div class="section">
 <h3 id="method-add-observations-">Method <code>add_observations()</code><a class="anchor" aria-label="anchor" href="#method-add-observations-"></a></h3>
 <p>Add observations to the metric graph.</p><div class="section">
-<h4 id="usage-26">Usage<a class="anchor" aria-label="anchor" href="#usage-26"></a></h4>
+<h4 id="usage-27">Usage<a class="anchor" aria-label="anchor" href="#usage-27"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span></span>
 <span>  Spoints <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -1086,7 +1110,7 @@ This helps detecting mistakes on the input locations when adding new data.</p></
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-26">Returns<a class="anchor" aria-label="anchor" href="#returns-26"></a></h4>
+<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
 <p>No return value. Called for its side effects. The observations are
 stored in the <code>data</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -1094,7 +1118,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div><p></p><hr><a id="method-metric_graph-mutate"></a><div class="section">
 <h3 id="method-mutate-">Method <code><a href="mutate.metric_graph_data.html">mutate()</a></code><a class="anchor" aria-label="anchor" href="#method-mutate-"></a></h3>
 <p>Use <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate</a></code> function on the internal metric graph data object.</p><div class="section">
-<h4 id="usage-27">Usage<a class="anchor" aria-label="anchor" href="#usage-27"></a></h4>
+<h4 id="usage-28">Usage<a class="anchor" aria-label="anchor" href="#usage-28"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span><span class="va">...</span>, .drop_na <span class="op">=</span> <span class="cn">FALSE</span>, .drop_all_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1120,14 +1144,14 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-27">Returns<a class="anchor" aria-label="anchor" href="#returns-27"></a></h4>
+<h4 id="returns-28">Returns<a class="anchor" aria-label="anchor" href="#returns-28"></a></h4>
 <p>A <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble</a></code> object containing the resulting data list after the mutate.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-drop_na"></a><div class="section">
 <h3 id="method-drop-na-">Method <code><a href="drop_na.metric_graph_data.html">drop_na()</a></code><a class="anchor" aria-label="anchor" href="#method-drop-na-"></a></h3>
 <p>Use <code><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">tidyr::drop_na()</a></code> function on the internal metric graph data object.</p><div class="section">
-<h4 id="usage-28">Usage<a class="anchor" aria-label="anchor" href="#usage-28"></a></h4>
+<h4 id="usage-29">Usage<a class="anchor" aria-label="anchor" href="#usage-29"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">drop_na</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1145,14 +1169,14 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-28">Returns<a class="anchor" aria-label="anchor" href="#returns-28"></a></h4>
+<h4 id="returns-29">Returns<a class="anchor" aria-label="anchor" href="#returns-29"></a></h4>
 <p>A <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble</a></code> object containing the resulting data list after the drop_na.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-select"></a><div class="section">
 <h3 id="method-select-">Method <code><a href="select.metric_graph_data.html">select()</a></code><a class="anchor" aria-label="anchor" href="#method-select-"></a></h3>
 <p>Use <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select</a></code> function on the internal metric graph data object.</p><div class="section">
-<h4 id="usage-29">Usage<a class="anchor" aria-label="anchor" href="#usage-29"></a></h4>
+<h4 id="usage-30">Usage<a class="anchor" aria-label="anchor" href="#usage-30"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">select</span><span class="op">(</span><span class="va">...</span>, .drop_na <span class="op">=</span> <span class="cn">FALSE</span>, .drop_all_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1178,14 +1202,14 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-29">Returns<a class="anchor" aria-label="anchor" href="#returns-29"></a></h4>
+<h4 id="returns-30">Returns<a class="anchor" aria-label="anchor" href="#returns-30"></a></h4>
 <p>A <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble</a></code> object containing the resulting data list after the selection.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-filter"></a><div class="section">
 <h3 id="method-filter-">Method <code><a href="filter.metric_graph_data.html">filter()</a></code><a class="anchor" aria-label="anchor" href="#method-filter-"></a></h3>
 <p>Use <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter</a></code> function on the internal metric graph data object.</p><div class="section">
-<h4 id="usage-30">Usage<a class="anchor" aria-label="anchor" href="#usage-30"></a></h4>
+<h4 id="usage-31">Usage<a class="anchor" aria-label="anchor" href="#usage-31"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">filter</span><span class="op">(</span><span class="va">...</span>, .drop_na <span class="op">=</span> <span class="cn">FALSE</span>, .drop_all_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1211,14 +1235,14 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-30">Returns<a class="anchor" aria-label="anchor" href="#returns-30"></a></h4>
+<h4 id="returns-31">Returns<a class="anchor" aria-label="anchor" href="#returns-31"></a></h4>
 <p>A <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble</a></code> object containing the resulting data list after the filter.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-summarise"></a><div class="section">
 <h3 id="method-summarise-">Method <code><a href="summarise.metric_graph_data.html">summarise()</a></code><a class="anchor" aria-label="anchor" href="#method-summarise-"></a></h3>
 <p>Use <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">dplyr::summarise</a></code> function on the internal metric graph data object grouped by the spatial locations and the internal group variable.</p><div class="section">
-<h4 id="usage-31">Usage<a class="anchor" aria-label="anchor" href="#usage-31"></a></h4>
+<h4 id="usage-32">Usage<a class="anchor" aria-label="anchor" href="#usage-32"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">summarise</span><span class="op">(</span></span>
 <span>  <span class="va">...</span>,</span>
 <span>  .include_graph_groups <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -1258,14 +1282,14 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="returns-31">Returns<a class="anchor" aria-label="anchor" href="#returns-31"></a></h4>
+<h4 id="returns-32">Returns<a class="anchor" aria-label="anchor" href="#returns-32"></a></h4>
 <p>A <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble</a></code> object containing the resulting data list after the summarise.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_data"></a><div class="section">
 <h3 id="method-get-data-">Method <code>get_data()</code><a class="anchor" aria-label="anchor" href="#method-get-data-"></a></h3>
 <p>Return the internal data with the option to filter by groups.</p><div class="section">
-<h4 id="usage-32">Usage<a class="anchor" aria-label="anchor" href="#usage-32"></a></h4>
+<h4 id="usage-33">Usage<a class="anchor" aria-label="anchor" href="#usage-33"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span></span>
 <span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tibble <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -1298,7 +1322,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div><p></p><hr><a id="method-metric_graph-buildC"></a><div class="section">
 <h3 id="method-buildc-">Method <code>buildC()</code><a class="anchor" aria-label="anchor" href="#method-buildc-"></a></h3>
 <p>Build Kirchoff constraint matrix from edges.</p><div class="section">
-<h4 id="usage-33">Usage<a class="anchor" aria-label="anchor" href="#usage-33"></a></h4>
+<h4 id="usage-34">Usage<a class="anchor" aria-label="anchor" href="#usage-34"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">buildC</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">2</span>, edge_constraint <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1321,14 +1345,14 @@ in the same vertex)</p>
 </div>
 
 <div class="section">
-<h4 id="returns-32">Returns<a class="anchor" aria-label="anchor" href="#returns-32"></a></h4>
+<h4 id="returns-33">Returns<a class="anchor" aria-label="anchor" href="#returns-33"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-build_mesh"></a><div class="section">
 <h3 id="method-build-mesh-">Method <code>build_mesh()</code><a class="anchor" aria-label="anchor" href="#method-build-mesh-"></a></h3>
 <p>Builds mesh object for graph.</p><div class="section">
-<h4 id="usage-34">Usage<a class="anchor" aria-label="anchor" href="#usage-34"></a></h4>
+<h4 id="usage-35">Usage<a class="anchor" aria-label="anchor" href="#usage-35"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="cn">NULL</span>, n <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1358,7 +1382,7 @@ provided).</p></dd>
 </ul></div>
 
 <div class="section">
-<h4 id="returns-33">Returns<a class="anchor" aria-label="anchor" href="#returns-33"></a></h4>
+<h4 id="returns-34">Returns<a class="anchor" aria-label="anchor" href="#returns-34"></a></h4>
 <p>No return value. Called for its side effects. The mesh is stored in
 the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 </div>
@@ -1366,7 +1390,7 @@ the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 </div><p></p><hr><a id="method-metric_graph-compute_fem"></a><div class="section">
 <h3 id="method-compute-fem-">Method <code>compute_fem()</code><a class="anchor" aria-label="anchor" href="#method-compute-fem-"></a></h3>
 <p>Build mass and stiffness matrices for given mesh object.</p><div class="section">
-<h4 id="usage-35">Usage<a class="anchor" aria-label="anchor" href="#usage-35"></a></h4>
+<h4 id="usage-36">Usage<a class="anchor" aria-label="anchor" href="#usage-36"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_fem</span><span class="op">(</span>petrov <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1392,7 +1416,7 @@ elements \(B_{ij} = &lt;d\phi_i, \phi_j&gt;\), the matrix <code>D</code> with el
 </div>
 
 <div class="section">
-<h4 id="returns-34">Returns<a class="anchor" aria-label="anchor" href="#returns-34"></a></h4>
+<h4 id="returns-35">Returns<a class="anchor" aria-label="anchor" href="#returns-35"></a></h4>
 <p>No return value. Called for its side effects. The finite element
 matrices <code>C</code>, <code>G</code> and <code>B</code> are stored in the <code>mesh</code> element in the
 <code>metric_graph</code> object. If <code>petrov=TRUE</code>, the corresponding Petrov-Galerkin
@@ -1403,7 +1427,7 @@ matrices are stored in <code>Cpet</code> and <code>Gpet</code>.</p>
 <h3 id="method-mesh-a-">Method <code>mesh_A()</code><a class="anchor" aria-label="anchor" href="#method-mesh-a-"></a></h3>
 <p>Deprecated - Computes observation matrix for mesh.</p>
 <p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> in favour of <code>metric_graph$fem_basis()</code>.</p><div class="section">
-<h4 id="usage-36">Usage<a class="anchor" aria-label="anchor" href="#usage-36"></a></h4>
+<h4 id="usage-37">Usage<a class="anchor" aria-label="anchor" href="#usage-37"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">mesh_A</span><span class="op">(</span><span class="va">PtE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1423,14 +1447,14 @@ elements \(A_{ij} = \phi_j(s_i)\).</p>
 </div>
 
 <div class="section">
-<h4 id="returns-35">Returns<a class="anchor" aria-label="anchor" href="#returns-35"></a></h4>
+<h4 id="returns-36">Returns<a class="anchor" aria-label="anchor" href="#returns-36"></a></h4>
 <p>The observation matrix.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-fem_basis"></a><div class="section">
 <h3 id="method-fem-basis-">Method <code>fem_basis()</code><a class="anchor" aria-label="anchor" href="#method-fem-basis-"></a></h3>
 <p>Computes observation matrix for mesh.</p><div class="section">
-<h4 id="usage-37">Usage<a class="anchor" aria-label="anchor" href="#usage-37"></a></h4>
+<h4 id="usage-38">Usage<a class="anchor" aria-label="anchor" href="#usage-38"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">fem_basis</span><span class="op">(</span><span class="va">PtE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1450,19 +1474,19 @@ elements \(A_{ij} = \phi_j(s_i)\).</p>
 </div>
 
 <div class="section">
-<h4 id="returns-36">Returns<a class="anchor" aria-label="anchor" href="#returns-36"></a></h4>
+<h4 id="returns-37">Returns<a class="anchor" aria-label="anchor" href="#returns-37"></a></h4>
 <p>The observation matrix.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-VtEfirst"></a><div class="section">
 <h3 id="method-vtefirst-">Method <code>VtEfirst()</code><a class="anchor" aria-label="anchor" href="#method-vtefirst-"></a></h3>
 <p>Find one edge corresponding to each vertex.</p><div class="section">
-<h4 id="usage-38">Usage<a class="anchor" aria-label="anchor" href="#usage-38"></a></h4>
+<h4 id="usage-39">Usage<a class="anchor" aria-label="anchor" href="#usage-39"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">VtEfirst</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-37">Returns<a class="anchor" aria-label="anchor" href="#returns-37"></a></h4>
+<h4 id="returns-38">Returns<a class="anchor" aria-label="anchor" href="#returns-38"></a></h4>
 <p>A nV x 2 matrix the first element of the <code>i</code>th row is the edge
 number corresponding to the <code>i</code>th vertex and the second value is 0
 if the vertex is at the start of the edge and 1 if the vertex
@@ -1472,7 +1496,7 @@ is at the end of the edge.</p>
 </div><p></p><hr><a id="method-metric_graph-plot"></a><div class="section">
 <h3 id="method-plot-">Method <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code><a class="anchor" aria-label="anchor" href="#method-plot-"></a></h3>
 <p>Plots the metric graph.</p><div class="section">
-<h4 id="usage-39">Usage<a class="anchor" aria-label="anchor" href="#usage-39"></a></h4>
+<h4 id="usage-40">Usage<a class="anchor" aria-label="anchor" href="#usage-40"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  newdata <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -1577,44 +1601,45 @@ requires the 'plotly' package.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-38">Returns<a class="anchor" aria-label="anchor" href="#returns-38"></a></h4>
+<h4 id="returns-39">Returns<a class="anchor" aria-label="anchor" href="#returns-39"></a></h4>
 <p>A <code>plot_ly</code> (if <code>plotly = TRUE</code>) or <code>ggplot</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_connections"></a><div class="section">
 <h3 id="method-plot-connections-">Method <code>plot_connections()</code><a class="anchor" aria-label="anchor" href="#method-plot-connections-"></a></h3>
 <p>Plots the connections in the graph</p><div class="section">
-<h4 id="usage-40">Usage<a class="anchor" aria-label="anchor" href="#usage-40"></a></h4>
+<h4 id="usage-41">Usage<a class="anchor" aria-label="anchor" href="#usage-41"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_connections</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-39">Returns<a class="anchor" aria-label="anchor" href="#returns-39"></a></h4>
+<h4 id="returns-40">Returns<a class="anchor" aria-label="anchor" href="#returns-40"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-is_tree"></a><div class="section">
 <h3 id="method-is-tree-">Method <code>is_tree()</code><a class="anchor" aria-label="anchor" href="#method-is-tree-"></a></h3>
 <p>Checks if the graph is a tree (without considering directions)</p><div class="section">
-<h4 id="usage-41">Usage<a class="anchor" aria-label="anchor" href="#usage-41"></a></h4>
+<h4 id="usage-42">Usage<a class="anchor" aria-label="anchor" href="#usage-42"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">is_tree</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-40">Returns<a class="anchor" aria-label="anchor" href="#returns-40"></a></h4>
+<h4 id="returns-41">Returns<a class="anchor" aria-label="anchor" href="#returns-41"></a></h4>
 <p>TRUE if the graph is a tree and FALSE otherwise.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_function"></a><div class="section">
 <h3 id="method-plot-function-">Method <code>plot_function()</code><a class="anchor" aria-label="anchor" href="#method-plot-function-"></a></h3>
 <p>Plots continuous function on the graph.</p><div class="section">
-<h4 id="usage-42">Usage<a class="anchor" aria-label="anchor" href="#usage-42"></a></h4>
+<h4 id="usage-43">Usage<a class="anchor" aria-label="anchor" href="#usage-43"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  newdata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  improve_plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  vertex_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  vertex_color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  edge_width <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -1653,6 +1678,10 @@ evaluated at the mesh in the graph</p></dd>
 <dt><code>plotly</code></dt>
 <dd><p>If <code>TRUE</code>, then the plot is shown in 3D. This option requires
 the package 'plotly'.</p></dd>
+
+
+<dt><code>improve_plot</code></dt>
+<dd><p>Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
@@ -1698,14 +1727,14 @@ the package 'plotly'.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-41">Returns<a class="anchor" aria-label="anchor" href="#returns-41"></a></h4>
+<h4 id="returns-42">Returns<a class="anchor" aria-label="anchor" href="#returns-42"></a></h4>
 <p>Either a <code>ggplot</code> (if <code>plotly = FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_movie"></a><div class="section">
 <h3 id="method-plot-movie-">Method <code>plot_movie()</code><a class="anchor" aria-label="anchor" href="#method-plot-movie-"></a></h3>
 <p>Plots a movie of a continuous function evolving on the graph.</p><div class="section">
-<h4 id="usage-43">Usage<a class="anchor" aria-label="anchor" href="#usage-43"></a></h4>
+<h4 id="usage-44">Usage<a class="anchor" aria-label="anchor" href="#usage-44"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_movie</span><span class="op">(</span></span>
 <span>  <span class="va">X</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -1762,14 +1791,14 @@ package 'plotly'.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-42">Returns<a class="anchor" aria-label="anchor" href="#returns-42"></a></h4>
+<h4 id="returns-43">Returns<a class="anchor" aria-label="anchor" href="#returns-43"></a></h4>
 <p>Either a <code>ggplot</code> (if <code>plotly=FALSE</code>) or a <code>plot_ly</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-add_mesh_observations"></a><div class="section">
 <h3 id="method-add-mesh-observations-">Method <code>add_mesh_observations()</code><a class="anchor" aria-label="anchor" href="#method-add-mesh-observations-"></a></h3>
 <p>Add observations on mesh to the object.</p><div class="section">
-<h4 id="usage-44">Usage<a class="anchor" aria-label="anchor" href="#usage-44"></a></h4>
+<h4 id="usage-45">Usage<a class="anchor" aria-label="anchor" href="#usage-45"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">add_mesh_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="cn">NULL</span>, group <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1790,7 +1819,7 @@ in which the group indices are stored.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-43">Returns<a class="anchor" aria-label="anchor" href="#returns-43"></a></h4>
+<h4 id="returns-44">Returns<a class="anchor" aria-label="anchor" href="#returns-44"></a></h4>
 <p>No return value. Called for its side effects. The observations are
 stored in the <code>data</code> element in the <code>metric_graph</code> object.</p>
 </div>
@@ -1798,12 +1827,12 @@ stored in the <code>data</code> element in the <code>metric_graph</code> object.
 </div><p></p><hr><a id="method-metric_graph-get_initial_graph"></a><div class="section">
 <h3 id="method-get-initial-graph-">Method <code>get_initial_graph()</code><a class="anchor" aria-label="anchor" href="#method-get-initial-graph-"></a></h3>
 <p>Returns a copy of the initial metric graph.</p><div class="section">
-<h4 id="usage-45">Usage<a class="anchor" aria-label="anchor" href="#usage-45"></a></h4>
+<h4 id="usage-46">Usage<a class="anchor" aria-label="anchor" href="#usage-46"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_initial_graph</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-44">Returns<a class="anchor" aria-label="anchor" href="#returns-44"></a></h4>
+<h4 id="returns-45">Returns<a class="anchor" aria-label="anchor" href="#returns-45"></a></h4>
 <p>A <code>metric_graph</code> object.</p>
 </div>
 
@@ -1811,7 +1840,7 @@ stored in the <code>data</code> element in the <code>metric_graph</code> object.
 <h3 id="method-coordinates-">Method <code><a href="https://rdrr.io/pkg/sp/man/coordinates.html" class="external-link">coordinates()</a></code><a class="anchor" aria-label="anchor" href="#method-coordinates-"></a></h3>
 <p>Convert between locations on the graph and Euclidean
 coordinates.</p><div class="section">
-<h4 id="usage-46">Usage<a class="anchor" aria-label="anchor" href="#usage-46"></a></h4>
+<h4 id="usage-47">Usage<a class="anchor" aria-label="anchor" href="#usage-47"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="cn">NULL</span>, XY <span class="op">=</span> <span class="cn">NULL</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1835,7 +1864,7 @@ normalized locations.</p></dd>
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-45">Returns<a class="anchor" aria-label="anchor" href="#returns-45"></a></h4>
+<h4 id="returns-46">Returns<a class="anchor" aria-label="anchor" href="#returns-46"></a></h4>
 <p>If <code>PtE</code> is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If <code>XY</code> is provided, then a matrix with the
 closest locations on the graph is returned.
@@ -1845,7 +1874,7 @@ data List containing data on the metric graph.</p>
 </div><p></p><hr><a id="method-metric_graph-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-47">Usage<a class="anchor" aria-label="anchor" href="#usage-47"></a></h4>
+<h4 id="usage-48">Usage<a class="anchor" aria-label="anchor" href="#usage-48"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
