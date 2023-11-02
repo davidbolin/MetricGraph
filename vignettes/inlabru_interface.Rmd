@@ -471,3 +471,78 @@ Let us compare with the true values:
   print(result_df_bru_rep)
 ```
 
+## An application with real data
+
+For this example we will consider the `pems` data contained in the MetricGraph package. This data was illustrated in [@BSW2022b]. The data consists of traffic speed observations on highways in the city of San Jose, California. The traffic speeds are stored in the variable `y`. We will create the metric graph setting `longlat = TRUE` since the coordinates are given in Longitude and Latitude. We will also add the observations to the metric graph object:
+
+```{r}
+pems_graph <- metric_graph$new(edges=pems$edges, longlat=TRUE)
+pems_graph$add_observations(data=pems$data, normalized=TRUE)
+pems_graph$prune_vertices()
+```
+
+Let us now plot the data. We will choose the data such that longitude is between `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`:
+
+```{r, warning=FALSE}
+p <- pems_graph$filter(-121.905< .coord_x, .coord_x < -121.875,
+                          37.312 < .coord_y, .coord_y < 37.328) %>%
+                          pems_graph$plot(data="y", vertex_size=0,
+                                          data_size=4)
+      p + xlim(-121.905,-121.875) + ylim(37.312,37.328)
+```
+
+We will now create the model, fit, and do predictions, using inlabru:
+
+
+```{r}
+spde_model_bru_pems <- graph_spde(pems_graph)
+      cmp <- y ~ -1 + Intercept(1) + field(loc,
+                          model = spde_model_bru_pems)
+      data_spde_bru_pems <- graph_data_spde(spde_model_bru_pems,
+                        loc_name = "loc")
+      spde_bru_fit_pems <- bru(cmp, data=data_spde_bru_pems[["data"]])
+```
+
+Let us see the estimated values in the original scale:
+```{r}
+spde_result_bru_pems <- spde_metric_graph_result(spde_bru_fit_pems, 
+                        "field", spde_model_bru_pems)
+
+summary(spde_result_bru_pems)
+```
+
+
+We can now get the mesh locations to do prediction. We start by creating a mesh and extracting the indexes of the mesh such that longitude is between `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`:
+
+```{r}
+      pems_graph$build_mesh(h=0.05)
+
+      # Getting mesh coordinates
+      mesh_coords <- pems_graph$mesh$V
+
+      # Finding coordinates such that longitude is between 
+      # `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`
+
+      idx_x <- (mesh_coords[,1] > -121.905) & (mesh_coords[,1] < -121.875)
+      idx_y <- (mesh_coords[,2] > 37.312) & (mesh_coords[,2] < 37.328)
+      idx_xy <- idx_x & idx_y
+```
+
+We can now create the data list in which we want to do prediction:
+
+```{r}
+      pred_coords <- list()
+      pred_coords[["loc"]] <- pems_graph$mesh$VtE[idx_xy,]
+```
+
+Finally, we can do the prediction and plot:
+
+```{r}
+      field_pred_pems <- predict(spde_model_bru_pems, cmp, 
+                        spde_bru_fit_pems,
+                        newdata = pred_coords,
+                        formula = ~ Intercept + field)
+      plot(field_pred_pems, edge_width = 0.5, vertex_size = 0, 
+                    improve_plot=TRUE, splines=TRUE) +
+            xlim(-121.905,-121.875) + ylim(37.316,37.328)
+```
