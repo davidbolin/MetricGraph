@@ -2878,6 +2878,7 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
 
+
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
     kk = 1
     for (i in 1:self$nE) {
@@ -2997,24 +2998,40 @@ metric_graph <-  R6Class("metric_graph",
               }
             }
         } else {
+
             PtE_tmp <- PtE_edges[[i]]
             if(PtE_tmp[1,1] != i){
               edge_new <- PtE_tmp[1,1]
               idx_new <- which(X[,1] == edge_new)
               new_val <- X[idx_new, 2:3, drop=FALSE]
               if(nrow(new_val)>0){
+                sum_fact <- ifelse(max(vals[,1]==1),  -1e-6,  min(new_val[,1]))
                 sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  max(new_val[,1]))
-                new_val[,1] <- new_val[,1] - sub_fact
+                pos_edge <- which(self$E[edge_new,] == self$E[i,1])
+                if(pos_edge == 2){
+                  new_val[,1] <- new_val[,1] - sub_fact
+                } else {
+                  new_val[,1] <- -new_val[,1] + sum_fact
+                }
                 vals <- rbind(vals, new_val)
               }
             } else{
-              if(any(self$E[,2] == i)){
-                edge_new <- which(self$E[,2] == i)[1]
+              if(any(self$E[,2] == self$E[i,1])){
+                edge_new <- which(self$E[,2] == self$E[i,1])[1]
                 idx_new <- which(X[,1] == edge_new)
                 new_val <- X[idx_new, 2:3, drop=FALSE]
                 if(nrow(new_val)>0){
                   sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  max(new_val[,1]))
                   new_val[,1] <- new_val[,1] - sub_fact
+                  vals <- rbind(vals, new_val)
+                }
+              } else if(any(self$E[-i,1] == self$E[i,1])){
+                edge_new <- which(self$E[-i,1] == self$E[i,1])[1]
+                idx_new <- which(X[,1] == edge_new)
+                new_val <- X[idx_new, 2:3, drop=FALSE]
+                if(nrow(new_val)>0){
+                  sum_fact <- ifelse(max(vals[,1]==1),  -1e-6,  min(new_val[,1]))
+                  new_val[,1] <- -new_val[,1] + sum_fact
                   vals <- rbind(vals, new_val)
                 }
               }
@@ -3025,13 +3042,19 @@ metric_graph <-  R6Class("metric_graph",
               idx_new <- which(X[,1] == edge_new)
               new_val <- X[idx_new, 2:3, drop=FALSE]
               if(nrow(new_val)>0){
+                sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  -max(new_val[,1]) - 1)
                 sum_fact <- ifelse(max(vals[,1]==1),  1+1e-6,  1-min(new_val[,1]))
-                new_val[,1] <- new_val[,1] + sum_fact
+                pos_edge <- which(self$E[edge_new,] == self$E[i,2])
+                if(pos_edge == 2){
+                  new_val[,1] <- -new_val[,1] - sub_fact
+                } else {
+                  new_val[,1] <- new_val[,1] + sum_fact
+                }
                 vals <- rbind(vals, new_val)
               }
             } else {
-                if (any(self$E[,1] == i)){
-                  edge_new <- which(self$E[,1] == i)[1]
+                if (any(self$E[,1] == self$E[i,2])){
+                  edge_new <- which(self$E[,1] == self$E[i,2])[1]
                   idx_new <- which(X[,1] == edge_new)
                   new_val <- X[idx_new, 2:3, drop=FALSE]
                   if(nrow(new_val)>0){
@@ -3039,20 +3062,28 @@ metric_graph <-  R6Class("metric_graph",
                     new_val[,1] <- new_val[,1] + sum_fact
                     vals <- rbind(vals, new_val)
                   }
-              } 
+              } else if (any(self$E[,2] == self$E[i,2])){
+                  edge_new <- which(self$E[,2] == self$E[i,2])[1]
+                  idx_new <- which(X[,1] == edge_new)
+                  new_val <- X[idx_new, 2:3, drop=FALSE]
+                  if(nrow(new_val)>0){
+                    sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  -max(new_val[,1]) - 1)
+                    new_val[,1] <- -new_val[,1] - sum_fact
+                    vals <- rbind(vals, new_val)
+                  }
+              }
             }
-
-
-
 
             if(length(PtE_tmp[,1]==i) > 0){
               PtE_tmp <- PtE_tmp[PtE_tmp[,1]==i, ,drop=FALSE]
               PtE_tmp <- PtE_tmp[,2,drop = TRUE]
               PtE_tmp <- setdiff(PtE_tmp, vals[,1])
-              PtE_tmp <- cbind(PtE_tmp, NA)
-              PtE_tmp <- as.data.frame(PtE_tmp)
-              colnames(PtE_tmp) <- c(".distance_on_edge", data)
-              vals <- rbind(vals,PtE_tmp)
+              if(length(PtE_tmp)>0){
+                PtE_tmp <- cbind(PtE_tmp, NA)
+                PtE_tmp <- as.data.frame(PtE_tmp)
+                colnames(PtE_tmp) <- c(".distance_on_edge", data)
+                vals <- rbind(vals,PtE_tmp)
+              }
             }
 
             ord_idx <- order(vals[,1])

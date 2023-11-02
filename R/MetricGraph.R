@@ -49,6 +49,7 @@
 #' @importFrom dplyr mutate filter select summarise
 #' @importFrom tidyr drop_na
 #' @importFrom magrittr `%>%`
+#' @importFrom zoo na.approx
 #' @export `%>%`
 #' @export summarise
 #' @export mutate

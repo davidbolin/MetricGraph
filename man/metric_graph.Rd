@@ -82,6 +82,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-metric_graph-compute_resdist_PtE}{\code{metric_graph$compute_resdist_PtE()}}
 \item \href{#method-metric_graph-get_degrees}{\code{metric_graph$get_degrees()}}
+\item \href{#method-metric_graph-compute_PtE_edges}{\code{metric_graph$compute_PtE_edges()}}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
@@ -515,6 +516,19 @@ Returns the degrees of the vertices in the metric graph.
 
 \subsection{Returns}{
 A vector containing the degrees of the vertices.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_PtE_edges"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_PtE_edges}{}}}
+\subsection{Method \code{compute_PtE_edges()}}{
+Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the \code{plot_function()} method, however it might be costly to compute.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_PtE_edges()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value, called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
@@ -1360,6 +1374,7 @@ Plots continuous function on the graph.
   group = 1,
   X = NULL,
   plotly = FALSE,
+  improve_plot = FALSE,
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
@@ -1390,6 +1405,8 @@ evaluated at the mesh in the graph}
 
 \item{\code{plotly}}{If \code{TRUE}, then the plot is shown in 3D. This option requires
 the package 'plotly'.}
+
+\item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 

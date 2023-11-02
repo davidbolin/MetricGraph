@@ -557,3 +557,83 @@ To illustration purposes, we will build this next plot as a 2d plot:
 graph$add_observations(data = data_f, clear_obs = TRUE, normalized = TRUE)
 graph$plot_function(data = "f")
 ```
+
+## Improving the plot obtained by `plot_function`
+
+If we compute the relative positions of the edge coordinates, we can improve the quality of the plot obtained by using `plot_function`. Observe that depending on the size of the graph, this might be costly, since we will need to do this conversion.
+
+We begin by recreating the first graph we used in this vignette:
+
+```{r}
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
+theta <- seq(from=pi,to=3*pi/2,length.out = 50)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+
+graph <- metric_graph$new(edges = edges)
+```
+
+Now, let us compute the relative positions of the coordinates of the edge by using the `compute_PtE_edges()` method:
+
+```{r}
+graph$compute_PtE_edges()
+```
+
+Let us create a coarse mesh, so the improvement can be easily seen.
+
+```{r}
+graph$build_mesh(h=0.5)
+graph$plot(mesh=TRUE)
+```
+
+Let us compute the function the same function as before on this mesh:
+
+```{r}
+XY <- graph$mesh$V
+f <- XY[, 1]^2 - XY[, 2]^2
+```
+
+We will need to supply the `data.frame`. So let us build it:
+
+```{r}
+df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
+                    distance_on_edge = graph$mesh$VtE[,2],
+                    f = f)
+```
+
+Let us now process the `data.frame` to the graph's internal data format
+using the `process_data()` method:
+
+```{r}
+df_f <- graph$process_data(data = df_f, normalized=TRUE)
+```
+
+We will now plot this function. First, let us do the default plot from `plot_function`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f)
+```
+
+Let us now, create the same plot with `improve_plot=TRUE`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+```
+
+The reason it refined a lot on the circular part is that it interpolates the values of the function at the edge coordinates, and the circular part has the most coordinates. All the other edges only have two coordinates, the start and end. 
+
+Let us now obtain a 3d plot. First, of the default version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+```
+
+Now, of the improved version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+                    improve_plot = TRUE)
+```
+
