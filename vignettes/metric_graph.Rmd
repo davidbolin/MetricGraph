@@ -670,8 +670,6 @@ Let us now, create the same plot with `improve_plot=TRUE`:
 graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
 ```
 
-The reason it refined a lot on the circular part is that it interpolates the values of the function at the edge coordinates, and the circular part has the most coordinates. All the other edges only have two coordinates, the start and end. 
-
 Let us now obtain a 3d plot. First, of the default version:
 
 ```{r}
@@ -684,3 +682,5 @@ Now, of the improved version:
 graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
                     improve_plot = TRUE)
 ```
+
+Observe that for both versions we have the same behavior around the vertices (which are the discontinuity points). 
