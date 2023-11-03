@@ -2420,6 +2420,8 @@ metric_graph <-  R6Class("metric_graph",
   #' for the creation of discontinuities at the vertices.
   #' @param merge.outs If `continuous = FALSE` and `merge.outs = TRUE`, continuity is
   #' assumed for the outgoing edges from each vertex.
+  #' @param merge.deg2 If `TRUE`, vertices of degree 2 are merged in discontinuous
+  #' meshes.
   #' @details The mesh is a list with the objects:
   #' - `PtE` The mesh locations excluding the original vertices;
   #' - `V` The verties of the mesh;
@@ -2430,7 +2432,8 @@ metric_graph <-  R6Class("metric_graph",
   #' - `VtE` All mesh locations including the original vertices.
   #' @return No return value. Called for its side effects. The mesh is stored in
   #' the `mesh` element of the `metric_graph` object.
- build_mesh = function(h=NULL,n=NULL, continuous = TRUE, merge.outs = FALSE) {
+ build_mesh = function(h=NULL, n=NULL, continuous = TRUE,
+                       merge.outs = FALSE, merge.deg2 = FALSE) {
 
    if(is.null(h) && is.null(n)){
      stop("You should specify either h or n!")
@@ -2548,7 +2551,10 @@ metric_graph <-  R6Class("metric_graph",
        private$mesh_merge_outs()
      }
      private$move_V_first()
-     private$mesh_merge_deg2()
+     if(merge.deg2) {
+       private$mesh_merge_deg2()
+     }
+
    }
  },
 

@@ -639,7 +639,7 @@ graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
 
 ### Note about continuity
 
-However, it is important to observe that `plot_function` assumes continuity of the function. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. In such a case, `improve_plot` does not affect the action on the discontinuity points.
+However, it is important to observe that `plot_function` assumes continuity of the function by default. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. In such a case, `improve_plot` does not affect the action on the discontinuity points.
 
 For example, let us consider the function that takes the edge number (normalized). Let us also refine the mesh a bit, so it is easier to observe what is happening.
 
@@ -684,3 +684,17 @@ graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
 ```
 
 Observe that for both versions we have the same behavior around the vertices (which are the discontinuity points). 
+
+To work with discontinuous functions, the simplest option is to create a mesh that does not assume continuity:
+```{r}
+graph$build_mesh(h=0.2, continuous = FALSE)
+```
+In this mesh, each vertex is split into one vertex per edge connecting to the vertex, which allows for discontinuous functions. 
+```{r}
+f <- graph$mesh$PtE[,1]/4
+graph$plot_function(f, improve_plot = TRUE)
+```
+
+```{r}
+graph$plot_function(f, plotly=TRUE, improve_plot = TRUE)
+```
