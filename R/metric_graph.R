@@ -519,6 +519,12 @@ metric_graph <-  R6Class("metric_graph",
     self$set_edge_weights(weights = edge_weights)
     private$create_update_vertices()
 
+    # Adding IDs to edges
+
+    for(i in 1:length(self$edges)){
+      attr(self$edges[[i]], "id") <- i
+    }
+
     # Cloning the initial graph
 
     private$initial_graph <- self$clone()
@@ -4095,9 +4101,7 @@ metric_graph <-  R6Class("metric_graph",
            E_new <- matrix(c(v2,v1),1,2)
         }
 
-        self$edges[[e_rem[1]]] <- coords
 
-        self$edges <- self$edges[-e_rem[2]]
       # } else{
       #   E_new1 <- self$E[e1,1]
       #   E_new2 <- self$E[e2,2]
@@ -4120,11 +4124,19 @@ metric_graph <-  R6Class("metric_graph",
       self$V <- self$V[-ind,]
       self$vertices[[ind]] <- NULL
       self$nV <- self$nV - 1
+      for(i in ind:length(self$vertices)){
+        attr(self$vertices[[i]], "id") <- attr(self$vertices[[i]], "id") - 1
+      }
 
       #update edges
       self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
       self$E <- self$E[-e_rem[2],,drop=FALSE]
       self$E[e_rem[1],] <- E_new
+      self$edges[[e_rem[1]]] <- coords
+      self$edges <- self$edges[-e_rem[2]]
+      for(i in e_rem[2]:length(self$edges)){
+        attr(self$edges, "id") <- attr(self$edges, "id") - 1
+      }
 
       self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
@@ -4349,6 +4361,9 @@ metric_graph <-  R6Class("metric_graph",
         } else{
           attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei,]
         }
+        attr(self$edges[[Ei]], "id") <- Ei
+        attr(self$edges[[length(self$edges)]], "id") <- length(self$edges)
+
         class(self$edges) <- "metric_graph_edges"
 
         if(!is.null(private$data)){
@@ -4586,8 +4601,8 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
           degrees_in[i] <- sum(self$E[,2]==i)
     }
     degrees <- degrees_in + degrees_out
-    return(list(degrees = degrees, degrees_in = degrees_in,
-              degrees_out = degrees_out))
+    return(list(degrees = degrees, indegrees = degrees_in,
+              outdegrees = degrees_out))
   },
 
   #  Creates/updates the vertices element of the metric graph list
@@ -4598,11 +4613,12 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
         function(i){
           vert <- self$V[i,]
           attr(vert, "degree") <- degrees$degrees[i]
-          attr(vert, "edges_in") <- degrees$degrees_in[i]
-          attr(vert, "edges_out") <- degrees$degrees_out[i]
-          attr(vert, "problematic") <- ifelse((degrees$degrees[i]>1) && ((degrees$degrees_in[i] == 0) || (degrees$degrees_out[i] == 0)), TRUE, FALSE)
+          attr(vert, "indegree") <- degrees$indegrees[i]
+          attr(vert, "outdegree") <- degrees$outdegrees[i]
+          attr(vert, "problematic") <- ifelse((degrees$degrees[i]>1) && ((degrees$indegrees[i] == 0) || (degrees$outdegrees[i] == 0)), TRUE, FALSE)
           attr(vert, "longlat") <- private$longlat
           attr(vert, "crs") <- private$crs$input
+          attr(vert, "id") <- i
           return(vert)
         })
     class(self$vertices) <- "metric_graph_vertices"

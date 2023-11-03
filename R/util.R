@@ -1329,7 +1329,7 @@ print.metric_graph_vertices <- function(x, n = 10, ...) {
   coord_tmp <- matrix(nrow = length(x), ncol = 6)
   coord_tmp <- as.data.frame(coord_tmp)
   for(i in 1:length(x)){
-    coord_tmp[i,1:5] <- c(x[[i]], attr(x[[i]], "degree"),attr(x[[i]], "edges_in"), attr(x[[i]], "edges_out"))
+    coord_tmp[i,1:5] <- c(x[[i]], attr(x[[i]], "degree"),attr(x[[i]], "indegree"), attr(x[[i]], "outdegree"))
     coord_tmp[i,6] <- attr(x[[i]], "problematic")
   }
   rownames(coord_tmp) <- 1:length(x)
