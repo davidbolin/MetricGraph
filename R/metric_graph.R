@@ -50,6 +50,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @field edges The coordinates of the edges in the graph.
   edges = NULL,
 
+  #' @field vertices The coordinates of the vertices in the graph, along with several attributes.
+  vertices = NULL,
+
   #' @field geo_dist Geodesic distances between the vertices in the graph.
   geo_dist = NULL,
 
@@ -70,6 +73,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
   #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
+  #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
+  #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
@@ -112,6 +117,7 @@ metric_graph <-  R6Class("metric_graph",
                         E = NULL,
                         vertex_unit = NULL,
                         length_unit = vertex_unit,
+                        edge_weights = 1,
                         longlat = FALSE,
                         crs = NULL,
                         proj4string = NULL,
@@ -456,13 +462,6 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
 
-    private$initial_graph <- self$clone()
-
-    # Cloning again to add the initial graph to the initial graph
-    private$initial_graph <- self$clone()
-
-
-
     # Cleaning the edges
 
     if(verbose){
@@ -517,28 +516,59 @@ metric_graph <-  R6Class("metric_graph",
         private$connected = FALSE
       }
     }
-    private$edge_weights <- rep(1, self$nE)
+    self$set_edge_weights(weights = edge_weights)
+    private$create_update_vertices()
+
+    # Cloning the initial graph
+
+    private$initial_graph <- self$clone()
+
+    # Cloning again to add the initial graph to the initial graph
+    private$initial_graph <- self$clone()
+
   },
 
   #' @description Sets the edge weights
-  #' @param weights Either a number or a numerical vector with length given by the number of edges, providing the edge weights.
+  #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
+  #' each row gives a vector of weights to its corresponding edge.
   #' @return No return value. Called for its side effects.
 
   set_edge_weights = function(weights = rep(1, self$nE)){
-    if(!is.numeric(weights)){
-      stop("'weights' must be numerical!")
+    if(!is.vector(weights) && !is.data.frame(weights)){
+      stop("'weights' must be either a vector or a data.frame!")
     }
-    if(!is.vector(weights)){
-      stop("'weights' must be a vector!")
-    }
-    if( (length(weigths) != 1) || (length(weights) != self$nE)){
-      stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
-    }
-    if(length(weights)==1){
-      private$edge_weights <- rep(weights, self$nE)
+
+    edge_lengths_ <- self$get_edge_lengths()
+
+    if(is.vector(weights)){
+      if ( (length(weights) != 1) && (length(weights) != self$nE)){
+        stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+      }
+      if(length(weights)==1){
+        private$edge_weights <- rep(weights, self$nE)
+      } else{
+        private$edge_weights <- weights
+      }
     } else{
+      if(nrow(weights) != self$nE){
+        stop("The number of rows of weights must be equal to the number of edges!")
+      }
       private$edge_weights <- weights
     }
+    self$edges <- lapply(1:self$nE, function(i){
+      edge <- self$edges[[i]]
+      if(is.vector(private$edge_weights)){
+        attr(edge,"weight") <- private$edge_weights[i]
+      } else{
+        attr(edge,"weight") <- private$edge_weights[i,]
+      }
+      attr(edge, "longlat") <- private$longlat
+      attr(edge, "crs") <- private$crs$input
+      attr(edge, "length") <- edge_lengths_[i]
+      return(edge)
+    })
+    class(self$edges) <- "metric_graph_edges"
+    
   },
 
 
@@ -606,7 +636,15 @@ metric_graph <-  R6Class("metric_graph",
     cat("\t Lengths: \n")
     cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
     cat("\t Weights: \n")
-    cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    if(is.vector(private$edge_weights)){
+      cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    } else{
+      if(!is.null(colnames(private$edge_weights))){
+        cat("\t\t Columns:", colnames(private$edge_weights),"\n")
+      } else{
+        cat("\t\t Number of columns:", ncol(private$edge_weights), "\n")
+      }
+    }
     cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
     cat("Graph units: \n")
     cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
@@ -744,7 +782,15 @@ metric_graph <-  R6Class("metric_graph",
     cat("\t Lengths: \n")
     cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
     cat("\t Weights: \n")
-    cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    if(is.vector(private$edge_weights)){
+      cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+    } else{
+      if(!is.null(colnames(private$edge_weights))){
+        cat("\t\t Columns:", colnames(private$edge_weights),"\n")
+      } else{
+        cat("\t\t Number of columns:", ncol(private$edge_weights), "\n")
+      }
+    }
     cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
     cat("Graph units: \n")
     cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
@@ -1133,11 +1179,18 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Returns the degrees of the vertices in the metric graph.
   #' @return A vector containing the degrees of the vertices.
   get_degrees = function(){
-    degrees <- rep(0,self$nV)
-    for(i in 1:self$nV) {
-          degrees[i] <- sum(self$E[,1]==i) + sum(self$E[,2]==i)
-    }
+    degrees <- sapply(self$vertices, function(vert){attr(vert, "degree")})
     return(degrees)
+  },
+
+  #' @description Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the `plot_function()` method, however it might be costly to compute.
+  #' @return No return value, called for its side effects.
+  compute_PtE_edges = function(){
+    edges_PtE <- lapply(self$edges, function(edge){self$coordinates(XY = edge)})
+     for(j in 1:length(self$edges)){
+        attr(self$edges[[j]], "PtE") <- edges_PtE[[j]]
+    }
+    return(invisible(NULL))
   },
 
   #' @description Computes the resistance metric between the vertices in the
@@ -1223,16 +1276,17 @@ metric_graph <-  R6Class("metric_graph",
     #'
   prune_vertices = function(verbose = FALSE){
     t <- system.time({
-    degrees <- self$get_degrees()
-    start.deg <- end.deg <- rep(0,self$nV)
-    for(i in 1:self$nV) {
-      start.deg[i] <- sum(self$E[,1]==i)
-      end.deg[i] <- sum(self$E[,2]==i)
-    }
+    degrees <- private$compute_degrees()$degrees
+    # start.deg <- end.deg <- rep(0,self$nV)
+    # for(i in 1:self$nV) {
+    #   start.deg[i] <- sum(self$E[,1]==i)
+    #   end.deg[i] <- sum(self$E[,2]==i)
+    # }
 
     # Finding problematic vertices, that is, vertices with incompatible directions
     # They will not be pruned.
-    problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    # problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
     res <- list(degrees = degrees, problematic = problematic)
     if(verbose){
       to.prune <- sum(res$degrees==2 & !res$problematic)
@@ -1280,6 +1334,11 @@ metric_graph <-  R6Class("metric_graph",
             message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
    }
+
+   for(j in 1:length(self$edges)){
+        attr(self$edges[[j]], "PtE") <- NULL
+    }
+
 
    if(!is.null(self$mesh)){
     max_h <- max(self$mesh$h_e)
@@ -1416,6 +1475,12 @@ metric_graph <-  R6Class("metric_graph",
         warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
       }
     }
+
+    private$create_update_vertices()
+    for(j in 1:length(self$edges)){
+        attr(self$edges[[j]], "PtE") <- NULL
+    }
+
   },
 
   #' @description Returns a list or a matrix with the mesh locations.
@@ -1537,17 +1602,23 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
 
+        if(!is.null(data)){
+          if(!is.list(data) && !is.data.frame(data)){
+            stop("'data' must be either a list or a data.frame!")
+          }
+        }
+
         data <- as.list(data)
 
 
         if(is.null(Spoints)){
         if(data_coords == "PtE"){
           if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
-            stop(paste("The data does not contain either the colum", edge_number,"or the column",distance_on_edge))
+            stop(paste("The data does not contain either the column", edge_number,"or the column",distance_on_edge))
           }
         } else{
           if(any( !(c(coord_x, coord_y) %in% names(data)))){
-            stop(paste("The data does not contain either the colum", coord_x,"or the column",coord_y))
+            stop(paste("The data does not contain either the column", coord_x,"or the column",coord_y))
           }
         }
         }
@@ -1822,6 +1893,13 @@ metric_graph <-  R6Class("metric_graph",
             stop("No data provided!")
           }
         }
+
+        if(!is.null(data)){
+          if(!is.list(data) && !is.data.frame(data)){
+            stop("'data' must be either a list or a data.frame!")
+          }
+        }
+
 
         data <- as.list(data)
 
@@ -2230,6 +2308,15 @@ metric_graph <-  R6Class("metric_graph",
       stop("The graph does not contain data.")
     }
     if(!is.null(group)){
+      total_groups <- self$get_groups()
+      if(!(all(group %in% total_groups))){
+        if(all(group%%1 == 0)){
+          group <- total_groups[group]
+        } else{
+          stop("At least one entry of 'group' is a not an existing group or an existing index.")
+        }
+      }
+
       data_temp <- select_group(private$data, group)
     } else{
       data_temp <- private$data
@@ -2656,6 +2743,7 @@ metric_graph <-  R6Class("metric_graph",
   #' evaluated at the mesh in the graph
   #' @param plotly If `TRUE`, then the plot is shown in 3D. This option requires
   #' the package 'plotly'.
+  #' @param improve_plot Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.
@@ -2672,6 +2760,7 @@ metric_graph <-  R6Class("metric_graph",
                            group = 1,
                            X = NULL,
                            plotly = FALSE,
+                           improve_plot = FALSE,
                            vertex_size = 5,
                            vertex_color = "black",
                            edge_width = 1,
@@ -2754,7 +2843,41 @@ metric_graph <-  R6Class("metric_graph",
         }
         X <- newdata[,c(".edge_number", ".distance_on_edge", data)]
       }
+
+      if(improve_plot){
+        if(is.null(attr(self$edges[[1]], "PtE"))){
+          self$compute_PtE_edges()
+        }
+        X <- as.data.frame(X)
+        PtE_edges <- lapply(1:length(self$edges), function(i){attr(self$edges[[i]], "PtE")})
+        # PtE_edges <- do.call(rbind, PtE_edges)
+        # PtE_edges <- as.data.frame(PtE_edges)
+        # colnames(PtE_edges) <- c(".edge_number", ".distance_on_edge")
+        # PtE_edges <- dplyr::setdiff(PtE_edges, X[,c(".edge_number", ".distance_on_edge")])
+        # PtE_edges[[data]] <- rep(NA, nrow(PtE_edges))
+        # X <- rbind(X, PtE_edges)
+        # ord_X <- order(X[,1], X[,2])
+        # X <- X[ord_X,]
+        # X <- unique(X)
+        # edge_num <- unique(X[,1])
+        # if(splines){
+        #   for(i in edge_num){
+        #     idx_edge <- which(X[,1] == i)
+        #     if(!all(is.na(X[idx_edge, 3]))){
+        #       max_val <- max(X[idx_edge,3], na.rm=TRUE)
+        #       min_val <- min(X[idx_edge,3], na.rm=TRUE)
+        #       X[idx_edge,3] <- na.const(pmax(pmin(object = zoo::na.approx(object = X[idx_edge,3],
+        #                                             x = X[idx_edge,2],
+        #                                                 na.rm=FALSE),
+        #                                          max_val), min_val))
+        #     } else{
+        #        X <- X[-idx_edge,]
+        #     }
+        #   }
+        # }
+      }
     }
+
 
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
     kk = 1
@@ -2794,100 +2917,206 @@ metric_graph <-  R6Class("metric_graph",
       } else {
         vals <- X[X[, 1]==i, 2:3, drop = FALSE]
       if(nrow(vals)>0){
-        if (max(vals[, 1]) < 1) {
-          #check if we can add end value from other edge
-          Ei <- self$E[, 1] == Ve #edges that start in Ve
-          Ei <- which(Ei)
-          if (sum(Ei) > 0) {
-            ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
-            if(sum(ind)>0){
-              ind <- ind[1]
-            } else {
-            ind <- NULL
-            ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-            min.val <- X[ind.val, 2,drop=TRUE]
-          }} else{
-            ind <- NULL
-            ind.val <- integer(0)
-          }
-          if (length(ind) > 0) {
-            vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-          } else {
-            Ei <- self$E[, 2] == Ve #edges that end in Ve
-            Ei <- which(Ei)
-            if (sum(Ei)  > 0) {
-              ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
-              if(sum(ind)>0){
-                ind <- ind[1]
-              } else {
-              ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-              max.val <- X[ind.val.max, 2,drop=TRUE]
-              if(length(ind.val) == 0){
-                ind <- ind.val.max
-              } else if (length(ind.val.max) == 0){
-                ind <- ind.val
-              } else{
-                ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
-              }
-            } } else{
-              if(length(ind.val)>0){
-                ind <- ind.val
-              } else{
+      
+        if(!improve_plot){
+            if (max(vals[, 1]) < 1) {
+              # #check if we can add end value from other edge
+              Ei <- self$E[, 1] == Ve #edges that start in Ve
+              Ei <- which(Ei)
+              if (sum(Ei) > 0) {
+                ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+                if(sum(ind)>0){
+                  ind <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+                } else {
                 ind <- NULL
+                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val]
+              }} else{
+                ind <- NULL
+                ind.val <- integer(0)
+              }
+              if (length(ind) > 0) {
+                # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                vals <- rbind(vals, c(1, min.val))
+              } 
+              else {
+                Ei <- self$E[, 2] == Ve #edges that end in Ve
+                Ei <- which(Ei)
+                if (sum(Ei)  > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+                  if(sum(ind)>0){
+                    ind <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                    max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+                  } else {
+                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val.max]
+                  if(length(ind.val) == 0){
+                    ind <- ind.val.max
+                  } else if (length(ind.val.max) == 0){
+                    ind <- ind.val
+                  } else{
+                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+                  }
+                } } else{
+                  if(length(ind.val)>0){
+                    ind <- ind.val
+                  } else{
+                    ind <- NULL
+                  }
+                }
+                if (length(ind) > 0){
+                  # vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  vals <- rbind(vals, c(1, max.val))
+                }
               }
             }
-            if (length(ind) > 0){
-              vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
-            }
-          }
-        }
 
-        if (min(vals[, 1] > 0)) {
-          #check if we can add start value from other edge
-          Ei <- self$E[, 1] == Vs #edges that start in Vs
-          Ei <- which(Ei)
-          if (sum(Ei) > 0) {
-              ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
-            if(sum(ind)>0){
-                ind <- ind[1]
-              } else {
-            ind <- NULL
-            ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-            min.val <- X[ind.val, 2,drop=TRUE]
-          }} else{
-            ind <- NULL
-            ind.val <- integer(0)
-          }
-          if (length(ind) > 0) {
-            vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
-          } else {
-            Ei <- self$E[, 2] == Vs #edges that end in Vs
-            Ei <- which(Ei)
-            if (sum(Ei) > 0) {
-              ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
-              if(sum(ind)>0){
-                ind <- ind[1]
-              } else {
-              ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-              max.val <- X[ind.val.max, 2,drop=TRUE]
-              if(length(ind.val) == 0){
-                ind <- ind.val.max
-              } else if (length(ind.val.max) == 0){
-                ind <- ind.val
-              } else{
-                ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
-              }
-            } } else{
-              if(length(ind.val)>0){
-                ind <- ind.val
-              } else{
+            if (min(vals[, 1] > 0)) {
+              #check if we can add start value from other edge
+              Ei <- self$E[, 1] == Vs #edges that start in Vs
+              Ei <- which(Ei)
+              if (sum(Ei) > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+                if(sum(ind)>0){
+                    ind <- ind[1]
+                  } else {
                 ind <- NULL
+                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                min.val <- X[ind.val, 2,drop=TRUE]
+              }} else{
+                ind <- NULL
+                ind.val <- integer(0)
+              }
+              if (length(ind) > 0) {
+                vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
+              } else {
+                Ei <- self$E[, 2] == Vs #edges that end in Vs
+                Ei <- which(Ei)
+                if (sum(Ei) > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+                  if(sum(ind)>0){
+                    ind <- ind[1]
+                  } else {
+                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  max.val <- X[ind.val.max, 2,drop=TRUE]
+                  if(length(ind.val) == 0){
+                    ind <- ind.val.max
+                  } else if (length(ind.val.max) == 0){
+                    ind <- ind.val
+                  } else{
+                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+                  }
+                } } else{
+                  if(length(ind.val)>0){
+                    ind <- ind.val
+                  } else{
+                    ind <- NULL
+                  }
+                }
+                if (length(ind) > 0) {
+                  vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
+                }
               }
             }
-            if (length(ind) > 0) {
-              vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
+        } else {
+
+            PtE_tmp <- PtE_edges[[i]]
+            if(PtE_tmp[1,1] != i){
+              edge_new <- PtE_tmp[1,1]
+              idx_new <- which(X[,1] == edge_new)
+              new_val <- X[idx_new, 2:3, drop=FALSE]
+              if(nrow(new_val)>0){
+                sum_fact <- ifelse(max(vals[,1]==1),  -1e-6,  min(new_val[,1]))
+                sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  max(new_val[,1]))
+                pos_edge <- which(self$E[edge_new,] == self$E[i,1])
+                if(pos_edge == 2){
+                  new_val[,1] <- new_val[,1] - sub_fact
+                } else {
+                  new_val[,1] <- -new_val[,1] + sum_fact
+                }
+                vals <- rbind(vals, new_val)
+              }
+            } else{
+              if(any(self$E[,2] == self$E[i,1])){
+                edge_new <- which(self$E[,2] == self$E[i,1])[1]
+                idx_new <- which(X[,1] == edge_new)
+                new_val <- X[idx_new, 2:3, drop=FALSE]
+                if(nrow(new_val)>0){
+                  sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  max(new_val[,1]))
+                  new_val[,1] <- new_val[,1] - sub_fact
+                  vals <- rbind(vals, new_val)
+                }
+              } else if(any(self$E[-i,1] == self$E[i,1])){
+                edge_new <- which(self$E[-i,1] == self$E[i,1])[1]
+                idx_new <- which(X[,1] == edge_new)
+                new_val <- X[idx_new, 2:3, drop=FALSE]
+                if(nrow(new_val)>0){
+                  sum_fact <- ifelse(max(vals[,1]==1),  -1e-6,  min(new_val[,1]))
+                  new_val[,1] <- -new_val[,1] + sum_fact
+                  vals <- rbind(vals, new_val)
+                }
+              }
             }
-          }
+
+            if (PtE_tmp[nrow(PtE_tmp), 1]!=i){
+              edge_new <- PtE_tmp[nrow(PtE_tmp), 1]
+              idx_new <- which(X[,1] == edge_new)
+              new_val <- X[idx_new, 2:3, drop=FALSE]
+              if(nrow(new_val)>0){
+                sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  -max(new_val[,1]) - 1)
+                sum_fact <- ifelse(max(vals[,1]==1),  1+1e-6,  1-min(new_val[,1]))
+                pos_edge <- which(self$E[edge_new,] == self$E[i,2])
+                if(pos_edge == 2){
+                  new_val[,1] <- -new_val[,1] - sub_fact
+                } else {
+                  new_val[,1] <- new_val[,1] + sum_fact
+                }
+                vals <- rbind(vals, new_val)
+              }
+            } else {
+                if (any(self$E[,1] == self$E[i,2])){
+                  edge_new <- which(self$E[,1] == self$E[i,2])[1]
+                  idx_new <- which(X[,1] == edge_new)
+                  new_val <- X[idx_new, 2:3, drop=FALSE]
+                  if(nrow(new_val)>0){
+                    sum_fact <- ifelse(max(vals[,1]==1),  1+1e-6,  1-min(new_val[,1]))
+                    new_val[,1] <- new_val[,1] + sum_fact
+                    vals <- rbind(vals, new_val)
+                  }
+              } else if (any(self$E[,2] == self$E[i,2])){
+                  edge_new <- which(self$E[,2] == self$E[i,2])[1]
+                  idx_new <- which(X[,1] == edge_new)
+                  new_val <- X[idx_new, 2:3, drop=FALSE]
+                  if(nrow(new_val)>0){
+                    sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  -max(new_val[,1]) - 1)
+                    new_val[,1] <- -new_val[,1] - sum_fact
+                    vals <- rbind(vals, new_val)
+                  }
+              }
+            }
+
+            if(length(PtE_tmp[,1]==i) > 0){
+              PtE_tmp <- PtE_tmp[PtE_tmp[,1]==i, ,drop=FALSE]
+              PtE_tmp <- PtE_tmp[,2,drop = TRUE]
+              PtE_tmp <- setdiff(PtE_tmp, vals[,1])
+              if(length(PtE_tmp)>0){
+                PtE_tmp <- cbind(PtE_tmp, NA)
+                PtE_tmp <- as.data.frame(PtE_tmp)
+                colnames(PtE_tmp) <- c(".distance_on_edge", data)
+                vals <- rbind(vals,PtE_tmp)
+              }
+            }
+
+            ord_idx <- order(vals[,1])
+            vals <- vals[ord_idx,]
+            max_val <- max(vals[,2], na.rm=TRUE)
+            min_val <- min(vals[,2], na.rm=TRUE)
+            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+                                                  x = vals[,1],
+                                                      na.rm=FALSE, ties = "mean"),
+                                               max_val), min_val))
+            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]                                               
         }
       }
       }
@@ -2907,8 +3136,8 @@ metric_graph <-  R6Class("metric_graph",
         i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
         kk = kk+1
     }
-    data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
 
+    data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
 
     if(plotly){
       requireNamespace("plotly")
@@ -2945,7 +3174,7 @@ metric_graph <-  R6Class("metric_graph",
 
     } else {
       if(is.null(p)) {
-        p <- ggplot(data = data, aes(x = x, y = y,
+          p <- ggplot(data = data, aes(x = x, y = y,
                                      group = i,
                                      colour = z)) +
           geom_path(linewidth = line_width) + scale_color_viridis() +
@@ -2957,7 +3186,7 @@ metric_graph <-  R6Class("metric_graph",
                            linewidth = line_width) +
           scale_color_viridis() + labs(colour = "")
       }
-      p <- self$plot(edge_width = 0, vertex_size = vertex_size,
+          p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees"){
@@ -3794,6 +4023,7 @@ metric_graph <-  R6Class("metric_graph",
       message("Small circles found!")
       message("Removing small circles")
     }
+
     if(threshold > 0) {
       loop.ind <- which(self$E[,1] == self$E[,2])
       if(length(loop.ind)>0) {
@@ -3801,7 +4031,7 @@ metric_graph <-  R6Class("metric_graph",
         ind <- loop.ind[loop.size < threshold]
         if(length(ind)>0) {
           v.loop <- self$E[ind,1]
-          v.degrees <- self$get_degrees()[v.loop]
+          v.degrees <- private$compute_degrees()$degrees[v.loop]
 
           ind.rem <- v.loop[v.degrees == 2]
           ind.keep <- v.loop[v.degrees > 2]
@@ -3825,7 +4055,7 @@ metric_graph <-  R6Class("metric_graph",
 
   # utility function to merge lines connected by degree 2 vertices
   merge.all.deg2 = function() {
-   while(sum(self$get_degrees()==2)>0) {
+   while(sum(private$compute_degrees()$degrees==2)>0) {
      private$remove.first.deg2()
    }
   },
@@ -3894,6 +4124,7 @@ metric_graph <-  R6Class("metric_graph",
 
       #update vertices
       self$V <- self$V[-ind,]
+      self$vertices[[ind]] <- NULL
       self$nV <- self$nV - 1
 
       #update edges
@@ -3905,8 +4136,21 @@ metric_graph <-  R6Class("metric_graph",
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
 
       self$nE <- self$nE - 1
+
+      attr(self$edges[[e_rem[1]]], "longlat") <- private$longlat
+      attr(self$edges[[e_rem[1]]], "crs") <- private$crs$input
+      attr(self$edges[[e_rem[1]]], "length") <- self$edge_lengths[e_rem[1]]
+      if(!is.null(private$length_unit)){
+        units(attr(self$edges[[e_rem[1]]], "length")) <- private$length_unit
+      }
+      if(is.vector(private$edge_weights)){
+        attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1]]
+      } else{
+        attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1],]
+      }
       }
     }
+    class(self$edges) <- "metric_graph_edges"
     return(res.out)
   },
 
@@ -4096,6 +4340,22 @@ metric_graph <-  R6Class("metric_graph",
         if(private$addinfo){
             private$initial_edges_added <- rbind(private$initial_edges_added,cbind(Ei, nrow(self$E)))
         }
+        attr(self$edges[[Ei]], "length") <- t * l_e
+        attr(self$edges[[length(self$edges)]], "length") <- (1 - t) * l_e
+        if(!is.null(private$length_unit)){
+          units(attr(self$edges[[Ei]], "length")) <- private$length_unit
+          units(attr(self$edges[[length(self$edges)]], "length")) <- private$length_unit
+        }
+        attr(self$edges[[Ei]], "longlat") <- private$longlat
+        attr(self$edges[[length(self$edges)]], "longlat") <- private$longlat
+        attr(self$edges[[Ei]], "crs") <- private$crs$input
+        attr(self$edges[[length(self$edges)]], "crs") <- private$crs$input
+        if(is.vector(private$edge_weights)){
+          attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei]
+        } else{
+          attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei,]
+        }
+        class(self$edges) <- "metric_graph_edges"
 
         if(!is.null(private$data)){
           ind <- which(private$temp_PtE[, 1] %in% Ei)
@@ -4321,6 +4581,38 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   }
   return(self)
 },
+
+ # Function to compute the degrees of the vertices, 
+
+  compute_degrees = function(){
+    degrees_in <- rep(0,self$nV)
+    degrees_out <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+          degrees_out[i] <- sum(self$E[,1]==i) 
+          degrees_in[i] <- sum(self$E[,2]==i)
+    }
+    degrees <- degrees_in + degrees_out
+    return(list(degrees = degrees, degrees_in = degrees_in,
+              degrees_out = degrees_out))
+  },
+
+  #  Creates/updates the vertices element of the metric graph list
+
+  create_update_vertices = function(){
+    degrees <- private$compute_degrees()
+    self$vertices <- lapply(1:nrow(self$V),
+        function(i){
+          vert <- self$V[i,]
+          attr(vert, "degree") <- degrees$degrees[i]
+          attr(vert, "edges_in") <- degrees$degrees_in[i]
+          attr(vert, "edges_out") <- degrees$degrees_out[i]
+          attr(vert, "problematic") <- ifelse((degrees$degrees[i]>1) && ((degrees$degrees_in[i] == 0) || (degrees$degrees_out[i] == 0)), TRUE, FALSE)
+          attr(vert, "longlat") <- private$longlat
+          attr(vert, "crs") <- private$crs$input
+          return(vert)
+        })
+    class(self$vertices) <- "metric_graph_vertices"
+  },
 
   # Temp PtE
 

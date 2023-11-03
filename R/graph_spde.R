@@ -678,6 +678,7 @@ spde_metric_graph_result <- function(inla, name,
         f = function(z) {
           denstemp(z)
         }, lower = min_x, upper = max_x,
+                  stop.on.error = FALSE,
         subdivisions = nrow(density_df)
       )$value
       return(norm_const)
@@ -900,6 +901,7 @@ create_summary_from_density <- function(density_df, name) {
       } else {
         stats::integrate(
           f = denstemp, lower = min_x, upper = v,
+                  stop.on.error = FALSE,
           subdivisions = min(nrow(density_df), 500)
         )$value
       }
@@ -911,6 +913,7 @@ create_summary_from_density <- function(density_df, name) {
     f = function(z) {
       denstemp(z) * z
     }, lower = min_x, upper = max_x,
+                  stop.on.error = FALSE,
     subdivisions = nrow(density_df)
   )$value
 
@@ -918,6 +921,7 @@ create_summary_from_density <- function(density_df, name) {
     f = function(z) {
       denstemp(z) * (z - mean_temp)^2
     }, lower = min_x, upper = max_x,
+                  stop.on.error = FALSE,
     subdivisions = nrow(density_df)
   )$value)
 
@@ -1183,7 +1187,7 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
                         "pred_y" = m_prd_bru)
   newdata <- x$initial_graph$process_data(data = newdata, normalized = TRUE)
   
-  p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, ...)
+  p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
   p
   p
 }
