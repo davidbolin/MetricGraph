@@ -1123,7 +1123,13 @@ No return value. Called for its side effects.
 \subsection{Method \code{build_mesh()}}{
 Builds mesh object for graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h = NULL, n = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(
+  h = NULL,
+  n = NULL,
+  continuous = TRUE,
+  continuous.outs = FALSE,
+  continuous.deg2 = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -1134,6 +1140,15 @@ not provided).}
 
 \item{\code{n}}{Maximum number of nodes per edge (should be provided if h is not
 provided).}
+
+\item{\code{continuous}}{If \code{TRUE} (default), the mesh contains only one node per vertex.
+If \code{FALSE}, each vertex v is split into deg(v) disconnected nodes to allow
+for the creation of discontinuities at the vertices.}
+
+\item{\code{continuous.outs}}{If \code{continuous = FALSE} and \code{continuous.outs = TRUE}, continuity is
+assumed for the outgoing edges from each vertex.}
+
+\item{\code{continuous.deg2}}{If \code{TRUE}, continuity is assumed at degree 2 vertices.}
 }
 \if{html}{\out{</div>}}
 }
