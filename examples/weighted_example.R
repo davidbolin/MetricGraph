@@ -1,0 +1,12 @@
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(1,0),c(2,1))
+edge3 <- rbind(c(1,0),c(2,-1))
+edge4 <- rbind(c(2,-1),c(3,0))
+edge5 <- rbind(c(2,-1),c(3,-2))
+edges = list(edge1, edge2, edge3, edge4, edge5)
+edge_weights <- c(1:5)
+graph <- metric_graph$new(edges = edges, edge_weights = edge_weights)
+graph$build_mesh(h=0.5)
+graph$plot(mesh=TRUE, direction = TRUE)
+graph$compute_fem()
+

@@ -2583,6 +2583,30 @@ metric_graph <-  R6Class("metric_graph",
     self$mesh$B <- fem_temp$B
     self$mesh$D <- Diagonal(dim(self$mesh$C)[1],
                             c(rep(1, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
+    #set weighted Krichhoff matrix
+    self$mesh$K <- Diagonal(dim(self$mesh$C)[1],
+                            c(rep(0, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
+
+    if(!all(self$get_edge_weights()==1)){
+      for(i in 1:self$nV) {
+        if(attr(self$vertices[[i]],"degree") > 1) {
+          edges.i <- which(rowSums(self$E==i)>0)
+          edges.mesh <- which(rowSums(self$mesh$E==i)>0)
+          w <- rep(0,length(edges.mesh))
+          h <- rep(0,length(edges.mesh))
+          for(j in 1:length(edges.mesh)) {
+            V.e <- self$mesh$E[edges.mesh[j],which(self$mesh$E[edges.mesh[j],]!=i)]
+            E.e <- self$mesh$VtE[V.e,1] #the edge the mesh node is on
+            w[j] <- attr(self$edges[[E.e]],"weight")
+            h[j] <- self$mesh$h_e[edges.mesh[j]]
+          }
+          for(j in 2:attr(self$vertices[[i]],"degree")){
+            self$mesh$K[i,i] <- self$mesh$K[i,i] +  (w[j]/w[1] - 1)/h[j]
+          }
+        }
+      }
+    }
+
     if(petrov) {
       self$mesh$Cpet <- fem_temp$Cpet
       self$mesh$Gpet <- fem_temp$Gpet
