@@ -35,6 +35,21 @@ mesh_merge_outs <- function(graph) {
   }
 }
 
+mesh_merge_deg2 <- function(graph) {
+  outs <- num_in_out(graph)$outs
+  ins <- num_in_out(graph)$outs
+  ind <- which(outs == 1 & ins == 1)
+  cat(ind)
+  for(i in 1:length(ind)) {
+    V.keep <- graph$mesh$V[ind[i],]
+    V.rem <- which(graph$mesh$V[,1] == V.keep[1] & graph$mesh$V[,2] == V.keep[2])[2]
+    graph$mesh$PtE <- graph$mesh$PtE[-V.rem,]
+    graph$mesh$V <- graph$mesh$V[-V.rem,]
+    graph$mesh$E[graph$mesh$E == V.rem] <- ind[i]
+    graph$mesh$E[graph$mesh$E>V.rem] <- graph$mesh$E[graph$mesh$E>V.rem] - 1
+  }
+}
+
 build_mesh = function(self, h=NULL,n=NULL, continuous = TRUE, merge.outs = FALSE) {
 
   if(is.null(h) && is.null(n)){
@@ -153,8 +168,23 @@ build_mesh = function(self, h=NULL,n=NULL, continuous = TRUE, merge.outs = FALSE
      mesh_merge_outs(self)
    }
     move.V.first(self)
+    mesh_merge_deg2(self)
   }
 }
+
+
+#debug
+edge2 <- rbind(c(2,1), c(1,0))
+edge3 <- rbind(c(2,-1), c(1,0))
+edge4 <- rbind(c(3,0),c(2,-1))
+edge7 <- rbind(c(3,0), c(2,1))
+edges = list(edge2, edge3, edge4, edge7)
+
+
+graph <- metric_graph$new(edges = edges)
+build_mesh(graph,h=1, continuous = FALSE, merge.outs = TRUE)
+graph$plot(mesh = TRUE, direction = TRUE)
+v <- rep(0, dim(graph$mesh$V)[1]); v[1] = 1; graph$plot_function(v, plotly = TRUE)
 
 find.mesh.bc <- function(graph) {
   if(attr(graph$mesh,"continuous")) {
@@ -230,14 +260,13 @@ move.V.first <- function(graph) {
   nv <- dim(graph$mesh$V)[1]
   for(i in 1:graph$nV) {
     ind <- which(graph$mesh$V[,1] == graph$V[i,1] & graph$mesh$V[,2] == graph$V[i,2])[1]
-    cat(i, " ", ind,"\n")
+
     if(ind > i && i < nv) {
       if (i == 1) {
         reo <- c(ind, setdiff(i:nv,ind))
       } else {
         reo <- c(1:(i-1), ind, setdiff(i:nv,ind))
       }
-      cat(reo, "\n")
       graph$mesh$V <- graph$mesh$V[reo,]
       graph$mesh$PtE <- graph$mesh$PtE[reo,]
       graph$mesh$VtE <- graph$mesh$VtE[reo,]
@@ -246,7 +275,6 @@ move.V.first <- function(graph) {
       ind2 <- Etmp >= i & Etmp < ind
       graph$mesh$E[ind1] = i
       graph$mesh$E[ind2] = graph$mesh$E[ind2] + 1
-      print(graph$mesh$E)
     }
   }
 }
@@ -267,7 +295,10 @@ hfull <- c(1/(1+kappa),graph$mesh$h_e)
 
 L <- kappa*mat$C + mat$G
 Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
-graph$plot_function(diag(Sigma),plotly=TRUE)
+p <- graph$plot(direction = TRUE)
+graph$plot_function(diag(Sigma), p = p)
+
+
 
 
 W <- rnorm(n=length(hfull),mean=0,sd = sqrt(hfull))
@@ -282,15 +313,12 @@ edge3 <- rbind(c(2,-1), c(1,0))
 edge4 <- rbind(c(3,0),c(2,-1))
 edge5 <- rbind(c(3,-2),c(2,-1))
 edge6 <- rbind(c(2,-1), c(1,-2))
-edges = list(edge1, edge2, edge3, edge4, edge5, edge6)
+edges = list(edge1, edge2, edge3, edge4, edge5)
 
 
 graph <- metric_graph$new(edges = edges)
 build_mesh(graph,h=0.05, continuous = FALSE, merge.outs = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
-n <- dim(graph$mesh$V)[1]
-v <- rep(0,n); v[22] = 1; graph$plot_function(v,plotly=TRUE)
-
 
 graph$compute_fem(petrov=TRUE)
 
@@ -301,8 +329,46 @@ hfull[mat$h0] = 0
 
 L <- kappa*mat$C + mat$G
 Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
-graph$plot_function(diag(Sigma))
+p <- graph$plot(direction = TRUE)
+graph$plot_function(diag(Sigma), p = p)
 
 W <- rnorm(n=length(hfull),mean=0,sd = sqrt(hfull))
 u <- solve(L,W)
 graph$plot_function(u,plotly=TRUE)
+
+
+
+#now test a reversed tree
+edge1 <- rbind(c(1,0), c(0,0))
+edge2 <- rbind(c(2,1), c(1,0))
+edge3 <- rbind(c(2,-1), c(1,0))
+edge4 <- rbind(c(3,0),c(2,-1))
+edge5 <- rbind(c(3,-2),c(2,-1))
+edge6 <- rbind(c(2,-1), c(1,-2))
+edge7 <- rbind(c(3,0), c(2,1))
+edges = list(edge1, edge2, edge3, edge4, edge5, edge6, edge7)
+
+
+graph <- metric_graph$new(edges = edges)
+build_mesh(graph,h=0.5, continuous = FALSE, merge.outs = TRUE)
+graph$plot(mesh = TRUE, direction = TRUE)
+
+v <- rep(0, dim(graph$mesh$V)[1]); v[23] = 1; graph$plot_function(v, plotly = TRUE)
+
+graph$compute_fem(petrov=TRUE)
+
+kappa <- 1
+mat <- set.petrov.matrices(graph)
+hfull <- c(rep(1/(1+kappa), mat$n.bc),graph$mesh$h_e)
+hfull[mat$h0] = 0
+
+L <- kappa*mat$C + mat$G
+Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
+p <- graph$plot(direction = TRUE)
+graph$plot_function(diag(Sigma), p = p)
+
+W <- rnorm(n=length(hfull),mean=0,sd = sqrt(hfull))
+u <- solve(L,W)
+graph$plot_function(u,plotly=TRUE)
+
+

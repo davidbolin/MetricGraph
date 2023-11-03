@@ -2774,13 +2774,19 @@ metric_graph <-  R6Class("metric_graph",
                           cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
                           c(1, XV[Ve]))
           } else {
-            if(min(self$mesh$PtE[ind,2])==0) {
+            if(min(self$mesh$PtE[ind,2])==0 && max(self$mesh$PtE[ind,2])==1) {
               vals <- cbind(self$mesh$PtE[ind, 2], X[which(ind)])
-            } else {
+            } else if (min(self$mesh$PtE[ind,2])==0) {
+                vals <- rbind(cbind(self$mesh$PtE[ind, 2], X[which(ind)]),
+                              c(1, XV[Ve]))
+            } else if (max(self$mesh$PtE[ind,2])==1){
               vals <- rbind(c(0, XV[Vs]),
                             cbind(self$mesh$PtE[ind, 2], X[which(ind)]))
+            } else {
+              vals <- rbind(c(0, XV[Vs]),
+                            cbind(self$mesh$PtE[ind, 2], X[which(ind)]),
+                            c(1, XV[Ve]))
             }
-
           }
 
 
