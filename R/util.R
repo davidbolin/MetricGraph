@@ -799,8 +799,13 @@ projectVecLine2 <- function(lines, points, normalized = FALSE){
 #' @noRd
 
 distance2 <- function(points, lines, byid=FALSE, longlat, crs){
-  class(points) <- NULL
-  class(lines) <- NULL
+  if(!is.null(points)){
+    class(points) <- setdiff(class(points), "metric_graph_edge")
+  }
+  if(!is.null(lines)){
+    class(lines) <- setdiff(class(lines), "metric_graph_edge")
+  }
+
   if(!longlat){
     points_sf <- sf::st_as_sf(as.data.frame(points), coords = 1:2)
   } else{
@@ -1077,7 +1082,9 @@ check_lines_input <- function(lines){
 #' 
 
 compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
-  class(edge) <- NULL
+  if(!is.null(edge)){
+      class(edge) <- setdiff(class(edge), "metric_graph_edge")
+  }
     if(!longlat || project_data){
       fact <- process_factor_unit(vertex_unit, unit)
       return(compute_length(edge) * fact)
@@ -1104,8 +1111,12 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 #' 
 
 compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit){
-  class(lines) <- NULL
-  class(points) <- NULL
+  if(!is.null(points)){
+    class(points) <- setdiff(class(points), "metric_graph_edge")
+  }
+  if(!is.null(lines)){
+    class(lines) <- setdiff(class(lines), "metric_graph_edge")
+  }
     if(!longlat){
       if(is.null(points)){
         dists <- dist(lines) * fact

@@ -1330,9 +1330,7 @@ metric_graph <-  R6Class("metric_graph",
    }
 
    t <- system.time({
-      for(i in 1:length(self$vertices)){
-        attr(self$vertices[[i]], "id") <- i
-      }
+      private$create_update_vertices()
       for(i in 1:length(self$edges)){
          attr(self$edges[[i]], "id") <- i
          attr(self$edges[[i]], "longlat") <- private$longlat
@@ -1510,7 +1508,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if (!is.null(self$mesh)) {
       self$mesh <- NULL
-      if(warning){
+      if(mesh_warning){
         warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
       }
     }
@@ -4035,7 +4033,9 @@ metric_graph <-  R6Class("metric_graph",
       coords_line <- c()
       coords_tmp <- c()
 
-      class(XY) <- NULL
+      if(!is.null(XY)){
+        class(XY) <- setdiff(class(XY), "metric_graph_edge")
+      }
 
 
       if(!private$longlat){
