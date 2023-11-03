@@ -7,7 +7,7 @@ edges = list(edge2, edge3, edge4, edge7)
 
 
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, merge.outs = TRUE, merge.deg2 = TRUE)
+graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
 v <- rep(0, dim(graph$mesh$V)[1]); v[4] = 1; graph$plot_function(v, plotly = TRUE)
 
@@ -29,7 +29,7 @@ edge4 <- rbind(c(2,-1),c(3,0))
 edge5 <- rbind(c(2,-1),c(3,-2))
 edges = list(edge1, edge2, edge3, edge4, edge5)
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, merge.outs = TRUE, merge.deg2 = TRUE)
+graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh=TRUE, direction = TRUE)
 
 graph$compute_fem(petrov = TRUE)
@@ -58,7 +58,7 @@ edge6 <- rbind(c(2,-1), c(1,-2))
 edges = list(edge1, edge2, edge3, edge4, edge5)
 
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, merge.outs = TRUE, merge.deg2 = TRUE)
+graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
 
 graph$compute_fem(petrov=TRUE)
@@ -89,7 +89,7 @@ edges = list(edge1, edge2, edge3, edge4, edge5, edge6, edge7)
 
 
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, merge.outs = TRUE, merge.deg2 = TRUE)
+graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
 
 graph$compute_fem(petrov=TRUE)
@@ -118,7 +118,7 @@ edge2 <- rbind(c(2,1), c(1,0))
 edge3 <- rbind(c(2,-1), c(1,0))
 edges = list(edge1, edge2, edge3)
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=0.5, continuous = FALSE, merge.outs = FALSE, merge.deg2 = TRUE)
+graph$build_mesh(h=0.5, continuous = FALSE, continuous.outs = FALSE, continuous.deg2 = TRUE)
 p1 <- graph$plot(mesh = TRUE, direction = TRUE)
 p1
 u <- rep(0,dim(graph$mesh$V)[1]); u[1] = 1
