@@ -24,6 +24,10 @@
 * Added `get_vertices_incomp_dir()` method to return vertices with incompatible directions.
 * Added `print()`, `summary()`, `compute_characteristics()`, `check_euclidean()`, `check_distance_consistency()` methods.
 * Added support for edge weights.
+* Created `vertices` element in the metric graph object, containing information such as degrees, indegrees, outdegrees.
+* Created `print` methods for `edges`, `vertices`, and for their entries.
+* Added the `improve_plot` option on `plot_function`.
+* Added support for discontinuous meshes.
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.

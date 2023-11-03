@@ -695,6 +695,8 @@ they are closer than this number (given in relative edge distance between
 0 and 1). The default is \code{1e-15}.}
 
 \item{\code{mesh_warning}}{Display a warning if the graph structure change and the metric graph has a mesh object.}
+
+\item{\code{share_weights}}{Should the same weight be shared among the split edges? If \code{FALSE}, the weights will be removed, and a common weight given by 1 will be given.}
 }
 \if{html}{\out{</div>}}
 }
