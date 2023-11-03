@@ -799,6 +799,8 @@ projectVecLine2 <- function(lines, points, normalized = FALSE){
 #' @noRd
 
 distance2 <- function(points, lines, byid=FALSE, longlat, crs){
+  class(points) <- NULL
+  class(lines) <- NULL
   if(!longlat){
     points_sf <- sf::st_as_sf(as.data.frame(points), coords = 1:2)
   } else{
@@ -1075,6 +1077,7 @@ check_lines_input <- function(lines){
 #' 
 
 compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
+  class(edge) <- NULL
     if(!longlat || project_data){
       fact <- process_factor_unit(vertex_unit, unit)
       return(compute_length(edge) * fact)
@@ -1101,6 +1104,8 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 #' 
 
 compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit){
+  class(lines) <- NULL
+  class(points) <- NULL
     if(!longlat){
       if(is.null(points)){
         dists <- dist(lines) * fact
@@ -1397,6 +1402,118 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
     message("# Use `print(n=...)` to see more edges")
   }
 }
+
+#' @name print.metric_graph_edge
+#' @title Print Method for \code{metric_graph_edge} Objects
+#' @description Provides a brief description of the chosen edge of a metric graph
+#' @param x object of class `metric_graph_edge`.
+#' @param n number of coordinates to show
+#' @param ... Currently not used.
+#' @return No return value. Called for its side effects.
+#' @noRd
+#' @method print metric_graph_edge
+#' @export
+print.metric_graph_edge <- function(x, n = 4, ...) {
+  cat("Edge",attr(x,"id"),"of the metric graph\n\n")
+  cat("Longitude and Latitude coordinates:", attr(x, "longlat"), "\n")
+  if(attr(x, "longlat")){
+    cat("Coordinate reference system:",attr(x, "crs"), "\n")
+  }
+  if(attr(x, "longlat")){
+    lab_x = "Longitude"
+    lab_y = "Latitude"
+  } else{
+    lab_x <- "x"
+    lab_y <- "y"
+  }
+  edge_lengths <- 
+  cat("\nCoordinates of the vertices of the edge: \n")
+  edge_df <- data.frame(a = x[,1], b = x[,2]) 
+  n_edge_df <- nrow(edge_df)
+  edge_df <- edge_df[c(1,n_edge_df),]
+  colnames(edge_df) <- c(lab_x,lab_y)
+  print(edge_df, row.names=FALSE)
+
+  cat("\n")
+
+  cat("Coordinates of the edge:\n")
+  edge_df <- data.frame(a = x[,1], b = x[,2]) 
+  colnames(edge_df) <- c(lab_x,lab_y)
+  print(edge_df[1:min(n,nrow(edge_df)),], row.names=FALSE)
+  if(n < nrow(edge_df)){
+    message(paste("#", nrow(x)-n,"more coordinates"))
+    message("# Use `print(n=...)` to see more coordinates")
+  }
+  
+  cat("\n")
+
+  if(is.null(attr(x, "PtE"))){
+    message("Relative positions of the coordinates on the graph edges were not computed.")
+    message("To compute them, run the `compute_PtE_edges()` method.")
+  } else{
+  cat("Relative positions of the edge:\n")
+  PtE <- attr(x, "PtE")
+  PtE_df <- data.frame(a = PtE[,1], b = PtE[,2]) 
+  colnames(PtE_df) <- c("Edge number","Distance on edge")
+  print(PtE_df[1:min(n,nrow(edge_df)),], row.names=FALSE)
+  if(n < nrow(PtE_df)){
+    message(paste("#", nrow(PtE_df)-n,"more relative positions"))
+    message("# Use `print(n=...)` to see more relative positions")
+  }
+  }
+  
+  cat("\n")
+  cat("Total number of coordinates:",nrow(edge_df),"\n")
+    if(!is.null(attr(attr(x,"length"),"units"))){
+      cat("Edge length:", attr(x, "length"),units(attr(x, "length"))$numerator,"\n")
+    } else{
+      cat("Edge length:", attr(x, "length"),"\n")
+    }
+    if(is.data.frame(attr(x, "weight"))){
+      cat("Weights: \n")
+      print(attr(x, "weight"), row.names=FALSE)
+      cat("\n")
+    } else{
+      cat("Weight:", attr(x, "weight"),"\n")
+    }
+
+}
+
+
+
+
+#' @name print.metric_graph_vertex
+#' @title Print Method for \code{metric_graph_vertice} Objects
+#' @description Provides a brief description of the chosen vertex of a metric graph
+#' @param x object of class `metric_graph_vertex`.
+#' @param n number of rows to show
+#' @param ... Currently not used.
+#' @return No return value. Called for its side effects.
+#' @noRd
+#' @method print metric_graph_vertex
+#' @export
+print.metric_graph_vertex <- function(x, n = 10, ...) {
+  cat("Vertex", attr(x, "id"),"of the metric graph\n\n")
+  cat("Longitude and Latitude coordinates:", attr(x, "longlat"), "\n")
+  if(attr(x, "longlat")){
+    cat("Coordinate reference system:",attr(x, "crs"), "\n")
+  }
+  if(attr(x, "longlat")){
+    lab_x = "Longitude"
+    lab_y = "Latitude"
+  } else{
+    lab_x <- "x"
+    lab_y <- "y"
+  }
+  cat("\nSummary: \n")
+  coord_tmp <- matrix(nrow = 1, ncol = 6)
+  coord_tmp <- as.data.frame(coord_tmp)
+  coord_tmp[1,1:5] <- c(x, attr(x, "degree"),attr(x, "indegree"), attr(x, "outdegree"))
+  coord_tmp[1,6] <- attr(x, "problematic")
+  colnames(coord_tmp) <- c(lab_x, lab_y, "Degree", "Indegree", "Outdegree", "Problematic")
+  print(coord_tmp, row.names = FALSE)
+}
+
 
 
 #' @noRd 

@@ -519,11 +519,12 @@ metric_graph <-  R6Class("metric_graph",
     self$set_edge_weights(weights = edge_weights)
     private$create_update_vertices()
 
-    # Adding IDs to edges
+    # Adding IDs to edges and setting up their class
 
-    for(i in 1:length(self$edges)){
-      attr(self$edges[[i]], "id") <- i
-    }
+    # for(i in 1:length(self$edges)){
+    #   attr(self$edges[[i]], "id") <- i
+    #   class(self$edges[[i]]) <- "metric_graph_edge"
+    # }
 
     # Cloning the initial graph
 
@@ -571,6 +572,8 @@ metric_graph <-  R6Class("metric_graph",
       attr(edge, "longlat") <- private$longlat
       attr(edge, "crs") <- private$crs$input
       attr(edge, "length") <- edge_lengths_[i]
+      attr(edge, "id") <- i
+      class(edge) <- "metric_graph_edge"
       return(edge)
     })
     class(self$edges) <- "metric_graph_edges"
@@ -1322,6 +1325,35 @@ metric_graph <-  R6Class("metric_graph",
     #   close(pb)
     # }
 
+   if(verbose){
+    message("Updating attributes of the edges and vertices")
+   }
+
+   t <- system.time({
+      for(i in 1:length(self$vertices)){
+        attr(self$vertices[[i]], "id") <- i
+      }
+      for(i in 1:length(self$edges)){
+         attr(self$edges[[i]], "id") <- i
+         attr(self$edges[[i]], "longlat") <- private$longlat
+         attr(self$edges[[i]], "crs") <- private$crs$input
+         attr(self$edges[[i]], "length") <- self$edge_lengths[i]
+         class(self$edges[[i]]) <- "metric_graph_edge"
+        if(!is.null(private$length_unit)){
+          units(attr(self$edges[[i]], "length")) <- private$length_unit
+        }
+        if(is.vector(private$edge_weights)){
+          attr(self$edges[[i]], "weight") <- private$edge_weights[i]
+        } else{
+          attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
+        }
+      }
+   })
+   if(verbose){
+            message(sprintf("time: %.3f s", t[["elapsed"]]))
+   }
+
+
    if(!is.null(private$data)){
     if(verbose){
       message("Updating data locations.")
@@ -1420,6 +1452,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param tolerance Observations locations are merged to a single vertex if
   #' they are closer than this number (given in relative edge distance between
   #' 0 and 1). The default is `1e-15`.
+  #' @param share_weights Should the same weight be shared among the split edges? If `FALSE`, the weights will be removed, and a common weight given by 1 will be given.
   #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
   #' @return No return value. Called for its side effects.
   observation_to_vertex = function(tolerance = 1e-15, mesh_warning = TRUE) {
@@ -1477,12 +1510,16 @@ metric_graph <-  R6Class("metric_graph",
 
     if (!is.null(self$mesh)) {
       self$mesh <- NULL
-      if(mesh_warning){
+      if(warning){
         warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
       }
     }
 
     private$create_update_vertices()
+      
+    # Updating the edge attributes
+    self$set_edge_weights(weights = private$edge_weights)
+
     for(j in 1:length(self$edges)){
         attr(self$edges[[j]], "PtE") <- NULL
     }
@@ -3909,6 +3946,8 @@ metric_graph <-  R6Class("metric_graph",
       coords_line <- c()
       coords_tmp <- c()
 
+      class(XY) <- NULL
+
 
       if(!private$longlat){
       lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
@@ -4124,9 +4163,9 @@ metric_graph <-  R6Class("metric_graph",
       self$V <- self$V[-ind,]
       self$vertices[[ind]] <- NULL
       self$nV <- self$nV - 1
-      for(i in ind:length(self$vertices)){
-        attr(self$vertices[[i]], "id") <- attr(self$vertices[[i]], "id") - 1
-      }
+      # for(i in ind:length(self$vertices)){
+      #   attr(self$vertices[[i]], "id") <- attr(self$vertices[[i]], "id") - 1
+      # }
 
       #update edges
       self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
@@ -4134,26 +4173,35 @@ metric_graph <-  R6Class("metric_graph",
       self$E[e_rem[1],] <- E_new
       self$edges[[e_rem[1]]] <- coords
       self$edges <- self$edges[-e_rem[2]]
-      for(i in e_rem[2]:length(self$edges)){
-        attr(self$edges, "id") <- attr(self$edges, "id") - 1
-      }
+      # for(i in e_rem[2]:length(self$edges)){
+      #     attr(self$edges[[i]], "id") <- attr(self$edges[[i]], "id") - 1
+      # }
+      # attr(self$edges[[e_rem[1]]], "id") <- e_rem[1]
 
       self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
       self$edge_lengths <- self$edge_lengths[-e_rem[2]]
 
       self$nE <- self$nE - 1
 
-      attr(self$edges[[e_rem[1]]], "longlat") <- private$longlat
-      attr(self$edges[[e_rem[1]]], "crs") <- private$crs$input
-      attr(self$edges[[e_rem[1]]], "length") <- self$edge_lengths[e_rem[1]]
-      if(!is.null(private$length_unit)){
-        units(attr(self$edges[[e_rem[1]]], "length")) <- private$length_unit
-      }
+
       if(is.vector(private$edge_weights)){
-        attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1]]
+        private$edge_weights <- private$edge_weights[-e_rem[2]]
       } else{
-        attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1],]
+        private$edge_weights <- private$edge_weights[-e_rem[2],]
       }
+
+      # attr(self$edges[[e_rem[1]]], "longlat") <- private$longlat
+      # class(self$edges[[e_rem[1]]]) <- "metric_graph_edge"
+      # attr(self$edges[[e_rem[1]]], "crs") <- private$crs$input
+      # attr(self$edges[[e_rem[1]]], "length") <- self$edge_lengths[e_rem[1]]
+      # if(!is.null(private$length_unit)){
+      #   units(attr(self$edges[[e_rem[1]]], "length")) <- private$length_unit
+      # }
+      # if(is.vector(private$edge_weights)){
+      #   attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1]]
+      # } else{
+      #   attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1],]
+      # }
       }
     }
     class(self$edges) <- "metric_graph_edges"
@@ -4346,25 +4394,36 @@ metric_graph <-  R6Class("metric_graph",
         if(private$addinfo){
             private$initial_edges_added <- rbind(private$initial_edges_added,cbind(Ei, nrow(self$E)))
         }
-        attr(self$edges[[Ei]], "length") <- t * l_e
-        attr(self$edges[[length(self$edges)]], "length") <- (1 - t) * l_e
-        if(!is.null(private$length_unit)){
-          units(attr(self$edges[[Ei]], "length")) <- private$length_unit
-          units(attr(self$edges[[length(self$edges)]], "length")) <- private$length_unit
-        }
-        attr(self$edges[[Ei]], "longlat") <- private$longlat
-        attr(self$edges[[length(self$edges)]], "longlat") <- private$longlat
-        attr(self$edges[[Ei]], "crs") <- private$crs$input
-        attr(self$edges[[length(self$edges)]], "crs") <- private$crs$input
-        if(is.vector(private$edge_weights)){
-          attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei]
-        } else{
-          attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei,]
-        }
-        attr(self$edges[[Ei]], "id") <- Ei
-        attr(self$edges[[length(self$edges)]], "id") <- length(self$edges)
 
-        class(self$edges) <- "metric_graph_edges"
+        if(is.vector(private$edge_weights)){
+          private$edge_weights <- c(private$edge_weights, private$edge_weights[Ei])
+        } else{
+          private$edge_weights <- rbind(private$edge_weights, private$edge_weights[Ei,])
+        }          
+
+        # attr(self$edges[[Ei]], "length") <- t * l_e
+        # attr(self$edges[[length(self$edges)]], "length") <- (1 - t) * l_e
+        # if(!is.null(private$length_unit)){
+        #   units(attr(self$edges[[Ei]], "length")) <- private$length_unit
+        #   units(attr(self$edges[[length(self$edges)]], "length")) <- private$length_unit
+        # }
+        # attr(self$edges[[Ei]], "longlat") <- private$longlat
+        # attr(self$edges[[length(self$edges)]], "longlat") <- private$longlat
+        # attr(self$edges[[Ei]], "crs") <- private$crs$input
+        # attr(self$edges[[length(self$edges)]], "crs") <- private$crs$input
+        # if(is.vector(private$edge_weights)){
+        #   attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei]
+        #   attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei]
+        # } else{
+        #   attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei,]
+        #   attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei,]
+        # }
+        # attr(self$edges[[Ei]], "id") <- Ei
+        # attr(self$edges[[length(self$edges)]], "id") <- length(self$edges)
+        # class(self$edges[[Ei]]) <- "metric_graph_edge"
+        # class(self$edges[[length(self$edges)]]) <- "metric_graph_edge"
+
+        # class(self$edges) <- "metric_graph_edges"
 
         if(!is.null(private$data)){
           ind <- which(private$temp_PtE[, 1] %in% Ei)
@@ -4619,6 +4678,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
           attr(vert, "longlat") <- private$longlat
           attr(vert, "crs") <- private$crs$input
           attr(vert, "id") <- i
+          class(vert) <- "metric_graph_vertex"
           return(vert)
         })
     class(self$vertices) <- "metric_graph_vertices"
