@@ -568,7 +568,7 @@ metric_graph <-  R6Class("metric_graph",
       return(edge)
     })
     class(self$edges) <- "metric_graph_edges"
-    
+
   },
 
 
@@ -2415,6 +2415,11 @@ metric_graph <-  R6Class("metric_graph",
   #' not provided).
   #' @param n Maximum number of nodes per edge (should be provided if h is not
   #' provided).
+  #' @param  continuous If `TRUE` (default), the mesh contains only one node per vertex.
+  #' If `FALSE`, each vertex v is split into deg(v) disconnected nodes to allow
+  #' for the creation of discontinuities at the vertices.
+  #' @param merge.outs If `continuous = FALSE` and `merge.outs = TRUE`, continuity is
+  #' assumed for the outgoing edges from each vertex.
   #' @details The mesh is a list with the objects:
   #' - `PtE` The mesh locations excluding the original vertices;
   #' - `V` The verties of the mesh;
@@ -2425,82 +2430,127 @@ metric_graph <-  R6Class("metric_graph",
   #' - `VtE` All mesh locations including the original vertices.
   #' @return No return value. Called for its side effects. The mesh is stored in
   #' the `mesh` element of the `metric_graph` object.
-  build_mesh = function(h=NULL,n=NULL) {
+ build_mesh = function(h=NULL,n=NULL, continuous = TRUE, merge.outs = FALSE) {
 
-    if(is.null(h) && is.null(n)){
-      stop("You should specify either h or n!")
-    }
+   if(is.null(h) && is.null(n)){
+     stop("You should specify either h or n!")
+   }
 
-    if(!is.null(h)){
-      if(length(h)>1 || (!is.numeric(h))){
-        stop("h should be a single number")
-      }
+   if(!is.null(h)){
+     if(length(h)>1 || (!is.numeric(h))){
+       stop("h should be a single number")
+     }
 
-      if(h<=0){
-        stop("h must be positive!")
-      }
-    }
+     if(h<=0){
+       stop("h must be positive!")
+     }
+   }
 
-    if(!is.null(n)){
-      if(length(n)>1 || (!is.numeric(n))){
-        stop("n should be a single number")
-      }
+   if(!is.null(n)){
+     if(length(n)>1 || (!is.numeric(n))){
+       stop("n should be a single number")
+     }
 
-      if(n<=0){
-        stop("n must be positive!")
-      }
+     if(n<=0){
+       stop("n must be positive!")
+     }
 
-      if(n%%1!=0){
-        warning("A noninteger n was given, we are rounding it to an integer.")
-        n <- round(n)
-      }
-    }
+     if(n%%1!=0){
+       warning("A noninteger n was given, we are rounding it to an integer.")
+       n <- round(n)
+     }
+   }
 
-    self$mesh <- list(PtE = NULL,
-                      V = NULL,
-                      E = NULL,
-                      n_e = rep(0, self$nV),
-                      h_e = NULL,
-                      ind = 1:self$nV,
-                      VtE = NULL)
-    attr(self$mesh, 'continuous') <- TRUE
-    self$mesh$V <- self$V
+   if(continuous) {
+     self$mesh <- list(PtE = NULL,
+                       V = NULL,
+                       E = NULL,
+                       n_e = rep(0, self$nV),
+                       h_e = NULL,
+                       ind = 1:self$nV,
+                       VtE = NULL)
+     attr(self$mesh, 'continuous') <- TRUE
+     self$mesh$V <- self$V
 
-    for (i in 1:length(self$edges)) {
-      if (is.null(n)) {
-        #remove boundary points
-        self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2
-      } else {
-        self$mesh$n_e[i] <- n
-      }
-      if (self$mesh$n_e[i] > 0) {
-        d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
-        d.e <- d.e[2:(1+self$mesh$n_e[i])]
+     for (i in 1:length(self$edges)) {
+       if (is.null(n)) {
+         #remove boundary points
+         self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2
+       } else {
+         self$mesh$n_e[i] <- n
+       }
+       if (self$mesh$n_e[i] > 0) {
+         d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
+         d.e <- d.e[2:(1+self$mesh$n_e[i])]
 
-        self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
-                                                    d.e))
+         self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
+                                                     d.e))
 
-        self$mesh$h_e <- c(self$mesh$h_e,
-                           rep(self$edge_lengths[i] * d.e[1],
-                               self$mesh$n_e[i] + 1))
+         self$mesh$h_e <- c(self$mesh$h_e,
+                            rep(self$edge_lengths[i] * d.e[1],
+                                self$mesh$n_e[i] + 1))
 
-        V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
-        self$mesh$ind <- c(self$mesh$ind, V.int)
-        self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i, 1], V.int),
-                                                c(V.int, self$E[i, 2])))
-      } else {
-        self$mesh$E <- rbind(self$mesh$E, self$E[i, ])
-        self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
-      }
-    }
+         V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
+         self$mesh$ind <- c(self$mesh$ind, V.int)
+         self$mesh$E <- rbind(self$mesh$E, cbind(c(self$E[i, 1], V.int),
+                                                 c(V.int, self$E[i, 2])))
+       } else {
+         self$mesh$E <- rbind(self$mesh$E, self$E[i, ])
+         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
+       }
+     }
 
-    self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
-    if(!is.null(self$mesh$PtE)) {
-      self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
-    } else {
-      self$mesh$V <- rbind(self$mesh$V)
-    }
-  },
+     self$mesh$VtE <- rbind(self$VtEfirst(), self$mesh$PtE)
+     if(!is.null(self$mesh$PtE)) {
+       self$mesh$V <- rbind(self$mesh$V, self$coordinates(PtE = self$mesh$PtE))
+     } else {
+       self$mesh$V <- rbind(self$mesh$V)
+     }
+   } else {
+     self$mesh <- list(PtE = NULL,
+                       V = NULL,
+                       E = NULL,
+                       n_e = NULL,
+                       h_e = NULL,
+                       ind = 0,
+                       VtE = NULL)
+     attr(self$mesh, 'continuous') <- FALSE
+     for (i in 1:length(self$edges)) {
+       if (is.null(n)) {
+         #remove boundary points
+         self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1
+       } else {
+         self$mesh$n_e[i] <- n + 2
+       }
+       if (self$mesh$n_e[i] > 0) {
+         d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i])
+
+         self$mesh$PtE <- rbind(self$mesh$PtE, cbind(rep(i, self$mesh$n_e[i]),
+                                                     d.e))
+
+         self$mesh$h_e <- c(self$mesh$h_e,
+                            rep(self$edge_lengths[i] * d.e[2],
+                                self$mesh$n_e[i] - 1))
+
+         V.int <- (max(self$mesh$ind) + 1):(max(self$mesh$ind) + self$mesh$n_e[i])
+         self$mesh$ind <- c(self$mesh$ind, V.int)
+
+         self$mesh$E <- rbind(self$mesh$E, cbind(V.int[-length(V.int)], V.int[-1]))
+
+       } else {
+         self$mesh$E <- rbind(self$mesh$E, self$E[i, ])
+         self$mesh$h_e <- c(self$mesh$h_e,self$edge_lengths[i])
+       }
+     }
+     self$mesh$VtE <- self$mesh$PtE
+     self$mesh$V <- self$coordinates(PtE = self$mesh$PtE)
+     if(merge.outs) {
+       private$mesh_merge_outs()
+     }
+     private$move_V_first()
+     private$mesh_merge_deg2()
+   }
+ },
 
   #' @description Build mass and stiffness matrices for given mesh object.
   #' @details The function builds: The matrix `C` which is the mass matrix with
@@ -2528,8 +2578,12 @@ metric_graph <-  R6Class("metric_graph",
     self$mesh$B <- fem_temp$B
     self$mesh$D <- Diagonal(dim(self$mesh$C)[1],
                             c(rep(1, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
-    self$mesh$Cpet <- fem_temp$Cpet
-    self$mesh$Gpet <- fem_temp$Gpet
+    if(petrov) {
+      self$mesh$Cpet <- fem_temp$Cpet
+      self$mesh$Gpet <- fem_temp$Gpet
+      private$set_petrov_matrices()
+    }
+
     self$mesh$weights <- rowSums(self$mesh$C)
   },
 
@@ -2917,7 +2971,7 @@ metric_graph <-  R6Class("metric_graph",
       } else {
         vals <- X[X[, 1]==i, 2:3, drop = FALSE]
       if(nrow(vals)>0){
-      
+
         if(!improve_plot){
             if (max(vals[, 1]) < 1) {
               # #check if we can add end value from other edge
@@ -2939,7 +2993,7 @@ metric_graph <-  R6Class("metric_graph",
               if (length(ind) > 0) {
                 # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
                 vals <- rbind(vals, c(1, min.val))
-              } 
+              }
               else {
                 Ei <- self$E[, 2] == Ve #edges that end in Ve
                 Ei <- which(Ei)
@@ -3116,7 +3170,7 @@ metric_graph <-  R6Class("metric_graph",
                                                   x = vals[,1],
                                                       na.rm=FALSE, ties = "mean"),
                                                max_val), min_val))
-            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]                                               
+            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
         }
       }
       }
@@ -4582,13 +4636,13 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   return(self)
 },
 
- # Function to compute the degrees of the vertices, 
+ # Function to compute the degrees of the vertices,
 
   compute_degrees = function(){
     degrees_in <- rep(0,self$nV)
     degrees_out <- rep(0,self$nV)
     for(i in 1:self$nV) {
-          degrees_out[i] <- sum(self$E[,1]==i) 
+          degrees_out[i] <- sum(self$E[,1]==i)
           degrees_in[i] <- sum(self$E[,2]==i)
     }
     degrees <- degrees_in + degrees_out
@@ -4612,6 +4666,192 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
           return(vert)
         })
     class(self$vertices) <- "metric_graph_vertices"
+  },
+
+  # Merge degree 2 vertices in mesh
+  mesh_merge_deg2 = function() {
+    outs <- rep(0,self$nV)
+    ins <- rep(0, self$nV)
+    for(i in 1:self$nV) {
+      outs[i] <- sum(self$E[,1] == i)
+      ins[i] <- sum(self$E[,2] == i)
+    }
+    ind <- which(outs == 1 & ins == 1)
+    if(length(ind)>0) {
+      for(i in 1:length(ind)) {
+        V.keep <- self$mesh$V[ind[i],]
+        V.rem <- which(self$mesh$V[,1] == V.keep[1] & self$mesh$V[,2] == V.keep[2])[2]
+        self$mesh$PtE <- self$mesh$PtE[-V.rem,]
+        self$mesh$V <- self$mesh$V[-V.rem,]
+        self$mesh$E[self$mesh$E == V.rem] <- ind[i]
+        self$mesh$E[self$mesh$E>V.rem] <- self$mesh$E[self$mesh$E>V.rem] - 1
+      }
+    }
+  },
+
+  mesh_merge_outs = function() {
+    outs <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+      outs[i] <- sum(self$E[,1] == i)
+    }
+    ind <- which(outs > 1)
+    while(length(ind)>0) {
+      #find edges going out
+      e.ind <- which(self$E[,1]==ind[1])
+      V.keep <- which(self$mesh$PtE[,1]==e.ind[1])[1]
+      V.rem <- which(self$mesh$PtE[,1]==e.ind[2])[1]
+      self$mesh$PtE <- self$mesh$PtE[-V.rem,]
+      self$mesh$V <- self$mesh$V[-V.rem,]
+      self$mesh$E[self$mesh$E == V.rem] <- V.keep
+      self$mesh$E[self$mesh$E>V.rem] <- self$mesh$E[self$mesh$E>V.rem] - 1
+      outs[ind[1]] <- outs[ind[1]] - 1
+      ind <- which(outs > 1)
+    }
+    #now merge ins with outs if there is only one in
+    ins <- rep(0,self$nV)
+    outs <- rep(0,self$nV)
+    for(i in 1:self$nV) {
+      ins[i] <- sum(self$E[,2] == i)
+      outs[i] <- sum(self$E[,1] == i)
+    }
+    ind <- which(ins == 1 & outs > 1)
+    while(length(ind)>0) {
+      #merge in vertex with out
+      e.ind.in <- which(self$E[,2]==ind[1])
+      e.ind <- which(self$E[,1]==ind[1])
+      V.keep <- which(self$mesh$PtE[,1]==e.ind[1])[1]
+      V.rem <- which(self$mesh$PtE[,1]==e.ind.in)
+      V.rem <- V.rem[length(V.rem)]
+      self$mesh$PtE <- self$mesh$PtE[-V.rem,]
+      self$mesh$V <- self$mesh$V[-V.rem,]
+      self$mesh$E[self$mesh$E == V.rem] <- V.keep
+      self$mesh$E[self$mesh$E>V.rem] <- self$mesh$E[self$mesh$E>V.rem] - 1
+      ins[ind[1]] <- ins[ind[1]] - 1
+      ind <- which(ins == 1 & outs > 1)
+    }
+  },
+
+  #find one mesh node corresponding to each vertex and move it first
+  move_V_first = function() {
+    nv <- dim(self$mesh$V)[1]
+    for(i in 1:self$nV) {
+      ind <- which(self$mesh$V[,1] == self$V[i,1] & self$mesh$V[,2] == self$V[i,2])[1]
+
+      if(ind > i && i < nv) {
+        if (i == 1) {
+          reo <- c(ind, setdiff(i:nv,ind))
+        } else {
+          reo <- c(1:(i-1), ind, setdiff(i:nv,ind))
+        }
+        self$mesh$V <- self$mesh$V[reo,]
+        self$mesh$PtE <- self$mesh$PtE[reo,]
+        self$mesh$VtE <- self$mesh$VtE[reo,]
+        Etmp <- self$mesh$E
+        ind1 <- Etmp == ind
+        ind2 <- Etmp >= i & Etmp < ind
+        self$mesh$E[ind1] = i
+        self$mesh$E[ind2] = self$mesh$E[ind2] + 1
+      }
+    }
+  },
+
+  # find vertices and connections for Petrov-Galerkin matrices
+  find_mesh_bc = function() {
+    if(attr(self$mesh,"continuous")) {
+      stop("mesh discontinuous")
+    }
+    starts <- which(self$mesh$PtE[,2]==0)
+    edges <- self$mesh$PtE[starts,1]
+
+    ind.keep <- rep(TRUE,length(starts))
+    for(i in 1:length(starts)) {
+      vert <- self$E[edges[i],1]
+      if(length(which(self$E[,2] == vert)) == 1) {
+        ind.keep[i] <- FALSE
+      }
+    }
+    starts <- starts[ind.keep]
+    edges <- edges[ind.keep]
+    connections <-list()
+    for(i in 1:length(starts)) {
+      vert <- self$E[edges[i],1] #the vertex of the start point
+      n.in <- sum(self$E[,2] == vert)
+      if(n.in == 0) {
+        connections[[i]] <- 0 #true starting value
+      } else {
+        #find edges ending in the vertex
+        edge.in <- which(self$E[,2] == vert)
+        #find edges starting in the vertex
+        edge.out <- which(self$E[,1] == vert)
+
+        mesh.in <- NULL
+        for(j in 1:length(edge.in)){
+          tmp <- which(self$mesh$PtE[,1] == edge.in[j]) #mesh nodes on the edge
+          mesh.in <- c(mesh.in, tmp[length(tmp)])
+        }
+        connections[[i]] <- mesh.in
+      }
+    }
+    return(connections)
+  },
+
+  # Function to add vertex conditions to Petrov-Galerkin matrices
+  set_petrov_matrices = function() {
+    if(attr(self$mesh,"continuous")) {
+      V <- self$mesh$V[1:self$nV,]
+      deg1 <- which(self$get_degrees() == 1)
+      starts <- deg1[deg1 %in% self$E[,1]]
+
+      if(length(starts)>1){
+
+        G <- rbind(sparseMatrix(i = 1:length(starts), j = starts,
+                                x = rep(0, length(starts)),
+                                dims = c(length(starts), dim(self$mesh$Cpet)[1])),
+                   t(self$mesh$Gpet[,-starts[-1]]))
+      } else {
+        C <- rbind(sparseMatrix(i = 1, j = starts, x = 1,
+                                dims = c(1,dim(self$mesh$Cpet)[1])),
+                   t(self$mesh$Cpet))
+        G <- rbind(sparseMatrix(i = 1, j = starts, x= 0,
+                                dims = c(1, dim(self$mesh$Cpet)[1])),
+                   t(self$mesh$Gpet))
+      }
+    } else {
+      bc <- private$find_mesh_bc()
+      starts <- which(self$mesh$PtE[,2]==0)
+      edges <- self$mesh$PtE[starts,1]
+
+      ind.keep <- rep(TRUE,length(starts))
+      for(i in 1:length(starts)) {
+        vert <- self$E[edges[i],1]
+        if(length(which(self$E[,2] == vert)) == 1) {
+          ind.keep[i] <- FALSE
+        }
+      }
+      starts <- starts[ind.keep]
+      edges <- edges[ind.keep]
+      C <- t(self$mesh$Cpet)
+      G <- t(self$mesh$Gpet)
+
+      for(i in length(bc):1) {
+        G <- rbind(sparseMatrix(i = 1, j = 1, x = 0,
+                                dims = c(1, dim(self$mesh$Cpet)[1])), G)
+        if(bc[[i]][1] == 0) {
+          C <- rbind(sparseMatrix(i = 1,j = starts[i], x = 1,
+                                  dims = c(1, dim(self$mesh$Cpet)[1])), C)
+        } else {
+          C <- rbind(sparseMatrix(i = rep(1,length(bc[[i]])+1),
+                                  j = c(starts[i], bc[[i]]),
+                                  x = c(1, rep(-1/length(bc[[i]]), length(bc[[i]]))),
+                                  dims = c(1, dim(self$mesh$Cpet)[1])), C)
+        }
+
+      }
+    }
+    self$mesh$Cpet = C
+    self$mesh$Gpet = G
+    self$mesh$n.bc = length(starts)
+    self$mesh$h0 = which(unlist(lapply(bc,length))>1)
   },
 
   # Temp PtE
