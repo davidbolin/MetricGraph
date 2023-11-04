@@ -1286,16 +1286,21 @@ metric_graph <-  R6Class("metric_graph",
   prune_vertices = function(verbose = FALSE){
     t <- system.time({
     degrees <- private$compute_degrees()$degrees
-    # start.deg <- end.deg <- rep(0,self$nV)
-    # for(i in 1:self$nV) {
-    #   start.deg[i] <- sum(self$E[,1]==i)
-    #   end.deg[i] <- sum(self$E[,2]==i)
-    # }
-
+    
     # Finding problematic vertices, that is, vertices with incompatible directions
     # They will not be pruned.
-    # problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
-    problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
+
+    if(is.null(self$vertices)){
+      start.deg <- end.deg <- rep(0,self$nV)
+      for(i in 1:self$nV) {
+        start.deg[i] <- sum(self$E[,1]==i)
+        end.deg[i] <- sum(self$E[,2]==i)
+      }
+      problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+    } else{
+      problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
+    }
+
     res <- list(degrees = degrees, problematic = problematic)
     if(verbose){
       to.prune <- sum(res$degrees==2 & !res$problematic)
