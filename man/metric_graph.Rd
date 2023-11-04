@@ -1392,6 +1392,7 @@ Plots continuous function on the graph.
   X = NULL,
   plotly = FALSE,
   improve_plot = FALSE,
+  continuous = TRUE,
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
@@ -1424,6 +1425,8 @@ evaluated at the mesh in the graph}
 the package 'plotly'.}
 
 \item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
+
+\item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 

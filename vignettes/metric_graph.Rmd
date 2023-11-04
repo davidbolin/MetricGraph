@@ -274,6 +274,29 @@ and
 graph3$edges
 ```
 
+We can also look at individual edges and vertices. For example, let us look at vertice number 2:
+
+```{r}
+graph3$vertices[[2]]
+```
+
+Similarly, let us look at edge number 4:
+
+```{r}
+graph3$edges[[4]]
+```
+
+We have a message informing us that the relative positions of the edges were not computed. They are used to produce better plots when using the `plot_function()` method, see the section "Improving the plot obtained by `plot_function`" below. To compute the relative positions, we run the `compute_PtE_edges()` method:
+
+```{r}
+graph3$compute_PtE_edges()
+```
+
+Now, we take a look at edge number 4 again:
+
+```{r}
+graph3$edges[[4]]
+```
 
 ## Understanding coordinates on graphs
 
@@ -595,7 +618,19 @@ XY <- graph$mesh$V
 f <- XY[, 1]^2 - XY[, 2]^2
 ```
 
-We will need to supply the `data.frame`. So let us build it:
+We can directly plot from the mesh values. Let us start with the default, non-improved, plot:
+
+```{r}
+graph$plot_function(f)
+```
+
+We can, then, plot the improved version by setting `improve_plot` to `TRUE`:
+
+```{r}
+graph$plot_function(f, improve_plot = TRUE)
+```
+
+Alternatively, we can supply the data through the `newdata` argument. To such an end, we will need to supply the `data.frame`. So let us build it:
 
 ```{r}
 df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
@@ -650,7 +685,6 @@ f <- graph$mesh$VtE[,1]/4
 
 Let us proceed with the creation of the `data.frame` and processing of the data:
 
-
 ```{r}
 df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
                     distance_on_edge = graph$mesh$VtE[,2],
@@ -697,4 +731,28 @@ graph$plot_function(f, improve_plot = TRUE)
 
 ```{r}
 graph$plot_function(f, plotly=TRUE, improve_plot = TRUE)
+```
+
+We can similarly plot by setting the `data.frame` and passing the `newdata` argument:
+
+```{r}
+df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
+                    distance_on_edge = graph$mesh$VtE[,2],
+                    f = f)
+df_f <- graph$process_data(data = df_f, normalized=TRUE)
+```
+
+Let us now build the plots. In this case, we need to set the `continuous` argument to `FALSE`. First the 2d plot:
+
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, 
+                      improve_plot = TRUE,  continuous = FALSE)
+```
+
+Now, the 3d plot:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+                    improve_plot = TRUE, continuous = FALSE)
 ```

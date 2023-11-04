@@ -2873,6 +2873,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param plotly If `TRUE`, then the plot is shown in 3D. This option requires
   #' the package 'plotly'.
   #' @param improve_plot Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?
+  #' @param continuous Should continuity be assumed when the plot uses `newdata`?
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.
@@ -2890,6 +2891,7 @@ metric_graph <-  R6Class("metric_graph",
                            X = NULL,
                            plotly = FALSE,
                            improve_plot = FALSE,
+                           continuous = TRUE,
                            vertex_size = 5,
                            vertex_color = "black",
                            edge_width = 1,
@@ -2972,40 +2974,15 @@ metric_graph <-  R6Class("metric_graph",
         }
         X <- newdata[,c(".edge_number", ".distance_on_edge", data)]
       }
+    }
+
 
       if(improve_plot){
         if(is.null(attr(self$edges[[1]], "PtE"))){
           self$compute_PtE_edges()
         }
-        X <- as.data.frame(X)
         PtE_edges <- lapply(1:length(self$edges), function(i){attr(self$edges[[i]], "PtE")})
-        # PtE_edges <- do.call(rbind, PtE_edges)
-        # PtE_edges <- as.data.frame(PtE_edges)
-        # colnames(PtE_edges) <- c(".edge_number", ".distance_on_edge")
-        # PtE_edges <- dplyr::setdiff(PtE_edges, X[,c(".edge_number", ".distance_on_edge")])
-        # PtE_edges[[data]] <- rep(NA, nrow(PtE_edges))
-        # X <- rbind(X, PtE_edges)
-        # ord_X <- order(X[,1], X[,2])
-        # X <- X[ord_X,]
-        # X <- unique(X)
-        # edge_num <- unique(X[,1])
-        # if(splines){
-        #   for(i in edge_num){
-        #     idx_edge <- which(X[,1] == i)
-        #     if(!all(is.na(X[idx_edge, 3]))){
-        #       max_val <- max(X[idx_edge,3], na.rm=TRUE)
-        #       min_val <- min(X[idx_edge,3], na.rm=TRUE)
-        #       X[idx_edge,3] <- na.const(pmax(pmin(object = zoo::na.approx(object = X[idx_edge,3],
-        #                                             x = X[idx_edge,2],
-        #                                                 na.rm=FALSE),
-        #                                          max_val), min_val))
-        #     } else{
-        #        X <- X[-idx_edge,]
-        #     }
-        #   }
-        # }
       }
-    }
 
 
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
@@ -3043,8 +3020,39 @@ metric_graph <-  R6Class("metric_graph",
 
 
         }
+
+        if(improve_plot){
+          PtE_tmp <- PtE_edges[[i]]
+          PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
+          PtE_tmp <- PtE_tmp[,2, drop=TRUE]
+          PtE_tmp <- setdiff(PtE_tmp, vals[,1])
+          if(length(PtE_tmp)>0){
+                PtE_tmp <- cbind(PtE_tmp, NA)
+                vals <- rbind(vals,PtE_tmp)
+          }
+            ord_idx <- order(vals[,1])
+            vals <- vals[ord_idx,]
+            if(vals[1,1] > 0){
+              vals <- rbind(c(0,NA), vals)
+            }
+            if(vals[nrow(vals),1] < 1){
+              vals <- rbind(vals, c(1,NA))
+            }
+            max_val <- max(vals[,2], na.rm=TRUE)
+            min_val <- min(vals[,2], na.rm=TRUE)
+            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+                                                  x = vals[,1],
+                                                      na.rm=FALSE, ties = "mean"),
+                                               max_val), min_val))
+            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+        }
+
+
       } else {
+        X <- as.data.frame(X)
         vals <- X[X[, 1]==i, 2:3, drop = FALSE]
+
+    if(continuous){
       if(nrow(vals)>0){
 
         if(!improve_plot){
@@ -3149,7 +3157,6 @@ metric_graph <-  R6Class("metric_graph",
               }
             }
         } else {
-
             PtE_tmp <- PtE_edges[[i]]
             if(PtE_tmp[1,1] != i){
               edge_new <- PtE_tmp[1,1]
@@ -3247,6 +3254,35 @@ metric_graph <-  R6Class("metric_graph",
                                                max_val), min_val))
             vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
         }
+      }
+      } else if(improve_plot){
+       
+          PtE_tmp <- PtE_edges[[i]]
+          PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
+          PtE_tmp <- PtE_tmp[,2, drop=TRUE]
+          PtE_tmp <- setdiff(PtE_tmp, vals[,1])
+          if(length(PtE_tmp)>0){
+                PtE_tmp <- cbind(PtE_tmp, NA)
+                PtE_tmp <- as.data.frame(PtE_tmp)
+                colnames(PtE_tmp) <- c(".distance_on_edge", data)
+                vals <- rbind(vals,PtE_tmp)
+          }
+            ord_idx <- order(vals[,1])
+            vals <- vals[ord_idx,]
+            if(vals[1,1] > 0){
+              vals <- rbind(c(0,NA), vals)
+            }
+            if(vals[nrow(vals),1] < 1){
+              vals <- rbind(vals, c(1,NA))
+            }
+            max_val <- max(vals[,2], na.rm=TRUE)
+            min_val <- min(vals[,2], na.rm=TRUE)
+            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+                                                  x = vals[,1],
+                                                      na.rm=FALSE, ties = "mean"),
+                                               max_val), min_val))
+            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+
       }
       }
 
