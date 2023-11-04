@@ -721,19 +721,27 @@ Observe that for both versions we have the same behavior around the vertices (wh
 
 To work with discontinuous functions, the simplest option is to create a mesh that does not assume continuity:
 ```{r}
-graph$build_mesh(h=0.2, continuous = FALSE)
+graph$build_mesh(h=0.8, continuous = FALSE)
 ```
-In this mesh, each vertex is split into one vertex per edge connecting to the vertex, which allows for discontinuous functions. 
+In this mesh, each vertex is split into one vertex per edge connecting to the vertex, which allows for discontinuous functions.  
 ```{r}
 f <- graph$mesh$PtE[,1]/4
+graph$plot_function(f)
+```
+
+Similarly to the case for continuous meshes, we have the `improve_plot` option:
+
+```{r}
 graph$plot_function(f, improve_plot = TRUE)
 ```
+
+Now, the 3d plot:
 
 ```{r}
 graph$plot_function(f, plotly=TRUE, improve_plot = TRUE)
 ```
 
-We can similarly plot by setting the `data.frame` and passing the `newdata` argument:
+Alternatively, we can similarly plot by setting the `data.frame` and passing the `newdata` argument:
 
 ```{r}
 df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
