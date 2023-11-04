@@ -821,25 +821,43 @@ summary(pems_graph)
 
 Observe that it is a non-Euclidean graph.
 
-Let us create as non-stationary covariates, the position on the edge, which will capture if the traffic speed was taken close to the intersections. We will apply the sine function so that we have the same behavior at the beginning and end of the edges.
+Let us create as non-stationary covariates, the position on the edge, which will capture if the traffic speed was taken close to the intersections. We will make this function symmetric around 0.5 by subtracting 0.5 for points larger than 0.5. That is, the covariate is zero close to intersections.
 
 ```{r}
-cov_pos <- sin(pems_graph$mesh$VtE[,2] * pi)
+cov_pos <- 2 * ifelse(pems_graph$mesh$VtE[,2] > 0.5, 
+                    1-pems_graph$mesh$VtE[,2], 
+                    pems_graph$mesh$VtE[,2])
 ```
 
 We will now build the non-stationary matrices to be used:
 
 ```{r}
  B.sigma = cbind(0, 1, 0, cov_pos, 0)
- B.range = cbind(0, 0, 1, 0, cov_pos)
+ B.range = cbind(0, 0, 1,  0, cov_pos)
+```
+
+Let us also obtain the same covariate for the observations:
+
+```{r}
+cov_obs <- pems$data[["distance_on_edge"]]
+cov_obs <- 2 * ifelse(cov_obs > 0.5, 
+                      1 - cov_obs,
+                      cov_obs)
+```
+
+Let add this covariate to the data:
+
+```{r}
+pems_graph$add_observations(data = pems_graph$mutate(cov_obs = cov_obs),
+                            clear_obs = TRUE)
 ```
 
 ### Fitting the model with `graph_lme`
 
-We are now in position to fit this model using the `graph_lme()` function:
+We are now in position to fit this model using the `graph_lme()` function. We will also add `cov_obs` as a covariate for the model.
 
 ```{r}
-fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", 
+fit <- graph_lme(y ~ cov_obs, graph = pems_graph, model = list(type = "WhittleMatern", 
                     B.sigma = B.sigma, B.range = B.range, fem = TRUE))
 ```
 
@@ -908,7 +926,7 @@ Let us create the component and fit.
 
 ```{r, message=FALSE, warning=FALSE}
 cmp_nonstat <-
-  y ~ -1 + Intercept(1) + field(loc,
+  y ~ -1 + Intercept(1) + cov_obs + field(loc,
     model = rspde_model_nonstat
   )
 
