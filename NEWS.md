@@ -27,7 +27,8 @@
 * Created `vertices` element in the metric graph object, containing information such as degrees, indegrees, outdegrees.
 * Created `print` methods for `edges`, `vertices`, and for their entries.
 * Added the `improve_plot` option on `plot_function`.
-* Added support for discontinuous meshes.
+* Added support for discontinuous meshes (at the vertices).
+* Added support for discontinuous functions (at the vertices) for `plot_function()`.
 
 # MetricGraph 1.1.2
 * Adjusts to ensure compatibility with future releases of the Matrix package.
