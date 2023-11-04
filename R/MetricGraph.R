@@ -56,7 +56,8 @@
 #' @export filter
 #' @export select
 #' @export drop_na
-#' @importFrom broom glance augment tidy
+#' @importFrom broom glance augment 
+# @importFrom broom tidy
 #' @export glance
 #' @export augment
 # @export tidy

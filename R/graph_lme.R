@@ -911,7 +911,7 @@ graph_lme <- function(formula, graph,
 #' @description computes the log-likelihood for a fitted mixed effects model on
 #' metric graphs.
 #' @param x Object of class `graph_lme` containing results from the fitted model.
-#' @param ... further arguments passed to or from other methods.
+#' @param ... Currently not used.
 #' @return Log-likelihood value.
 #' @noRd
 #' @method logLik graph_lme
@@ -926,7 +926,7 @@ logLik.graph_lme <- function(object, ...){
 #' @title Number of observations for \code{graph_lme} objects
 #' @description Gets the number of observations of the fitted object.
 #' @param x Object of class `graph_lme` containing results from the fitted model.
-#' @param ... further arguments passed to or from other methods.
+#' @param ... Currently not used.
 #' @return The number of observations.
 #' @noRd
 #' @method nobs graph_lme
@@ -938,9 +938,9 @@ nobs.graph_lme <- function(object, ...){
 
 #' @name deviance.graph_lme
 #' @title Deviance for \code{graph_lme} objects
-#' @description Gets the number of observations of the fitted object.
+#' @description Gets the deviance of `graph_lme` fitted object.
 #' @param x Object of class `graph_lme` containing results from the fitted model.
-#' @param ... further arguments passed to or from other methods.
+#' @param ... Currently not used.
 #' @return Deviance
 #' @noRd
 #' @method deviance graph_lme
