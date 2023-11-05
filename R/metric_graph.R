@@ -1186,9 +1186,21 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   #' @description Returns the degrees of the vertices in the metric graph.
+  #' @param which If "degree", returns the degree of the vertex. If "indegree", returns the indegree,
+  #' and if "outdegree", it returns the outdegree.
   #' @return A vector containing the degrees of the vertices.
-  get_degrees = function(){
-    degrees <- sapply(self$vertices, function(vert){attr(vert, "degree")})
+  get_degrees = function(which = "degree"){
+    which <- which[[1]]
+    if(!(which %in% c("degree", "indegree", "outdegree"))){
+      stop("'which' must be either 'degree', 'indegree' or 'outdegree'!")
+    }
+    if(which == "degree"){
+      degrees <- sapply(self$vertices, function(vert){attr(vert, "degree")})
+    } else if(which == "indegree"){
+       degrees <- sapply(self$vertices, function(vert){attr(vert, "indegree")})     
+    } else{
+        degrees <- sapply(self$vertices, function(vert){attr(vert, "outdegree")})      
+    }
     return(degrees)
   },
 
