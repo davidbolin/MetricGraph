@@ -99,7 +99,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
-modified: 2023-11-04.</h4>
+modified: 2023-11-05.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -521,7 +521,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  34.16009 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  45.55833 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
@@ -725,7 +725,7 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## Number of function calls by 'optim' = 31</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  45.15883 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  50.97868 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
@@ -818,7 +818,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.14926 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  4.08663 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -903,7 +903,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.18731 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  8.27814 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -983,8 +983,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.864340 0.1051110   1.665470 1.861830   2.077750 1.856920</span></span>
-<span><span class="co">## range 0.179198 0.0270036   0.132328 0.177054   0.238166 0.172558</span></span></code></pre>
+<span><span class="co">## sigma 1.867070 0.1023670   1.674980 1.864740   2.071520 1.869210</span></span>
+<span><span class="co">## range 0.179351 0.0271454   0.132865 0.176939   0.239273 0.171674</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -1004,8 +1004,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.8643412 1.8569222</span></span>
-<span><span class="co">## 2     range  0.2 0.1791978 0.1725583</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.8670712 1.8692138</span></span>
+<span><span class="co">## 2     range  0.2 0.1793506 0.1716737</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">

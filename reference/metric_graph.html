@@ -652,9 +652,18 @@ Laplacian matrix?</p></dd>
 <h3 id="method-get-degrees-">Method <code>get_degrees()</code><a class="anchor" aria-label="anchor" href="#method-get-degrees-"></a></h3>
 <p>Returns the degrees of the vertices in the metric graph.</p><div class="section">
 <h4 id="usage-14">Usage<a class="anchor" aria-label="anchor" href="#usage-14"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_degrees</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_degrees</span><span class="op">(</span>which <span class="op">=</span> <span class="st">"degree"</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
+<div class="section">
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>which</code></dt>
+<dd><p>If "degree", returns the degree of the vertex. If "indegree", returns the indegree,
+and if "outdegree", it returns the outdegree.</p></dd>
+
+
+</dl><p></p></div>
+</div>
 <div class="section">
 <h4 id="returns-14">Returns<a class="anchor" aria-label="anchor" href="#returns-14"></a></h4>
 <p>A vector containing the degrees of the vertices.</p>
@@ -695,7 +704,7 @@ object.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
+<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>full</code></dt>
 <dd><p>Should the resistance distances be computed for all
 the available locations. If <code>FALSE</code>, it will be computed
@@ -728,7 +737,7 @@ in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</
 </div>
 
 <div class="section">
-<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
+<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>verbose</code></dt>
 <dd><p>Show progress? Default is <code>FALSE</code>.</p></dd>
 
@@ -754,7 +763,7 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
+<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>get_cols</code></dt>
 <dd><p>Should the names of the columns that created the group variable be returned?</p></dd>
 
@@ -774,7 +783,7 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
+<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>group</code></dt>
 <dd><p>For which group, should the PtE be returned? <code>NULL</code> means that all PtEs available will be returned.</p></dd>
 
@@ -800,7 +809,7 @@ observation locations.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
+<h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>unit</code></dt>
 <dd><p>If non-NULL, changes from <code>length_unit</code> from the graph construction to <code>unit</code>.</p></dd>
 
@@ -832,7 +841,7 @@ observation locations.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
+<h4 id="arguments-14">Arguments<a class="anchor" aria-label="anchor" href="#arguments-14"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>tolerance</code></dt>
 <dd><p>Observations locations are merged to a single vertex if
 they are closer than this number (given in relative edge distance between
@@ -862,7 +871,7 @@ they are closer than this number (given in relative edge distance between
 </div>
 
 <div class="section">
-<h4 id="arguments-14">Arguments<a class="anchor" aria-label="anchor" href="#arguments-14"></a></h4>
+<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>bru</code></dt>
 <dd><p>Should an 'inlabru'-friendly list be returned?</p></dd>
 
@@ -918,7 +927,7 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
+<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>Spoints</code></dt>
 <dd><p><code>SpatialPoints</code> or <code>SpatialPointsDataFrame</code> containing the
 observations. It may include the coordinates of the observations only, or
@@ -1028,7 +1037,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
+<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>Spoints</code></dt>
 <dd><p><code>SpatialPoints</code> or <code>SpatialPointsDataFrame</code> containing the
 observations. It may include the coordinates of the observations only, or
@@ -1127,7 +1136,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
+<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate()</a></code>.</p></dd>
 
@@ -1160,7 +1169,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
+<h4 id="arguments-19">Arguments<a class="anchor" aria-label="anchor" href="#arguments-19"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">tidyr::drop_na()</a></code>.</p></dd>
 
@@ -1185,7 +1194,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-19">Arguments<a class="anchor" aria-label="anchor" href="#arguments-19"></a></h4>
+<h4 id="arguments-20">Arguments<a class="anchor" aria-label="anchor" href="#arguments-20"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select()</a></code>.</p></dd>
 
@@ -1218,7 +1227,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-20">Arguments<a class="anchor" aria-label="anchor" href="#arguments-20"></a></h4>
+<h4 id="arguments-21">Arguments<a class="anchor" aria-label="anchor" href="#arguments-21"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter()</a></code>.</p></dd>
 
@@ -1257,7 +1266,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-21">Arguments<a class="anchor" aria-label="anchor" href="#arguments-21"></a></h4>
+<h4 id="arguments-22">Arguments<a class="anchor" aria-label="anchor" href="#arguments-22"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">dplyr::summarise()</a></code>.</p></dd>
 
@@ -1303,7 +1312,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-22">Arguments<a class="anchor" aria-label="anchor" href="#arguments-22"></a></h4>
+<h4 id="arguments-23">Arguments<a class="anchor" aria-label="anchor" href="#arguments-23"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>group</code></dt>
 <dd><p>A vector contaning which groups should be returned? The default is <code>NULL</code>, which gives the result for the all groups.</p></dd>
 
@@ -1331,7 +1340,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-23">Arguments<a class="anchor" aria-label="anchor" href="#arguments-23"></a></h4>
+<h4 id="arguments-24">Arguments<a class="anchor" aria-label="anchor" href="#arguments-24"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>alpha</code></dt>
 <dd><p>the type of constraint (currently only supports 2)</p></dd>
 
@@ -1367,7 +1376,7 @@ in the same vertex)</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-24">Arguments<a class="anchor" aria-label="anchor" href="#arguments-24"></a></h4>
+<h4 id="arguments-25">Arguments<a class="anchor" aria-label="anchor" href="#arguments-25"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>h</code></dt>
 <dd><p>Maximum distance between mesh nodes (should be provided if n is
 not provided).</p></dd>
@@ -1420,7 +1429,7 @@ the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-25">Arguments<a class="anchor" aria-label="anchor" href="#arguments-25"></a></h4>
+<h4 id="arguments-26">Arguments<a class="anchor" aria-label="anchor" href="#arguments-26"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>petrov</code></dt>
 <dd><p>Compute Petrov-Galerkin matrices? (default <code>FALSE</code>). These
 are defined as \(Cpet_{ij} = &lt;\phi_i, \psi_j&gt;\) and \(Gpet_{ij} = &lt;d\phi_i, \psi_j&gt;\),
@@ -1457,7 +1466,7 @@ matrices are stored in <code>Cpet</code> and <code>Gpet</code>.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-26">Arguments<a class="anchor" aria-label="anchor" href="#arguments-26"></a></h4>
+<h4 id="arguments-27">Arguments<a class="anchor" aria-label="anchor" href="#arguments-27"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Locations given as (edge number in graph, normalized location on
 edge)</p></dd>
@@ -1484,7 +1493,7 @@ elements \(A_{ij} = \phi_j(s_i)\).</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-27">Arguments<a class="anchor" aria-label="anchor" href="#arguments-27"></a></h4>
+<h4 id="arguments-28">Arguments<a class="anchor" aria-label="anchor" href="#arguments-28"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Locations given as (edge number in graph, normalized location on
 edge)</p></dd>
@@ -1545,7 +1554,7 @@ is at the end of the edge.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-28">Arguments<a class="anchor" aria-label="anchor" href="#arguments-28"></a></h4>
+<h4 id="arguments-29">Arguments<a class="anchor" aria-label="anchor" href="#arguments-29"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>Which column of the data to plot? If <code>NULL</code>, no data will be
 plotted.</p></dd>
@@ -1680,7 +1689,7 @@ requires the 'plotly' package.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-29">Arguments<a class="anchor" aria-label="anchor" href="#arguments-29"></a></h4>
+<h4 id="arguments-30">Arguments<a class="anchor" aria-label="anchor" href="#arguments-30"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>Which column of the data to plot? If <code>NULL</code>, no data will be
 plotted.</p></dd>
@@ -1779,7 +1788,7 @@ the package 'plotly'.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-30">Arguments<a class="anchor" aria-label="anchor" href="#arguments-30"></a></h4>
+<h4 id="arguments-31">Arguments<a class="anchor" aria-label="anchor" href="#arguments-31"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>X</code></dt>
 <dd><p>A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.</p></dd>
@@ -1833,7 +1842,7 @@ package 'plotly'.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-31">Arguments<a class="anchor" aria-label="anchor" href="#arguments-31"></a></h4>
+<h4 id="arguments-32">Arguments<a class="anchor" aria-label="anchor" href="#arguments-32"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.frame</code> or named list containing the observations.
 In case of groups, the data.frames for the groups should be stacked vertically,
@@ -1875,7 +1884,7 @@ coordinates.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-32">Arguments<a class="anchor" aria-label="anchor" href="#arguments-32"></a></h4>
+<h4 id="arguments-33">Arguments<a class="anchor" aria-label="anchor" href="#arguments-33"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Matrix with locations on the graph (edge number and normalized
 position on the edge).</p></dd>
@@ -1909,7 +1918,7 @@ data List containing data on the metric graph.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-33">Arguments<a class="anchor" aria-label="anchor" href="#arguments-33"></a></h4>
+<h4 id="arguments-34">Arguments<a class="anchor" aria-label="anchor" href="#arguments-34"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
