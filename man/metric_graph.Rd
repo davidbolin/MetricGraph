@@ -511,9 +511,17 @@ A matrix containing the resistance distances.
 \subsection{Method \code{get_degrees()}}{
 Returns the degrees of the vertices in the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_degrees()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_degrees(which = "degree")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{which}}{If "degree", returns the degree of the vertex. If "indegree", returns the indegree,
+and if "outdegree", it returns the outdegree.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 A vector containing the degrees of the vertices.
 }

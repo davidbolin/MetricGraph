@@ -1,3 +1,5 @@
+library(ggplot2)
+library(viridis)
 #simple example
 edge2 <- rbind(c(2,1), c(1,0))
 edge3 <- rbind(c(2,-1), c(1,0))
