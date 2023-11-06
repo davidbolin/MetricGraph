@@ -1,7 +1,7 @@
 ---
 title: "Working with metric graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Working with metric graphs}
@@ -34,27 +34,20 @@ For details about Gaussian processes and inference on metric graphs, we refer to
 
 ## Basic constructions and properties
 A metric graph can be constructed in two ways. The first is to specify all edges
-in the graph as a `SpatialLines` object using the `sp` package. To illustrate
-this, we first load the `sp` package
+in the graph as a `list` object, where each entry is a matrix. To illustrate
+this, we first construct the following edges
 ```{r}
-library(sp)
-```
-and construct the following lines
-```{r}
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 50)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
 ```
-We can now create the graph based on the `Lines` object as follows
+We can now create the graph based on the `edges` object as follows
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph <- metric_graph$new(lines = Lines)
+graph <- metric_graph$new(edges = edges)
 graph$plot()
 ```
 
@@ -93,7 +86,7 @@ specifies the Euclidian coordinates of the vertices is
 graph$V
 ```
 and the edge matrix that specified the edges of the graph (i.e., which vertices
-that are connected by lines) is
+that are connected by edges) is
 ```{r}
 graph$E
 ```
@@ -105,7 +98,7 @@ graph$geo_dist
 ```
 The second option it to construct the graph using two matrices `V` and `E` that
 specify the locations (in Euclidean space) of the vertices and the edges. In this
-case, it is assumed that the graph only has straight lines:
+case, it is assumed that the graph only has straight edges:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 V <- rbind(c(0, 0), c(1, 0), c(0, 1), c(-1, 1))
 E <- rbind(c(1, 2), c(1, 3), c(3, 4), c(4, 1))
@@ -113,56 +106,81 @@ graph2 <- metric_graph$new(V = V, E = E)
 graph2$plot()
 ```
 
-## Tolerances for the merging vertices and lines
-The constructor of the graph has one argument `tolerance` which is used for connecting lines that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
+A third option is to create a graph from a `SpatialLines` object:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
+library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 50)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+
+graph <- metric_graph$new(edges = Lines)                    
+graph$plot()
+```
+
+A final option is to create from a `MULTILINESTRING` object:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
+library(sf)
+line1 <- st_linestring(rbind(c(0,0),c(1,0)))
+line2 <- st_linestring(rbind(c(0,0),c(0,1)))
+line3 <- st_linestring(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 50)
+line4 <- st_linestring(cbind(sin(theta),1+ cos(theta)))
+multilinestring = st_multilinestring(list(line1, line2, line3, line4))
+
+graph <- metric_graph$new(edges = multilinestring)                    
+graph$plot()
+```
+
+## Tolerances for merging vertices and edges
+The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
 * `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
-* `vertex_line` if a vertex at the end of one line is closer than this number to another line, this vertex is connected to that line (the default value is `1e-7`)
-* `line_line` if two lines at some point are closer than this number, a new
-vertex is added at that point and the two lines are connected (the default value is `0` which means that the option is not used)
+* `vertex_edge` if a vertex at the end of one edge is closer than this number to another edge, this vertex is connected to that edge (the default value is `1e-7`)
+* `edge_edge` if two edges at some point are closer than this number, a new
+vertex is added at that point and the two edges are connected (the default value is `0` which means that the option is not used)
 
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
-following three lines:
+following three edges:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0.03),c(0,1)))
-line3 <- Line(rbind(c(-1,1),c(0.5,0.03)))
-lines = SpatialLines(list(Lines(list(line1),ID="1"),
-                          Lines(list(line2),ID="2"),
-                          Lines(list(line3),ID="3")))
-graph3 <- metric_graph$new(lines = lines)
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0.03),c(0,0.75))
+edge3 <- rbind(c(-1,1),c(0.5,0.03))
+edge4 <- rbind(c(0,0.75), c(0,1))
+edges =  list(edge1, edge2, edge3, edge4)
+graph3 <- metric_graph$new(edges = edges)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
 ```
 
-We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three lines are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two lines are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
+We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three edges are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two edges are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05))
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
-One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first line, so that the two lines there are connected. This can be done by adjusting the `vertex_line` tolerance: 
+One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first edge, so that the two edges there are connected. This can be done by adjusting the `vertex_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
-                                                           vertex_line = 0.1))
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05,
+                                                           vertex_edge = 0.1))
 graph3$plot(degree = TRUE)
 ```
 
-We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `lines` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected lines. This modification might take some time for large graphs with many lines, because of this, the `lines` object is by default modified if the graph has less than 100 lines, and otherwise it is not modified. Whether or not it should be modified can be set via the argument `adjust_lines`:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.05,
-                                                           vertex_line = 0.1),
-                           adjust_lines = FALSE)
-graph3$plot(degree = TRUE)
-```
+We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `edges` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected edges. 
 
-If the `lines` object is not modified, then the graph is correct but the plot might not show the graph as connected even though it is. 
-Finally, to add a vertex at the intersection between `line2` and `line3` we can adjust the `line_line` tolerance: 
+Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
-                                                           vertex_line = 0.1,
-                                                           line_line = 0.001))
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+                                                           vertex_edge = 0.1,
+                                                           edge_edge = 0.001))
 graph3$plot(degree = TRUE)
 ```
 
@@ -170,11 +188,114 @@ Now, the structure of the metric graph does not change if we add or remove verti
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph3 <- metric_graph$new(lines = lines, tolerance = list(vertex_vertex = 0.2,
-                                                           vertex_line = 0.1,
-                                                           line_line = 0.001),
+graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+                                                           vertex_edge = 0.1,
+                                                           edge_edge = 0.001),
                            remove_deg2 = TRUE)
 graph3$plot(degree = TRUE)
+```
+
+Observe that one vertex of degree 2 was not removed. This is due to the fact that if we consider the direction, this vertex has directions incompatible for removal. We can see this by setting the argument `direction=TRUE` in the `plot()` method:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+graph3$plot(direction = TRUE)
+```
+
+## Characteristics of the graph
+
+A brief summary of the main characteristics of the graph can be obtained by the `compute_characteristics()` method:
+
+```{r}
+graph3$compute_characteristics()
+```
+
+We can, then, view those characteristics by simply printing the `metric_graph` object:
+
+```{r}
+graph3
+```
+
+Observe that we do not know that the graph has Euclidean edges. We can check by using the `check_euclidean()` method:
+
+```{r}
+graph3$check_euclidean()
+```
+
+Let us view the characteristics again:
+
+```{r}
+graph3
+```
+
+It can happen that we have that the graph does not have Euclidean edges without the need to check the distance consistency. However, if one wants to check if the graph satisfies the distance consistency assumption, one can run the `check_distance_consistency()` function:
+
+```{r}
+graph3$check_distance_consistency()
+```
+
+Further, the individual characteristics can be accessed (after running the `compute_characteristics()` method) through the `characteristics` component of the graph object:
+
+```{r}
+graph3$characteristics
+```
+
+## Summaries of metric graphs
+
+We can also obtain a summary of the informations contained on a metric graph object by using the `summary()` method. 
+Let us obtain a summary of informations of `graph3`:
+
+```{r}
+summary(graph3)
+```
+
+Observe that there are some quantities that were not computed on the summary. We can see how to compute them by setting the argument `messages` to `TRUE`:
+
+```{r}
+summary(graph3, messages = TRUE)
+```
+
+Finally, the `summary()` can also be accessed from the metric graph object:
+
+```{r}
+graph3$summary()
+```
+
+## Vertices and edges
+
+The metric graph object has the `edges` and `vertices` elements in its list. We can get a quick summary from them by calling these elements:
+
+```{r}
+graph3$vertices
+```
+
+and
+
+```{r}
+graph3$edges
+```
+
+We can also look at individual edges and vertices. For example, let us look at vertice number 2:
+
+```{r}
+graph3$vertices[[2]]
+```
+
+Similarly, let us look at edge number 4:
+
+```{r}
+graph3$edges[[4]]
+```
+
+We have a message informing us that the relative positions of the edges were not computed. They are used to produce better plots when using the `plot_function()` method, see the section "Improving the plot obtained by `plot_function`" below. To compute the relative positions, we run the `compute_PtE_edges()` method:
+
+```{r}
+graph3$compute_PtE_edges()
+```
+
+Now, we take a look at edge number 4 again:
+
+```{r}
+graph3$edges[[4]]
 ```
 
 ## Understanding coordinates on graphs
@@ -229,7 +350,7 @@ coordinates are given in Longitude and Latitude. Because of this, the edge
 lengths are by default given in degrees, which may result in very small 
 numbers:
 ```{r}
-range(graph5$edge_lengths)
+range(graph5$get_edge_lengths())
 ```
 This may cause numerical instabilities when dealing with random fields on the
 graph, and it also makes it difficult to interpret results (unless one has a 
@@ -242,7 +363,7 @@ This tells the constructor that the coordinates are given in Longitude and
 Latitude and that distances should be calculated in km. So if we now look at the
 edge lengths, they are given in km:
 ```{r}
-range(graph5$edge_lengths)
+range(graph5$get_edge_lengths())
 ```
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
@@ -250,7 +371,8 @@ the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), 
+                                                    longlat = TRUE)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -270,33 +392,51 @@ One reason for having multiple components here might be that we set the toleranc
 by looking at the edge lengths we see that we have vertices that are as close 
 as 
 ```{r}
-min(graph5$edge_lengths) * 1000
+min(graph5$get_edge_lengths(unit='m'))
 ```
 meters. Let us increase the tolerances so that vertices that are at most
-a distance of 20 meters (0.02km) apart should be merged, and that vertices that
-are withing 20 meters of other lines should be merged with them:
+a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
-                               tolerance = list(vertex_vertex = 0.02,
-                                                vertex_line = 0.02))
+                               tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0)
 ```
 
-With this choice, we see that the graph is connected:
+With this choice, let us check the number of connected components:
 ```{r}
 graphs$n
 ```
-However, since the `adjust_vertices` argument by default is `FALSE` for this size
-of graphs, the plot of the graph might look disconnected in places where vertices
-have been merged. We can retrieve the graphas a standard `metric_graph` object to work 
+
+We can retrieve the graph as a standard `metric_graph` object to work 
 with in further analysis via the `get_largest` command:
 ```{r}
 graph5 <- graphs$get_largest()
 ```
 
+Let us take a quick look at its vertices and edges:
+
+```{r}
+graph5$vertices
+```
+
+and
+
+```{r}
+graph5$edges
+```
+
+It is also relevant to obtain a summary of this graph:
+
+```{r}
+summary(graph5)
+```
+
+We have that this graph does not have Euclidean edges. Also observe that we have the units for the vertices and lengths, and also the coordinate reference system being used by this object.
+
 # Adding data to the graph 
 
-Given that we have constructed the metric graph, we can now add data to it. 
+Given that we have constructed the metric graph, we can now add data to it. For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html). 
 As an example, let us consider the first graph again and suppose that we have 
 observations at a distance 0.5 from the start of each edge. One way of specifying
 this is as follows 
@@ -372,6 +512,12 @@ graph$plot(data = "x", group = 1)
 One can note that the command adds all observation locations, from all groups
 as vertices. 
 
+Finally, let us obtain a summary of the graph containing data:
+
+```{r}
+summary(graph)
+```
+
 # Working with functions on metric graphs
 
 When working with data on metric graphs, one often wants to display functions
@@ -400,28 +546,221 @@ function `plot_function` to display it:
 x <- graph$mesh$V[, 1]
 y <- graph$mesh$V[, 2]
 f <- x^2 - y^2
-graph$plot_function(f)
+graph$plot_function(X = f)
 ```
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
 visualization of the function:
 ```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
-graph$plot_function(f, plotly = TRUE)
+graph$plot_function(X = f, plotly = TRUE)
 ```
 
 When the first argument of `plot_function` is a vector, the function assumes that 
 the values in the vector are the values of the function evaluated at the vertices
-of the mesh. As an alternative, one can also provide the first argument as a 
-matrix consisting of the triplets $(i, t, f(i, t))$. Here $i$ denotes the 
-edge number, $t$ the location on the edge, and $f(i, t)$ the value at that point.
+of the mesh. As an alternative, one can also provide a new dataset.
 To illustrate this, let us first construct a set of locations that are evenly 
-spaced over each edge, then convert these to Euclidean coordinates so that we
-can evaluate the function above, and finally plot the result:
+spaced over each edge. Then, we will convert the data to Euclidean coordinates 
+so that we can evaluate the function above. Then, process the data and finally plot the result:
 ```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
 n.e <- 30
 PtE <- cbind(rep(1:graph$nE, each = n.e), 
-             rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))
+             rep(seq(from = 0, to = 1, length.out = n.e), graph$nE))        
 XY <- graph$coordinates(PtE)
 f <- XY[, 1]^2 - XY[, 2]^2
-graph$plot_function(cbind(PtE, f), plotly = TRUE)
+data_f <- data.frame(f = f, "edge_number" = PtE[,1], 
+            "distance_on_edge" = PtE[,2])
+data_f <- graph$process_data(data = data_f, normalized=TRUE)            
+graph$plot_function(data = "f", newdata = data_f, plotly = TRUE)
+```
+
+Alternatively, we can add the data to the graph, and directly plot by using the `data` argument.
+To illustration purposes, we will build this next plot as a 2d plot:
+
+```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
+graph$add_observations(data = data_f, clear_obs = TRUE, normalized = TRUE)
+graph$plot_function(data = "f")
+```
+
+## Improving the plot obtained by `plot_function`
+
+If we compute the relative positions of the edge coordinates, we can improve the quality of the plot obtained by using `plot_function`. Observe that depending on the size of the graph, this might be costly, since we will need to do this conversion.
+
+We begin by recreating the first graph we used in this vignette:
+
+```{r}
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
+theta <- seq(from=pi,to=3*pi/2,length.out = 50)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+
+graph <- metric_graph$new(edges = edges)
+```
+
+Now, let us compute the relative positions of the coordinates of the edge by using the `compute_PtE_edges()` method:
+
+```{r}
+graph$compute_PtE_edges()
+```
+
+Let us create a coarse mesh, so the improvement can be easily seen.
+
+```{r}
+graph$build_mesh(h=0.8)
+graph$plot(mesh=TRUE)
+```
+
+Let us compute the function the same function as before on this mesh:
+
+```{r}
+XY <- graph$mesh$V
+f <- XY[, 1]^2 - XY[, 2]^2
+```
+
+We can directly plot from the mesh values. Let us start with the default, non-improved, plot:
+
+```{r}
+graph$plot_function(f)
+```
+
+We can, then, plot the improved version by setting `improve_plot` to `TRUE`:
+
+```{r}
+graph$plot_function(f, improve_plot = TRUE)
+```
+
+Alternatively, we can supply the data through the `newdata` argument. To such an end, we will need to supply the `data.frame`. So let us build it:
+
+```{r}
+df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
+                    distance_on_edge = graph$mesh$VtE[,2],
+                    f = f)
+```
+
+Let us now process the `data.frame` to the graph's internal data format
+using the `process_data()` method:
+
+```{r}
+df_f <- graph$process_data(data = df_f, normalized=TRUE)
+```
+
+We will now plot this function. First, let us do the default plot from `plot_function`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f)
+```
+
+Let us now, create the same plot with `improve_plot=TRUE`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+```
+
+The reason it refined a lot on the circular part is that it interpolates the values of the function at the edge coordinates, and the circular part has the most coordinates. All the other edges only have two coordinates, the start and end. 
+
+Let us now obtain a 3d plot. First, of the default version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+```
+
+Now, of the improved version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+                    improve_plot = TRUE)
+```
+
+### Note about continuity
+
+However, it is important to observe that `plot_function` assumes continuity of the function by default. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. In such a case, `improve_plot` does not affect the action on the discontinuity points.
+
+For example, let us consider the function that takes the edge number (normalized). Let us also refine the mesh a bit, so it is easier to observe what is happening.
+
+```{r}
+graph$build_mesh(h=0.2)
+f <- graph$mesh$VtE[,1]/4
+```
+
+Let us proceed with the creation of the `data.frame` and processing of the data:
+
+```{r}
+df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
+                    distance_on_edge = graph$mesh$VtE[,2],
+                    f = f)
+df_f <- graph$process_data(data = df_f, normalized=TRUE)
+```
+
+We will now plot this function with the default plot from `plot_function`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f)
+```
+
+Let us now, create the same plot with `improve_plot=TRUE`:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+```
+
+Let us now obtain a 3d plot. First, of the default version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+```
+
+Now, of the improved version:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+                    improve_plot = TRUE)
+```
+
+Observe that for both versions we have the same behavior around the vertices (which are the discontinuity points). 
+
+To work with discontinuous functions, the simplest option is to create a mesh that does not assume continuity:
+```{r}
+graph$build_mesh(h=0.8, continuous = FALSE)
+```
+In this mesh, each vertex is split into one vertex per edge connecting to the vertex, which allows for discontinuous functions.  
+```{r}
+f <- graph$mesh$PtE[,1]/4
+graph$plot_function(f)
+```
+
+Similarly to the case for continuous meshes, we have the `improve_plot` option:
+
+```{r}
+graph$plot_function(f, improve_plot = TRUE)
+```
+
+Now, the 3d plot:
+
+```{r}
+graph$plot_function(f, plotly=TRUE, improve_plot = TRUE)
+```
+
+Alternatively, we can similarly plot by setting the `data.frame` and passing the `newdata` argument:
+
+```{r}
+df_f <- data.frame(edge_number = graph$mesh$VtE[,1],
+                    distance_on_edge = graph$mesh$VtE[,2],
+                    f = f)
+df_f <- graph$process_data(data = df_f, normalized=TRUE)
+```
+
+Let us now build the plots. In this case, we need to set the `continuous` argument to `FALSE`. First the 2d plot:
+
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, 
+                      improve_plot = TRUE,  continuous = FALSE)
+```
+
+Now, the 3d plot:
+
+```{r}
+graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+                    improve_plot = TRUE, continuous = FALSE)
 ```

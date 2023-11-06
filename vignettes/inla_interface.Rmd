@@ -1,7 +1,7 @@
 ---
 title: "INLA interface for Whittle--Matérn fields on metric graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{INLA interface for Whittle--Matérn fields on metric graphs}
@@ -52,6 +52,9 @@ for this approach is provided in
 For an introduction to the `metric_graph` class, please see 
 the [Working with metric graphs](metric_graph.html) vignette.
 
+For handling data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html)
+
 For a simplification of the `R-INLA` interface, see
 the [inlabru interface of Whittle--Matérn fields](inlabru_interface.html) vignette.
 
@@ -80,18 +83,14 @@ and creating a metric graph:
 
 ```{r}
 library(MetricGraph)
-library(sp)
 
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line4),ID="3"),
-                              Lines(list(line3),ID="4")))
-graph <- metric_graph$new(lines = Lines)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
 ```
 
 Let us add 50 random locations in each edge where we will 
@@ -159,36 +158,25 @@ library(INLA)
 spde_model <- graph_spde(graph)
 ```
 
-Now, we need to create the index object with 
-the `graph_spde_make_index()` function:
+Now, we need to create the data object with the `graph_data_spde()` function, in which we need to provide a name for the random effect, which we will call `field`:
 
 ```{r}
-spde_index <- graph_spde_make_index(name="field", graph_spde=spde_model)
-```
-
-Observe that, as in `R-INLA`, we need to name the field.
-
-The next step is to create the observation matrix, to which
-we use the `graph_spde_make_A()` function:
-
-```{r}
-A <- graph_spde_make_A(spde_model)
+data_spde <- graph_data_spde(graph_spde = spde_model, name = "field")
 ```
 
 The remaining is standard in `R-INLA`. We create the
 formula object and the
 `inla.stack` object with the `inla.stack()` function. 
 The data needs to be in the `graph` (by using the `add_observations()` 
-method) and should be supplied to the stack by using the
-`graph_spde_data()` function. 
+method) and should be supplied to the stack by the components of the `data_spde` list obtained from the `graph_data_spde()` function: 
 
 ```{r}
 f.s <- y ~ -1 + Intercept + f(field, model = spde_model)
 
-stk_dat <- inla.stack(data = graph_data_spde(spde_model), 
-                        A = A, 
+stk_dat <- inla.stack(data = data_spde[["data"]], 
+                        A = data_spde[["basis"]], 
                         effects = c(
-      spde_index,
+      data_spde[["index"]],
       list(Intercept = 1)
     ))
 ```
@@ -200,7 +188,7 @@ data_stk <- inla.stack.data(stk_dat)
 
 Finally, we fit the model:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 spde_fit <- inla(f.s, data = data_stk)
 ```
 
@@ -284,12 +272,9 @@ we create a new model object with the `graph_spde()` function:
 spde_model_prd <- graph_spde(graph)
 ```
 
-Now, let us create a new index object and a new observation (`A`):
+Now, let us create a new data object for prediction. Observe that we need to set `drop_all_na` to `FALSE` in order to not remove the prediction locations:
 ```{r}
-spde_index_prd <- graph_spde_make_index(name="field", 
-                            graph_spde=spde_model_prd)
-
-A_prd <- graph_spde_make_A(graph_spde = spde_model_prd)
+data_spde_prd <- graph_data_spde(spde_model_prd, drop_all_na = FALSE, name="field")
 ```
 
 We will create a new vector of response variables,
@@ -300,10 +285,10 @@ formula object and the
 ```{r}
 f_s_prd <- y ~ -1 + Intercept + f(field, model = spde_model_prd)
 
-stk_dat_prd <- inla.stack(data = graph_data_spde(spde_model_prd), 
-                        A = A_prd, 
+stk_dat_prd <- inla.stack(data = data_spde_prd[["data"]], 
+                        A = data_spde_prd[["basis"]], 
                         effects = c(
-      spde_index_prd,
+      data_spde_prd[["index"]],
       list(Intercept = 1)
     ))
 ```
@@ -317,7 +302,7 @@ spde_fit_prd <- inla(f_s_prd, data = data_stk_prd)
 
 We will now extract the means at the prediction locations:
 ```{r}
-idx_prd <- which(is.na(graph_data_spde(spde_model_prd)[["y"]]))
+idx_prd <- which(is.na(data_spde_prd[["data"]][["y"]]))
 
 m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
 ```
@@ -325,7 +310,7 @@ m_prd <- spde_fit_prd$summary.fitted.values$mean[idx_prd]
 To improve visualization, we will plot the posterior means
 using the `plot()` method:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$plot_function(m_prd, vertex_size = 0, edge_width = 2)
+graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 2)
 ```
 
 Finally, we can plot the predictions together with
@@ -421,33 +406,21 @@ replicates.
 Thus, let us assume we want only to consider replicates
 1, 3, 5, 7 and 9. To this end,
 we the index object by using the
-`graph_spde_make_index()` function with the
-argument `n.repl` set to the number of replicates we want,
-in this case 5:
+`graph_data_spde()` function with the
+argument `repl` set to the replicates we want,
+in this case `c(1,3,5,7,9)`:
 ```{r}
-spde_index_rep <- graph_spde_make_index(name="field", 
-                    graph_spde=spde_model_rep, 
-                    n.repl = 5)
-```
-
-Similarly, we create the observation (`A`) matrix with the
-function `graph_spde_make_A()` setting the `repl` argument
-to the replicates we want:
-```{r}
-A_rep <- graph_spde_make_A(graph_spde=spde_model_rep,
-                             repl = c(1,3,5,7,9))
+data_spde <- graph_data_spde(graph_spde=spde_model_rep,
+                      name="field", repl = c(1,3,5,7,9))
 ```
 
 Next, we create the stack object, remembering that
-we need to input the `data` argument
-with the function `graph_data_spde()`. There, we 
-determine the replicates we want with the `repl` argument.
+we need to input the components from `data_spde`:
 ```{r}
-stk_dat_rep <- inla.stack(data = graph_data_spde(spde_model_rep,
-                                  repl = c(1,3,5,7,9)), 
-                        A = A_rep, 
+stk_dat_rep <- inla.stack(data = data_spde[["data"]], 
+                        A = data_spde[["basis"]], 
                         effects = c(
-      spde_index_rep,
+      data_spde[["index"]],
       list(Intercept = 1)
     ))
 ```
@@ -499,31 +472,21 @@ Let us compare with the true values:
 
 
 Now, let us consider the case with all replicates. 
-We create a new index object by using the
-`graph_spde_make_index()` function with the
-argument `n.repl` set to the total number of replicates:
+We create a new data object by using the
+`graph_data_spde()` function with the
+argument `repl` set to `.all`:
 ```{r}
-spde_index_rep <- graph_spde_make_index(name="field", 
-                    graph_spde=spde_model_rep, 
-                    n.repl = n_repl)
+data_spde_rep <- graph_data_spde(graph_spde=spde_model_rep, 
+                    name="field", 
+                    repl = ".all")
 ```
 
-Similarly, we create a new observation (`A`) matrix with the
-function `graph_spde_make_A()` setting the `repl` argument
-to `__all`:
+Now the stack:
 ```{r}
-A_rep <- graph_spde_make_A(graph_spde=spde_model_rep,
-                            repl="__all")
-```
-
-Now the stack, where we set the `repl` argument in 
-the function `graph_data_spde()` to `__all`:
-```{r}
-stk_dat_rep <- inla.stack(data = graph_data_spde(spde_model_rep,
-                                          repl = "__all"), 
-                        A = A_rep, 
+stk_dat_rep <- inla.stack(data = data_spde_rep[["data"]], 
+                        A = data_spde_rep[["basis"]], 
                         effects = c(
-      spde_index_rep,
+      data_spde_rep[["index"]],
       list(Intercept = 1)
     ))
 ```

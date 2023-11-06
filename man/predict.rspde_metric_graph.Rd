@@ -8,7 +8,7 @@
   object,
   cmp,
   bru_fit,
-  data = NULL,
+  newdata = NULL,
   formula = NULL,
   data_coords = c("PtE", "euclidean"),
   normalized = TRUE,
@@ -19,7 +19,8 @@
   include = NULL,
   exclude = NULL,
   drop = FALSE,
-  ...
+  ...,
+  data = deprecated()
 )
 }
 \arguments{
@@ -30,7 +31,7 @@
 
 \item{bru_fit}{A fitted model using 'inlabru' or 'INLA'.}
 
-\item{data}{A data.frame of covariates needed for the prediction. The locations
+\item{newdata}{A data.frame of covariates needed for the prediction. The locations
 must be normalized PtE.}
 
 \item{formula}{A formula where the right hand side defines an R expression to
@@ -75,6 +76,8 @@ prediciton summary has the same number of rows as data, then the output is a
 SpatialDataFrame object. Default FALSE.}
 
 \item{...}{Additional arguments passed on to inla.posterior.sample.}
+
+\item{data}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{newdata} instead.}
 }
 \value{
 A list with predictions.

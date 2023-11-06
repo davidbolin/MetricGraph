@@ -25,6 +25,8 @@ navbar:
         href: articles/metric_graph.html
       - text: Gaussian random fields on metric graphs
         href: articles/random_fields.html
+      - text: Data manipulation on metric graphs
+        href: articles/metric_graph_data.html
       - text: inlabru interface of Whittle--Matérn fields
         href: articles/inlabru_interface.html
       - text: INLA interface of Whittle--Matérn fields
@@ -43,7 +45,6 @@ home:
   - text: Our research group
     href: http://stochproc.kaust.edu.sa/
 
-
 reference:
   - title: MetricGraph package
     contents:
@@ -59,17 +60,15 @@ reference:
     - spde_metric_graph_result
     - summary.metric_graph_spde_result
     - gg_df.metric_graph_spde_result
-    - graph_spde_make_A
-    - graph_spde_make_index
     - graph_data_spde
-    - graph_repl_spde
+    - graph_spde_basis
+    - graph_spde_make_A
   - title: inlabru and SPDE approach on metric graphs
     contents:
     - bru_mapper.inla_metric_graph_spde
     - predict.inla_metric_graph_spde
     - predict.rspde_metric_graph
     - plot.graph_bru_pred
-    - bru_graph_rep
     - graph_bru_process_data
   - title: Linear mixed-effects models
     contents:
@@ -78,6 +77,8 @@ reference:
     - summary.graph_lme
     - posterior_crossvalidation
     - graph_starting_values
+    - glance.graph_lme
+    - augment.graph_lme
   - title: Log-Cox Gaussian processes
     contents:
     - graph_lgcp
@@ -89,6 +90,16 @@ reference:
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
+  - title: Data manipulation on metric graphs
+    contents:
+    - select.metric_graph_data
+    - filter.metric_graph_data
+    - mutate.metric_graph_data
+    - summarise.metric_graph_data
+    - drop_na.metric_graph_data
+  - title: Methods for metric graphs
+    contents:
+    - summary.metric_graph
   - title: Precision matrices
     contents:
     - spde_precision

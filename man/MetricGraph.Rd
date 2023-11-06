@@ -3,6 +3,7 @@
 \docType{package}
 \name{MetricGraph}
 \alias{MetricGraph}
+\alias{MetricGraph-package}
 \title{Gaussian processes on metric graphs}
 \description{
 'MetricGraph' is used for creation and manipulation of metric graphs, such as street or river networks.

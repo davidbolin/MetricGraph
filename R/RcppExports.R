@@ -49,8 +49,8 @@ NULL
 #' @param nV [int] Number of vertices
 #' @noRd
 #'
-assemble_fem <- function(E, h_e, nV) {
-    .Call(`_MetricGraph_assemble_fem`, E, h_e, nV)
+assemble_fem <- function(E, h_e, nV, petrov) {
+    .Call(`_MetricGraph_assemble_fem`, E, h_e, nV, petrov)
 }
 
 #' @name projectVecLine
@@ -75,5 +75,15 @@ projectVecLine <- function(lines, points, normalized = 0L) {
 #'
 interpolate2_aux <- function(lines, pos, normalized = 0L) {
     .Call(`_MetricGraph_interpolate2_aux`, lines, pos, normalized)
+}
+
+#' @name compute_length
+#' @title Compute length
+#' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
+#' @param coords nx2 matrix Matrix of the points of the lines
+#' @noRd
+#'
+compute_length <- function(coords) {
+    .Call(`_MetricGraph_compute_length`, coords)
 }
 

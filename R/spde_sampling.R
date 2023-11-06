@@ -91,8 +91,10 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                 u <- NULL
                 inds_PtE <- unique(graph$PtE[,1])
               } else {
+                order_PtE <- order(PtE[,1], PtE[,2])
+                ordered_PtE <- PtE[order_PtE,]
                 u <- NULL
-                inds_PtE <- unique(PtE[,1])
+                inds_PtE <- unique(ordered_PtE[,1])
               }
 
               for (i in inds_PtE) {
@@ -101,7 +103,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                 } else if (type == "obs") {
                   t <- graph$PtE[graph$PtE[,1] == i, 2]
                 } else {
-                  t <- PtE[PtE[,1] == i, 2]
+                  t <- ordered_PtE[ordered_PtE[,1] == i, 2]
                 }
 
                 samp <- sample_alpha1_line(kappa = kappa, tau = tau,
@@ -109,6 +111,9 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                                            l_e = graph$edge_lengths[i])
                 u <- c(u, samp[,2])
               }
+                if(type == "manual"){
+                  u[order_PtE] <- u
+                }
     } else if(method == "Q"){
         if(type == "manual"){
           graph_tmp <- graph$get_initial_graph()
@@ -126,7 +131,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
           Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
         } else if(type == "obs"){
           Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
-          n_obs_tmp <- length(graph$data[["__group"]])
+          n_obs_tmp <- length(graph$data[[".group"]])
           order_PtE <- 1:n_obs_tmp
         } else if(type == "mesh"){
           graph_tmp <- graph$get_initial_graph()
@@ -178,8 +183,10 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
         u <- NULL
         inds_PtE <- unique(graph$PtE[,1])
       } else {
+        order_PtE <- order(PtE[,1], PtE[,2])
+        ordered_PtE <- PtE[order_PtE,]
         u <- NULL
-        inds_PtE <- unique(PtE[,1])
+        inds_PtE <- unique(ordered_PtE[,1])
       }
 
       for (i in inds_PtE) {
@@ -188,7 +195,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
         } else if (type == "obs") {
           t <- graph$PtE[graph$PtE[,1] == i, 2]
         } else {
-          t <- PtE[PtE[,1] == i, 2]
+          t <- ordered_PtE[ordered_PtE[,1] == i, 2]
         }
         samp <- sample_alpha2_line(kappa = kappa, tau = tau,
                                    sigma_e = sigma_e,
@@ -196,6 +203,9 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                                    t = t,
                                    l_e = graph$edge_lengths[i])
         u <- c(u, samp[,2])
+      }
+      if(type == "manual"){
+        u[order_PtE] <- u
       }
     } else {
       stop("only alpha = 1 and alpha = 2 implemented.")

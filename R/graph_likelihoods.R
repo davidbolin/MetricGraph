@@ -83,7 +83,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     graph$buildC(2)
   }
 
-  repl_vec <- graph[["data"]][["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
   if(is.null(repl)){
     repl <- unique(repl_vec)
@@ -98,15 +98,15 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   }
 
   if(is.null(repl)){
-    u_repl <- unique(graph$data[["__group"]])
+    u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
   } else{
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$data[["__group"]] %in% u_repl)
+  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
 
   if(is.null(manual_y)){
-    y <- graph$data[[data_name]]
+    y <- graph$.__enclos_env__$private$data[[data_name]]
   } else if(is.null(data_name)){
     y <- manual_y
   } else{
@@ -130,19 +130,19 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
   loglik <- 0
   det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
-  # n.o <- length(graph$data[[data_name]])
-  # u_repl <- unique(graph$data[["__group"]])
+  # n.o <- length(graph$.__enclos_env__$private$data[[data_name]])
+  # u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
   det_R_count <- NULL
 
-  # y <- graph$data[[data_name]]
+  # y <- graph$.__enclos_env__$private$data[[data_name]]
 
 
 
   for(repl_y in 1:length(u_repl)){
       loglik <- loglik + det_R
       Qpmu <- rep(0, 4 * nrow(graph$E))
-      # y_rep <- graph$data[[data_name]][graph$data[["__group"]] == u_repl[repl_y]]
-      y_rep <- y[graph$data[["__group"]] == u_repl[repl_y]]
+      # y_rep <- graph$.__enclos_env__$private$data[[data_name]][graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]]
+      y_rep <- y[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]]
       #build BSIGMAB
 
       i_ <- j_ <- x_ <- rep(0, 16 * length(obs.edges))
@@ -169,7 +169,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{
-            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[obs.id, ,drop = FALSE]
             y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
           }
@@ -337,7 +337,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' @noRd
 likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterization) {
 
-  repl_vec <- graph[["data"]][["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
   if(is.null(repl)){
     repl <- unique(repl_vec)
@@ -420,7 +420,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   sigma_e <- exp(theta[1])
   #build Q
 
-  repl_vec <- graph[["data"]][["__group"]]
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
   if(is.null(repl)){
     repl <- unique(repl_vec)
@@ -452,18 +452,18 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
   if(is.null(repl)){
-    u_repl <- unique(graph$data[["__group"]])
+    u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
   } else{
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$data[["__group"]] %in% u_repl)
+  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
 
   loglik <- 0
 
   det_R_count <- NULL
   if(is.null(manual_y)){
-    y_resp <- graph$data[[data_name]]
+    y_resp <- graph$.__enclos_env__$private$data[[data_name]]
   } else if(is.null(data_name)){
     y_resp <- manual_y
   } else{
@@ -476,7 +476,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     count <- 0
     Qpmu <- rep(0, nrow(graph$V))
     for (e in obs.edges) {
-      ind_repl <- graph$data[["__group"]] == u_repl[repl_y]
+      ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
       obs.id <- PtE[,1] == e
       y_i <- y_resp[ind_repl]
       y_i <- y_i[obs.id]
@@ -491,7 +491,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       #     n_cov <- ncol(graph$covariates[[1]])
       #     if(length(graph$covariates)==1){
       #     X_cov <- graph$covariates[[1]]
-      #     } else if(length(graph$covariates) == ncol(graph$data[[data_name]])){
+      #     } else if(length(graph$covariates) == ncol(graph$.__enclos_env__$private$data[[data_name]])){
       #       X_cov <- graph$covariates[[repl_y]]
       #     } else{
       #       stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
@@ -505,7 +505,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{
-            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
             X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
             y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
@@ -723,10 +723,10 @@ likelihood_graph_covariance <- function(graph,
 
       loglik_val <- 0
 
-      repl_vec <- graph[["data"]][["__group"]]
+      repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
       if(is.null(repl)){
-        u_repl <- unique(graph$data[["__group"]])
+        u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
       } else{
         u_repl <- unique(repl)
       }
@@ -738,14 +738,14 @@ likelihood_graph_covariance <- function(graph,
           na_obs <- is.na(y_tmp)
           Sigma_non_na <- Sigma[!na_obs, !na_obs]
           R <- base::chol(Sigma_non_na)
-          v <- y_graph[graph$data[["__group"]] == u_repl[repl_y]]
+          v <- y_graph[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]]
 
           if(!is.null(X_cov)){
               n_cov <- ncol(X_cov)
               if(n_cov == 0){
                 X_cov_repl <- 0
               } else{
-                X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], ,
+                X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], ,
                                     drop=FALSE]
                 v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
               }
@@ -809,10 +809,10 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
   # }
 
   loglik <- function(theta){
-    repl_vec <- graph[["data"]][["__group"]]
+    repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
     if(is.null(repl)){
-      u_repl <- unique(graph$data[["__group"]])
+      u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
     } else{
       u_repl <- unique(repl)
     }
@@ -829,9 +829,9 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     y_resp <- y_graph
 
     l <- 0
-    A <- graph$A(group = "__all")
+    A <- graph$.__enclos_env__$private$A(group = ".all", drop_all_na = FALSE, drop_na = FALSE)
 
-    u_repl <- unique(graph$data[["__group"]])
+    u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
     for(repl_y in 1:length(u_repl)){
       K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]]
       Q <- K
@@ -846,7 +846,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
       R <- Matrix::Cholesky(Q)
 
-      v <- y_resp[graph$data[["__group"]] == u_repl[repl_y]]
+      v <- y_resp[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]]
       na.obs <- is.na(v)
       A.repl <- A[!na.obs, ]
       v <- v[!na.obs]
@@ -863,7 +863,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{
-            X_cov_repl <- X_cov[graph$data[["__group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[!na.obs, , drop = FALSE]
             v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
           }

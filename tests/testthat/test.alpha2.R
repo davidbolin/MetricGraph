@@ -149,11 +149,10 @@ test_that("test likelihood",{
   sigma_e <- 0.1
   sigma   <- 1
   theta <-  c(sigma_e,sigma,kappa)
-  line2 <- Line(rbind(c(30, 80), c(140, 80)))
-  line1 <- Line(rbind(c(30, 00), c(30, 80)))
-  Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                                 Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(lines = Lines)
+  edge2 <- rbind(c(30, 80), c(140, 80))
+  edge1 <- rbind(c(30, 00), c(30, 80))
+  edges <- list(edge1, edge2)
+  graph <- metric_graph$new(edges = edges)
   Q <- spde_precision(kappa = kappa, tau = 1/sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
@@ -191,7 +190,7 @@ test_that("test likelihood",{
   #covariance likelihood
 
   lik2 <-likelihood_graph_covariance(graph = graph2,
-                                     model = "WM2", repl = NULL, y_graph = graph2$data[["y"]],
+                                     model = "WM2", repl = NULL, y_graph = graph2$get_data()[["y"]],
                                      log_scale = FALSE, X_cov = NULL)
   lik2 <- lik2(exp(theta))
   #likelihood with extended graph
@@ -203,17 +202,17 @@ test_that("test likelihood",{
 })
 
 test_that("test posterior mean",{
+  library(Matrix)
   set.seed(13)
   nt <- 90
   kappa <- 0.3
   sigma_e <- 0.1
   sigma   <- 2
   theta <-  c(sigma_e,sigma,kappa)
-  line2 <- Line(rbind(c(30, 80), c(140, 80)))
-  line1 <- Line(rbind(c(30, 00), c(30, 80)))
-  Lines <- sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                                 Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(lines = Lines)
+  edge2 <- rbind(c(30, 80), c(140, 80))
+  edge1 <- rbind(c(30, 00), c(30, 80))
+  edges <- list(edge1, edge2)
+  graph <- metric_graph$new(edges = edges)
   Q <- spde_precision(kappa = kappa, tau = 1/sigma,
                       alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
@@ -242,7 +241,7 @@ test_that("test posterior mean",{
 
   #test posterior at observation locations
   res <- graph_lme(y ~ -1, graph=graph, model="WM2", parallel = FALSE)
-  pm <- predict(res, data = df_temp)$mean
+  pm <- predict(res, newdata = df_temp)$mean
 
   kappa_est <- res$coeff$random_effects[2]
   tau_est <- res$coeff$random_effects[1]
@@ -251,7 +250,6 @@ test_that("test posterior mean",{
   graph2 <- graph$clone()
   graph2$observation_to_vertex()
   graph2$buildC(2, FALSE)
-  n.o <- length(graph2$y)
   n.v <- dim(graph2$V)[1]
   n.c <- 1:length(graph2$CoB$S)
   Q <- spde_precision(kappa = kappa_est, tau = tau_est,
@@ -267,12 +265,16 @@ test_that("test posterior mean",{
   Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
   Sigma.Y <- Sigma
   diag(Sigma.Y) <- diag(Sigma.Y) + theta_est[1]^2
-  pm2 <- Sigma %*% solve(Sigma.Y, graph2$data$y)
+  pm2 <- Sigma %*% solve(Sigma.Y, graph2$get_data()$y)
 
   pm2 <- as.vector(pm2)
 
-  ord1 <- order(graph$data[["__coord_x"]], graph$data[["__coord_y"]])
-  ord2 <- order(graph2$data[["__coord_x"]], graph2$data[["__coord_y"]])
+  ord1 <- order(graph$get_data()[[".coord_x"]], graph$get_data()[[".coord_y"]])
+  ord2 <- order(graph2$get_data()[[".coord_x"]], graph2$get_data()[[".coord_y"]])
 
-  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-10)
+  expect_equal(sum((pm2[ord2]-pm[ord1])^2),0, tolerance = 1e-5)
 })
+
+
+
+

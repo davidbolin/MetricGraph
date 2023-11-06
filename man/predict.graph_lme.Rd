@@ -6,46 +6,43 @@
 \usage{
 \method{predict}{graph_lme}(
   object,
-  data = NULL,
+  newdata = NULL,
   mesh = FALSE,
   mesh_h = 0.01,
-  repl = NULL,
+  which_repl = NULL,
   compute_variances = FALSE,
   posterior_samples = FALSE,
   n_samples = 100,
-  only_latent = FALSE,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
   normalized = FALSE,
+  sample_latent = FALSE,
   return_as_list = FALSE,
   return_original_order = TRUE,
-  ...
+  ...,
+  data = deprecated()
 )
 }
 \arguments{
 \item{object}{The fitted object with the \code{graph_lme()} function.}
 
-\item{data}{A \code{data.frame} or a \code{list} containing the covariates, the edge
-number and the distance on edge for the locations to obtain the prediction.}
+\item{newdata}{A \code{data.frame} or a \code{list} containing the covariates, the edge
+number and the distance on edge for the locations to obtain the prediction. Observe that you should not provide the locations for each replicate. Only a single set of locations and covariates, and the predictions for the different replicates will be obtained for this same set of locations.}
 
-\item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh,
-and either \code{only_latent} is set to TRUE or the model does not have covariates.}
+\item{mesh}{Obtain predictions for mesh nodes? The graph must have a mesh and should not have covariates.}
 
 \item{mesh_h}{If the graph does not have a mesh, one will be created with this
 value of 'h'.}
 
-\item{repl}{Which replicates to obtain the prediction. If \code{NULL} predictions
+\item{which_repl}{Which replicates to obtain the prediction. If \code{NULL} predictions
 will be obtained for all replicates. Default is \code{NULL}.}
 
-\item{compute_variances}{Set to also TRUE to compute the kriging variances.}
+\item{compute_variances}{Set to TRUE to compute the kriging variances.}
 
 \item{posterior_samples}{If \code{TRUE}, posterior samples will be returned.}
 
 \item{n_samples}{Number of samples to be returned. Will only be used if
 \code{sampling} is \code{TRUE}.}
-
-\item{only_latent}{Should the posterior samples and predictions be only given
-to the latent model?}
 
 \item{edge_number}{Name of the variable that contains the edge number, the
 default is \code{edge_number}.}
@@ -55,6 +52,8 @@ edge, the default is \code{distance_on_edge}.}
 
 \item{normalized}{Are the distances on edges normalized?}
 
+\item{sample_latent}{Do posterior samples only for the random effects?}
+
 \item{return_as_list}{Should the means of the predictions and the posterior
 samples be returned as a list, with each replicate being an element?}
 
@@ -62,10 +61,12 @@ samples be returned as a list, with each replicate being an element?}
 (input) order or in the order inside the graph?}
 
 \item{...}{Not used.}
+
+\item{data}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{newdata} instead.}
 }
 \value{
 A list with elements \code{mean}, which contains the means of the
-predictions, \code{variance} (if \code{compute_variance} is \code{TRUE}), which contains the
+predictions, \code{fe_mean}, which is the prediction for the fixed effects, \code{re_mean}, which is the prediction for the random effects, \code{variance} (if \code{compute_variance} is \code{TRUE}), which contains the
 variances of the predictions, \code{samples} (if \code{posterior_samples} is \code{TRUE}),
 which contains the posterior samples.
 }

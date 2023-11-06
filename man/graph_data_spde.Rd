@@ -2,23 +2,50 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_data_spde}
 \alias{graph_data_spde}
-\title{Data extraction for 'rSPDE' models}
+\title{Data extraction for 'spde' models}
 \usage{
-graph_data_spde(graph_spde, repl = NULL, only_pred = FALSE, loc = NULL)
+graph_data_spde(
+  graph_spde,
+  name = "field",
+  repl = NULL,
+  group = NULL,
+  group_col = NULL,
+  only_pred = FALSE,
+  loc_name = NULL,
+  tibble = FALSE,
+  drop_na = FALSE,
+  drop_all_na = TRUE,
+  loc = deprecated()
+)
 }
 \arguments{
 \item{graph_spde}{An \code{inla_metric_graph_spde} object built with the
-\code{graph_spde()} function or an \code{rspde_metric_graph} object built with the
-\code{rspde.metric_graph()} function from the 'rSPDE' package.}
+\code{graph_spde()} function.}
+
+\item{name}{A character string with the base name of the effect.}
 
 \item{repl}{Which replicates? If there is no replicates, one
 can set \code{repl} to \code{NULL}. If one wants all replicates,
-then one sets to \code{repl} to \verb{__all}.}
+then one sets to \code{repl} to \code{.all}.}
+
+\item{group}{Which groups? If there is no groups, one
+can set \code{group} to \code{NULL}. If one wants all groups,
+then one sets to \code{group} to \code{.all}.}
+
+\item{group_col}{Which "column" of the data contains the group variable?}
 
 \item{only_pred}{Should only return the \code{data.frame} to the prediction data?}
 
-\item{loc}{Character with the name of the location variable to be used in
+\item{loc_name}{Character with the name of the location variable to be used in
 'inlabru' prediction.}
+
+\item{tibble}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{drop_na}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}. This option is turned to \code{FALSE} if \code{only_pred} is \code{TRUE}.}
+
+\item{drop_all_na}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}. This option is turned to \code{FALSE} if \code{only_pred} is \code{TRUE}.}
+
+\item{loc}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{loc_name} instead.}
 }
 \value{
 An 'INLA' and 'inlabru' friendly list with the data.

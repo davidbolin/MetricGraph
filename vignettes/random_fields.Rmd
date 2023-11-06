@@ -1,7 +1,7 @@
 ---
 title: "Gaussian random fields on metric graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date:  "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Gaussian random fields on metric graphs}
@@ -92,17 +92,13 @@ the metric graph, but only at the vertices.
 
 As an example throughout the vignette, we consider the following metric graph:
 ```{r}
-library(sp)
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
-graph <- metric_graph$new(lines = Lines)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
 graph$plot()
 ```
 
@@ -151,7 +147,7 @@ result as a function as follows:
 ```{r}
 u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function(u)
+graph$plot_function(X = u)
 ```
 
 Let us construct a finer mesh, simulate the field, and visualize the simulation
@@ -162,7 +158,7 @@ graph$build_mesh(h = 0.01)
 
 u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function(u, plotly = TRUE)
+graph$plot_function(X = u, plotly = TRUE)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -171,7 +167,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r}
 C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
-graph$plot_function(C, plotly = TRUE)
+graph$plot_function(X = C, plotly = TRUE)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
@@ -179,14 +175,14 @@ The corresponding covariance function then looks as follows:
 ```{r}
 C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 2,
                             graph = graph)
-graph$plot_function(C, plotly = TRUE)
+graph$plot_function(X = C, plotly = TRUE)
 ```
 
 Let us simulate a process with $\alpha=2$ as well:
 ```{r}
 u <- sample_spde(range = range, sigma = sigma, alpha = 2,
                  graph = graph, type = "mesh")
-graph$plot_function(u, plotly = TRUE)
+graph$plot_function(X = u, plotly = TRUE)
 ```
 
 ## Inference
@@ -208,7 +204,8 @@ independent centered Gaussian variables $N(0,\sigma_e^2)$ representing
 measurement noise. 
 
 Let us start by generating some data like this and adding it to the 
-metric graph:
+metric graph. For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html).
 
 ```{r}
 range <- 0.2
@@ -245,6 +242,12 @@ res <- graph_lme(y ~ -1, graph = graph, model = 'WM1')
 summary(res)
 ```
 
+We can also take a glance at `res`:
+
+```{r}
+glance(res)
+```
+
 Let us now compare with the true values:
 
 ```{r}
@@ -264,7 +267,16 @@ on the regular mesh that we previously constructed.
 u_est <- predict(res, data.frame(edge_number = graph$mesh$VtE[,1],
                         distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
 
-graph$plot_function(u_est$mean, plotly = TRUE)
+graph$plot_function(X = u_est$mean, plotly = TRUE)
+```
+
+We can, alternatively, use the `augment()` function:
+
+```{r}
+pred_aug <- augment(res, data.frame(edge_number = graph$mesh$VtE[,1],
+                        distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
+p <- graph$plot_function(X = pred_aug[[".fitted"]], plotly = TRUE)
+graph$plot(data = "y", p=p, plotly=TRUE)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -299,7 +311,7 @@ We can now construct the covariance matrix for the process:
 sigma <- 1
 kappa <- 5
 Sigma <- sigma^2*exp(-kappa*graph$mesh$res_dist)
-graph$plot_function(Sigma[20,], plotly = TRUE)
+graph$plot_function(X = Sigma[20,], plotly = TRUE)
 ```
 
 One can note that this covariance function looks quite similar to that of the 
@@ -308,8 +320,8 @@ Whittle--Matérn covariance to compare:
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
 C.wm <- spde_covariance(P,range=2/kappa, sigma=sigma, graph=graph, alpha = 1)
-p <- graph$plot_function(Sigma[20,], plotly = TRUE)
-graph$plot_function(C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
+p <- graph$plot_function(X = Sigma[20,], plotly = TRUE)
+graph$plot_function(X = C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
                     support_width = 0)
 ```
 
@@ -349,10 +361,30 @@ graph$add_observations(data = df_isocov, normalized=TRUE)
 graph$plot(data = "y")
 ```
 
-We can now fit the model with the `graph_lme()` function. We need the model to `list(type="isoCov")`, by default the exponential covariance
-will be used.
+We can now fit the model with the `graph_lme()` function. We need to set model to `list(type="isoCov")`, by default the exponential covariance
+will be used. Alternatively, if one wants to directly use the isotropic exponential covariance function, one can simply set the model
+to `isoexp`.
 ```{r}
 res_exp <- graph_lme(y ~ -1, graph = graph, model = list(type = "isoCov"))
+```
+
+Observe that we received a warning saying that we did not check if the graph has Euclidean edges. This is due to the fact that the isotropic covariance models are only known to work for graphs with Euclidean edges. Let us check if the graph has Euclidean edges. To this end, we need to use the `check_euclidean()` method:
+
+```{r}
+graph$check_euclidean()
+```
+
+Now, we simply call the graph to print its characteristics:
+
+```{r}
+graph
+```
+
+We can see that this is a graph with Euclidean edges. Let us run the fit again, and this time no warning will appear. 
+Further, this time we will set the model to `isoexp` for conveniency:
+
+```{r}
+res_exp <- graph_lme(y ~ -1, graph = graph, model = "isoexp")
 summary(res_exp)
 
 sigma_e_est <- res_exp$coeff$measurement_error
@@ -373,6 +405,17 @@ locations:
 u_est_exp <- predict(res_exp, df_isocov, normalized = TRUE)
 graph$plot(X = u_est_exp$mean, X_loc = PtE)
 ```
+
+
+We can, alternatively, use the `augment()` function:
+
+```{r}
+pred_aug_exp <- augment(res_exp, data.frame(edge_number = graph$mesh$VtE[,1],
+                        distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
+p <- graph$plot_function(X = pred_aug_exp[[".fitted"]], plotly = TRUE)
+graph$plot(data = "y", p=p, plotly=TRUE)
+```
+
 
 
 # Models based on the Graph Laplacian
@@ -508,7 +551,7 @@ df_cv <- data.frame(y = y, edge_number = PtE[,1],
                       distance_on_edge = PtE[,2])
 
 graph$add_observations(data=df_cv, normalized = TRUE)
-graph$plot(data = TRUE)
+graph$plot(data = "y")
 ```
 
 We now fit the different models to this data: 
@@ -533,25 +576,12 @@ leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
 ```{r}
-cv.alpha1 <- posterior_crossvalidation(fit_alpha1)
-cv.alpha2 <- posterior_crossvalidation(fit_alpha2)
-cv.exp <- posterior_crossvalidation(fit_isoexp)
-cv.GL1 <- posterior_crossvalidation(fit_GL1)
-cv.GL2 <- posterior_crossvalidation(fit_GL2)
-results <- data.frame(rmse = c(cv.alpha1$rmse, cv.alpha2$rmse, cv.exp$rmse,
-                               cv.GL1$rmse, cv.GL2$rmse),
-                      mae = c(cv.alpha1$mae, cv.alpha2$mae, cv.exp$mae,
-                               cv.GL1$mae, cv.GL2$mae),
-                      crps = c(cv.alpha1$crps, cv.alpha2$crps, cv.exp$crps,
-                               cv.GL1$crps, cv.GL2$crps),
-                      scrps = c(cv.alpha1$scrps, cv.alpha2$scrps, cv.exp$scrps,
-                               cv.GL1$scrps, cv.GL2$scrps),
-                      logscore = c(cv.alpha1$logscore, cv.alpha2$logscore,
-                                   cv.exp$logscore, cv.GL1$logscore, 
-                                   cv.GL2$logscore),
-                      row.names = c("alpha=1", "alpha=2", "isoExp",
-                                    "GL1", "GL2"))
-round(1000*results)
+fitted_models_list <- list("alpha=1" = fit_alpha1, 
+                    "alpha=2" = fit_alpha2, 
+                    "isoExp" = fit_isoexp, 
+                    "GL1" = fit_GL1, "GL2" = fit_GL2)
+
+posterior_crossvalidation(fitted_models_list, factor=1000)[["scores"]]
 ```
 
 # A model with replicates
@@ -655,7 +685,7 @@ replicate.
 df_pred <-  data.frame(edge_number = PtE[,1],
                       distance_on_edge = PtE[,2])
 
-pred_alpha1 <- predict(fit_repl, data = df_pred, normalized = TRUE, return_as_list = TRUE)
+pred_alpha1 <- predict(fit_repl, newdata = df_pred, normalized = TRUE, return_as_list = TRUE)
 ```
 
 Let us now plot the predictions of the first replicate by using the number which indicates the order of the replicate:
@@ -674,16 +704,13 @@ graph$plot(X = pred_alpha1$mean[["y.15"]], X_loc = df_pred)
 In this example we will consider the first graph:
 
 ```{r}
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
-graph <- metric_graph$new(lines = Lines)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
 graph$plot()
 ```
 
@@ -741,7 +768,7 @@ print(results)
 To do kriging, we can use the `predict()` method together with a `data.frame` containing the locations and the covariates at the locations we want to obtain the predictions. Let us obtain predictions for the observation locations:
 
 ```{r}
-pred_cov <- predict(fit_cov, data = df_graph, normalized = TRUE)
+pred_cov <- predict(fit_cov, newdata = df_graph, normalized = TRUE)
 ```
 
 Let us now plot the predictions of the first replicate by using the number which indicates the order of the replicate:
@@ -755,16 +782,13 @@ graph$plot(X = pred_cov$mean, X_loc = df_graph[,3:4])
 Let us consider the same graph from the previous example:
 
 ```{r}
-line1 <- Line(rbind(c(0,0),c(1,0)))
-line2 <- Line(rbind(c(0,0),c(0,1)))
-line3 <- Line(rbind(c(0,1),c(-1,1)))
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
 theta <- seq(from=pi,to=3*pi/2,length.out = 20)
-line4 <- Line(cbind(sin(theta),1+ cos(theta)))
-Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
-                              Lines(list(line2),ID="2"),
-                              Lines(list(line3),ID="3"),
-                              Lines(list(line4),ID="4")))
-graph <- metric_graph$new(lines = Lines)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
 graph$plot()
 ```
 
@@ -832,7 +856,7 @@ Finally, we can do kriging in an analogous manner to the previous cases. Let us 
 df_pred <-  data.frame(edge_number = PtE[,1],
                       distance_on_edge = PtE[,2], x1 = X_cov[,2])
 
-pred_cov_repl <- predict(fit_cov_repl, data = df_pred, normalized = TRUE, return_as_list = TRUE)
+pred_cov_repl <- predict(fit_cov_repl, newdata = df_pred, normalized = TRUE, return_as_list = TRUE)
 ```
 
 Let us now plot the predictions of the first replicate by using the number which indicates the order of the replicate:

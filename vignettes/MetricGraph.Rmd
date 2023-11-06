@@ -1,7 +1,7 @@
 ---
 title: "MetricGraph: Random Fields on Metric Graphs"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
-date: "`r Sys.Date()`"
+date: "Created: 2022-11-26. Last modified: `r Sys.Date()`."
 output:
   rmarkdown::html_vignette:
     number_sections: true
@@ -185,14 +185,14 @@ graph$plot(vertex_size = 0.5)
 We can note the warning that the graph is not connected, so let us create a 
 `graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graphs <- graph_components$new(lines = lines, longlat = TRUE)
+graphs <- graph_components$new(edges = lines, longlat = TRUE)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
 ```
 
-The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$edge_lengths` given in the unit km (since we specified `longlat = TRUE` in the construction). Thus, we can obtain the range of the edge lengths in the unit m as:
+The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$get_edge_lengths()` given in the unit km (since we specified `longlat = TRUE` in the construction). Thus, we can obtain the range of the edge lengths in the unit m as:
 ```{r}
-range(graph$edge_lengths) * 1000
+range(graph$get_edge_lengths(unit="m")) 
 ```
 
 We will also remove the vertices of degree 2 by using the `prune_vertices()` method:
@@ -228,7 +228,8 @@ should be given in normalized distance or not.
 
 ## Adding data to the graph 
 
-Given that we have constructed the metric graph, we can now add data to it. 
+Given that we have constructed the metric graph, we can now add data to it. For further details on data manipulation on metric graphs, see 
+[Data manipulation on metric graphs](metric_graph_data.html). 
 As an example, let us sample some locations on edges at random and add data to them in the graph: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 n.obs <- 10
@@ -274,7 +275,7 @@ Suppose now that we want to display the function $f(s) = \text{Longitude}(s) - \
 lon <- graph$mesh$V[, 1]
 lat <- graph$mesh$V[, 2]
 f <- lon - lat
-graph$plot_function(f, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5)
 ```
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
@@ -311,10 +312,8 @@ sigma_e <- 0.1
 n.obs <- 200
 obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 
-# The graph has very small edges, so we will use the 
-# Q method to improve numerical stability
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                 graph = graph, PtE = obs.loc, method = "Q")
+                 graph = graph, PtE = obs.loc)
 graph$clear_observations()
 graph$add_observations(data = data.frame(edge_number = obs.loc[, 1],
                                          distance_on_edge = obs.loc[, 2],
@@ -326,8 +325,8 @@ graph$plot(data = "u", vertex_size = 0)
 We can also sample the field at the mesh on the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                 graph = graph, type = "mesh", method = "Q")
-graph$plot_function(u, vertex_size = 0, edge_width = 0.5)
+                 graph = graph, type = "mesh")
+graph$plot_function(X = u, vertex_size = 0, edge_width = 0.5)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -336,7 +335,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 C <- spde_covariance(c(200, 0.1), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
-graph$plot_function(C, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = C, vertex_size = 0, edge_width = 0.5)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$ in the code above.
@@ -355,9 +354,6 @@ $\varepsilon_i$ are independent centered Gaussian variables $N(0,\sigma_e^2)$ re
 
 Let us create such observations, clear the current data in the graph, and finally add the data on the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-# The graph has very small edges, so we will use the 
-# Q method to improve numerical stability
-
 sigma <- 2
 range <- 0.2 # range parameter
 sigma_e <- 0.1
@@ -375,7 +371,7 @@ long.edges <- graph$edge_lengths > 0.5
 obs.loc <- rbind(obs.loc, cbind(sample(which(long.edges), n.obs.2, replace=TRUE), runif(n.obs.2)))
 
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                 graph = graph, PtE = obs.loc, method = "Q")
+                 graph = graph, PtE = obs.loc)
 
 beta0 = -1
 beta1 = 1
@@ -420,6 +416,12 @@ Let us get the summary of the result:
 summary(res)
 ```
 
+We can obtain additional information by using `glance()`:
+
+```{r}
+glance(res)
+```
+
 We will now compare with the true values of the random effects:
 ```{r}
 sigma_e_est <- res$coeff$measurement_error[[1]]
@@ -438,12 +440,29 @@ on the mesh locations.
 
 
 
-
 Now, we can compute the predictions for $y$. First, let us compute the posterior mean for the field at the observation locations and plot the residuals between the posterior means and the field:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-pred_u <- predict(res, data = data, normalized = TRUE, only_latent = TRUE)
-graph$plot(X = pred_u$mean - u, X_loc = data[,1:2], vertex_size = 0)
+pred_u <- predict(res, newdata = data, normalized = TRUE)
+pred_u$resid_field <- pred_u$re_mean - u
+pred_u <- graph$process_data(data = pred_u, normalized=TRUE)
+pred_u %>% graph$plot(data = "resid_field", vertex_size = 0)
+```
+
+We can also obtain predictions by using the `augment()` function:
+
+Let us first plot the predictions for the field, then the fitted values:
+
+```{r}
+pred_aug <- augment(res, newdata = data, normalized = TRUE)
+
+pred_aug %>% graph$plot(data = ".random", vertex_size = 0)
+```
+
+Let us now plot the fitted values along with the observed values:
+
+```{r}
+pred_aug %>% graph$plot(data = ".fitted", vertex_size = 0)
 ```
 
 Let us now obtain predictions of the field on a mesh of equally spaced nodes on the graph. First, let us create the mesh and `data.frame`:
@@ -461,21 +480,19 @@ data_mesh_pred <- data.frame(lon = scaled_lonlat_mesh[,1],
 data_mesh_pred <- data_mesh_pred[!duplicated(graph$mesh$V),]
 ```
 
-Now, let us obtain the predictions. We can obtain estimates for the latent field by setting `only_latent` to `TRUE`:
+Now, let us obtain the predictions. We can obtain estimates for the latent field by taking the `re_mean` element from the `pred` list obtained by calling `prediction()`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-pred <- predict(res, data=data_mesh_pred, normalized=TRUE, only_latent=TRUE)
-u_est <- pred$mean
-graph$plot_function(u_est, vertex_size = 0, edge_width = 0.5)
+pred <- predict(res, newdata=data_mesh_pred, normalized=TRUE)
+u_est <- pred$re_mean
+graph$plot_function(X = u_est, vertex_size = 0, edge_width = 0.5)
 ```
 
-Finally, let us obtain predictions for the observed values on the mesh. In this case we set
-`only_latent` to `FALSE`:
+Finally, let us obtain predictions for the observed values on the mesh. In this case we use the `mean` component of the `pred` list:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-pred_y <- predict(res, data=data_mesh_pred, normalized=TRUE, only_latent=FALSE)
-y_est <- pred_y$mean
-graph$plot_function(y_est, vertex_size = 0, edge_width = 0.5)
+y_est <- pred$mean
+graph$plot_function(X = y_est, vertex_size = 0, edge_width = 0.5)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -511,34 +528,49 @@ However, if the goal is to fit a model using this covariance function, there is 
 
 ```{r}
 res_exp <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "isoCov"))
+```
+
+Observe that we received a warning saying that we did not check if the graph has Euclidean edges. This is due to the fact that the isotropic covariance models are only known to work for graphs with Euclidean edges. Let us check if the graph has Euclidean edges. To this end, we need to use the `check_euclidean()` method:
+
+```{r}
+graph$check_euclidean()
+```
+
+Now, we simply call the graph to print its characteristics to check the information:
+
+```{r}
+graph
+```
+
+Observe that this graph DOES NOT have Euclidean edges. This means that the model with isotropic exponential covariance is not guaranteed to work for this graph. In any case, we can try to fit it anyway. Observe that we will now receive a different warning, since now we know for fact that the graph does not have Euclidean edges. In this case, we will set `model` to `isoexp` for conveniency.
+
+```{r}
+res_exp <- graph_lme(y ~ lon + lat, graph = graph, model = "isoexp")
 summary(res_exp)
+```
+
+We can also have a glance at the fitted model:
+
+```{r}
+glance(res_exp)
 ```
 
 Let us now compute the posterior mean for the field at the observation 
 locations and plot the residuals between the field and the posterior means of the field:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-u_est_exp <- predict(res_exp, data = data, normalized = TRUE, only_latent = TRUE)
-graph$plot(X = u_est_exp$mean - u, X_loc = data[,1:2], vertex_size = 0)
+pred_exp <- predict(res_exp, newdata = data, normalized = TRUE)
+graph$plot(X = pred_exp$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
 To perform kriging prediction to other locations, one can use the `predict()` method along with a `data.frame` containing the locations in which one wants to obtain predictions and the corresponding covariate values at these locations. In this example we will use the `data_mesh_pred` from the previous example.
-We start by obtaining predictions for the latent model:
+Let us estimate the observed values at the mesh locations:
 
 ```{r, fig.align = "center",echo=TRUE}
-pred_exp <- predict(res_exp, data = data_mesh_pred, 
-                    normalized=TRUE, only_latent = TRUE)
-u_est_exp <- pred_exp$mean
-graph$plot_function(u_est_exp, vertex_size = 0, edge_width = 0.5)
-```
-
-Finally, let us estimated the observed values at the mesh locations:
-
-```{r, fig.align = "center",echo=TRUE}
-pred_exp_y <- predict(res_exp, data = data_mesh_pred, 
-                    normalized=TRUE, only_latent = FALSE)
+pred_exp_y <- predict(res_exp, newdata = data_mesh_pred, 
+                    normalized=TRUE)
 y_est_exp <- pred_exp_y$mean
-graph$plot_function(y_est_exp, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_exp, vertex_size = 0, edge_width = 0.5)
 ```
 
 ## Models based on the Graph Laplacian
@@ -568,27 +600,25 @@ res_gl <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "GraphLapl
 summary(res_gl)
 ```
 
+We can also have a glance at the fitted model:
+
+```{r}
+glance(res_gl)
+```
+
 We can now obtain prediction at the observed locations by using the `predict()` method. Let us compute the posterior mean for the field at the observation locations and plot the residuals between the field and the posterior means of the field:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-pred_u_GL <- predict(res_gl, data = data, normalized = TRUE, only_latent = TRUE)
-graph$plot(X = pred_u_GL$mean - u, X_loc = data[,1:2], vertex_size = 0)
+pred_GL <- predict(res_gl, newdata = data, normalized = TRUE)
+graph$plot(X = pred_GL$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
-Now, if we do predictions outside of the observation locations on a graph Laplacian model, we need to modify the graph. This modifies the model in its entirety. Thus, we need to refit the model with all the observation locations we want to do predictions. However, if we use the `predict()` method with observations outside of the observation locations, the `predict()` will return predictions together with a `warning` that one should refit the model to obtain proper predictions:
-
+Now, if we do predictions outside of the observation locations on a graph Laplacian model, we need to modify the graph. This modifies the model in its entirety. Thus, we need to refit the model with all the observation locations we want to do predictions. However, if we use the `predict()` method with observations outside of the observation locations, the `predict()` will return predictions together with a `warning` that one should refit the model to obtain proper predictions. Here, we will see the (incorrect way of obtaining) predictions of the observed data:
 ```{r, fig.align = "center",echo=TRUE}
-pred_GL <- predict(res_gl, data = data_mesh_pred, 
-                    normalized=TRUE, only_latent = TRUE)
-u_est_GL <- pred_GL$mean
-graph$plot_function(u_est_GL, vertex_size = 0, edge_width = 0.5)
-```
-and here the (incorrect way of obtaining) predictions of the observed data:
-```{r, fig.align = "center",echo=TRUE}
-pred_GL_y <- predict(res_gl, data = data_mesh_pred, 
-                    normalized=TRUE, only_latent = FALSE)
+pred_GL_y <- predict(res_gl, newdata = data_mesh_pred, 
+                    normalized=TRUE)
 y_est_GL <- pred_GL_y$mean
-graph$plot_function(y_est_GL, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_GL, vertex_size = 0, edge_width = 0.5)
 ```
 
 Let us now refit the model with all the locations we want to obtain predictions. Let us create a new 
@@ -621,24 +651,16 @@ One should compare the estimates with the ones obtained in the model without the
 Let us first compute the residual between the latent field and the posterior means at the observation locations:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-pred_u_GL_full <- predict(res_gl_pred, data = data, normalized = TRUE, only_latent = TRUE)
-graph$plot(X = pred_u_GL_full$mean - u, X_loc = data[,1:2], vertex_size = 0)
+pred_GL_full <- predict(res_gl_pred, newdata = data, normalized = TRUE)
+graph$plot(X = pred_GL_full$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
-Let us now obtain predictions at the desired locations:
-
+Let us now obtain predictions at the desired locations (in the correct way) of the observed data: 
 ```{r, fig.align = "center",echo=TRUE}
-pred_GL_full <- predict(res_gl_pred, data = data_mesh_pred, 
-                    normalized=TRUE, only_latent = TRUE)
-u_est_GL_full <- pred_GL_full$mean
-graph$plot_function(u_est_GL_full, vertex_size = 0, edge_width = 0.5)
-```
-and here the correct way of obtaining predictions of the observed data at the desired locations: 
-```{r, fig.align = "center",echo=TRUE}
-pred_GL_y_full <- predict(res_gl_pred, data = data_mesh_pred, 
-                    normalized=TRUE, only_latent = FALSE)
+pred_GL_y_full <- predict(res_gl_pred, newdata = data_mesh_pred, 
+                    normalized=TRUE)
 y_est_GL_full <- pred_GL_y_full$mean
-graph$plot_function(y_est_GL_full, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_GL_full, vertex_size = 0, edge_width = 0.5)
 ```
 
 
@@ -665,7 +687,7 @@ cmp <- y ~ Intercept(1) + lon + lat + field(loc, model = spde_model)
 This formula is very simple since we are not assuming mean zero, so that we do not need an intercept, and we do not have any other covariates or model components. However, the setup is exactly  the same for more complicated models, with the only exception that we would have more terms in the formla. Now, we directly fit the model:
 
 ```{r}
-spde_bru_fit <- bru(cmp, data=graph_data_spde(spde_model, loc = "loc"))
+spde_bru_fit <- bru(cmp, data=graph_data_spde(spde_model, loc = "loc")[["data"]])
 ```
 
 The advantage / difference between the estimates we obtain here and those above is that the `bru` function does full Bayesian inference (assuming priors for the model parameters). We used the default priors when creating the `graph_spde` model (see the help text for that function). The advantage now is that we do not only obtain point estimates but entire posterior distributions for the parameters. To view the estimates we can use the `spde_metric_graph_result()` function, then
@@ -740,14 +762,14 @@ method in `inlabru`.
 field_pred <- predict(spde_model, 
                                 cmp,
                                 spde_bru_fit, 
-                                data = data_list,
+                                newdata = data_list,
                                 formula = ~ field)
 ```
 
 Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_field_prd <- field_pred$pred[,1]
-graph$plot_function(mean_field_prd, vertex_size = 0)
+graph$plot_function(X = mean_field_prd, vertex_size = 0, edge_width = 0.5)
 ```
 
 Fin §ally, let us plot predictions of the observed data at the mesh locations:
@@ -756,14 +778,14 @@ Fin §ally, let us plot predictions of the observed data at the mesh locations:
 obs_pred <- predict(spde_model, 
                                 cmp,
                                 spde_bru_fit, 
-                                data = data_list,
+                                newdata = data_list,
                                 formula = ~ Intercept + lat + lon + field)
 ```
 
 Let us plot the predictions:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_obs_prd <- obs_pred$pred[,1]
-graph$plot_function(mean_obs_prd, vertex_size = 0)
+graph$plot_function(X = mean_obs_prd, vertex_size = 0, edge_width = 0.5)
 ```
 
 # References {-}

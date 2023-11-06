@@ -17,7 +17,7 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line5),ID="5"),
                           Lines(list(line6),ID="6"),
                           Lines(list(line7),ID="7")))
-graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
+graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.5))
 graph$plot()
 
 #test line vertex
@@ -50,9 +50,9 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line2),ID="2"),
                           Lines(list(line3),ID="3"),
                           Lines(list(line4),ID="4")))
-plot(lines)
+
 graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.05,
-                                                  vertex_line = 0.05))
+                                                  line_line = 0.05))
 graph$plot()
 
 #half circle line
@@ -67,7 +67,7 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line3),ID="3"),
                           Lines(list(line4),ID="4")))
 plot(lines)
-graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.05))
+graph <- metric_graph$new(lines, tolerance = list(line_line = 0.2))
 graph$plot()
 
 # circle line
@@ -80,7 +80,7 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line2),ID="2"),
                           Lines(list(line3),ID="3")))
 plot(lines)
-graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
+graph <- metric_graph$new(lines, tolerance = list(line_line = 0.2))
 graph$plot()
 
 
@@ -91,7 +91,7 @@ line2 <- Line(rbind(c(-0.75,1),c(-0.75,-1)))
 lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line2),ID="2")))
 plot(lines)
-graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.2))
+graph <- metric_graph$new(lines, tolerance = list(line_line = 0.2))
 graph$plot()
 
 #complicated with multiple circles
@@ -107,6 +107,6 @@ lines = SpatialLines(list(Lines(list(line1),ID="1"),
                           Lines(list(line4),ID="4"),
                           Lines(list(line5),ID="5")))
 plot(lines)
-graph <- metric_graph$new(lines, tolerance = list(vertex_vertex = 0.1))
+graph <- metric_graph$new(lines, tolerance = list(line_line = 0.1))
 graph$plot()
 

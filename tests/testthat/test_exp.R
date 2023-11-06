@@ -30,12 +30,10 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
 
   #line1 <- Line(rbind(c(30, 80), c(120, 80)))
   #line2 <- Line(rbind(c(30, 00), c(30, 80)))
-  line1 <- Line(rbind(c(0, 0), c(1e-0, 0)))
-  line2 <- Line(rbind(c(0, 1e-0), c(0, 0)))
+  edge1 <- rbind(c(0, 0), c(1e-0, 0))
+  edge2 <- rbind(c(0, 1e-0), c(0, 0))
 
-  graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line1), ID = "1"),
-                                                   Lines(list(line2), ID = "2")
-                                                   )))
+  graph <-  metric_graph$new(list(edge1, edge2))
 
   n.obs.per.edge <- 10
   PtE <- NULL
@@ -59,10 +57,10 @@ test_that("Check agrement beteen covariance and precision likelihoods", {
 
   graph$observation_to_vertex()
   lik.v2 <- likelihood_alpha1_v2(theta = theta, graph = graph, 
-              X_cov = matrix(ncol=0,nrow=0), y = graph$data$y, repl = NULL, BC = 1, 
+              X_cov = matrix(ncol=0,nrow=0), y = graph$get_data()$y, repl = NULL, BC = 1, 
               parameterization = "spde")
 
-  lik.cov <- likelihood_graph_covariance(graph, model = "WM1", log_scale = TRUE, y_graph = graph$data$y, repl = NULL, X_cov = NULL, maximize = TRUE)
+  lik.cov <- likelihood_graph_covariance(graph, model = "WM1", log_scale = TRUE, y_graph = graph$get_data()$y, repl = NULL, X_cov = NULL, maximize = TRUE)
   lik.cov <- lik.cov(theta)
 
   #version 1
@@ -100,7 +98,7 @@ test_that("Test posterior mean", {
 
   #test posterior at observation locations
   res <- graph_lme(y ~ -1, graph=graph, model="WM1", parallel = FALSE)
-  pm <- predict(res, data = df_temp, normalized=TRUE)$mean
+  pm <- predict(res, newdata = df_temp, normalized=TRUE)$mean
 
   kappa_est <- res$coeff$random_effects[2]
   tau_est <- res$coeff$random_effects[1]
@@ -112,10 +110,10 @@ test_that("Test posterior mean", {
   Sigma <- solve(Q)[graph$PtV, graph$PtV]
   Sigma.obs <- Sigma
   diag(Sigma.obs) <- diag(Sigma.obs) + theta_est[1]^2
-  pm2 <- Sigma %*% solve(Sigma.obs, graph$data$y)
+  pm2 <- Sigma %*% solve(Sigma.obs, graph$get_data()$y)
 
   expect_equal(sum((sort(pm)-sort(pm2))^2), 0, tolerance=1e-8)
 
-  expect_equal(sum((pm - df_temp$y)^2), sum((pm2 - graph$data$y)^2), tolerance = 1e-8)
+  expect_equal(sum((pm - df_temp$y)^2), sum((pm2 - graph$get_data()$y)^2), tolerance = 1e-8)
 
 })

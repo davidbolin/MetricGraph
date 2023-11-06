@@ -16,14 +16,11 @@ see the vignette:
 \code{vignette("metric_graph", package = "MetricGraph")}
 }
 \examples{
-library(sp)
-line1 <- Line(rbind(c(0, 0), c(2, 0)))
-line2 <- Line(rbind(c(2, 0), c(1, 1)))
-line3 <- Line(rbind(c(1, 1), c(0, 0)))
-lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
-                           Lines(list(line2), ID = "2"),
-                           Lines(list(line3), ID = "3")))
-graph <- metric_graph$new(lines)
+edge1 <- rbind(c(0, 0), c(2, 0))
+edge2 <- rbind(c(2, 0), c(1, 1))
+edge3 <- rbind(c(1, 1), c(0, 0))
+edges <- list(edge1, edge2, edge3)
+graph <- metric_graph$new(edges)
 graph$plot()
 
 }
@@ -43,28 +40,18 @@ the vertex at the end of the edge.}
 
 \item{\code{edge_lengths}}{Vector with the lengths of the edges in the graph.}
 
-\item{\code{EID}}{Vector with the IDs of the edges in the graph.}
-
-\item{\code{LtE}}{Matrix with edge positions on the lines.}
-
-\item{\code{ELend}}{Vector with the locations of the end points of the edges on
-the lines in the graph. The locations are normalized on the line.}
-
-\item{\code{ELstart}}{Vector with the locations of the starting points of the
-edges on the lines in the graph. The locations are normalized on the line.}
-
 \item{\code{C}}{Constraint matrix used to set Kirchhoff constraints.}
 
 \item{\code{CoB}}{Change-of-basis object used for Kirchhoff constraints.}
-
-\item{\code{data}}{List containing data on the metric graph.}
 
 \item{\code{PtV}}{Vector with the indices of the vertices which are observation
 locations.}
 
 \item{\code{mesh}}{Mesh object used for plotting.}
 
-\item{\code{lines}}{The lines in the graph.}
+\item{\code{edges}}{The coordinates of the edges in the graph.}
+
+\item{\code{vertices}}{The coordinates of the vertices in the graph, along with several attributes.}
 
 \item{\code{geo_dist}}{Geodesic distances between the vertices in the graph.}
 
@@ -72,6 +59,8 @@ locations.}
 
 \item{\code{Laplacian}}{The weighted graph Laplacian of the vertices in the
 graph. The weights are given by the edge lengths.}
+
+\item{\code{characteristics}}{List with various characteristics of the graph.}
 }
 \if{html}{\out{</div>}}
 }
@@ -79,33 +68,52 @@ graph. The weights are given by the edge lengths.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-set_edge_weights}{\code{metric_graph$set_edge_weights()}}
+\item \href{#method-metric_graph-get_edge_weights}{\code{metric_graph$get_edge_weights()}}
+\item \href{#method-metric_graph-get_vertices_incomp_dir}{\code{metric_graph$get_vertices_incomp_dir()}}
+\item \href{#method-metric_graph-summary}{\code{metric_graph$summary()}}
+\item \href{#method-metric_graph-print}{\code{metric_graph$print()}}
+\item \href{#method-metric_graph-compute_characteristics}{\code{metric_graph$compute_characteristics()}}
+\item \href{#method-metric_graph-check_euclidean}{\code{metric_graph$check_euclidean()}}
+\item \href{#method-metric_graph-check_distance_consistency}{\code{metric_graph$check_distance_consistency()}}
 \item \href{#method-metric_graph-compute_geodist}{\code{metric_graph$compute_geodist()}}
 \item \href{#method-metric_graph-compute_geodist_PtE}{\code{metric_graph$compute_geodist_PtE()}}
 \item \href{#method-metric_graph-compute_geodist_mesh}{\code{metric_graph$compute_geodist_mesh()}}
 \item \href{#method-metric_graph-compute_resdist}{\code{metric_graph$compute_resdist()}}
 \item \href{#method-metric_graph-compute_resdist_PtE}{\code{metric_graph$compute_resdist_PtE()}}
 \item \href{#method-metric_graph-get_degrees}{\code{metric_graph$get_degrees()}}
+\item \href{#method-metric_graph-compute_PtE_edges}{\code{metric_graph$compute_PtE_edges()}}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
+\item \href{#method-metric_graph-get_groups}{\code{metric_graph$get_groups()}}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
-\item \href{#method-metric_graph-get_Spoints}{\code{metric_graph$get_Spoints()}}
+\item \href{#method-metric_graph-get_edge_lengths}{\code{metric_graph$get_edge_lengths()}}
+\item \href{#method-metric_graph-get_locations}{\code{metric_graph$get_locations()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
 \item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
+\item \href{#method-metric_graph-process_data}{\code{metric_graph$process_data()}}
 \item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
+\item \href{#method-metric_graph-mutate}{\code{metric_graph$mutate()}}
+\item \href{#method-metric_graph-drop_na}{\code{metric_graph$drop_na()}}
+\item \href{#method-metric_graph-select}{\code{metric_graph$select()}}
+\item \href{#method-metric_graph-filter}{\code{metric_graph$filter()}}
+\item \href{#method-metric_graph-summarise}{\code{metric_graph$summarise()}}
+\item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
+\item \href{#method-metric_graph-fem_basis}{\code{metric_graph$fem_basis()}}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
 \item \href{#method-metric_graph-plot}{\code{metric_graph$plot()}}
 \item \href{#method-metric_graph-plot_connections}{\code{metric_graph$plot_connections()}}
+\item \href{#method-metric_graph-is_tree}{\code{metric_graph$is_tree()}}
 \item \href{#method-metric_graph-plot_function}{\code{metric_graph$plot_function()}}
 \item \href{#method-metric_graph-plot_movie}{\code{metric_graph$plot_movie()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
-\item \href{#method-metric_graph-A}{\code{metric_graph$A()}}
 \item \href{#method-metric_graph-coordinates}{\code{metric_graph$coordinates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
@@ -117,59 +125,93 @@ graph. The weights are given by the edge lengths.}
 Create a new \code{metric_graph} object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$new(
-  lines = NULL,
+  edges = NULL,
   V = NULL,
   E = NULL,
+  vertex_unit = NULL,
+  length_unit = vertex_unit,
+  edge_weights = 1,
   longlat = FALSE,
-  tolerance = list(vertex_vertex = 1e-07, vertex_line = 1e-07, line_line = 0),
+  crs = NULL,
+  proj4string = NULL,
+  which_longlat = "sp",
+  project = TRUE,
+  project_data = FALSE,
+  which_projection = "Winkel tripel",
+  tolerance = list(vertex_vertex = 1e-07, vertex_edge = 1e-07, edge_edge = 0),
   check_connected = TRUE,
-  adjust_lines = NULL,
   remove_deg2 = FALSE,
+  merge_close_vertices = TRUE,
+  factor_merge_close_vertices = 1,
   remove_circles = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  lines = deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{lines}}{Object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}.}
+\item{\code{edges}}{A list containing coordinates as \verb{m x 2} matrices (that is, of \code{matrix} type) or m x 2 data frames (\code{data.frame} type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type \code{SpatialLinesDataFrame} or \code{SpatialLines} (from \code{sp} package) or \code{MULTILINESTRING} (from \code{sf} package).}
 
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
 
 \item{\code{E}}{m x 2 matrix where each row represents one of the m edges.}
 
-\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
-in Longitude/Latitude and that distances should be computed in km.}
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
 
-\item{\code{tolerance}}{List that provides tolerances during the construction of
-the graph:
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
+If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+
+\item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
+each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}
+
+\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
+in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
+
+\item{\code{crs}}{Coordinate reference system to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sf}. Object of class crs. The default is \code{sf::st_crs(4326)}.}
+
+\item{\code{proj4string}}{Projection string of class CRS-class to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sp}. The default is \code{sp::CRS("+proj=longlat +datum=WGS84")}.}
+
+\item{\code{which_longlat}}{Compute the distance using which package? The options are \code{sp} and \code{sf}. The default is \code{sp}.}
+
+\item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{TRUE}. When \code{TRUE}, the construction of the graph is faster.}
+
+\item{\code{project_data}}{If \code{longlat} is \code{TRUE} should the vertices be project to planar coordinates? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
+
+\item{\code{which_projection}}{Which projection should be used in case \code{project} is \code{TRUE}? The options are \code{Robinson}, \verb{Winkel tripel} or a proj4string. The default is \verb{Winkel tripel}.}
+
+\item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
-\item \code{vertex_vertex} Vertices that are closer than this number are merged
-(default = 1e-7).
-\item \code{vertex_line} If a vertex at the end of one line is closer than this
-number to another line, this vertex is connected to that line
-(default = 1e-7).
-\item \code{line_line} If two lines at some point are closer than this number, a new
-vertex is added at that point and the two lines are connected (default = 0).
+\item \code{vertex_vertex} Vertices that are closer than this number are merged (default = 1e-7).
+\item \code{vertex_edge} If a vertex at the end of one edge is closer than this
+number to another edge, this vertex is connected to that edge
+(default = 1e-7). Previously \code{vertex_line}, which is now deprecated.
+\item \code{edge_edge} If two edges at some point are closer than this number, a new
+vertex is added at that point and the two edges are connected (default = 0).
+\item \code{vertex_line}, Deprecated. Use \code{vertex_edge} instead.
+\item \code{line_line}, Deprecated. Use \code{edge_edge} instead.
 }
 
-If \code{longlat = TRUE}, the tolerances are given in km.}
+In case \code{longlat = TRUE}, the tolerances are given in \code{length_unit}.}
 
 \item{\code{check_connected}}{If \code{TRUE}, it is checked whether the graph is
 connected and a warning is given if this is not the case.}
 
-\item{\code{adjust_lines}}{Set to \code{TRUE} to adjust the lines object to match the graph
-connections. This can take some time for large graphs, so by default it is \code{TRUE}
-for graphs with at most 100 lines, and \code{FALSE} for larger graphs.}
-
 \item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
 initialization. Default is \code{FALSE}.}
 
+\item{\code{merge_close_vertices}}{should an additional step to merge close vertices be done?}
+
+\item{\code{factor_merge_close_vertices}}{Which factor to be multiplied by tolerance \code{vertex_vertex} when merging close vertices at the additional step?}
+
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
-are removed. The default is the \code{vertex_vertex} tolerance.}
+are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}
 
 \item{\code{verbose}}{Print progress of graph creation.}
+
+\item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -184,6 +226,148 @@ viewed as a vertex.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-set_edge_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-set_edge_weights}{}}}
+\subsection{Method \code{set_edge_weights()}}{
+Sets the edge weights
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(weights = rep(1, self$nE))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
+each row gives a vector of weights to its corresponding edge.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_edge_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_edge_weights}{}}}
+\subsection{Method \code{get_edge_weights()}}{
+Gets the edge weights
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A vector containing the edge weights.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_vertices_incomp_dir"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_vertices_incomp_dir}{}}}
+\subsection{Method \code{get_vertices_incomp_dir()}}{
+Gets vertices with incompatible directions
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_vertices_incomp_dir()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A vector containing the vertices with incompatible directions.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-summary"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-summary}{}}}
+\subsection{Method \code{summary()}}{
+Prints a summary of various informations of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$summary(
+  messages = FALSE,
+  compute_characteristics = TRUE,
+  check_euclidean = TRUE,
+  check_distance_consistency = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{messages}}{Should message explaining how to build the results be given for missing quantities?}
+
+\item{\code{compute_characteristics}}{Should the characteristics of the graph be computed?}
+
+\item{\code{check_euclidean}}{Check if the graph has Euclidean edges?}
+
+\item{\code{check_distance_consistency}}{Check the distance consistency assumption?}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-print"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-print}{}}}
+\subsection{Method \code{print()}}{
+Prints various characteristics of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$print()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_characteristics"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_characteristics}{}}}
+\subsection{Method \code{compute_characteristics()}}{
+Computes various characteristics of the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_characteristics(check_euclidean = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{check_euclidean}}{Also check if the graph has Euclidean edges? This essentially means that the distance consistency check will also be perfomed. If the graph does not have Euclidean edges due to another reason rather than the distance consistency, then it will already be indicated that the graph does not have Euclidean edges.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects. The computed characteristics
+are stored in the \code{characteristics} element of the \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-check_euclidean"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-check_euclidean}{}}}
+\subsection{Method \code{check_euclidean()}}{
+Check if the graph has Euclidean edges.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$check_euclidean()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Returns \code{TRUE} if the graph has Euclidean edges, or \code{FALSE} otherwise.
+The result is stored in the \code{characteristics} element of the \code{metric_graph} object.
+The result is displayed when the graph is printed.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-check_distance_consistency"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-check_distance_consistency}{}}}
+\subsection{Method \code{check_distance_consistency()}}{
+Checks distance consistency of the graph.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$check_distance_consistency()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+No return value.
+The result is stored in the \code{characteristics} element of the \code{metric_graph} object.
+The result is displayed when the graph is printed.
 }
 }
 \if{html}{\out{<hr>}}
@@ -327,11 +511,32 @@ A matrix containing the resistance distances.
 \subsection{Method \code{get_degrees()}}{
 Returns the degrees of the vertices in the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_degrees()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_degrees(which = "degree")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{which}}{If "degree", returns the degree of the vertex. If "indegree", returns the indegree,
+and if "outdegree", it returns the outdegree.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A vector containing the degrees of the vertices.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_PtE_edges"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_PtE_edges}{}}}
+\subsection{Method \code{compute_PtE_edges()}}{
+Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the \code{plot_function()} method, however it might be costly to compute.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_PtE_edges()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A vector containing the degrees of the vertices.
+No return value, called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
@@ -367,7 +572,7 @@ the available locations. If \code{FALSE}, it will be computed
 separately for the locations of each group.}
 
 \item{\code{obs}}{Should the resistance distances be computed at the observation
-locations?}
+locations? It will only compute for locations in which there is at least one observations that is not NA.}
 
 \item{\code{group}}{Vector or list containing which groups to compute the
 Laplacian for. If \code{NULL}, it will be computed for all groups.}
@@ -385,11 +590,43 @@ in the \code{Laplacian} element in the \code{metric_graph} object.
 \subsection{Method \code{prune_vertices()}}{
 Removes vertices of degree 2 from the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(verbose = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{Show progress? Default is \code{FALSE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Vertices of degree 2 are removed as long as the corresponding edges that
+would be merged are compatible in terms of direction.
 }
 
 \subsection{Returns}{
 No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_groups"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_groups}{}}}
+\subsection{Method \code{get_groups()}}{
+Gets the groups from the data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_groups(get_cols = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{get_cols}}{Should the names of the columns that created the group variable be returned?}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A vector containing the available groups in the internal data.
 }
 }
 \if{html}{\out{<hr>}}
@@ -401,6 +638,15 @@ Gets PtE from the data.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_PtE()}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{group}}{For which group, should the PtE be returned? \code{NULL} means that all PtEs available will be returned.}
+
+\item{\code{include_group}}{Should the group be included as a column? If \code{TRUE}, the PtEs for each group will be concatenated, otherwise a single matrix containing the unique PtEs will be returned.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 A matrix with two columns, where the first column contains the edge
 number and the second column contains the distance on edge of the
@@ -408,16 +654,36 @@ observation locations.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-get_Spoints"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-get_Spoints}{}}}
-\subsection{Method \code{get_Spoints()}}{
-Gets the spatial points from the data.
+\if{html}{\out{<a id="method-metric_graph-get_edge_lengths"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_edge_lengths}{}}}
+\subsection{Method \code{get_edge_lengths()}}{
+Gets the edge lengths with the corresponding unit.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_Spoints()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_lengths(unit = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{unit}}{If non-NULL, changes from \code{length_unit} from the graph construction to \code{unit}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a vector with the length unit (if the graph was constructed with a length unit).
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_locations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_locations}{}}}
+\subsection{Method \code{get_locations()}}{
+Gets the spatial locations from the data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_locations()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A \code{SpatialPoints} object of the observation locations.
+A \code{data.frame} object with observation locations. If \code{longlat = TRUE}, the column names are lon and lat, otherwise the column names are x and y.
 }
 }
 \if{html}{\out{<hr>}}
@@ -426,7 +692,7 @@ A \code{SpatialPoints} object of the observation locations.
 \subsection{Method \code{observation_to_vertex()}}{
 Adds observation locations as vertices in the graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15, mesh_warning = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -435,6 +701,10 @@ Adds observation locations as vertices in the graph.
 \item{\code{tolerance}}{Observations locations are merged to a single vertex if
 they are closer than this number (given in relative edge distance between
 0 and 1). The default is \code{1e-15}.}
+
+\item{\code{mesh_warning}}{Display a warning if the graph structure change and the metric graph has a mesh object.}
+
+\item{\code{share_weights}}{Should the same weight be shared among the split edges? If \code{FALSE}, the weights will be removed, and a common weight given by 1 will be given.}
 }
 \if{html}{\out{</div>}}
 }
@@ -482,22 +752,25 @@ No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-add_observations"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-add_observations}{}}}
-\subsection{Method \code{add_observations()}}{
-Add observations to the metric graph.
+\if{html}{\out{<a id="method-metric_graph-process_data"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-process_data}{}}}
+\subsection{Method \code{process_data()}}{
+Process data to the metric graph data format.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$process_data(
   Spoints = NULL,
   data = NULL,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
   coord_x = "coord_x",
   coord_y = "coord_y",
-  data_coords = c("PtE", "euclidean"),
+  data_coords = c("PtE", "spatial"),
   group = NULL,
+  group_sep = ".",
   normalized = FALSE,
-  tolerance = max(self$edge_lengths)/2
+  tibble = TRUE,
+  tolerance = max(self$edge_lengths)/2,
+  verbose = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -534,27 +807,295 @@ chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_c
 
 \item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
 coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
-\code{distance_on_edge}, otherwise if \code{euclidean}, the user must provide
-\code{coord_x} and \code{coord_y}.}
+\code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
+\code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
 
-\item{\code{group}}{If the data is grouped (for example measured at different time
-points), this argument specifies the the column (or entry on the list) in
-which the group varialbe is stored.}
+\item{\code{group}}{Vector. If the data is grouped (for example measured at different time
+points), this argument specifies the columns (or entries on the list) in
+which the group variables are stored. It will be stored as a single column \code{.group} with the combined entries.}
+
+\item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE. Will not be used if
 \code{Spoints} is not \code{NULL}.}
 
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
 \item{\code{tolerance}}{Parameter to control a warning when adding observations.
 If the distance of some location and the closest point on the graph is
 greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.}
+
+\item{\code{verbose}}{If \code{TRUE}, report steps and times.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 No return value. Called for its side effects. The observations are
 stored in the \code{data} element of the \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-add_observations"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-add_observations}{}}}
+\subsection{Method \code{add_observations()}}{
+Add observations to the metric graph.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
+  Spoints = NULL,
+  data = NULL,
+  edge_number = "edge_number",
+  distance_on_edge = "distance_on_edge",
+  coord_x = "coord_x",
+  coord_y = "coord_y",
+  data_coords = c("PtE", "spatial"),
+  group = NULL,
+  group_sep = ".",
+  normalized = FALSE,
+  clear_obs = FALSE,
+  tibble = FALSE,
+  tolerance = max(self$edge_lengths)/2,
+  verbose = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{Spoints}}{\code{SpatialPoints} or \code{SpatialPointsDataFrame} containing the
+observations. It may include the coordinates of the observations only, or
+the coordinates as well as the observations.}
+
+\item{\code{data}}{A \code{data.frame} or named list containing the observations. In
+case of groups, the data.frames for the groups should be stacked vertically,
+with a column indicating the index of the group. If \code{data} is not \code{NULL},
+it takes priority over any eventual data in \code{Spoints}.}
+
+\item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that
+contains the edge numbers. If not supplied, the column with name
+"edge_number" will be chosen. Will not be used if \code{Spoints} is not \code{NULL}.}
+
+\item{\code{distance_on_edge}}{Column (or entry on the list) of the \code{data} that
+contains the edge numbers. If not supplied, the column with name
+"distance_on_edge" will be chosen.  Will not be used if \code{Spoints} is not
+\code{NULL}.}
+
+\item{\code{coord_x}}{Column (or entry on the list) of the \code{data} that contains
+the x coordinate. If not supplied, the column with name "coord_x" will be
+chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
+\code{PtE}.}
+
+\item{\code{coord_y}}{Column (or entry on the list) of the \code{data} that contains
+the y coordinate. If not supplied, the column with name "coord_x" will be
+chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
+\code{PtE}.}
+
+\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
+\code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
+\code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
+
+\item{\code{group}}{Vector. If the data is grouped (for example measured at different time
+points), this argument specifies the columns (or entries on the list) in
+which the group variables are stored. It will be stored as a single column \code{.group} with the combined entries.}
+
+\item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
+
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
+assumed to be normalized to (0,1). Default FALSE. Will not be used if
+\code{Spoints} is not \code{NULL}.}
+
+\item{\code{clear_obs}}{Should the existing observations be removed before adding the data?}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{tolerance}}{Parameter to control a warning when adding observations.
+If the distance of some location and the closest point on the graph is
+greater than the tolerance, the function will display a warning.
+This helps detecting mistakes on the input locations when adding new data.}
+
+\item{\code{verbose}}{If \code{TRUE}, report steps and times.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects. The observations are
+stored in the \code{data} element of the \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-mutate"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-mutate}{}}}
+\subsection{Method \code{mutate()}}{
+Use \code{dplyr::mutate} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate(..., .drop_na = FALSE, .drop_all_na = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::mutate()}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::mutate()} within the internal metric graph data object.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the mutate.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-drop_na"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-drop_na}{}}}
+\subsection{Method \code{drop_na()}}{
+Use \code{tidyr::drop_na()} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$drop_na(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{tidyr::drop_na()}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::drop_na()} within the internal metric graph data object.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the drop_na.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-select"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-select}{}}}
+\subsection{Method \code{select()}}{
+Use \code{dplyr::select} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select(..., .drop_na = FALSE, .drop_all_na = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::select()}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::select()} within the internal metric graph data object. Observe that it is a bit different from directly using \code{dplyr::select()} since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the selection.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-filter"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-filter}{}}}
+\subsection{Method \code{filter()}}{
+Use \code{dplyr::filter} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter(..., .drop_na = FALSE, .drop_all_na = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::filter()}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::filter()} within the internal metric graph data object.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the filter.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-summarise"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-summarise}{}}}
+\subsection{Method \code{summarise()}}{
+Use \code{dplyr::summarise} function on the internal metric graph data object grouped by the spatial locations and the internal group variable.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$summarise(
+  ...,
+  .include_graph_groups = FALSE,
+  .groups = NULL,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::summarise()}.}
+
+\item{\code{.include_graph_groups}}{Should the internal graph groups be included in the grouping variables? The default is \code{FALSE}. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.}
+
+\item{\code{.groups}}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::summarise()} within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called \code{.group}, will be added, with the same value 1 for all rows.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble} object containing the resulting data list after the summarise.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_data"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_data}{}}}
+\subsection{Method \code{get_data()}}{
+Return the internal data with the option to filter by groups.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_data(
+  group = NULL,
+  tibble = TRUE,
+  drop_na = FALSE,
+  drop_all_na = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{group}}{A vector contaning which groups should be returned? The default is \code{NULL}, which gives the result for the all groups.}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -590,7 +1131,13 @@ No return value. Called for its side effects.
 \subsection{Method \code{build_mesh()}}{
 Builds mesh object for graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(h = NULL, n = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$build_mesh(
+  h = NULL,
+  n = NULL,
+  continuous = TRUE,
+  continuous.outs = FALSE,
+  continuous.deg2 = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -601,6 +1148,15 @@ not provided).}
 
 \item{\code{n}}{Maximum number of nodes per edge (should be provided if h is not
 provided).}
+
+\item{\code{continuous}}{If \code{TRUE} (default), the mesh contains only one node per vertex.
+If \code{FALSE}, each vertex v is split into deg(v) disconnected nodes to allow
+for the creation of discontinuities at the vertices.}
+
+\item{\code{continuous.outs}}{If \code{continuous = FALSE} and \code{continuous.outs = TRUE}, continuity is
+assumed for the outgoing edges from each vertex.}
+
+\item{\code{continuous.deg2}}{If \code{TRUE}, continuity is assumed at degree 2 vertices.}
 }
 \if{html}{\out{</div>}}
 }
@@ -628,30 +1184,70 @@ the \code{mesh} element of the \code{metric_graph} object.
 \subsection{Method \code{compute_fem()}}{
 Build mass and stiffness matrices for given mesh object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_fem(petrov = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{petrov}}{Compute Petrov-Galerkin matrices? (default \code{FALSE}). These
+are defined as \eqn{Cpet_{ij} = <\phi_i, \psi_j>} and \eqn{Gpet_{ij} = <d\phi_i, \psi_j>},
+where \eqn{\psi_{i}} are piecewise constant basis functions on the edges of
+the mesh.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Details}{
 The function builds: The matrix \code{C} which is the mass matrix with
 elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix \code{G} which is the stiffness
 matrix with elements \eqn{G_{ij} = <d\phi_i, d\phi_j>}, the matrix \code{B} with
-elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, and the vector with weights
+elements \eqn{B_{ij} = <d\phi_i, \phi_j>}, the matrix \code{D} with elements
+\eqn{D_{ij} = \sum_{v\in V}\phi_i(v)\phi_j(v)}, and the vector with weights
 \eqn{<\phi_i, 1>}.
 }
 
 \subsection{Returns}{
 No return value. Called for its side effects. The finite element
 matrices \code{C}, \code{G} and \code{B} are stored in the \code{mesh} element in the
-\code{metric_graph} object.
+\code{metric_graph} object. If \code{petrov=TRUE}, the corresponding Petrov-Galerkin
+matrices are stored in \code{Cpet} and \code{Gpet}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-mesh_A"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-mesh_A}{}}}
 \subsection{Method \code{mesh_A()}}{
-Computes observation matrix for mesh.
+Deprecated - Computes observation matrix for mesh.
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} in favour of \code{metric_graph$fem_basis()}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$mesh_A(PtE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{PtE}}{Locations given as (edge number in graph, normalized location on
+edge)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+For n locations and a mesh with m nodes, \code{A} is an n x m matrix with
+elements \eqn{A_{ij} = \phi_j(s_i)}{A_{ij} = \phi_j(s_i)}.
+}
+
+\subsection{Returns}{
+The observation matrix.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-fem_basis"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-fem_basis}{}}}
+\subsection{Method \code{fem_basis()}}{
+Computes observation matrix for mesh.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$fem_basis(PtE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -695,6 +1291,7 @@ Plots the metric graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot(
   data = NULL,
+  newdata = NULL,
   group = 1,
   plotly = FALSE,
   vertex_size = 3,
@@ -702,6 +1299,8 @@ Plots the metric graph.
   edge_width = 0.3,
   edge_color = "black",
   data_size = 1,
+  support_width = 0.5,
+  support_color = "gray",
   mesh = FALSE,
   X = NULL,
   X_loc = NULL,
@@ -717,6 +1316,8 @@ Plots the metric graph.
 \describe{
 \item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be
 plotted.}
+
+\item{\code{newdata}}{A dataset of class \code{metric_graph_data}, obtained by any \code{get_data()}, \code{mutate()}, \code{filter()}, \code{summarise()}, \code{drop_na()} methods of metric graphs, see the vignette on data manipulation for more details.}
 
 \item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
 number, it will be the index of the group as stored internally. If \code{group}
@@ -734,6 +1335,10 @@ requires the 'plotly' package.}
 \item{\code{edge_color}}{Color of edges.}
 
 \item{\code{data_size}}{Size of markers for data.}
+
+\item{\code{support_width}}{For 3D plot, width of support lines.}
+
+\item{\code{support_color}}{For 3D plot, color of support lines.}
 
 \item{\code{mesh}}{Plot the mesh locations?}
 
@@ -770,14 +1375,32 @@ No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-is_tree"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-is_tree}{}}}
+\subsection{Method \code{is_tree()}}{
+Checks if the graph is a tree (without considering directions)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$is_tree()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+TRUE if the graph is a tree and FALSE otherwise.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-plot_function"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-plot_function}{}}}
 \subsection{Method \code{plot_function()}}{
 Plots continuous function on the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_function(
-  X,
+  data = NULL,
+  newdata = NULL,
+  group = 1,
+  X = NULL,
   plotly = FALSE,
+  improve_plot = FALSE,
+  continuous = TRUE,
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
@@ -794,12 +1417,24 @@ Plots continuous function on the graph.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X}}{Either an m x 3 matrix with (edge number, position on
-curve (in length), value) or a vector with values for the function
+\item{\code{data}}{Which column of the data to plot? If \code{NULL}, no data will be
+plotted.}
+
+\item{\code{newdata}}{A dataset of class \code{metric_graph_data}, obtained by any \code{get_data()}, \code{mutate()}, \code{filter()}, \code{summarise()}, \code{drop_na()} methods of metric graphs, see the vignette on data manipulation for more details.}
+
+\item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
+number, it will be the index of the group as stored internally. If \code{group}
+is a character, then the group will be chosen by its name.}
+
+\item{\code{X}}{A vector with values for the function
 evaluated at the mesh in the graph}
 
 \item{\code{plotly}}{If \code{TRUE}, then the plot is shown in 3D. This option requires
 the package 'plotly'.}
+
+\item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
+
+\item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
@@ -916,34 +1551,6 @@ A \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-A"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-A}{}}}
-\subsection{Method \code{A()}}{
-Get the observation/prediction matrix A
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$A(group = NULL, obs_to_vert = FALSE, include_NA = TRUE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{group}}{A vector. If \code{NULL}, the A matrix for the first group will be
-returned. One can use all groups by simply setting the \code{group} variable
-to \verb{__all}. Otherwise, the A matrix for the groups in the vector will be
-returned.}
-
-\item{\code{obs_to_vert}}{Should the observations be turned into vertices?}
-
-\item{\code{include_NA}}{Should the locations for which all observations are NA be
-included?}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-The observation or prediction matrix.
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-coordinates"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-coordinates}{}}}
 \subsection{Method \code{coordinates()}}{
@@ -971,6 +1578,7 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned.
+data List containing data on the metric graph.
 }
 }
 \if{html}{\out{<hr>}}

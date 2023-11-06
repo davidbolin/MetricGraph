@@ -18,13 +18,12 @@ For more details, see the vignette:
 }
 \examples{
 library(sp)
-line1 <- Line(rbind(c(0, 0), c(1, 0)))
-line2 <- Line(rbind(c(1, 0), c(2, 0)))
-line3 <- Line(rbind(c(1, 1), c(2, 1)))
-Lines <-  SpatialLines(list(Lines(list(line1), ID = "1"),
-                           Lines(list(line2), ID = "2"),
-                           Lines(list(line3), ID = "3")))
-graphs <- graph_components$new(Lines)
+edge1 <- rbind(c(0, 0), c(1, 0))
+edge2 <- rbind(c(1, 0), c(2, 0))
+edge3 <- rbind(c(1, 1), c(2, 1))
+edges <- list(edge1, edge2, edge3)
+
+graphs <- graph_components$new(edges)
 graphs$plot()
 }
 \section{Public fields}{
@@ -55,13 +54,20 @@ Create metric graphs for connected components}
 \if{latex}{\out{\hypertarget{method-graph_components-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{graph_components$new(lines = NULL, V = NULL, E = NULL, by_length = TRUE, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{graph_components$new(
+  edges = NULL,
+  V = NULL,
+  E = NULL,
+  by_length = TRUE,
+  ...,
+  lines = deprecated()
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{lines}}{Object of type \code{SpatialLinesDataFrame} or \code{SpatialLines}.}
+\item{\code{edges}}{A list containing coordinates as \verb{m x 2} matrices (that is, of \code{matrix} type) or m x 2 data frames (\code{data.frame} type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type \code{SpatialLinesDataFrame} or \code{SpatialLines} (from \code{sp} package) or \code{MULTILINESTRING} (from \code{sf} package).}
 
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
 
@@ -72,8 +78,16 @@ the components are sorted by the number of vertices.}
 
 \item{\code{...}}{Additional arguments used when specifying the graphs}
 
-\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given
-in Longitude/Latitude and that distances should be computed in km.}
+\item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
+
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
+
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
+If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+
+\item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
+in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
 
 \item{\code{tolerance}}{Vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the

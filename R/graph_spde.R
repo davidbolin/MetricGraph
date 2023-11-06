@@ -65,7 +65,7 @@ graph_spde <- function(graph_object,
 
   graph_spde <- graph_object$clone()
 
-  graph_spde$observation_to_vertex()
+  graph_spde$observation_to_vertex(mesh_warning=FALSE)
 
   parameterization <- parameterization[[1]]
   if(!(alpha%in%c(1,2))){
@@ -292,7 +292,7 @@ return(model)
 #' @param ... Currently not being used.
 #'
 #' @return A list of indexes.
-#' @export
+#' @noRd
 graph_spde_make_index <- function (name,
                                    graph_spde,
                                    n.group = 1,
@@ -309,7 +309,25 @@ graph_spde_make_index <- function (name,
 }
 
 
-#' Observation/prediction matrices for 'rSPDE' models
+#' Observation/prediction matrices for 'SPDE' models
+#'
+#' Constructs observation/prediction weight matrices
+#' for metric graph models.
+#'
+#' @param graph_spde An `inla_metric_graph_spde` object built with the
+#' `graph_spde()` function.
+#' @param repl Which replicates? If there is no replicates, or to
+#' use all replicates, one can set to `NULL`.
+#' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @return The observation matrix.
+#' @export
+
+graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all_na = TRUE) {
+   return(graph_spde$graph_spde$.__enclos_env__$private$A(group = repl, drop_na = drop_na, drop_all_na = drop_all_na))
+}
+
+#' Deprecated - Observation/prediction matrices for 'SPDE' models
 #'
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
@@ -321,79 +339,177 @@ graph_spde_make_index <- function (name,
 #' @return The observation matrix.
 #' @export
 
-graph_spde_make_A <- function (graph_spde, repl = NULL) {
-   return(graph_spde$graph_spde$A(group = repl))
+graph_spde_make_A <- function(graph_spde, repl = NULL){
+  lifecycle::deprecate_warn("1.2.0", "graph_spde_make_A()", "graph_spde_basis()")
+  return(graph_spde_basis(graph_spde, repl = repl, drop_na = FALSE, drop_all_na = FALSE))
 }
 
 
-#' Data extraction for 'rSPDE' models
+#' Data extraction for 'spde' models
 #'
 #' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
 #'
 #' @param graph_spde An `inla_metric_graph_spde` object built with the
-#' `graph_spde()` function or an `rspde_metric_graph` object built with the
-#' `rspde.metric_graph()` function from the 'rSPDE' package.
+#' `graph_spde()` function.
+#' @param name A character string with the base name of the effect.
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
-#' then one sets to `repl` to `__all`.
+#' then one sets to `repl` to `.all`.
+#' @param group Which groups? If there is no groups, one
+#' can set `group` to `NULL`. If one wants all groups,
+#' then one sets to `group` to `.all`.
+#' @param group_col Which "column" of the data contains the group variable?
 #' @param only_pred Should only return the `data.frame` to the prediction data?
-#' @param loc Character with the name of the location variable to be used in
+#' @param loc `r lifecycle::badge("deprecated")` Use `loc_name` instead.
+#' @param loc_name Character with the name of the location variable to be used in
 #' 'inlabru' prediction.
+#' @param tibble Should the data be returned as a `tidyr::tibble`?
+#' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
+#' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
-graph_data_spde <- function (graph_spde, repl = NULL,
+graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NULL, 
+                                group_col = NULL,
                                 only_pred = FALSE,
-                                loc = NULL){
+                                loc_name = NULL,
+                                tibble = FALSE,
+                                drop_na = FALSE, drop_all_na = TRUE,
+                                loc = deprecated()){
+
+        if (lifecycle::is_present(loc)) {
+         if (is.null(loc_name)) {
+           lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+             details = c("`loc` was provided but not `loc_name`. Setting `loc_name <- loc`.")
+           )
+           loc_name <- loc
+         } else {
+           lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+             details = c("Both `loc_name` and `loc` were provided. Only `loc_name` will be considered.")
+           )
+         }
+         loc <- NULL
+       }  
+
+  ret <- list()
+
   graph_tmp <- graph_spde$graph_spde$clone()
+
+  if(is.null((graph_tmp$.__enclos_env__$private$data))){
+    stop("The graph has no data!")
+  }
   if(only_pred){
-    idx_allNA <- !idx_not_all_NA(graph_tmp$data)
-    graph_tmp$data <- lapply(graph_tmp$data, function(dat){return(dat[idx_allNA])})
+    idx_anyNA <- !idx_not_any_NA(graph_tmp$.__enclos_env__$private$data)
+    graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat){return(dat[idx_anyNA])})
+    drop_na <- FALSE
+    drop_all_na <- FALSE
   }
 
   if(is.null(repl)){
-    groups <- graph_tmp$data[["__group"]]
+    groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
     repl <- groups[1]
-    ret <- select_group(graph_tmp$data, repl)
-  } else if(repl[1] == "__all") {
-    ret <- graph_tmp$data
-  } else {
-    ret <- select_group(graph_tmp$data, repl)
+  } else if(repl[1] == ".all") {
+    groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
+    repl <- unique(groups)
+  } 
+
+   ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, group = group, group_col = group_col)   
+
+
+  n.repl <- length(unique(repl))
+
+  if(is.null(group)){
+    n.group <- 1
+  } else if (group[1] == ".all"){
+    n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
+  } else{
+    n.group <- length(unique(group))
   }
-  if(!is.null(loc)){
-    ret[[loc]] <- cbind(ret[["__edge_number"]],
-                          ret[["__distance_on_edge"]])
+
+   A <- Matrix::Diagonal(0)  
+
+   for(i in 1:n.repl){
+    for(j in 1:n.group){
+        data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], group = group[j], group_col = group_col)
+        if(drop_na){
+          idx_notna <- idx_not_any_NA(data_group_repl)
+        } else if(drop_all_na){
+          idx_notna <- idx_not_all_NA(data_group_repl)
+        } else{
+          idx_notna <- rep(TRUE, length(data_group_repl[[".group"]]))
+        }
+        # nV_tmp <- sum(idx_notna)
+        A <- Matrix::bdiag(A, Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ])
+    }
+   }
+
+  if(tibble){
+    ret[["data"]] <-tidyr::as_tibble(ret[["data"]])
   }
+
+  if(drop_all_na){
+    is_tbl <- inherits(ret, "tbl_df")
+      idx_temp <- idx_not_all_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]}) 
+      if(is_tbl){
+        ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+      }
+  }    
+  if(drop_na){
+    if(!inherits(ret[["data"]], "tbl_df")){
+      idx_temp <- idx_not_any_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]})
+    } else{
+      ret[["data"]] <- tidyr::drop_na(ret[["data"]])
+    }
+  }
+  
+  if(!is.null(loc_name)){
+      ret[["data"]][[loc_name]] <- cbind(ret[["data"]][[".edge_number"]],
+                          ret[["data"]][[".distance_on_edge"]])
+  }
+
+
+  if(!inherits(ret[["data"]], "metric_graph_data")){
+    class(ret[["data"]]) <- c("metric_graph_data", class(ret))
+  }
+
+  ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
+
+
+   ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
+                                   n.group = n.group,
+                                   n.repl = n.repl)
+  
+
+  ret[["basis"]] <- A
+  
   return(ret)
 }
 
-#' Extraction of vector of replicates for 'inlabru'
-#'
-#' Extracts the vector of replicates from an 'rSPDE'
-#' model object for 'inlabru'
-#'
-#' @param graph_spde An `rspde_metric_graph` object built with the
-#' `rspde.metric_graph()` function from the 'rSPDE' package.
-#' @param repl Which replicates? If there is no replicates, one
-#' can set `repl` to `NULL`. If one wants all replicates,
-#' then one sets to `repl` to `__all`.
-#' @return The vector of replicates.
-#' @export
 
-graph_repl_spde <- function (graph_spde, repl = NULL){
-  graph_tmp <- graph_spde$graph_spde$clone()
-  if(is.null(repl)){
-    groups <- graph_tmp$data[["__group"]]
-    repl <- groups[1]
-    ret <- select_group(graph_tmp$data, repl)
-  } else if(repl[1] == "__all") {
-    ret <- graph_tmp$data
-  } else {
-    ret <- select_group(graph_tmp$data, repl)
-  }
-  return(ret[["__group"]])
+#' Select replicate and group
+#' @noRd
+#'
+select_repl_group <- function(data_list, repl, group, group_col){
+    if(!is.null(group) && is.null(group_col)){
+      stop("If you specify group, you need to specify group_col!")
+    }
+    if(!is.null(group)){
+      grp <- data_list[[group_col]]
+      grp <- which(grp %in% group)
+      data_result <- lapply(data_list, function(dat){dat[grp]})
+      replicates <- data_result[[".group"]]
+      replicates <- which(replicates %in% repl)
+      data_result <- lapply(data_result, function(dat){dat[replicates]})
+      return(data_result)
+    } else{
+      replicates <- data_list[[".group"]]
+      replicates <- which(replicates %in% repl)
+      data_result <- lapply(data_list, function(dat){dat[replicates]})
+      return(data_result)
+    }
 }
-
 
 
 #' @name spde_metric_graph_result
@@ -562,6 +678,7 @@ spde_metric_graph_result <- function(inla, name,
         f = function(z) {
           denstemp(z)
         }, lower = min_x, upper = max_x,
+                  stop.on.error = FALSE,
         subdivisions = nrow(density_df)
       )$value
       return(norm_const)
@@ -728,7 +845,7 @@ bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   model <- mapper[["model"]]
-  n_groups <- length(unique(model$graph_spde$data[["__group"]]))
+  n_groups <- length(unique(model$graph_spde$.__enclos_env__$private$data[[".group"]]))
   return(model$f$n)
 }
 #' @rdname bru_mapper.inla_metric_graph_spde
@@ -743,7 +860,7 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   input_list <- lapply(1:nrow(input), function(i){input[i,]})
   pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
   idx_tmp <- match(input_list, pte_tmp_list)
-  A_tmp <- model$graph_spde$A()
+  A_tmp <- model$graph_spde$.__enclos_env__$private$A()
   return(A_tmp[idx_tmp,])
 }
 
@@ -784,6 +901,7 @@ create_summary_from_density <- function(density_df, name) {
       } else {
         stats::integrate(
           f = denstemp, lower = min_x, upper = v,
+                  stop.on.error = FALSE,
           subdivisions = min(nrow(density_df), 500)
         )$value
       }
@@ -795,6 +913,7 @@ create_summary_from_density <- function(density_df, name) {
     f = function(z) {
       denstemp(z) * z
     }, lower = min_x, upper = max_x,
+                  stop.on.error = FALSE,
     subdivisions = nrow(density_df)
   )$value
 
@@ -802,6 +921,7 @@ create_summary_from_density <- function(density_df, name) {
     f = function(z) {
       denstemp(z) * (z - mean_temp)^2
     }, lower = min_x, upper = max_x,
+                  stop.on.error = FALSE,
     subdivisions = nrow(density_df)
   )$value)
 
@@ -835,19 +955,19 @@ create_summary_from_density <- function(density_df, name) {
 #' @title Creates a vector of replicates to be used with 'inlabru'
 #' @description Auxiliary function to create a vector of replicates to be used
 #' with 'inlabru'.
-#' @param repl A vector of replicates. If set to `__all`, a vector
+#' @param repl A vector of replicates. If set to `.all`, a vector
 #' for all replicates will be generated.
 #' @param graph_spde Name of the field.
 #' @return A vector of replicates to be used with 'inlabru'.
-#' @export
+#' @noRd
 
 bru_graph_rep <- function(repl, graph_spde){
-  groups <- unique(graph_spde$graph_spde$data[["__group"]])
-  if(repl[1] == "__all"){
+  groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]])
+  if(repl[1] == ".all"){
     repl <- groups
   }
   n_groups <- length(groups)
-  length_resp <- sum(graph_spde$graph_spde$data[["__group"]] == groups[1])
+  length_resp <- sum(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]] == groups[1])
   return(rep(repl, each = length_resp ))
 }
 
@@ -859,7 +979,7 @@ bru_graph_rep <- function(repl, graph_spde){
 #' function.
 #' @param cmp The 'inlabru' component used to fit the model.
 #' @param bru_fit A fitted model using 'inlabru' or 'INLA'.
-#' @param data A data.frame of covariates needed for the prediction. The
+#' @param newdata A data.frame of covariates needed for the prediction. The
 #' locations must be normalized PtE.
 #' @param formula A formula where the right hand side defines an R expression to
 #' evaluate for each generated sample. If NULL, the latent and hyperparameter
@@ -894,13 +1014,14 @@ bru_graph_rep <- function(repl, graph_spde){
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
 #' @param... Additional arguments passed on to `inla.posterior.sample()`.
+#' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with predictions.
 #' @export
 
 predict.inla_metric_graph_spde <- function(object,
                                            cmp,
                                            bru_fit,
-                                           data = NULL,
+                                           newdata = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
                                            normalized = TRUE,
@@ -912,7 +1033,23 @@ predict.inla_metric_graph_spde <- function(object,
                                            include = NULL,
                                            exclude = NULL,
                                            drop = FALSE,
-                                           ...){
+                                           ...,
+                                           data = deprecated()){
+  if (lifecycle::is_present(data)) {
+    if (is.null(newdata)) {
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
+        details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
+      )
+      newdata <- data
+    } else {
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
+        details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
+      )
+    }
+    data <- NULL
+  }
+
+  data <- newdata
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
@@ -920,13 +1057,13 @@ predict.inla_metric_graph_spde <- function(object,
   graph_tmp <- object$graph_spde$get_initial_graph()
   # graph_tmp <- object$graph_spde$clone()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
-  original_data <- object$graph_spde$data
-  original_data[["__edge_number"]] <- object$data_PtE[,1]
-  original_data[["__distance_on_edge"]] <- object$data_PtE[,2]
+  original_data <- object$graph_spde$.__enclos_env__$private$data
+  original_data[[".edge_number"]] <- object$data_PtE[,1]
+  original_data[[".distance_on_edge"]] <- object$data_PtE[,2]
 
   graph_tmp$add_observations(data = original_data,
-                  edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge",
+                  edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge",
                   data_coords = "PtE",
                   normalized = TRUE)
 
@@ -934,66 +1071,66 @@ predict.inla_metric_graph_spde <- function(object,
   new_data[[name_locations]] <- NULL
   n_locations <- nrow(data[[name_locations]])
   names_columns <- names(original_data)
-  names_columns <- setdiff(names_columns, c("__group", "__coord_x",
-                                            "__coord_y", "__edge_number",
-                                            "__distance_on_edge"))
+  names_columns <- setdiff(names_columns, c(".group", ".coord_x",
+                                            ".coord_y", ".edge_number",
+                                            ".distance_on_edge"))
   # for(name_column in names_columns){
   #   new_data[[name_column]] <- rep(NA, n_locations)
   # }
   if(data_coords == "PtE"){
-    new_data[["__edge_number"]] <- data[[name_locations]][,1]
-    new_data[["__distance_on_edge"]] <- data[[name_locations]][,2]
+    new_data[[".edge_number"]] <- data[[name_locations]][,1]
+    new_data[[".distance_on_edge"]] <- data[[name_locations]][,2]
   } else{
-    new_data[["__coord_x"]] <- data[[name_locations]][,1]
-    new_data[["__coord_y"]] <- data[[name_locations]][,2]
+    new_data[[".coord_x"]] <- data[[name_locations]][,1]
+    new_data[[".coord_y"]] <- data[[name_locations]][,2]
   }
 
-  new_data[["__dummy_var"]] <- 1:length(new_data[["__edge_number"]])
+  new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
 
   graph_tmp$add_observations(data = new_data,
-                  edge_number = "__edge_number",
-                  distance_on_edge = "__distance_on_edge",
-                  coord_x = "__coord_x",
-                  coord_y = "__coord_y",
+                  edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge",
+                  coord_x = ".coord_x",
+                  coord_y = ".coord_y",
                   data_coords = data_coords,
                   normalized = normalized)
 
-  dummy1 <- graph_tmp$data[["__dummy_var"]]
+  dummy1 <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]]
 
-  graph_tmp$data[["__dummy_var2"]] <- 1:length(graph_tmp$data[["__dummy_var"]])
+  graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]] <- 1:length(graph_tmp$.__enclos_env__$private$data[["__dummy_var"]])
 
-  pred_PtE <- cbind(graph_tmp$data[["__edge_number"]],
-                          graph_tmp$data[["__distance_on_edge"]])
+  pred_PtE <- cbind(graph_tmp$.__enclos_env__$private$data[[".edge_number"]],
+                          graph_tmp$.__enclos_env__$private$data[[".distance_on_edge"]])
 
   # pred_PtE <- pred_PtE[!is.na(dummy1),]
 
   # Adding the original data
 
   # graph_tmp$add_observations(data = original_data,
-  #                   coord_x = "__coord_x",
-  #                   coord_y = "__coord_y",
+  #                   coord_x = ".coord_x",
+  #                   coord_y = ".coord_y",
   #                   data_coords = "euclidean")
 
-  graph_tmp$observation_to_vertex()
+  graph_tmp$observation_to_vertex(mesh_warning=FALSE)
 
-  # tmp_list2 <- cbind(graph_tmp$data[["__coord_x"]],
-  #                                       graph_tmp$data[["__coord_y"]])
+  # tmp_list2 <- cbind(graph_tmp$data[[".coord_x"]],
+  #                                       graph_tmp$data[[".coord_y"]])
   # tmp_list2 <- lapply(1:nrow(tmp_list2), function(i){tmp_list2[i,]})
   # idx_list <- match(tmp_list, tmp_list2)
 
-  new_data_list <- graph_tmp$data
+  new_data_list <- graph_tmp$.__enclos_env__$private$data
 
   idx_list <- !is.na(new_data_list[["__dummy_var"]])
 
   new_data_list <- lapply(new_data_list, function(dat){dat[idx_list]})
 
-  pred_PtE <- pred_PtE[graph_tmp$data[["__dummy_var2"]],][idx_list,]
+  pred_PtE <- pred_PtE[graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]],][idx_list,]
 
-  # new_data_list[[name_locations]] <- cbind(graph_tmp$data[["__edge_number"]][idx_list],
-  #                                             graph_tmp$data[["__distance_on_edge"]][idx_list])
+  # new_data_list[[name_locations]] <- cbind(graph_tmp$data[[".edge_number"]][idx_list],
+  #                                             graph_tmp$data[[".distance_on_edge"]][idx_list])
 
-  new_data_list[[name_locations]] <- cbind(new_data_list[["__edge_number"]],
-                                              new_data_list[["__distance_on_edge"]])
+  new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
+                                              new_data_list[[".distance_on_edge"]])
 
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
@@ -1001,9 +1138,9 @@ predict.inla_metric_graph_spde <- function(object,
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
   bru_fit_new <- inlabru::bru(cmp,
-          data = graph_data_spde(spde____model, loc = name_locations))
+          data = graph_data_spde(spde____model, loc_name = name_locations, drop_all_na = FALSE, drop_na = FALSE)[["data"]])
   pred <- predict(object = bru_fit_new,
-                    data = new_data_list,
+                    newdata = new_data_list,
                     formula = formula,
                     n.samples = n.samples,
                     seed = seed,
@@ -1017,7 +1154,7 @@ predict.inla_metric_graph_spde <- function(object,
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
   if(return_original_order){
-    ord <- graph_tmp$data[["__dummy_var"]][idx_list]
+    ord <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]][idx_list]
     pred_list[["pred"]][ord,] <- pred
     pred_list[["PtE_pred"]][ord,] <- pred_PtE
   }
@@ -1038,15 +1175,20 @@ predict.inla_metric_graph_spde <- function(object,
 #' @param x A predicted object obtained with the `predict` method.
 #' @param y Not used.
 #' @param vertex_size Size of the vertices.
-#' @param ... Additional parameters to be passed to the plot function.
+#' @param ... Additional parameters to be passed to plot_function.
 #' @return A 'ggplot2' object.
 #' @export
 
 plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
   m_prd_bru <- x$pred$mean
   PtE_prd <- x$PtE_pred
-  p <- x$initial_graph$plot_function(X = cbind(PtE_prd, m_prd_bru),
-                                      vertex_size = vertex_size, ...)
+  newdata <- data.frame("edge_number" = PtE_prd[,1],
+                        "distance_on_edge" = PtE_prd[,2],
+                        "pred_y" = m_prd_bru)
+  newdata <- x$initial_graph$process_data(data = newdata, normalized = TRUE)
+  
+  p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
+  p
   p
 }
 
@@ -1058,7 +1200,7 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' `rspde.metric_graph()` function.
 #' @param cmp The 'inlabru' component used to fit the model.
 #' @param bru_fit A fitted model using 'inlabru' or 'INLA'.
-#' @param data A data.frame of covariates needed for the prediction. The locations
+#' @param newdata A data.frame of covariates needed for the prediction. The locations
 #' must be normalized PtE.
 #' @param formula A formula where the right hand side defines an R expression to
 #' evaluate for each generated sample. If NULL, the latent and hyperparameter
@@ -1092,13 +1234,14 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
 #' @param... Additional arguments passed on to inla.posterior.sample.
+#' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with predictions.
 #' @export
 
 predict.rspde_metric_graph <- function(object,
                                            cmp,
                                            bru_fit,
-                                           data = NULL,
+                                           newdata = NULL,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
                                            normalized = TRUE,
@@ -1109,12 +1252,28 @@ predict.rspde_metric_graph <- function(object,
                                            include = NULL,
                                            exclude = NULL,
                                            drop = FALSE,
-                                           ...){
+                                           ...,
+                                           data = deprecated()){
+  if (lifecycle::is_present(data)) {
+    if (is.null(newdata)) {
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
+        details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
+      )
+      newdata <- data
+    } else {
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
+        details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
+      )
+    }
+    data <- NULL
+  }
+
+  data <- newdata
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }
-  graph_tmp <- object$graph_spde$get_initial_graph()
+  graph_tmp <- object$mesh$get_initial_graph()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
 
   if(data_coords == "PtE"){
@@ -1129,7 +1288,7 @@ predict.rspde_metric_graph <- function(object,
   }
 
   pred <- predict(object = bru_fit,
-                    data = data,
+                    newdata = newdata,
                     formula = formula,
                     n.samples = n.samples,
                     seed = seed,
