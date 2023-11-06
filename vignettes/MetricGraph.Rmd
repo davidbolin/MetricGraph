@@ -769,7 +769,7 @@ field_pred <- predict(spde_model,
 
 Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
-graph$plot_function(field_pred, improve_plot = TRUE, edge_width = 0.5)
+plot(field_pred, improve_plot = TRUE, edge_width = 0.5)
 ```
 
 Finally, let us plot predictions of the observed data at the mesh locations:
