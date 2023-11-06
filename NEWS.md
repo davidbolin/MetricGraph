@@ -1,3 +1,5 @@
+# MetricGraph (development version)
+
 # MetricGraph 1.2.0
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.
 * Bugfixes on sample_spde and when adding observations based on Euclidean positions.
