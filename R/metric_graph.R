@@ -139,12 +139,12 @@ metric_graph <-  R6Class("metric_graph",
       start_construction_time <- Sys.time()
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(lines)", "metric_graph$new(edges)",
+           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)", "metric_graph$new(edges)",
              details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
            )
            edges <- lines
          } else {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(lines)", "metric_graph$new(edges)",
+           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)", "metric_graph$new(edges)",
              details = c("Both `edges` and `lines` were provided. Only `edges` will be considered.")
            )
          }
@@ -152,26 +152,26 @@ metric_graph <-  R6Class("metric_graph",
        }
 
       if (is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
+           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("`tolerance$vertex_line` was provided but not `tolerance$vertex_edge`. Setting `tolerance$vertex_edge <- tolerance$vertex_line`.")
            )
            tolerance$vertex_edge <- tolerance$vertex_line
            tolerance$vertex_line <- NULL
          } else if(!is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
-           lifecycle::deprecate_warn("1.1.2.9000","metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
+           lifecycle::deprecate_warn("1.2.0","metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("Both `tolerance$vertex_edge` and `tolerance$vertex_line` were provided. Only `tolerance$vertex_edge` will be considered.")
            )
             tolerance$vertex_line <- NULL
          }
 
         if (is.null(tolerance$edge_edge) && !is.null(tolerance$line_line)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
+           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("`tolerance$line_line` was provided but not `tolerance$edge_edge`. Setting `tolerance$edge_edge <- tolerance$line_line`.")
            )
            tolerance$edge_edge <- tolerance$line_line
            tolerance$line_line <- NULL
          } else if(!is.null(tolerance$edge_edge) && !is.null(tolerance$line_line)) {
-           lifecycle::deprecate_warn("1.1.2.9000","metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
+           lifecycle::deprecate_warn("1.2.0","metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
              details = c("Both `tolerance$edge_edge` and `tolerance$line_line` were provided. Only `tolerance$edge_edge` will be considered.")
            )
           tolerance$line_line <- NULL
@@ -1938,7 +1938,7 @@ metric_graph <-  R6Class("metric_graph",
 
         data_coords <- data_coords[[1]]
         if(data_coords == "euclidean"){
-          lifecycle::deprecate_warn("1.1.2.9000", "add_observations(data_coords = 'must be either PtE or spatial')")
+          lifecycle::deprecate_warn("1.2.0", "add_observations(data_coords = 'must be either PtE or spatial')")
           data_coords <- "spatial"
         }
         if(is.null(data)){
@@ -2685,7 +2685,7 @@ metric_graph <-  R6Class("metric_graph",
   #'
 
   mesh_A = function(PtE){
-    lifecycle::deprecate_warn("1.1.2.9000", "metric_graph$mesh_A()", "metric_graph$fem_basis()")
+    lifecycle::deprecate_warn("1.2.0", "metric_graph$mesh_A()", "metric_graph$fem_basis()")
     self$fem_basis(PtE)
   },
 
@@ -5090,12 +5090,12 @@ graph_components <-  R6::R6Class("graph_components",
 
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "graph_components$new(lines)", "graph_components$new(edges)",
+           lifecycle::deprecate_warn("1.2.0", "graph_components$new(lines)", "graph_components$new(edges)",
              details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
            )
            edges <- lines
          } else {
-           lifecycle::deprecate_warn("1.1.2.9000", "graph_components$new(lines)", "graph_components$new(edges)",
+           lifecycle::deprecate_warn("1.2.0", "graph_components$new(lines)", "graph_components$new(edges)",
              details = c("Both `edges` and `lines` were provided. Only `edges` will be considered.")
            )
          }

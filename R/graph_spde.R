@@ -340,7 +340,7 @@ graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all
 #' @export
 
 graph_spde_make_A <- function(graph_spde, repl = NULL){
-  lifecycle::deprecate_warn("1.1.2.9000", "graph_spde_make_A()", "graph_spde_basis()")
+  lifecycle::deprecate_warn("1.2.0", "graph_spde_make_A()", "graph_spde_basis()")
   return(graph_spde_basis(graph_spde, repl = repl, drop_na = FALSE, drop_all_na = FALSE))
 }
 
@@ -379,12 +379,12 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
 
         if (lifecycle::is_present(loc)) {
          if (is.null(loc_name)) {
-           lifecycle::deprecate_warn("1.1.2.9000", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+           lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
              details = c("`loc` was provided but not `loc_name`. Setting `loc_name <- loc`.")
            )
            loc_name <- loc
          } else {
-           lifecycle::deprecate_warn("1.1.2.9000", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+           lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
              details = c("Both `loc_name` and `loc` were provided. Only `loc_name` will be considered.")
            )
          }
@@ -1037,12 +1037,12 @@ predict.inla_metric_graph_spde <- function(object,
                                            data = deprecated()){
   if (lifecycle::is_present(data)) {
     if (is.null(newdata)) {
-      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
         details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
       )
       newdata <- data
     } else {
-      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
         details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
       )
     }
@@ -1256,12 +1256,12 @@ predict.rspde_metric_graph <- function(object,
                                            data = deprecated()){
   if (lifecycle::is_present(data)) {
     if (is.null(newdata)) {
-      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
         details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
       )
       newdata <- data
     } else {
-      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
         details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
       )
     }

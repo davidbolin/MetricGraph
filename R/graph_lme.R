@@ -1440,12 +1440,12 @@ predict.graph_lme <- function(object,
   repl <- which_repl
   if (lifecycle::is_present(data)) {
     if (is.null(newdata)) {
-      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
         details = c("`data` was provided but not `newdata`. Setting `newdata <- data`.")
       )
       newdata <- data
     } else {
-      lifecycle::deprecate_warn("1.1.2.9000", "predict(data)", "predict(newdata)",
+      lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
         details = c("Both `newdata` and `data` were provided. Only `newdata` will be considered.")
       )
     }
