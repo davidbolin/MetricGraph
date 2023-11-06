@@ -88,6 +88,10 @@ git flow release finish 'VERSION'
 
 git tag vX.X.X -m "Tag for version X.X.X"
 
+# After pushing the merge, also push the tag:
+
+git push origin vX.X.X
+
 # After handling the stable branch, merge back with devel.
 # In R, the following updates the dev version number in DESCRIPTION and NEWS:
 usethis::use_dev_version() 
