@@ -22,6 +22,7 @@ jobs:
             cp * ../vignettes
             cd ..
             git rm -rf cran_vignettes
+            git rm -rf examples
             git add vignettes
             git commit -m "Doing the setup"
             git push
