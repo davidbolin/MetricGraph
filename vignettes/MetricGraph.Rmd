@@ -791,5 +791,6 @@ mean_obs_prd <- obs_pred$pred[,1]
 graph$plot_function(X = mean_obs_prd, improve_plot = TRUE,
                     vertex_size = 0, edge_width = 0.5)
 ```
+
 # References {-}
 
