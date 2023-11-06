@@ -2,11 +2,10 @@
 test_that("test if the over determined covariances are correct",{
   kappa <- 0.07
   sigma   <- 0.1
-  line.line <- Line(rbind(c(120,80),c(30,80)))
-  line.line2 <- Line(rbind(c(30,80),c(30,00)))
+  edge1 <- rbind(c(120,80),c(30,80))
+  edge2 <- rbind(c(30,80),c(30,00))
 
-  graph <-  metric_graph$new(sp::SpatialLines(list(Lines(list(line.line),ID="1"),
-                                                Lines(list(line.line2),ID="2"))))
+  graph <-  metric_graph$new(list(edge1,edge2))
   Q <- spde_precision(kappa = kappa, tau = 1/sigma, alpha = 2, graph = graph, BC = 1)
   graph$buildC(2, FALSE)
   Qtilde <- (graph$CoB$T)%*%Q%*%t(graph$CoB$T)

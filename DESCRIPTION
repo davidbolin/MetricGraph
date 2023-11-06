@@ -1,20 +1,20 @@
 Package: MetricGraph
 Type: Package
 Title: Random Fields on Metric Graphs
-Version: 1.1.2
+Version: 1.2.0
 Authors@R: c(
     person("David", "Bolin", email = "davidbolin@gmail.com", role = c("cre", "aut")),
-    person("Jonas", "Wallin", email = "jonas.wallin81@gmail.com", role = "aut"),
-    person("Alexandre", "Simas", email = "alexandre.impa@gmail.com", role = "aut"))
+    person("Alexandre", "Simas", email = "alexandre.impa@gmail.com", role = "aut"),
+    person("Jonas", "Wallin", email = "jonas.wallin81@gmail.com", role = "aut"))
 Maintainer: David Bolin <davidbolin@gmail.com>
 Description: Facilitates creation and manipulation of metric graphs, such as street or river networks. Further facilitates operations and visualizations of data on metric graphs, and the creation of a large class of random fields and stochastic partial differential equations on such spaces. These random fields can be used for simulation, prediction and inference. In particular, linear mixed effects models including random field components can be fitted to data based on computationally efficient sparse matrix representations. Interfaces to the R packages 'INLA' and 'inlabru' are also provided, which facilitate working with Bayesian statistical models on metric graphs. The main references for the methods are Bolin, Simas and Wallin (2022) <doi:10.48550/arXiv.2205.06163>, Bolin, Kovacs, Kumar and Simas (2023) <doi:10.48550/arXiv.2302.03995> and Bolin, Simas and Wallin (2023) <doi:10.48550/arXiv.2304.03190> and <doi:10.48550/arXiv.2304.10372>.
 License: GPL (>=2)
-Imports: stats, ggplot2, igraph, sp, sf, viridis, rSPDE (>= 2.3.1), Matrix, methods,  Rcpp (>= 1.0.5), R6
-Suggests: knitr, testthat, INLA (>= 0.0-1468840039), inlabru, osmdata, sn,  plotly, tidyr, parallel, optimParallel, numDeriv
+Imports: stats, ggplot2, igraph, sf, viridis, rSPDE (>= 2.3.3), Matrix, methods,  Rcpp (>= 1.0.5), R6, lifecycle, sp, dplyr, tidyr, magrittr, broom, zoo
+Suggests: knitr, testthat, INLA (>= 22.12.14), inlabru, osmdata, sn,  plotly, parallel, optimParallel, numDeriv
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 BugReports: https://github.com/davidbolin/MetricGraph/issues
 URL: https://davidbolin.github.io/MetricGraph/
-Copyright: The R package and code, and the main programs, were written by and are Copyright by David Bolin, Alexandre B. Simas and Jonas Wallin, and are redistributable under the GNU Public License, version 2 or later. The package also includes one function from another package, which will be deprecated in 2023, and whose codes are under the GPL-2 license. For details see the COPYRIGHTS file.
+Copyright: The R package and code, and the main programs, were written by and are Copyright by David Bolin, Alexandre B. Simas and Jonas Wallin, and are redistributable under the GNU Public License, version 2 or later. The package also includes partial codes from another package, which was deprecated in Oct-2023, and whose codes are under the GPL-2 license. For details see the COPYRIGHTS file.
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3

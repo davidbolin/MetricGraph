@@ -1,7 +1,7 @@
 #' Precision matrix for Whittle-Matérn fields
-#' 
+#'
 #' Computes the precision matrix for all vertices for a Whittle-Matérn field.
-#' 
+#'
 #' @param kappa Range parameter.
 #' @param tau Precision parameter.
 #' @param alpha Smoothness parameter (1 or 2).
@@ -279,7 +279,9 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 #' @param graph metric_graph object
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 gives stationary boundary conditions
-#' @param w ([0,1]) how two weight the top edge
+#' BC=2 stationary boundary conditions only on Outwards vertices
+#' BC=3 stationary boundary conditions only on Outwards inwards
+#' @param w ([0,1]) how to weight the top edge
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list
@@ -326,14 +328,28 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
       count <- count + 1
     }
   }
-  if(BC == 1){
-    #does this work for circle?
-    i.table <- table(i_[1:count])
-    index = as.integer(names(which(i.table < 3)))
-    i_ <- c(i_[1:count], index)
-    j_ <- c(j_[1:count], index)
-    x_ <- c(x_[1:count], rep(0.5, length(index)))
-    count <- count + length(index)
+
+  if(BC>0){
+    if(BC==1 || BC==2){
+      BC_in <- graph$get_degrees("indegree")==1
+      if(length(BC_in)>0){
+        BC_in <- which(BC_in)
+        i_ <- c(i_[1:count], BC_in)
+        j_ <- c(j_[1:count], BC_in)
+        x_ <- c(x_[1:count], rep(w, length(BC_in)))
+        count <- count + length(BC_in)
+      }
+    }
+    if(BC==1 || BC==3){
+      BC_out <- graph$get_degrees("outdegree")==1
+      if(length(BC_out)>0){
+        BC_out <- which(BC_out)
+        i_ <- c(i_[1:count], BC_out)
+        j_ <- c(j_[1:count], BC_out)
+        x_ <- c(x_[1:count], rep(1-w, length(BC_out)))
+        count <- count + length(BC_out)
+      }
+    }
   }
   if(build){
     Q <- Matrix::sparseMatrix(i = i_[1:count],

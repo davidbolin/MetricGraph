@@ -130,21 +130,21 @@ posterior_crossvalidation_covariance_manual <- function(theta,
   diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
 
   if(is.null(ind)){
-    ind <- 1:length(graph$data[[data_name]])
+    ind <- 1:length(graph$.__enclos_env__$private$data[[data_name]])
   }
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$data[[data_name]]))
-  mae <- rmse <- rep(0, length(graph$data[[data_name]]))
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
+  mae <- rmse <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
   for (j in 1:length(unique(ind))) {
     i <- which(ind == j)
-    mu.p[i] <-Sigma[i, -i] %*% solve(Sigma.o[-i, -i], graph$data[[data_name]][-i])
+    mu.p[i] <-Sigma[i, -i] %*% solve(Sigma.o[-i, -i], graph$.__enclos_env__$private$data[[data_name]][-i])
     Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                         Sigma.o[-i, i])
     var.p[i] <- diag(Sigma.p)
-    logscore[i] <- LS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(graph$data[[data_name]][i] - mu.p[i])
-    rmse[i] <- (graph$data[[data_name]][i] - mu.p[i])^2
+    logscore[i] <- LS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])
+    rmse[i] <- (graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])^2
   }
   return(list(mu = mu.p,
               var = var.p,
@@ -218,23 +218,21 @@ posterior_crossvalidation_manual <- function(theta,
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
       Q <- K %*% K * tau^2
     }
-    A <- graph$A()
-    Q.p <- Q  + t(A)%*%A/sigma_e^2
   } else {
     stop("Wrong model choice.")
   }
 
   if(is.null(ind)){
-    ind <- 1:length(graph$data[[data_name]])
+    ind <- 1:length(graph$.__enclos_env__$private$data[[data_name]])
   }
 
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$data[[data_name]]))
-  mae <- rmse <- rep(0, length(graph$data[[data_name]]))
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
+  mae <- rmse <- rep(0, length(graph$.__enclos_env__$private$data[[data_name]]))
 
   for (j in 1:length(unique(ind))) {
     i <- which(ind == j)
     if(model == "isoExp" || model == "alpha2"){
-      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], graph$data[[data_name]][-i])
+      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], graph$.__enclos_env__$private$data[[data_name]][-i])
       Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                           Sigma.o[-i, i])
       var.p[i] <- diag(Sigma.p)
@@ -242,16 +240,16 @@ posterior_crossvalidation_manual <- function(theta,
       A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
       Q.p <- Q + t(A) %*% A / sigma_e^2
       mu.p[i] <- solve(Q.p,
-                       as.vector(t(A) %*% graph$data[[data_name]][-i] / sigma_e^2))[graph$PtV[i]]
+                       as.vector(t(A) %*% graph$.__enclos_env__$private$data[[data_name]][-i] / sigma_e^2))[graph$PtV[i]]
       v <- rep(0,dim(Q.p)[1])
       v[graph$PtV[i]] <- 1
       var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
     }
-    logscore[i] <- LS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(graph$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(graph$data[[data_name]][i] - mu.p[i])
-    rmse[i] <- (graph$data[[data_name]][i] - mu.p[i])^2
+    logscore[i] <- LS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    crps[i] <- CRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    scrps[i] <- SCRPS(graph$.__enclos_env__$private$data[[data_name]][i], mu.p[i], sqrt(var.p[i]))
+    mae[i] <- abs(graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])
+    rmse[i] <- (graph$.__enclos_env__$private$data[[data_name]][i] - mu.p[i])^2
   }
   return(list(mu = mu.p,
               var = var.p,
@@ -266,21 +264,43 @@ posterior_crossvalidation_manual <- function(theta,
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
 #' the vertices of metric graphs
 #'
-#' @param object A fitted model using the `graph_lme()` function.
+#' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
+#' @param factor Which factor to multiply the scores. The default is 1.
+#' @param tibble Return the scores as a `tidyr::tibble()`
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
 #' @export
-posterior_crossvalidation <- function(object)
+posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
 {
+  if(!inherits(object,"graph_lme") && !is.list(object)){
+    stop("object should be of class graph_lme or a list of objects of class graph_lme.")
+  }
+
   if(!inherits(object,"graph_lme")){
-    stop("object should be of class graph_lme.")
+    if(is.null(names(object))){
+      warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
+    }
+    results_list <- lapply(object, function(obj){posterior_crossvalidation(obj, factor=factor, tibble=FALSE)})
+    res <- list()
+    res[["mu"]] <- lapply(results_list, function(dat){dat[["mu"]]})
+    res[["var"]] <- lapply(results_list, function(dat){dat[["var"]]})
+    res[["scores"]] <- lapply(results_list, function(dat){dat[["scores"]]})
+    scores <- do.call(rbind, res[["scores"]])
+    row.names(scores) <- names(res[["scores"]])
+    if(tibble){
+      scores[["Model"]] <- row.names(scores)
+      scores <- tidyr::as_tibble(scores)
+      scores <- scores[, c("Model", "logscore", "crps", "scrps", "mae", "rmse")]
+    }
+    res[["scores"]] <- scores
+    return(res)
   }
 
   graph <- object$graph$clone()
 
-  graph$observation_to_vertex()
+  graph$observation_to_vertex(mesh_warning = FALSE)
 
   beta_cov <- object$coeff$fixed_effects
   sigma_e <- object$coeff$measurement_error
@@ -345,8 +365,6 @@ posterior_crossvalidation <- function(object)
       K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
       Q <- K %*% K * tau^2
     }
-    A <- graph$A()
-    Q.p <- Q  + t(A)%*%A/sigma_e^2
   } else {
     stop("Wrong model choice.")
   }
@@ -365,49 +383,97 @@ posterior_crossvalidation <- function(object)
     X_cov <- NULL
   }
 
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+  repl <- unique(repl_vec)
 
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, length(y_graph))
-  mae <- rmse <- rep(0, length(y_graph))
+  n_obs <- sum(repl_vec == repl[1])
 
-  for (j in 1:length(unique(ind))) {
-    i <- which(ind == j)
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, n_obs)
+  mae <- rmse <- rep(0, n_obs)
 
-    y_cv <- y_graph[-i]
-    v_cv <- y_cv
-    if(!is.null(X_cov)){
-      v_cv <- v_cv - as.vector(X_cov[-i, ] %*% beta_cov)
-      mu_fe <- as.vector(X_cov[i, ] %*% beta_cov)
-    } else {
-      mu_fe <- 0
+
+  for(i in 1:n_obs){
+        idx_repl <- repl_vec == repl[1]
+        y_graph_repl <- y_graph[idx_repl]
+
+        y_cv <- y_graph_repl[-i]
+        v_cv <- y_cv
+        if(!is.null(X_cov)){
+          X_cov_repl <- X_cov[idx_repl,]
+          v_cv <- v_cv - as.vector(X_cov_repl[-i, ] %*% beta_cov)
+          mu_fe <- as.vector(X_cov_repl[i, ] %*% beta_cov)
+        } else {
+          mu_fe <- 0
+        }
+
+        if(model == "isoExp" || model == "alpha2"){
+          mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
+          Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
+                                                              Sigma.o[-i, i])
+          var.p[i] <- diag(Sigma.p)
+        } else {
+          A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+          Q.p <- Q + t(A) %*% A / sigma_e^2
+          mu.p[i] <- solve(Q.p,
+                           as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
+          v <- rep(0,dim(Q.p)[1])
+          v[graph$PtV[i]] <- 1
+          var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+        }
+        logscore[i] <- LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+        crps[i] <- CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+        scrps[i] <- SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+        mae[i] <- abs(y_graph_repl[i] - mu.p[i])
+        rmse[i] <- (y_graph_repl[i] - mu.p[i])^2
+      if(length(repl)>1){
+        for (j in 2:length(repl)) {
+          y_graph_repl <- y_graph[repl_vec == repl[j]]
+          y_cv <- y_graph_repl[-i]
+          v_cv <- y_cv
+          if(!is.null(X_cov)){
+            X_cov_repl <- X_cov[idx_repl,]
+            v_cv <- v_cv - as.vector(X_cov_repl[-i, ] %*% beta_cov)
+            mu_fe <- as.vector(X_cov_repl[i, ] %*% beta_cov)
+          } else {
+            mu_fe <- 0
+          }
+  
+          if(model == "isoExp" || model == "alpha2"){
+            mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
+            Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
+                                                                Sigma.o[-i, i])
+            var.p[i] <- diag(Sigma.p)
+          } else {
+            A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+            Q.p <- Q + t(A) %*% A / sigma_e^2
+            mu.p[i] <- solve(Q.p,
+                             as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
+            v <- rep(0,dim(Q.p)[1])
+            v[graph$PtV[i]] <- 1
+            var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+          }
+          logscore[i] <- logscore[i] + LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+          crps[i] <- crps[i] + CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+          scrps[i] <- scrps[i] + SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+          mae[i] <- mae[i] + abs(y_graph_repl[i] - mu.p[i])
+          rmse[i] <- rmse[i] + (y_graph_repl[i] - mu.p[i])^2
+        }
     }
-
-    if(model == "isoExp" || model == "alpha2"){
-      mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
-      Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
-                                                          Sigma.o[-i, i])
-      var.p[i] <- diag(Sigma.p)
-    } else {
-      A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
-      Q.p <- Q + t(A) %*% A / sigma_e^2
-      mu.p[i] <- solve(Q.p,
-                       as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
-      v <- rep(0,dim(Q.p)[1])
-      v[graph$PtV[i]] <- 1
-      var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
-    }
-    logscore[i] <- LS(y_graph[i], mu.p[i], sqrt(var.p[i]))
-    crps[i] <- CRPS(y_graph[i], mu.p[i], sqrt(var.p[i]))
-    scrps[i] <- SCRPS(y_graph[i], mu.p[i], sqrt(var.p[i]))
-    mae[i] <- abs(y_graph[i] - mu.p[i])
-    rmse[i] <- (y_graph[i] - mu.p[i])^2
   }
-  return(list(mu = mu.p,
-              var = var.p,
-              logscore = -mean(logscore),
-              crps = -mean(crps),
-              scrps = -mean(scrps),
-              mae = mean(mae),
-              rmse = sqrt(mean(rmse))))
+  res <- list(mu = mu.p,
+              var = var.p)
+  res[["scores"]] <- data.frame(logscore = -factor * mean(logscore/length(repl), na.rm = TRUE),
+              crps = -factor * mean(crps/length(repl), na.rm = TRUE),
+              scrps = -factor * mean(scrps/length(repl), na.rm = TRUE),
+              mae = factor * mean(mae/length(repl), na.rm = TRUE),
+              rmse = factor * sqrt(mean(rmse/length(repl), na.rm = TRUE)))
+  attr(res[["scores"]], "factor") <- factor
+  if(tibble){
+    res[["scores"]] <- tidyr::as_tibble(res[["scores"]])
+    return(res)
+  } else{
+    return(res)
+  }
 }
 
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at

@@ -1,0 +1,538 @@
+---
+title: "Data manipulation on metric graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2023-10-24. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data manipulation on metric graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MetricGraph)
+set.seed(1)
+```
+
+# Introduction
+
+In this vignette we will provide some examples of data manipulation on metric graphs. More precisely, we will show how to add data to the metric graph, how to retrieve the data, how to do data manipulation using some of the `tidyverse` tools. Finally, we will show how add the results of these manipulations back to the metric graph.
+
+As an example throughout the vignette, we consider the following metric graph:
+```{r}
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
+graph$plot()
+```
+
+For further details on the construction of metric graphs, see
+[Working with metric graphs](metric_graphs.html)
+
+# Adding and accessing data on metric graphs
+
+Let us start by generating some data to be added to the metric graph object we created, namely `graph`. 
+We first generate the locations:
+```{r}
+obs_per_edge <- 50
+obs_loc <- NULL
+for(i in 1:(graph$nE)) {
+  obs_loc <- rbind(obs_loc,
+                   cbind(rep(i,obs_per_edge), 
+                   runif(obs_per_edge)))
+}
+```
+
+Now, we will generate the data and build a `data.frame` to be added to the metric graph:
+
+```{r}
+y <- rnorm(graph$nE * obs_per_edge)
+
+df_data <- data.frame(y=y, edge = obs_loc[,1], pos = obs_loc[,2])
+```
+
+We can now add the data to the graph by using the `add_mesh_observations()` method. We will add the data by providing the edge number and relative distance on the edge. To this end, when adding the data, we need to supply the names of the columns that contain the edge number and the distance on edge by entering the `edge_number` and `distance_on_edge` arguments. Further, since we are providing the relative distance, we need to set the `normalized` argument to `TRUE`:
+
+```{r}
+graph$add_observations(data = df_data, edge_number = "edge", 
+                    distance_on_edge = "pos", normalized = TRUE)
+```
+
+We can check that the data was successfully added by retrieving them from the metric graph using the `get_data()` method:
+
+```{r}
+graph$get_data()
+```
+
+We can also visualize the data by using the `plot()` method and specifying which column we would like to plot:
+
+```{r}
+graph$plot(data = "y")
+```
+
+We can add more data to the metric graph by using the `add_observations()` method again. To this end, let us create an additional dataset. This time, we will add it using spatial coordinates. 
+In this case, we will generate `50` uniform locations to be the `x` coordinate of the data, and we will keep the `y` coordinate equal to zero. Further, we will generate `50` more realizations of a standard gaussian variable as the `y2` variable. 
+
+```{r}
+coordx <- runif(50)
+coordy <- 0
+y2 <- rnorm(50)
+
+df_data2 <- data.frame(y2 = y2, coordx = coordx, coordy = coordy)
+```
+
+Let us add this dataset. Now, we need to set `data_coords` to `"spatial"` and we need to supply the names of the columns of the `x` and `y` coordinates:
+
+```{r}
+graph$add_observations(data = df_data2, data_coords = "spatial", 
+                            coord_x = "coordx", coord_y = "coordy")
+```
+
+Let us check that the data was successfully added:
+
+```{r}
+graph$get_data()
+```
+
+We can also plot:
+
+```{r}
+graph$plot(data = "y2")
+```
+
+Observe that `NAs` were added, since `df_data` does not contain the column `y2` and `df_data2` does not contain the column `y`.
+
+By default, the `get_data()` method excludes all rows in which all the variables are `NA` (the location variables are not considered here). We can also show the rows that do not contain any `NA` observations by using the `drop_na` argument in the `get_data()` method:
+
+```{r}
+graph$get_data(drop_na = TRUE)
+```
+
+Observe that there is no row, since all of them contain at least one `NA`.
+
+Suppose now that we want to replace the metric graph data by a new dataset. To this end we have two options. The first one is to use the `clear_observations()` method, then add the observations:
+
+```{r}
+graph$clear_observations()
+```
+
+We will now create the dataset we want to add. To simplify, we will use the default naming for the edge number and distance on edge, so that we do not need to specify them in the `add_observations()` method:
+
+```{r}
+y3 <- rnorm(graph$nE * obs_per_edge)
+
+df_data3 <- data.frame(y3=y3, edge_number = obs_loc[,1], distance_on_edge = obs_loc[,2])
+```
+
+We can now add the data. Remember to set `normalized` to `TRUE` since we are providing the relative distance on edge:
+
+```{r}
+graph$add_observations(data = df_data3, normalized = TRUE)
+```
+and check:
+
+```{r}
+graph$get_data()
+```
+
+The second way to replace the data in the metric graph is to set the `clear_obs` argument to `TRUE`. We will also create a new dataset using the default naming for the `x` and `y` coordinates, so we do not need to specify them:
+
+```{r}
+df_data4 <- data.frame(y4 = exp(y2), coord_x = coordx, coord_y = coordy)
+```
+and we add them (remember to set `data_coords` to `"spatial"`):
+```{r}
+graph$add_observations(data = df_data4, clear_obs = TRUE, 
+                            data_coords = "spatial")
+```
+and we can check it replaced:
+```{r}
+graph$get_data()
+```
+
+# Adding grouped data to metric graphs
+
+The graph structure also allow to add grouped data. To this end we need to specify which column of the data will be the grouping variable. 
+
+To illustrate, let us generate a grouped data. We will use the same locations we generated in the previous section.
+
+```{r}
+n.repl <- 5
+
+y_repl <- rnorm(n.repl * graph$nE * obs_per_edge)
+repl <- rep(1:n.repl, each = graph$nE * obs_per_edge)
+```
+
+Let us now create the `data.frame` with the grouped data, where the grouping variable is `repl`:
+
+```{r}
+df_data_repl <- data.frame(y = y_repl, repl = repl, 
+                  edge_number = rep(obs_loc[,1], times = n.repl), 
+                  distance_on_edge = rep(obs_loc[,2], times = n.repl))
+```
+
+We can now add this `data.frame` to the graph by using the `add_observations()` method. We need to set `normalized` to `TRUE`, since we have relative distances on edge. We also need to set the `group` argument to `repl`, since `repl` is our grouping variable. Finally, we will also set `clear_obs` to `TRUE` since we want to replace the existing data.
+
+```{r}
+graph$add_observations(data = df_data_repl, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = "repl")
+```
+Let us check the graph data. Observe that the grouping variable is now `.group`.
+
+```{r}
+graph$get_data()
+```
+
+We can obtain the data for a given group by setting the `group` argument in the `get_data()` method:
+
+```{r}
+graph$get_data(group = "3")
+```
+
+We can also provide the group argument as a vector:
+
+```{r}
+graph$get_data(group = c("3","5"))
+```
+
+The `plot()` method works similarly. We can plot the data from a specific group by specifying which group we would like to plot:
+
+```{r}
+graph$plot(data = "y", group = "3")
+```
+
+
+# More advanced grouping
+
+Besides being able to group data acoording to one column of the data, we can also group the data with respect to several columns of the data. Let us generate a new data set:
+
+```{r}
+n.repl <- 10
+
+y_repl <- rnorm(n.repl * graph$nE * obs_per_edge)
+repl_1 <- rep(1:n.repl, each = graph$nE * obs_per_edge)
+repl_2 <- rep(c("a","b","c","d","e"), times = 2 * graph$nE * obs_per_edge)
+
+df_adv_grp <- data.frame(data.frame(y = y_repl, 
+                  repl_1 = repl_1, repl_2 = repl_2,
+                  edge_number = rep(obs_loc[,1], times = n.repl), 
+                  distance_on_edge = rep(obs_loc[,2], times = n.repl)))
+```
+
+Let us now add these observations on the graph and group them by `c("repl_1","repl_2")`:
+
+```{r}
+graph$add_observations(data = df_adv_grp, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = c("repl_1", "repl_2"))
+```
+
+Let us take a look at the grouped variables. They are stored in the `.group` column:
+
+```{r}
+graph$get_data()
+```
+
+Observe that the `group` variable is created, by default, by pasting the group variables together with the `.` as separator. We can change the separator using the `group_sep` argument:
+
+```{r}
+graph$add_observations(data = df_adv_grp, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = c("repl_1", "repl_2"),
+                        group_sep = ":")
+```
+
+Then,
+
+```{r}
+graph$get_data()
+```
+
+To plot the data for a particular group, we simply select the group variable we want to plot. Let us plot `y` for `repl_1` equal to `3` and `repl_2` equal to `c`:
+
+```{r}
+graph$plot(data = "y", group = "3:c")
+```
+
+
+# Manipulating data from metric graphs in the tidyverse style
+
+In this section we will present some data manipulation tools that are implemented in metric graphs and can be safely used. 
+
+The tools are based on `dplyr::select()`, `dplyr::mutate()`, `dplyr::filter()`, `dplyr::summarise()` and `tidyr::drop_na()`.
+
+Let us generate a dataset that will be widely used throughout this section and add this to the metric graph object. Observe that we are replacing the existing data by setting `clear_obs` to `TRUE`:
+
+```{r}
+df_tidy <- data.frame(y=y, y2 = exp(y), y3 = y^2, y4 = sin(y),
+       edge_number = obs_loc[,1], distance_on_edge = obs_loc[,2])
+
+# Ordering to simplify presentation with NA data
+ord_idx <- order(df_tidy[["edge_number"]], 
+                df_tidy[["distance_on_edge"]])
+df_tidy <- df_tidy[ord_idx,]
+
+# Setting some NA data
+df_tidy[["y"]][1] <- df_tidy[["y2"]][1] <- NA
+df_tidy[["y3"]][1] <- df_tidy[["y4"]][1] <- NA
+
+df_tidy[["y2"]][2] <- NA
+df_tidy[["y3"]][3] <- NA
+
+graph$add_observations(data = df_tidy, clear_obs = TRUE, normalized = TRUE)
+```
+
+Let us look at the complete data:
+
+```{r}
+graph$get_data(drop_all_na = FALSE)
+```
+
+## select
+
+The verb `select` allows one to choose which columns to keep or to remove. 
+
+For example, let us select the columns `y` and `y2` from the metric graph dataset using the `select()` method:
+
+```{r}
+graph$select(y,y2)
+```
+
+First, observe that this `select` verb is metric graph friendly since it does not remove the columns related to spatial locations.
+
+Also observe that the first original row, that contains only `NA` was removed by default. To return all the rows, we can set the argument `.drop_all_na` to `FALSE`:
+
+```{r}
+graph$select(y, y2, .drop_all_na = FALSE)
+```
+
+Further, observe that the second row also contain an `NA` value in `y2`. To remove all the rows that contain `NA` for at least one variable, we can set the argument `.drop_na` to `TRUE`:
+
+```{r}
+graph$select(y, y2, .drop_na = TRUE)
+```
+
+Moreover, if we want to remove a column, we can simply use the `select()` method together with adding a minus sign `-` in front of the column we want to be removed. For example, to remove `y2`, we can do:
+
+```{r}
+graph$select(-y2)
+```
+
+Alternatively, we can combine the `select()` function with the output of `get_data()` to obtain the same results:
+
+```{r}
+graph$get_data() %>% select(y,y2)
+```
+
+Observe that the spatial locations columns were not removed as well. 
+To avoid removing `NA` variables, we need to set the argument `drop_all_na` to `FALSE` when using the `get_data()` method:
+
+```{r}
+graph$get_data(drop_all_na = FALSE) %>% select(y,y2)
+```
+
+We can proceed similarly to remove `y2`:
+
+```{r}
+graph$get_data() %>% select(-y2)
+```
+
+Finally, observe that this is a modification of `dplyr::select()` made to be user-friendly to metric graphs, since it keeps the spatial locations. For example, if we use the standard version of `dplyr::select()` the result is different:
+
+```{r}
+graph$get_data() %>% dplyr:::select.data.frame(y,y2)
+```
+
+## filter
+
+The `filter` verb selects rows based on conditions on the variables. For example, let us select the variables that are on `edge_number` 3, with `distance_on_edge` greater than 0.5:
+
+```{r}
+filtered_data <- graph$filter(`.edge_number` == 3, `.distance_on_edge` > 0.5)
+```
+
+We can plot the result using the `plot()` method together with the `newdata` argument to supply the modified dataset:
+
+```{r}
+graph$plot(data = "y", newdata = filtered_data)
+```
+
+The behavior with `NA` variables is exactly the same as with the `select()` method. For example, we can remove the rows that contain `NA` variables by setting `drop_na` to `TRUE`:
+
+```{r}
+graph$filter(y > 1, .drop_na = TRUE)
+```
+
+To conclude, we can also use the `filter()` function on top of the result of the `get_data()` method:
+
+```{r}
+filtered_data2 <- graph$get_data() %>% filter(y > 1)
+```
+
+Let us plot:
+
+```{r}
+graph$plot(data = "y", newdata = filtered_data2)
+```
+
+
+## mutate
+
+The `mutate` verb creates new columns, or modify existing columns, as functions of the existing columns. Let us create a new column, `new_y`, obtained as the sum of `y` and `y2`:
+
+```{r}
+graph$mutate(new_y = y+y2)
+```
+
+The behavior with `NA` data is the same as for the `filter()` and `select()` methods. For example, if we want to keep all the data, we can set `.drop_all_na` to `FALSE:
+
+```{r}
+graph$mutate(new_y = y+y2, .drop_all_na=FALSE)
+```
+
+Let us modify the variable `y3` and at the same time remove all the `NA`:
+
+```{r}
+graph$mutate(y3 = ifelse(y>1,1,-1), .drop_na = TRUE)
+```
+
+Finally, we can also apply the `mutate()` function the result of the `get_data()` method, and also pipe it to the `plot()` method (we are also changing the scale to discrete):
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+graph$get_data() %>% mutate(new_y = y+y2, 
+                        y3=as.factor(ifelse(y>1,1,-1))) %>% 
+                        graph$plot(data = "y3") + 
+                        scale_colour_discrete()
+```
+
+## summarise
+
+The `summarise` verb creates summaries of selected columns based on groupings. For metric graphs, the groups always include the edge number (`.edge_number`) and relative distance on edge (`.distance_on_edge`). By using the argument `.include_graph_groups`, the internal metric graph group variable, namely `.group`, will also be added to the `summarise()` group. Finally, additional groups can be passed by the `.groups` argument.
+
+To illustrate, we will use the `data.frame` from the group example:
+
+```{r}
+graph$add_observations(data = df_data_repl, 
+                normalized = TRUE, 
+                clear_obs = TRUE, 
+                group = "repl")
+```
+
+We can see the data:
+
+```{r}
+graph$get_data()
+```
+
+Let us `summarise` the data by obtaining the mean of `y` at each location across all groups:
+
+```{r}
+graph$summarise(mean_y = mean(y))
+```
+
+Let us now obtain the standard deviation of `y` at each location and plot it:
+
+```{r}
+graph$summarise(sd_y = sd(y)) %>% graph$plot(data = "sd_y")
+```
+
+## drop_na
+
+The `drop_na` verb removes rows that contain `NA` for the selected columns. To illustrate, let us add the `df_tidy` back to the metric graph, replacing the existing dataset:
+
+```{r}
+graph$add_observations(data = df_tidy, clear_obs=TRUE, normalized=TRUE)
+```
+
+Now, let us take a look at this dataset:
+
+```{r}
+graph$get_data(drop_all_na = FALSE)
+```
+For example, let us remove the rows such that `y3` is `NA`, we simply apply the `drop_na()` method passing the column `y3`:
+
+```{r}
+graph$drop_na(y3)
+```
+
+We can also remove the rows such that either `y2` or `y3` is `NA`:
+
+```{r}
+graph$drop_na(y2, y3)
+```
+
+If we simply run the `drop_na()` method, this is equivalent to run the `get_data()` method with the argument `drop_na` set to `TRUE`:
+```{r}
+identical(graph$drop_na(), graph$get_data(drop_na=TRUE))
+```
+
+Finally, we can also directly apply the `drop_na()` function to the result of the `get_data()` method:
+
+```{r}
+graph$get_data(drop_all_na = FALSE) %>% drop_na(y3)
+```
+
+## Combining multiple verbs
+
+The resulting data from applying the previous verbs are safe in the sense that they are friendly to the metric graph environment. Thus, the result after applying one verb can be used as input of any of the remaining verbs. 
+
+For this example we will consider the `df_data_repl` dataset. Let us add to the graph (replacing the existing data):
+
+```{r}
+graph$add_observations(data = df_data_repl, 
+                        normalized = TRUE, 
+                        clear_obs = TRUE, 
+                        group = "repl")
+
+graph$get_data(drop_all_na = FALSE)
+```
+
+We will now create a new variable `new_y` which is the exponential of `y`, then filter the data to be on edges `1` and `2`, summarise to get the means of `new_y` at all positions (across the different groups, from the `_.group` variable) and plot it:
+
+```{r}
+graph$mutate(new_y = exp(y)) %>% filter(`.edge_number` %in% c(1,2)) %>% 
+            summarise(mean_new_y = mean(new_y)) %>% 
+            graph$plot(data = "mean_new_y")
+```
+
+# Replacing the data in the metric graph by manipulated data
+
+Let us suppose we want to replace the internal data by the data obtained from these manipulations. This is very simple, all we need to do is to pass the resulting data to the `data` argument from the `add_observations()` method. It is important to note that if the input is the result of those verbs, `mutate`, `select`, `filter`, `summarise` or `drop_na`, or any combination of them, then there is no need to set any of the other arguments of the `add_observations()` method, one should simply supply the `data` argument with such dataset.
+For example, let us consider the dataset from the previous section. We will replace the data, so we will set `clear_obs` to `TRUE`:
+
+```{r}
+graph$add_observations(data = graph$mutate(new_y = exp(y)) %>% 
+                        filter(`.edge_number` %in% c(1,2)) %>% 
+                                summarise(mean_new_y = mean(new_y)),
+                                clear_obs = TRUE)
+```
+
+We can now observe the result:
+
+```{r}
+graph$get_data()
+```
+
+We can also save it to a separate variable and use as input:
+
+```{r}
+df_temp <- graph$mutate(even_newer_y = mean_new_y^2)
+graph$add_observations(data = df_temp, clear_obs = TRUE)
+```
+
+We can check that it was properly added:
+
+```{r}
+graph$get_data()
+```

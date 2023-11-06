@@ -5,9 +5,11 @@
 \title{Simulation of log-Gaussian Cox processes driven by Whittle-Matérn
 fields on metric graphs}
 \usage{
-graph_lgcp(intercept = 0, sigma, range, alpha, graph)
+graph_lgcp(n = 1, intercept = 0, sigma, range, alpha, graph)
 }
 \arguments{
+\item{n}{Number of samples.}
+
 \item{intercept}{Mean value of the Gaussian process.}
 
 \item{sigma}{Parameter for marginal standard deviations.}

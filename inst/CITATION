@@ -1,5 +1,5 @@
 citHeader("To cite MetricGraph in publications use the first of the following
-references to cite the package. If you use the Whittle--Matérn models (for example if you use graph_spde in 'INLA' or 'inlabru'), please cite references 2,4 and 5, and if you use the fractional Whittle--Matérn models with FEM approximations, please cite reference 3.")
+references to cite the package. If you use the Whittle--Matérn models (for example if you use graph_spde in 'INLA' or 'inlabru'), please cite references 2,4 and 5, and if you use the fractional Whittle--Matérn models with FEM approximations, please cite references 2 and 3.")
 
 bibentry( bibtype = "Manual",
           title = "MetricGraph: Random fields on metric graphs",
@@ -13,7 +13,7 @@ bibentry( bibtype = "Manual",
                             family = "Simas",
                             email = "alexandre.simas@kaust.edu.sa")),
           year = "2023",
-          note = "R package version 1.1.2",
+          note = "R package version 1.2.0",
           url = "https://CRAN.R-project.org/package=MetricGraph",
 )
 

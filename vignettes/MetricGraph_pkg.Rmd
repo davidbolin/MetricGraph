@@ -145,6 +145,8 @@ We have the following vignettes for the `MetricGraph` package:
 
 * [Gaussian random fields on metric graphs](https://davidbolin.github.io/MetricGraph/articles/random_fields.html)
 
+* [Data manipulation on metric graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graph_data.html)
+
 * [Whittle--Matérn fields with general smoothness](https://davidbolin.github.io/MetricGraph/articles/fem_models.html)
 
 * [inlabru interface of Whittle--Matérn fields](https://davidbolin.github.io/MetricGraph/articles/inlabru_interface.html)

@@ -84,6 +84,14 @@ usethis::use_version("minor")
 git flow release finish 'VERSION'
 # In the stable merge, accept all incoming changes.
 # Push the changes and do adjustments if needed.
+# Create a tag with 
+
+git tag vX.X.X -m "Tag for version X.X.X"
+
+# After pushing the merge, also push the tag:
+
+git push origin vX.X.X
+
 # After handling the stable branch, merge back with devel.
 # In R, the following updates the dev version number in DESCRIPTION and NEWS:
 usethis::use_dev_version() 
