@@ -618,8 +618,7 @@ Let us now build the auxiliary data to be used with the `graph_data_rspde()` fun
 data_rspde_bru <- graph_data_rspde(rspde_model, loc_name = "loc")
 ```
 
-Now, we can directly fit the model of the
-`graph_data_spde()` function:
+Now, we can directly fit the model, by using the `data` element of `data_rspde_bru`:
 ```{r}
   rspde_bru_fit <-
     bru(cmp,
