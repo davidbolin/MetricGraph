@@ -3,15 +3,15 @@ references to cite the package. If you use the Whittle--Matérn models (for exam
 
 bibentry( bibtype = "Manual",
           title = "MetricGraph: Random fields on metric graphs",
-          author = c(person(given = "David",
-                            family = "Bolin",
-                            email = "davidbolin@gmail.com"),
-                     person("Jonas", "Wallin",
-                            email = "jonas.wallin81@gmail.com",
-                            role = "aut"),
-                     person(given = "Alexandre B.",
-                            family = "Simas",
-                            email = "alexandre.simas@kaust.edu.sa")),
+         author = c(person(given = "David",
+                           family = "Bolin",
+                           email = "davidbolin@gmail.com"),
+                    person(given = "Alexandre B.",
+                           family = "Simas",
+                           email = "alexandre.simas@kaust.edu.sa"),
+                    person("Jonas", "Wallin",
+                           email = "jonas.wallin81@gmail.com",
+                           role = "aut")),
           year = "2023",
           note = "R package version 1.2.0",
           url = "https://CRAN.R-project.org/package=MetricGraph",
@@ -49,8 +49,9 @@ bibentry(bibtype = "Article",
                            family = "Simas",
                            email = "alexandre.simas@kaust.edu.sa")),
          year = "2023",
-         journal = "arXiv preprint arXiv:2302.03995",
-         doi = "10.48550/arXiv.2302.03995"
+         journal = "Mathematics of Computation",
+         doi = "10.48550/arXiv.2302.03995",
+         note="(in press)"
 )
 
 

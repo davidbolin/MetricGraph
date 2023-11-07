@@ -49,8 +49,8 @@ references:
     given: Vivek
   - family: Simas
     given: Alexandre B.
-  container-title: arXiv:2302.03995
-  type: preprint
+  container-title: Mathematics of Computation
+  type: article
   issued:
   year: 2023
 - id: BSW2023PPST
