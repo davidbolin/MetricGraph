@@ -40,7 +40,7 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 #' boundary conditions and BC=1 ....
 #' @return Precision matrix or list
 #' @noRd
-Qalpha1_edges <- function(theta, graph, w,BC = 0, build = TRUE) {
+Qalpha1_edges <- function(theta, graph, w, BC = 0, build = TRUE) {
 
   kappa <- theta[2]
   tau <- theta[1]

@@ -16,6 +16,7 @@
 #' also estimates the smoothness parameter via finite-element method; 'isoExp'
 #' for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a
 #' SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively.
+#' 'WMD1' is the directed Whittle-Matern with  \eqn{\alpha}=1.
 #' There is also the option to provide it as a list containing the elements
 #' `type`, which can be `linearModel`, `WhittleMatern`, `graphLaplacian` or `isoCov`.
 #' `linearModel` corresponds to a linear model without random effects.
@@ -98,8 +99,8 @@ graph_lme <- function(formula, graph,
     }
     model <- model[[1]]
     model <- tolower(model)
-    if(!(model%in% c("lm", "wm", "wm1", "wm2", "isoexp", "gl1", "gl2"))){
-      stop("If model is a character (string), the options are 'lm', 'WM', 'WM1', 'WM2', 'isoExp', 'GL1' or 'GL2'.")
+    if(!(model%in% c("lm", "wm", "wm1", "wm2", "isoexp", "gl1", "gl2","wmd1"))){
+      stop("If model is a character (string), the options are 'lm', 'WM','WMD1', 'WM1', 'WM2', 'isoExp', 'GL1' or 'GL2'.")
     }
     model <- switch(model,
             "lm" = list(type = "linearModel"),
@@ -108,7 +109,8 @@ graph_lme <- function(formula, graph,
             "isoexp" = list(type = "isoCov"),
             "gl1" = list(type = "graphLaplacian", alpha = 1),
             "gl2" = list(type = "graphLaplacian", alpha = 2),
-            "wm" = list(type = "WhittleMatern", fem = TRUE)
+            "wm" = list(type = "WhittleMatern", fem = TRUE),
+            'wmd1' = list(type = "WhittleMatern", fem = FALSE, alpha = 1, directional=1)
             )
   }
 
@@ -119,6 +121,7 @@ graph_lme <- function(formula, graph,
             "lm" = "linearModel",
             "wm1" = "WhittleMatern",
             "wm2" = "WhittleMatern",
+            "wmd1" = "WhittleMatern",
             "isoexp" = "isoCov",
             "gl1" = "graphLaplacian",
             "gl2" = "graphLaplacian",
@@ -213,6 +216,9 @@ graph_lme <- function(formula, graph,
     if(is.null(model[["fem"]])){
       model[["fem"]] <- FALSE
     }
+    if(is.null(model[["directional"]])){
+      model[["directional"]] <- 0
+    }
     if(model[["fem"]]){
       if(is.null(model[["rspde_order"]])){
         rspde_order <- 2
@@ -251,7 +257,7 @@ graph_lme <- function(formula, graph,
        (!is.null(model[["B.sigma"]]) && is.null(model[["B.range"]])) ||
        (is.null(model[["B.sigma"]]) && !is.null(model[["B.range"]]))){
         stop("You must either define both B.tau and B.kappa or both B.sigma and B.range.")
-      } else{ 
+      } else{
         rspde_object <- rSPDE::matern.operators(graph = graph,
                                                 m = rspde_order,
                                                 parameterization = "spde")
@@ -298,8 +304,8 @@ graph_lme <- function(formula, graph,
 
       if(!is.null(X_cov)){
         cov_names <- attr(cov_term, "term.labels")
-      }       
-      
+      }
+
       names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
 
       df_data <- lapply(names_temp, function(i){df_data[[i]]})
@@ -307,9 +313,9 @@ graph_lme <- function(formula, graph,
 
       idx_notanyNA <- idx_not_any_NA(df_data)
 
-      df_data <- lapply(df_data, function(dat){dat[idx_notanyNA]})   
+      df_data <- lapply(df_data, function(dat){dat[idx_notanyNA]})
 
-      fit <- rSPDE::rspde_lme(formula = formula, 
+      fit <- rSPDE::rspde_lme(formula = formula,
                             loc = cbind(df_data[[".edge_number"]],
                             df_data[[".distance_on_edge"]]),
                             model = rspde_object,
@@ -377,7 +383,7 @@ graph_lme <- function(formula, graph,
 
   if(!is.null(X_cov)){
     cov_names <- attr(cov_term, "term.labels")
-  } 
+  }
 
   names_temp <- NULL
 
@@ -456,28 +462,40 @@ graph_lme <- function(formula, graph,
 
 
   if(model_type == "whittlematern"){
-    if(model[["alpha"]] == 1){
-      if(model[["version"]] == 2){
+    if(model[["directional"]] == 1){
+      if(model[["alpha"]] == 1){
         likelihood <- function(theta){
-          return(-likelihood_alpha1_v2(theta = theta, graph = graph_bkp,
-              X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC,
-              parameterization = "spde")) # parameterization = parameterization_latent))
-        }
-      } else {
-        likelihood <- function(theta){
-          return(-likelihood_alpha1(theta = theta, graph = graph_bkp,
+          return(-likelihood_alpha1_directional(theta = theta, graph = graph_bkp,
                                     data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = which_repl, BC = BC,
-                             parameterization = "spde")) # , parameterization = parameterization_latent))
+                                    X_cov = X_cov, repl = which_repl,
+                                    parameterization = "spde")) # , parameterization = parameterization_latent))
         }
       }
-    } else{
-      likelihood <- function(theta){
-          return(-likelihood_alpha2(theta = theta, graph = graph_bkp,
-                                    data_name = NULL, manual_y = y_graph,
-                             X_cov = X_cov, repl = which_repl, BC = BC,
-                             parameterization = "spde")) # , parameterization = parameterization_latent))
+
+    }else{
+      if(model[["alpha"]] == 1){
+        if(model[["version"]] == 2){
+          likelihood <- function(theta){
+            return(-likelihood_alpha1_v2(theta = theta, graph = graph_bkp,
+                X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC,
+                parameterization = "spde")) # parameterization = parameterization_latent))
+          }
+        } else {
+          likelihood <- function(theta){
+            return(-likelihood_alpha1(theta = theta, graph = graph_bkp,
+                                      data_name = NULL, manual_y = y_graph,
+                               X_cov = X_cov, repl = which_repl, BC = BC,
+                               parameterization = "spde")) # , parameterization = parameterization_latent))
+          }
         }
+      } else{
+        likelihood <- function(theta){
+            return(-likelihood_alpha2(theta = theta, graph = graph_bkp,
+                                      data_name = NULL, manual_y = y_graph,
+                               X_cov = X_cov, repl = which_repl, BC = BC,
+                               parameterization = "spde")) # , parameterization = parameterization_latent))
+          }
+      }
     }
   } else if (model_type == "graphlaplacian"){
       likelihood <- likelihood_graph_laplacian(graph = graph_bkp,
@@ -527,7 +545,7 @@ graph_lme <- function(formula, graph,
       time_par <- NULL
 
       likelihood_new <- function(theta){
-        l_tmp <- tryCatch(likelihood(theta), 
+        l_tmp <- tryCatch(likelihood(theta),
                             error = function(e){return(NULL)})
           if(is.null(l_tmp)){
               return(10^100)
@@ -588,26 +606,26 @@ graph_lme <- function(formula, graph,
             time_hessian <- end_hessian-start_hessian
           }
           eig_hes <- eigen(observed_fisher)$value
-          cond_pos_hes <- (min(eig_hes) > 1e-15)          
+          cond_pos_hes <- (min(eig_hes) > 1e-15)
         } else{
           stop("Could not fit the model. Please, try another method with 'parallel' set to FALSE.")
         }
 
          if(min(eig_hes) < 1e-15){
-          warning("The optimization failed to provide a numerically positive-definite Hessian. You can try to obtain a positive-definite Hessian by setting 'improve_hessian' to TRUE or by setting 'parallel' to FALSE, which allows other optimization methods to be used.")        
+          warning("The optimization failed to provide a numerically positive-definite Hessian. You can try to obtain a positive-definite Hessian by setting 'improve_hessian' to TRUE or by setting 'parallel' to FALSE, which allows other optimization methods to be used.")
         }
 
       } else{
         possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
         start_fit <- Sys.time()
-        res <- withCallingHandlers(tryCatch(optim(start_values, 
+        res <- withCallingHandlers(tryCatch(optim(start_values,
                   likelihood_new, method = optim_method,
                   control = optim_controls,
-                  hessian = hessian), error = function(e){return(NA)}), 
+                  hessian = hessian), error = function(e){return(NA)}),
                   warning = function(w){invokeRestart("muffleWarning")})
         end_fit <- Sys.time()
         time_fit <- end_fit-start_fit
-        
+
         cond_pos_hes <- FALSE
         time_hessian <- NULL
 
@@ -661,10 +679,10 @@ graph_lme <- function(formula, graph,
                 new_method <- possible_methods[1]
                 time_fit <- NULL
                 start_fit <- Sys.time()
-                  res <- withCallingHandlers(tryCatch(optim(start_values, 
+                  res <- withCallingHandlers(tryCatch(optim(start_values,
                             likelihood_new, method = new_method,
                             control = optim_controls,
-                            hessian = hessian), error = function(e){return(NA)}), 
+                            hessian = hessian), error = function(e){return(NA)}),
                             warning = function(w){invokeRestart("muffleWarning")})
                 end_fit <- Sys.time()
                 time_fit <- end_fit-start_fit
@@ -990,10 +1008,10 @@ glance.graph_lme <- function(x, ...){
   } else if(!is.null(x$latent_model$alpha)){
     alpha <- x$latent_model$alpha
   }
-  tidyr::tibble(nobs = stats::nobs(x), 
-                  sigma = as.numeric(x$coeff$measurement_error[[1]]), 
+  tidyr::tibble(nobs = stats::nobs(x),
+                  sigma = as.numeric(x$coeff$measurement_error[[1]]),
                    logLik = as.numeric(stats::logLik(x)), AIC = stats::AIC(x),
-                   BIC = stats::BIC(x), deviance = stats::deviance(x), 
+                   BIC = stats::BIC(x), deviance = stats::deviance(x),
                    df.residual = stats::df.residual(x),
                    model = x$latent_model$type,
                    alpha = alpha,
@@ -1005,7 +1023,7 @@ glance.graph_lme <- function(x, ...){
 #' @title Augment data with information from a `graph_lme` object
 #' @aliases augment augment.graph_lme
 #' @description Augment accepts a model object and a dataset and adds information about each observation in the dataset. It includes
-#' predicted values in the `.fitted` column, residuals in the `.resid` column, and standard errors for the fitted values in a `.se.fit` column. 
+#' predicted values in the `.fitted` column, residuals in the `.resid` column, and standard errors for the fitted values in a `.se.fit` column.
 #' It also contains the New columns always begin with a . prefix to avoid overwriting columns in the original dataset.
 #' @param x A `graph_lme` object.
 #' @param newdata A `data.frame` or a `list` containing the covariates, the edge
@@ -1030,11 +1048,11 @@ glance.graph_lme <- function(x, ...){
 #' `coord_x` and `coord_y`.
 #' @param normalized Are the distances on edges normalized?
 #' @param se_fit Logical indicating whether or not a .se.fit column should be added to the augmented output. If TRUE, it only returns a non-NA value if type of prediction is 'link'.
-#' @param conf_int Logical indicating whether or not confidence intervals for the fitted variable should be built. 
+#' @param conf_int Logical indicating whether or not confidence intervals for the fitted variable should be built.
 #' @param pred_int Logical indicating whether or not prediction intervals for future observations should be built.
 #' @param level Level of confidence and prediction intervals if they are constructed.
 #' @param n_samples Number of samples when computing prediction intervals.
-#' @param ... Additional arguments. 
+#' @param ... Additional arguments.
 #'
 #' @return A [tidyr::tibble()] with columns:
 #' \itemize{
@@ -1053,12 +1071,12 @@ glance.graph_lme <- function(x, ...){
 #' @method augment graph_lme
 #' @export
 augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FALSE, conf_int = FALSE, pred_int = FALSE, level = 0.95, n_samples = 100, edge_number = "edge_number", distance_on_edge = "distance_on_edge", coord_x = "coord_x", coord_y = "coord_y", data_coords = c("PtE", "spatial"),  normalized = FALSE, ...) {
-  
+
   .resid <- FALSE
   if(is.null(newdata)){
     .resid <-  TRUE
-  } 
-    
+  }
+
 
   level <- level[[1]]
   if(!is.numeric(level)){
@@ -1071,7 +1089,7 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
   if(is.null(newdata)){
     newdata = x$graph$get_data(group = x$graph$get_groups()[1], tibble=TRUE)
   } else{
-    newdata <- x$graph$process_data(data = newdata, 
+    newdata <- x$graph$process_data(data = newdata,
     edge_number = edge_number, distance_on_edge = distance_on_edge,
     coord_x = coord_x, coord_y = coord_y, data_coords = data_coords, group = NULL,
     tibble=TRUE, normalized = normalized)
@@ -1858,8 +1876,8 @@ predict.graph_lme <- function(object,
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]],
                                          data_prd_temp[[distance_on_edge]]))
-                            
-        
+
+
         mu_fe <- mu[idx_repl, , drop = FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
         mu_re <- mu_krig[ord_idx]
@@ -1871,9 +1889,9 @@ predict.graph_lme <- function(object,
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = cbind(data_prd_temp[[edge_number]],
                                          data_prd_temp[[distance_on_edge]]))
-                        # PtE_pred = cbind(edge_nb, dist_ed)) 
-          mu_re <- mu_krig[ord_idx]                
-          mu_fe <- mu[idx_repl, , drop = FALSE]          
+                        # PtE_pred = cbind(edge_nb, dist_ed))
+          mu_re <- mu_krig[ord_idx]
+          mu_fe <- mu[idx_repl, , drop = FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
           mu_krig <- mu_fe + mu_re

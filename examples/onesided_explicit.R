@@ -6,11 +6,11 @@ library(Matrix)
 graphics.off()
 #simple example
 edge1 <- rbind(c(0,0),c(1,0))
-edge2 <- rbind(c(1,0),c(1,1))
-edge3 <- rbind(c(1,0),c(2,0))
-#edge4 <- rbind(c(2,0),c(2,1))
-#edge5 <- rbind(c(2,0),c(3,0))
-edges = list(edge1, edge2, edge3)#, edge4, edge5)
+edge2 <- rbind(c(1,0),c(2,1))
+edge3 <- rbind(c(1,0),c(2,-1))
+edge4 <- rbind(c(2,-1),c(3,0))
+edge5 <- rbind(c(2,-1),c(3,-2))
+edges = list(edge1, edge2, edge3, edge4, edge5)
 graph <- metric_graph$new(edges = edges)
 graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 print(graph$plot(mesh=TRUE, direction = TRUE))
@@ -58,6 +58,8 @@ buildC = function(graph, alpha = 1) {
 
         x_[count + 1:(n_in+1)] <- c(-1,
                                     rep(1/n_in,n_in))
+        #c(-1,
+        #rep(w_i,n_in))
         count <- count + (n_in+1)
         count_constraint <- count_constraint + 1
       }
@@ -97,7 +99,7 @@ n_const <- length(graph$CoB$S)
 ind.const <- c(1:n_const)
 Tc <- graph$CoB$T[-ind.const, ]
 #add soft constraint
-Q_mod <- forceSymmetric(Tc%*%Q_edges%*%t(Tc))
+Q_mod <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
 
 Sigma_E <- t(Tc)%*%solve(Q_mod)%*%(Tc)
 
