@@ -81,7 +81,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`.
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
-  #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
+  #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
   #' @param tolerance List that provides tolerances during the construction of the graph:
@@ -122,7 +122,7 @@ metric_graph <-  R6Class("metric_graph",
                         crs = NULL,
                         proj4string = NULL,
                         which_longlat = "sp",
-                        project = TRUE,
+                        project = FALSE,
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
@@ -189,6 +189,28 @@ metric_graph <-  R6Class("metric_graph",
         private$which_longlat <- which_longlat
       }
 
+      if(!is.null(proj4string)){
+        if(!longlat){
+          warning("proj4string was passed, so setting longlat to TRUE")
+          longlat <- TRUE
+          private$longlat <- TRUE
+          private$which_longlat <- which_longlat
+        }
+        private$crs <- sf::st_crs(proj4string)
+        private$proj4string <- proj4string
+      }
+
+      if(!is.null(crs)){
+        if(!longlat){
+          warning("crs was passed, so setting longlat to TRUE")
+          longlat <- TRUE
+          private$longlat <- TRUE
+          private$which_longlat <- which_longlat          
+        }        
+        private$crs <- sf::st_crs(crs)
+        private$proj4string <- sp::CRS(crs@projargs)
+      }
+
       if(longlat && (which_longlat == "sp") && is.null(proj4string)){
         proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
         private$crs <- sf::st_crs(proj4string)
@@ -233,10 +255,15 @@ metric_graph <-  R6Class("metric_graph",
 
     if(longlat){
       private$vertex_unit <- "degrees"
-      private$length_unit <- "km"
+      if(!is.null(length_unit)){
+        private$length_unit <- length_unit
+      } else{
+        private$length_unit <- "km"
+      }
     } else if(!is.null(vertex_unit)){
         if(private$vertex_unit == "degrees"){
           longlat <- TRUE
+          private$longlat <- TRUE
         }
     }
 
@@ -3687,7 +3714,7 @@ metric_graph <-  R6Class("metric_graph",
       message("Computing auxiliary distances")
     }
 
-    if(!project_data || !longlat){
+    if(project_data || longlat){
     if(!project || !longlat){
         fact <- process_factor_unit(vertex_unit, length_unit)
           dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit)

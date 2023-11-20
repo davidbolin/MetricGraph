@@ -1090,6 +1090,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
       return(compute_length(edge) * fact)
     } else if(which_longlat == "sf"){
       if(!is.null(edge)){
+        print(class(crs))
         linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
         length <- sf::st_length(linestring)
         units(length) <- unit
@@ -1131,10 +1132,12 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
     } else if (which_longlat == "sf") {
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
         if(is.null(points)){
-          dists <- sf::st_distance(sf_points, which = "Great Circle")
+          # dists <- sf::st_distance(sf_points, which = "Great Circle")
+          dists <- sf::st_distance(sf_points)
         } else{
           sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
-          dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle", by_element = TRUE)
+          # dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle", by_element = TRUE)
+          dists <- sf::st_distance(x = sf_points, y = sf_p_points, by_element = TRUE)
         }
         units(dists) <- length_unit
         units(dists) <- NULL
