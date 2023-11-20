@@ -262,7 +262,8 @@ posterior_crossvalidation_manual <- function(theta,
 
 
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
-#' the vertices of metric graphs
+#' the vertices of metric graphs,
+#' for WM2 alpha=2 requries observations at nodes
 #'
 #' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
 #' @param factor Which factor to multiply the scores. The default is 1.
@@ -322,9 +323,13 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     sigma <- object$coeff$random_effects[1]
   } else if(tolower(object$latent_model$type) == "whittlematern"){
     if(object$latent_model$alpha == 1){
-      model <- "alpha1"
+      if(object$latent_model$directional==0){
+        model <- "WM alpha1"
+      }else{
+        model <- "WMD alpha1"
+      }
     } else {
-      model <- "alpha2"
+      model <- "WM alpha2"
     }
   } else{
     graph$compute_laplacian(full=TRUE)
@@ -343,7 +348,9 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
-  } else if(model == "alpha2"){
+  } else if(model == "WM alpha2"){
+    if(is.null(graph$C))
+      graph$buildC(2)
     n.c <- 1:length(graph$CoB$S)
     Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
@@ -356,8 +363,23 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
-  } else if (model %in% c("alpha1", "GL1", "GL2")) {
-    if(model == "alpha1"){
+  }else if(model == "WMD alpha1"){
+    if(is.null(graph$C))
+      graph$buildDirectionalConstraints(1)
+
+    Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=1, build=TRUE)
+    n_const <- length(graph$CoB$S)
+    ind.const <- c(1:n_const)
+    Tc <- graph$CoB$T[-ind.const, ]
+    Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
+    Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
+    PtE = graph$get_PtE()
+    index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 1]> 1-0.001) + 1
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+    Sigma.o <- Sigma
+    diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
+  }else if (model %in% c("WM alpha1", "GL1", "GL2")) {
+    if(model == "WM alpha1"){
       Q <- Qalpha1(c(tau, kappa), graph, BC = BC)
     } else if(model == "GL1"){
       Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) * tau^2
@@ -406,7 +428,7 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
           mu_fe <- 0
         }
 
-        if(model == "isoExp" || model == "alpha2"){
+        if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1" ){
           mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
           Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                               Sigma.o[-i, i])
@@ -437,8 +459,8 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
           } else {
             mu_fe <- 0
           }
-  
-          if(model == "isoExp" || model == "alpha2"){
+
+          if(model == "isoExp" || model == "WM alpha2"|| model == "WMD alpha1"){
             mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
             Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                                 Sigma.o[-i, i])
@@ -519,7 +541,7 @@ posterior_crossvalidation_covariance <- function(object)
     if(object$latent_model$alpha == 1){
       model <- "alpha1"
     } else {
-      model <- "alpha2"
+      model <- "WM alpha2"
     }
   } else{
     graph$compute_laplacian(full=TRUE)
@@ -550,7 +572,7 @@ posterior_crossvalidation_covariance <- function(object)
   if (model == "alpha1") {
     Q <- Qalpha1(c(tau, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
-  } else if (model == "alpha2") {
+  } else if (model == "WM alpha2") {
 
     graph$buildC(2,BC==0)
     n.c <- 1:length(graph$CoB$S)
