@@ -101,6 +101,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-filter}{\code{metric_graph$filter()}}
 \item \href{#method-metric_graph-summarise}{\code{metric_graph$summarise()}}
 \item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
+\item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
@@ -1096,6 +1097,31 @@ Return the internal data with the option to filter by groups.
 \item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-buildDirectionalConstraints"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-buildDirectionalConstraints}{}}}
+\subsection{Method \code{buildDirectionalConstraints()}}{
+Build directional ODE constraint matrix from edges.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$buildDirectionalConstraints(alpha = 1)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{alpha}}{how many derivatives the processes has}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Currently not implemented for circles (edges that start and end
+in the same vertex)
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}

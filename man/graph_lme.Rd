@@ -34,6 +34,7 @@ precision matrices, respectively; 'WM' for Whittle-Matern models where one
 also estimates the smoothness parameter via finite-element method; 'isoExp'
 for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a
 SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively.
+'WMD1' is the directed Whittle-Matern with  \eqn{\alpha}=1.
 There is also the option to provide it as a list containing the elements
 \code{type}, which can be \code{linearModel}, \code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}.
 \code{linearModel} corresponds to a linear model without random effects.

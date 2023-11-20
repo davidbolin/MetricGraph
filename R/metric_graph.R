@@ -1224,9 +1224,9 @@ metric_graph <-  R6Class("metric_graph",
     if(which == "degree"){
       degrees <- sapply(self$vertices, function(vert){attr(vert, "degree")})
     } else if(which == "indegree"){
-       degrees <- sapply(self$vertices, function(vert){attr(vert, "indegree")})     
+       degrees <- sapply(self$vertices, function(vert){attr(vert, "indegree")})
     } else{
-        degrees <- sapply(self$vertices, function(vert){attr(vert, "outdegree")})      
+        degrees <- sapply(self$vertices, function(vert){attr(vert, "outdegree")})
     }
     return(degrees)
   },
@@ -1325,7 +1325,7 @@ metric_graph <-  R6Class("metric_graph",
   prune_vertices = function(verbose = FALSE){
     t <- system.time({
     degrees <- private$compute_degrees()$degrees
-    
+
     # Finding problematic vertices, that is, vertices with incompatible directions
     # They will not be pruned.
 
@@ -1558,7 +1558,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     private$create_update_vertices()
-      
+
     # Updating the edge attributes
     self$set_edge_weights(weights = private$edge_weights)
 
@@ -2434,6 +2434,74 @@ metric_graph <-  R6Class("metric_graph",
     return(data_temp)
   },
 
+
+ #' @description Build directional ODE constraint matrix from edges.
+ #' @param alpha how many derivatives the processes has
+ #' @details Currently not implemented for circles (edges that start and end
+ #' in the same vertex)
+ #' @return No return value. Called for its side effects.
+  buildDirectionalConstraints = function(alpha = 1){
+
+    V_indegree = self$get_degrees("indegree")
+    V_outdegree = self$get_degrees("outdegree")
+    index_outdegree <- V_outdegree > 0 & V_indegree >0
+    index_in0      <- V_indegree == 0
+    nC = sum(V_outdegree[index_outdegree] *(1 + V_indegree[index_outdegree]) + sum(V_outdegree[index_in0]-1)) * alpha
+    i_  =  rep(0, nC)
+    j_  =  rep(0, nC)
+    x_  =  rep(0, nC)
+    Vs <- which(index_outdegree)
+    count_constraint <- 0
+    count <- 0
+    for (v in Vs) {
+      out_edges   <- which(self$E[, 1] %in% v)
+      in_edges    <- which(self$E[, 2] %in% v)
+      #for each out edge
+      n_in <- length(in_edges)
+      for(i in 1:length(out_edges)){
+        for(der in 1:alpha){
+          i_[count + 1:(n_in+1)] <- count_constraint + 1
+          j_[count + 1:(n_in+1)] <- c(2 * alpha * (out_edges[i]-1) + der,
+                                      2 * alpha * (in_edges-1)  + alpha + der)
+
+          x_[count + 1:(n_in+1)] <- c(-1,
+                                      rep(1/n_in,n_in))
+          #c(-1,
+          #rep(w_i,n_in))
+          count <- count + (n_in+1)
+          count_constraint <- count_constraint + 1
+        }
+      }
+    }
+    Vs0 <- which(index_in0)
+    for (v in Vs0) {
+      out_edges   <- which(self$E[, 1] %in% v)
+      #for each out edge
+      if(length(out_edges)>1){
+        for(i in 2:length(out_edges)){
+          for(der in 1:alpha){
+            i_[count + 1:2] <- count_constraint + 1
+            j_[count + 1:2] <- c(2 * alpha * (out_edges[i]-1) + der,
+                                 2 * alpha * (out_edges[i-1]-1)  + alpha + der)
+
+            x_[count + 1:2] <- c(-1,
+                                 1)
+            count <- count + 2
+            count_constraint <- count_constraint + 1
+          }
+        }
+      }
+    }
+    C <- Matrix::sparseMatrix(i = i_[1:count],
+                              j = j_[1:count],
+                              x = x_[1:count],
+                              dims = c(count_constraint, 2*alpha*self$nE))
+    self$C = C
+    self$CoB <- c_basis2(self$C)
+    self$CoB$T <- t(self$CoB$T)
+  },
+
+
   #' @description Build Kirchoff constraint matrix from edges.
   #' @param alpha the type of constraint (currently only supports 2)
   #' @param edge_constraint if TRUE, add constraints on vertices of degree 1
@@ -3295,7 +3363,7 @@ metric_graph <-  R6Class("metric_graph",
         }
       }
       } else if(improve_plot){
-       
+
           PtE_tmp <- PtE_edges[[i]]
           PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
           PtE_tmp <- PtE_tmp[,2, drop=TRUE]
@@ -4568,7 +4636,7 @@ metric_graph <-  R6Class("metric_graph",
           private$edge_weights <- c(private$edge_weights, private$edge_weights[Ei])
         } else{
           private$edge_weights <- rbind(private$edge_weights, private$edge_weights[Ei,])
-        }          
+        }
 
         # attr(self$edges[[Ei]], "length") <- t * l_e
         # attr(self$edges[[length(self$edges)]], "length") <- (1 - t) * l_e
