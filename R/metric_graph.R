@@ -3788,7 +3788,7 @@ metric_graph <-  R6Class("metric_graph",
       message("Computing auxiliary distances")
     }
 
-    if(project_data || longlat){
+    if(!project_data && longlat){
     if(!project || !longlat){
         fact <- process_factor_unit(vertex_unit, length_unit)
           dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit, transform = private$transform)

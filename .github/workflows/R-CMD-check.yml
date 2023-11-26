@@ -66,10 +66,11 @@ jobs:
           pkgs <- installed.packages()[, "Package"]
           sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}
-      - name: Installing rSPDE
+      - name: Installing rSPDE and MatrixModels
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
           remotes::install_github("davidbolin/rSPDE")
+          install.packages("MatrixModels", type = "source")
         shell: Rscript {0}        
       - uses: r-lib/actions/check-r-package@v2
         env:
