@@ -26,7 +26,7 @@ mf04.glmssn0 <- glmssn(Summer_mn ~ ELEV_DEM + SLOPE, mf04p,
                        CorModels = NULL, use.nugget = TRUE)
 summary(mf04.glmssn0)
 
-mf04.glmssn1 <- glmssn(Summer_mn ~ ELEV_DEM + SLOPE, mf04p,
+mf04.glmssn1 <- glmssn(Summer_mn ~ ELEV_DEM + SLOPE + netID, mf04p,
                        CorModels = c("Exponential.tailup", "Exponential.taildown",
                                      "Exponential.Euclid"), addfunccol = "afvArea")
 summary(mf04.glmssn1)

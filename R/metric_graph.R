@@ -2455,10 +2455,10 @@ metric_graph <-  R6Class("metric_graph",
           for(der in 1:alpha){
             i_[count + 1:2] <- count_constraint + 1
             j_[count + 1:2] <- c(2 * alpha * (out_edges[i]-1) + der,
-                                 2 * alpha * (out_edges[i-1]-1)  + alpha + der)
+                                 2 * alpha * (out_edges[i-1]-1)   + der)
 
-            x_[count + 1:2] <- c(-1,
-                                 1)
+            x_[count + 1:2] <- c(1,
+                                 -1)
             count <- count + 2
             count_constraint <- count_constraint + 1
           }

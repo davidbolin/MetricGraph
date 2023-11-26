@@ -374,7 +374,7 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
     Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
     PtE = graph$get_PtE()
-    index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 1]> 1-0.001) + 1
+    index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-0.001) + 1
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2

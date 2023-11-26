@@ -66,6 +66,7 @@ buildC = function(graph, alpha = 1) {
     }
   }
   Vs0 <- which(index_in0)
+  Vs0 <- c()
   for (v in Vs0) {
     out_edges   <- which(graph$E[, 1] %in% v)
     #for each out edge
