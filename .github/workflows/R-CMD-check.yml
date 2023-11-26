@@ -70,7 +70,8 @@ jobs:
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
           remotes::install_github("davidbolin/rSPDE")
-          install.packages("MatrixModels", type = "source")
+          install.packages("MatrixModels", type="source", repos = "http://R-Forge.R-project.org")
+          install.packages("Matrix", type="source", repos = "http://R-Forge.R-project.org")
         shell: Rscript {0}        
       - uses: r-lib/actions/check-r-package@v2
         env:
