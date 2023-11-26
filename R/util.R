@@ -1081,7 +1081,7 @@ check_lines_input <- function(lines){
 #' @noRd 
 #' 
 
-compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
+compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data, transform){
   if(!is.null(edge)){
       class(edge) <- setdiff(class(edge), "metric_graph_edge")
   }
@@ -1091,6 +1091,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
     } else if(which_longlat == "sf"){
       if(!is.null(edge)){
         linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
+        # linestring <- sf::st_transform(linestring,  crs = 4326)        
         length <- sf::st_length(linestring)
         units(length) <- unit
         units(length) <- NULL
@@ -1099,8 +1100,20 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
         return(0)
       }
     } else{
-      Line <- sp::Line(edge)
-      length <- sp::LineLength(Line, longlat = longlat)
+      # Line <- sp::Line(edge)
+      # Line <- sp::Lines(Line, ID = 1)
+      # Line <- sp::SpatialLines(list(Line), proj4string =  proj4string)
+      # Line <- sp::spTransform(Line, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
+      # Line <- sp::Line(sp::coordinates(Line))
+      if(!transform){
+        length <- sp::LineLength(edge, longlat = longlat)
+      } else{
+        Line <- sf::st_as_sf(as.data.frame(edge), coords = 1:2, crs = crs)
+        Line <- sf::st_transform(Line, crs = 4326)
+        Line <- sf::st_coordinates(Line) 
+        length <- sp::LineLength(Line, longlat = longlat)
+      }
+
       fact <- process_factor_unit(vertex_unit, unit)
       return(length * fact)
     }
@@ -1110,7 +1123,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 #' @noRd 
 #' 
 
-compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit){
+compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit, transform){
   if(!is.null(points)){
     class(points) <- setdiff(class(points), "metric_graph_edge")
   }
@@ -1129,21 +1142,33 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
         dists <- sqrt((lines[,1] - points[,1])^2 + (lines[,2]-points[,2])^2) * fact
       }
     } else if (which_longlat == "sf") {
-        sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
+        sf_points <<- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
+        if(transform){
+          sf_points <- sf::st_transform(sf_points,  crs = 4326)
+        }
         if(is.null(points)){
           dists <- sf::st_distance(sf_points, which = "Great Circle")
         } else{
           sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
+          if(transform){
+            sf_p_points <- sf::st_transform(sf_p_points,  crs = 4326)
+          }
           dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle", by_element = TRUE)
         }
         units(dists) <- length_unit
         units(dists) <- NULL
     } else{
         sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string) 
+        if(transform){
+          sp_points <- sp::spTransform(sp_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
+        }
         if(is.null(points)){
           dists <- sp::spDists(sp_points, longlat = TRUE) * fact
         } else{
           sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
+          if(transform){
+            sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))          
+          }
           dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) * fact
         }
     }

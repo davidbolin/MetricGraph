@@ -81,7 +81,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`.
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
-  #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `TRUE`. When `TRUE`, the construction of the graph is faster.
+  #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
   #' @param tolerance List that provides tolerances during the construction of the graph:
@@ -122,7 +122,7 @@ metric_graph <-  R6Class("metric_graph",
                         crs = NULL,
                         proj4string = NULL,
                         which_longlat = "sp",
-                        project = TRUE,
+                        project = FALSE,
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
                         tolerance = list(vertex_vertex = 1e-7,
@@ -189,15 +189,43 @@ metric_graph <-  R6Class("metric_graph",
         private$which_longlat <- which_longlat
       }
 
+      if(!is.null(proj4string)){
+        if(!longlat){
+          warning("proj4string was passed, so setting longlat to TRUE")
+          longlat <- TRUE
+          private$longlat <- TRUE
+          private$which_longlat <- which_longlat
+        }
+        private$crs <- sf::st_crs(proj4string)
+        private$proj4string <- proj4string
+        crs <- private$crs
+        private$transform <- !(sf::st_is_longlat(private$crs))
+      }
+
+      if(!is.null(crs)){
+        if(!longlat){
+          warning("crs was passed, so setting longlat to TRUE")
+          longlat <- TRUE
+          private$longlat <- TRUE
+          private$which_longlat <- which_longlat          
+        }        
+        private$crs <- sf::st_crs(crs)
+        private$proj4string <- sp::CRS(crs$input)
+        proj4string <- private$proj4string
+        private$transform <- !(sf::st_is_longlat(private$crs))        
+      }
+
       if(longlat && (which_longlat == "sp") && is.null(proj4string)){
         proj4string <- sp::CRS("+proj=longlat +datum=WGS84")
         private$crs <- sf::st_crs(proj4string)
         private$proj4string <- proj4string
+        private$transform <- !(sf::st_is_longlat(private$crs))        
       }
 
       if(longlat && (which_longlat == "sf") && is.null(crs)){
         crs <- sf::st_crs(4326)
         private$crs <- crs
+        private$transform <- !(sf::st_is_longlat(private$crs))        
       }
 
     # private$longlat <- longlat
@@ -233,10 +261,15 @@ metric_graph <-  R6Class("metric_graph",
 
     if(longlat){
       private$vertex_unit <- "degrees"
-      private$length_unit <- "km"
+      if(!is.null(length_unit)){
+        private$length_unit <- length_unit
+      } else{
+        private$length_unit <- "km"
+      }
     } else if(!is.null(vertex_unit)){
         if(private$vertex_unit == "degrees"){
           longlat <- TRUE
+          private$longlat <- TRUE
         }
     }
 
@@ -441,7 +474,7 @@ metric_graph <-  R6Class("metric_graph",
         message("Recomputing edge lengths")
       }
       t <- system.time({
-        self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data)
+        self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
       })
        if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1744,7 +1777,7 @@ metric_graph <-  R6Class("metric_graph",
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
             # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
             # norm_XY <- max(norm_XY)
             # if(norm_XY > tolerance){
             #   warning("There was at least one point whose location is far from the graph,
@@ -1771,7 +1804,7 @@ metric_graph <-  R6Class("metric_graph",
                 XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
                 # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
                 fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
                 # norm_XY <- max(norm_XY)
                 far_points <- (norm_XY > tolerance)
                 rm(norm_XY)
@@ -2040,7 +2073,7 @@ metric_graph <-  R6Class("metric_graph",
             XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
             # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
             rm(Spoints)
             # norm_XY <- max(norm_XY)
             # if(norm_XY > tolerance){
@@ -2067,7 +2100,7 @@ metric_graph <-  R6Class("metric_graph",
                 XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
                 # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
                 fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
                 # norm_XY <- max(norm_XY)
                 # if(norm_XY > tolerance){
                 #   warning("There was at least one point whose location is far from the graph,
@@ -2893,7 +2926,7 @@ metric_graph <-  R6Class("metric_graph",
                            direction = direction,
                            ...)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees"){
+        if(private$vertex_unit == "degrees" && !private$transform){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
@@ -2917,7 +2950,7 @@ metric_graph <-  R6Class("metric_graph",
                            p = p,
                            ...)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees"){
+        if(private$vertex_unit == "degrees" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -3410,7 +3443,7 @@ metric_graph <-  R6Class("metric_graph",
       }
 
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees"){
+        if(private$vertex_unit == "degrees" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -3434,7 +3467,7 @@ metric_graph <-  R6Class("metric_graph",
           p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees"){
+        if(private$vertex_unit == "degrees" && !private$transform){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
@@ -3562,7 +3595,7 @@ metric_graph <-  R6Class("metric_graph",
                              split = ~i, showlegend = FALSE, ...)
 
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees"){
+        if(private$vertex_unit == "degrees" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -3755,10 +3788,10 @@ metric_graph <-  R6Class("metric_graph",
       message("Computing auxiliary distances")
     }
 
-    if(!project_data || !longlat){
+    if(!project_data && longlat){
     if(!project || !longlat){
         fact <- process_factor_unit(vertex_unit, length_unit)
-          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit)
+          dists <- compute_aux_distances(lines = lines[,2:3,drop=FALSE], crs = crs, longlat = longlat, proj4string = proj4string, fact = fact, which_longlat = which_longlat, length_unit = private$length_unit, transform = private$transform)
     } else if (which_longlat == "sf"){
         if(which_projection == "Robinson"){
           str_proj <- "+proj=robin +datum=WGS84 +no_defs +over"
@@ -3839,7 +3872,7 @@ metric_graph <-  R6Class("metric_graph",
       if(length(ind2)>0){
         self$edges[[i]][i.e,] <- vertex[ind2, 2:3, drop=FALSE]
       }
-      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)
+      ll <- compute_line_lengths(self$edges[[i]], longlat = longlat, unit = length_unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data, private$transform)
       if(ll > tolerance) {
         lvl[k,] <- c(i, ind1, ind2, ll)
         k=k+1
@@ -4219,7 +4252,7 @@ metric_graph <-  R6Class("metric_graph",
   #utility function to merge close vertices
   merge_close_vertices = function(tolerance, fact) {
     if(tolerance > 0) {
-      dists <- compute_aux_distances(lines = self$V, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit)
+      dists <- compute_aux_distances(lines = self$V, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
       v.merge <- NULL
       k <- 0
       for (i in 2:self$nV) {
@@ -4420,9 +4453,9 @@ metric_graph <-  R6Class("metric_graph",
 
   # Compute lengths
 
-  compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
+  compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data, transform){
           ll <- sapply(self$edges,
-          function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data)})
+          function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data, transform)})
           return(ll)
   },
 
@@ -4766,7 +4799,7 @@ metric_graph <-  R6Class("metric_graph",
               if(!is.matrix(self$V)){
                 self$V <- matrix(self$V,ncol=2)
               }
-              if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit))>tol) {
+              if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform))>tol) {
                 p_cur <- rbind(p_cur,p)
                 p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                 p2 <- t(p2[["coords"]])
@@ -4807,7 +4840,7 @@ metric_graph <-  R6Class("metric_graph",
             }
 
             #add points if they are not close to V or previous points
-            if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit))>tol) {
+            if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform))>tol) {
               # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
                 if(!private$longlat && !is.null(p_cur)){
                   dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2), intersect_tmp[k])
@@ -5090,6 +5123,10 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   # tolerance
 
   tolerance = NULL,
+
+  # transform to long lat?
+
+  transform = FALSE,
 
   # edge_weights
 
