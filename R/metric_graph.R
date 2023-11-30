@@ -337,6 +337,9 @@ metric_graph <-  R6Class("metric_graph",
       self$edges <- edges
     }
 
+    self$nE <- length(self$edges)
+
+    private$set_first_weights(weights = edge_weights)
 
     if(verbose){
       message("Setup edges and merge close vertices")
@@ -549,8 +552,9 @@ metric_graph <-  R6Class("metric_graph",
         private$connected = FALSE
       }
     }
-    self$set_edge_weights(weights = edge_weights)
     private$create_update_vertices()
+
+    self$set_edge_weights(weights = private$edge_weights)
 
     # Adding IDs to edges and setting up their class
 
@@ -5130,7 +5134,30 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 
   # edge_weights
 
-  edge_weights = NULL
+  edge_weights = NULL,
+
+    set_first_weights = function(weights = rep(1, self$nE)){
+    if(!is.vector(weights) && !is.data.frame(weights)){
+      stop("'weights' must be either a vector or a data.frame!")
+    }
+
+    if(is.vector(weights)){
+      if ( (length(weights) != 1) && (length(weights) != self$nE)){
+        stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+      }
+      if(length(weights)==1){
+        private$edge_weights <- rep(weights, self$nE)
+      } else{
+        private$edge_weights <- weights
+      }
+    } else{
+      if(nrow(weights) != self$nE){
+        stop("The number of rows of weights must be equal to the number of edges!")
+      }
+      private$edge_weights <- weights
+    }
+
+  }
 
 ))
 
