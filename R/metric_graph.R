@@ -344,7 +344,7 @@ metric_graph <-  R6Class("metric_graph",
     if(verbose){
       message("Setup edges and merge close vertices")
     }
-    
+
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = private$longlat, factor_unit, verbose=verbose,
@@ -4340,6 +4340,12 @@ metric_graph <-  R6Class("metric_graph",
           self$edges <- self$edges[-ind]
           self$E <- self$E[-ind,]
           self$nE <- self$nE - length(ind)
+          if(is.vector(private$edge_weights)){
+            private$edge_weights <- private$edge_weights[-ind]
+          } else{
+            private$edge_weights <- private$edge_weights[-ind,]
+          }
+
         }
       }
     }
