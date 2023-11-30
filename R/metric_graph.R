@@ -344,14 +344,13 @@ metric_graph <-  R6Class("metric_graph",
     if(verbose){
       message("Setup edges and merge close vertices")
     }
-
+    
     t <- system.time(
       private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = private$longlat, factor_unit, verbose=verbose,
                            private$crs, private$proj4string, which_longlat, private$length_unit, private$vertex_unit,
                            project, which_projection, project_data)
       )
-
 
     if(verbose){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -458,7 +457,6 @@ metric_graph <-  R6Class("metric_graph",
       private$clear_initial_info()
     }
 
-
     if(merge_close_vertices){
       private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
     }
@@ -503,6 +501,7 @@ metric_graph <-  R6Class("metric_graph",
     if(verbose){
       message("Post-processing the edges")
     }
+
 
     t <- system.time(
           self$edges <- lapply(self$edges, function(edge){
@@ -3886,6 +3885,13 @@ metric_graph <-  R6Class("metric_graph",
 
     lvl <- lvl[1:(k-1),,drop = FALSE]
     self$edges <- self$edges[lines_keep_id]
+
+    if(is.vector(private$edge_weights)){
+        private$edge_weights <- private$edge_weights[lines_keep_id]
+    } else{
+        private$edge_weights <- private$edge_weights[lines_keep_id,]
+    }
+
     self$V <- vertex[, 2:3, drop = FALSE]
     self$E <- lvl[, 2:3, drop = FALSE]
     self$edge_lengths <- lvl[,4]
