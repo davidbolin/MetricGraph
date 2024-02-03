@@ -1054,7 +1054,7 @@ metric_graph <-  R6Class("metric_graph",
         df_temp <- unique(df_temp)
       }
 
-      graph.temp$build_mesh(h = 1000)
+      graph.temp$build_mesh(h = 10000)
 
       df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
@@ -1080,12 +1080,30 @@ metric_graph <-  R6Class("metric_graph",
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
       geodist_temp <- distances(g)
-      geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
-      #Ordering back in the input order
-      geodist_temp[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- geodist_temp
+
+      if(length(graph.temp$PtV)[1]!=nrow(geodist_temp)){
+        un_PtV <- unique(graph.temp$PtV)
+        un_coords <- !duplicated(graph.temp$PtV)
+
+        geodist_temp <- geodist_temp[un_PtV, un_PtV]
+
+        tmp_vec <- graph.temp$.__enclos_env__$private$data[["__dummy"]][un_coords]
+
+        un_ord <- order(tmp_vec)
+
+        tmp_vec[un_ord] <- 1:length(tmp_vec)
+        #Ordering back in the input order
+        geodist_temp[tmp_vec,tmp_vec] <- geodist_temp
+      } else{
+          geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
+          #Ordering back in the input order
+          geodist_temp[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- geodist_temp
+      }
+
       if(!include_vertices){
         geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp), (nV_new+1):nrow(geodist_temp)]
       }
+
       return(geodist_temp)
   },
 
