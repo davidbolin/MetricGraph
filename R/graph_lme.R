@@ -440,15 +440,13 @@ graph_lme <- function(formula, graph,
                     range_par = FALSE)
     }
   } else if(model_type != "linearmodel") {
-    start_values <- c(log(0.1*sd(y_graph),log(starting_values_latent)))
+    start_values <- c(log(0.1*sd(y_graph)),log(starting_values_latent))
     par_names <- names(starting_values_latent)
 
     if(!is.null(start_sigma_e)){
         start_values[1] <- log(start_sigma_e)
     }
   }
-
-
 
   if(ncol(X_cov)>0 && model_type != "linearmodel"){
     names_tmp <- colnames(X_cov)
@@ -523,6 +521,7 @@ graph_lme <- function(formula, graph,
                                               X_cov = X_cov, repl = which_repl)
     } else{
     model[["cov_function_name"]] <- "other"
+    model_cov <- "isoCov"
       likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
                                                 y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
@@ -760,6 +759,10 @@ graph_lme <- function(formula, graph,
   }
 
   coeff <- res$par
+
+  if(all(res$par == start_values)){
+    stop("The optimizer did not converge!")
+  }
   coeff <- exp(c(res$par[1:n_par_coeff]))
   coeff <- c(coeff, res$par[-c(1:n_par_coeff)])
 
