@@ -761,7 +761,7 @@ graph_lme <- function(formula, graph,
   coeff <- res$par
 
   if(all(res$par == start_values)){
-    stop("The optimizer did not converge!")
+    stop("The optimizer is stuck at the starting values! This probably indicates that the precision matrix is not positive-definite.")
   }
   coeff <- exp(c(res$par[1:n_par_coeff]))
   coeff <- c(coeff, res$par[-c(1:n_par_coeff)])
