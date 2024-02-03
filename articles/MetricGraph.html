@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.7/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.8/font.css" rel="stylesheet">
 <!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="MetricGraph: Random Fields on Metric Graphs">
@@ -99,7 +99,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
-modified: 2023-11-30.</h4>
+modified: 2024-02-03.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -521,7 +521,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  31.8682 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  30.49969 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
@@ -725,7 +725,7 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## Number of function calls by 'optim' = 31</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  33.84747 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  31.19615 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
@@ -818,7 +818,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  2.4135 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  2.39088 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -903,7 +903,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 30</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  5.50755 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  5.45084 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -977,8 +977,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.864690 0.1049570    1.66697 1.861990   2.078640 1.858210</span></span>
-<span><span class="co">## range 0.179249 0.0271161    0.13240 0.177005   0.238687 0.172212</span></span></code></pre>
+<span><span class="co">## sigma 1.865430 0.1038920   1.671280 1.862610   2.073730 1.856430</span></span>
+<span><span class="co">## range 0.179203 0.0269994   0.132426 0.177022   0.238259 0.172403</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
@@ -998,8 +998,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.8646885 1.8582139</span></span>
-<span><span class="co">## 2     range  0.2 0.1792489 0.1722125</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.8654315 1.8564254</span></span>
+<span><span class="co">## 2     range  0.2 0.1792027 0.1724034</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
