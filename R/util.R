@@ -1848,3 +1848,57 @@ create_fix_vec_val <- function(fixed_values){
   return(list(fix_vec = fix_vec, fix_v_val = fix_v_val))
 
 }
+
+
+#' @noRd 
+
+check_model_options <- function(model_options){
+  if(length(model_options[["fix_tau"]]) > 1){
+    stop("'fix_tau' must have length 1!")
+  }
+  if(length(model_options[["fix_sigma"]]) > 1){
+    stop("'fix_sigma' must have length 1!")
+  }
+  if(length(model_options[["fix_sigma_e"]]) > 1){
+    stop("'fix_sigma_e' must have length 1!")
+  }
+  if(length(model_options[["fix_kappa"]]) > 1){
+    stop("'fix_kappa' must have length 1!")
+  }  
+  if(length(model_options[["fix_range"]]) > 1){
+    stop("'fix_range' must have length 1!")
+  }
+  if(length(model_options[["fix_nu"]]) > 1){
+    stop("'fix_nu' must have length 1!")
+  }
+  if(!is.null(model_options[["fix_sigma"]])){
+    if(model_options[["fix_sigma"]] <= 0){
+      stop("'fix_sigma' must be positive!")
+    }
+  }
+  if(!is.null(model_options[["fix_tau"]])){
+    if(model_options[["fix_tau"]] <= 0){
+      stop("'fix_tau' must be positive!")
+    }
+  }  
+  if(!is.null(model_options[["fix_kappa"]])){
+    if(model_options[["fix_kappa"]] <= 0){
+      stop("'fix_kappa' must be positive!")
+    }
+  }
+  if(!is.null(model_options[["fix_range"]])){
+    if(model_options[["fix_range"]] <= 0){
+      stop("'fix_range' must be positive!")
+    }
+  }
+  if(!is.null(model_options[["fix_nu"]])){
+    if(model_options[["fix_nu"]] <= 0){
+      stop("'fix_nu' must be positive!")
+    }
+  }  
+  if(!is.null(model_options[["fix_sigma_e"]])){
+    if(model_options[["fix_sigma_e"]] < 0){
+      stop("'fix_sigma_e' must be non-negative!")
+    }
+  }
+}

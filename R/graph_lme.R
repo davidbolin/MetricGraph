@@ -123,6 +123,8 @@ graph_lme <- function(formula, graph,
             model_type
             )
 
+  check_model_options(model_options)
+
   if(model_type == "isocov"){
     if(is.null(graph$characteristics)){
       warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method.")
