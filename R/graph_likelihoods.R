@@ -799,20 +799,25 @@ likelihood_graph_covariance <- function(graph,
 
   loglik <- function(theta){
 
-    if(!is.null(fix_v_val)){
-      new_theta <- fix_v_val
-    }
-    if(!is.null(fix_vec)){
-      new_theta[!fix_vec] <- theta   
-    } else{
-      new_theta <- theta
-    }
-
       if(!is.null(X_cov)){
             n_cov <- ncol(X_cov)
       } else{
             n_cov <- 0
       }
+
+    if(!is.null(fix_v_val)){
+      # new_theta <- fix_v_val
+      fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+      fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+      new_theta <- fix_v_val_full
+    }
+    if(!is.null(fix_vec)){
+      new_theta[!fix_vec_full] <- theta
+    } else{
+      new_theta <- theta
+    }
+
+
       if(model == "isoCov"){
         if(log_scale){
           sigma_e <- exp(new_theta[1])
@@ -834,8 +839,12 @@ likelihood_graph_covariance <- function(graph,
       }
 
       if(!is.null(X_cov)){
-        theta_covariates <- new_theta[(length(new_theta)-n_cov+1):length(theta)]
+        theta_covariates <- new_theta[(length(new_theta)-n_cov+1):length(new_theta)]
       }
+
+      print(sigma_e)
+      print(theta_cov)
+      print(theta_covariates)
 
 
 
@@ -981,11 +990,20 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
   loglik <- function(theta){
 
+      if(!is.null(X_cov)){
+            n_cov <- ncol(X_cov)
+      } else{
+            n_cov <- 0
+      }
+
     if(!is.null(fix_v_val)){
-      new_theta <- fix_v_val
+      # new_theta <- fix_v_val
+      fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+      fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+      new_theta <- fix_v_val_full
     }
     if(!is.null(fix_vec)){
-      new_theta[!fix_vec] <- theta   
+      new_theta[!fix_vec_full] <- theta
     } else{
       new_theta <- theta
     }
@@ -1047,7 +1065,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           } else{
             X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[!na.obs, , drop = FALSE]
-            v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+            v <- v - X_cov_repl %*% new_theta[4:(3+n_cov)]
           }
       }
 

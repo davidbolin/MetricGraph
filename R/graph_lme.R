@@ -475,8 +475,15 @@ graph_lme <- function(formula, graph,
     if(model[["directional"]] == 1){
       if(model[["alpha"]] == 1){
         likelihood <- function(theta){
-          new_theta <- fix_v_val
-          new_theta[!fix_vec] <- theta
+            if(!is.null(X_cov)){
+                  n_cov <- ncol(X_cov)
+            } else{
+                  n_cov <- 0
+            }
+          fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+          fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+          new_theta <- fix_v_val_full
+          new_theta[!fix_vec_full] <- theta
           return(-likelihood_alpha1_directional(theta = new_theta, graph = graph_bkp,
                                     data_name = NULL, manual_y = y_graph,
                                     X_cov = X_cov, repl = which_repl,
@@ -488,17 +495,30 @@ graph_lme <- function(formula, graph,
       if(model[["alpha"]] == 1){
         if(model[["version"]] == 2){
           likelihood <- function(theta){
-            new_theta <- fix_v_val
-            new_theta[!fix_vec] <- theta
-
+            if(!is.null(X_cov)){
+                  n_cov <- ncol(X_cov)
+            } else{
+                  n_cov <- 0
+            }
+            fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+            fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+            new_theta <- fix_v_val_full
+            new_theta[!fix_vec_full] <- theta
             return(-likelihood_alpha1_v2(theta = new_theta, graph = graph_bkp,
                 X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC,
                 parameterization = "spde")) # parameterization = parameterization_latent))
           }
         } else {
           likelihood <<- function(theta){
-            new_theta <- fix_v_val
-            new_theta[!fix_vec] <- theta
+            if(!is.null(X_cov)){
+                  n_cov <- ncol(X_cov)
+            } else{
+                  n_cov <- 0
+            }
+            fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+            fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+            new_theta <- fix_v_val_full
+            new_theta[!fix_vec_full] <- theta
             
             return(-likelihood_alpha1(theta = new_theta, graph = graph_bkp,
                                       data_name = NULL, manual_y = y_graph,
@@ -508,8 +528,15 @@ graph_lme <- function(formula, graph,
         }
       } else{
         likelihood <- function(theta){
-            new_theta <- fix_v_val
-            new_theta[!fix_vec] <- theta          
+            if(!is.null(X_cov)){
+                  n_cov <- ncol(X_cov)
+            } else{
+                  n_cov <- 0
+            }
+            fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+            fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+            new_theta <- fix_v_val_full
+            new_theta[!fix_vec_full] <- theta          
             return(-likelihood_alpha2(theta = new_theta, graph = graph_bkp,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,
@@ -838,7 +865,12 @@ graph_lme <- function(formula, graph,
 
   loglik <- -res$value
 
-  n_fixed <- ncol(X_cov)
+  if(!is.null(X_cov)){
+        n_fixed <- ncol(X_cov)
+  } else{
+        n_fixed <- 0
+  }
+
   # n_random <- length(coeff) - n_fixed - 1
   n_random <- length(fix_vec) - 1
 
@@ -875,10 +907,12 @@ graph_lme <- function(formula, graph,
       #   new_par[2] <- -new_par[2]
       #   return(likelihood(new_par))
       # }
+      
+      fix_vec_full <- c(fix_vec, rep(FALSE, n_fixed))
 
-      observed_tmp <- matrix(nrow = 3, ncol = 3)
+      observed_tmp <- matrix(nrow = length(fix_vec_full), ncol = length(fix_vec_full))
 
-      observed_tmp[!fix_vec, !fix_vec] <- observed_fisher
+      observed_tmp[!fix_vec_full, !fix_vec_full] <- observed_fisher
 
       # coeff_tmp <- coeff[2:3]
       # new_observed_fisher <- observed_fisher[2:3,2:3]
@@ -915,8 +949,10 @@ graph_lme <- function(formula, graph,
                                                     ncol(observed_fisher)))
   std_err <- sqrt(diag(inv_fisher))
 
-  std_err_tmp <- rep(NA, length(fix_vec))
-  std_err_tmp[!fix_vec] <- std_err
+  fix_vec_full <- c(fix_vec, rep(FALSE,n_fixed))
+
+  std_err_tmp <- rep(NA, length(fix_vec_full))
+  std_err_tmp[!fix_vec_full] <- std_err
 
   std_err <- std_err_tmp
 
@@ -932,8 +968,8 @@ graph_lme <- function(formula, graph,
 
   coeff_fixed <- NULL
   if(n_fixed > 0){
-    coeff_fixed <- coeff[(2+n_random):length(coeff)]
-    std_fixed <- std_err[(2+n_random):length(coeff)]
+    coeff_fixed <- coeff[(1 + sum(!fix_vec)):length(tmp_coeff)]
+    std_fixed <- std_err[(1+sum(!fix_vec)):length(tmp_coeff)]
   } else{
     std_fixed <- NULL
   }
