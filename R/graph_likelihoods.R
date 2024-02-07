@@ -810,8 +810,6 @@ likelihood_graph_covariance <- function(graph,
       fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
       fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
       new_theta <- fix_v_val_full
-    }
-    if(!is.null(fix_vec)){
       new_theta[!fix_vec_full] <- theta
     } else{
       new_theta <- theta
@@ -838,15 +836,9 @@ likelihood_graph_covariance <- function(graph,
         }
       }
 
-      if(!is.null(X_cov)){
+      if(n_cov >0){
         theta_covariates <- new_theta[(length(new_theta)-n_cov+1):length(new_theta)]
       }
-
-      print(sigma_e)
-      print(theta_cov)
-      print(theta_covariates)
-
-
 
       if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
         graph$compute_laplacian()
@@ -926,7 +918,8 @@ likelihood_graph_covariance <- function(graph,
               } else{
                 X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], ,
                                     drop=FALSE]
-                v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+                # v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+                v <- v - X_cov_repl %*% theta_covariates
               }
           }
 
