@@ -786,7 +786,10 @@ likelihood_graph_covariance <- function(graph,
                                         X_cov = NULL,
                                         repl,
                                         log_scale = TRUE,
-                                        maximize = FALSE) {
+                                        maximize = FALSE,
+                                        fix_vec = NULL,
+                                        fix_v_val = NULL,
+                                        check_euclidean = TRUE) {
 
   # check <- check_graph(graph)
 
@@ -795,6 +798,16 @@ likelihood_graph_covariance <- function(graph,
   }
 
   loglik <- function(theta){
+
+    if(!is.null(fix_v_val)){
+      new_theta <- fix_v_val
+    }
+    if(!is.null(fix_vec)){
+      new_theta[!fix_vec] <- theta   
+    } else{
+      new_theta <- theta
+    }
+
       if(!is.null(X_cov)){
             n_cov <- ncol(X_cov)
       } else{
@@ -802,26 +815,26 @@ likelihood_graph_covariance <- function(graph,
       }
       if(model == "isoCov"){
         if(log_scale){
-          sigma_e <- exp(theta[1])
-          theta_cov <- exp(theta[2:(length(theta)-n_cov)])
+          sigma_e <- exp(new_theta[1])
+          theta_cov <- exp(new_theta[2:(length(new_theta)-n_cov)])
         } else{
-          sigma_e <- theta[1]
-          theta_cov <- theta[2:(length(theta)-n_cov)]
+          sigma_e <- new_theta[1]
+          theta_cov <- new_theta[2:(length(new_theta)-n_cov)]
         }
       } else{
         if(log_scale){
-          sigma_e <- exp(theta[1])
-          reciprocal_tau <- exp(theta[2])
-          kappa <- exp(theta[3])
+          sigma_e <- exp(new_theta[1])
+          reciprocal_tau <- exp(new_theta[2])
+          kappa <- exp(new_theta[3])
         } else{
-          sigma_e <- theta[1]
-          reciprocal_tau <- theta[2]
-          kappa <- theta[3]
+          sigma_e <- new_theta[1]
+          reciprocal_tau <- new_theta[2]
+          kappa <- new_theta[3]
         }
       }
 
       if(!is.null(X_cov)){
-        theta_covariates <- theta[(length(theta)-n_cov+1):length(theta)]
+        theta_covariates <- new_theta[(length(new_theta)-n_cov+1):length(theta)]
       }
 
 
@@ -870,7 +883,7 @@ likelihood_graph_covariance <- function(graph,
         }
 
         if(is.null(graph$res_dist)){
-          graph$compute_resdist(full = TRUE)
+          graph$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
         }
 
         Sigma <- as.matrix(cov_function(as.matrix(graph$res_dist[[1]]), theta_cov))
@@ -945,7 +958,8 @@ likelihood_graph_covariance <- function(graph,
 #' covariates.
 #' @noRd
 likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
-              X_cov = NULL, maximize = FALSE, parameterization) {
+              X_cov = NULL, maximize = FALSE, parameterization,
+              fix_vec = NULL, fix_v_val = NULL) {
 
   check <- check_graph(graph)
 
@@ -966,6 +980,17 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
   # }
 
   loglik <- function(theta){
+
+    if(!is.null(fix_v_val)){
+      new_theta <- fix_v_val
+    }
+    if(!is.null(fix_vec)){
+      new_theta[!fix_vec] <- theta   
+    } else{
+      new_theta <- theta
+    }
+
+
     repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
     if(is.null(repl)){
@@ -975,12 +1000,12 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     }
 
 
-    sigma_e <- exp(theta[1])
-    reciprocal_tau <- exp(theta[2])
+    sigma_e <- exp(new_theta[1])
+    reciprocal_tau <- exp(new_theta[2])
     if(parameterization == "matern"){
-      kappa = sqrt(8 * (alpha-0.5)) / exp(theta[3])
+      kappa = sqrt(8 * (alpha-0.5)) / exp(new_theta[3])
     } else{
-      kappa = exp(theta[3])
+      kappa = exp(new_theta[3])
     }
 
     y_resp <- y_graph

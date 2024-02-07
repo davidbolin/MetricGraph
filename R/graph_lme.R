@@ -50,15 +50,8 @@
 #' tell which version of the likelihood should be used. Version is 1 by default.
 #' @param which_repl Vector or list containing which replicates to consider in
 #' the model. If `NULL` all replicates will be considered.
+#' @param model_options A list containing additional options to be used in the model. Currently, it is possible to fix parameters during the estimation or change the starting values of the parameters. The general structure of the elements of the list is `fix_parname` and `start_parname`, where `parname` stands for the name of the parameter. If `fix_parname` is not `NULL`, then the model with be fitted with the `parname` being fixed at the value that was passed. If `start_parname` is not `NULL`, the model will be fitted using the value passed as starting value for `parname`. the For 'WM' models, the possible elements of the list are: `fix_sigma_e`, `start_sigma_e`, `fix_nu`, `start_nu`, `fix_sigma`, `start_sigma`, `fix_range`, `start_range`. Alternatively, one can use `fix_sigma_e`, `start_sigma_e`, `fix_nu`, `start_nu`, `fix_tau`, `start_tau`, `fix_kappa`, `start_kappa`. For 'WM1', 'WM2', 'isoExp', 'GL1' and 'GL2' models, the possible elements of the list are `fix_sigma_e`, `start_sigma_e`, `fix_sigma`, `start_sigma`, `fix_range`, `start_range`. Alternatively, one can use `fix_sigma_e`, `start_sigma_e`, `fix_tau`, `start_tau`, `fix_kappa`, `start_kappa`. For 'isoCov' models, the possible values are `fix_sigma_e`, `start_sigma_e`, `fix_par_vec`, `start_par_vec`. Observe that contrary to the other models, for 'isoCov' models, both `fix_par_vec` and `start_par_vec` should be given as vectors of the size of the dimension of the vector for the input of the covariance function passed to the 'isoCov' model. Furthermore, for 'isoCov' models, `fix_par_vec` is a logical vector, indicating which parameters to be fixed, and the values will be kept fixed to the values given to `start_par_vec`, one can also use `fix_sigma_e` and `start_sigma_e` for controlling the std. deviation of the measurement error.
 #' @param optim_method The method to be used with `optim` function.
-#' @param starting_values_latent A vector containing the starting values for the
-#' latent model. If the latent model is `WhittleMatern` or `graphLaplacian`, then
-#' the starting values should be provided as a vector of the form c(sigma,kappa)
-#' or c(sigma,range) depending on the parameterization. If the model is `isoCov`,
-#' then the starting values should be provided as a vector containing the parameters
-#' of the covariance function.
-#' @param start_sigma_e Starting value for the standard deviation of the measurament
-#' error.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
 #' (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
@@ -74,6 +67,7 @@
 #' in the `hessian` function. See the help of the `hessian` function in 'numDeriv'
 #' package for details. Observet that it only accepts the "Richardson" method for
 #' now, the method "complex" is not supported.
+#' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
 #' @return A list containing the fitted model.
 #' @rdname graph_lme
 #' @export
@@ -82,8 +76,7 @@ graph_lme <- function(formula, graph,
                 model = list(type = "linearModel"),
                 which_repl = NULL,
                 optim_method = "L-BFGS-B",
-                starting_values_latent = NULL,
-                start_sigma_e = NULL,
+                model_options = list(),
                 # parameterization_latent = c("matern", "spde"),
                 BC = 1,
                 # model_matrix = TRUE,
@@ -91,7 +84,8 @@ graph_lme <- function(formula, graph,
                 n_cores = parallel::detectCores()-1,
                 optim_controls = list(),
                 improve_hessian = FALSE,
-                hessian_args = list()) {
+                hessian_args = list(),
+                check_euclidean = TRUE) {
 
   if(!is.list(model)){
     if(!is.character(model)){
@@ -382,7 +376,10 @@ graph_lme <- function(formula, graph,
   cov_names <- NULL
 
   if(!is.null(X_cov)){
+    n_cov <- ncol(X_cov)
     cov_names <- attr(cov_term, "term.labels")
+  } else{
+    n_cov <- 0
   }
 
   names_temp <- NULL
@@ -400,7 +397,7 @@ graph_lme <- function(formula, graph,
 
   time_build_likelihood_start <- Sys.time()
 
-  if(is.null(starting_values_latent)){
+  if(is.null(model_options$start_par_vec)){
     if(model_type == "whittlematern"){
       if(model[["alpha"]] == 1){
         model_start <- "alpha1"
@@ -428,24 +425,33 @@ graph_lme <- function(formula, graph,
     }
 
     if(model_type != "linearmodel"){
-      range_par <- FALSE
+      # range_par <- FALSE
       # if(model_type == "whittlematern"){
       #   range_par <- ifelse(parameterization_latent == "matern",TRUE,FALSE)
       # }
-      start_values <- graph_starting_values(graph = graph_bkp,
+      if(model_type %in% c("whittlematern", "graphlaplacian")){
+        rec_tau <- TRUE
+      } else{
+        rec_tau <- FALSE
+      }
+      start_fixed_values <- graph_starting_values(graph = graph_bkp,
                     model = model_start,
                     manual_data = unlist(y_graph),
                     log_scale = TRUE,
                     # range_par = range_par)
-                    range_par = FALSE)
+                    range_par = FALSE,
+                    model_options = model_options,
+                    rec_tau = rec_tau)
+      start_values <- start_fixed_values$start_values
+      fixed_values <- start_fixed_values$fixed_values
     }
   } else if(model_type != "linearmodel") {
-    start_values <- c(log(0.1*sd(y_graph)),log(starting_values_latent))
-    par_names <- names(starting_values_latent)
-
-    if(!is.null(start_sigma_e)){
-        start_values[1] <- log(start_sigma_e)
+    if(is.null(model_options$start_sigma_e)){
+      start_values <- c(log(0.1*sd(y_graph)),log(model_options$start_par_vec))
+    } else{
+      start_values <- c(log(model_options$start_sigma_e),log(model_options$start_par_vec))
     }
+    par_names <- names(model_options$start_par_vec)
   }
 
   if(ncol(X_cov)>0 && model_type != "linearmodel"){
@@ -460,10 +466,18 @@ graph_lme <- function(formula, graph,
 
 
   if(model_type == "whittlematern"){
+
+    fix_v <- create_fix_vec_val(fixed_values)
+
+    fix_vec <- fix_v$fix_vec
+    fix_v_val <- fix_v$fix_v_val
+
     if(model[["directional"]] == 1){
       if(model[["alpha"]] == 1){
         likelihood <- function(theta){
-          return(-likelihood_alpha1_directional(theta = theta, graph = graph_bkp,
+          new_theta <- fix_v_val
+          new_theta[!fix_vec] <- theta
+          return(-likelihood_alpha1_directional(theta = new_theta, graph = graph_bkp,
                                     data_name = NULL, manual_y = y_graph,
                                     X_cov = X_cov, repl = which_repl,
                                     parameterization = "spde")) # , parameterization = parameterization_latent))
@@ -474,13 +488,19 @@ graph_lme <- function(formula, graph,
       if(model[["alpha"]] == 1){
         if(model[["version"]] == 2){
           likelihood <- function(theta){
-            return(-likelihood_alpha1_v2(theta = theta, graph = graph_bkp,
+            new_theta <- fix_v_val
+            new_theta[!fix_vec] <- theta
+
+            return(-likelihood_alpha1_v2(theta = new_theta, graph = graph_bkp,
                 X_cov = X_cov, y = y_graph, repl = which_repl, BC = BC,
                 parameterization = "spde")) # parameterization = parameterization_latent))
           }
         } else {
-          likelihood <- function(theta){
-            return(-likelihood_alpha1(theta = theta, graph = graph_bkp,
+          likelihood <<- function(theta){
+            new_theta <- fix_v_val
+            new_theta[!fix_vec] <- theta
+            
+            return(-likelihood_alpha1(theta = new_theta, graph = graph_bkp,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,
                                parameterization = "spde")) # , parameterization = parameterization_latent))
@@ -488,7 +508,9 @@ graph_lme <- function(formula, graph,
         }
       } else{
         likelihood <- function(theta){
-            return(-likelihood_alpha2(theta = theta, graph = graph_bkp,
+            new_theta <- fix_v_val
+            new_theta[!fix_vec] <- theta          
+            return(-likelihood_alpha2(theta = new_theta, graph = graph_bkp,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,
                                parameterization = "spde")) # , parameterization = parameterization_latent))
@@ -496,12 +518,20 @@ graph_lme <- function(formula, graph,
       }
     }
   } else if (model_type == "graphlaplacian"){
-      likelihood <- likelihood_graph_laplacian(graph = graph_bkp,
+
+    fix_v <- create_fix_vec_val(fixed_values)
+
+    fix_vec <- fix_v$fix_vec
+    fix_v_val <- fix_v$fix_v_val
+
+    likelihood <- likelihood_graph_laplacian(graph = graph_bkp,
                                                alpha = model[["alpha"]],
                                                y_graph = y_graph,
                                                X_cov = X_cov, maximize = FALSE,
                                                repl=which_repl,
-                                               parameterization = "spde")
+                                               parameterization = "spde",
+                                               fix_vec = fix_vec,
+                                               fix_v_val = fix_v_val)
   } else if(model_type == "isocov") {
 
   if (is.character(model[["cov_function"]])) {
@@ -515,20 +545,35 @@ graph_lme <- function(formula, graph,
         model[["cov_function_name"]] <- "exp_covariance"
       }
     }
+
+    fix_v <- create_fix_vec_val(fixed_values)
+
+    fix_vec <- fix_v$fix_vec
+    fix_v_val <- fix_v$fix_v_val
+
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
                                               y_graph = y_graph,
                                               cov_function = model[["cov_function"]],
-                                              X_cov = X_cov, repl = which_repl)
+                                              X_cov = X_cov, repl = which_repl,
+                                              fix_vec = fix_vec,
+                                              fix_v_val = fix_v_val,
+                                               check_euclidean = check_euclidean)
     } else{
     model[["cov_function_name"]] <- "other"
     model_cov <- "isoCov"
-      likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
+
+    fix_vec <- model_options$fix_par_vec
+    fix_v_val <- model_options$start_par_values
+
+    likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
                                                 y_graph = y_graph,
                                                 cov_function = model[["cov_function"]],
-                                                X_cov = X_cov, repl = which_repl)
+                                                X_cov = X_cov, repl = which_repl,
+                                                fix_vec = fix_vec,
+                                                fix_v_val = fix_v_val,
+                                               check_euclidean = check_euclidean)
     }
     }
-
 
   if(model_type != "linearmodel"){
       time_build_likelihood_end <- Sys.time()
@@ -552,6 +597,13 @@ graph_lme <- function(formula, graph,
           return(l_tmp)
         }
 
+      # if(!is.null(fix_par_vec)){
+      #   likelihood_new2 <- function_factory_fix_var(likelihood_new, fix_par_vec, length(start_values), get_fixed_values(start_values, fix_par_vec, n_cov), n_cov)
+      # } else{
+      #   fix_par_vec <- rep(FALSE, length(starting_values_latent))
+      # }
+
+
       if(parallel){
         start_par <- Sys.time()
         cl <- parallel::makeCluster(n_cores)
@@ -561,6 +613,8 @@ graph_lme <- function(formula, graph,
         parallel::clusterExport(cl, "X_cov", envir = environment())
         parallel::clusterExport(cl, "which_repl", envir = environment())
         parallel::clusterExport(cl, "model", envir = environment())
+        parallel::clusterExport(cl, "fix_vec", envir = environment())        
+        parallel::clusterExport(cl, "fix_v_val", envir = environment())      
         # parallel::clusterExport(cl, "y_list", envir = environment())
         parallel::clusterExport(cl, "likelihood_graph_covariance",
                        envir = as.environment(asNamespace("MetricGraph")))
@@ -577,12 +631,20 @@ graph_lme <- function(formula, graph,
         time_par <- end_par - start_par
 
           start_fit <- Sys.time()
+          # res <- optimParallel::optimParallel(start_values_fix(start_values, fix_par_vec, n_cov),
+          #               likelihood_new2, method = optim_method,
+          #               control = optim_controls,
+          #               hessian = hessian,
+          #               parallel = list(forward = FALSE, cl = cl,
+          #                   loginfo = FALSE))
+
           res <- optimParallel::optimParallel(start_values,
                         likelihood_new, method = optim_method,
                         control = optim_controls,
                         hessian = hessian,
                         parallel = list(forward = FALSE, cl = cl,
                             loginfo = FALSE))
+
         end_fit <- Sys.time()
         time_fit <- end_fit-start_fit
         parallel::stopCluster(cl)
@@ -617,11 +679,18 @@ graph_lme <- function(formula, graph,
       } else{
         possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
         start_fit <- Sys.time()
+        # res <- withCallingHandlers(tryCatch(optim(start_values_fix(start_values, fix_par_vec, n_cov),
+        #           likelihood_new2, method = optim_method,
+        #           control = optim_controls,
+        #           hessian = hessian), error = function(e){return(NA)}),
+        #           warning = function(w){invokeRestart("muffleWarning")})
+
         res <- withCallingHandlers(tryCatch(optim(start_values,
                   likelihood_new, method = optim_method,
                   control = optim_controls,
                   hessian = hessian), error = function(e){return(NA)}),
                   warning = function(w){invokeRestart("muffleWarning")})
+
         end_fit <- Sys.time()
         time_fit <- end_fit-start_fit
 
@@ -755,52 +824,75 @@ graph_lme <- function(formula, graph,
   } else if(model[["cov_function_name"]] == "exp_covariance"){
     n_par_coeff <- 3
   } else{
-    n_par_coeff <- length(starting_values_latent) + 1
+    n_par_coeff <- length(model_options$start_par_vec) + 1
   }
 
   coeff <- res$par
 
   if(all(res$par == start_values)){
+    likelihood(start_values)
     stop("The optimizer is stuck at the starting values! This probably indicates that the precision matrix is not positive-definite.")
   }
-  coeff <- exp(c(res$par[1:n_par_coeff]))
-  coeff <- c(coeff, res$par[-c(1:n_par_coeff)])
+  coeff <- exp(c(res$par[1:(sum(!fix_vec))]))
+  coeff <- c(coeff, res$par[-c(1:(sum(!fix_vec)))])
 
   loglik <- -res$value
 
   n_fixed <- ncol(X_cov)
-  n_random <- length(coeff) - n_fixed - 1
+  # n_random <- length(coeff) - n_fixed - 1
+  n_random <- length(fix_vec) - 1
 
   n_coeff_nonfixed <- length(coeff) - n_fixed
 
-  par_change <- diag(c(exp(-c(res$par[1:n_coeff_nonfixed])), rep(1,n_fixed)))
+  tmp_vec <- c(exp(-c(res$par[1:(sum(!fix_vec))])), rep(1,n_fixed))
+  if(length(tmp_vec)>1){
+      par_change <- diag(tmp_vec)
+  } else{
+    par_change <- tmp_vec
+  }
+
   observed_fisher <- par_change %*% observed_fisher %*% par_change
 
   new_likelihood <- NULL
 
   if(model_type %in% c("graphlaplacian", "whittlematern")){
 
-      coeff[2] <- 1/coeff[2]
 
-      grad_tmp <- diag(c(1,-1/(coeff[2]^2), 1, rep(1,n_fixed)))
+      tmp_coeff <- rep(NA,3)
+      tmp_coeff[!fix_vec] <- coeff[1:(sum(!fix_vec))]
+      tmp_coeff[fix_vec] <- exp(fix_v_val[!is.na(fix_v_val)])
+
+      tmp_coeff[2] <- 1/tmp_coeff[2]
+
+      grad_tmp <- diag(c(c(1,-1/(tmp_coeff[2]^2), 1)[!fix_vec], rep(1,n_fixed)))
 
       observed_fisher <- grad_tmp %*% observed_fisher %*% grad_tmp
 
       time_matern_par_start <- Sys.time()
-      new_likelihood <- function(theta){
-        new_par <- res$par
-        new_par[2:3] <- theta
-        new_par[2] <- -new_par[2]
-        return(likelihood(new_par))
-      }
+      # new_likelihood <- function(theta){
+      #   new_par <- res$par
+      #   new_par[2:3] <- theta
+      #   new_par[2] <- -new_par[2]
+      #   return(likelihood(new_par))
+      # }
 
-      coeff_tmp <- coeff[2:3]
-      new_observed_fisher <- observed_fisher[2:3,2:3]
-      change_par <- change_parameterization_graphlme(new_likelihood,
+      observed_tmp <- matrix(nrow = 3, ncol = 3)
+
+      observed_tmp[!fix_vec, !fix_vec] <- observed_fisher
+
+      # coeff_tmp <- coeff[2:3]
+      # new_observed_fisher <- observed_fisher[2:3,2:3]
+
+      coeff_tmp <- tmp_coeff[2:3]
+
+      new_observed_fisher <- observed_tmp[2:3,2:3]
+
+      change_par <- change_parameterization_graphlme( #new_likelihood,
                                                      model[["alpha"]]-0.5,
                                               coeff_tmp,
-                                              hessian = new_observed_fisher
+                                              hessian = new_observed_fisher, fix_vec[2:3]
                                               )
+      
       matern_coeff <- list()
       matern_coeff$random_effects <- change_par$coeff
       names(matern_coeff$random_effects) <- c("sigma", "range")
@@ -808,6 +900,11 @@ graph_lme <- function(formula, graph,
       time_matern_par_end <- Sys.time()
       time_matern_par <- time_matern_par_end - time_matern_par_start
     } else{
+
+      tmp_coeff <- rep(NA,length(fix_vec))
+      tmp_coeff[!fix_vec] <- coeff[1:(sum(!fix_vec))]
+      tmp_coeff[fix_vec] <- exp(fix_v_val[!is.na(fix_v_val)])
+
       matern_coeff <- NULL
       time_matern_par <- NULL
     }
@@ -818,11 +915,17 @@ graph_lme <- function(formula, graph,
                                                     ncol(observed_fisher)))
   std_err <- sqrt(diag(inv_fisher))
 
-  coeff_random <- coeff[2:(1+n_random)]
+  std_err_tmp <- rep(NA, length(fix_vec))
+  std_err_tmp[!fix_vec] <- std_err
+
+  std_err <- std_err_tmp
+
+  coeff_random <- tmp_coeff[2:(1+n_random)]
   std_random <- std_err[2:(1+n_random)]
+
   names(coeff_random) <- par_names
 
-  coeff_meas <- coeff[1]
+  coeff_meas <- tmp_coeff[1]
   names(coeff_meas) <- "std. dev"
 
   std_meas <- std_err[1]
@@ -905,6 +1008,11 @@ graph_lme <- function(formula, graph,
   object$time_hessian <- time_hessian
   object$parallel <- parallel
   object$time_par <- time_par
+  object$start_values <- start_values
+  object$fixed_values <- fixed_values
+  if(!is.null(graph_bkp$res_dist)){
+    object$euclidean <- attr(graph_bkp$res_dist[[1]], "euclidean")
+  }
   # if(model_matrix){
     if(ncol(X_cov)>0){
       object$model_matrix <- cbind(y_graph, X_cov)
@@ -1431,6 +1539,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' samples be returned as a list, with each replicate being an element?
 #' @param return_original_order Should the results be return in the original
 #' (input) order or in the order inside the graph?
+#' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
 #' @param ... Not used.
 #' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with elements `mean`, which contains the means of the
@@ -1454,6 +1563,7 @@ predict.graph_lme <- function(object,
                               sample_latent = FALSE,
                               return_as_list = FALSE,
                               return_original_order = TRUE,
+                              check_euclidean = TRUE,
                                ...,
                                data = deprecated()) {
 
@@ -1739,7 +1849,7 @@ predict.graph_lme <- function(object,
         # }
         }
       } else{
-        graph_bkp$compute_resdist(full = TRUE)
+        graph_bkp$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
         cov_function <- model_type$cov_function
         Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[1]], coeff_random))
       }

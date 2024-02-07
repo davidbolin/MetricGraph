@@ -1126,9 +1126,11 @@ metric_graph <-  R6Class("metric_graph",
   #' locations?
   #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
+  #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
   #' @return No return value. Called for its side effects. The geodesic distances
   #' are stored in the `res_dist` element of the `metric_graph` object.
-  compute_resdist = function(full = FALSE, obs = TRUE, group = NULL) {
+  compute_resdist = function(full = FALSE, obs = TRUE, group = NULL,
+                                 check_euclidean = FALSE) {
     self$res_dist <- list()
     if(is.null(private$data)){
       obs <- FALSE
@@ -1140,11 +1142,13 @@ metric_graph <-  R6Class("metric_graph",
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
       self$res_dist[[".vertices"]] <- self$compute_resdist_PtE(PtE,
-                                                                normalized=TRUE)
+                                                                normalized=TRUE,
+                                                                       check_euclidean = check_euclidean)
     } else if(full){
       PtE <- self$get_PtE()
       self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
-                                                                normalized=TRUE)
+                                                                normalized=TRUE,
+                                                                       check_euclidean = check_euclidean)
     } else{
       if(is.null(group)){
           group <- unique(private$data[[".group"]])
@@ -1158,7 +1162,8 @@ metric_graph <-  R6Class("metric_graph",
         PtE <- cbind(data_grp[[".edge_number"]][idx_notna],
                      data_grp[[".distance_on_edge"]][idx_notna])
         self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE,
-                                                                       normalized=TRUE)
+                                                                       normalized=TRUE,
+                                                                       check_euclidean = check_euclidean)
       }
     }
   },
@@ -1169,10 +1174,12 @@ metric_graph <-  R6Class("metric_graph",
   #' @param normalized Are the locations in PtE in normalized distance?
   #' @param include_vertices Should the original vertices be included in the
   #' Laplacian matrix?
+  #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
   #' @return A matrix containing the resistance distances.
   compute_resdist_PtE = function(PtE,
                                  normalized = TRUE,
-                                 include_vertices = FALSE) {
+                                 include_vertices = FALSE,
+                                 check_euclidean = FALSE) {
       graph.temp <- self$clone()
       graph.temp$clear_observations()
       df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
@@ -1209,6 +1216,12 @@ metric_graph <-  R6Class("metric_graph",
 
         graph.temp$observation_to_vertex(mesh_warning=FALSE)
         graph.temp$compute_geodist(full=TRUE)
+
+        if(check_euclidean){
+          graph.temp$check_euclidean()
+          is_euclidean <- graph.temp$characteristics$euclidean
+        }
+
         geodist_temp <- graph.temp$geo_dist[[".complete"]]
         geodist_temp[graph.temp$PtV, graph.temp$PtV] <- geodist_temp
 
@@ -1234,6 +1247,10 @@ metric_graph <-  R6Class("metric_graph",
 
       if(!include_vertices){
         R <- R[(nV_new+1):nrow(R), (nV_new+1):nrow(R)]
+      }
+
+      if(check_euclidean){
+        attr(R, "euclidean") <- is_euclidean
       }
 
       return(R)
