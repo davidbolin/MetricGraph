@@ -642,7 +642,9 @@ graph_starting_values <- function(graph,
   }
 
   if(log_scale){
-    out_vec <- log(out_vec)
+    if(length(out_vec)>1){
+      out_vec <- log(out_vec)
+    }
     out_fixed <- lapply(out_fixed, log)  
   }
 

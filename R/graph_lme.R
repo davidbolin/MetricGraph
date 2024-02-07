@@ -695,8 +695,10 @@ graph_lme <- function(formula, graph,
             end_hessian <- Sys.time()
             time_hessian <- end_hessian-start_hessian
           }
-          eig_hes <- eigen(observed_fisher)$value
-          cond_pos_hes <- (min(eig_hes) > 1e-15)
+          if(nrow(observed_fisher)>0){
+            eig_hes <- eigen(observed_fisher)$value
+            cond_pos_hes <- (min(eig_hes) > 1e-15)
+          }
         } else{
           stop("Could not fit the model. Please, try another method with 'parallel' set to FALSE.")
         }
@@ -740,8 +742,10 @@ graph_lme <- function(formula, graph,
             end_hessian <- Sys.time()
             time_hessian <- end_hessian-start_hessian
           }
-          eig_hes <- eigen(observed_fisher)$value
-          cond_pos_hes <- (min(eig_hes) > 1e-15)
+          if(nrow(observed_fisher) > 0){
+            eig_hes <- eigen(observed_fisher)$value
+            cond_pos_hes <- (min(eig_hes) > 1e-15)
+          }
         }
 
 
@@ -805,8 +809,10 @@ graph_lme <- function(formula, graph,
                     end_hessian <- Sys.time()
                     time_hessian <- end_hessian-start_hessian
                   }
-                  eig_hes <- eigen(observed_fisher)$value
-                  cond_pos_hes <- (min(eig_hes) > 1e-15)
+                  if(nrow(observed_fisher)>0){
+                    eig_hes <- eigen(observed_fisher)$value
+                    cond_pos_hes <- (min(eig_hes) > 1e-15)
+                  }
 
                   problem_optim[[tmp_method]][["lik"]] <- -res$value
                   problem_optim[[tmp_method]][["res"]] <- res
@@ -837,7 +843,9 @@ graph_lme <- function(formula, graph,
                   observed_fisher <- problem_optim[[max_method]][["hess"]]
                   time_hessian <- problem_optim[[max_method]][["time_hessian"]]
                   time_fit <- problem_optim[[max_method]][["time_fit"]]
-                  warning("All optimization methods failed to provide a positive-definite Hessian. The optimization method with largest likelihood was chosen. You can try to obtain a positive-definite Hessian by setting 'improve_hessian' to TRUE.")
+                  if(length(fix_vec) != sum(fix_vec)){
+                    warning("All optimization methods failed to provide a positive-definite Hessian. The optimization method with largest likelihood was chosen. You can try to obtain a positive-definite Hessian by setting 'improve_hessian' to TRUE.")
+                  }
                 }
           }
       }
@@ -860,10 +868,17 @@ graph_lme <- function(formula, graph,
 
   if(all(res$par == start_values)){
     likelihood(start_values)
-    stop("The optimizer is stuck at the starting values! This probably indicates that the precision matrix is not positive-definite.")
+    if(length(fix_vec) != sum(fix_vec)){
+      stop("The optimizer is stuck at the starting values! This probably indicates that the precision matrix is not positive-definite.")
+    }
   }
-  coeff <- exp(c(res$par[1:(sum(!fix_vec))]))
-  coeff <- c(coeff, res$par[-c(1:(sum(!fix_vec)))])
+  
+  if(sum(!fix_vec)>0){
+    coeff <- exp(c(res$par[1:(sum(!fix_vec))]))
+    coeff <- c(coeff, res$par[-c(1:(sum(!fix_vec)))])
+  } else{
+    coeff <- res$par
+  }
 
   loglik <- -res$value
 
@@ -876,9 +891,11 @@ graph_lme <- function(formula, graph,
   # n_random <- length(coeff) - n_fixed - 1
   n_random <- length(fix_vec) - 1
 
-  n_coeff_nonfixed <- length(coeff) - n_fixed
-
-  tmp_vec <- c(exp(-c(res$par[1:(sum(!fix_vec))])), rep(1,n_fixed))
+  if(sum(!fix_vec)>0){
+    tmp_vec <- c(exp(-c(res$par[1:(sum(!fix_vec))])), rep(1,n_fixed))
+  } else{
+    tmp_vec <- rep(1,n_fixed)
+  }
   if(length(tmp_vec)>1){
       par_change <- diag(tmp_vec)
   } else{
@@ -898,9 +915,12 @@ graph_lme <- function(formula, graph,
 
       tmp_coeff[2] <- 1/tmp_coeff[2]
 
-      grad_tmp <- diag(c(c(1,-1/(tmp_coeff[2]^2), 1)[!fix_vec], rep(1,n_fixed)))
+      if(sum(!fix_vec)>0){
+        grad_tmp <- diag(c(c(1,-1/(tmp_coeff[2]^2), 1)[!fix_vec], rep(1,n_fixed)))
+        observed_fisher <- grad_tmp %*% observed_fisher %*% grad_tmp
+      }
 
-      observed_fisher <- grad_tmp %*% observed_fisher %*% grad_tmp
+
 
       time_matern_par_start <- Sys.time()
       # new_likelihood <- function(theta){
@@ -970,8 +990,12 @@ graph_lme <- function(formula, graph,
 
   coeff_fixed <- NULL
   if(n_fixed > 0){
-    coeff_fixed <- coeff[(1 + sum(!fix_vec)):length(tmp_coeff)]
-    std_fixed <- std_err[(1+sum(!fix_vec)):length(tmp_coeff)]
+    if(sum(!fix_vec)>0){
+      coeff_fixed <- res$par[-c(1:(sum(!fix_vec)))]
+    } else{
+      coeff_fixed <- res$par
+    }
+    std_fixed <- std_err[(2+n_random):length(fix_vec_full)]
   } else{
     std_fixed <- NULL
   }
