@@ -888,8 +888,9 @@ likelihood_graph_covariance <- function(graph,
         }
 
         Sigma <- as.matrix(cov_function(as.matrix(graph$res_dist[[".complete"]]), theta_cov))
-        nV <- graph$nV - nrow(graph$get_PtE())
-        Sigma <- Sigma[(nV+1):nrow(Sigma), (nV+1):nrow(Sigma)]
+        # nV <- nrow(graph$res_dist[[".complete"]]) - nrow(graph$get_PtE())
+
+        # Sigma <- Sigma[(nV+1):nrow(Sigma), (nV+1):nrow(Sigma)]
       })
 
       diag(Sigma) <- diag(Sigma) + sigma_e^2

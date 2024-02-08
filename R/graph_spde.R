@@ -171,7 +171,7 @@ graph_spde <- function(graph_object,
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
       start_values_vector <- graph_starting_values(graph_spde,
-                      model = model_start, data=FALSE)
+                      model = model_start, data=FALSE)$start_values
 
       prior_kappa$meanlog <- log(start_values_vector[3])
       prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog

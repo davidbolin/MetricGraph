@@ -1148,7 +1148,7 @@ metric_graph <-  R6Class("metric_graph",
       PtE <- self$get_PtE()
 
       self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
-                                                                normalized=TRUE, include_vertices = TRUE,
+                                                                normalized=TRUE, include_vertices = FALSE,
                                                                        check_euclidean = check_euclidean)
     } else{
       if(is.null(group)){

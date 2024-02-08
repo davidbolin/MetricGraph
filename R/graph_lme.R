@@ -322,8 +322,8 @@ graph_lme <- function(formula, graph,
                             use_data_from_graph = FALSE,
                             parallel = parallel,
                             n_cores = n_cores,
-                            starting_values_latent = starting_values_latent,
-                            start_sigma_e = start_sigma_e,
+                            starting_values_latent = NULL,
+                            start_sigma_e = NULL,
                             optim_controls = optim_controls,
                             improve_hessian = improve_hessian,
                             hessian_args = hessian_args)
@@ -1031,6 +1031,8 @@ graph_lme <- function(formula, graph,
     names(coeff_meas) <- "std. dev"
     std_meas <- NULL
     loglik <- logLik(res)[[1]]
+    start_values <- NULL
+    fixed_values <- NULL
 
   }
 
@@ -2129,16 +2131,20 @@ predict.graph_lme <- function(object,
           # mu_krig <- A[idx_prd,]%*%solve(Q_tmp, t(A[idx_prd,])%*%y_repl/sigma_e^2)
 
           nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
-          idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
-          idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)          
+          # idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
+          # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)
+          idx_obs_tmp <- idx_obs
+          idx_prd_tmp <- idx_prd          
           cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp]
           cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp]    
           diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2      
           mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
         } else{
           nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
-          idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
-          idx_prd_tmp <- c(rep(FALSE,nV), idx_obs)          
+          # idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
+          # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)
+          idx_obs_tmp <- idx_obs
+          idx_prd_tmp <- idx_prd                      
           cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp]
           cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp]          
           mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)

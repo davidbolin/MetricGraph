@@ -347,9 +347,9 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     graph$compute_resdist(full = TRUE)
     Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[".complete"]]))
 
-    nV <- nrow(graph$res_dist[[".complete"]]) - length(graph$get_data()[[".group"]])
+    # nV <- nrow(graph$res_dist[[".complete"]]) - length(graph$get_data()[[".group"]])
 
-    Sigma <- Sigma[-c(1:nV), -c(1:nV)]
+    # Sigma <- Sigma[-c(1:nV), -c(1:nV)]
 
     Sigma.o <- Sigma
 
