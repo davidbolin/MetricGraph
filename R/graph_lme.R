@@ -2073,8 +2073,6 @@ predict.graph_lme <- function(object,
 
           }
 
-
-
         mu_fe <- mu[idx_repl, , drop = FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
         mu_re <- mu_krig[ord_idx]
@@ -2087,6 +2085,7 @@ predict.graph_lme <- function(object,
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
+               
         } else{
           QiAt <- solve(Q, t(A[idx_obs,]))
           AQiA <- A[idx_obs,] %*% QiAt
@@ -2105,7 +2104,7 @@ predict.graph_lme <- function(object,
           # print(mu_krig)
       
 
-          mu_re <- mu_krig[ord_idx]
+          mu_re <- mu_krig[ord_idx]         
           mu_fe <- mu[idx_repl, , drop = FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
@@ -2126,7 +2125,7 @@ predict.graph_lme <- function(object,
 
           nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
           idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
-          idx_prd_tmp <- c(rep(FALSE,nV), idx_obs)          
+          idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)          
           cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp]
           cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp]    
           diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2      
@@ -2147,8 +2146,7 @@ predict.graph_lme <- function(object,
         mu_fe <- mu[idx_repl, , drop = FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
-        mu_krig <- mu_fe + mu_krig
-
+        mu_krig <- mu_fe + mu_re
 
     }
 
