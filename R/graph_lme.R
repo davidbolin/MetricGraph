@@ -2066,16 +2066,17 @@ predict.graph_lme <- function(object,
                       mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
+                      mu_re <- mu_krig[ord_idx]
           } else{
                 cov_loc <- Sigma[idx_prd, idx_obs]
                 cov_Obs <- Sigma[idx_obs, idx_obs]    
                 mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
-
+                mu_re <- mu_krig
           }
 
         mu_fe <- mu[idx_repl, , drop = FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
-        mu_re <- mu_krig[ord_idx]
+
 
         mu_krig <- mu_fe + mu_re
 
@@ -2085,12 +2086,15 @@ predict.graph_lme <- function(object,
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
+
+                        mu_re <- mu_krig[ord_idx]      
                
         } else{
           QiAt <- solve(Q, t(A[idx_obs,]))
           AQiA <- A[idx_obs,] %*% QiAt
           mu_krig <- solve(Q, t(A[idx_obs,]) %*% solve(AQiA, y_repl))
           mu_krig <- as.vector(A[idx_prd,] %*% mu_krig)
+          mu_re <- mu_krig
         }
 
           # Q <- spde_precision(kappa = kappa, tau = tau,
@@ -2104,7 +2108,8 @@ predict.graph_lme <- function(object,
           # print(mu_krig)
       
 
-          mu_re <- mu_krig[ord_idx]         
+          mu_re <- mu_krig[ord_idx]      
+          mu_re <- mu_krig   
           mu_fe <- mu[idx_repl, , drop = FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 

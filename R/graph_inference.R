@@ -193,7 +193,7 @@ posterior_crossvalidation_manual <- function(theta,
   #setup matrices for prediction
   if(model == "isoExp"){
     graph$compute_resdist()
-    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist[[".complete"]]))
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
@@ -345,8 +345,14 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
   #setup matrices for prediction
   if(model == "isoExp"){
     graph$compute_resdist(full = TRUE)
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[".complete"]]))
+
+    nV <- nrow(graph$res_dist[[".complete"]]) - length(graph$get_data()[[".group"]])
+
+    Sigma <- Sigma[-c(1:nV), -c(1:nV)]
+
     Sigma.o <- Sigma
+
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "WM alpha2"){
     if(is.null(graph$C))
@@ -594,7 +600,7 @@ posterior_crossvalidation_covariance <- function(object)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
     graph$compute_resdist(full = TRUE)
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[".complete"]]))
   } else {
     stop("wrong model choice")
   }
