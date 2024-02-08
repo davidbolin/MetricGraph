@@ -290,7 +290,7 @@ posterior_mean_alpha1 <- function(theta, graph, resp,
   tau <- theta[2]
   kappa <- theta[3]
 
-  Qp.list <- spde_precision(kappa = theta[3], tau = 1/theta[2], alpha = 1,
+  Qp.list <- spde_precision(kappa = theta[3], tau = theta[2], alpha = 1,
                             graph = graph, build = FALSE)
   #build BSIGMAB
   Qpmu <- rep(0, graph$nV)
@@ -380,7 +380,7 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const,]
 
-  Q <- spde_precision(kappa = theta[3], tau = 1/theta[2],
+  Q <- spde_precision(kappa = theta[3], tau = theta[2],
                       alpha = 2, graph = graph)
 
 

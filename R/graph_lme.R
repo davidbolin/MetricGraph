@@ -1771,12 +1771,14 @@ predict.graph_lme <- function(object,
   sigma.e <- coeff_meas[[1]]
   sigma_e <- sigma.e
 
+  # graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+
   if(tolower(model_type$type) == "whittlematern"){
     tau <- object$coeff$random_effects[1]
     # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
 
-      if (compute_variances || posterior_samples){
+      if (compute_variances || posterior_samples || no_nugget){
               graph_bkp$observation_to_vertex(mesh_warning=FALSE)
       }
     # } else{
@@ -1989,34 +1991,31 @@ predict.graph_lme <- function(object,
     }
   }
 
-  if(compute_variances || posterior_samples){
+  if(compute_variances || posterior_samples || no_nugget){
     if(cond_wm){
       tau <- object$coeff$random_effects[1]
-      graph_bkp2 <- graph_bkp$clone()
-      # graph_bkp2$observation_to_vertex(mesh_warning=FALSE)
       if(cond_alpha1){
         Q <- spde_precision(kappa = kappa, tau = tau,
-                          alpha = 1, graph = graph_bkp2)
-        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp2$PtV, ]
+                          alpha = 1, graph = graph_bkp)
+        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
       } else{
-        if(is.null(graph_bkp2$CoB)){
-          graph_bkp2$buildC(2)
+        if(is.null(graph_bkp$CoB)){
+          graph_bkp$buildC(2)
         }
-        PtE <- graph_bkp2$get_PtE()
-        n.c <- 1:length(graph_bkp2$CoB$S)
+        PtE <- graph_bkp$get_PtE()
+        n.c <- 1:length(graph_bkp$CoB$S)
         Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
-                            graph = graph_bkp2, BC = BC)
-        Qtilde <- (graph_bkp2$CoB$T) %*% Q %*% t(graph_bkp2$CoB$T)
+                            graph = graph_bkp, BC = BC)
+        Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
         Qtilde <- Qtilde[-n.c,-n.c]
-        Sigma.overdetermined  = t(graph_bkp2$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-          (graph_bkp2$CoB$T[-n.c,])
+        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+          (graph_bkp$CoB$T[-n.c,])
         index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
           3.0 * (abs(PtE[, 2]) > 1e-14)
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
-        Q <- solve(Sigma)
-        A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
+        # Q <- solve(Sigma)
+        # A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
       }
-      rm(graph_bkp2)
     }
   }
 
@@ -2063,10 +2062,17 @@ predict.graph_lme <- function(object,
         if(is.null(graph_bkp$CoB)){
           graph_bkp$buildC(2)
         }
-          mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
+          if(!no_nugget){
+                      mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
-                        PtE_pred = cbind(data_prd_temp[[edge_number]],
-                                         data_prd_temp[[distance_on_edge]]), no_nugget = no_nugget)
+                        PtE_pred = PtE_pred, no_nugget = no_nugget)
+          } else{
+                cov_loc <- Sigma[idx_prd, idx_obs]
+                cov_Obs <- Sigma[idx_obs, idx_obs]    
+                mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
+
+          }
+
 
 
         mu_fe <- mu[idx_repl, , drop = FALSE]
@@ -2075,38 +2081,35 @@ predict.graph_lme <- function(object,
 
         mu_krig <- mu_fe + mu_re
 
-      } else{
+      } else{          
 
-          graph_bkp2 <- object$graph$clone()
-
-          Y2 <- graph_bkp2$.__enclos_env__$private$data[[as.character(object$response_var)]] 
-
-          idx_obs_full <- as.vector(!is.na(Y))
-
-          idx_repl2 <- graph_bkp2$.__enclos_env__$private$data[[".group"]] == repl_y
-
-          idx_obs2 <- idx_obs_full[idx_repl2]
-
-          y_repl2 <- Y2[idx_repl2]
-          y_repl2 <- y_repl2[idx_obs2]
-
-          PtE_obs2 <- PtE_full[idx_obs2,]
-          PtE_pred2 <- PtE_obs2
-          
-
+        if(!no_nugget){
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
-                        graph = graph_bkp2, PtE_resp = PtE_obs2, resp = y_repl2,
-                        PtE_pred = PtE_pred2, #cbind(data_prd_temp[[edge_number]],
-                                         #data_prd_temp[[distance_on_edge]]), 
-                                         no_nugget = no_nugget)
+                        graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
+                        PtE_pred = PtE_pred, no_nugget = no_nugget)
+        } else{
+          QiAt <- solve(Q, t(A[idx_obs,]))
+          AQiA <- A[idx_obs,] %*% QiAt
+          mu_krig <- solve(Q, t(A[idx_obs,]) %*% solve(AQiA, y_repl))
+          mu_krig <- as.vector(A[idx_prd,] %*% mu_krig)
+        }
+
+          # Q <- spde_precision(kappa = kappa, tau = tau,
+          #                 alpha = 1, graph = graph_bkp)
+          # A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
+
+          # Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
+          # mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
+          # mu_krig <<- A[idx_prd,] %*% mu_krig
+
+          # print(mu_krig)
+      
 
           mu_re <- mu_krig[ord_idx]
           mu_fe <- mu[idx_repl, , drop = FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
           mu_krig <- mu_fe + mu_re
-
-          rm(graph_bkp2)
       }
     } else {
 
@@ -2185,12 +2188,14 @@ predict.graph_lme <- function(object,
         if(!cond_isocov){
           if(cond_alpha2){
             if(!no_nugget){
-              Q_tmp <- solve(Sigma)
-              diag(Q_tmp) <- diag(Q_tmp) + 1/sigma_e^2
-              Sigma <- solve()
+                cov_loc <- Sigma[idx_prd, idx_obs]
+                cov_Obs <- Sigma[idx_obs, idx_obs]    
+                diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2    
+                var_tmp <- diag(Sigma[idx_prd, idx_prd] - cov_loc %*%  solve(cov_Obs, t(cov_loc)))
+            } else{
+              var_tmp <- diag(Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs])))
+              var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors
             }
-            var_tmp <- diag(Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs])))
-            var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors
           } else{
             if(!no_nugget){
               post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
@@ -2238,7 +2243,20 @@ predict.graph_lme <- function(object,
     if(posterior_samples){
       mean_tmp <- as.vector(mu_krig)
         if(cond_isocov){
-          post_cov <- Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs], t(Sigma[idx_prd,  idx_obs]))
+          if(!no_nugget){
+              post_cov <- Sigma[idx_prd_tmp, idx_prd_tmp] - cov_loc %*%  solve(cov_Obs, t(cov_loc))
+          } else{
+              post_cov <- Sigma[idx_prd_tmp, idx_prd_tmp] - Sigma[idx_prd_tmp, idx_obs_tmp] %*% solve(Sigma[idx_obs_tmp, idx_obs_tmp],t(Sigma[idx_prd_tmp, idx_obs_tmp]))
+          }
+        } else if(cond_alpha2){
+              if(!no_nugget){
+                cov_loc <- Sigma[idx_prd, idx_obs]
+                cov_Obs <- Sigma[idx_obs, idx_obs]    
+                diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2    
+                post_cov <- Sigma[idx_prd, idx_prd] - cov_loc %*%  solve(cov_Obs, t(cov_loc))
+            } else{
+              post_cov <- Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs]))
+            }
         } else{
           if(!no_nugget){
             post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
