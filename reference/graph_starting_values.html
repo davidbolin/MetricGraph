@@ -84,7 +84,9 @@ field models on metric graphs.</p>
 <span>  nu <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  manual_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  like_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  log_scale <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  log_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  model_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  rec_tau <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -128,6 +130,14 @@ last element? This is the format for the likelihood constructor from the
 
 <dt>log_scale</dt>
 <dd><p>Should the initial values be returned in log scale?</p></dd>
+
+
+<dt>model_options</dt>
+<dd><p>List object containing the model options.</p></dd>
+
+
+<dt>rec_tau</dt>
+<dd><p>Should a starting value for the reciprocal of tau be given?</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -99,7 +99,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
-modified: 2024-02-03.</h4>
+modified: 2024-02-08.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -497,31 +497,31 @@ the simplified form:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.1003    0.1186  -9.275   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon           0.9520    0.1199   7.941    2e-15 ***</span></span>
-<span><span class="co">## lat           1.9809    0.1228  16.125   &lt;2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.1014    0.1181  -9.324  &lt; 2e-16 ***</span></span>
+<span><span class="co">## lon           0.9511    0.1201   7.922 2.34e-15 ***</span></span>
+<span><span class="co">## lat           1.9748    0.1232  16.035  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##        Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.114434  0.005426  21.089</span></span>
-<span><span class="co">## kappa 11.340958  1.720159   6.593</span></span>
+<span><span class="co">## tau    0.114099  0.005449  20.941</span></span>
+<span><span class="co">## kappa 11.506072  1.742238   6.604</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma  1.83487   0.09728  18.862</span></span>
-<span><span class="co">## range  0.17635   0.02626   6.715</span></span>
+<span><span class="co">## sigma  1.82701   0.09598  19.036</span></span>
+<span><span class="co">## range  0.17382   0.02583   6.729</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.07662   0.04495   1.705</span></span>
+<span><span class="co">## std. dev  0.07595   0.04519   1.681</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -793.2845 </span></span>
+<span><span class="co">## Log-Likelihood:  -794.3335 </span></span>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  30.49969 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  29.23455 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
@@ -529,7 +529,7 @@ the simplified form:</p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
 <span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model         alpha</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.076<span style="text-decoration: underline;">6</span>  -<span style="color: #BB0000;">793.</span> <span style="text-decoration: underline;">1</span>599. <span style="text-decoration: underline;">1</span>624.    <span style="text-decoration: underline;">1</span>587.         494 WhittleMatern     1</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.076<span style="text-decoration: underline;">0</span>  -<span style="color: #BB0000;">794.</span> <span style="text-decoration: underline;">1</span>601. <span style="text-decoration: underline;">1</span>626.    <span style="text-decoration: underline;">1</span>589.         494 WhittleMatern     1</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -540,9 +540,9 @@ the simplified form:</p>
 <span>                      range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">range</span>, <span class="va">range_est</span><span class="op">)</span>,</span>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Truth"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            sigma_e    sigma     range</span></span>
-<span><span class="co">## Truth    0.1000000 2.000000 0.2000000</span></span>
-<span><span class="co">## Estimate 0.0766249 1.834874 0.1763519</span></span></code></pre>
+<pre><code><span><span class="co">##             sigma_e   sigma     range</span></span>
+<span><span class="co">## Truth    0.10000000 2.00000 0.2000000</span></span>
+<span><span class="co">## Estimate 0.07595015 1.82701 0.1738213</span></span></code></pre>
 <p>Given these estimated parameters, we can now do kriging to estimate
 the field at locations in the graph. As an example, we now obtain
 predictions on the regular mesh that we previously constructed. First,
@@ -706,14 +706,14 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.1398    0.1846  -6.175 6.62e-10 ***</span></span>
-<span><span class="co">## lon           0.9181    0.1423   6.453 1.09e-10 ***</span></span>
-<span><span class="co">## lat           2.0046    0.1644  12.196  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.1399    0.1846  -6.175 6.61e-10 ***</span></span>
+<span><span class="co">## lon           0.9183    0.1423   6.454 1.09e-10 ***</span></span>
+<span><span class="co">## lat           2.0044    0.1644  12.194  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau     1.7196    0.0972  17.691</span></span>
-<span><span class="co">## kappa  14.0476    2.4201   5.804</span></span>
+<span><span class="co">## tau    1.71966   0.09721  17.690</span></span>
+<span><span class="co">## kappa 14.04626   2.41997   5.804</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
@@ -722,10 +722,10 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Log-Likelihood:  -801.5418 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 31</span></span>
+<span><span class="co">## Number of function calls by 'optim' = 40</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  31.19615 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  36.86743 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
@@ -794,18 +794,18 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.1262    0.1151  -9.785  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.1262    0.1151  -9.784  &lt; 2e-16 ***</span></span>
 <span><span class="co">## lon           0.9531    0.1205   7.913 2.52e-15 ***</span></span>
 <span><span class="co">## lat           2.0330    0.1185  17.156  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
 <span><span class="co">## tau   0.110274  0.005644  19.540</span></span>
-<span><span class="co">## kappa 2.954872  0.361341   8.178</span></span>
+<span><span class="co">## kappa 2.954880  0.361342   8.178</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma  3.73029   0.14660  25.446</span></span>
+<span><span class="co">## sigma  3.73030   0.14660  25.446</span></span>
 <span><span class="co">## range  0.67685   0.08092   8.365</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
@@ -818,7 +818,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 23</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  2.39088 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  2.58785 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -869,8 +869,12 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="va">graph_pred</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">new_data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now fit the model with all data:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_gl_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph_pred</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl_pred</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">res_gl_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph_pred</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning in graph_lme(y ~ lon + lat, graph = graph_pred, model = list(type =</span></span>
+<span><span class="co">## "GraphLaplacian")): optim method L-BFGS-B failed to provide a positive-definite</span></span>
+<span><span class="co">## Hessian. Another optimization method was used.</span></span></code></pre>
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl_pred</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Latent model - graph Laplacian SPDE with alpha = 1</span></span>
 <span><span class="co">## </span></span>
@@ -879,42 +883,42 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept) -1.09303   0.10400  -10.51   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          0.93537   0.08282   11.29   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          2.06019   0.08214   25.08   &lt;2e-16 ***</span></span>
+<span><span class="co">## (Intercept) -1.11486   0.09908  -11.25   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          0.92625   0.08130   11.39   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          2.07185   0.08080   25.64   &lt;2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.16856   0.02455   6.866</span></span>
-<span><span class="co">## kappa  1.61283   0.40439   3.988</span></span>
+<span><span class="co">## tau    0.16682   0.02479   6.730</span></span>
+<span><span class="co">## kappa  1.74728   0.42127   4.148</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   3.3032    0.2078  15.895</span></span>
-<span><span class="co">## range   1.2401    0.2632   4.711</span></span>
+<span><span class="co">## sigma   3.2066    0.1942  16.512</span></span>
+<span><span class="co">## range   1.1446    0.2376   4.817</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev   0.9260    0.0997   9.287</span></span>
+<span><span class="co">## std. dev   0.9317    0.1017   9.162</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -895.9502 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 30</span></span>
-<span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
+<span><span class="co">## Log-Likelihood:  -896.1099 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 501</span></span>
+<span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  5.45084 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  6.52525 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
 posterior means at the observation locations:</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_GL_full</span><span class="op">$</span><span class="va">re_mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-44-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Let us now obtain predictions at the desired locations (in the
 correct way) of the observed data:</p>
-<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_y_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">y_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y_full</span><span class="op">$</span><span class="va">mean</span></span>
@@ -943,21 +947,21 @@ load <code>INLA</code> and <code>inlabru</code> packages. We will also
 need to create the <code>inla</code> model object with the
 <code>graph_spde</code> function. By default we have
 <code>alpha=1</code>.</p>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">INLA</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.inlabru.org" class="external-link">inlabru</a></span><span class="op">)</span></span>
 <span><span class="va">spde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>Recall that the data is already on the graph object (from the
 previous models above). Now, we create <code>inlabru</code>’s component,
 which is a formula-like object:</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="fu">Intercept</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span> <span class="op">+</span> <span class="fu">field</span><span class="op">(</span><span class="va">loc</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span></span></code></pre></div>
 <p>This formula is very simple since we are not assuming mean zero, so
 that we do not need an intercept, and we do not have any other
 covariates or model components. However, the setup is exactly the same
 for more complicated models, with the only exception that we would have
 more terms in the formla. Now, we directly fit the model:</p>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_bru_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://inlabru-org.github.io/inlabru/reference/bru.html" class="external-link">bru</a></span><span class="op">(</span><span class="va">cmp</span>, data <span class="op">=</span> </span>
 <span>              <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span><span class="va">spde_model</span>, loc_name <span class="op">=</span> <span class="st">"loc"</span><span class="op">)</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in inla.model.properties.generic(inla.trim.family(model), mm[names(mm) == : Model 'cgeneric' in section 'latent' is marked as 'experimental'; changes may appear at any time.</span></span>
@@ -971,7 +975,7 @@ obtain point estimates but entire posterior distributions for the
 parameters. To view the estimates we can use the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
-<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_bru_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_bru_fit</span>, </span>
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
@@ -983,7 +987,7 @@ parameters. To view the estimates we can use the
 (<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
 We now compare the means of the estimated values with the true
 values:</p>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_bru</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -998,11 +1002,11 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.8654315 1.8564254</span></span>
-<span><span class="co">## 2     range  0.2 0.1792027 0.1724034</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.8654311 1.8564257</span></span>
+<span><span class="co">## 2     range  0.2 0.1792026 0.1724034</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
-<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">posterior_df_bru_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -1027,7 +1031,7 @@ predictions. In this case, we will want the predictions on a mesh.</p>
 <code><a href="../reference/graph_bru_process_data.html">graph_bru_process_data()</a></code> helps us into converting that
 <code>data.frame</code> to an <code>inlabru</code> friendly format for
 dealing with metric graphs:</p>
-<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_bru_process_data.html">graph_bru_process_data</a></span><span class="op">(</span><span class="va">data_mesh_pred</span>, loc <span class="op">=</span> <span class="st">"loc"</span><span class="op">)</span></span></code></pre></div>
 <p>We can now obtain the predictions by using the <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>
 method. Observe that our <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method for graph models
@@ -1036,28 +1040,28 @@ is a bit different from <code>inlabru</code>’s standard
 created with the <code><a href="../reference/graph_spde.html">graph_spde()</a></code> function, the second is
 <code>inlabru</code>’s component, and the remaining is as done with the
 standard <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method in <code>inlabru</code>.</p>
-<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">field_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">spde_model</span>, </span>
 <span>                                <span class="va">cmp</span>,</span>
 <span>                                <span class="va">spde_bru_fit</span>, </span>
 <span>                                newdata <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>                                formula <span class="op">=</span> <span class="op">~</span> <span class="va">field</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot the predictions of the latent field:</p>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_field_prd</span> <span class="op">&lt;-</span> <span class="va">field_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">mean_field_prd</span>, improve_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                      vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-54-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, let us plot predictions of the observed data at the mesh
 locations:</p>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obs_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">spde_model</span>, </span>
 <span>                                <span class="va">cmp</span>,</span>
 <span>                                <span class="va">spde_bru_fit</span>, </span>
 <span>                                newdata <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>                                formula <span class="op">=</span> <span class="op">~</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">lat</span> <span class="op">+</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">field</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot the predictions:</p>
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_obs_prd</span> <span class="op">&lt;-</span> <span class="va">obs_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">mean_obs_prd</span>, improve_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                    vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>

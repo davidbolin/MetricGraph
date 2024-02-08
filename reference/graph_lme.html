@@ -87,14 +87,14 @@ covariance functions.</p>
 <span>  model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"linearModel"</span><span class="op">)</span>,</span>
 <span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  optim_method <span class="op">=</span> <span class="st">"L-BFGS-B"</span>,</span>
-<span>  starting_values_latent <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  start_sigma_e <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  BC <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  model_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  BC <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
 <span>  optim_controls <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  improve_hessian <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  hessian_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  hessian_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  check_euclidean <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -161,18 +161,8 @@ the model. If <code>NULL</code> all replicates will be considered.</p></dd>
 <dd><p>The method to be used with <code>optim</code> function.</p></dd>
 
 
-<dt>starting_values_latent</dt>
-<dd><p>A vector containing the starting values for the
-latent model. If the latent model is <code>WhittleMatern</code> or <code>graphLaplacian</code>, then
-the starting values should be provided as a vector of the form c(sigma,kappa)
-or c(sigma,range) depending on the parameterization. If the model is <code>isoCov</code>,
-then the starting values should be provided as a vector containing the parameters
-of the covariance function.</p></dd>
-
-
-<dt>start_sigma_e</dt>
-<dd><p>Starting value for the standard deviation of the measurament
-error.</p></dd>
+<dt>model_options</dt>
+<dd><p>A list containing additional options to be used in the model. Currently, it is possible to fix parameters during the estimation or change the starting values of the parameters. The general structure of the elements of the list is <code>fix_parname</code> and <code>start_parname</code>, where <code>parname</code> stands for the name of the parameter. If <code>fix_parname</code> is not <code>NULL</code>, then the model with be fitted with the <code>parname</code> being fixed at the value that was passed. If <code>start_parname</code> is not <code>NULL</code>, the model will be fitted using the value passed as starting value for <code>parname</code>. the For 'WM' models, the possible elements of the list are: <code>fix_sigma_e</code>, <code>start_sigma_e</code>, <code>fix_nu</code>, <code>start_nu</code>, <code>fix_sigma</code>, <code>start_sigma</code>, <code>fix_range</code>, <code>start_range</code>. Alternatively, one can use <code>fix_sigma_e</code>, <code>start_sigma_e</code>, <code>fix_nu</code>, <code>start_nu</code>, <code>fix_tau</code>, <code>start_tau</code>, <code>fix_kappa</code>, <code>start_kappa</code>. For 'WM1', 'WM2', 'isoExp', 'GL1' and 'GL2' models, the possible elements of the list are <code>fix_sigma_e</code>, <code>start_sigma_e</code>, <code>fix_sigma</code>, <code>start_sigma</code>, <code>fix_range</code>, <code>start_range</code>. Alternatively, one can use <code>fix_sigma_e</code>, <code>start_sigma_e</code>, <code>fix_tau</code>, <code>start_tau</code>, <code>fix_kappa</code>, <code>start_kappa</code>. For 'isoCov' models, the possible values are <code>fix_sigma_e</code>, <code>start_sigma_e</code>, <code>fix_par_vec</code>, <code>start_par_vec</code>. Observe that contrary to the other models, for 'isoCov' models, both <code>fix_par_vec</code> and <code>start_par_vec</code> should be given as vectors of the size of the dimension of the vector for the input of the covariance function passed to the 'isoCov' model. Furthermore, for 'isoCov' models, <code>fix_par_vec</code> is a logical vector, indicating which parameters to be fixed, and the values will be kept fixed to the values given to <code>start_par_vec</code>, one can also use <code>fix_sigma_e</code> and <code>start_sigma_e</code> for controlling the std. deviation of the measurement error.</p></dd>
 
 
 <dt>BC</dt>
@@ -204,6 +194,10 @@ The list can contain the arguments to be passed to the <code>method.args</code> 
 in the <code>hessian</code> function. See the help of the <code>hessian</code> function in 'numDeriv'
 package for details. Observet that it only accepts the "Richardson" method for
 now, the method "complex" is not supported.</p></dd>
+
+
+<dt>check_euclidean</dt>
+<dd><p>Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.</p></dd>
 
 </dl></div>
     <div class="section level2">

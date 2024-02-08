@@ -94,6 +94,8 @@ It also contains the New columns always begin with a . prefix to avoid overwriti
 <span>  coord_y <span class="op">=</span> <span class="st">"coord_y"</span>,</span>
 <span>  data_coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PtE"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  no_nugget <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  check_euclidean <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -167,6 +169,14 @@ coordinate system to use. If <code>PtE</code>, the user must provide <code>edge_
 
 <dt>normalized</dt>
 <dd><p>Are the distances on edges normalized?</p></dd>
+
+
+<dt>no_nugget</dt>
+<dd><p>Should the prediction be done without nugget?</p></dd>
+
+
+<dt>check_euclidean</dt>
+<dd><p>Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.</p></dd>
 
 
 <dt>...</dt>

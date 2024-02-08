@@ -86,8 +86,10 @@
 <span>  distance_on_edge <span class="op">=</span> <span class="st">"distance_on_edge"</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sample_latent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  no_nugget <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_as_list <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_original_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  check_euclidean <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  data <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -149,6 +151,10 @@ edge, the default is <code>distance_on_edge</code>.</p></dd>
 <dd><p>Do posterior samples only for the random effects?</p></dd>
 
 
+<dt>no_nugget</dt>
+<dd><p>Should the prediction be carried out without the nugget?</p></dd>
+
+
 <dt>return_as_list</dt>
 <dd><p>Should the means of the predictions and the posterior
 samples be returned as a list, with each replicate being an element?</p></dd>
@@ -157,6 +163,10 @@ samples be returned as a list, with each replicate being an element?</p></dd>
 <dt>return_original_order</dt>
 <dd><p>Should the results be return in the original
 (input) order or in the order inside the graph?</p></dd>
+
+
+<dt>check_euclidean</dt>
+<dd><p>Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.</p></dd>
 
 
 <dt>...</dt>
