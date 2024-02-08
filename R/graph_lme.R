@@ -2219,8 +2219,10 @@ predict.graph_lme <- function(object,
           }
         } else{
           nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
-          idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
-          idx_prd_tmp <- c(rep(FALSE,nV), idx_obs)   
+          # idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
+          # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)   
+          idx_obs_tmp <- idx_obs
+          idx_prd_tmp <- idx_prd
 
           if(!no_nugget){
             # Sigma_prd <- solve(Q_tmp)
@@ -2295,6 +2297,7 @@ predict.graph_lme <- function(object,
       }
     }
   }
+
 
   if(check_euclidean){
     if(!is.null(graph_bkp$res_dist)){
