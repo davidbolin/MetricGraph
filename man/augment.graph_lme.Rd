@@ -20,6 +20,8 @@
   coord_y = "coord_y",
   data_coords = c("PtE", "spatial"),
   normalized = FALSE,
+  no_nugget = FALSE,
+  check_euclidean = FALSE,
   ...
 )
 }
@@ -64,6 +66,10 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \code{coord_x} and \code{coord_y}.}
 
 \item{normalized}{Are the distances on edges normalized?}
+
+\item{no_nugget}{Should the prediction be done without nugget?}
+
+\item{check_euclidean}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 
 \item{...}{Additional arguments.}
 }

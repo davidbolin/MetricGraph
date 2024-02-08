@@ -136,7 +136,7 @@ Create a new \code{metric_graph} object.
   crs = NULL,
   proj4string = NULL,
   which_longlat = "sp",
-  project = TRUE,
+  project = FALSE,
   project_data = FALSE,
   which_projection = "Winkel tripel",
   tolerance = list(vertex_vertex = 1e-07, vertex_edge = 1e-07, edge_edge = 0),
@@ -177,7 +177,7 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{which_longlat}}{Compute the distance using which package? The options are \code{sp} and \code{sf}. The default is \code{sp}.}
 
-\item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{TRUE}. When \code{TRUE}, the construction of the graph is faster.}
+\item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
 
 \item{\code{project_data}}{If \code{longlat} is \code{TRUE} should the vertices be project to planar coordinates? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
 
@@ -453,7 +453,12 @@ on the mesh are stored in \code{mesh$geo_dist} in the \code{metric_graph} object
 Computes the resistance distance between the observation
 locations.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(
+  full = FALSE,
+  obs = TRUE,
+  group = NULL,
+  check_euclidean = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -468,6 +473,8 @@ locations?}
 
 \item{\code{group}}{Vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
+
+\item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 }
 \if{html}{\out{</div>}}
 }
@@ -486,7 +493,8 @@ locations.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_PtE(
   PtE,
   normalized = TRUE,
-  include_vertices = FALSE
+  include_vertices = FALSE,
+  check_euclidean = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -499,6 +507,8 @@ locations.
 
 \item{\code{include_vertices}}{Should the original vertices be included in the
 Laplacian matrix?}
+
+\item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 }
 \if{html}{\out{</div>}}
 }

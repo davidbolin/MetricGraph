@@ -17,8 +17,10 @@
   distance_on_edge = "distance_on_edge",
   normalized = FALSE,
   sample_latent = FALSE,
+  no_nugget = FALSE,
   return_as_list = FALSE,
   return_original_order = TRUE,
+  check_euclidean = TRUE,
   ...,
   data = deprecated()
 )
@@ -54,11 +56,15 @@ edge, the default is \code{distance_on_edge}.}
 
 \item{sample_latent}{Do posterior samples only for the random effects?}
 
+\item{no_nugget}{Should the prediction be carried out without the nugget?}
+
 \item{return_as_list}{Should the means of the predictions and the posterior
 samples be returned as a list, with each replicate being an element?}
 
 \item{return_original_order}{Should the results be return in the original
 (input) order or in the order inside the graph?}
+
+\item{check_euclidean}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 
 \item{...}{Not used.}
 

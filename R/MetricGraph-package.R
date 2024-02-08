@@ -29,9 +29,7 @@
 #'
 #' For a more detailed introduction to the package, see the 'MetricGraph' Vignettes.
 #'
-#' @docType package
-#' @name MetricGraph
-#' @aliases MetricGraph-package
+"_PACKAGE"
 #' @import Matrix
 #' @export Cholesky t
 #' @importFrom igraph graph distances is_tree
@@ -48,18 +46,19 @@
 #' @importFrom lifecycle deprecated
 #' @importFrom dplyr mutate filter select summarise
 #' @importFrom tidyr drop_na
-#' @importFrom magrittr `%>%`
+#' @importFrom magrittr %>%
 #' @importFrom zoo na.approx
-#' @export `%>%`
+#' @export %>%
 #' @export summarise
 #' @export mutate
 #' @export filter
 #' @export select
 #' @export drop_na
-#' @importFrom broom glance augment 
+#' @importFrom broom glance augment
 # @importFrom broom tidy
 #' @export glance
 #' @export augment
 # @export tidy
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL
+

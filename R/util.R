@@ -301,7 +301,8 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' last element? This is the format for the likelihood constructor from the
 #' 'rSPDE' package.
 #' @param log_scale Should the initial values be returned in log scale?
-#' @param start_sigma
+#' @param rec_tau Should a starting value for the reciprocal of tau be given?
+#' @param model_options List object containing the model options.
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
