@@ -37,6 +37,8 @@ navbar:
         href: articles/pointprocess.html
       - text: Comparison of different models with real data
         href: articles/comparison.html        
+      - text: On isotropic covariances on metric graphs with non-Euclidean edges
+        href: articles/isotropic_noneuclidean.html                
     twitter:
       icon: fa-twitter
       href: https://twitter.com/jdavidbolin

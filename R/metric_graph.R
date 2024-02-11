@@ -1127,10 +1127,11 @@ metric_graph <-  R6Class("metric_graph",
   #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
   #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
+  #' @param include_vertices Should the vertices of the graph be also included in the resulting matrix when using `FULL=TRUE`?
   #' @return No return value. Called for its side effects. The geodesic distances
   #' are stored in the `res_dist` element of the `metric_graph` object.
   compute_resdist = function(full = FALSE, obs = TRUE, group = NULL,
-                                 check_euclidean = FALSE) {
+                                 check_euclidean = FALSE, include_vertices = FALSE) {
     self$res_dist <- list()
     if(is.null(private$data)){
       obs <- FALSE
@@ -1146,10 +1147,16 @@ metric_graph <-  R6Class("metric_graph",
                                                                        check_euclidean = check_euclidean)
     } else if(full){
       PtE <- self$get_PtE()
-
-      self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
+      if(!include_vertices){
+        self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE, include_vertices = FALSE,
                                                                        check_euclidean = check_euclidean)
+      } else{
+        self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
+                                                                normalized=TRUE, include_vertices = TRUE,
+                                                                       check_euclidean = check_euclidean)
+      }
+
     } else{
       if(is.null(group)){
           group <- unique(private$data[[".group"]])
