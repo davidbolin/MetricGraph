@@ -539,7 +539,7 @@ We can now create the data list in which we want to do prediction:
 
 Finally, we can do the prediction and plot. Observe that we are setting `improve_plot=TRUE` to improve the quality of the plot, however, it increases to the computational cost, since it will call the `compute_PtE_edges()` method internally.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
       field_pred_pems <- predict(spde_model_bru_pems, cmp, 
                         spde_bru_fit_pems,
                         newdata = pred_coords,

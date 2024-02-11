@@ -135,8 +135,7 @@ library(MetricGraph)
 
 # Introduction
 
-In this vignette our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian
-processes with an isotropic exponential covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
+In this vignette our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian random field with an isotropic exponential covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
 # The dataset
 
