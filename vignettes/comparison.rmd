@@ -352,7 +352,8 @@ Let plot the predictions with the corresponding observed values. First for the m
 library(ggplot2)
 
 p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted",
-                improve_plot=TRUE, vertex_size = 0) 
+                improve_plot=TRUE, vertex_size = 0,
+                edge_width = 0.5) 
 ```
 
 We can now add the original observations obtain the plot in region 1:
@@ -378,7 +379,8 @@ Similarly, for `alpha=1` with boundary correction in region 1:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
-              improve_plot=TRUE, vertex_size = 0) 
+              improve_plot=TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -389,7 +391,8 @@ and in region 2:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
-              improve_plot=TRUE, vertex_size = 0) 
+              improve_plot=TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
@@ -407,7 +410,8 @@ Let us now build the plot for region 1:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0) 
+                    improve_plot=TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -418,7 +422,8 @@ and region 2:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0) 
+                    improve_plot=TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
@@ -436,7 +441,8 @@ the plot in region 1:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0) 
+                    improve_plot=TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -447,7 +453,8 @@ and in region 2:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0) 
+                    improve_plot=TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
@@ -466,7 +473,8 @@ the plot in region 1:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0) 
+                    improve_plot = TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -477,7 +485,8 @@ and in region 2:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0) 
+                    improve_plot = TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
@@ -495,7 +504,8 @@ the plot in region 1:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0) 
+                    improve_plot = TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -506,7 +516,8 @@ and in region 2:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0) 
+                    improve_plot = TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
@@ -524,7 +535,8 @@ and the corresponding plot in region 1:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0) 
+                    improve_plot = TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -535,7 +547,8 @@ and in region 2:
 
 ```{r}
 p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0) 
+                    improve_plot = TRUE, vertex_size = 0,
+                    edge_width = 0.5) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
