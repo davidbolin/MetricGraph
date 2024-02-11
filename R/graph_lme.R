@@ -127,11 +127,11 @@ graph_lme <- function(formula, graph,
 
   if(model_type == "isocov"){
     if(is.null(graph$characteristics)){
-      warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method.")
+      warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method. See the vignette https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html for further details.")
     } else if(is.null(graph$characteristics$euclidean)){
-            warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method.")
+            warning("No check for Euclidean edges have been perfomed on this graph. The isotropic covariance models are only known to work for graphs with Euclidean edges. You can check if the graph has Euclidean edges by running the `check_euclidean()` method. See the vignette https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html for further details.")
     } else if(!graph$characteristics$euclidean){
-                  warning("This graph DOES NOT have Euclidean edges. The isotropic covariance models are NOT guaranteed to work for this graph!")
+                  warning("This graph DOES NOT have Euclidean edges. The isotropic covariance models are NOT guaranteed to work for this graph! See the vignette https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html for further details.")
     }
   }
 
