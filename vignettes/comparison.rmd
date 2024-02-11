@@ -1,0 +1,288 @@
+---
+title: "Comparison of different models with real data"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2024-02-09. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparison of different models with real data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: Bernoulli
+  type: article
+  issued:
+    year: 2023
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2304.10372
+  type: preprint
+  issued:
+    year: 2023
+- id: Anderes2020
+  title: "Isotropic covariance functions on graphs and their edges"
+  author:
+  - family: Anderes
+    given: Ethan
+  - family: Møller
+    given: Jesper
+  - family: Rasmussen
+    given: Jakob G
+  container-title: Annals of Statistics
+  type: article
+  issue: 48
+  pages: 2478-2503
+  issued:
+    year: 2020
+- id: Borovitskiy2021
+  title: "Matérn Gaussian processes on graphs"
+  author:
+  - family: Borovitskiy
+    given: Viacheslav
+  - family: Azangulov
+    given: Iskander
+  - family: Terenin
+    given: Alexander 
+  - family: Mostowsky
+    given: Peter
+  - family: Deisenroth
+    given: Marc
+  - family: Durrande
+    given: Nicolas
+  container-title: International Conference on Artificial Intelligence and Statistics
+  type: article
+  pages: 2593-2601
+  issued: 
+    year: 2021
+- id: LindgrenRue2015
+  title: Bayesian Spatial Modelling with R-INLA.
+  author:
+  - family: Lindgren
+    given: Finn
+  - family: Rue
+    given: Haavard
+  container-title: Journal of Statistical Software
+  type: article
+  issue: 63
+  pages: 1-25
+  issued:
+    year: 2015
+- id: inlabru2019
+  title: inlabru an R package for Bayesian spatial modelling from ecological survey data
+  author:
+  - family: Bachl
+    given: Fabian E.
+  - family: Lindgren
+    given: Finn
+  - family: Borchers
+    given: David L.
+  - family: Illian
+    given: Janine B.
+  container-title: Methods in Ecology and Evolution
+  type: article
+  issue: 10
+  pages: 760-766
+  issued:
+    year: 2019
+- id: sppackage
+  title: Applied spatial data analysis with R
+  author:
+  - family: Bivand
+    given: Roger S.
+  - family: Pebesma
+    given: Edzer
+  - family: Gomez-Rubio
+    given: Virgilio
+  publisher: Springer, NY
+  type: book
+  issued:
+    year: 2013
+- id: plotlypackage
+  title: Interactive Web-Based Data Visualization with R, plotly, and shiny
+  author:
+  - family: Sievert
+    given: Carson
+  publisher: Chapman and Hall/CRC
+  type: book
+  issued:
+    year: 2020
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(MetricGraph)
+```
+
+# Introduction
+
+In this vignette our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian
+processes with an isotropic exponential covariance functions [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
+
+# The dataset
+
+For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose, California. The variable `y` contains the traffic speeds.
+
+```{r}
+ pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
+ pems_graph$add_observations(data = pems$data, normalized=TRUE)
+ pems_graph$prune_vertices()
+```
+
+Let us take a look at the observations:
+
+```{r}
+pems_graph$plot(data = "y", vertex_size = 0)
+```
+
+# The models
+
+Let us fit the different models. We start by fitting a Whittle-Matérn field with `alpha = 1`:
+
+```{r}
+fit_alpha1 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "WhittleMatern", alpha = 1))
+```
+
+and look at its summary:
+
+```{r}
+summary(fit_alpha1)
+```
+
+Now, we will fit a Whittle-Matérn field with `alpha = 2`:
+
+```{r}
+fit_alpha2 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "WhittleMatern", alpha = 2))
+```
+
+and its summary:
+
+```{r}
+summary(fit_alpha2)
+```
+
+We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`, and by performing a boundary correction on vertices of degree 1. To such an end, we set `BC=1`:
+
+
+```{r}
+fit_alpha1_bc <- graph_lme(y ~ -1, graph=pems_graph, BC = 1,
+        model = list(type = "WhittleMatern", alpha = 1))
+
+fit_alpha2_bc <- graph_lme(y ~ -1, graph=pems_graph, BC = 1,
+        model = list(type = "WhittleMatern", alpha = 2))
+```
+
+Now, let us look at the summaries:
+
+```{r}
+summary(fit_alpha1_bc)
+```
+and
+```{r}
+summary(fit_alpha2_bc)
+```
+
+Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`:
+
+```{r}
+fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "graphLaplacian", alpha = 1))
+
+fit_GL2 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "graphLaplacian", alpha = 2))
+```
+
+and look at their summaries:
+
+```{r}
+summary(fit_GL1)
+```
+
+and
+
+```{r}
+summary(fit_GL2)
+```
+
+Observe that the default optimizer (L-BFGS-B) failed to converge, thus an alternative optimizer was used, when fitting the graph Laplacian model with `alpha=2`.
+
+Let us now fit a Gaussian field with isotropic exponential covariance function:
+
+```{r}
+fit_isoexp <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "isoCov"))
+```
+
+Observe the warning, message. This message tells us that we did not check if the metric graph has Euclidean edges. Let us check now:
+
+```{r}
+pems_graph$check_euclidean()
+```
+
+Now, we can look at the graph's characteristics contained in this summary:
+
+```{r}
+summary(pems_graph)
+```
+
+Thus, this graph does not have Euclidean edges. This means, when we fit the model, we actually modify the graph, when we add the obvservations as vertices. By default, when fitting isotropic models, the `graph_lme()` function checks it the metric graph after adding the observations as vertices has Euclidean edges. We can check by looking at the `euclidean` element of the fitted model:
+
+```{r}
+fit_isoexp$euclidean
+```
+
+Therefore, even after adding the observations as vertices, the metric graph is still not Euclidean.
+
+Let us check if we can fit an isotropic model with isotropic Matérn covariance function with smoothness parameter `nu=1.5` (which corresponds to `alpha=2` for Whittle-Matérn fields and Matérn Gaussian models based on the graph Laplacian). Recall that by the results in [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), it is not guaranteed that such a function will be a valid covariance function even on an metric graph with Euclidean edges.
+
+We start by defining the Matérn covariance:
+
+```{r}
+cov_mat <- function(h,theta){
+    nu <- 1.5
+    sigma <- theta[1]
+    kappa <- theta[2]
+    (sigma^2/(2^(nu - 1) * gamma(nu))) * ((kappa * abs(h))^nu) * 
+            besselK(kappa * abs(h), nu)
+        }
+```
+
+Let us now fit the model:
+
+```{r, error=TRUE}
+fit_isomat <- graph_lme(y ~ -1, graph = pems_graph, model = list(type = "isoCov", cov_function = cov_mat), 
+                                    model_options = list(start_par_vec = c(1,1)))
+```
+
+Indeed, the model could not be fitted.
+
+# Comparison by cross-validation
+
+We will now use the function `posterior_crossvalidation()` to perform 
+leave-one-out cross validation based on the estimated parameters and compare
+the results:
+
+```{r}
+fitted_models_list <- list("alpha=1" = fit_alpha1, 
+                    "alpha=2" = fit_alpha2, 
+                    "isoExp" = fit_isoexp, 
+                    "GL1" = fit_GL1, "GL2" = fit_GL2,
+                    "alpha=1 bc" = fit_alpha1_bc,
+                    "alpha=2 bc" = fit_alpha2_bc)
+
+posterior_crossvalidation(fitted_models_list, factor = 1000)[["scores"]]
+```

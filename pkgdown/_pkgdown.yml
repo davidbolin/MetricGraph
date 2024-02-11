@@ -35,6 +35,8 @@ navbar:
         href: articles/fem_models.html
       - text: Log-Gaussian Cox processes on metric graphs
         href: articles/pointprocess.html
+      - text: Comparison of different models with real data
+        href: articles/comparison.html        
     twitter:
       icon: fa-twitter
       href: https://twitter.com/jdavidbolin

@@ -571,7 +571,7 @@ fit_GL1 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", 
 fit_GL2 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", alpha = 2))
 ```
 
-Finally, we use the function `posterior_crossvalidation` to perform 
+Finally, we use the function `posterior_crossvalidation()` to perform 
 leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
