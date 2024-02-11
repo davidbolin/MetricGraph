@@ -116,7 +116,11 @@ modified: 2024-02-11.</h4>
 different models on metric graphs by cross-validation. More precisely,
 we consider the Whittle–Matérn fields introduced by <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin,
 Simas, and Wallin (2024)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
+<<<<<<< HEAD
 Simas, and Wallin (2023)</span></a>, a Gaussian random field with an
+=======
+Simas, and Wallin (2023)</span></a>, a Gaussian processes with an
+>>>>>>> bd678212681261b614829253837627129d851f26
 isotropic exponential covariance functions <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>, and
 Matérn Gaussian processes based on the graph Laplacian <a href="http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf" class="external-link"><span class="citation">Borovitskiy et al. (2021)</span></a>.</p>
 </div>
@@ -176,7 +180,11 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 17</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  2.52041 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  6.72937 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -196,17 +204,17 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau    0.14486   0.02158   6.712</span></span>
-<span><span class="co">#&gt; kappa  0.12983   0.02419   5.367</span></span>
+<span><span class="co">#&gt; tau    0.14486   0.02156   6.718</span></span>
+<span><span class="co">#&gt; kappa  0.12983   0.02418   5.368</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   73.782    15.532   4.750</span></span>
-<span><span class="co">#&gt; range   26.682     4.823   5.533</span></span>
+<span><span class="co">#&gt; sigma   73.782    15.537   4.749</span></span>
+<span><span class="co">#&gt; range   26.682     4.822   5.533</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   7.9315    0.4049   19.59</span></span>
+<span><span class="co">#&gt; std. dev   7.9315    0.4048   19.59</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -214,7 +222,11 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 15</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  3.65388 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  9.53256 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
@@ -244,7 +256,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
 <span><span class="co">#&gt; sigma   126.57     81.62   1.551</span></span>
-<span><span class="co">#&gt; range   740.04    959.36   0.771</span></span>
+<span><span class="co">#&gt; range   740.04    959.37   0.771</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
@@ -256,7 +268,11 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 19</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  2.73793 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  7.29397 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -271,17 +287,17 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau    0.14121   0.01983   7.119</span></span>
-<span><span class="co">#&gt; kappa  0.11934   0.02475   4.822</span></span>
+<span><span class="co">#&gt; tau    0.14121   0.01980   7.131</span></span>
+<span><span class="co">#&gt; kappa  0.11934   0.02472   4.829</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   85.888    21.109   4.069</span></span>
-<span><span class="co">#&gt; range   29.027     5.884   4.933</span></span>
+<span><span class="co">#&gt; sigma   85.888    21.105   4.069</span></span>
+<span><span class="co">#&gt; range   29.027     5.877   4.939</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   7.8889    0.3983   19.81</span></span>
+<span><span class="co">#&gt; std. dev   7.8889    0.3982   19.81</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
@@ -289,7 +305,11 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 16</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  4.05726 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  10.24537 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -333,7 +353,11 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 24</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  0.35572 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  0.92688 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -353,8 +377,8 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   91.163    24.766   3.681</span></span>
-<span><span class="co">#&gt; range   38.859     8.126   4.782</span></span>
+<span><span class="co">#&gt; sigma   91.163    24.767   3.681</span></span>
+<span><span class="co">#&gt; range   38.859     8.127   4.782</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
@@ -366,7 +390,11 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 224</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  0.59271 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  1.35677 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
@@ -393,7 +421,7 @@ function:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau   47.09091  23.62894   1.993</span></span>
+<span><span class="co">#&gt; tau   47.09091  23.62895   1.993</span></span>
 <span><span class="co">#&gt; kappa  0.01982   0.02031   0.976</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
@@ -406,7 +434,11 @@ function:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 20</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
+<<<<<<< HEAD
 <span><span class="co">#&gt; Time used to:     fit the model =  1.44581 secs</span></span></code></pre></div>
+=======
+<span><span class="co">#&gt; Time used to:     fit the model =  5.248 secs</span></span></code></pre></div>
+>>>>>>> bd678212681261b614829253837627129d851f26
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -735,7 +767,7 @@ region 1:</p>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-45-1.png" width="700"></p>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Anderes2020" class="csl-entry">
 Anderes, Ethan, Jesper Møller, and Jakob G Rasmussen. 2020.
 <span>“Isotropic Covariance Functions on Graphs and Their Edges.”</span>
