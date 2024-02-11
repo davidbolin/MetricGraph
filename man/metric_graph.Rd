@@ -457,7 +457,8 @@ locations.
   full = FALSE,
   obs = TRUE,
   group = NULL,
-  check_euclidean = FALSE
+  check_euclidean = FALSE,
+  include_vertices = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -475,6 +476,8 @@ locations?}
 for. If \code{NULL}, it will be computed for all groups.}
 
 \item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
+
+\item{\code{include_vertices}}{Should the vertices of the graph be also included in the resulting matrix when using \code{FULL=TRUE}?}
 }
 \if{html}{\out{</div>}}
 }
