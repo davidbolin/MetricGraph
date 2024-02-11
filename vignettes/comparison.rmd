@@ -319,7 +319,7 @@ As the region is very large, we will select two smaller subregions to ``zoom in'
 ```{r}
 coordx_lwr1 <- -121.905
 coordx_upr1 <- -121.875
-coordy_lwr1 <- 37.312
+coordy_lwr1 <- 37.316
 coordy_upr1 <- 37.328
 ```
 
