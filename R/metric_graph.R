@@ -3233,8 +3233,13 @@ metric_graph <-  R6Class("metric_graph",
                 ind.val <- integer(0)
               }
               if (length(ind) > 0) {
-                # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-                vals <- rbind(vals, c(1, min.val))
+                vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                # vals <- rbind(vals, c(1, min.val))
+                  # if(length(min.val)>0){
+                  #   vals <- rbind(vals, c(1, min.val[[1]]))
+                  # } else{
+                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                  # }                  
               }
               else {
                 Ei <- self$E[, 2] == Ve #edges that end in Ve
@@ -3262,8 +3267,13 @@ metric_graph <-  R6Class("metric_graph",
                   }
                 }
                 if (length(ind) > 0){
-                  # vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
-                  vals <- rbind(vals, c(1, max.val))
+                  vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  # vals <- rbind(vals, c(1, max.val))
+                  # if(length(max.val)>0){
+                  #   vals <- rbind(vals, c(1, max.val[[1]]))
+                  # } else{
+                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                  # }                          
                 }
               }
             }
@@ -3312,6 +3322,10 @@ metric_graph <-  R6Class("metric_graph",
                 }
                 if (length(ind) > 0) {
                   vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
+                } else if (nrow(vals)>0){
+                  print("BLASS")
+                  idx_tmp <- which.min(vals[,1])
+                  vals <- rbind(c(0,vals[idx_tmp,2, drop = TRUE]), vals)
                 }
               }
             }
@@ -3412,6 +3426,122 @@ metric_graph <-  R6Class("metric_graph",
                                                       na.rm=FALSE, ties = "mean"),
                                                max_val), min_val))
             vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+            
+            if(nrow(vals)>0){
+              if(min(vals[,1]>0)){
+                vals <- rbind(c(0,vals[1,2, drop=TRUE]), vals)
+              }
+            }
+
+        }
+      } else{
+        if(improve_plot){
+          vals <- NULL
+              Ei <- self$E[, 1] == Ve #edges that start in Ve
+              Ei <- which(Ei)
+              if (sum(Ei) > 0) {
+                ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+                if(sum(ind)>0){
+                  ind <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+                } else {
+                ind <- NULL
+                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val]
+              }} else{
+                ind <- NULL
+                ind.val <- integer(0)
+              }
+              if (length(ind) > 0) {
+                vals <- rbind(vals, c(1, min.val))
+                  # if(length(min.val)>0){
+                  #   vals <- rbind(vals, c(1, min.val[[1]]))
+                  # } else{
+                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                  # }  
+                  vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+              }
+              else {
+                Ei <- self$E[, 2] == Ve #edges that end in Ve
+                Ei <- which(Ei)
+                if (sum(Ei)  > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+                  if(sum(ind)>0){
+                    ind <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                    max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+                  } else {
+                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val.max]
+                  if(length(ind.val) == 0){
+                    ind <- ind.val.max
+                  } else if (length(ind.val.max) == 0){
+                    ind <- ind.val
+                  } else{
+                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+                  }
+                } } else{
+                  if(length(ind.val)>0){
+                    ind <- ind.val
+                  } else{
+                    ind <- NULL
+                  }
+                }
+                if (length(ind) > 0){
+                  # if(length(max.val)>0){
+                  #   vals <- rbind(vals, c(1, max.val[[1]]))
+                  # } else{
+                  #   vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  # }   
+                  vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))           
+                }
+              }
+
+              Ei <- self$E[, 1] == Vs #edges that start in Vs
+              Ei <- which(Ei)
+              if (sum(Ei) > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+                if(sum(ind)>0){
+                    ind <- ind[1]
+                  } else {
+                ind <- NULL
+                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                min.val <- X[ind.val, 2,drop=TRUE]
+              }} else{
+                ind <- NULL
+                ind.val <- integer(0)
+              }
+              if (length(ind) > 0) {
+                vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)   
+              } else {
+                Ei <- self$E[, 2] == Vs #edges that end in Vs
+                Ei <- which(Ei)
+                if (sum(Ei) > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+                  if(sum(ind)>0){
+                    ind <- ind[1]
+                  } else {
+                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  max.val <- X[ind.val.max, 2,drop=TRUE]
+                  if(length(ind.val) == 0){
+                    ind <- ind.val.max
+                  } else if (length(ind.val.max) == 0){
+                    ind <- ind.val
+                  } else{
+                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+                  }
+                } } else{
+                  if(length(ind.val)>0){
+                    ind <- ind.val
+                  } else{
+                    ind <- NULL
+                  }
+                }
+                if (length(ind) > 0) {
+                  vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)                
+                } else{
+                  vals <- rbind(c(0, vals[1, 2, drop=TRUE]), vals)  
+                }
+              }
         }
       }
       } else if(improve_plot){

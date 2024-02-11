@@ -435,7 +435,7 @@ pred_alpha2_bc <- augment(fit_alpha2_bc, newdata = df_pred,
 the plot in region 1:
 
 ```{r}
-p <- pems_graph$plot_function(mewdata = pred_alpha2_bc, data = ".fitted",
+p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
                     improve_plot=TRUE, vertex_size = 0) 
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
                     edge_width = 0, p = p) + 
@@ -516,7 +516,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 4,
 Finally, for models with isotropic exponential covariance:
 
 ```{r}
-pred_isoexp <- augment(fit_isoexp, newdata = df_pred_pte,
+pred_isoexp <- augment(fit_isoexp, newdata = df_pred,
                         normalized = TRUE)
 ```
 
