@@ -3,6 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   MetricGraph: MetricGraph.html
+  comparison: comparison.html
   fem_models: fem_models.html
   inla_interface: inla_interface.html
   inlabru_interface: inlabru_interface.html
@@ -10,7 +11,7 @@ articles:
   metric_graph_data: metric_graph_data.html
   pointprocess: pointprocess.html
   random_fields: random_fields.html
-last_built: 2024-02-08T14:44Z
+last_built: 2024-02-11T10:36Z
 urls:
   reference: https://davidbolin.github.io/MetricGraph/reference
   article: https://davidbolin.github.io/MetricGraph/articles
