@@ -47,8 +47,8 @@ references:
 
 In this vignette we will introduce how to fit Whittle--Matérn fields with
 general smoothness based on finite element and rational approximations.
-The theory for this approach is provided in [@graph_fem](https://arxiv.org/abs/2302.03995) and
-[@xiong22](https://arxiv.org/abs/2209.04670).
+The theory for this approach is provided in [@graph_fem](https://doi.org/10.1090/mcom/3929) and
+[@xiong22](https://doi.org/10.1080/10618600.2023.2231051).
 For the implementation, we make use of the [`rSPDE` package](https://davidbolin.github.io/rSPDE/) for the rational approximations.
 
 These models are thus implemented using finite element approximations. Such
