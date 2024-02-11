@@ -21,8 +21,10 @@ references:
     given: Jonas
   container-title: Bernoulli
   type: article
+  issue: 30
+  pages: 1611-1639
   issued:
-    year: 2023
+    year: 2024
 - id: BSW2022b
   title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
   author:

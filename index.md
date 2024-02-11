@@ -12,7 +12,7 @@ To get started with the package, please go to the [MetricGraph: Random Fields on
 
 
 # References #
-D. Bolin, A. Simas, J. Wallin (2023) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. Bernoulli. In press.
+D. Bolin, A. Simas, J. Wallin (2023) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. Bernoulli, 30, 1611-1639, 2024.
 
 D. Bolin, M. Kovács, V. Kumar, A. Simas (2023) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. Mathematics of Computation. In press.
 
@@ -39,7 +39,7 @@ remotes::install_github("davidbolin/metricgraph", ref = "devel")
 ```
 
 
-[ref1]: https://arxiv.org/abs/2205.06163 "Gaussian Whittle-Matérn fields on metric graphs"
+[ref1]: http://doi.org/10.3150/23-BEJ1647 "Gaussian Whittle-Matérn fields on metric graphs"
 [ref2]: https://arxiv.org/abs/2302.03995 "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
 [ref3]: https://arxiv.org/abs/2304.03190 "Markov properties of Gaussian random fields on compact metric graphs"
 [ref4]: https://arxiv.org/abs/2304.10372 "Statistical inference for Gaussian Whittle-Matérn fields on metric graphs"
