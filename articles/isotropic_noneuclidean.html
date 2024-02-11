@@ -126,7 +126,12 @@ vertices, then the resulting model is different from what one would
 expect. Indeed, the model might change when doing predictions (as one
 would need to add further observations as vertices to obtain
 predictions). Furthermore, if one does not add observations as vertices,
-then the actual covariance function might not be valid <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">@Anderes2020</span></a>.</p>
+then the actual covariance function might not be valid <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">@Anderes2020</span></a>. Actually, in <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">@Anderes2020</span></a>, such models were not defined,
+as they only define Gaussian models with isotropic covariance functions
+for metric graphs with Euclidean edges. One option, therefore, would be
+to simply not allow one to fit such models at all as they are not
+consistent. However, in the package we chose to only give a warning, and
+let the user decide what to do.</p>
 </div>
 <div class="section level2">
 <h2 id="a-simple-example">A simple example<a class="anchor" aria-label="anchor" href="#a-simple-example"></a>
@@ -334,7 +339,7 @@ prediction locations were added as vertices of yet another metric
 graph.</p>
 <p>Thus, we do not recommend using isotropic covariance models on metric
 graphs with non-Euclidean edges, even if the model is capable of being
-fit, as there will be several inconsistencies between the original
+fitted, as there will be several inconsistencies between the original
 model, the fitted model, and the model used to obtain predictions.</p>
 <p>It is important to mention that the same phenomenon occur in the
 Matérn Gaussian models based on the graph Laplacian. Whenever we want to
