@@ -3233,8 +3233,8 @@ metric_graph <-  R6Class("metric_graph",
                 ind.val <- integer(0)
               }
               if (length(ind) > 0) {
-                vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-                # vals <- rbind(vals, c(1, min.val))
+                # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                vals <- rbind(vals, c(1, min.val))
                   # if(length(min.val)>0){
                   #   vals <- rbind(vals, c(1, min.val[[1]]))
                   # } else{
@@ -3267,8 +3267,8 @@ metric_graph <-  R6Class("metric_graph",
                   }
                 }
                 if (length(ind) > 0){
-                  vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
-                  # vals <- rbind(vals, c(1, max.val))
+                  # vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  vals <- rbind(vals, c(1, max.val))
                   # if(length(max.val)>0){
                   #   vals <- rbind(vals, c(1, max.val[[1]]))
                   # } else{
@@ -3586,7 +3586,7 @@ metric_graph <-  R6Class("metric_graph",
           coords <- interpolate2(self$edges[[i]],
                                  pos = data.to.plot.order[, 1, drop = TRUE],
                                  normalized = TRUE)
-  
+
           x.loc <- c(x.loc, coords[, 1])
           y.loc <- c(y.loc, coords[, 2])
           z.loc <- c(z.loc, data.to.plot.order[, 2, drop=TRUE])
