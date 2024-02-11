@@ -1820,13 +1820,15 @@ predict.graph_lme <- function(object,
     # } else{
     #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
     # }
+
       if(model_type$alpha == 1){
+        # Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
         Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
       } else{
+        # Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- Q %*% Q * tau^2
       }
-
 
   } else if(tolower(model_type$type) == "isocov"){
       graph_bkp$observation_to_vertex(mesh_warning=FALSE)
@@ -2053,9 +2055,9 @@ predict.graph_lme <- function(object,
 
         mu_fe <- mu[idx_repl, , drop = FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
-        mu_re <- mu_krig
+        mu_re <- mu_krig[ord_idx]
 
-        mu_krig <- mu_fe + mu_krig
+        mu_krig <- mu_fe + mu_re
     } else if (cond_wm){
 
       PtE_obs <- PtE_full[idx_obs,]
@@ -2068,7 +2070,7 @@ predict.graph_lme <- function(object,
                       mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
-                      mu_re <- mu_krig[ord_idx]
+                      mu_re <- mu_krig #[ord_idx]
           } else{
                 cov_loc <- Sigma[idx_prd, idx_obs]
                 cov_Obs <- Sigma[idx_obs, idx_obs]    

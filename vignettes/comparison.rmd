@@ -317,32 +317,22 @@ df_pred <- data.frame(edge_number = pems_graph$mesh$PtE[,1],
 As the region is very large, we will select two smaller subregions to ``zoom in'', so we can see the predictions with more details. Let us create variables containing the coordinates of such regions:
 
 ```{r}
-coordx_lwr1 <- -121.91
-coordx_upr1 <- -121.85
-coordy_lwr1 <- 37.3
-coordy_upr1 <- 37.35
+coordx_lwr1 <- -121.905
+coordx_upr1 <- -121.875
+coordy_lwr1 <- 37.312
+coordy_upr1 <- 37.328
 ```
 
 Now, for the second region:
 
 ```{r}
-coordx_lwr2<- -121.96
-coordx_upr2 <- -121.85
-coordy_lwr2 <- 37.34
+coordx_lwr2<- -121.94
+coordx_upr2 <- -121.88
+coordy_lwr2 <- 37.35
 coordy_upr2 <- 37.38
 ```
 
-Let us also obtain the observed values at these regions. To such an end we will use the `filter()` method:
-
-```{r}
-y_region1 <- pems_graph$filter(coordx_lwr1 < .coord_x, .coord_x < coordx_upr1,
-                          coordy_lwr1 < .coord_y, .coord_y < coordy_upr1)
-
-y_region2 <- pems_graph$filter(coordx_lwr2 < .coord_x, .coord_x < coordx_upr2,
-                          coordy_lwr2 < .coord_y, .coord_y < coordy_upr2)                          
-```
-
-We can now obtain the predictions. We will use the `augment()` function to obtain such predictions. We start by obtaining predictions for the Whittle-Matérn models with `alpha=1`:
+We can now obtain the predictions. We will use the `augment()` method to obtain such predictions. We start by obtaining predictions for the Whittle-Matérn models with `alpha=1`:
 
 ```{r}
 pred_alpha1 <- augment(fit_alpha1, newdata = df_pred,
@@ -356,17 +346,55 @@ pred_alpha1_bc <- augment(fit_alpha1_bc, newdata = df_pred,
                         normalized = TRUE)
 ```
 
-Let plot the predictions with the corresponding observed values. First for the model without boundary correction:
+Let plot the predictions with the corresponding observed values. First for the model without boundary correction. As the predictions were obtained on the mesh nodes, we can supply the fitted values into the `X` argument of the `plot_function()` method:
 
 ```{r}
 library(ggplot2)
 
-p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted", 
-                    vertex_size = 0) + xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)
+p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted",
+                improve_plot=TRUE, vertex_size = 0) 
 ```
 
+We can now add the original observations obtain the plot in region 1:
 
+```{r, message=FALSE, warning=FALSE}
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                
+```
+
+Now in region 2:
+
+```{r}
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)
+```
+                      
+
+Similarly, for `alpha=1` with boundary correction in region 1:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
+              improve_plot=TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                       
+```
+
+and in region 2:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
+              improve_plot=TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)                       
+```
 
 Now, for the Whittle-Matérn models with `alpha=2`:
 
@@ -375,18 +403,85 @@ pred_alpha2 <- augment(fit_alpha2, newdata = df_pred,
                         normalized = TRUE)
 ```
 
-and with boundary correction:
+Let us now build the plot for region 1:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
+                    improve_plot=TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                       
+```
+
+and region 2:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
+                    improve_plot=TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)                       
+```
+
+Now with boundary correction:
 
 ```{r}
 pred_alpha2_bc <- augment(fit_alpha2_bc, newdata = df_pred,
                         normalized = TRUE)
 ```
 
+the plot in region 1:
+
+```{r}
+p <- pems_graph$plot_function(mewdata = pred_alpha2_bc, data = ".fitted",
+                    improve_plot=TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                       
+```
+
+and in region 2:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
+                    improve_plot=TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)                       
+```
+
+
 We now move to the models based on the graph Laplacian:
 
 ```{r}
 pred_GL1 <- augment(fit_GL1, newdata = df_pred,
                         normalized = TRUE)
+```
+
+the plot in region 1:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
+                    improve_plot = TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                       
+```
+
+and in region 2:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
+                    improve_plot = TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)                       
 ```
 
 and for `alpha=2`:
@@ -396,9 +491,53 @@ pred_GL2 <- augment(fit_GL2, newdata = df_pred,
                         normalized = TRUE)
 ```
 
+the plot in region 1:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
+                    improve_plot = TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                       
+```
+
+and in region 2:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
+                    improve_plot = TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)                       
+```
+
 Finally, for models with isotropic exponential covariance:
 
 ```{r}
-pred_isoexp <- augment(fit_isoexp, newdata = df_pred,
+pred_isoexp <- augment(fit_isoexp, newdata = df_pred_pte,
                         normalized = TRUE)
+```
+
+and the corresponding plot in region 1:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
+                    improve_plot = TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)                       
+```
+
+and in region 2:
+
+```{r}
+p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
+                    improve_plot = TRUE, vertex_size = 0) 
+pems_graph$plot(data = "y", vertex_size = 0, data_size = 4, 
+                    edge_width = 0, p = p) + 
+                    xlim(coordx_lwr2, coordx_upr2) + 
+                    ylim(coordy_lwr2, coordy_upr2)                       
 ```
