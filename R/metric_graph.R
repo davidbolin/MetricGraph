@@ -3323,7 +3323,6 @@ metric_graph <-  R6Class("metric_graph",
                 if (length(ind) > 0) {
                   vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
                 } else if (nrow(vals)>0){
-                  print("BLASS")
                   idx_tmp <- which.min(vals[,1])
                   vals <- rbind(c(0,vals[idx_tmp,2, drop = TRUE]), vals)
                 }
@@ -3542,6 +3541,9 @@ metric_graph <-  R6Class("metric_graph",
                   vals <- rbind(c(0, vals[1, 2, drop=TRUE]), vals)  
                 }
               }
+              if(ncol(vals)<2){
+                vals <- NULL
+              }
         }
       }
       } else if(improve_plot){
@@ -3576,19 +3578,24 @@ metric_graph <-  R6Class("metric_graph",
       }
 
         data.to.plot <- vals
-
-        data.to.plot.order <- data.to.plot[order(vals[, 1,drop=TRUE]), ,
+        if(!is.null(data.to.plot)){
+          data.to.plot.order <- data.to.plot[order(vals[, 1,drop=TRUE]), ,
                                            drop = FALSE]
 
-        coords <- interpolate2(self$edges[[i]],
-                               pos = data.to.plot.order[, 1, drop = TRUE],
-                               normalized = TRUE)
 
-        x.loc <- c(x.loc, coords[, 1])
-        y.loc <- c(y.loc, coords[, 2])
-        z.loc <- c(z.loc, data.to.plot.order[, 2, drop=TRUE])
-        i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
-        kk = kk+1
+          coords <- interpolate2(self$edges[[i]],
+                                 pos = data.to.plot.order[, 1, drop = TRUE],
+                                 normalized = TRUE)
+  
+          x.loc <- c(x.loc, coords[, 1])
+          y.loc <- c(y.loc, coords[, 2])
+          z.loc <- c(z.loc, data.to.plot.order[, 2, drop=TRUE])
+          i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
+          kk = kk+1                                           
+        }
+
+                                        
+
     }
 
     data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
@@ -3724,6 +3731,7 @@ metric_graph <-  R6Class("metric_graph",
         data.to.plot <- vals
         data.to.plot.order <- data.to.plot[order(data.to.plot[, 1]), ,
                                            drop = FALSE]
+                                           
 
         coords <- interpolate2(self$edges[[i]],
                                pos = data.to.plot.order[, 1, drop = TRUE],
