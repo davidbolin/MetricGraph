@@ -29,6 +29,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(MetricGraph)
 ```
 
 
@@ -150,3 +151,5 @@ exp_covariance(res_dist_orig, theta = c(1,1))
 This shows that these are two different models. One considering the original metric graph, and another, considering the metric graph with the added observations. Therefore, when one considers a model with isotropic covariance function on a metric graph with non-Euclidean edges to perform statistical analysis, different models are considered in the different stages of the statistical analysis. More precisely, one believes the model being considered only depends on the original vertices of the metric graph, when, in reality, when fitting the model, the resistance distances are computed on a different metric graph that was obtained when the observations were turned into vertices of a new metric graph. Finally, when one does prediction, yet another metric graph will be considered, namely, the metric graph in which the prediction locations were added as vertices of yet another metric graph.
 
 Thus, we do not recommend using isotropic covariance models on metric graphs with non-Euclidean edges, even if the model is capable of being fit, as there will be several inconsistencies between the original model, the fitted model, and the model used to obtain predictions.
+
+It is important to mention that the same phenomenon occur in the Matérn Gaussian models based on the graph Laplacian. Whenever we want to do prediction, we need to add the observation locations as vertices, thus modifying the graph. This means that there is an inconsistency between the model used to fit the data, and the model used to obtain prediction.

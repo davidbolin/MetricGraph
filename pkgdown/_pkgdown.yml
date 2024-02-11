@@ -35,7 +35,7 @@ navbar:
         href: articles/fem_models.html
       - text: Log-Gaussian Cox processes on metric graphs
         href: articles/pointprocess.html
-      - text: Comparison of different models with real data
+      - text: Comparison of different models using real data
         href: articles/comparison.html        
       - text: On isotropic covariances on metric graphs with non-Euclidean edges
         href: articles/isotropic_noneuclidean.html                

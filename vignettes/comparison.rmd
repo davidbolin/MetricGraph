@@ -1,10 +1,10 @@
 ---
-title: "Comparison of different models with real data"
+title: "Comparison of different models using real data"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2024-02-09. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Comparison of different models with real data}
+  %\VignetteIndexEntry{Comparison of different models using real data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
@@ -157,7 +157,8 @@ pems_graph$plot(data = "y", vertex_size = 0)
 Let us fit the different models. We start by fitting a Whittle-Matérn field with `alpha = 1`:
 
 ```{r}
-fit_alpha1 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "WhittleMatern", alpha = 1))
+fit_alpha1 <- graph_lme(y ~ -1, graph=pems_graph, 
+            model = list(type = "WhittleMatern", alpha = 1))
 ```
 
 and look at its summary:
@@ -169,7 +170,8 @@ summary(fit_alpha1)
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
 
 ```{r}
-fit_alpha2 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "WhittleMatern", alpha = 2))
+fit_alpha2 <- graph_lme(y ~ -1, graph=pems_graph, 
+            model = list(type = "WhittleMatern", alpha = 2))
 ```
 
 and its summary:
@@ -202,9 +204,11 @@ summary(fit_alpha2_bc)
 Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`:
 
 ```{r}
-fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "graphLaplacian", alpha = 1))
+fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
+            model = list(type = "graphLaplacian", alpha = 1))
 
-fit_GL2 <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "graphLaplacian", alpha = 2))
+fit_GL2 <- graph_lme(y ~ -1, graph=pems_graph, 
+            model = list(type = "graphLaplacian", alpha = 2))
 ```
 
 and look at their summaries:
@@ -224,7 +228,14 @@ Observe that the default optimizer (L-BFGS-B) failed to converge, thus an altern
 Let us now fit a Gaussian field with isotropic exponential covariance function:
 
 ```{r}
-fit_isoexp <- graph_lme(y ~ -1, graph=pems_graph, model = list(type = "isoCov"))
+fit_isoexp <- graph_lme(y ~ -1, graph=pems_graph, 
+                model = list(type = "isoCov"))
+```
+
+and look at the summary:
+
+```{r}
+summary(fit_isoexp)
 ```
 
 Observe the warning, message. This message tells us that we did not check if the metric graph has Euclidean edges. Let us check now:
@@ -264,7 +275,8 @@ cov_mat <- function(h,theta){
 Let us now fit the model:
 
 ```{r, error=TRUE}
-fit_isomat <- graph_lme(y ~ -1, graph = pems_graph, model = list(type = "isoCov", cov_function = cov_mat), 
+fit_isomat <- graph_lme(y ~ -1, graph = pems_graph, 
+                            model = list(type = "isoCov", cov_function = cov_mat), 
                                     model_options = list(start_par_vec = c(1,1)))
 ```
 
@@ -285,4 +297,108 @@ fitted_models_list <- list("alpha=1" = fit_alpha1,
                     "alpha=2 bc" = fit_alpha2_bc)
 
 posterior_crossvalidation(fitted_models_list, factor = 1000)[["scores"]]
+```
+
+# Kriging 
+
+We will now perform kriging with the different fitted models. Observe that for the Matérn Gaussian model based on the graph Laplacian and the Gaussian model with isotropic exponential covariance function, we actually modify the model when doing predictions. See the [On isotropic covariances on metric graphs with non-Euclidean edges](isotropic_noneuclidean.html) vignette for further details. 
+
+Therefore, even though we are able to obtain ``predictions'' using the Matérn Gaussian models based on graph Laplacian and the Gaussian models with istropic exponential covariance function, there are some inconsistencies between the model used to fit the data, and the model used to obtain predictions. Such inconsistency is not present in the Whittle-Matérn models on metric graphs.
+
+Let us begin by building a mesh on the metric graph and create a `data.frame()` with such mesh locations:
+
+```{r}
+pems_graph$build_mesh(h = 0.1)
+
+df_pred <- data.frame(edge_number = pems_graph$mesh$PtE[,1],
+                        distance_on_edge = pems_graph$mesh$PtE[,2])
+```
+
+As the region is very large, we will select two smaller subregions to ``zoom in'', so we can see the predictions with more details. Let us create variables containing the coordinates of such regions:
+
+```{r}
+coordx_lwr1 <- -121.91
+coordx_upr1 <- -121.85
+coordy_lwr1 <- 37.3
+coordy_upr1 <- 37.35
+```
+
+Now, for the second region:
+
+```{r}
+coordx_lwr2<- -121.96
+coordx_upr2 <- -121.85
+coordy_lwr2 <- 37.34
+coordy_upr2 <- 37.38
+```
+
+Let us also obtain the observed values at these regions. To such an end we will use the `filter()` method:
+
+```{r}
+y_region1 <- pems_graph$filter(coordx_lwr1 < .coord_x, .coord_x < coordx_upr1,
+                          coordy_lwr1 < .coord_y, .coord_y < coordy_upr1)
+
+y_region2 <- pems_graph$filter(coordx_lwr2 < .coord_x, .coord_x < coordx_upr2,
+                          coordy_lwr2 < .coord_y, .coord_y < coordy_upr2)                          
+```
+
+We can now obtain the predictions. We will use the `augment()` function to obtain such predictions. We start by obtaining predictions for the Whittle-Matérn models with `alpha=1`:
+
+```{r}
+pred_alpha1 <- augment(fit_alpha1, newdata = df_pred,
+                        normalized = TRUE)
+```
+
+and with boundary correction:
+
+```{r}
+pred_alpha1_bc <- augment(fit_alpha1_bc, newdata = df_pred,
+                        normalized = TRUE)
+```
+
+Let plot the predictions with the corresponding observed values. First for the model without boundary correction:
+
+```{r}
+library(ggplot2)
+
+p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted", 
+                    vertex_size = 0) + xlim(coordx_lwr1, coordx_upr1) + 
+                    ylim(coordy_lwr1, coordy_upr1)
+```
+
+
+
+Now, for the Whittle-Matérn models with `alpha=2`:
+
+```{r}
+pred_alpha2 <- augment(fit_alpha2, newdata = df_pred,
+                        normalized = TRUE)
+```
+
+and with boundary correction:
+
+```{r}
+pred_alpha2_bc <- augment(fit_alpha2_bc, newdata = df_pred,
+                        normalized = TRUE)
+```
+
+We now move to the models based on the graph Laplacian:
+
+```{r}
+pred_GL1 <- augment(fit_GL1, newdata = df_pred,
+                        normalized = TRUE)
+```
+
+and for `alpha=2`:
+
+```{r}
+pred_GL2 <- augment(fit_GL2, newdata = df_pred,
+                        normalized = TRUE)
+```
+
+Finally, for models with isotropic exponential covariance:
+
+```{r}
+pred_isoexp <- augment(fit_isoexp, newdata = df_pred,
+                        normalized = TRUE)
 ```
