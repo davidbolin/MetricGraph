@@ -103,7 +103,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance `vertex_vertex` when merging close vertices at the additional step?
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
-  #' @param verbose Print progress of graph creation.
+  #' @param verbose Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
   #' @details A graph object can be initialized in two ways. The first method
   #' is to specify V and E. In this case, all edges are assumed to be straight
@@ -133,7 +133,7 @@ metric_graph <-  R6Class("metric_graph",
                         merge_close_vertices = TRUE,
                         factor_merge_close_vertices = 1,
                         remove_circles = TRUE,
-                        verbose = FALSE,
+                        verbose = 1,
                         lines = deprecated()) {
 
       start_construction_time <- Sys.time()
@@ -289,6 +289,23 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
 
+    if(verbose > 0){
+      message("Starting graph creation...")
+      message(paste("LongLat is set to",longlat))
+      if(longlat){
+        message(paste("The unit for edge lengths is", private$length_unit))
+        message(paste0("The current tolerances (in ",private$length_unit,") are:"))
+        message(paste("\t Vertex-Vertex", tolerance$vertex_vertex))        
+        message(paste("\t Vertex-Edge", tolerance$vertex_edge))           
+        message(paste("\t Edge-Edge", tolerance$edge_edge))             
+      } else{
+        message("The current tolerances are:")
+        message(paste("\t Vertex-Vertex", tolerance$vertex_vertex))        
+        message(paste("\t Vertex-Edge", tolerance$vertex_edge))           
+        message(paste("\t Edge-Edge", tolerance$edge_edge))    
+      }
+    }    
+
     if(is.null(tolerance$buffer_edge_edge)){
       tolerance$buffer_edge_edge <- max(tolerance$edge_edge/2 - 1e-10,0)
     }
@@ -341,7 +358,7 @@ metric_graph <-  R6Class("metric_graph",
 
     private$set_first_weights(weights = edge_weights)
 
-    if(verbose){
+    if(verbose > 0){
       message("Setup edges and merge close vertices")
     }
 
@@ -352,7 +369,7 @@ metric_graph <-  R6Class("metric_graph",
                            project, which_projection, project_data)
       )
 
-    if(verbose){
+    if(verbose == 2){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
 
@@ -362,7 +379,7 @@ metric_graph <-  R6Class("metric_graph",
     if (tolerance$edge_edge > 0) {
     private$addinfo <- TRUE
 
-    if(verbose){
+    if(verbose > 0){
       message("Find edge-edge intersections")
     }
 
@@ -371,7 +388,7 @@ metric_graph <-  R6Class("metric_graph",
       crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
       )
 
-    if(verbose){
+    if(verbose == 2){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
 
@@ -391,7 +408,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(!is.null(PtE)){
-      if(verbose){
+      if(verbose == 2){
         message(sprintf("Add %d new vertices", nrow(PtE)))
       }
 
@@ -401,7 +418,7 @@ metric_graph <-  R6Class("metric_graph",
       private$add_vertices(PtE, tolerance = tolerance$edge_edge, verbose = verbose)
       )
 
-      if(verbose){
+      if(verbose == 2){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
     }
@@ -411,7 +428,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if(tolerance$vertex_edge > 0){
       private$addinfo <- TRUE
-      if(verbose){
+      if(verbose > 0){
         message("Snap vertices to close edges")
       }
 
@@ -421,7 +438,7 @@ metric_graph <-  R6Class("metric_graph",
       crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
         )
 
-      if(verbose){
+      if(verbose == 2){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
       edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
@@ -440,7 +457,7 @@ metric_graph <-  R6Class("metric_graph",
       }
 
       if(!is.null(PtE_tmp)){
-        if(verbose){
+        if(verbose == 2){
           message(sprintf("Add %d new vertices", nrow(PtE_tmp)))
         }
 
@@ -450,7 +467,7 @@ metric_graph <-  R6Class("metric_graph",
           private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge, verbose=verbose)
           )
 
-        if(verbose){
+        if(verbose == 2){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
         }
       }
@@ -471,13 +488,13 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(merge_close_vertices || remove_circles){
-      if(verbose){
+      if(verbose == 2){
         message("Recomputing edge lengths")
       }
       t <- system.time({
         self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
       })
-       if(verbose){
+       if(verbose == 2){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
        }
     }
@@ -485,20 +502,20 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if (remove_deg2) {
-      if (verbose) {
+      if (verbose > 0) {
         message("Remove degree 2 vertices")
       }
       t <- system.time(
         self$prune_vertices(verbose = verbose)
       )
-      if(verbose){
+      if(verbose == 2){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
     }
 
     # Cleaning the edges
 
-    if(verbose){
+    if(verbose == 2){
       message("Post-processing the edges")
     }
 
@@ -519,7 +536,7 @@ metric_graph <-  R6Class("metric_graph",
             )
     )
 
-    if(verbose){
+    if(verbose == 2){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
 
@@ -536,7 +553,7 @@ metric_graph <-  R6Class("metric_graph",
     end_construction_time <- Sys.time()
     construction_time <- end_construction_time - start_construction_time
 
-    if(verbose){
+    if(verbose > 0){
       message(sprintf('Total construction time: %.2f %s', construction_time, units(construction_time)))
 
     }
@@ -1393,7 +1410,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     res <- list(degrees = degrees, problematic = problematic)
-    if(verbose){
+    if(verbose == 2){
       to.prune <- sum(res$degrees==2 & !res$problematic)
       k <- 1
       message(sprintf("removing %d vertices", to.prune))
@@ -1405,7 +1422,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
    while(sum(res$degrees==2 & !res$problematic)>0) {
-     if(verbose && to.prune > 0){
+     if((verbose == 2) && to.prune > 0){
       #  setTxtProgressBar(pb,k)
       bar_prune$increment()
        #message(sprintf("removing vertex %d of %d.", k, to.prune))
@@ -1414,14 +1431,14 @@ metric_graph <-  R6Class("metric_graph",
      res <- private$remove.first.deg2(res)
    }
    })
-    if(verbose){
+    if(verbose == 2){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
     # if(verbose && to.prune > 0){
     #   close(pb)
     # }
 
-   if(verbose){
+   if(verbose == 2){
     message("Updating attributes of the edges and vertices")
    }
 
@@ -1443,13 +1460,13 @@ metric_graph <-  R6Class("metric_graph",
         }
       }
    })
-   if(verbose){
+   if(verbose == 2){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
    }
 
 
    if(!is.null(private$data)){
-    if(verbose){
+    if(verbose == 2){
       message("Updating data locations.")
     }
       t <- system.time({
@@ -1462,7 +1479,7 @@ metric_graph <-  R6Class("metric_graph",
       order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
       private$data <- lapply(private$data, function(dat){dat[order_idx]})
       })
-      if(verbose){
+      if(verbose == 2){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
    }
@@ -1780,7 +1797,7 @@ metric_graph <-  R6Class("metric_graph",
         }
 
         ## convert everything to PtE
-        if(verbose){
+        if(verbose == 2){
           if(data_coords == "spatial" || !is.null(Spoints)){
           message("Converting data to PtE")
           if(private$longlat){
@@ -1870,7 +1887,7 @@ metric_graph <-  R6Class("metric_graph",
           }
         })
 
-      if(verbose){
+      if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
 
       message("Processing data")
@@ -1922,7 +1939,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     class(data) <- c("metric_graph_data", class(data))
     })
-          if(verbose){
+          if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
           return(data)
@@ -2079,7 +2096,7 @@ metric_graph <-  R6Class("metric_graph",
 
 
         ## convert everything to PtE
-        if(verbose){
+        if(verbose > 0){
           if(data_coords == "spatial" || !is.null(Spoints)){
           message("Converting data to PtE")
           if(private$longlat){
@@ -2226,7 +2243,7 @@ metric_graph <-  R6Class("metric_graph",
           }
         })
 
-      if(verbose){
+      if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
 
       message("Processing data")
@@ -2280,7 +2297,7 @@ metric_graph <-  R6Class("metric_graph",
     private$group_col <- group
     class(private$data) <- c("metric_graph_data", class(private$data))
     })
-          if(verbose){
+          if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
   },
@@ -3966,7 +3983,7 @@ metric_graph <-  R6Class("metric_graph",
 
 
     if(project_data && longlat){
-     if(verbose){
+     if(verbose == 2) {
       message("Projecting edges")
       bar_edges_proj <- msg_progress_bar(length(self$edges))
     }
@@ -3981,7 +3998,7 @@ metric_graph <-  R6Class("metric_graph",
         }
         fact <- process_factor_unit("m", length_unit)
         for(i in 1:length(self$edges)){
-          if(verbose){
+          if(verbose == 2) {
             bar_edges_proj$increment()
           }
           sf_points <- sf::st_as_sf(as.data.frame(self$edges[[i]]), coords = 1:2, crs = crs)
@@ -3998,7 +4015,7 @@ metric_graph <-  R6Class("metric_graph",
         }
         fact <- process_factor_unit("km", length_unit)
         for(i in 1:length(self$edges)){
-          if(verbose){
+          if(verbose == 2) {
             bar_edges_proj$increment()
           }
           sp_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string)
@@ -4011,7 +4028,7 @@ metric_graph <-  R6Class("metric_graph",
       private$proj4string <- NULL
     }
 
-    if(verbose){
+    if(verbose == 2) {
       message("Part 1/2")
       bar_line_vertex <- msg_progress_bar(length(self$edges))
     }
@@ -4019,7 +4036,7 @@ metric_graph <-  R6Class("metric_graph",
 
     lines <- matrix(nrow = 2*length(self$edges), ncol = 3)
     for(i in 1:length(self$edges)){
-      if(verbose){
+      if(verbose == 2) {
         bar_line_vertex$increment()
       }
       points <- self$edges[[i]]
@@ -4029,7 +4046,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     #save all vertices that are more than tolerance distance apart
-    if(verbose){
+    if(verbose == 2) {
       message("Computing auxiliary distances")
     }
 
@@ -4068,7 +4085,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
 
-    if(verbose){
+    if(verbose == 2) {
       message("Done!")
     }
 
@@ -4084,7 +4101,7 @@ metric_graph <-  R6Class("metric_graph",
       # idx_keep <- sapply(1:nrow(lines), function(i){ifelse(i==1,TRUE,all(dists[i, 1:(i-1)] > tolerance))})
       # vertex <- lines[idx_keep,]
 
-    if(verbose){
+    if(verbose == 2) {
       message("Part 2/2")
       bar_line_vertex <- msg_progress_bar(max(lines[, 1]))
     }
@@ -4095,7 +4112,7 @@ metric_graph <-  R6Class("metric_graph",
 
     for (i in 1:max(lines[, 1])) {
 
-      if(verbose){
+      if(verbose == 2) {
         bar_line_vertex$increment()
       }
 
@@ -4457,23 +4474,23 @@ metric_graph <-  R6Class("metric_graph",
       points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = private$crs)
     }
 
-      if(verbose){
+      if(verbose == 2) {
         message("Computing auxiliary distances")
       }
 
       within_dist <- t(as.matrix(sf::st_is_within_distance(points_sf, lines_sf, dist = tolerance)))
 
-      if(verbose){
+      if(verbose == 2) {
         message("Done!")
       }
 
-      if(verbose){
+      if(verbose == 2) {
         message("Snapping vertices")
         bar_multiple_snaps <- msg_progress_bar(length(self$edges))
       }
 
       for(i in 1:length(self$edges)){
-        if(verbose){
+        if(verbose == 2) {
           bar_multiple_snaps$increment()
         }
         select_points <- matrix(XY[within_dist[i,],], ncol=2)
@@ -4490,7 +4507,7 @@ metric_graph <-  R6Class("metric_graph",
       PtE = cbind(match(coords_line, 1:length(self$edges)), 0)
 
       for (ind in unique(PtE[, 1])) {
-        if(verbose){
+        if(verbose == 2) {
           bar_multiple_snaps$increment()
         }
         index.p <- PtE[, 1] == ind
@@ -4553,7 +4570,7 @@ metric_graph <-  R6Class("metric_graph",
 
   # utility function to remove small circles
   remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data) {
-    if(verbose){
+    if(verbose == 2) {
       message("Small circles found!")
       message("Removing small circles")
     }
@@ -5006,11 +5023,11 @@ metric_graph <-  R6Class("metric_graph",
   points_add <- NULL
   points_add_PtE <- NULL
 
-  if(verbose){
+  if(verbose == 2) {
     bar_line_line <- msg_progress_bar(length(self$edges)-1)
   }
   for(i in 1:(length(self$edges)-1)) {
-    if(verbose){
+    if(verbose == 2) {
       bar_line_line$increment()
     }
     #lines within tol of line i
@@ -5129,11 +5146,11 @@ metric_graph <-  R6Class("metric_graph",
 
 add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   e.u <- unique(PtE[,1])
-  if(verbose){
+  if(verbose == 2) {
     bar_eu <- msg_progress_bar(length(e.u))
   }
   for (i in 1:length(e.u)) {
-    if(verbose){
+    if(verbose == 2) {
       bar_eu$increment()
     }
     dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
