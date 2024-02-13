@@ -1222,11 +1222,11 @@ glance.graph_lme <- function(x, ...){
 #' `distance_on_edge`, otherwise if `spatial`, the user must provide
 #' `coord_x` and `coord_y`.
 #' @param normalized Are the distances on edges normalized?
-#' @param se_fit Logical indicating whether or not a .se.fit column should be added to the augmented output. If TRUE, it only returns a non-NA value if type of prediction is 'link'.
-#' @param conf_int Logical indicating whether or not confidence intervals for the fitted variable should be built.
-#' @param pred_int Logical indicating whether or not prediction intervals for future observations should be built.
+#' @param sd_post_re Logical indicating whether or not a .sd_post_re column should be added to the augmented output containing the posterior standard deviations of the random effects. 
+#' @param se_fit Logical indicating whether or not a .se_fit column should be added to the augmented output containing the standard errors of the fitted values. If `TRUE`, the posterior standard deviations of the random effects will also be returned.
+#' @param conf_int Logical indicating whether or not confidence intervals for the posterior mean of the random effects should be built.
+#' @param pred_int Logical indicating whether or not prediction intervals for the fitted values should be built. If `TRUE`, the confidence intervals for the posterior random effects will also be built.
 #' @param level Level of confidence and prediction intervals if they are constructed.
-#' @param n_samples Number of samples when computing prediction intervals.
 #' @param no_nugget Should the prediction be done without nugget?
 #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
 #' @param ... Additional arguments.
@@ -1234,20 +1234,22 @@ glance.graph_lme <- function(x, ...){
 #' @return A [tidyr::tibble()] with columns:
 #' \itemize{
 #'   \item `.fitted` Fitted or predicted value.
-#'   \item `.fittedlwrconf` Lower bound of the confidence interval, if conf_int = TRUE
-#'   \item `.fitteduprconf` Upper bound of the confidence interval, if conf_int = TRUE
-#'   \item `.fittedlwrpred` Lower bound of the prediction interval, if pred_int = TRUE
-#'   \item `.fitteduprpred` Upper bound of the prediction interval, if pred_int = TRUE
+#'   \item `.relwrconf` Lower bound of the confidence interval of the random effects, if conf_int = TRUE
+#'   \item `.reuprconf` Upper bound of the confidence interval of the random effects, if conf_int = TRUE
+#'   \item `.fittedlwrpred` Lower bound of the prediction interval, if conf_int = TRUE
+#'   \item `.fitteduprpred` Upper bound of the prediction interval, if conf_int = TRUE
 #'   \item `.fixed` Prediction of the fixed effects.
 #'   \item `.random` Prediction of the random effects.
 #'   \item `.resid` The ordinary residuals, that is, the difference between observed and fitted values.
+#'   \item `.std_resid` The standardized residuals, that is, the ordinary residuals divided by the standard error of the fitted values (by the prediction standard error), if se_fit = TRUE or pred_int = TRUE.
 #'   \item `.se_fit` Standard errors of fitted values, if se_fit = TRUE.
+#'    \item `.sd_post_re` Standard deviation of the posterior mean of the random effects, if se_fit = TRUE.
 #'   }
 #'
 #' @seealso [glance.graph_lme]
 #' @method augment graph_lme
 #' @export
-augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FALSE, conf_int = FALSE, pred_int = FALSE, level = 0.95, n_samples = 100, edge_number = "edge_number", distance_on_edge = "distance_on_edge", coord_x = "coord_x", coord_y = "coord_y", data_coords = c("PtE", "spatial"),  normalized = FALSE, no_nugget = FALSE, check_euclidean = FALSE,...) {
+augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, sd_post_re = FALSE, se_fit = FALSE, conf_int = FALSE, pred_int = FALSE, level = 0.95, edge_number = "edge_number", distance_on_edge = "distance_on_edge", coord_x = "coord_x", coord_y = "coord_y", data_coords = c("PtE", "spatial"),  normalized = FALSE, no_nugget = FALSE, check_euclidean = FALSE,...) {
 
   .resid <- FALSE
   if(is.null(newdata)){
@@ -1272,12 +1274,11 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
     tibble=TRUE, normalized = normalized)
   }
 
-
-  if(pred_int){
-    pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = TRUE,
-                  posterior_samples = TRUE, n_samples = n_samples, edge_number = ".edge_number",
+ if(pred_int || se_fit){
+    pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_pred_variances = TRUE,
+                  posterior_samples = FALSE, edge_number = ".edge_number",
                   distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
-  } else if(conf_int || se_fit){
+ } else if(conf_int || sd_post_re){
     pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = TRUE,
                   posterior_samples = FALSE, edge_number = ".edge_number",
                   distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
@@ -1286,40 +1287,33 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, se_fit = FAL
                   distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
   }
 
-  if(se_fit || pred_int || conf_int){
-    newdata[[".fitted"]] <- pred$mean
-    newdata[[".se_fit"]] <- sqrt(pred$variance)
-    newdata[[".fixed"]] <- pred$fe_mean
-    newdata[[".random"]] <- pred$re_mean
-    if(.resid){
+  newdata[[".fitted"]] <- pred$mean
+  newdata[[".fixed"]] <- pred$fe_mean
+  newdata[[".random"]] <- pred$re_mean  
+  if(.resid){
       newdata[[".resid"]] <- pred$mean - newdata[[as.character(x$response_var)]]
-    }
-  } else{
-    newdata[[".fitted"]] <- pred$mean
-    newdata[[".fixed"]] <- pred$fe_mean
-    newdata[[".random"]] <- pred$re_mean
-    if(.resid){
-      newdata[[".resid"]] <- pred$mean - newdata[[as.character(x$response_var)]]
-    }
-  }
+      if(se_fit || pred_int){
+        newdata[[".std_resid"]] <- (pred$mean - newdata[[as.character(x$response_var)]])/sqrt(pred$pred_variance)
+      }
+  }  
+
+  if(se_fit || pred_int){
+    newdata[[".se_fit"]] <- sqrt(pred$pred_variance)
+  } 
+
+  if(conf_int || sd_post_re || se_fit || pred_int){
+    newdata[[".sd_post_re"]] <- sqrt(pred$variance)
+  }   
 
 
-  if(conf_int){
-    newdata$.fittedlwrconf <- newdata[[".fitted"]] + stats::qnorm( (1-level)/2 )*newdata[[".se_fit"]]
-    newdata$.fitteduprconf <- newdata[[".fitted"]] + stats::qnorm( (1+level)/2 )*newdata[[".se_fit"]]
+  if(conf_int || pred_int){
+    newdata$.relwrconf <- newdata[[".random"]] + stats::qnorm( (1-level)/2 )*newdata[[".sd_post_re"]]
+    newdata$.reuprconf <- newdata[[".random"]] + stats::qnorm( (1+level)/2 )*newdata[[".sd_post_re"]]
   }
 
   if(pred_int){
-   list_pred_int <- lapply(1:nrow(pred$samples), function(i){
-      y_sim <- pred$samples[i,]
-      y_sim <- sort(y_sim)
-      idx_lwr <- max(1, round(n_samples * (1 - level) / 2))
-      idx_upr <- round(n_samples * (1 + level) / 2)
-      c(y_sim[idx_lwr], y_sim[idx_upr])})
-    list_pred_int <- unlist(list_pred_int)
-    list_pred_int <- t(matrix(list_pred_int, nrow = 2))
-    newdata$.fittedlwrpred <- list_pred_int[,1]
-    newdata$.fitteduprpred <- list_pred_int[,2]
+    newdata$.fittedlwrpred <- newdata[[".fitted"]] + stats::qnorm( (1-level)/2 )*newdata[[".se_fit"]]
+    newdata$.fitteduprpred <- newdata[[".fitted"]] + stats::qnorm( (1+level)/2 )*newdata[[".se_fit"]]
   }
 
   attr(newdata, "euclidean") <- pred$euclidean
@@ -1592,7 +1586,9 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param which_repl Which replicates to obtain the prediction. If `NULL` predictions
 #' will be obtained for all replicates. Default is `NULL`.
 #' @param compute_variances Set to TRUE to compute the kriging variances.
-#' @param posterior_samples If `TRUE`, posterior samples will be returned.
+#' @param compute_pred_variances Set to TRUE to compute the prediction variances. Will only be computed if newdata is `NULL`.
+#' @param posterior_samples If `TRUE`, posterior samples for the random effect will be returned.
+#' @param pred_samples If `TRUE`, prediction samples for the response variable will be returned. Will only be computed if newdata is `NULL`.
 #' @param n_samples Number of samples to be returned. Will only be used if
 #' `sampling` is `TRUE`.
 #' @param edge_number Name of the variable that contains the edge number, the
@@ -1600,7 +1596,6 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param distance_on_edge Name of the variable that contains the distance on
 #' edge, the default is `distance_on_edge`.
 #' @param normalized Are the distances on edges normalized?
-#' @param sample_latent Do posterior samples only for the random effects?
 #' @param no_nugget Should the prediction be carried out without the nugget?
 #' @param return_as_list Should the means of the predictions and the posterior
 #' samples be returned as a list, with each replicate being an element?
@@ -1611,7 +1606,7 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with elements `mean`, which contains the means of the
 #' predictions, `fe_mean`, which is the prediction for the fixed effects, `re_mean`, which is the prediction for the random effects, `variance` (if `compute_variance` is `TRUE`), which contains the
-#' variances of the predictions, `samples` (if `posterior_samples` is `TRUE`),
+#' posterior variances of the random effects, `samples` (if `posterior_samples` is `TRUE`),
 #' which contains the posterior samples.
 #' @export
 #' @method predict graph_lme
@@ -1622,7 +1617,9 @@ predict.graph_lme <- function(object,
                               mesh_h = 0.01,
                               which_repl = NULL,
                               compute_variances = FALSE,
+                              compute_pred_variances = FALSE,
                               posterior_samples = FALSE,
+                              pred_samples = FALSE,
                               n_samples = 100,
                               edge_number = "edge_number",
                               distance_on_edge = "distance_on_edge",
@@ -1635,7 +1632,7 @@ predict.graph_lme <- function(object,
                                ...,
                                data = deprecated()) {
 
-
+                                
   repl <- which_repl
   if (lifecycle::is_present(data)) {
     if (is.null(newdata)) {
@@ -1780,7 +1777,7 @@ predict.graph_lme <- function(object,
     # if(object$parameterization_latent == "spde"){
       kappa <- object$coeff$random_effects[2]
 
-      if (compute_variances || posterior_samples || no_nugget){
+      if (compute_variances || posterior_samples || no_nugget || compute_pred_variances){
               graph_bkp$observation_to_vertex(mesh_warning=FALSE)
       }
     # } else{
@@ -1995,7 +1992,7 @@ predict.graph_lme <- function(object,
     }
   }
 
-  if(compute_variances || posterior_samples || no_nugget){
+  if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
     if(cond_wm){
       tau <- object$coeff$random_effects[1]
       if(cond_alpha1){
@@ -2187,7 +2184,7 @@ predict.graph_lme <- function(object,
       out$re_mean[[repl_y]] <- mean_re_tmp
     }
 
-    if(compute_variances || posterior_samples){
+    if(compute_variances || posterior_samples || compute_pred_variances){
       if(cond_wm){
         if(!cond_alpha2){
             Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
@@ -2195,46 +2192,78 @@ predict.graph_lme <- function(object,
       }
     }
 
-    if (compute_variances) {
+    if (compute_variances || compute_pred_variances) {
         if(!cond_isocov){
           if(cond_alpha2){
             if(!no_nugget){
                 cov_loc <- Sigma[idx_prd, idx_obs]
                 cov_Obs <- Sigma[idx_obs, idx_obs]    
                 diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2    
-                var_tmp <- diag(Sigma[idx_prd, idx_prd] - cov_loc %*%  solve(cov_Obs, t(cov_loc)))
+                post_cov_tmp <- cov_loc %*%  solve(cov_Obs, t(cov_loc))
+                var_tmp <- diag(Sigma[idx_prd, idx_prd] - post_cov_tmp)
+                if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- Matrix::Diagonal(dim(cov_loc)[1], x=sigma_e^2) -cov_loc + post_cov_tmp
+                  pred_var_tmp <- diag(pred_cov)
+                }
             } else{
-              var_tmp <- diag(Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs])))
+              cov_tmp <- Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs]))
+              var_tmp <- diag(cov_tmp)
               var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors
+              if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- cov_tmp
+                  pred_var_tmp <- diag(pred_cov)
+                }
             }
           } else{
             if(!no_nugget){
               post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
               var_tmp <- diag(post_cov)
-              var_tmp <- var_tmp * (var_tmp > 0)
+              # var_tmp <- var_tmp * (var_tmp > 0)
+                if(compute_pred_variances  || pred_samples) {
+                  Q_x_tmp <- A[idx_prd,]%*%solve(Q, t(A[idx_prd,]))
+                  pred_cov <- sigma_e^2 - Q_x_tmp + Q_x_tmp %*% solve(Q_x_tmp + Matrix::Diagonal(dim(Q_x_tmp)[1], x=sigma_e^2), t(Q_x_tmp))
+                  pred_var_tmp <- diag(pred_cov)
+                }           
             } else{
                 QiAt <- solve(Q, t(A[idx_obs,]))
                 AQiA <- A[idx_obs,] %*% QiAt            
                 M <- Q - QiAt %*% solve(AQiA, t(QiAt))
-                var_tmp <- diag(A[idx_prd,] %*% M %*% t(A[idx_prd,]))
+                cov_tmp <- A[idx_prd,] %*% M %*% t(A[idx_prd,])
+                var_tmp <- diag(cov_tmp)
+              if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- cov_tmp
+                  pred_var_tmp <- diag(pred_cov)
+                }                
             }
           }
         } else{
-          nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
+          # nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
           # idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
           # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)   
-          idx_obs_tmp <- idx_obs
-          idx_prd_tmp <- idx_prd
+          # idx_obs_tmp <- idx_obs
+          # idx_prd_tmp <- idx_prd
 
           if(!no_nugget){
             # Sigma_prd <- solve(Q_tmp)
             # var_tmp <- diag(Sigma_prd[idx_prd_tmp,idx_prd_tmp])
             # print(var_tmp)
-            var_tmp <- diag(Sigma[idx_prd_tmp, idx_prd_tmp] - cov_loc %*%  solve(cov_Obs, t(cov_loc)))
+            # var_tmp <- diag(Sigma[idx_prd_tmp, idx_prd_tmp] - cov_loc %*%  solve(cov_Obs, t(cov_loc)))
+            post_cov_tmp <- cov_loc %*%  solve(cov_Obs, t(cov_loc))
+            var_tmp <- diag(Sigma[idx_prd, idx_prd] - post_cov_tmp)
+            if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- Matrix::Diagonal(dim(cov_loc)[1], x= sigma_e^2) -cov_loc + post_cov_tmp
+                  pred_var_tmp <- diag(pred_cov) 
+            }
+
             
           } else{
-            var_tmp <- diag(Sigma[idx_prd_tmp, idx_prd_tmp] - Sigma[idx_prd_tmp, idx_obs_tmp] %*% solve(Sigma[idx_obs_tmp, idx_obs_tmp],t(Sigma[idx_prd_tmp, idx_obs_tmp])))
+            cov_tmp <- Sigma[idx_prd_tmp, idx_prd_tmp] - Sigma[idx_prd_tmp, idx_obs_tmp] %*% solve(Sigma[idx_obs_tmp, idx_obs_tmp],t(Sigma[idx_prd_tmp, idx_obs_tmp]))
+            var_tmp <- diag(cov_tmp)
             var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors
+            if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- cov_tmp
+                  pred_var_tmp <- diag(cov_tmp)
+              }                  
           }
         }
 
@@ -2242,19 +2271,28 @@ predict.graph_lme <- function(object,
 
       if(return_original_order){
         var_tmp[ord_idx] <- var_tmp
+        if(compute_pred_variances  || pred_samples) {
+          pred_var_tmp[ord_idx] <- pred_var_tmp
+        }        
       }
       if(!return_as_list){
         out$variance <- rep(var_tmp, length(u_repl))
+        if(compute_pred_variances  || pred_samples) {
+            out$pred_variance <- rep(pred_var_tmp, length(u_repl))
+        }
       }
       else {
           for(repl_y in u_repl){
             out$variance[[repl_y]] <- var_tmp
+            if(compute_pred_variances  || pred_samples) {
+              out$pred_variance[[repl_y]] <- pred_var_tmp     
+            }
           }
       }
     }
 
     if(posterior_samples){
-      mean_tmp <- as.vector(mu_krig)
+      mean_tmp <- as.vector(mu_re[idx_prd, , drop=FALSE])
         if(cond_isocov){
           if(!no_nugget){
               post_cov <- Sigma[idx_prd_tmp, idx_prd_tmp] - cov_loc %*%  solve(cov_Obs, t(cov_loc))
@@ -2282,11 +2320,6 @@ predict.graph_lme <- function(object,
       LQ <- chol(forceSymmetric(post_cov))
       X <- LQ %*% Z
       X <- X + mean_tmp
-      if(!sample_latent){
-        X <- X + matrix(rnorm(n_samples * length(mean_tmp), sd = sigma.e), nrow = length(mean_tmp))
-      } else{
-        X <- X - as.vector(mu_fe[idx_prd, , drop=FALSE])
-      }
 
       if(return_original_order){
         X[ord_idx,] <- X
@@ -2298,6 +2331,27 @@ predict.graph_lme <- function(object,
         out$samples[[repl_y]] <- X
       }
     }
+    
+    if(pred_samples && null_newdata){
+      mean_tmp <- as.vector(mu_krig[idx_prd, , drop=FALSE])
+      Z <- rnorm(dim(pred_cov)[1] * n_samples)
+      dim(Z) <- c(dim(pred_cov)[1], n_samples)
+      LQ <- chol(forceSymmetric(pred_cov))
+      X <- LQ %*% Z
+      X <- X + mean_tmp
+
+      if(return_original_order){
+        X[ord_idx,] <- X
+      }
+
+      if(!return_as_list){
+        out$pred_samples <- rbind(out$pred_samples, X)
+      } else{
+        out$pred_samples[[repl_y]] <- X
+      }
+    }
+
+
   }
 
 

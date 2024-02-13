@@ -125,8 +125,8 @@ metric_graph <-  R6Class("metric_graph",
                         project = FALSE,
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
-                        tolerance = list(vertex_vertex = 1e-7,
-                                         vertex_edge = 1e-7,
+                        tolerance = list(vertex_vertex = 1e-3,
+                                         vertex_edge = 1e-3,
                                          edge_edge = 0),
                         check_connected = TRUE,
                         remove_deg2 = FALSE,
@@ -2043,11 +2043,11 @@ metric_graph <-  R6Class("metric_graph",
         if(is.null(Spoints)){
         if(data_coords == "PtE"){
           if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
-            stop(paste("The data does not contain either the colum", edge_number,"or the column",distance_on_edge))
+            stop(paste("The data does not contain either the column", edge_number,"or the column",distance_on_edge))
           }
         } else{
           if(any( !(c(coord_x, coord_y) %in% names(data)))){
-            stop(paste("The data does not contain either the colum", coord_x,"or the column",coord_y))
+            stop(paste("The data does not contain either the column", coord_x,"or the column",coord_y))
           }
         }
         }
@@ -2160,6 +2160,10 @@ metric_graph <-  R6Class("metric_graph",
                 }
                 PtE <- PtE[!far_points,,drop=FALSE]
                 rm(far_points)
+                dup_points <- duplicated(XY_new)
+                data <- lapply(data, function(dat){dat[!dup_points]})
+                PtE <- PtE[!dup_points,,drop=FALSE]                
+
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
             }
@@ -2202,6 +2206,7 @@ metric_graph <-  R6Class("metric_graph",
     data[[".group"]] <- NULL
     private$data[[".coord_x"]] <- NULL
     private$data[[".coord_y"]] <- NULL
+
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
