@@ -1712,6 +1712,10 @@ metric_graph <-  R6Class("metric_graph",
   #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
   #' `Spoints` is not `NULL`.
   #' @param tibble Should the data be returned as a `tidyr::tibble`?
+  #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+  #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
+  #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
+  #' @param only_return_removed Should the removed data (if it exists) when using 'closest' `duplicated_strategy` be returned instead of the processed data?
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
@@ -1731,6 +1735,7 @@ metric_graph <-  R6Class("metric_graph",
                               group_sep = ".",
                               normalized = FALSE,
                               tibble = TRUE,
+                              only_return_removed = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE) {
 
@@ -1744,6 +1749,36 @@ metric_graph <-  R6Class("metric_graph",
       tolerance <- tolerance[[1]]
       warning("'tolerance' had more than one element, only the first one will be used.")
     }
+
+    removed_data <- NULL
+
+    if(inherits(data, "sf")){
+      if(!inherits(data, "data.frame")){
+        stop("No data was found in 'data'")
+      }
+      data_coords <- "spatial"
+      coord_x = ".coord_x"
+      coord_y = ".coord_y"      
+
+      data <- sf::st_transform(data, crs = private$crs)
+      coord_tmp <- sf::st_coordinates(data,geometry)
+      data <- sf::st_drop_geometry(data)
+      data[[".coord_x"]] <- coord_tmp[,1]
+      data[[".coord_y"]] <- coord_tmp[,2]
+    }    
+
+    if(inherits(data, "metric_graph_data")){
+      if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
+        warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
+        class(data) <- setdiff(class(data), "metric_graph_data")
+      } else{
+        data_coords <- "PtE"
+        edge_number <- ".edge_number"
+        distance_on_edge <- ".distance_on_edge"
+        group <- ".group"
+        normalized <- TRUE
+      }
+    }    
 
         if(is.null(data)){
           if(is.null(Spoints)){
@@ -1797,7 +1832,7 @@ metric_graph <-  R6Class("metric_graph",
         }
 
         ## convert everything to PtE
-        if(verbose == 2){
+        if(verbose > 0){
           if(data_coords == "spatial" || !is.null(Spoints)){
           message("Converting data to PtE")
           if(private$longlat){
@@ -1834,6 +1869,7 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
 
+
         t <- system.time({
           if(!is.null(Spoints)){
             PtE <- self$coordinates(XY = Spoints@coords)
@@ -1841,19 +1877,22 @@ metric_graph <-  R6Class("metric_graph",
             # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
             norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
+            rm(Spoints)
             # norm_XY <- max(norm_XY)
             # if(norm_XY > tolerance){
             #   warning("There was at least one point whose location is far from the graph,
             #   please consider checking the input.")
             # }
-            rm(Spoints)
             far_points <- (norm_XY > tolerance)
-            rm(norm_XY)
             data <- lapply(data, function(dat){dat[!far_points]})
+            norm_XY <- norm_XY[!far_points]   
+            if(include_distance_to_graph){
+              data[[".distance_to_graph"]] <- norm_XY                 
+            }
             if(any(far_points)){
               warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
             }
-            PtE <- PtE[!far_points,,drop=FALSE]
+            PtE <- PtE[!far_points, ,drop=FALSE]
             rm(far_points)
           } else{
             if(data_coords == "PtE"){
@@ -1863,29 +1902,100 @@ metric_graph <-  R6Class("metric_graph",
                 }
               } else if(data_coords == "spatial"){
                 point_coords <- cbind(data[[coord_x]], data[[coord_y]])
-                PtE <- self$coordinates(XY = point_coords)
-                XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-                # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-                norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-                # norm_XY <- max(norm_XY)
-                far_points <- (norm_XY > tolerance)
-                rm(norm_XY)
-                data <- lapply(data, function(dat){dat[!far_points]})
-                PtE <- PtE[!far_points,,drop=FALSE]
-                # if(norm_XY > tolerance){
-                #   warning("There was at least one point whose location is far from the graph,
-                #     please consider checking the input.")
-                #   }
-                if(any(far_points)){
-                  warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                PtE <- self$coordinates(XY = point_coords)    
+
+                if(tolower(duplicated_strategy) == "closest"){
+                    XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
+                    # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)
+                    norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
+                    # norm_XY <- max(norm_XY)
+                    # if(norm_XY > tolerance){
+                    #   warning("There was at least one point whose location is far from the graph,
+                    #     please consider checking the input.")
+                    #   }
+                    far_points <- (norm_XY > tolerance)
+                    data <- lapply(data, function(dat){dat[!far_points]})
+                    if(any(far_points)){
+                      warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                    }                          
+                    PtE <- PtE[!far_points,,drop=FALSE]
+                    dup_points <- duplicated(XY_new) | duplicated(XY_new, fromLast=TRUE)                     
+                    if(sum(dup_points)>0){
+                      warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
+                    }
+                    norm_XY <- norm_XY[!far_points]
+                    old_new_coords <- cbind(point_coords[dup_points,], XY_new[dup_points,], norm_XY[dup_points], which(dup_points))
+                    old_new_coords <- as.data.frame(old_new_coords)
+                    colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
+                    old_new_coords <- dplyr::as_tibble(old_new_coords)
+                    old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::ungroup() %>% dplyr::mutate(min_idx = dist == min_dist)
+                    min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
+                    closest_points <- rep(FALSE, length(dup_points))
+                    closest_points[min_dist_idx] <- TRUE
+                    data <- lapply(data, function(dat){dat[!closest_points]})
+                    norm_XY <- norm_XY[!closest_points]
+                    removed_data <-  lapply(data, function(dat){dat[closest_points]})
+                    PtE <- PtE[!closest_points,,drop=FALSE]     
+                    if(include_distance_to_graph){
+                      data[[".distance_to_graph"]] <- norm_XY                    
+                    }
+                } else if(tolower(duplicated_strategy) == "jitter"){
+                    dup_points <- duplicated(PtE)    
+                    while(sum(dup_points)>0){
+                      idx_pte0 <- which(PtE[dup_points,2] == 0)
+                      idx_pte1 <-  which(PtE[dup_points,2] == 1) 
+                      idx_other_pte <- !idx_pte0 & !idx_pte1
+                      d_points <- which(dup_points)
+                      if(length(idx_pte0)>0){
+                        PtE[d_points[idx_pte0],2] <- PtE[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
+                      }
+                      if(length(idx_pte1)>0){
+                        PtE[d_points[idx_pte1],2] <- PtE[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))                      
+                      }
+                      if(length(idx_other_pte)>0){
+                        delta_dif <- min(1e-2, 1-max(PtE[d_points[idx_other_pte],2]), min(PtE[d_points[idx_other_pte],2]))
+                        PtE[d_points[idx_other_pte],2] <- PtE[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
+                      }
+                      dup_points <- duplicated(PtE)    
+                    }
+                    XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
+                    # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
+                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)
+                    norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
+                    # norm_XY <- max(norm_XY)
+                    # if(norm_XY > tolerance){
+                    #   warning("There was at least one point whose location is far from the graph,
+                    #     please consider checking the input.")
+                    #   }
+                    far_points <- (norm_XY > tolerance)
+                    data <- lapply(data, function(dat){dat[!far_points]})
+                    if(any(far_points)){
+                      warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                    }                          
+                    PtE <- PtE[!far_points,,drop=FALSE]
+                    norm_XY <- norm_XY[!far_points]   
+                    if(include_distance_to_graph){
+                      data[[".distance_to_graph"]] <- norm_XY                 
+                    }
+                } else{
+                  stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
                 }
-                rm(far_points)
+    
+                rm(far_points)                       
+                rm(norm_XY)
+
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
             }
           }
         })
+
+    if(only_return_removed){
+      if(!is.null(removed_data)){
+        return(as.data.frame(removed_data))
+      }
+    }     
 
       if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1921,6 +2031,13 @@ metric_graph <-  R6Class("metric_graph",
     data[[".group"]] <- NULL
     data[[".coord_x"]] <- NULL
     data[[".coord_y"]] <- NULL
+
+
+    length_data <- unique(unlist(lapply(data, length)))
+
+    if(length(length_data)>1){
+      stop("There was a problem when processing the data. The number of observations and observation locations (after projecting on the metric graph) are not matching.")
+    }
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
