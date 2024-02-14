@@ -1735,6 +1735,8 @@ metric_graph <-  R6Class("metric_graph",
                               group_sep = ".",
                               normalized = FALSE,
                               tibble = TRUE,
+                              duplicated_strategy = "closest",
+                              include_distance_to_graph = TRUE,                              
                               only_return_removed = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE) {
