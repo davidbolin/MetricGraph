@@ -1997,7 +1997,7 @@ predict.graph_lme <- function(object,
       tau <- object$coeff$random_effects[1]
       if(cond_alpha1){
         Q <- spde_precision(kappa = kappa, tau = tau,
-                          alpha = 1, graph = graph_bkp)
+                          alpha = 1, graph = graph_bkp, BC = BC)
         A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
       } else{
         if(is.null(graph_bkp$CoB)){
@@ -2129,7 +2129,7 @@ predict.graph_lme <- function(object,
           # Q_tmp <- Q_tmp + t(A[idx_obs,]) %*% A[idx_obs,] /sigma_e^2   
           # mu_krig <- A[idx_prd,]%*%solve(Q_tmp, t(A[idx_prd,])%*%y_repl/sigma_e^2)
 
-          nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
+          # nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
           # idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
           # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)
           idx_obs_tmp <- idx_obs
@@ -2381,14 +2381,17 @@ get_covariance_precision <- function(object){
     tau <- object$coeff$random_effects[1]
     kappa <- object$coeff$random_effects[2] 
     if(model_type$alpha == 1){
+        BC = object$BC
         Q <- spde_precision(kappa = kappa, tau = tau,
-                          alpha = 1, graph = graph_bkp)
+                          alpha = 1, graph = graph_bkp,
+                          BC = BC)
         prec_cov <- Q
         attr(prec_cov, "prec_cov") <- "prec"
       } else{
         if(is.null(graph_bkp$CoB)){
           graph_bkp$buildC(2)
         }
+        BC = object$BC
         PtE <- graph_bkp$get_PtE()
         n.c <- 1:length(graph_bkp$CoB$S)
         Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
@@ -2452,61 +2455,143 @@ get_covariance_precision <- function(object){
 }
 
 
-#' @title Simulation of a fractional SPDE using a rational SPDE approximation
+#' @title Simulation of models on metric graphs
 #'
 #' @description The function samples a Gaussian random field based on a
-#' pre-computed rational SPDE approximation.
+#' fitted model using `graph_lme()`.
 #'
-#' @param object The rational SPDE approximation, computed
-#' using [fractional.operators()],
-#' [matern.operators()], or [spde.matern.operators()].
-#' @param nsim The number of simulations.
+#' @param object A `graph_lme` object
+#' @param sample_latent If `FALSE`, samples for the response variable will be generated. If `TRUE`, samples for the latent model will be generated. The default is `FALSE`.
+#' @param posterior Should posterior samples be generated? If `FALSE`, samples will be computed based on the estimated prior distribution. The default is `FALSE`.
+#' @param nsim The number of simulations. 
+#' @param which_repl Which replicates to generate the samples. If `NULL` samples will
+#' be generated for all replicates. Default is `NULL`.
 #' @param seed an object specifying if and how the random number generator should be initialized (‘seeded’).
 #' @param ... Currently not used.
 #'
-#' @return A matrix with the `n` samples as columns.
-#' @seealso [simulate.CBrSPDEobj()]
+#' @return A list containing elements `samples`, `edge_number` and `distance_on_edge`. Each of them is a list, whose indexes are the replicates, and in `samples` a matrix is given with `nsim` columns, each one being a sample. `edge_number` and `distance_on_edges` contain the respective edge numbers and distances on edge for each sampled element. The locations of the samples are the location of the data in which the model was fitted.
 #' @export
-#' @method simulate rSPDEobj
+#' @method simulate graph_lme
 #'
-#' @examples
-#' # Sample a Gaussian Matern process on R using a rational approximation
-#' kappa <- 10
-#' sigma <- 1
-#' nu <- 0.8
-#' range <- sqrt(8*nu)/kappa
-#'
-#' # create mass and stiffness matrices for a FEM discretization
-#' x <- seq(from = 0, to = 1, length.out = 101)
-#' fem <- rSPDE.fem1d(x)
-#'
-#' # compute rational approximation
-#' op <- matern.operators(
-#'   range = range, sigma = sigma,
-#'   nu = nu, loc_mesh = x, d = 1,
-#'   parameterization = "matern"
-#' )
-#'
-#' # Sample the model and plot the result
-#' Y <- simulate(op)
-#' plot(x, Y, type = "l", ylab = "u(x)", xlab = "x")
-#'
-simulate.rSPDEobj <- function(object,
+simulate.graph_lme <- function(object,
+                              sample_latent = FALSE,
+                              posterior = FALSE,
                               nsim = 1,
+                              which_repl = NULL,
                               seed = NULL,
                               ...) {
+
+  repl <- which_repl                                
+  
   if(!is.null(seed)){
     set.seed(seed)
   }
   
-  if (!inherits(object, "rSPDEobj")) {
-    stop("input object is not of class rSPDEobj")
+  if (!inherits(object, "graph_lme")) {
+    stop("input object is not of class graph_lme")
   }
-  m <- dim(object$Q)[1]
-  z <- rnorm(nsim * m)
-  dim(z) <- c(m, nsim)
-  x <- Qsqrt.solve(object, z)
-  x <- Pr.mult(object, x)
 
-  return(x)
+  coeff_fixed <- object$coeff$fixed_effects
+  coeff_random <- object$coeff$random_effects
+  coeff_meas <- object$coeff$measurement_error
+
+  model_type <- object$latent_model
+
+  sigma_e <- coeff_meas[[1]]
+
+  # We dont need to clone it since we will not modify it
+  graph_bkp <- object$graph  
+
+  n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
+
+  ##
+  repl_vec <- graph_bkp$.__enclos_env__$private$data[[".group"]]
+
+  if(is.null(repl)){
+    u_repl <- unique(graph_bkp$.__enclos_env__$private$data[[".group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
+
+  if(all(dim(X_cov_pred) == c(0,1))){
+    X_cov_pred <- matrix(1, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
+  }
+  if(ncol(X_cov_pred) > 0){
+    mu <- X_cov_pred %*% coeff_fixed
+  } else{
+    mu <- matrix(0, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
+  }
+
+  edge_nb <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][1:n]
+  dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n]  
+
+  Y <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]] - mu
+
+  out <- list()
+
+  for(repl_y in u_repl){
+    out$distance_on_edge[[repl_y]] <- dist_ed
+    out$edge_number[[repl_y]] <- edge_nb    
+
+    idx_repl <- graph_bkp$.__enclos_env__$private$data[[".group"]] == repl_y
+    y_repl <- Y[idx_repl]
+    y_repl <- y_repl[idx_obs]
+    
+    mu_fe <- mu[idx_repl, , drop = FALSE]    
+
+    prec_cov_prior <- get_covariance_precision(object)
+    A <- prec_cov_prior$A
+    order_idx <- prec_cov_prior$order_vec
+    prec_cov_prior <- prec_cov_prior$prec_cov
+    prec_cov_prior[order_idx,] <- prec_cov_prior
+    type_prec_cov <- attr(prec_cov_prior, "prec_cov")
+    
+    if(!posterior){
+      mu_re <- 0
+      if(type_prec_cov == "prec"){
+        krig_cov <- A%*%solve(prec_cov_prior, t(A))   
+      } else{
+        krig_cov <- prec_cov_prior
+      }
+      pred_cov <- Matrix::Diagonal(dim(Q_x_tmp)[1], x=sigma_e^2)
+    } else{
+      if(type_prec_cov == "prec"){
+          krig_Q <- t(A) %*% A/sigma_e^2 + prec_cov_prior
+          mu_re <- solve(krig_Q,as.vector(t(A) %*% y_repl / sigma_e^2))
+          mu_re <- A %*% mu_re
+          krig_cov <- A%*%solve(krig_Q, t(A))          
+          pred_cov <- sigma_e^2 - krig_cov + krig_cov %*% solve(krig_cov + Matrix::Diagonal(dim(Q_x_tmp)[1], x=sigma_e^2), t(krig_cov))          
+      } else{
+          cov_loc <- prec_cov_prior
+          cov_Obs <- prec_cov_prior
+          diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2      
+          mu_re <- cov_loc %*%  solve(cov_Obs, y_repl)
+          post_cov_tmp <- cov_loc %*%  solve(cov_Obs, t(cov_loc))
+          krig_cov <- cov_loc - post_cov_tmp
+          pred_cov <- Matrix::Diagonal(dim(cov_loc)[1], x=sigma_e^2) -cov_loc + post_cov_tmp
+      }
+    }
+
+    mu_krig <- mu_fe + mu_re
+
+    if(latent){
+      Z <- rnorm(dim(post_cov)[1] * nsim)
+      dim(Z) <- c(dim(post_cov)[1], nsim)
+      LQ <- chol(forceSymmetric(krig_cov))
+      X <- LQ %*% Z
+      X <- X + mean_tmp
+      out$samples[[repl_y]] <- X
+    } else{
+      mean_tmp <- as.vector(mu_krig)
+      Z <- rnorm(dim(pred_cov)[1] * nsim)
+      dim(Z) <- c(dim(pred_cov)[1], nsim)
+      LQ <- chol(forceSymmetric(pred_cov))
+      X <- LQ %*% Z
+      X <- X + mean_tmp
+      out$samples[[repl_y]] <- X      
+    }
+  }
+  return(out)
 }
