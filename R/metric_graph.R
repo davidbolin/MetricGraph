@@ -1953,7 +1953,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param data A `data.frame` or named list containing the observations. In
   #' case of groups, the data.frames for the groups should be stacked vertically,
   #' with a column indicating the index of the group. If `data` is not `NULL`,
-  #' it takes priority over any eventual data in `Spoints`.
+  #' it takes priority over any eventual data in `Spoints`. `data` can also be an `sf` object,
+  #' in which case `data_coords` will automatically be spatial, and there is no need to specify the `coord_x` or `coord_y` arguments.
   #' @param edge_number Column (or entry on the list) of the `data` that
   #' contains the edge numbers. If not supplied, the column with name
   #' "edge_number" will be chosen. Will not be used if `Spoints` is not `NULL`.
@@ -1984,11 +1985,13 @@ metric_graph <-  R6Class("metric_graph",
   #' @param tibble Should the data be returned as a `tidyr::tibble`?
   #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
   #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
+  #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
+  #' @param return_removed Should the removed data (if it exists) when using 'closest' `duplicated_strategy` be returned?
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
-  #' @param verbose If `TRUE`, report steps and times.
+  #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
   add_observations = function(Spoints = NULL,
@@ -2005,7 +2008,9 @@ metric_graph <-  R6Class("metric_graph",
                               tibble = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               duplicated_strategy = "closest",
-                              verbose = FALSE) {
+                              include_distance_to_graph = TRUE,
+                              return_removed = TRUE,
+                              verbose = 1) {
 
     if(clear_obs){
       df_temp <- data
@@ -2013,10 +2018,35 @@ metric_graph <-  R6Class("metric_graph",
       data <- df_temp
     }
 
+    removed_data <- NULL
+
+    if(inherits(data, "sf")){
+      if(!inherits(data, "data.frame")){
+        stop("No data was found in 'data'")
+      }
+      data_coords <- "spatial"
+      coord_x = ".coord_x"
+      coord_y = ".coord_y"      
+
+      data <- sf::st_transform(data, crs = private$crs)
+      coord_tmp <- sf::st_coordinates(data,geometry)
+      data <- sf::st_drop_geometry(data)
+      data[[".coord_x"]] <- coord_tmp[,1]
+      data[[".coord_y"]] <- coord_tmp[,2]
+    }
+
     if(length(tolerance)>1){
       tolerance <- tolerance[[1]]
       warning("'tolerance' had more than one element, only the first one will be used.")
     }
+
+    if(verbose>0){
+      message("Adding observations...")
+      if(private$longlat){
+        message(paste("The unit for edge lengths is", private$length_unit))
+        message(paste0("The current tolerance for removing distant observations is (in ",private$length_unit,"): ", tolerance))
+      }
+    }    
 
     if(!is.null(group)){
       group <- unique(group)
@@ -2147,8 +2177,11 @@ metric_graph <-  R6Class("metric_graph",
             #   please consider checking the input.")
             # }
             far_points <- (norm_XY > tolerance)
-            rm(norm_XY)
             data <- lapply(data, function(dat){dat[!far_points]})
+            norm_XY <- norm_XY[!far_points]   
+            if(include_distance_to_graph){
+              data[[".distance_to_graph"]] <- norm_XY                 
+            }
             if(any(far_points)){
               warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
             }
@@ -2194,7 +2227,12 @@ metric_graph <-  R6Class("metric_graph",
                     closest_points <- rep(FALSE, length(dup_points))
                     closest_points[min_dist_idx] <- TRUE
                     data <- lapply(data, function(dat){dat[!closest_points]})
+                    norm_XY <- norm_XY[!closest_points]
+                    removed_data <-  lapply(data, function(dat){dat[closest_points]})
                     PtE <- PtE[!closest_points,,drop=FALSE]     
+                    if(include_distance_to_graph){
+                      data[[".distance_to_graph"]] <- norm_XY                    
+                    }
                 } else if(tolower(duplicated_strategy) == "jitter"){
                     dup_points <- duplicated(PtE)    
                     while(sum(dup_points)>0){
@@ -2229,7 +2267,10 @@ metric_graph <-  R6Class("metric_graph",
                       warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
                     }                          
                     PtE <- PtE[!far_points,,drop=FALSE]
-                    norm_XY <- norm_XY[!far_points]                    
+                    norm_XY <- norm_XY[!far_points]   
+                    if(include_distance_to_graph){
+                      data[[".distance_to_graph"]] <- norm_XY                 
+                    }
                 } else{
                   stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
                 }
@@ -2283,6 +2324,12 @@ metric_graph <-  R6Class("metric_graph",
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
+    length_data <- unique(unlist(lapply(data, length)))
+
+    if(length(length_data)>1){
+      stop("There was a problem when processing the data. The number of observations and observation locations (after projecting on the metric graph) are not matching.")
+    }
+
     private$data <- process_data_add_obs(PtE, new_data = data, private$data,
                                         group_vector)
 
@@ -2295,11 +2342,19 @@ metric_graph <-  R6Class("metric_graph",
       private$data <- tidyr::as_tibble(private$data)
     }
     private$group_col <- group
+    # distance_graph_tmp <- private$data[[".distance_to_graph"]]
     class(private$data) <- c("metric_graph_data", class(private$data))
+    # attr(private$data, "distance_to_graph") <- distance_graph_tmp
     })
           if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
+
+    if(return_removed){
+      if(!is.null(removed_data)){
+        return(as.data.frame(removed_data))
+      }
+    }          
   },
 
 

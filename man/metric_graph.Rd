@@ -871,7 +871,9 @@ Add observations to the metric graph.
   tibble = FALSE,
   tolerance = max(self$edge_lengths)/2,
   duplicated_strategy = "closest",
-  verbose = FALSE
+  include_distance_to_graph = TRUE,
+  return_removed = TRUE,
+  verbose = 1
 )}\if{html}{\out{</div>}}
 }
 
@@ -885,7 +887,8 @@ the coordinates as well as the observations.}
 \item{\code{data}}{A \code{data.frame} or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
 with a column indicating the index of the group. If \code{data} is not \code{NULL},
-it takes priority over any eventual data in \code{Spoints}.}
+it takes priority over any eventual data in \code{Spoints}. \code{data} can also be an \code{sf} object,
+in which case \code{data_coords} will automatically be spatial, and there is no need to specify the \code{coord_x} or \code{coord_y} arguments.}
 
 \item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that
 contains the edge numbers. If not supplied, the column with name
@@ -933,7 +936,11 @@ This helps detecting mistakes on the input locations when adding new data.}
 \item{\code{duplicated_strategy}}{Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
 The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.}
 
-\item{\code{verbose}}{If \code{TRUE}, report steps and times.}
+\item{\code{include_distance_to_graph}}{When \code{data_coord} is 'spatial', should the distance of the observations to the graph be included as a column?}
+
+\item{\code{return_removed}}{Should the removed data (if it exists) when using 'closest' \code{duplicated_strategy} be returned?}
+
+\item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
