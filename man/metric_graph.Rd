@@ -139,13 +139,13 @@ Create a new \code{metric_graph} object.
   project = FALSE,
   project_data = FALSE,
   which_projection = "Winkel tripel",
-  tolerance = list(vertex_vertex = 1e-07, vertex_edge = 1e-07, edge_edge = 0),
+  tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
   merge_close_vertices = TRUE,
   factor_merge_close_vertices = 1,
   remove_circles = TRUE,
-  verbose = FALSE,
+  verbose = 1,
   lines = deprecated()
 )}\if{html}{\out{</div>}}
 }
@@ -210,7 +210,7 @@ initialization. Default is \code{FALSE}.}
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
 are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}
 
-\item{\code{verbose}}{Print progress of graph creation.}
+\item{\code{verbose}}{Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
 \item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
 }
@@ -870,6 +870,7 @@ Add observations to the metric graph.
   clear_obs = FALSE,
   tibble = FALSE,
   tolerance = max(self$edge_lengths)/2,
+  duplicated_strategy = "closest",
   verbose = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -928,6 +929,9 @@ assumed to be normalized to (0,1). Default FALSE. Will not be used if
 If the distance of some location and the closest point on the graph is
 greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.}
+
+\item{\code{duplicated_strategy}}{Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.}
 
 \item{\code{verbose}}{If \code{TRUE}, report steps and times.}
 }

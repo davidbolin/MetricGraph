@@ -11,7 +11,9 @@
   mesh_h = 0.01,
   which_repl = NULL,
   compute_variances = FALSE,
+  compute_pred_variances = FALSE,
   posterior_samples = FALSE,
+  pred_samples = FALSE,
   n_samples = 100,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
@@ -41,7 +43,11 @@ will be obtained for all replicates. Default is \code{NULL}.}
 
 \item{compute_variances}{Set to TRUE to compute the kriging variances.}
 
-\item{posterior_samples}{If \code{TRUE}, posterior samples will be returned.}
+\item{compute_pred_variances}{Set to TRUE to compute the prediction variances. Will only be computed if newdata is \code{NULL}.}
+
+\item{posterior_samples}{If \code{TRUE}, posterior samples for the random effect will be returned.}
+
+\item{pred_samples}{If \code{TRUE}, prediction samples for the response variable will be returned. Will only be computed if newdata is \code{NULL}.}
 
 \item{n_samples}{Number of samples to be returned. Will only be used if
 \code{sampling} is \code{TRUE}.}
@@ -53,8 +59,6 @@ default is \code{edge_number}.}
 edge, the default is \code{distance_on_edge}.}
 
 \item{normalized}{Are the distances on edges normalized?}
-
-\item{sample_latent}{Do posterior samples only for the random effects?}
 
 \item{no_nugget}{Should the prediction be carried out without the nugget?}
 
@@ -73,7 +77,7 @@ samples be returned as a list, with each replicate being an element?}
 \value{
 A list with elements \code{mean}, which contains the means of the
 predictions, \code{fe_mean}, which is the prediction for the fixed effects, \code{re_mean}, which is the prediction for the random effects, \code{variance} (if \code{compute_variance} is \code{TRUE}), which contains the
-variances of the predictions, \code{samples} (if \code{posterior_samples} is \code{TRUE}),
+posterior variances of the random effects, \code{samples} (if \code{posterior_samples} is \code{TRUE}),
 which contains the posterior samples.
 }
 \description{
