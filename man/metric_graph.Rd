@@ -783,6 +783,9 @@ Process data to the metric graph data format.
   group_sep = ".",
   normalized = FALSE,
   tibble = TRUE,
+  duplicated_strategy = "closest",
+  include_distance_to_graph = TRUE,
+  only_return_removed = FALSE,
   tolerance = max(self$edge_lengths)/2,
   verbose = FALSE
 )}\if{html}{\out{</div>}}
@@ -835,6 +838,13 @@ assumed to be normalized to (0,1). Default FALSE. Will not be used if
 \code{Spoints} is not \code{NULL}.}
 
 \item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{duplicated_strategy}}{Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.}
+
+\item{\code{include_distance_to_graph}}{When \code{data_coord} is 'spatial', should the distance of the observations to the graph be included as a column?}
+
+\item{\code{only_return_removed}}{Should the removed data (if it exists) when using 'closest' \code{duplicated_strategy} be returned instead of the processed data?}
 
 \item{\code{tolerance}}{Parameter to control a warning when adding observations.
 If the distance of some location and the closest point on the graph is
