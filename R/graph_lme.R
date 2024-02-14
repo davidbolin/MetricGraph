@@ -1756,11 +1756,11 @@ predict.graph_lme <- function(object,
 
   graph_bkp$add_observations(data = data, edge_number = edge_number,
                              distance_on_edge = distance_on_edge,
-                             normalized = TRUE, group = ".group")
+                             normalized = TRUE, group = ".group", verbose = 0)
 
   graph_bkp$add_observations(data = old_data, edge_number = ".edge_number",
                              distance_on_edge = ".distance_on_edge",
-                             group = ".group", normalized = TRUE)
+                             group = ".group", normalized = TRUE, verbose = 0)
 
   graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
 
@@ -2364,4 +2364,149 @@ predict.graph_lme <- function(object,
   return(out)
 }
 
+#' @noRd 
+# theta depends on the model
+# object is a graph_lme object
 
+get_covariance_precision <- function(object){
+  graph_bkp <- object$graph$clone()
+  graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
+  graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+  model_type <- object$latent_model
+  coeff_fixed <- object$coeff$fixed_effects
+  coeff_random <- object$coeff$random_effects
+  coeff_meas <- object$coeff$measurement_error
+  sigma_e <- coeff_meas[[1]]
+  if(tolower(model_type$type) == "whittlematern"){
+    tau <- object$coeff$random_effects[1]
+    kappa <- object$coeff$random_effects[2] 
+    if(model_type$alpha == 1){
+        Q <- spde_precision(kappa = kappa, tau = tau,
+                          alpha = 1, graph = graph_bkp)
+        prec_cov <- Q
+        attr(prec_cov, "prec_cov") <- "prec"
+      } else{
+        if(is.null(graph_bkp$CoB)){
+          graph_bkp$buildC(2)
+        }
+        PtE <- graph_bkp$get_PtE()
+        n.c <- 1:length(graph_bkp$CoB$S)
+        Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
+                            graph = graph_bkp, BC = BC)
+        Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
+        Qtilde <- Qtilde[-n.c,-n.c]
+        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
+          (graph_bkp$CoB$T[-n.c,])
+        index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+          3.0 * (abs(PtE[, 2]) > 1e-14)
+        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+        prec_cov <- Sigma
+        attr(prec_cov, "prec_cov") <- "cov" 
+      }    
+  } else if(tolower(model_type$type) == "graphlaplacian"){
+    tau <- object$coeff$random_effects[1]
+    graph_bkp$compute_laplacian(full=TRUE)
+    kappa <- object$coeff$random_effects[2]
+    if(model_type$alpha == 1){
+        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
+      } else{
+        Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
+        Q <- Q %*% Q * tau^2
+      }
+    prec_cov <- Q
+    attr(prec_cov, "prec_cov") <- "prec"
+  }  else if(tolower(model_type$type) == "isocov"){
+      if(is.character(model_type$cov_function)){
+        sigma <- object$coeff$random_effects[1]
+        kappa <- object$coeff$random_effects[2]
+        if(model_type$cov_function == "GL1"){
+              tau <- object$coeff$random_effects[1]
+              nV_temp <- object$nV_orig
+              graph_bkp$compute_laplacian(full=TRUE)
+              Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
+        prec_cov <- Q
+        attr(prec_cov, "prec_cov") <- "prec"              
+        } else if(model_type$cov_function == "GL2"){
+              tau <- object$coeff$random_effects[1]
+              graph_bkp$compute_laplacian(full=TRUE)
+              Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
+              Q <- Q %*% Q * tau^2
+              prec_cov <- Q
+              attr(prec_cov, "prec_cov") <- "prec" 
+        }
+      } else{
+        graph_bkp$compute_resdist(full = TRUE, check_euclidean = FALSE)
+        cov_function <- model_type$cov_function
+        Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[".complete"]], coeff_random))
+        prec_cov <- Sigma
+        attr(prec_cov, "prec_cov") <- "cov" 
+      }
+  }
+
+  if(attr(prec_cov,"prec_cov")  == "prec"){
+    A <- Matrix::Diagonal(dim(prec_cov)[1])[graph_bkp$PtV, ]
+  } else{
+    A <- NULL
+  }
+  return(list(order_vec = graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]], A = A, prec_cov = prec_cov))
+}
+
+
+#' @title Simulation of a fractional SPDE using a rational SPDE approximation
+#'
+#' @description The function samples a Gaussian random field based on a
+#' pre-computed rational SPDE approximation.
+#'
+#' @param object The rational SPDE approximation, computed
+#' using [fractional.operators()],
+#' [matern.operators()], or [spde.matern.operators()].
+#' @param nsim The number of simulations.
+#' @param seed an object specifying if and how the random number generator should be initialized (‘seeded’).
+#' @param ... Currently not used.
+#'
+#' @return A matrix with the `n` samples as columns.
+#' @seealso [simulate.CBrSPDEobj()]
+#' @export
+#' @method simulate rSPDEobj
+#'
+#' @examples
+#' # Sample a Gaussian Matern process on R using a rational approximation
+#' kappa <- 10
+#' sigma <- 1
+#' nu <- 0.8
+#' range <- sqrt(8*nu)/kappa
+#'
+#' # create mass and stiffness matrices for a FEM discretization
+#' x <- seq(from = 0, to = 1, length.out = 101)
+#' fem <- rSPDE.fem1d(x)
+#'
+#' # compute rational approximation
+#' op <- matern.operators(
+#'   range = range, sigma = sigma,
+#'   nu = nu, loc_mesh = x, d = 1,
+#'   parameterization = "matern"
+#' )
+#'
+#' # Sample the model and plot the result
+#' Y <- simulate(op)
+#' plot(x, Y, type = "l", ylab = "u(x)", xlab = "x")
+#'
+simulate.rSPDEobj <- function(object,
+                              nsim = 1,
+                              seed = NULL,
+                              ...) {
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
+  
+  if (!inherits(object, "rSPDEobj")) {
+    stop("input object is not of class rSPDEobj")
+  }
+  m <- dim(object$Q)[1]
+  z <- rnorm(nsim * m)
+  dim(z) <- c(m, nsim)
+  x <- Qsqrt.solve(object, z)
+  x <- Pr.mult(object, x)
+
+  return(x)
+}

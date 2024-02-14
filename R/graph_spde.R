@@ -1065,7 +1065,8 @@ predict.inla_metric_graph_spde <- function(object,
                   edge_number = ".edge_number",
                   distance_on_edge = ".distance_on_edge",
                   data_coords = "PtE",
-                  normalized = TRUE)
+                  normalized = TRUE,
+                  verbose=0)
 
   new_data <- data
   new_data[[name_locations]] <- NULL
@@ -1093,7 +1094,8 @@ predict.inla_metric_graph_spde <- function(object,
                   coord_x = ".coord_x",
                   coord_y = ".coord_y",
                   data_coords = data_coords,
-                  normalized = normalized)
+                  normalized = normalized,
+                  verbose=0)
 
   dummy1 <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]]
 
@@ -1109,7 +1111,7 @@ predict.inla_metric_graph_spde <- function(object,
   # graph_tmp$add_observations(data = original_data,
   #                   coord_x = ".coord_x",
   #                   coord_y = ".coord_y",
-  #                   data_coords = "euclidean")
+  #                   data_coords = "euclidean", verbose=0)
 
   graph_tmp$observation_to_vertex(mesh_warning=FALSE)
 
