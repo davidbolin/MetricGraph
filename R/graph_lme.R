@@ -1772,6 +1772,47 @@ predict.graph_lme <- function(object,
 
   # graph_bkp$observation_to_vertex(mesh_warning=FALSE)
 
+  n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
+
+  ##
+  repl_vec <- graph_bkp$.__enclos_env__$private$data[[".group"]]
+
+  if(is.null(repl)){
+    u_repl <- unique(graph_bkp$.__enclos_env__$private$data[[".group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ##
+
+  X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
+
+  if(all(dim(X_cov_pred) == c(0,1))){
+    X_cov_pred <- matrix(1, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
+  }
+  if(ncol(X_cov_pred) > 0){
+    mu <- X_cov_pred %*% coeff_fixed
+  } else{
+    mu <- matrix(0, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
+  }
+
+  Y <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]] - mu
+
+
+  if(!is.null(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]])){
+      idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]][1:n])
+  } else {
+      idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["X__dummy_var"]][1:n])
+  }
+
+  n_prd <- sum(idx_prd)
+
+  edge_nb <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][1:n][idx_prd]
+  dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n][idx_prd]
+
+  ## construct Q
+
+
   if(tolower(model_type$type) == "whittlematern"){
     tau <- object$coeff$random_effects[1]
     # if(object$parameterization_latent == "spde"){
@@ -1883,50 +1924,9 @@ predict.graph_lme <- function(object,
       }
   }
 
-  n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
-
-  ##
-  repl_vec <- graph_bkp$.__enclos_env__$private$data[[".group"]]
-
-  if(is.null(repl)){
-    u_repl <- unique(graph_bkp$.__enclos_env__$private$data[[".group"]])
-  } else{
-    u_repl <- unique(repl)
-  }
-
-  ##
-
-  X_cov_pred <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
-
-  if(all(dim(X_cov_pred) == c(0,1))){
-    X_cov_pred <- matrix(1, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
-  }
-  if(ncol(X_cov_pred) > 0){
-    mu <- X_cov_pred %*% coeff_fixed
-  } else{
-    mu <- matrix(0, nrow = length(graph_bkp$.__enclos_env__$private$data[[".group"]]), ncol=1)
-  }
-
-  Y <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]] - mu
 
 
-  if(!is.null(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]])){
-      idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]][1:n])
-  } else {
-      idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["X__dummy_var"]][1:n])
-  }
-
-  n_prd <- sum(idx_prd)
-
-  edge_nb <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][1:n][idx_prd]
-  dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n][idx_prd]
-
-  ## construct Q
-
-  # graph_bkp$data <- lapply(graph_bkp$data, function(dat){dat_temp <- dat
-  #                       dat_temp[graph_bkp$data[["__dummy_ord_var"]]] <- dat
-  #                                       return(dat_temp)})
-
+  ord_var <- graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]]
 
   # gap <- dim(Q)[1] - n
 

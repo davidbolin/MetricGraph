@@ -561,7 +561,7 @@ Let us now compute the posterior mean for the field at the observation
 locations and plot the residuals between the field and the posterior means of the field:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-pred_exp <- augment(res_exp, newdata = data, normalized = TRUE)
+pred_exp <- predict(res_exp, newdata = data, normalized = TRUE)
 graph$plot(X = pred_exp$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
 ```
 
