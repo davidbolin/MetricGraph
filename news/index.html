@@ -69,7 +69,15 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="metricgraph-development-version">MetricGraph (development version)<a class="anchor" aria-label="anchor" href="#metricgraph-development-version"></a></h2>
-</div>
+<ul><li>Added handlers in <code>add_observations()</code> for the situation in which observations that are being projected at the same location. More precisely, the <code>duplicated_strategy</code> argument.</li>
+<li>Added <code>simulate</code> method for <code>graph_lme</code> objects.</li>
+<li>Added the possibility to fix parameters when estimating.</li>
+<li>Deprecated the <code>Spoints</code> argument in <code>add_observations()</code>. <code>SpatialPointsDataFrame</code> can now be added in the <code>data</code> argument.</li>
+<li>
+<code>sf</code> objects containing data can also be directly added by using the <code>add_observations()</code> method in the <code>data</code> argument.</li>
+<li>Added the possibility of using a <code>graph_lme</code> object to provide starting values when fitting a model using <code><a href="../reference/graph_lme.html">graph_lme()</a></code>.</li>
+<li>Added the option of fitting a directional Whittle-Matérn model with <code>alpha=1</code> when using <code><a href="../reference/graph_lme.html">graph_lme()</a></code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="metricgraph-120">MetricGraph 1.2.0<a class="anchor" aria-label="anchor" href="#metricgraph-120"></a></h2><p class="text-muted">CRAN release: 2023-11-07</p>
 <ul><li>Changed argument <code>data</code> to <code>newdata</code> in <code>predict</code> methods. The argument <code>data</code> was deprecated.</li>

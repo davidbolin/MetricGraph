@@ -147,15 +147,6 @@ graph does not have Euclidean edges:</p>
 <span><span class="va">edges</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">edge1</span>, <span class="va">edge2</span>, <span class="va">edge3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">edges</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting graph creation...</span></span>
-<span><span class="co">#&gt; LongLat is set to FALSE</span></span>
-<span><span class="co">#&gt; The current tolerances are:</span></span>
-<span><span class="co">#&gt;   Vertex-Vertex 0.001</span></span>
-<span><span class="co">#&gt;   Vertex-Edge 0.001</span></span>
-<span><span class="co">#&gt;   Edge-Edge 0</span></span>
-<span><span class="co">#&gt; Setup edges and merge close vertices</span></span>
-<span><span class="co">#&gt; Snap vertices to close edges</span></span>
-<span><span class="co">#&gt; Total construction time: 0.82 secs</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
@@ -225,15 +216,6 @@ by creating such a metric graph:</p>
 <span><span class="va">edges2</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">edge1</span>, <span class="va">edge2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph2</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">edges2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting graph creation...</span></span>
-<span><span class="co">#&gt; LongLat is set to FALSE</span></span>
-<span><span class="co">#&gt; The current tolerances are:</span></span>
-<span><span class="co">#&gt;   Vertex-Vertex 0.001</span></span>
-<span><span class="co">#&gt;   Vertex-Edge 0.001</span></span>
-<span><span class="co">#&gt;   Edge-Edge 0</span></span>
-<span><span class="co">#&gt; Setup edges and merge close vertices</span></span>
-<span><span class="co">#&gt; Snap vertices to close edges</span></span>
-<span><span class="co">#&gt; Total construction time: 0.85 secs</span></span>
 <span></span>
 <span><span class="va">graph2</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
