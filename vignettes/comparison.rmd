@@ -141,7 +141,7 @@ In this vignette our goal is to compare the predictive power of different models
 
 For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose, California. The variable `y` contains the traffic speeds.
 
-```{r}
+```{r, message=FALSE}
  pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
  pems_graph$add_observations(data = pems$data, normalized=TRUE)
  pems_graph$prune_vertices()

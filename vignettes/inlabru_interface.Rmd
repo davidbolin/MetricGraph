@@ -83,7 +83,7 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 Let us begin by loading the `MetricGraph` package
 and creating a metric graph:
 
-```{r}
+```{r, message=FALSE}
 library(MetricGraph)
 
 edge1 <- rbind(c(0,0),c(1,0))
@@ -477,7 +477,7 @@ Let us compare with the true values:
 
 For this example we will consider the `pems` data contained in the MetricGraph package. This data was illustrated in [@BSW2022b]. The data consists of traffic speed observations on highways in the city of San Jose, California. The traffic speeds are stored in the variable `y`. We will create the metric graph setting `longlat = TRUE` since the coordinates are given in Longitude and Latitude. We will also add the observations to the metric graph object:
 
-```{r}
+```{r, message=FALSE}
 pems_graph <- metric_graph$new(edges=pems$edges, longlat=TRUE)
 pems_graph$add_observations(data=pems$data, normalized=TRUE)
 pems_graph$prune_vertices()

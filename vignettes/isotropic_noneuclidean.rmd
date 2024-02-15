@@ -45,7 +45,7 @@ The effect of this study is that if one fits an isotropic model on a metric grap
 
 We start by creating a metric graph with multiple edges. This metric graph does not have Euclidean edges:
 
-```{r}
+```{r, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 theta1 <- seq(from=pi/2,to=0,length.out = 50)
 theta2 <- seq(from=pi,to=3*pi/2,length.out = 50)
@@ -79,7 +79,7 @@ res_dist_graph <- graph$res_dist[[1]]
 
 In reality, what is being actually done to the metric graph, is that one of the edges is, in practice, being ignored. Indeed, let us create a metric graph with Euclidean edges obtained by removing one of the edges, and compute the resistance distance between its vertices. Thus, we start by creating such a metric graph:
 
-```{r}
+```{r, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 theta1 <- seq(from=pi/2,to=0,length.out = 50)
 edge2 <- cbind(sin(theta1)-1,cos(theta1))

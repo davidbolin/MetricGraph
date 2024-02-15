@@ -93,7 +93,7 @@ library(INLA)
 
 As an example, we consider the default graph in the package:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE, message=FALSE}
 graph <- metric_graph$new(tolerance = list(vertex_vertex = 1e-1, vertex_edge = 1e-3, edge_edge = 1e-3),
                           remove_deg2 = TRUE)
 graph$plot()

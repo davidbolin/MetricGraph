@@ -73,7 +73,7 @@ We begin by loading the `rSPDE` and `MetricGraph` packages:
 ```
 
 As an example, we consider the following metric graph
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
   edge1 <- rbind(c(0,0),c(1,0))
   edge2 <- rbind(c(0,0),c(0,1))
   edge3 <- rbind(c(0,1),c(-1,1))
@@ -805,7 +805,7 @@ one simply let the corresponding column to be nonzero on both `B.sigma` and `B.r
 For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose,
 California. The variable `y` contains the traffic speeds.
 
-```{r}
+```{r, message=FALSE}
  pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
  pems_graph$add_observations(data = pems$data, normalized=TRUE)
  pems_graph$prune_vertices()

@@ -83,7 +83,7 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 Let us begin by loading the `MetricGraph` package
 and creating a metric graph:
 
-```{r}
+```{r, message=FALSE}
 library(MetricGraph)
 
 edge1 <- rbind(c(0,0),c(1,0))

@@ -93,7 +93,7 @@ by [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitsk
 the metric graph, but only at the vertices. 
 
 As an example throughout the vignette, we consider the following metric graph:
-```{r}
+```{r, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0),c(0,1))
 edge3 <- rbind(c(0,1),c(-1,1))
@@ -508,7 +508,7 @@ fit all different models that we have discussed, and then compare their
 predictive ability through leave-one-out crossvalidation. To change things
 up a bit, let us consider a different graph: 
 
-```{r} 
+```{r, message=FALSE} 
 V <- rbind(c(0, 0),
            c(1, 0),
            c(1, 1),
@@ -590,7 +590,7 @@ posterior_crossvalidation(fitted_models_list, factor=1000)[["scores"]]
 
 Let us illustrate now how one can fit a model with replicates. To this end, we will consider the same graph from the previous example.
 
-```{r} 
+```{r, message=FALSE} 
 V <- rbind(c(0, 0),
            c(1, 0),
            c(1, 1),
@@ -705,7 +705,7 @@ graph$plot(X = pred_alpha1$mean[["y.15"]], X_loc = df_pred)
 
 In this example we will consider the first graph:
 
-```{r}
+```{r, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0),c(0,1))
 edge3 <- rbind(c(0,1),c(-1,1))
@@ -783,7 +783,7 @@ graph$plot(X = pred_cov$mean, X_loc = df_graph[,3:4])
 
 Let us consider the same graph from the previous example:
 
-```{r}
+```{r, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0),c(0,1))
 edge3 <- rbind(c(0,1),c(-1,1))

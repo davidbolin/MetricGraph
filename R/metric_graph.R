@@ -2017,13 +2017,6 @@ metric_graph <-  R6Class("metric_graph",
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                 
                     }
-                } else{
-                  stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
-                }
-    
-                rm(far_points)                       
-                rm(norm_XY)
-
             } else{
                   stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
                 }

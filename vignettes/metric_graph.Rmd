@@ -46,7 +46,7 @@ edges = list(edge1, edge2, edge3, edge4)
 ```
 We can now create the graph based on the `edges` object as follows
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph <- metric_graph$new(edges = edges)
 graph$plot()
 ```
@@ -108,7 +108,7 @@ graph2$plot()
 
 A third option is to create a graph from a `SpatialLines` object:
 
-```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 library(sp)
 line1 <- Line(rbind(c(0,0),c(1,0)))
 line2 <- Line(rbind(c(0,0),c(0,1)))
@@ -126,7 +126,7 @@ graph$plot()
 
 A final option is to create from a `MULTILINESTRING` object:
 
-```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 library(sf)
 line1 <- st_linestring(rbind(c(0,0),c(1,0)))
 line2 <- st_linestring(rbind(c(0,0),c(0,1)))
@@ -150,7 +150,7 @@ vertex is added at that point and the two edges are connected (the default value
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
 following three edges:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0.03),c(0,0.75))
 edge3 <- rbind(c(-1,1),c(0.5,0.03))
@@ -162,13 +162,13 @@ print(graph3$nV)
 ```
 
 We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three edges are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two edges are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first edge, so that the two edges there are connected. This can be done by adjusting the `vertex_edge` tolerance: 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05,
                                                            vertex_edge = 0.1))
 graph3$plot(degree = TRUE)
@@ -177,7 +177,7 @@ graph3$plot(degree = TRUE)
 We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from $(0,0)$ to $(1,0)$ and that vertex now has degree 3 since it is connected with three edges. One can also note that the `edges` object that was used to create the graph is modified internally in the `metric_graph` object so that the connections are visualized correctly in the sense that all edges are actually shown as connected edges. 
 
 Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001))
@@ -187,7 +187,7 @@ graph3$plot(degree = TRUE)
 Now, the structure of the metric graph does not change if we add or remove vertices of degree 2. 
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001),
@@ -333,7 +333,7 @@ should be given in normalized distance or not.
 To illustrate the useage of `metric_graph` on some real data, we use the 
 `osmdata` package to download data from OpenStreetMap. In the following code,
 we extract highways in the city of Copenhagen:
-```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
 library(osmdata)
 set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 call <- opq(bbox = c(12.4,55.5,12.65,55.9))
@@ -356,7 +356,7 @@ This may cause numerical instabilities when dealing with random fields on the
 graph, and it also makes it difficult to interpret results (unless one has a 
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
-```{r}
+```{r, message=FALSE}
 graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
@@ -370,7 +370,7 @@ is not connected. This might not be ideal for modeling and we may want to study
 the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, message=FALSE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), 
                                                     longlat = TRUE)
 ```
@@ -396,7 +396,7 @@ min(graph5$get_edge_lengths(unit='m'))
 ```
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
-```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
+```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
 graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
                                tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0)
@@ -524,7 +524,7 @@ When working with data on metric graphs, one often wants to display functions
 on the graph. The best way to visualize functions on the graph is to evaluate
 them on a fine mesh over the graph and then use `plot_function`. To illustrate
 this procedure, let us consider the following graph:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1), c(-1, 1), c(-1, 0), c(0, -1))
 E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 5),
            c(5, 6), c(6, 1), c(4, 1),c(1, 7))
@@ -587,7 +587,7 @@ If we compute the relative positions of the edge coordinates, we can improve the
 
 We begin by recreating the first graph we used in this vignette:
 
-```{r}
+```{r, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0),c(0,1))
 edge3 <- rbind(c(0,1),c(-1,1))
