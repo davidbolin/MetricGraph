@@ -12,6 +12,8 @@ graph_lme(
   optim_method = "L-BFGS-B",
   model_options = list(),
   BC = 0,
+  previous_fit = NULL,
+  fix_coeff = FALSE,
   parallel = FALSE,
   n_cores = parallel::detectCores() - 1,
   optim_controls = list(),
@@ -77,6 +79,10 @@ the model. If \code{NULL} all replicates will be considered.}
 \item{BC}{For \code{WhittleMatern} models, decides which boundary condition to use
 (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
 conditions.}
+
+\item{previous_fit}{An object of class \code{graph_lme}. Use the fitted coefficients as starting values.}
+
+\item{fix_coeff}{If using a previous fit, should all coefficients be fixed at the starting values?}
 
 \item{parallel}{logical. Indicating whether to use \code{optimParallel()} or not.}
 
