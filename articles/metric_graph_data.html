@@ -135,7 +135,7 @@ metric graph:</p>
 <pre><code><span><span class="co">##   Edge-Edge 0</span></span></code></pre>
 <pre><code><span><span class="co">## Setup edges and merge close vertices</span></span></code></pre>
 <pre><code><span><span class="co">## Snap vertices to close edges</span></span></code></pre>
-<pre><code><span><span class="co">## Total construction time: 0.83 secs</span></span></code></pre>
+<pre><code><span><span class="co">## Total construction time: 0.82 secs</span></span></code></pre>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
@@ -218,14 +218,8 @@ of the <code>x</code> and <code>y</code> coordinates:</p>
 <span>                            coord_x <span class="op">=</span> <span class="st">"coordx"</span>, coord_y <span class="op">=</span> <span class="st">"coordy"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## Converting data to PtE</span></span></code></pre>
-<pre><code><span><span class="co">## Warning: There was 1 warning in `dplyr::mutate()`.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> In argument: `min_dist = min(dist)`.</span></span>
-<span><span class="co">## Caused by warning in `min()`:</span></span>
-<span><span class="co">## <span style="color: #BBBB00;">!</span> no non-missing arguments to min; returning Inf</span></span></code></pre>
-<pre><code><span><span class="co">## [1] y2     coordx coordy</span></span>
-<span><span class="co">## &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre>
 <p>Let us check that the data was successfully added:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 250 × 8</span></span></span>
 <span><span class="co">##          y     y2 .distance_to_graph .edge_number .distance_on_edge .group</span></span>
@@ -243,7 +237,7 @@ of the <code>x</code> and <code>y</code> coordinates:</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 240 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 2 more variables: .coord_x &lt;dbl&gt;, .coord_y &lt;dbl&gt;</span></span></span></code></pre>
 <p>We can also plot:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y2"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
 <p>Observe that <code>NAs</code> were added, since <code>df_data</code>
@@ -254,7 +248,7 @@ which all the variables are <code>NA</code> (the location variables are
 not considered here). We can also show the rows that do not contain any
 <code>NA</code> observations by using the <code>drop_na</code> argument
 in the <code>get_data()</code> method:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 0 × 8</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 8 variables: y &lt;dbl&gt;, y2 &lt;dbl&gt;, .distance_to_graph &lt;dbl&gt;,</span></span></span>
@@ -265,24 +259,24 @@ in the <code>get_data()</code> method:</p>
 <p>Suppose now that we want to replace the metric graph data by a new
 dataset. To this end we have two options. The first one is to use the
 <code>clear_observations()</code> method, then add the observations:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>We will now create the dataset we want to add. To simplify, we will
 use the default naming for the edge number and distance on edge, so that
 we do not need to specify them in the <code>add_observations()</code>
 method:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span> <span class="op">*</span> <span class="va">obs_per_edge</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">df_data3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y3<span class="op">=</span><span class="va">y3</span>, edge_number <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, distance_on_edge <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>We can now add the data. Remember to set <code>normalized</code> to
 <code>TRUE</code> since we are providing the relative distance on
 edge:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data3</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>and check:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 6</span></span></span>
 <span><span class="co">##         y3 .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -302,23 +296,17 @@ edge:</p>
 <code>clear_obs</code> argument to <code>TRUE</code>. We will also
 create a new dataset using the default naming for the <code>x</code> and
 <code>y</code> coordinates, so we do not need to specify them:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_data4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">y2</span><span class="op">)</span>, coord_x <span class="op">=</span> <span class="va">coordx</span>, coord_y <span class="op">=</span> <span class="va">coordy</span><span class="op">)</span></span></code></pre></div>
 <p>and we add them (remember to set <code>data_coords</code> to
 <code>"spatial"</code>):</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data4</span>, clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                            data_coords <span class="op">=</span> <span class="st">"spatial"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## Converting data to PtE</span></span></code></pre>
-<pre><code><span><span class="co">## Warning: There was 1 warning in `dplyr::mutate()`.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> In argument: `min_dist = min(dist)`.</span></span>
-<span><span class="co">## Caused by warning in `min()`:</span></span>
-<span><span class="co">## <span style="color: #BBBB00;">!</span> no non-missing arguments to min; returning Inf</span></span></code></pre>
-<pre><code><span><span class="co">## [1] y4      coord_x coord_y</span></span>
-<span><span class="co">## &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre>
 <p>and we can check it replaced:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 50 × 7</span></span></span>
 <span><span class="co">##       y4 .distance_to_graph .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -344,14 +332,14 @@ need to specify which column of the data will be the grouping
 variable.</p>
 <p>To illustrate, let us generate a grouped data. We will use the same
 locations we generated in the previous section.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n.repl</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span></span>
 <span><span class="va">y_repl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n.repl</span> <span class="op">*</span> <span class="va">graph</span><span class="op">$</span><span class="va">nE</span> <span class="op">*</span> <span class="va">obs_per_edge</span><span class="op">)</span></span>
 <span><span class="va">repl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n.repl</span>, each <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">nE</span> <span class="op">*</span> <span class="va">obs_per_edge</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now create the <code>data.frame</code> with the grouped data,
 where the grouping variable is <code>repl</code>:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_data_repl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y_repl</span>, repl <span class="op">=</span> <span class="va">repl</span>, </span>
 <span>                  edge_number <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, times <span class="op">=</span> <span class="va">n.repl</span><span class="op">)</span>, </span>
 <span>                  distance_on_edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, times <span class="op">=</span> <span class="va">n.repl</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -362,7 +350,7 @@ distances on edge. We also need to set the <code>group</code> argument
 to <code>repl</code>, since <code>repl</code> is our grouping variable.
 Finally, we will also set <code>clear_obs</code> to <code>TRUE</code>
 since we want to replace the existing data.</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data_repl</span>, </span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                        clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, </span>
@@ -370,7 +358,7 @@ since we want to replace the existing data.</p>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>Let us check the graph data. Observe that the grouping variable is
 now <code>.group</code>.</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 7</span></span></span>
 <span><span class="co">##         y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -388,7 +376,7 @@ now <code>.group</code>.</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 990 more rows</span></span></span></code></pre>
 <p>We can obtain the data for a given group by setting the
 <code>group</code> argument in the <code>get_data()</code> method:</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>group <span class="op">=</span> <span class="st">"3"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 7</span></span></span>
 <span><span class="co">##          y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -405,7 +393,7 @@ now <code>.group</code>.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">0.881</span>      3            1            0.212  3        0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 190 more rows</span></span></span></code></pre>
 <p>We can also provide the group argument as a vector:</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"3"</span>,<span class="st">"5"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 400 × 7</span></span></span>
 <span><span class="co">##          y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -424,7 +412,7 @@ now <code>.group</code>.</p>
 <p>The <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method works similarly. We can plot the data
 from a specific group by specifying which group we would like to
 plot:</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, group <span class="op">=</span> <span class="st">"3"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-25-1.png" width="700"></p>
 </div>
@@ -434,7 +422,7 @@ plot:</p>
 <p>Besides being able to group data acoording to one column of the data,
 we can also group the data with respect to several columns of the data.
 Let us generate a new data set:</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n.repl</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
 <span></span>
 <span><span class="va">y_repl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n.repl</span> <span class="op">*</span> <span class="va">graph</span><span class="op">$</span><span class="va">nE</span> <span class="op">*</span> <span class="va">obs_per_edge</span><span class="op">)</span></span>
@@ -447,7 +435,7 @@ Let us generate a new data set:</p>
 <span>                  distance_on_edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, times <span class="op">=</span> <span class="va">n.repl</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now add these observations on the graph and group them by
 <code>c("repl_1","repl_2")</code>:</p>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_adv_grp</span>, </span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                        clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, </span>
@@ -455,7 +443,7 @@ Let us generate a new data set:</p>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>Let us take a look at the grouped variables. They are stored in the
 <code>.group</code> column:</p>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2,000 × 8</span></span></span>
 <span><span class="co">##         y repl_1 repl_2 .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -475,7 +463,7 @@ Let us generate a new data set:</p>
 by pasting the group variables together with the <code>.</code> as
 separator. We can change the separator using the <code>group_sep</code>
 argument:</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_adv_grp</span>, </span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                        clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, </span>
@@ -483,7 +471,7 @@ argument:</p>
 <span>                        group_sep <span class="op">=</span> <span class="st">":"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>Then,</p>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2,000 × 8</span></span></span>
 <span><span class="co">##         y repl_1 repl_2 .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -503,7 +491,7 @@ argument:</p>
 variable we want to plot. Let us plot <code>y</code> for
 <code>repl_1</code> equal to <code>3</code> and <code>repl_2</code>
 equal to <code>c</code>:</p>
-<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, group <span class="op">=</span> <span class="st">"3:c"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-31-1.png" width="700"></p>
 </div>
@@ -519,7 +507,7 @@ implemented in metric graphs and can be safely used.</p>
 section and add this to the metric graph object. Observe that we are
 replacing the existing data by setting <code>clear_obs</code> to
 <code>TRUE</code>:</p>
-<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_tidy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">y</span>, y2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, y3 <span class="op">=</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>, y4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span>
 <span>       edge_number <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, distance_on_edge <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
@@ -538,7 +526,7 @@ replacing the existing data by setting <code>clear_obs</code> to
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_tidy</span>, clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>Let us look at the complete data:</p>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 9</span></span></span>
 <span><span class="co">##         y     y2      y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -563,7 +551,7 @@ keep or to remove.</p>
 <p>For example, let us select the columns <code>y</code> and
 <code>y2</code> from the metric graph dataset using the
 <code><a href="../reference/select.metric_graph_data.html">select()</a></code> method:</p>
-<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">select</span><span class="op">(</span><span class="va">y</span>,<span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 199 × 7</span></span></span>
 <span><span class="co">##         y     y2 .group .edge_number .distance_on_edge .coord_x .coord_y</span></span>
@@ -585,7 +573,7 @@ locations.</p>
 <p>Also observe that the first original row, that contains only
 <code>NA</code> was removed by default. To return all the rows, we can
 set the argument <code>.drop_all_na</code> to <code>FALSE</code>:</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">select</span><span class="op">(</span><span class="va">y</span>, <span class="va">y2</span>, .drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 7</span></span></span>
 <span><span class="co">##         y     y2 .group .edge_number .distance_on_edge .coord_x .coord_y</span></span>
@@ -605,7 +593,7 @@ set the argument <code>.drop_all_na</code> to <code>FALSE</code>:</p>
 value in <code>y2</code>. To remove all the rows that contain
 <code>NA</code> for at least one variable, we can set the argument
 <code>.drop_na</code> to <code>TRUE</code>:</p>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">select</span><span class="op">(</span><span class="va">y</span>, <span class="va">y2</span>, .drop_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 198 × 7</span></span></span>
 <span><span class="co">##         y    y2 .group .edge_number .distance_on_edge .coord_x .coord_y</span></span>
@@ -625,7 +613,7 @@ value in <code>y2</code>. To remove all the rows that contain
 <code><a href="../reference/select.metric_graph_data.html">select()</a></code> method together with adding a minus sign
 <code>-</code> in front of the column we want to be removed. For
 example, to remove <code>y2</code>, we can do:</p>
-<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 199 × 8</span></span></span>
 <span><span class="co">##         y      y3     y4 .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -643,7 +631,7 @@ example, to remove <code>y2</code>, we can do:</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 189 more rows</span></span></span></code></pre>
 <p>Alternatively, we can combine the <code><a href="../reference/select.metric_graph_data.html">select()</a></code> function with
 the output of <code>get_data()</code> to obtain the same results:</p>
-<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/select.metric_graph_data.html">select</a></span><span class="op">(</span><span class="va">y</span>,<span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 199 × 7</span></span></span>
 <span><span class="co">##         y     y2 .group .edge_number .distance_on_edge .coord_x .coord_y</span></span>
@@ -663,7 +651,7 @@ the output of <code>get_data()</code> to obtain the same results:</p>
 To avoid removing <code>NA</code> variables, we need to set the argument
 <code>drop_all_na</code> to <code>FALSE</code> when using the
 <code>get_data()</code> method:</p>
-<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/select.metric_graph_data.html">select</a></span><span class="op">(</span><span class="va">y</span>,<span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 7</span></span></span>
 <span><span class="co">##         y     y2 .group .edge_number .distance_on_edge .coord_x .coord_y</span></span>
@@ -680,7 +668,7 @@ To avoid removing <code>NA</code> variables, we need to set the argument
 <span><span class="co">## <span style="color: #BCBCBC;">10</span>  1.34   3.83       1            1            0.212    0.212         0</span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 190 more rows</span></span></span></code></pre>
 <p>We can proceed similarly to remove <code>y2</code>:</p>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/select.metric_graph_data.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 199 × 8</span></span></span>
 <span><span class="co">##         y      y3     y4 .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -701,7 +689,7 @@ To avoid removing <code>NA</code> variables, we need to set the argument
 since it keeps the spatial locations. For example, if we use the
 standard version of <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select()</a></code> the result is
 different:</p>
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">:::</span><span class="fu">select.data.frame</span><span class="op">(</span><span class="va">y</span>,<span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 199 × 2</span></span></span>
 <span><span class="co">##         y     y2</span></span>
@@ -725,19 +713,19 @@ different:</p>
 variables. For example, let us select the variables that are on
 <code>edge_number</code> 3, with <code>distance_on_edge</code> greater
 than 0.5:</p>
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filtered_data</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">filter</span><span class="op">(</span><span class="va">`.edge_number`</span> <span class="op">==</span> <span class="fl">3</span>, <span class="va">`.distance_on_edge`</span> <span class="op">&gt;</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p>We can plot the result using the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method together
 with the <code>newdata</code> argument to supply the modified
 dataset:</p>
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, newdata <span class="op">=</span> <span class="va">filtered_data</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-43-1.png" width="700"></p>
 <p>The behavior with <code>NA</code> variables is exactly the same as
 with the <code><a href="../reference/select.metric_graph_data.html">select()</a></code> method. For example, we can remove the
 rows that contain <code>NA</code> variables by setting
 <code>drop_na</code> to <code>TRUE</code>:</p>
-<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">filter</span><span class="op">(</span><span class="va">y</span> <span class="op">&gt;</span> <span class="fl">1</span>, .drop_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 30 × 9</span></span></span>
 <span><span class="co">##        y    y2    y3    y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -756,10 +744,10 @@ rows that contain <code>NA</code> variables by setting
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: .coord_y &lt;dbl&gt;</span></span></span></code></pre>
 <p>To conclude, we can also use the <code><a href="../reference/filter.metric_graph_data.html">filter()</a></code> function on
 top of the result of the <code>get_data()</code> method:</p>
-<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filtered_data2</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/filter.metric_graph_data.html">filter</a></span><span class="op">(</span><span class="va">y</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot:</p>
-<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, newdata <span class="op">=</span> <span class="va">filtered_data2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-46-1.png" width="700"></p>
 </div>
@@ -770,7 +758,7 @@ top of the result of the <code>get_data()</code> method:</p>
 columns, as functions of the existing columns. Let us create a new
 column, <code>new_y</code>, obtained as the sum of <code>y</code> and
 <code>y2</code>:</p>
-<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>new_y <span class="op">=</span> <span class="va">y</span><span class="op">+</span><span class="va">y2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 199 × 10</span></span></span>
 <span><span class="co">##         y     y2      y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -791,7 +779,7 @@ column, <code>new_y</code>, obtained as the sum of <code>y</code> and
 <code><a href="../reference/filter.metric_graph_data.html">filter()</a></code> and <code><a href="../reference/select.metric_graph_data.html">select()</a></code> methods. For example, if
 we want to keep all the data, we can set <code>.drop_all_na</code> to
 `FALSE:</p>
-<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>new_y <span class="op">=</span> <span class="va">y</span><span class="op">+</span><span class="va">y2</span>, .drop_all_na<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 10</span></span></span>
 <span><span class="co">##         y     y2      y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -810,7 +798,7 @@ we want to keep all the data, we can set <code>.drop_all_na</code> to
 <span><span class="co">## <span style="color: #949494;"># ℹ 2 more variables: .coord_y &lt;dbl&gt;, new_y &lt;dbl&gt;</span></span></span></code></pre>
 <p>Let us modify the variable <code>y3</code> and at the same time
 remove all the <code>NA</code>:</p>
-<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>y3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">y</span><span class="op">&gt;</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="op">-</span><span class="fl">1</span><span class="op">)</span>, .drop_na <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 197 × 9</span></span></span>
 <span><span class="co">##         y    y2    y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -831,7 +819,7 @@ remove all the <code>NA</code>:</p>
 result of the <code>get_data()</code> method, and also pipe it to the
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method (we are also changing the scale to
 discrete):</p>
-<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/mutate.metric_graph_data.html">mutate</a></span><span class="op">(</span>new_y <span class="op">=</span> <span class="va">y</span><span class="op">+</span><span class="va">y2</span>, </span>
@@ -853,14 +841,14 @@ variable, namely <code>.group</code>, will also be added to the
 by the <code>.groups</code> argument.</p>
 <p>To illustrate, we will use the <code>data.frame</code> from the group
 example:</p>
-<div class="sourceCode" id="cb98"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data_repl</span>, </span>
 <span>                normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                group <span class="op">=</span> <span class="st">"repl"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>We can see the data:</p>
-<div class="sourceCode" id="cb100"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 7</span></span></span>
 <span><span class="co">##         y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -878,7 +866,7 @@ example:</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 990 more rows</span></span></span></code></pre>
 <p>Let us <code>summarise</code> the data by obtaining the mean of
 <code>y</code> at each location across all groups:</p>
-<div class="sourceCode" id="cb102"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb98"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">summarise</span><span class="op">(</span>mean_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 6</span></span></span>
 <span><span class="co">##    .edge_number .distance_on_edge .coord_x .coord_y  mean_y .group</span></span>
@@ -896,7 +884,7 @@ example:</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 190 more rows</span></span></span></code></pre>
 <p>Let us now obtain the standard deviation of <code>y</code> at each
 location and plot it:</p>
-<div class="sourceCode" id="cb104"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb100"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">summarise</span><span class="op">(</span>sd_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"sd_y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="metric_graph_data_files/figure-html/unnamed-chunk-54-1.png" width="700"></p>
 </div>
@@ -907,11 +895,11 @@ location and plot it:</p>
 <code>NA</code> for the selected columns. To illustrate, let us add the
 <code>df_tidy</code> back to the metric graph, replacing the existing
 dataset:</p>
-<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_tidy</span>, clear_obs<span class="op">=</span><span class="cn">TRUE</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>Now, let us take a look at this dataset:</p>
-<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 200 × 9</span></span></span>
 <span><span class="co">##         y     y2      y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -931,7 +919,7 @@ dataset:</p>
 <p>For example, let us remove the rows such that <code>y3</code> is
 <code>NA</code>, we simply apply the <code><a href="../reference/drop_na.metric_graph_data.html">drop_na()</a></code> method
 passing the column <code>y3</code>:</p>
-<div class="sourceCode" id="cb109"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">drop_na</span><span class="op">(</span><span class="va">y3</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 198 × 9</span></span></span>
 <span><span class="co">##         y     y2     y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -950,7 +938,7 @@ passing the column <code>y3</code>:</p>
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: .coord_y &lt;dbl&gt;</span></span></span></code></pre>
 <p>We can also remove the rows such that either <code>y2</code> or
 <code>y3</code> is <code>NA</code>:</p>
-<div class="sourceCode" id="cb111"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">drop_na</span><span class="op">(</span><span class="va">y2</span>, <span class="va">y3</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 197 × 9</span></span></span>
 <span><span class="co">##         y    y2     y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -970,12 +958,12 @@ passing the column <code>y3</code>:</p>
 <p>If we simply run the <code><a href="../reference/drop_na.metric_graph_data.html">drop_na()</a></code> method, this is
 equivalent to run the <code>get_data()</code> method with the argument
 <code>drop_na</code> set to <code>TRUE</code>:</p>
-<div class="sourceCode" id="cb113"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb109"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="fu">drop_na</span><span class="op">(</span><span class="op">)</span>, <span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_na<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
 <p>Finally, we can also directly apply the <code><a href="../reference/drop_na.metric_graph_data.html">drop_na()</a></code>
 function to the result of the <code>get_data()</code> method:</p>
-<div class="sourceCode" id="cb115"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb111"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/drop_na.metric_graph_data.html">drop_na</a></span><span class="op">(</span><span class="va">y3</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 198 × 9</span></span></span>
 <span><span class="co">##         y     y2     y3     y4 .edge_number .distance_on_edge .group .coord_x</span></span>
@@ -1002,13 +990,13 @@ result after applying one verb can be used as input of any of the
 remaining verbs.</p>
 <p>For this example we will consider the <code>df_data_repl</code>
 dataset. Let us add to the graph (replacing the existing data):</p>
-<div class="sourceCode" id="cb117"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb113"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data_repl</span>, </span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                        clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>                        group <span class="op">=</span> <span class="st">"repl"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
-<div class="sourceCode" id="cb119"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb115"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span>drop_all_na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,000 × 7</span></span></span>
 <span><span class="co">##         y  repl .edge_number .distance_on_edge .group .coord_x .coord_y</span></span>
@@ -1029,7 +1017,7 @@ exponential of <code>y</code>, then filter the data to be on edges
 <code>1</code> and <code>2</code>, summarise to get the means of
 <code>new_y</code> at all positions (across the different groups, from
 the <code>_.group</code> variable) and plot it:</p>
-<div class="sourceCode" id="cb121"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb117"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>new_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/filter.metric_graph_data.html">filter</a></span><span class="op">(</span><span class="va">`.edge_number`</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>            <span class="fu"><a href="../reference/summarise.metric_graph_data.html">summarise</a></span><span class="op">(</span>mean_new_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">new_y</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>            <span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"mean_new_y"</span><span class="op">)</span></span></code></pre></div>
@@ -1051,14 +1039,14 @@ method, one should simply supply the <code>data</code> argument with
 such dataset. For example, let us consider the dataset from the previous
 section. We will replace the data, so we will set <code>clear_obs</code>
 to <code>TRUE</code>:</p>
-<div class="sourceCode" id="cb122"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb118"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>new_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>                        <span class="fu"><a href="../reference/filter.metric_graph_data.html">filter</a></span><span class="op">(</span><span class="va">`.edge_number`</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>                                <span class="fu"><a href="../reference/summarise.metric_graph_data.html">summarise</a></span><span class="op">(</span>mean_new_y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">new_y</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                clear_obs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>We can now observe the result:</p>
-<div class="sourceCode" id="cb124"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb120"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 100 × 6</span></span></span>
 <span><span class="co">##    .coord_x .coord_y mean_new_y .edge_number .distance_on_edge .group</span></span>
@@ -1075,12 +1063,12 @@ to <code>TRUE</code>:</p>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span>   0.212         0      0.643            1            0.212  1     </span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 90 more rows</span></span></span></code></pre>
 <p>We can also save it to a separate variable and use as input:</p>
-<div class="sourceCode" id="cb126"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb122"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_temp</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>even_newer_y <span class="op">=</span> <span class="va">mean_new_y</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_temp</span>, clear_obs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <p>We can check that it was properly added:</p>
-<div class="sourceCode" id="cb128"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb124"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 100 × 7</span></span></span>
 <span><span class="co">##    .coord_x .coord_y mean_new_y even_newer_y .edge_number .distance_on_edge</span></span>

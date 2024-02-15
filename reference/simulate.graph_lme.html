@@ -80,11 +80,11 @@ fitted model using <code><a href="graph_lme.html">graph_lme()</a></code>.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for graph_lme</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
+<span>  nsim <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sample_latent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  posterior <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  nsim <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -95,6 +95,14 @@ fitted model using <code><a href="graph_lme.html">graph_lme()</a></code>.</p>
 <dd><p>A <code>graph_lme</code> object</p></dd>
 
 
+<dt>nsim</dt>
+<dd><p>The number of simulations.</p></dd>
+
+
+<dt>seed</dt>
+<dd><p>an object specifying if and how the random number generator should be initialized (‘seeded’).</p></dd>
+
+
 <dt>sample_latent</dt>
 <dd><p>If <code>FALSE</code>, samples for the response variable will be generated. If <code>TRUE</code>, samples for the latent model will be generated. The default is <code>FALSE</code>.</p></dd>
 
@@ -103,17 +111,9 @@ fitted model using <code><a href="graph_lme.html">graph_lme()</a></code>.</p>
 <dd><p>Should posterior samples be generated? If <code>FALSE</code>, samples will be computed based on the estimated prior distribution. The default is <code>FALSE</code>.</p></dd>
 
 
-<dt>nsim</dt>
-<dd><p>The number of simulations.</p></dd>
-
-
 <dt>which_repl</dt>
 <dd><p>Which replicates to generate the samples. If <code>NULL</code> samples will
 be generated for all replicates. Default is <code>NULL</code>.</p></dd>
-
-
-<dt>seed</dt>
-<dd><p>an object specifying if and how the random number generator should be initialized (‘seeded’).</p></dd>
 
 
 <dt>...</dt>
