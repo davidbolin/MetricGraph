@@ -229,13 +229,13 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  project <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  project_data <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  which_projection <span class="op">=</span> <span class="st">"Winkel tripel"</span>,</span>
-<span>  tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>vertex_vertex <span class="op">=</span> <span class="fl">1e-07</span>, vertex_edge <span class="op">=</span> <span class="fl">1e-07</span>, edge_edge <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>vertex_vertex <span class="op">=</span> <span class="fl">0.001</span>, vertex_edge <span class="op">=</span> <span class="fl">0.001</span>, edge_edge <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  check_connected <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  remove_deg2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  merge_close_vertices <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  factor_merge_close_vertices <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  remove_circles <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -334,7 +334,7 @@ are removed. If <code>TRUE</code>, the <code>vertex_vertex</code> tolerance will
 
 
 <dt><code>verbose</code></dt>
-<dd><p>Print progress of graph creation.</p></dd>
+<dd><p>Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 <dt><code>lines</code></dt>
@@ -943,6 +943,9 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 <span>  group_sep <span class="op">=</span> <span class="st">"."</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tibble <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  duplicated_strategy <span class="op">=</span> <span class="st">"closest"</span>,</span>
+<span>  include_distance_to_graph <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  only_return_removed <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">self</span><span class="op">$</span><span class="va">edge_lengths</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
@@ -1017,6 +1020,19 @@ assumed to be normalized to (0,1). Default FALSE. Will not be used if
 <dd><p>Should the data be returned as a <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble</a></code>?</p></dd>
 
 
+<dt><code>duplicated_strategy</code></dt>
+<dd><p>Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.</p></dd>
+
+
+<dt><code>include_distance_to_graph</code></dt>
+<dd><p>When <code>data_coord</code> is 'spatial', should the distance of the observations to the graph be included as a column?</p></dd>
+
+
+<dt><code>only_return_removed</code></dt>
+<dd><p>Should the removed data (if it exists) when using 'closest' <code>duplicated_strategy</code> be returned instead of the processed data?</p></dd>
+
+
 <dt><code>tolerance</code></dt>
 <dd><p>Parameter to control a warning when adding observations.
 If the distance of some location and the closest point on the graph is
@@ -1054,7 +1070,10 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 <span>  clear_obs <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tibble <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">self</span><span class="op">$</span><span class="va">edge_lengths</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  duplicated_strategy <span class="op">=</span> <span class="st">"closest"</span>,</span>
+<span>  include_distance_to_graph <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  return_removed <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -1070,7 +1089,8 @@ the coordinates as well as the observations.</p></dd>
 <dd><p>A <code>data.frame</code> or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
 with a column indicating the index of the group. If <code>data</code> is not <code>NULL</code>,
-it takes priority over any eventual data in <code>Spoints</code>.</p></dd>
+it takes priority over any eventual data in <code>Spoints</code>. <code>data</code> can also be an <code>sf</code> object,
+in which case <code>data_coords</code> will automatically be spatial, and there is no need to specify the <code>coord_x</code> or <code>coord_y</code> arguments.</p></dd>
 
 
 <dt><code>edge_number</code></dt>
@@ -1138,8 +1158,21 @@ greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.</p></dd>
 
 
+<dt><code>duplicated_strategy</code></dt>
+<dd><p>Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.</p></dd>
+
+
+<dt><code>include_distance_to_graph</code></dt>
+<dd><p>When <code>data_coord</code> is 'spatial', should the distance of the observations to the graph be included as a column?</p></dd>
+
+
+<dt><code>return_removed</code></dt>
+<dd><p>Should the removed data (if it exists) when using 'closest' <code>duplicated_strategy</code> be returned?</p></dd>
+
+
 <dt><code>verbose</code></dt>
-<dd><p>If <code>TRUE</code>, report steps and times.</p></dd>
+<dd><p>Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 </dl><p></p></div>
@@ -1985,6 +2018,15 @@ data List containing data on the metric graph.</p>
 <span class="r-in"><span><span class="va">edge3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">edges</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">edge1</span>, <span class="va">edge2</span>, <span class="va">edge3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va">metric_graph</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">edges</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting graph creation...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The current tolerances are:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Vertex-Vertex 0.001</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Vertex-Edge 0.001</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.97 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

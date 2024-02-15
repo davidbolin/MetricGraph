@@ -101,7 +101,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-11. Last
-modified: 2024-02-11.</h4>
+modified: 2024-02-15.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/isotropic_noneuclidean.rmd" class="external-link"><code>vignettes/isotropic_noneuclidean.rmd</code></a></small>
       <div class="d-none name"><code>isotropic_noneuclidean.rmd</code></div>
@@ -147,6 +147,15 @@ graph does not have Euclidean edges:</p>
 <span><span class="va">edges</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">edge1</span>, <span class="va">edge2</span>, <span class="va">edge3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">edges</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Starting graph creation...</span></span>
+<span><span class="co">#&gt; LongLat is set to FALSE</span></span>
+<span><span class="co">#&gt; The current tolerances are:</span></span>
+<span><span class="co">#&gt;   Vertex-Vertex 0.001</span></span>
+<span><span class="co">#&gt;   Vertex-Edge 0.001</span></span>
+<span><span class="co">#&gt;   Edge-Edge 0</span></span>
+<span><span class="co">#&gt; Setup edges and merge close vertices</span></span>
+<span><span class="co">#&gt; Snap vertices to close edges</span></span>
+<span><span class="co">#&gt; Total construction time: 0.82 secs</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
@@ -193,8 +202,8 @@ the <code>check_euclidean()</code> method, then calling the
 <span><span class="co">#&gt; Data: The graph has no data!</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Tolerances: </span></span>
-<span><span class="co">#&gt;   vertex-vertex:  1e-07 </span></span>
-<span><span class="co">#&gt;   vertex-edge:  1e-07 </span></span>
+<span><span class="co">#&gt;   vertex-vertex:  0.001 </span></span>
+<span><span class="co">#&gt;   vertex-edge:  0.001 </span></span>
 <span><span class="co">#&gt;   edge-edge:  0</span></span></code></pre></div>
 <p>Let us now compute the resistance distances between the vertices
 using the <code>compute_resdist()</code> method:</p>
@@ -216,6 +225,15 @@ by creating such a metric graph:</p>
 <span><span class="va">edges2</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">edge1</span>, <span class="va">edge2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph2</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">edges2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Starting graph creation...</span></span>
+<span><span class="co">#&gt; LongLat is set to FALSE</span></span>
+<span><span class="co">#&gt; The current tolerances are:</span></span>
+<span><span class="co">#&gt;   Vertex-Vertex 0.001</span></span>
+<span><span class="co">#&gt;   Vertex-Edge 0.001</span></span>
+<span><span class="co">#&gt;   Edge-Edge 0</span></span>
+<span><span class="co">#&gt; Setup edges and merge close vertices</span></span>
+<span><span class="co">#&gt; Snap vertices to close edges</span></span>
+<span><span class="co">#&gt; Total construction time: 0.84 secs</span></span>
 <span></span>
 <span><span class="va">graph2</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
@@ -260,8 +278,8 @@ by creating such a metric graph:</p>
 <span><span class="co">#&gt; Data: The graph has no data!</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Tolerances: </span></span>
-<span><span class="co">#&gt;   vertex-vertex:  1e-07 </span></span>
-<span><span class="co">#&gt;   vertex-edge:  1e-07 </span></span>
+<span><span class="co">#&gt;   vertex-vertex:  0.001 </span></span>
+<span><span class="co">#&gt;   vertex-edge:  0.001 </span></span>
 <span><span class="co">#&gt;   edge-edge:  0</span></span></code></pre></div>
 <p>Let us now compute the resistance distances:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -280,6 +298,7 @@ which the observations were turned into vertices).</p>
 <code class="sourceCode R"><span><span class="va">df_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>edge_number <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>, distance_on_edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Adding observations...</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>

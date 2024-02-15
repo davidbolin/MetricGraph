@@ -85,11 +85,11 @@ It also contains the New columns always begin with a . prefix to avoid overwriti
 <span>  <span class="va">x</span>,</span>
 <span>  newdata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sd_post_re <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  se_fit <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  conf_int <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  pred_int <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  level <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  n_samples <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  edge_number <span class="op">=</span> <span class="st">"edge_number"</span>,</span>
 <span>  distance_on_edge <span class="op">=</span> <span class="st">"distance_on_edge"</span>,</span>
 <span>  coord_x <span class="op">=</span> <span class="st">"coord_x"</span>,</span>
@@ -118,24 +118,24 @@ number and the distance on edge for the locations to obtain the prediction. If <
 will be obtained for all replicates. Default is <code>NULL</code>.</p></dd>
 
 
+<dt>sd_post_re</dt>
+<dd><p>Logical indicating whether or not a .sd_post_re column should be added to the augmented output containing the posterior standard deviations of the random effects.</p></dd>
+
+
 <dt>se_fit</dt>
-<dd><p>Logical indicating whether or not a .se.fit column should be added to the augmented output. If TRUE, it only returns a non-NA value if type of prediction is 'link'.</p></dd>
+<dd><p>Logical indicating whether or not a .se_fit column should be added to the augmented output containing the standard errors of the fitted values. If <code>TRUE</code>, the posterior standard deviations of the random effects will also be returned.</p></dd>
 
 
 <dt>conf_int</dt>
-<dd><p>Logical indicating whether or not confidence intervals for the fitted variable should be built.</p></dd>
+<dd><p>Logical indicating whether or not confidence intervals for the posterior mean of the random effects should be built.</p></dd>
 
 
 <dt>pred_int</dt>
-<dd><p>Logical indicating whether or not prediction intervals for future observations should be built.</p></dd>
+<dd><p>Logical indicating whether or not prediction intervals for the fitted values should be built. If <code>TRUE</code>, the confidence intervals for the posterior random effects will also be built.</p></dd>
 
 
 <dt>level</dt>
 <dd><p>Level of confidence and prediction intervals if they are constructed.</p></dd>
-
-
-<dt>n_samples</dt>
-<dd><p>Number of samples when computing prediction intervals.</p></dd>
 
 
 <dt>edge_number</dt>
@@ -190,14 +190,16 @@ coordinate system to use. If <code>PtE</code>, the user must provide <code>edge_
     
 
 <p>A <code><a href="https://tidyr.tidyverse.org/reference/reexports.html" class="external-link">tidyr::tibble()</a></code> with columns:</p><ul><li><p><code>.fitted</code> Fitted or predicted value.</p></li>
-<li><p><code>.fittedlwrconf</code> Lower bound of the confidence interval, if conf_int = TRUE</p></li>
-<li><p><code>.fitteduprconf</code> Upper bound of the confidence interval, if conf_int = TRUE</p></li>
-<li><p><code>.fittedlwrpred</code> Lower bound of the prediction interval, if pred_int = TRUE</p></li>
-<li><p><code>.fitteduprpred</code> Upper bound of the prediction interval, if pred_int = TRUE</p></li>
+<li><p><code>.relwrconf</code> Lower bound of the confidence interval of the random effects, if conf_int = TRUE</p></li>
+<li><p><code>.reuprconf</code> Upper bound of the confidence interval of the random effects, if conf_int = TRUE</p></li>
+<li><p><code>.fittedlwrpred</code> Lower bound of the prediction interval, if conf_int = TRUE</p></li>
+<li><p><code>.fitteduprpred</code> Upper bound of the prediction interval, if conf_int = TRUE</p></li>
 <li><p><code>.fixed</code> Prediction of the fixed effects.</p></li>
 <li><p><code>.random</code> Prediction of the random effects.</p></li>
 <li><p><code>.resid</code> The ordinary residuals, that is, the difference between observed and fitted values.</p></li>
+<li><p><code>.std_resid</code> The standardized residuals, that is, the ordinary residuals divided by the standard error of the fitted values (by the prediction standard error), if se_fit = TRUE or pred_int = TRUE.</p></li>
 <li><p><code>.se_fit</code> Standard errors of fitted values, if se_fit = TRUE.</p></li>
+<li><p><code>.sd_post_re</code> Standard deviation of the posterior mean of the random effects, if se_fit = TRUE.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

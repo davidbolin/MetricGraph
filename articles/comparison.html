@@ -101,7 +101,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-09. Last
-modified: 2024-02-11.</h4>
+modified: 2024-02-15.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/comparison.rmd" class="external-link"><code>vignettes/comparison.rmd</code></a></small>
       <div class="d-none name"><code>comparison.rmd</code></div>
@@ -129,7 +129,20 @@ traffic speed observations on highways in the city of San Jose,
 California. The variable <code>y</code> contains the traffic speeds.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span> <span class="va">pems_graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">pems</span><span class="op">$</span><span class="va">edges</span>, longlat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Starting graph creation...</span></span>
+<span><span class="co">#&gt; LongLat is set to TRUE</span></span>
+<span><span class="co">#&gt; The unit for edge lengths is km</span></span>
+<span><span class="co">#&gt; The current tolerances (in km) are:</span></span>
+<span><span class="co">#&gt;   Vertex-Vertex 0.001</span></span>
+<span><span class="co">#&gt;   Vertex-Edge 0.001</span></span>
+<span><span class="co">#&gt;   Edge-Edge 0</span></span>
+<span><span class="co">#&gt; Setup edges and merge close vertices</span></span>
+<span><span class="co">#&gt; Snap vertices to close edges</span></span>
+<span><span class="co">#&gt; Total construction time: 3.31 secs</span></span>
 <span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">pems</span><span class="op">$</span><span class="va">data</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Adding observations...</span></span>
+<span><span class="co">#&gt; The unit for edge lengths is km</span></span>
+<span><span class="co">#&gt; The current tolerance for removing distant observations is (in km): 1.64091934314162</span></span>
 <span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Let us take a look at the observations:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -176,7 +189,7 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 17</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  6.54511 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  6.60163 secs</span></span></code></pre></div>
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -214,7 +227,7 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 15</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  9.37846 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  9.43982 secs</span></span></code></pre></div>
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
@@ -256,7 +269,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 19</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  7.07168 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  7.1678 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -289,7 +302,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 16</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  10.11909 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  10.38782 secs</span></span></code></pre></div>
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -333,7 +346,7 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 24</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  0.90359 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  0.92331 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -366,7 +379,7 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 224</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.32873 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.34716 secs</span></span></code></pre></div>
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
@@ -408,7 +421,7 @@ function:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 20</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  5.18073 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  5.00837 secs</span></span></code></pre></div>
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -458,8 +471,8 @@ summary:</p>
 <span><span class="co">#&gt;   Groups:  None </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Tolerances: </span></span>
-<span><span class="co">#&gt;   vertex-vertex:  1e-07 </span></span>
-<span><span class="co">#&gt;   vertex-edge:  1e-07 </span></span>
+<span><span class="co">#&gt;   vertex-vertex:  0.001 </span></span>
+<span><span class="co">#&gt;   vertex-edge:  0.001 </span></span>
 <span><span class="co">#&gt;   edge-edge:  0</span></span></code></pre></div>
 <p>Thus, this graph does not have Euclidean edges. This means, when we
 fit the model, we actually modify the graph, when we add the
@@ -498,7 +511,7 @@ even on an metric graph with Euclidean edges.</p>
 <span><span class="co">#&gt; NOT guaranteed to work for this graph! See the vignette</span></span>
 <span><span class="co">#&gt; https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html</span></span>
 <span><span class="co">#&gt; for further details.</span></span>
-<span><span class="co">#&gt; Error in chol.default(Sigma_non_na): the leading minor of order 1 is not positive</span></span></code></pre></div>
+<span><span class="co">#&gt; Error in model[["cov_function"]] == "exp_covariance": comparison (==) is possible only for atomic and list types</span></span></code></pre></div>
 <p>Indeed, the model could not be fitted.</p>
 </div>
 <div class="section level2">

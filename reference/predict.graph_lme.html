@@ -82,12 +82,13 @@
 <span>  mesh_h <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  compute_variances <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  compute_pred_variances <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  posterior_samples <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  pred_samples <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_samples <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  edge_number <span class="op">=</span> <span class="st">"edge_number"</span>,</span>
 <span>  distance_on_edge <span class="op">=</span> <span class="st">"distance_on_edge"</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  sample_latent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  no_nugget <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_as_list <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_original_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -126,8 +127,16 @@ will be obtained for all replicates. Default is <code>NULL</code>.</p></dd>
 <dd><p>Set to TRUE to compute the kriging variances.</p></dd>
 
 
+<dt>compute_pred_variances</dt>
+<dd><p>Set to TRUE to compute the prediction variances. Will only be computed if newdata is <code>NULL</code>.</p></dd>
+
+
 <dt>posterior_samples</dt>
-<dd><p>If <code>TRUE</code>, posterior samples will be returned.</p></dd>
+<dd><p>If <code>TRUE</code>, posterior samples for the random effect will be returned.</p></dd>
+
+
+<dt>pred_samples</dt>
+<dd><p>If <code>TRUE</code>, prediction samples for the response variable will be returned. Will only be computed if newdata is <code>NULL</code>.</p></dd>
 
 
 <dt>n_samples</dt>
@@ -147,10 +156,6 @@ edge, the default is <code>distance_on_edge</code>.</p></dd>
 
 <dt>normalized</dt>
 <dd><p>Are the distances on edges normalized?</p></dd>
-
-
-<dt>sample_latent</dt>
-<dd><p>Do posterior samples only for the random effects?</p></dd>
 
 
 <dt>no_nugget</dt>
@@ -185,7 +190,7 @@ samples be returned as a list, with each replicate being an element?</p></dd>
 
 <p>A list with elements <code>mean</code>, which contains the means of the
 predictions, <code>fe_mean</code>, which is the prediction for the fixed effects, <code>re_mean</code>, which is the prediction for the random effects, <code>variance</code> (if <code>compute_variance</code> is <code>TRUE</code>), which contains the
-variances of the predictions, <code>samples</code> (if <code>posterior_samples</code> is <code>TRUE</code>),
+posterior variances of the random effects, <code>samples</code> (if <code>posterior_samples</code> is <code>TRUE</code>),
 which contains the posterior samples.</p>
     </div>
 
