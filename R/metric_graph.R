@@ -2297,8 +2297,13 @@ metric_graph <-  R6Class("metric_graph",
                   far_points <- NULL   
                   dup_points <- NULL
                   closest_points <- NULL
-                  for(grp in unique(data[[".group"]])){
-                      idx_grp <- which(data[[".group"]] == grp)
+                  grp_dat <- data[[".group"]]
+                  if(length(grp_dat) == 0){
+                    grp_dat <- rep(1, nrow(PtE))
+                  }
+
+                  for(grp in unique(grp_dat)){
+                      idx_grp <- which(grp_dat == grp)
                       PtE_grp <- PtE[idx_grp,, drop=FALSE]
                       XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
                       point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
