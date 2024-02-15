@@ -1894,81 +1894,137 @@ metric_graph <-  R6Class("metric_graph",
                 point_coords <- cbind(data[[coord_x]], data[[coord_y]])
                 PtE <- self$coordinates(XY = point_coords)    
 
+     
                 if(tolower(duplicated_strategy) == "closest"){
-                    XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
+                  norm_XY <- NULL
+                  fact <- process_factor_unit(private$vertex_unit, private$length_unit)           
+                  PtE_new <- NULL    
+                  far_points <- NULL   
+                  dup_points <- NULL
+                  closest_points <- NULL
+                  grp_dat <- data[[".group"]]
+                  if(length(grp_dat) == 0){
+                    grp_dat <- rep(1, nrow(PtE))
+                  }
+
+                  for(grp in unique(grp_dat)){
+                      idx_grp <- which(grp_dat == grp)
+                      PtE_grp <- PtE[idx_grp,, drop=FALSE]
+                      XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
+                      point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
                     # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-                    norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
+                      norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
                     # norm_XY <- max(norm_XY)
                     # if(norm_XY > tolerance){
                     #   warning("There was at least one point whose location is far from the graph,
                     #     please consider checking the input.")
                     #   }
-                    far_points <- (norm_XY > tolerance)
-                    data <- lapply(data, function(dat){dat[!far_points]})
-                    if(any(far_points)){
-                      warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
-                    }                          
-                    PtE <- PtE[!far_points,,drop=FALSE]
-                    dup_points <- duplicated(XY_new) | duplicated(XY_new, fromLast=TRUE)                     
+                      far_points_grp <- (norm_XY_grp > tolerance)                
+                      PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
+                      dup_points_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast=TRUE)                     
+                      norm_XY_grp <- norm_XY_grp[!far_points_grp]
+                      if(any(dup_points_grp)){
+                        old_new_coords <- cbind(point_coords_grp[dup_points_grp,], XY_new_grp[dup_points_grp,], norm_XY_grp[dup_points_grp], which(dup_points_grp))
+                        old_new_coords <- as.data.frame(old_new_coords)
+                        colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
+                        old_new_coords <- dplyr::as_tibble(old_new_coords)
+                        old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::mutate(min_idx = dist == min_dist, min_idx = get_only_first(min_idx)) %>% dplyr::ungroup()
+                        min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
+                        closest_points_grp <- rep(FALSE, length(dup_points_grp))
+                        closest_points_grp[min_dist_idx] <- TRUE
+                        norm_XY_grp <- norm_XY_grp[!closest_points_grp]
+                        PtE_grp <- PtE_grp[!closest_points_grp,,drop=FALSE]     
+                        closest_points <- c(closest_points, closest_points_grp)                        
+                      } else{
+                        closest_points_grp <- rep(FALSE, length(norm_XY_grp))
+                        closest_points <- c(closest_points, closest_points_grp)      
+                      }
+
+                      dup_points <- c(dup_points, dup_points_grp)
+                      far_points <- c(far_points, far_points_grp)
+                      PtE_new <- rbind(PtE_new, PtE_grp)
+                      norm_XY <- c(norm_XY, norm_XY_grp)
+                    } 
+                    PtE <- PtE_new
+
                     if(sum(dup_points)>0){
-                      warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
+                        warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
+                    }       
+
+                    data <- lapply(data, function(dat){dat[!far_points]})
+                    if(!is.null(closest_points)){
+                      data <- lapply(data, function(dat){dat[!closest_points]})    
+                      removed_data <-  lapply(data, function(dat){dat[closest_points]})                                    
                     }
-                    norm_XY <- norm_XY[!far_points]
-                    old_new_coords <- cbind(point_coords[dup_points,], XY_new[dup_points,], norm_XY[dup_points], which(dup_points))
-                    old_new_coords <- as.data.frame(old_new_coords)
-                    colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
-                    old_new_coords <- dplyr::as_tibble(old_new_coords)
-                    old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::ungroup() %>% dplyr::mutate(min_idx = dist == min_dist)
-                    min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
-                    closest_points <- rep(FALSE, length(dup_points))
-                    closest_points[min_dist_idx] <- TRUE
-                    data <- lapply(data, function(dat){dat[!closest_points]})
-                    norm_XY <- norm_XY[!closest_points]
-                    removed_data <-  lapply(data, function(dat){dat[closest_points]})
-                    PtE <- PtE[!closest_points,,drop=FALSE]     
+                    if(any(far_points)){
+                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                    }      
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                    
                     }
+
+
                 } else if(tolower(duplicated_strategy) == "jitter"){
-                    dup_points <- duplicated(PtE)    
-                    while(sum(dup_points)>0){
-                      idx_pte0 <- which(PtE[dup_points,2] == 0)
-                      idx_pte1 <-  which(PtE[dup_points,2] == 1) 
-                      idx_other_pte <- !idx_pte0 & !idx_pte1
-                      d_points <- which(dup_points)
-                      if(length(idx_pte0)>0){
-                        PtE[d_points[idx_pte0],2] <- PtE[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
-                      }
-                      if(length(idx_pte1)>0){
-                        PtE[d_points[idx_pte1],2] <- PtE[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))                      
-                      }
-                      if(length(idx_other_pte)>0){
-                        delta_dif <- min(1e-2, 1-max(PtE[d_points[idx_other_pte],2]), min(PtE[d_points[idx_other_pte],2]))
-                        PtE[d_points[idx_other_pte],2] <- PtE[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
-                      }
-                      dup_points <- duplicated(PtE)    
+                    norm_XY <- NULL
+                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)           
+                    PtE_new <- NULL    
+                    far_points <- NULL   
+
+                    grp_dat <- data[[".group"]]
+                    if(length(grp_dat) == 0){
+                      grp_dat <- rep(1, nrow(PtE))
                     }
-                    XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-                    # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-                    norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-                    # norm_XY <- max(norm_XY)
-                    # if(norm_XY > tolerance){
-                    #   warning("There was at least one point whose location is far from the graph,
-                    #     please consider checking the input.")
-                    #   }
-                    far_points <- (norm_XY > tolerance)
+
+                    for(grp in unique(grp_dat)){
+                      idx_grp <- which(grp_dat == grp)
+                      PtE_grp <- PtE[idx_grp,, drop=FALSE]
+                      dup_points_grp <- duplicated(PtE_grp)                
+                      while(sum(dup_points_grp)>0){
+                        cond_0 <- PtE_grp[dup_points_grp,2] == 0
+                        cond_1 <- PtE_grp[dup_points_grp,2] == 1
+                        idx_pte0 <- which(cond_0)
+                        idx_pte1 <-  which(cond_1) 
+                        idx_other_pte <- which(!cond_0 & !cond_1)
+                        d_points <- which(dup_points_grp)
+                        if(length(idx_pte0)>0){
+                          PtE_grp[d_points[idx_pte0],2] <- PtE_grp[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
+                        }
+                        if(length(idx_pte1)>0){
+                          PtE_grp[d_points[idx_pte1],2] <- PtE_grp[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))                      
+                        }
+                        if(length(idx_other_pte)>0){
+                          delta_dif <- min(1e-2, 1-max(PtE_grp[d_points[idx_other_pte],2]), min(PtE_grp[d_points[idx_other_pte],2]))
+                          PtE_grp[d_points[idx_other_pte],2] <- PtE_grp[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
+                        }
+                        dup_points_grp <- duplicated(PtE_grp)    
+                      }
+                      XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
+                      point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
+                      norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
+                      far_points_grp <- (norm_XY_grp > tolerance)                
+                      PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
+                      norm_XY_grp <- norm_XY_grp[!far_points_grp]
+                      far_points <- c(far_points, far_points_grp)
+                      PtE_new <- rbind(PtE_new, PtE_grp)
+                      norm_XY <- c(norm_XY, norm_XY_grp)
+                    } 
+                    PtE <- PtE_new
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
                       warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
                     }                          
                     PtE <- PtE[!far_points,,drop=FALSE]
-                    norm_XY <- norm_XY[!far_points]   
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                 
                     }
                 } else{
+                  stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
+                }
+    
+                rm(far_points)                       
+                rm(norm_XY)
+
+            } else{
                   stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
                 }
     
@@ -2360,40 +2416,55 @@ metric_graph <-  R6Class("metric_graph",
 
 
                 } else if(tolower(duplicated_strategy) == "jitter"){
-                    dup_points <- duplicated(PtE)    
-                    while(sum(dup_points)>0){
-                      idx_pte0 <- which(PtE[dup_points,2] == 0)
-                      idx_pte1 <-  which(PtE[dup_points,2] == 1) 
-                      idx_other_pte <- !idx_pte0 & !idx_pte1
-                      d_points <- which(dup_points)
-                      if(length(idx_pte0)>0){
-                        PtE[d_points[idx_pte0],2] <- PtE[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
-                      }
-                      if(length(idx_pte1)>0){
-                        PtE[d_points[idx_pte1],2] <- PtE[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))                      
-                      }
-                      if(length(idx_other_pte)>0){
-                        delta_dif <- min(1e-2, 1-max(PtE[d_points[idx_other_pte],2]), min(PtE[d_points[idx_other_pte],2]))
-                        PtE[d_points[idx_other_pte],2] <- PtE[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
-                      }
-                      dup_points <- duplicated(PtE)    
+                    norm_XY <- NULL
+                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)           
+                    PtE_new <- NULL    
+                    far_points <- NULL   
+
+                    grp_dat <- data[[".group"]]
+                    if(length(grp_dat) == 0){
+                      grp_dat <- rep(1, nrow(PtE))
                     }
-                    XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-                    # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-                    fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-                    norm_XY <- compute_aux_distances(lines = point_coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-                    # norm_XY <- max(norm_XY)
-                    # if(norm_XY > tolerance){
-                    #   warning("There was at least one point whose location is far from the graph,
-                    #     please consider checking the input.")
-                    #   }
-                    far_points <- (norm_XY > tolerance)
+
+                    for(grp in unique(grp_dat)){
+                      idx_grp <- which(grp_dat == grp)
+                      PtE_grp <- PtE[idx_grp,, drop=FALSE]
+                      dup_points_grp <- duplicated(PtE_grp)                
+                      while(sum(dup_points_grp)>0){
+                        cond_0 <- PtE_grp[dup_points_grp,2] == 0
+                        cond_1 <- PtE_grp[dup_points_grp,2] == 1
+                        idx_pte0 <- which(cond_0)
+                        idx_pte1 <-  which(cond_1) 
+                        idx_other_pte <- which(!cond_0 & !cond_1)
+                        d_points <- which(dup_points_grp)
+                        if(length(idx_pte0)>0){
+                          PtE_grp[d_points[idx_pte0],2] <- PtE_grp[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
+                        }
+                        if(length(idx_pte1)>0){
+                          PtE_grp[d_points[idx_pte1],2] <- PtE_grp[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))                      
+                        }
+                        if(length(idx_other_pte)>0){
+                          delta_dif <- min(1e-2, 1-max(PtE_grp[d_points[idx_other_pte],2]), min(PtE_grp[d_points[idx_other_pte],2]))
+                          PtE_grp[d_points[idx_other_pte],2] <- PtE_grp[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
+                        }
+                        dup_points_grp <- duplicated(PtE_grp)    
+                      }
+                      XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
+                      point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
+                      norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
+                      far_points_grp <- (norm_XY_grp > tolerance)                
+                      PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
+                      norm_XY_grp <- norm_XY_grp[!far_points_grp]
+                      far_points <- c(far_points, far_points_grp)
+                      PtE_new <- rbind(PtE_new, PtE_grp)
+                      norm_XY <- c(norm_XY, norm_XY_grp)
+                    } 
+                    PtE <- PtE_new
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
                       warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
                     }                          
                     PtE <- PtE[!far_points,,drop=FALSE]
-                    norm_XY <- norm_XY[!far_points]   
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                 
                     }
