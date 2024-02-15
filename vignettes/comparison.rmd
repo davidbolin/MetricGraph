@@ -150,7 +150,7 @@ For this example we will consider the `pems` data contained in the `MetricGraph`
 
 Let us take a look at the observations:
 
-```{r}
+```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 pems_graph$plot(data = "y", vertex_size = 0)
 ```
 
@@ -359,7 +359,7 @@ pred_alpha1_bc <- augment(fit_alpha1_bc, newdata = df_pred,
 
 Let plot the predictions with the corresponding observed values. First for the model without boundary correction. As the predictions were obtained on the mesh nodes, we can supply the fitted values into the `X` argument of the `plot_function()` method:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 library(ggplot2)
 
 p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted",
@@ -369,7 +369,7 @@ p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted",
 
 We can now add the original observations obtain the plot in region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr1, coordx_upr1) + 
@@ -388,7 +388,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 Similarly, for `alpha=1` with boundary correction in region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
               improve_plot=TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -400,7 +400,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 and in region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
               improve_plot=TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -419,7 +419,7 @@ pred_alpha2 <- augment(fit_alpha2, newdata = df_pred,
 
 Let us now build the plot for region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
                     improve_plot=TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -431,7 +431,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 and region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
                     improve_plot=TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -450,7 +450,7 @@ pred_alpha2_bc <- augment(fit_alpha2_bc, newdata = df_pred,
 
 the plot in region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
                     improve_plot=TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -462,7 +462,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 and in region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
                     improve_plot=TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -482,7 +482,7 @@ pred_GL1 <- augment(fit_GL1, newdata = df_pred,
 
 the plot in region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
                     improve_plot = TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -494,7 +494,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 and in region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
                     improve_plot = TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -513,7 +513,7 @@ pred_GL2 <- augment(fit_GL2, newdata = df_pred,
 
 the plot in region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
                     improve_plot = TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -525,7 +525,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 and in region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
                     improve_plot = TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -544,7 +544,7 @@ pred_isoexp <- augment(fit_isoexp, newdata = df_pred,
 
 and the corresponding plot in region 1:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
                     improve_plot = TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -556,7 +556,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 and in region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
                     improve_plot = TRUE, vertex_size = 0,
                     edge_width = 0.5) 
@@ -580,7 +580,7 @@ fitted_aug <- augment(fit_alpha2_bc, se_fit = TRUE)
 
 Now let us build the QQ-plot against the theoretical quantiles a standard Gaussian distribution:
 
-```{r}
+```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 library(ggplot2)
 p <- fitted_aug %>% ggplot(aes(sample = .std_resid)) +
           geom_qq()
@@ -591,7 +591,7 @@ We will now do a parametric bootstrap procedure to obtain confidence bands (simu
 
 ```{r}
 B <- 100
-samples_alpha2_bc <- simulate(fit_alpha2_bc, nsim = 100)
+samples_alpha2_bc <- simulate(fit_alpha2_bc, nsim = B)
 ```
 
 To reduce computational cost, we will fix the parameters at the original fitted values, this can be done by passing the fitted model as the `previous_fit` argument, and setting `fix_coeff` to `TRUE`. We will compute the new standardized residuals based on these new samples:
@@ -632,13 +632,13 @@ We will now create the lower and upper bands with 95% confidence, as well as plo
 
 Let us now produce the QQ plot with the confidence bands and median line. We start by obtaining the quantile values, and add them to the bands `data.frame`:
 
-```{r}
+```{r, fig.show="hide"}
 tmp_quantiles <- qqnorm(fitted_aug[[".std_resid"]])
 bands[["x"]] <- sort(tmp_quantiles$x)
 bands[["y"]] <- sort(tmp_quantiles$y)
 ```
 
-```{r}
+```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- bands %>% ggplot(aes(x = x, y = y)) + geom_point() +
         geom_ribbon(aes(x = x, ymin = lower, ymax = upper), alpha = 0.2)
 p
