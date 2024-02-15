@@ -578,7 +578,7 @@ graph_lme <- function(formula, graph,
             fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
             new_theta <- fix_v_val_full
             new_theta[!fix_vec_full] <- theta
-            
+
             return(-likelihood_alpha1(theta = new_theta, graph = graph_bkp,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,
@@ -595,7 +595,9 @@ graph_lme <- function(formula, graph,
             fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
             fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
             new_theta <- fix_v_val_full
-            new_theta[!fix_vec_full] <- theta          
+            new_theta[!fix_vec_full] <- theta       
+            print(new_theta)
+            print(theta)   
             return(-likelihood_alpha2(theta = new_theta, graph = graph_bkp,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,

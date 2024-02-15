@@ -131,6 +131,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 library(MetricGraph)
+set.seed(1)
 ```
 
 # Introduction
@@ -155,7 +156,16 @@ pems_graph$plot(data = "y", vertex_size = 0)
 
 # The models
 
-Let us fit the different models. We start by fitting a Whittle-Matérn field with `alpha = 1`:
+We will assume that the data has the following structure:
+
+$$
+y_i = u(s_i) + \varepsilon_i, \quad i=1,\ldots,n,
+$$
+where $u(\cdot)$ is a Gaussian random field, $s_i\in \Gamma$ are observation locations and $\varepsilon_i$ are
+independent centered Gaussian variables $N(0,\sigma_e^2)$ representing 
+measurement noise. 
+
+Let us fit the different models, that is, we will assume several different possible latent fields $u(\cdot)$. We start by fitting a Whittle-Matérn field with `alpha = 1`:
 
 ```{r}
 fit_alpha1 <- graph_lme(y ~ -1, graph=pems_graph, 
@@ -554,4 +564,82 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
                     ylim(coordy_lwr2, coordy_upr2)                       
+```
+
+# A quick diagnostic analysis
+
+The cross-validation suggests that the best model with respect to RMSE, MAE, CRPS and log-score is the Whittle-Matérn field with `alpha=2` and boundary corrections.
+Let the residual be given by
+$$e_i = y_i - E(u(s_i)|y_1,\ldots,y_n), \quad i=1,\ldots, n.$$
+We will consider a standardized version of the above residual where we normalize it by divinding by its standard deviation. Such standardized residuals are given when using the `augment` function when the argument `se_fit` is set to `TRUE`. 
+Let us now compute such residuals, then do a simple QQ plot of them.
+
+```{r}
+fitted_aug <- augment(fit_alpha2_bc, se_fit = TRUE)
+```
+
+Now let us build the QQ-plot against the theoretical quantiles a standard Gaussian distribution:
+
+```{r}
+library(ggplot2)
+p <- fitted_aug %>% ggplot(aes(sample = .std_resid)) +
+          geom_qq()
+p          
+```
+
+We will now do a parametric bootstrap procedure to obtain confidence bands (simulated envelopes) for the above QQ plot. We will consider $B=100$ bootstrap samples. We start by generating $B$ samples. This can be done by using the `simulate()` method:
+
+```{r}
+B <- 100
+samples_alpha2_bc <- simulate(fit_alpha2_bc, nsim = 100)
+```
+
+To reduce computational cost, we will fix the parameters at the original fitted values, this can be done by passing the fitted model as the `previous_fit` argument, and setting `fix_coeff` to `TRUE`. We will compute the new standardized residuals based on these new samples:
+
+```{r}
+simul_std_resid <- matrix(nrow = nrow(fitted_aug), ncol = B)
+# We clone the graph to add new data
+pems_graph_new <- pems_graph$clone()
+for(i in 1:B){
+  # We get the simulated response. Since we do not have replicates, 
+  # all of them are in the first element of the list.
+  y_tmp <- samples_alpha2_bc$samples[[1]][,i]
+  # Add new observations
+  pems_graph_new$add_observations(data = pems_graph$mutate(y = y_tmp), 
+                                  clear_obs = TRUE, verbose = 0)
+  new_fit <- graph_lme(y ~ -1, graph=pems_graph_new, BC = 1, 
+                                previous_fit = fit_alpha2_bc,
+                                model = list(type = "WhittleMatern", alpha = 2),
+                                fix_coeff = TRUE)
+  new_fitted_aug <-  augment(new_fit, se_fit = TRUE)        
+  simul_std_resid[,i] <- new_fitted_aug[[".std_resid"]]            
+}
+```
+
+We will now create the lower and upper bands with 95% confidence, as well as plot a median line. We being by extracting the lower, upper and median values.
+
+```{r}
+  prob <- 0.95
+  simul_std_resid <- t(simul_std_resid)
+  simul_std_resid <- t(apply(simul_std_resid, 1, sort))
+  simul_std_resid <- apply(simul_std_resid, 2, sort)
+  id1 <- max(1, round(B * (1 - prob) / 2))
+  id2 <- round(B * (1 + prob) / 2)
+  bands <- rbind(simul_std_resid[id2, ], apply(simul_std_resid, 2, stats::median), simul_std_resid[id1, ])
+  bands <- as.data.frame(t(bands))
+  colnames(bands) <- c("upper", "median", "lower")  
+```
+
+Let us now produce the QQ plot with the confidence bands and median line. We start by obtaining the quantile values, and add them to the bands `data.frame`:
+
+```{r}
+tmp_quantiles <- qqnorm(fitted_aug[[".std_resid"]])
+bands[["x"]] <- sort(tmp_quantiles$x)
+bands[["y"]] <- sort(tmp_quantiles$y)
+```
+
+```{r}
+p <- bands %>% ggplot(aes(x = x, y = y)) + geom_point() +
+        geom_ribbon(aes(x = x, ymin = lower, ymax = upper), alpha = 0.2)
+p
 ```
