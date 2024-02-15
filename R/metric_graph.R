@@ -1679,9 +1679,6 @@ metric_graph <-  R6Class("metric_graph",
 
 
   #' @description Process data to the metric graph data format.
-  #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
-  #' observations. It may include the coordinates of the observations only, or
-  #' the coordinates as well as the observations.
   #' @param data A `data.frame` or named list containing the observations. In
   #' case of groups, the data.frames for the groups should be stacked vertically,
   #' with a column indicating the index of the group. If `data` is not `NULL`,
@@ -1721,12 +1718,12 @@ metric_graph <-  R6Class("metric_graph",
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
+  #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
   #' @param verbose If `TRUE`, report steps and times.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
 
-  process_data = function(Spoints = NULL,
-                              data = NULL,
+  process_data = function(    data = NULL,
                               edge_number = "edge_number",
                               distance_on_edge = "distance_on_edge",
                               coord_x = "coord_x",
@@ -1740,7 +1737,8 @@ metric_graph <-  R6Class("metric_graph",
                               include_distance_to_graph = TRUE,                              
                               only_return_removed = FALSE,
                               tolerance = max(self$edge_lengths)/2,
-                              verbose = FALSE) {
+                              verbose = FALSE,
+                              Spoints = lifecycle::deprecated()) {
 
 
         data_coords <- data_coords[[1]]
@@ -1753,7 +1751,15 @@ metric_graph <-  R6Class("metric_graph",
       warning("'tolerance' had more than one element, only the first one will be used.")
     }
 
+    if(lifecycle::is_present(Spoints)){
+           lifecycle::deprecate_warn("1.2.9000", "add_observations(Spoints)", "add_observations(data)",
+             details = c("`Spoints` is deprecated, use `data` instead.")
+           )
+           data <- Spoints
+    }    
+
     removed_data <- NULL
+    strc_data <- FALSE    
 
     if(inherits(data, "sf")){
       if(!inherits(data, "data.frame")){
@@ -1768,7 +1774,20 @@ metric_graph <-  R6Class("metric_graph",
       data <- sf::st_drop_geometry(data)
       data[[".coord_x"]] <- coord_tmp[,1]
       data[[".coord_y"]] <- coord_tmp[,2]
-    }    
+      strc_data <- TRUE
+    }
+
+    if("SpatialPointsDataFrame"%in%is(data)){
+      data_coords <- "spatial"
+      coord_x = ".coord_x"
+      coord_y = ".coord_y"   
+      data <- sp::spTransform(data,sp::CRS(private$proj4string))
+      coord_tmp <- data@coords
+      data <- data@data
+      data[[".coord_x"]] <- coord_tmp[,1]
+      data[[".coord_y"]] <- coord_tmp[,2]      
+      strc_data <- TRUE
+    }
 
     if(inherits(data, "metric_graph_data")){
       if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
@@ -1784,14 +1803,7 @@ metric_graph <-  R6Class("metric_graph",
     }    
 
         if(is.null(data)){
-          if(is.null(Spoints)){
             stop("No data provided!")
-          }
-          if("SpatialPointsDataFrame"%in%is(Spoints)){
-            data <- Spoints@data
-          } else{
-            stop("No data provided!")
-          }
         }
 
         if(!is.null(data)){
@@ -1803,7 +1815,7 @@ metric_graph <-  R6Class("metric_graph",
         data <- as.list(data)
 
 
-        if(is.null(Spoints)){
+        if(!strc_data){
         if(data_coords == "PtE"){
           if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
             stop(paste("The data does not contain either the column", edge_number,"or the column",distance_on_edge))
@@ -1845,13 +1857,7 @@ metric_graph <-  R6Class("metric_graph",
         }
 
         ## Check data for repeated observations
-        if (!is.null(Spoints)){
-            if(is.null(group)){
-            data_tmp <- Spoints@coords
-          } else{
-            data_tmp <- cbind(Spoints@coords, data[[".group"]])
-          }
-        } else if(data_coords == "spatial"){
+        if(data_coords == "spatial"){
           if(is.null(group)){
             data_tmp <- cbind(data[[coord_x]], data[[coord_y]])
           } else{
@@ -1867,37 +1873,10 @@ metric_graph <-  R6Class("metric_graph",
 
         if(nrow(unique(data_tmp)) != nrow(data_tmp)){
           warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
-          if(data_coords == "spatial" || !is.null(Spoints)){
-            warning("It is also possible that two different points were projected to the same location on the metric graph.")
-          }
         }
 
 
         t <- system.time({
-          if(!is.null(Spoints)){
-            PtE <- self$coordinates(XY = Spoints@coords)
-            XY_new <- self$coordinates(PtE = PtE, normalized = TRUE)
-            # norm_XY <- max(sqrt(rowSums( (Spoints@coords-XY_new)^2 )))
-            fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-            norm_XY <- compute_aux_distances(lines = Spoints@coords, points = XY_new, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-            rm(Spoints)
-            # norm_XY <- max(norm_XY)
-            # if(norm_XY > tolerance){
-            #   warning("There was at least one point whose location is far from the graph,
-            #   please consider checking the input.")
-            # }
-            far_points <- (norm_XY > tolerance)
-            data <- lapply(data, function(dat){dat[!far_points]})
-            norm_XY <- norm_XY[!far_points]   
-            if(include_distance_to_graph){
-              data[[".distance_to_graph"]] <- norm_XY                 
-            }
-            if(any(far_points)){
-              warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
-            }
-            PtE <- PtE[!far_points, ,drop=FALSE]
-            rm(far_points)
-          } else{
             if(data_coords == "PtE"){
                 PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
                 if(!normalized){
@@ -1991,7 +1970,6 @@ metric_graph <-  R6Class("metric_graph",
             } else{
                 stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
             }
-          }
         })
 
     if(only_return_removed){
@@ -2109,9 +2087,7 @@ metric_graph <-  R6Class("metric_graph",
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
-  #' @param Spoints `SpatialPoints` or `SpatialPointsDataFrame` containing the
-  #' observations. It may include the coordinates of the observations only, or
-  #' the coordinates as well as the observations.
+  #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
   add_observations = function(data = NULL,
@@ -2164,7 +2140,7 @@ metric_graph <-  R6Class("metric_graph",
       strc_data <- TRUE
     }
 
-    if("SpatialPointsDataFrame"%in%is(Spoints)){
+    if("SpatialPointsDataFrame"%in%is(data)){
       data_coords <- "spatial"
       coord_x = ".coord_x"
       coord_y = ".coord_y"   
@@ -2245,9 +2221,6 @@ metric_graph <-  R6Class("metric_graph",
           ord_tmp <- do.call(order, data_group_tmp)
           rm(data_group_tmp)
           data <- lapply(data, function(dat){dat[ord_tmp]})
-          if(!is.null(Spoints)){
-            Spoints@coords <- Spoints@coords[ord_tmp,]
-          }
           rm(ord_tmp)
           data[[".dummy_var"]] <- as.character(data[[group[1]]])
           if(length(group)>1){
