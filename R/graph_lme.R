@@ -2318,7 +2318,7 @@ predict.graph_lme <- function(object,
       Z <- rnorm(dim(post_cov)[1] * n_samples)
       dim(Z) <- c(dim(post_cov)[1], n_samples)
       LQ <- chol(forceSymmetric(post_cov))
-      X <- LQ %*% Z
+      X <- t(LQ) %*% Z
       X <- X + mean_tmp
 
       if(return_original_order){
@@ -2337,7 +2337,7 @@ predict.graph_lme <- function(object,
       Z <- rnorm(dim(pred_cov)[1] * n_samples)
       dim(Z) <- c(dim(pred_cov)[1], n_samples)
       LQ <- chol(forceSymmetric(pred_cov))
-      X <- LQ %*% Z
+      X <- t(LQ) %*% Z
       X <- X + mean_tmp
 
       if(return_original_order){
@@ -2531,13 +2531,14 @@ simulate.graph_lme <- function(object,
 
   out <- list()
 
+
   for(repl_y in u_repl){
     out$distance_on_edge[[repl_y]] <- dist_ed
     out$edge_number[[repl_y]] <- edge_nb    
 
     idx_repl <- graph_bkp$.__enclos_env__$private$data[[".group"]] == repl_y
     y_repl <- Y[idx_repl]
-    y_repl <- y_repl[idx_obs]
+    y_repl <- y_repl
     
     mu_fe <- mu[idx_repl, , drop = FALSE]    
 
@@ -2545,7 +2546,6 @@ simulate.graph_lme <- function(object,
     A <- prec_cov_prior$A
     order_idx <- prec_cov_prior$order_vec
     prec_cov_prior <- prec_cov_prior$prec_cov
-    prec_cov_prior[order_idx,] <- prec_cov_prior
     type_prec_cov <- attr(prec_cov_prior, "prec_cov")
     
     if(!posterior){
@@ -2555,14 +2555,14 @@ simulate.graph_lme <- function(object,
       } else{
         krig_cov <- prec_cov_prior
       }
-      pred_cov <- Matrix::Diagonal(dim(Q_x_tmp)[1], x=sigma_e^2)
+      pred_cov <- Matrix::Diagonal(dim(krig_cov)[1], x=sigma_e^2)
     } else{
       if(type_prec_cov == "prec"){
           krig_Q <- t(A) %*% A/sigma_e^2 + prec_cov_prior
           mu_re <- solve(krig_Q,as.vector(t(A) %*% y_repl / sigma_e^2))
           mu_re <- A %*% mu_re
           krig_cov <- A%*%solve(krig_Q, t(A))          
-          pred_cov <- sigma_e^2 - krig_cov + krig_cov %*% solve(krig_cov + Matrix::Diagonal(dim(Q_x_tmp)[1], x=sigma_e^2), t(krig_cov))          
+          pred_cov <- sigma_e^2 - krig_cov + krig_cov %*% solve(krig_cov + Matrix::Diagonal(dim(krig_cov)[1], x=sigma_e^2), t(krig_cov))          
       } else{
           cov_loc <- prec_cov_prior
           cov_Obs <- prec_cov_prior
@@ -2576,21 +2576,36 @@ simulate.graph_lme <- function(object,
 
     mu_krig <- mu_fe + mu_re
 
-    if(latent){
-      Z <- rnorm(dim(post_cov)[1] * nsim)
-      dim(Z) <- c(dim(post_cov)[1], nsim)
+    mean_tmp <- as.vector(mu_krig)
+
+    if(sample_latent){
+      Z <- rnorm(dim(krig_cov)[1] * nsim)
+      dim(Z) <- c(dim(krig_cov)[1], nsim)
       LQ <- chol(forceSymmetric(krig_cov))
-      X <- LQ %*% Z
-      X <- X + mean_tmp
+      X <- t(LQ) %*% Z
+      X[order_idx,] <- X
       out$samples[[repl_y]] <- X
     } else{
-      mean_tmp <- as.vector(mu_krig)
-      Z <- rnorm(dim(pred_cov)[1] * nsim)
-      dim(Z) <- c(dim(pred_cov)[1], nsim)
-      LQ <- chol(forceSymmetric(pred_cov))
-      X <- LQ %*% Z
-      X <- X + mean_tmp
-      out$samples[[repl_y]] <- X      
+      if(posterior){
+        Z <- rnorm(dim(pred_cov)[1] * nsim)
+        dim(Z) <- c(dim(pred_cov)[1], nsim)
+        LQ <- chol(forceSymmetric(pred_cov))
+        X <- t(LQ) %*% Z
+        X <- X + mean_tmp
+        X[order_idx,] <- X      
+        out$samples[[repl_y]] <- X      
+      } else{
+        Z <- rnorm(dim(krig_cov)[1] * nsim)
+        dim(Z) <- c(dim(krig_cov)[1], nsim)
+        LQ <- chol(forceSymmetric(krig_cov))
+        X <- t(LQ) %*% Z
+        X <- X + mean_tmp
+        Z <- rnorm(dim(pred_cov)[1] * nsim) * sigma_e
+        dim(Z) <- c(dim(pred_cov)[1], nsim)
+        X <- X + Z
+        X[order_idx,] <- X
+        out$samples[[repl_y]] <- X
+      }
     }
   }
   return(out)
