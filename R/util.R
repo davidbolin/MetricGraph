@@ -1904,3 +1904,12 @@ check_model_options <- function(model_options){
     }
   }
 }
+
+#' @noRd 
+
+get_only_first <- function(vec){
+  idx <- which(vec)
+  vec <- rep(FALSE, length(vec))
+  vec[idx[1]] <- TRUE
+  return(vec)
+}

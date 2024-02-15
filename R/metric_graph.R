@@ -2318,24 +2318,28 @@ metric_graph <-  R6Class("metric_graph",
                         old_new_coords <- as.data.frame(old_new_coords)
                         colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
                         old_new_coords <- dplyr::as_tibble(old_new_coords)
-                        old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::ungroup() %>% dplyr::mutate (min_idx = dist == min_dist)
+                        old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::mutate(min_idx = dist == min_dist, min_idx = get_only_first(min_idx)) %>% dplyr::ungroup()
                         min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
                         closest_points_grp <- rep(FALSE, length(dup_points_grp))
                         closest_points_grp[min_dist_idx] <- TRUE
                         norm_XY_grp <- norm_XY_grp[!closest_points_grp]
-                        PtE_grp <- PtE_grp[!closest_points,,drop=FALSE]     
+                        PtE_grp <- PtE_grp[!closest_points_grp,,drop=FALSE]     
                         closest_points <- c(closest_points, closest_points_grp)                        
+                      } else{
+                        closest_points_grp <- rep(FALSE, length(norm_XY_grp))
+                        closest_points <- c(closest_points, closest_points_grp)      
                       }
+
                       dup_points <- c(dup_points, dup_points_grp)
                       far_points <- c(far_points, far_points_grp)
                       PtE_new <- rbind(PtE_new, PtE_grp)
                       norm_XY <- c(norm_XY, norm_XY_grp)
-                    }
+                    } 
                     PtE <- PtE_new
 
                     if(sum(dup_points)>0){
                         warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
-                    }                    
+                    }       
 
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(!is.null(closest_points)){
