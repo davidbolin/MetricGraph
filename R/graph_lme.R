@@ -2525,12 +2525,12 @@ get_covariance_precision <- function(object){
 #' fitted model using `graph_lme()`.
 #'
 #' @param object A `graph_lme` object
+#' @param nsim The number of simulations. 
+#' @param seed an object specifying if and how the random number generator should be initialized (‘seeded’).
 #' @param sample_latent If `FALSE`, samples for the response variable will be generated. If `TRUE`, samples for the latent model will be generated. The default is `FALSE`.
 #' @param posterior Should posterior samples be generated? If `FALSE`, samples will be computed based on the estimated prior distribution. The default is `FALSE`.
-#' @param nsim The number of simulations. 
 #' @param which_repl Which replicates to generate the samples. If `NULL` samples will
 #' be generated for all replicates. Default is `NULL`.
-#' @param seed an object specifying if and how the random number generator should be initialized (‘seeded’).
 #' @param ... Currently not used.
 #'
 #' @return A list containing elements `samples`, `edge_number` and `distance_on_edge`. Each of them is a list, whose indexes are the replicates, and in `samples` a matrix is given with `nsim` columns, each one being a sample. `edge_number` and `distance_on_edges` contain the respective edge numbers and distances on edge for each sampled element. The locations of the samples are the location of the data in which the model was fitted.
@@ -2538,11 +2538,11 @@ get_covariance_precision <- function(object){
 #' @method simulate graph_lme
 #'
 simulate.graph_lme <- function(object,
+                              nsim = 1,
+                              seed = NULL,                              
                               sample_latent = FALSE,
                               posterior = FALSE,
-                              nsim = 1,
                               which_repl = NULL,
-                              seed = NULL,
                               ...) {
 
   repl <- which_repl                                

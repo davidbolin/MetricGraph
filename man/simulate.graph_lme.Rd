@@ -6,27 +6,27 @@
 \usage{
 \method{simulate}{graph_lme}(
   object,
+  nsim = 1,
+  seed = NULL,
   sample_latent = FALSE,
   posterior = FALSE,
-  nsim = 1,
   which_repl = NULL,
-  seed = NULL,
   ...
 )
 }
 \arguments{
 \item{object}{A \code{graph_lme} object}
 
+\item{nsim}{The number of simulations.}
+
+\item{seed}{an object specifying if and how the random number generator should be initialized (‘seeded’).}
+
 \item{sample_latent}{If \code{FALSE}, samples for the response variable will be generated. If \code{TRUE}, samples for the latent model will be generated. The default is \code{FALSE}.}
 
 \item{posterior}{Should posterior samples be generated? If \code{FALSE}, samples will be computed based on the estimated prior distribution. The default is \code{FALSE}.}
 
-\item{nsim}{The number of simulations.}
-
 \item{which_repl}{Which replicates to generate the samples. If \code{NULL} samples will
 be generated for all replicates. Default is \code{NULL}.}
-
-\item{seed}{an object specifying if and how the random number generator should be initialized (‘seeded’).}
 
 \item{...}{Currently not used.}
 }

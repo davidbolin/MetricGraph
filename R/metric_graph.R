@@ -1768,8 +1768,12 @@ metric_graph <-  R6Class("metric_graph",
       data_coords <- "spatial"
       coord_x = ".coord_x"
       coord_y = ".coord_y"      
-
-      data <- sf::st_transform(data, crs = private$crs)
+      
+      if(!is.null(private$crs)){
+        if(!is.na((sf::st_crs(data)))){
+          data <- sf::st_transform(data, crs = private$crs)
+        }
+      }
       coord_tmp <- sf::st_coordinates(data,geometry)
       data <- sf::st_drop_geometry(data)
       data[[".coord_x"]] <- coord_tmp[,1]
@@ -1781,7 +1785,11 @@ metric_graph <-  R6Class("metric_graph",
       data_coords <- "spatial"
       coord_x = ".coord_x"
       coord_y = ".coord_y"   
-      data <- sp::spTransform(data,sp::CRS(private$proj4string))
+      if(!is.null(private$proj4string)){
+        if(!is.na(sp::proj4string(data))){
+          data <- sp::spTransform(data,sp::CRS(private$proj4string))
+        }
+      }
       coord_tmp <- data@coords
       data <- data@data
       data[[".coord_x"]] <- coord_tmp[,1]
@@ -2132,7 +2140,11 @@ metric_graph <-  R6Class("metric_graph",
       coord_x = ".coord_x"
       coord_y = ".coord_y"      
 
-      data <- sf::st_transform(data, crs = private$crs)
+      if(!is.null(private$crs)){
+        if(!is.na((sf::st_crs(data)))){
+          data <- sf::st_transform(data, crs = private$crs)
+        }
+      }
       coord_tmp <- sf::st_coordinates(data,geometry)
       data <- sf::st_drop_geometry(data)
       data[[".coord_x"]] <- coord_tmp[,1]
@@ -2144,7 +2156,11 @@ metric_graph <-  R6Class("metric_graph",
       data_coords <- "spatial"
       coord_x = ".coord_x"
       coord_y = ".coord_y"   
-      data <- sp::spTransform(data,sp::CRS(private$proj4string))
+      if(!is.null(private$proj4string)){
+        if(!is.na(sp::proj4string(data))){
+          data <- sp::spTransform(data,sp::CRS(private$proj4string))
+        }
+      }
       coord_tmp <- data@coords
       data <- data@data
       data[[".coord_x"]] <- coord_tmp[,1]
@@ -2295,20 +2311,20 @@ metric_graph <-  R6Class("metric_graph",
                       warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
                     }
                     norm_XY <- norm_XY[!far_points]
-                    print("Bla!!!")
-                    print(XY_new)
-                    old_new_coords <- cbind(point_coords[dup_points,], XY_new[dup_points,], norm_XY[dup_points], which(dup_points))
-                    old_new_coords <- as.data.frame(old_new_coords)
-                    colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
-                    old_new_coords <- dplyr::as_tibble(old_new_coords)
-                    old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::ungroup() %>% dplyr::mutate(min_idx = dist == min_dist)
-                    min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
-                    closest_points <- rep(FALSE, length(dup_points))
-                    closest_points[min_dist_idx] <- TRUE
-                    data <- lapply(data, function(dat){dat[!closest_points]})
-                    norm_XY <- norm_XY[!closest_points]
-                    removed_data <-  lapply(data, function(dat){dat[closest_points]})
-                    PtE <- PtE[!closest_points,,drop=FALSE]     
+                    if(any(dup_points)){
+                      old_new_coords <- cbind(point_coords[dup_points,], XY_new[dup_points,], norm_XY[dup_points], which(dup_points))
+                      old_new_coords <- as.data.frame(old_new_coords)
+                      colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
+                      old_new_coords <- dplyr::as_tibble(old_new_coords)
+                      old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::ungroup() %>% dplyr::mutate(min_idx = dist == min_dist)
+                      min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
+                      closest_points <- rep(FALSE, length(dup_points))
+                      closest_points[min_dist_idx] <- TRUE
+                      data <- lapply(data, function(dat){dat[!closest_points]})
+                      norm_XY <- norm_XY[!closest_points]
+                      removed_data <-  lapply(data, function(dat){dat[closest_points]})
+                      PtE <- PtE[!closest_points,,drop=FALSE]     
+                    }
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                    
                     }

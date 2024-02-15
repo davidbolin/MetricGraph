@@ -772,7 +772,6 @@ No return value. Called for its side effects.
 Process data to the metric graph data format.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$process_data(
-  Spoints = NULL,
   data = NULL,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
@@ -787,17 +786,14 @@ Process data to the metric graph data format.
   include_distance_to_graph = TRUE,
   only_return_removed = FALSE,
   tolerance = max(self$edge_lengths)/2,
-  verbose = FALSE
+  verbose = FALSE,
+  Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Spoints}}{\code{SpatialPoints} or \code{SpatialPointsDataFrame} containing the
-observations. It may include the coordinates of the observations only, or
-the coordinates as well as the observations.}
-
 \item{\code{data}}{A \code{data.frame} or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
 with a column indicating the index of the group. If \code{data} is not \code{NULL},
@@ -852,6 +848,8 @@ greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.}
 
 \item{\code{verbose}}{If \code{TRUE}, report steps and times.}
+
+\item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -867,7 +865,6 @@ stored in the \code{data} element of the \code{metric_graph} object.
 Add observations to the metric graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
-  Spoints = NULL,
   data = NULL,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
@@ -883,21 +880,18 @@ Add observations to the metric graph.
   duplicated_strategy = "closest",
   include_distance_to_graph = TRUE,
   return_removed = TRUE,
-  verbose = 1
+  verbose = 1,
+  Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Spoints}}{\code{SpatialPoints} or \code{SpatialPointsDataFrame} containing the
-observations. It may include the coordinates of the observations only, or
-the coordinates as well as the observations.}
-
 \item{\code{data}}{A \code{data.frame} or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
-with a column indicating the index of the group. If \code{data} is not \code{NULL},
-it takes priority over any eventual data in \code{Spoints}. \code{data} can also be an \code{sf} object,
+with a column indicating the index of the group. \code{data} can also be an \code{sf} object or a
+\code{SpatialPointsDataFrame} object.
 in which case \code{data_coords} will automatically be spatial, and there is no need to specify the \code{coord_x} or \code{coord_y} arguments.}
 
 \item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that
@@ -951,6 +945,8 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 \item{\code{return_removed}}{Should the removed data (if it exists) when using 'closest' \code{duplicated_strategy} be returned?}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
 }
 \if{html}{\out{</div>}}
 }
