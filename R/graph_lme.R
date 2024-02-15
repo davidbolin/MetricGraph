@@ -1689,7 +1689,6 @@ predict.graph_lme <- function(object,
                               edge_number = "edge_number",
                               distance_on_edge = "distance_on_edge",
                               normalized = FALSE,
-                              sample_latent = FALSE,
                               no_nugget = FALSE,
                               return_as_list = FALSE,
                               return_original_order = TRUE,
@@ -2397,7 +2396,7 @@ predict.graph_lme <- function(object,
       }
     }
     
-    if(pred_samples && null_newdata){
+    if(pred_samples){
       mean_tmp <- as.vector(mu_krig[idx_prd, , drop=FALSE])
       Z <- rnorm(dim(pred_cov)[1] * n_samples)
       dim(Z) <- c(dim(pred_cov)[1], n_samples)

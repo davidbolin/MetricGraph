@@ -18,7 +18,6 @@
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
   normalized = FALSE,
-  sample_latent = FALSE,
   no_nugget = FALSE,
   return_as_list = FALSE,
   return_original_order = TRUE,

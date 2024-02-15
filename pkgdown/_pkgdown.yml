@@ -78,6 +78,7 @@ reference:
     contents:
     - graph_lme
     - predict.graph_lme
+    - simulate.graph_lme
     - summary.graph_lme
     - posterior_crossvalidation
     - graph_starting_values
