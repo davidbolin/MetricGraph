@@ -51,6 +51,8 @@
 #' @param which_repl Vector or list containing which replicates to consider in
 #' the model. If `NULL` all replicates will be considered.
 #' @param model_options A list containing additional options to be used in the model. Currently, it is possible to fix parameters during the estimation or change the starting values of the parameters. The general structure of the elements of the list is `fix_parname` and `start_parname`, where `parname` stands for the name of the parameter. If `fix_parname` is not `NULL`, then the model with be fitted with the `parname` being fixed at the value that was passed. If `start_parname` is not `NULL`, the model will be fitted using the value passed as starting value for `parname`. the For 'WM' models, the possible elements of the list are: `fix_sigma_e`, `start_sigma_e`, `fix_nu`, `start_nu`, `fix_sigma`, `start_sigma`, `fix_range`, `start_range`. Alternatively, one can use `fix_sigma_e`, `start_sigma_e`, `fix_nu`, `start_nu`, `fix_tau`, `start_tau`, `fix_kappa`, `start_kappa`. For 'WM1', 'WM2', 'isoExp', 'GL1' and 'GL2' models, the possible elements of the list are `fix_sigma_e`, `start_sigma_e`, `fix_sigma`, `start_sigma`, `fix_range`, `start_range`. Alternatively, one can use `fix_sigma_e`, `start_sigma_e`, `fix_tau`, `start_tau`, `fix_kappa`, `start_kappa`. For 'isoCov' models, the possible values are `fix_sigma_e`, `start_sigma_e`, `fix_par_vec`, `start_par_vec`. Observe that contrary to the other models, for 'isoCov' models, both `fix_par_vec` and `start_par_vec` should be given as vectors of the size of the dimension of the vector for the input of the covariance function passed to the 'isoCov' model. Furthermore, for 'isoCov' models, `fix_par_vec` is a logical vector, indicating which parameters to be fixed, and the values will be kept fixed to the values given to `start_par_vec`, one can also use `fix_sigma_e` and `start_sigma_e` for controlling the std. deviation of the measurement error.
+#' @param previous_fit An object of class `graph_lme`. Use the fitted coefficients as starting values.
+#' @param fix_coeff If using a previous fit, should all coefficients be fixed at the starting values?
 #' @param optim_method The method to be used with `optim` function.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
@@ -77,9 +79,9 @@ graph_lme <- function(formula, graph,
                 which_repl = NULL,
                 optim_method = "L-BFGS-B",
                 model_options = list(),
-                # parameterization_latent = c("matern", "spde"),
                 BC = 0,
-                # model_matrix = TRUE,
+                previous_fit = NULL,
+                fix_coeff = FALSE,
                 parallel = FALSE,
                 n_cores = parallel::detectCores()-1,
                 optim_controls = list(),
@@ -122,6 +124,45 @@ graph_lme <- function(formula, graph,
             "wm" = "WhittleMatern",
             model_type
             )
+
+  start_previous <- NULL     
+  par_vec <- FALSE
+
+  if(!is.null(previous_fit)){
+    if(!inherits(previous_fit, "graph_lme")){
+      warning("previous_fit is not a 'graph_lme' object, thus will be ignored.")
+    }
+    if(tolower(previous_fit$latent_model$type) %in% c("whittlematern", "graphlaplacian")){
+      par_vec <- FALSE
+      if(tolower(model_type) == "isocov"){
+        warning("previous_fit is of type 'isoCov' and thus will be ignored.")
+      } else {
+        if(fix_coeff){
+          model_options <- list(fix_kappa = previous_fit$coeff$random_effects[2],
+                              fix_tau = previous_fit$coeff$random_effects[1],
+                              fix_sigma_e = previous_fit$coeff$measurement_error)
+        } else{
+          model_options <- list(start_kappa = previous_fit$coeff$random_effects[2],
+                              start_tau = previous_fit$coeff$random_effects[1],
+                              start_sigma_e = previous_fit$coeff$measurement_error)
+        }
+      }
+    } else if(tolower(previous_fit$latent_model$type) == "isocov"){
+      par_vec <- TRUE
+      if(tolower(model_type) %in% c("whittlematern", "graphlaplacian")){
+        warning("previous_fit is not of type 'isoCov' and thus will be ignored")
+      } else{ 
+        if(fix_coeff){
+          model_options <- list(start_par_vec = previous_fit$coeff$random_effects,
+                                fix_par_vec = rep(TRUE, length(previous_fit$coeff$random_effects)),
+                              fix_sigma_e = previous_fit$coeff$measurement_error)
+        } else{
+          model_options <- list(start_par_vec = previous_fit$coeff$random_effects,
+                              start_sigma_e = previous_fit$coeff$measurement_error)
+        }
+      }
+    } 
+  } 
 
   check_model_options(model_options)
 
@@ -392,6 +433,7 @@ graph_lme <- function(formula, graph,
     colnames(X_cov) <- names_temp
   }
 
+
   names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
 
   graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
@@ -399,7 +441,7 @@ graph_lme <- function(formula, graph,
 
   time_build_likelihood_start <- Sys.time()
 
-  if(is.null(model_options$start_par_vec)){
+  if( (is.null(model_options$start_par_vec) && !par_vec) || tolower(model_type) != "isocov"){
     if(model_type == "whittlematern"){
       if(model[["alpha"]] == 1){
         model_start <- "alpha1"
@@ -426,6 +468,7 @@ graph_lme <- function(formula, graph,
       }
     }
 
+
     if(model_type != "linearmodel"){
       # range_par <- FALSE
       # if(model_type == "whittlematern"){
@@ -444,16 +487,30 @@ graph_lme <- function(formula, graph,
                     range_par = FALSE,
                     model_options = model_options,
                     rec_tau = rec_tau)
+                
       start_values <- start_fixed_values$start_values
       fixed_values <- start_fixed_values$fixed_values
     }
   } else if(model_type != "linearmodel") {
-    if(is.null(model_options$start_sigma_e)){
+    if(is.null(model_options$start_sigma_e) && is.null(model_options$fix_sigma_e)){
       start_values <- c(log(0.1*sd(y_graph)),log(model_options$start_par_vec))
+    } else if(!is.null(model_options$fix_sigma_e)) {
+      start_values <- c(log(model_options$fix_sigma_e),log(model_options$start_par_vec))
     } else{
       start_values <- c(log(model_options$start_sigma_e),log(model_options$start_par_vec))
     }
+    
     par_names <- names(model_options$start_par_vec)
+    if(is.null(model_options$fix_sigma_e)){
+        fixed_values <- FALSE
+    } else{
+        fixed_values <- TRUE
+    }
+    if(is.null(model_options$fix_par_vec)){
+      fixed_values <- c(fixed_values, rep(FALSE, length(model_options$start_par_vec)))
+    } else{
+      fixed_values <- c(fixed_values, model_options$fix_par_vec)
+    }
   }
 
   if(ncol(X_cov)>0 && model_type != "linearmodel"){
@@ -511,7 +568,7 @@ graph_lme <- function(formula, graph,
                 parameterization = "spde")) # parameterization = parameterization_latent))
           }
         } else {
-          likelihood <<- function(theta){
+          likelihood <- function(theta){
             if(!is.null(X_cov)){
                   n_cov <- ncol(X_cov)
             } else{
@@ -563,7 +620,7 @@ graph_lme <- function(formula, graph,
                                                fix_v_val = fix_v_val)
   } else if(model_type == "isocov") {
 
-  if (is.character(model[["cov_function"]])) {
+  if (is.character(model[["cov_function"]]) && !par_vec) {
     if(model[["cov_function"]] %in% c("WM1","WM2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
       par_names <- c("tau", "kappa")
@@ -590,9 +647,16 @@ graph_lme <- function(formula, graph,
     } else{
     model[["cov_function_name"]] <- "other"
     model_cov <- "isoCov"
+    if(model[["cov_function"]] == "exp_covariance"){
+        model[["cov_function"]] <- exp_covariance
+        model[["cov_function_name"]] <- "exp_covariance"
+    }    
 
-    fix_vec <- model_options$fix_par_vec
-    fix_v_val <- model_options$start_par_values
+    # fix_vec <- model_options$fix_par_vec
+    # fix_v_val <- model_options$start_par_values
+    fix_vec <- fixed_values
+    fix_v_val <- start_values
+    start_values <- start_values[!fix_vec]
 
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
                                                 y_graph = y_graph,
@@ -708,7 +772,7 @@ graph_lme <- function(formula, graph,
         }
 
       } else{
-        possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")
+        possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")  
         start_fit <- Sys.time()
         # res <- withCallingHandlers(tryCatch(optim(start_values_fix(start_values, fix_par_vec, n_cov),
         #           likelihood_new2, method = optim_method,
@@ -896,6 +960,7 @@ graph_lme <- function(formula, graph,
   } else{
     tmp_vec <- rep(1,n_fixed)
   }
+
   if(length(tmp_vec)>1){
       par_change <- diag(tmp_vec)
   } else{
@@ -2104,7 +2169,7 @@ predict.graph_lme <- function(object,
 
           # Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
           # mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
-          # mu_krig <<- A[idx_prd,] %*% mu_krig
+          # mu_krig <- A[idx_prd,] %*% mu_krig
 
           # print(mu_krig)
       

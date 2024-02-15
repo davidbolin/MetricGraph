@@ -1352,7 +1352,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
         dists <- sqrt((lines[,1] - points[,1])^2 + (lines[,2]-points[,2])^2) * fact
       }
     } else if (which_longlat == "sf") {
-        sf_points <<- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
+        sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
         if(transform){
           sf_points <- sf::st_transform(sf_points,  crs = 4326)
         }
@@ -1849,7 +1849,6 @@ create_fix_vec_val <- function(fixed_values){
     }
 
   return(list(fix_vec = fix_vec, fix_v_val = fix_v_val))
-
 }
 
 
