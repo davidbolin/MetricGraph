@@ -411,10 +411,12 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     X_cov <- NULL
   }
 
-  if(all(dim(X_cov) == c(0,1))){
-    names_temp <- colnames(X_cov)
-    X_cov <- matrix(1, nrow = length(y_graph))
-    colnames(X_cov) <- names_temp
+  if(!is.null(X_cov)){
+    if(all(dim(X_cov) == c(0,1))){
+      names_temp <- colnames(X_cov)
+      X_cov <- matrix(1, nrow = length(y_graph))
+      colnames(X_cov) <- names_temp
+    }
   }
 
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
