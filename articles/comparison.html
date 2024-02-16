@@ -101,7 +101,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-09. Last
-modified: 2024-02-15.</h4>
+modified: 2024-02-16.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/comparison.rmd" class="external-link"><code>vignettes/comparison.rmd</code></a></small>
       <div class="d-none name"><code>comparison.rmd</code></div>
@@ -109,9 +109,9 @@ modified: 2024-02-15.</h4>
 
     
     
-<div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h2>
+<div class="section level3">
+<h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h3>
 <p>In this vignette our goal is to compare the predictive power of
 different models on metric graphs by cross-validation. More precisely,
 we consider the Whittle–Matérn fields introduced by <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin,
@@ -120,9 +120,9 @@ Simas, and Wallin (2023)</span></a>, a Gaussian random field with an
 isotropic exponential covariance function <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>, and
 Matérn Gaussian processes based on the graph Laplacian <a href="http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf" class="external-link"><span class="citation">Borovitskiy et al. (2021)</span></a>.</p>
 </div>
-<div class="section level2">
-<h2 id="the-dataset">The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
-</h2>
+<div class="section level3">
+<h3 id="the-dataset">The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
+</h3>
 <p>For this example we will consider the <code>pems</code> data
 contained in the <code>MetricGraph</code> package. The data consists of
 traffic speed observations on highways in the city of San Jose,
@@ -134,15 +134,25 @@ California. The variable <code>y</code> contains the traffic speeds.</p>
 <p>Let us take a look at the observations:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level2">
-<h2 id="the-models">The models<a class="anchor" aria-label="anchor" href="#the-models"></a>
-</h2>
-<p>Let us fit the different models. We start by fitting a Whittle-Matérn
-field with <code>alpha = 1</code>:</p>
+<div class="section level3">
+<h3 id="the-models">The models<a class="anchor" aria-label="anchor" href="#the-models"></a>
+</h3>
+<p>We will assume that the data has the following structure:</p>
+<p><span class="math display">\[
+y_i = \mu + u(s_i) + \varepsilon_i, \quad i=1,\ldots,n,
+\]</span> where <span class="math inline">\(\mu\)</span> is a constant
+that represents the mean of the field, <span class="math inline">\(u(\cdot)\)</span> is a Gaussian random field,
+<span class="math inline">\(s_i\in \Gamma\)</span> are observation
+locations and <span class="math inline">\(\varepsilon_i\)</span> are
+independent centered Gaussian variables <span class="math inline">\(N(0,\sigma_e^2)\)</span> representing measurement
+noise.</p>
+<p>Let us fit the different models, that is, we will assume several
+different possible latent fields <span class="math inline">\(u(\cdot)\)</span>. We start by fitting a
+Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_alpha1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
+<code class="sourceCode R"><span><span class="va">fit_alpha1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
 <span>            model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"WhittleMatern"</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>and look at its summary:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -151,36 +161,38 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Latent model - Whittle-Matern with alpha = 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
 <span><span class="co">#&gt;     alpha = 1))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; (Intercept)   51.202     4.111   12.45   &lt;2e-16 ***</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau   0.107461  0.007631  14.082</span></span>
-<span><span class="co">#&gt; kappa 0.008431  0.005995   1.406</span></span>
+<span><span class="co">#&gt; tau   0.104413  0.007828  13.338</span></span>
+<span><span class="co">#&gt; kappa 0.108770  0.049942   2.178</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma    71.66     25.44   2.816</span></span>
-<span><span class="co">#&gt; range   237.23    168.62   1.407</span></span>
+<span><span class="co">#&gt; sigma   20.534     4.355   4.715</span></span>
+<span><span class="co">#&gt; range   18.387     8.426   2.182</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   6.8908    0.4081   16.89</span></span>
+<span><span class="co">#&gt; std. dev   6.8665    0.4086    16.8</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1224.501 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 17</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1221.337 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 29</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  6.50487 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  14.12102 secs</span></span></code></pre></div>
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
+<code class="sourceCode R"><span><span class="va">fit_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
 <span>            model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"WhittleMatern"</span>, alpha <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>and its summary:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -189,40 +201,42 @@ field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Latent model - Whittle-Matern with alpha = 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
 <span><span class="co">#&gt;     alpha = 2))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; (Intercept)   50.850     2.652   19.18   &lt;2e-16 ***</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau    0.14486   0.02156   6.718</span></span>
-<span><span class="co">#&gt; kappa  0.12983   0.02418   5.368</span></span>
+<span><span class="co">#&gt; tau    0.07528   0.01420   5.302</span></span>
+<span><span class="co">#&gt; kappa  0.49552   0.08698   5.697</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   73.782    15.537   4.749</span></span>
-<span><span class="co">#&gt; range   26.682     4.822   5.533</span></span>
+<span><span class="co">#&gt; sigma   19.042     2.461   7.737</span></span>
+<span><span class="co">#&gt; range    6.991     1.188   5.884</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   7.9315    0.4048   19.59</span></span>
+<span><span class="co">#&gt; std. dev   7.4751    0.3917   19.09</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1234.673 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 15</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1216.806 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 16</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  9.48375 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  14.38118 secs</span></span></code></pre></div>
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_alpha1_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, BC <span class="op">=</span> <span class="fl">1</span>,</span>
+<code class="sourceCode R"><span><span class="va">fit_alpha1_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, BC <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>        model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"WhittleMatern"</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_alpha2_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, BC <span class="op">=</span> <span class="fl">1</span>,</span>
+<span><span class="va">fit_alpha2_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, BC <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>        model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"WhittleMatern"</span>, alpha <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Now, let us look at the summaries:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -231,32 +245,34 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Latent model - Whittle-Matern with alpha = 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
 <span><span class="co">#&gt;     alpha = 1), BC = 1)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; (Intercept)   51.155     4.285   11.94   &lt;2e-16 ***</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau   0.107462  0.007631  14.082</span></span>
-<span><span class="co">#&gt; kappa 0.002703  0.003505   0.771</span></span>
+<span><span class="co">#&gt; tau   0.104561  0.007831  13.352</span></span>
+<span><span class="co">#&gt; kappa 0.095349  0.051226   1.861</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   126.57     81.62   1.551</span></span>
-<span><span class="co">#&gt; range   740.04    959.37   0.771</span></span>
+<span><span class="co">#&gt; sigma   21.901     5.468   4.005</span></span>
+<span><span class="co">#&gt; range   20.976    11.247   1.865</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   6.8909    0.4081   16.89</span></span>
+<span><span class="co">#&gt; std. dev   6.8673    0.4085   16.81</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1224.51 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 19</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1221.489 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 32</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  7.1203 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  15.90697 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -264,43 +280,48 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Latent model - Whittle-Matern with alpha = 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", </span></span>
 <span><span class="co">#&gt;     alpha = 2), BC = 1)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; (Intercept)   50.850     2.683   18.95   &lt;2e-16 ***</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau    0.14121   0.01980   7.131</span></span>
-<span><span class="co">#&gt; kappa  0.11934   0.02472   4.829</span></span>
+<span><span class="co">#&gt; tau    0.07626   0.01446   5.275</span></span>
+<span><span class="co">#&gt; kappa  0.48068   0.08719   5.513</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   85.888    21.105   4.069</span></span>
-<span><span class="co">#&gt; range   29.027     5.877   4.939</span></span>
+<span><span class="co">#&gt; sigma   19.672     2.659   7.398</span></span>
+<span><span class="co">#&gt; range    7.207     1.266   5.693</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   7.8889    0.3982   19.81</span></span>
+<span><span class="co">#&gt; std. dev   7.4779    0.3913   19.11</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1234.77 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 16</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1217.021 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 18</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  10.37868 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  16.08952 secs</span></span></code></pre></div>
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_GL1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
+<code class="sourceCode R"><span><span class="va">fit_GL1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
 <span>            model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"graphLaplacian"</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in graph_lme(y ~ 1, graph = pems_graph, model = list(type =</span></span>
+<span><span class="co">#&gt; "graphLaplacian", : All optimization methods failed to provide a</span></span>
+<span><span class="co">#&gt; positive-definite Hessian. The optimization method with largest likelihood was</span></span>
+<span><span class="co">#&gt; chosen. You can try to obtain a positive-definite Hessian by setting</span></span>
+<span><span class="co">#&gt; 'improve_hessian' to TRUE.</span></span>
+<span><span class="co">#&gt; Warning in sqrt(diag(inv_fisher)): NaNs produced</span></span>
 <span></span>
-<span><span class="va">fit_GL2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
-<span>            model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"graphLaplacian"</span>, alpha <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in graph_lme(y ~ -1, graph = pems_graph, model = list(type =</span></span>
-<span><span class="co">#&gt; "graphLaplacian", : optim method L-BFGS-B failed to provide a positive-definite</span></span>
-<span><span class="co">#&gt; Hessian. Another optimization method was used.</span></span></code></pre></div>
+<span><span class="va">fit_GL2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>,</span>
+<span>            model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"graphLaplacian"</span>, alpha <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>and look at their summaries:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL1</span><span class="op">)</span></span>
@@ -308,32 +329,34 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Latent model - graph Laplacian SPDE with alpha = 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "graphLaplacian", </span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "graphLaplacian", </span></span>
 <span><span class="co">#&gt;     alpha = 1))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)</span></span>
+<span><span class="co">#&gt; (Intercept)    38.78       NaN     NaN      NaN</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau   0.107558  0.007645  14.069</span></span>
-<span><span class="co">#&gt; kappa 0.007029  0.004998   1.406</span></span>
+<span><span class="co">#&gt; tau   0.106588  0.007586   14.05</span></span>
+<span><span class="co">#&gt; kappa 0.030622       NaN     NaN</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma    78.42     27.84   2.816</span></span>
-<span><span class="co">#&gt; range   284.54    202.25   1.407</span></span>
+<span><span class="co">#&gt; sigma    37.91     13.31   2.848</span></span>
+<span><span class="co">#&gt; range    65.31     46.66   1.400</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   6.8925    0.4083   16.88</span></span>
+<span><span class="co">#&gt; std. dev   6.8994    0.4092   16.86</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1224.56 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 24</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1223.056 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 205</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  0.94902 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.34626 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -341,45 +364,47 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Latent model - graph Laplacian SPDE with alpha = 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "graphLaplacian", </span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "graphLaplacian", </span></span>
 <span><span class="co">#&gt;     alpha = 2))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
+<span><span class="co">#&gt; (Intercept)   51.394     2.883   17.83   &lt;2e-16 ***</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau    0.20606   0.02633   7.827</span></span>
-<span><span class="co">#&gt; kappa  0.08915   0.01894   4.707</span></span>
+<span><span class="co">#&gt; tau    0.12680   0.02152   5.892</span></span>
+<span><span class="co">#&gt; kappa  0.32736   0.05672   5.772</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects (Matern parameterization):</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; sigma   91.163    24.767   3.681</span></span>
-<span><span class="co">#&gt; range   38.859     8.127   4.782</span></span>
+<span><span class="co">#&gt; sigma   21.053     3.038   6.930</span></span>
+<span><span class="co">#&gt; range   10.582     1.771   5.975</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   7.5124    0.3879   19.37</span></span>
+<span><span class="co">#&gt; std. dev   7.1607    0.3888   18.42</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1223.088 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 224</span></span>
-<span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1209.003 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 62</span></span>
+<span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.35294 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  3.57308 secs</span></span></code></pre></div>
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
 <p>Let us now fit a Gaussian field with isotropic exponential covariance
 function:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_isoexp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
+<code class="sourceCode R"><span><span class="va">fit_isoexp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph</span>, </span>
 <span>                model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"isoCov"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in graph_lme(y ~ -1, graph = pems_graph, model = list(type =</span></span>
-<span><span class="co">#&gt; "isoCov")): No check for Euclidean edges have been perfomed on this graph. The</span></span>
-<span><span class="co">#&gt; isotropic covariance models are only known to work for graphs with Euclidean</span></span>
-<span><span class="co">#&gt; edges. You can check if the graph has Euclidean edges by running the</span></span>
-<span><span class="co">#&gt; `check_euclidean()` method. See the vignette</span></span>
+<span><span class="co">#&gt; Warning in graph_lme(y ~ 1, graph = pems_graph, model = list(type = "isoCov")):</span></span>
+<span><span class="co">#&gt; No check for Euclidean edges have been perfomed on this graph. The isotropic</span></span>
+<span><span class="co">#&gt; covariance models are only known to work for graphs with Euclidean edges. You</span></span>
+<span><span class="co">#&gt; can check if the graph has Euclidean edges by running the `check_euclidean()`</span></span>
+<span><span class="co">#&gt; method. See the vignette</span></span>
 <span><span class="co">#&gt; https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html</span></span>
 <span><span class="co">#&gt; for further details.</span></span></code></pre></div>
 <p>and look at the summary:</p>
@@ -389,26 +414,28 @@ function:</p>
 <span><span class="co">#&gt; Latent model - Covariance-based model</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; graph_lme(formula = y ~ -1, graph = pems_graph, model = list(type = "isoCov"))</span></span>
+<span><span class="co">#&gt; graph_lme(formula = y ~ 1, graph = pems_graph, model = list(type = "isoCov"))</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; No fixed effects.</span></span>
+<span><span class="co">#&gt; Fixed effects:</span></span>
+<span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)</span></span>
+<span><span class="co">#&gt; (Intercept)    33.08     24.22   1.366    0.172</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; tau   47.09091  23.62895   1.993</span></span>
-<span><span class="co">#&gt; kappa  0.01982   0.02031   0.976</span></span>
+<span><span class="co">#&gt; tau   31.23132  16.36467   1.908</span></span>
+<span><span class="co">#&gt; kappa  0.04609   0.05046   0.913</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev   6.8813    0.4082   16.86</span></span>
+<span><span class="co">#&gt; std. dev    6.877     0.409   16.82</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -1224.2 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 20</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -1223.773 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 40</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  5.25202 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  9.63167 secs</span></span></code></pre></div>
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -490,15 +517,21 @@ even on an metric graph with Euclidean edges.</p>
 <span>        <span class="op">}</span></span></code></pre></div>
 <p>Let us now fit the model:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_isomat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span>, graph <span class="op">=</span> <span class="va">pems_graph</span>, </span>
+<code class="sourceCode R"><span><span class="va">fit_isomat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph <span class="op">=</span> <span class="va">pems_graph</span>, </span>
 <span>                            model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"isoCov"</span>, cov_function <span class="op">=</span> <span class="va">cov_mat</span><span class="op">)</span>, </span>
 <span>                                    model_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start_par_vec <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in graph_lme(y ~ -1, graph = pems_graph, model = list(type = "isoCov",</span></span>
-<span><span class="co">#&gt; : This graph DOES NOT have Euclidean edges. The isotropic covariance models are</span></span>
+<span><span class="co">#&gt; Warning in graph_lme(y ~ 1, graph = pems_graph, model = list(type = "isoCov", :</span></span>
+<span><span class="co">#&gt; This graph DOES NOT have Euclidean edges. The isotropic covariance models are</span></span>
 <span><span class="co">#&gt; NOT guaranteed to work for this graph! See the vignette</span></span>
 <span><span class="co">#&gt; https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html</span></span>
 <span><span class="co">#&gt; for further details.</span></span>
-<span><span class="co">#&gt; Error in model[["cov_function"]] == "exp_covariance": comparison (==) is possible only for atomic and list types</span></span></code></pre></div>
+<span><span class="co">#&gt; Warning in graph_lme(y ~ 1, graph = pems_graph, model = list(type = "isoCov", :</span></span>
+<span><span class="co">#&gt; All optimization methods failed to provide a positive-definite Hessian. The</span></span>
+<span><span class="co">#&gt; optimization method with largest likelihood was chosen. You can try to obtain a</span></span>
+<span><span class="co">#&gt; positive-definite Hessian by setting 'improve_hessian' to TRUE.</span></span>
+<span><span class="co">#&gt; Warning in new_theta[!fix_vec_full] &lt;- theta: number of items to replace is not</span></span>
+<span><span class="co">#&gt; a multiple of replacement length</span></span>
+<span><span class="co">#&gt; Error in chol.default(Sigma_non_na): the leading minor of order 1 is not positive</span></span></code></pre></div>
 <p>Indeed, the model could not be fitted.</p>
 </div>
 <div class="section level2">
@@ -519,17 +552,16 @@ parameters and compare the results:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 6</span></span></span>
 <span><span class="co">#&gt;   Model      logscore  crps scrps   mae  rmse</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> alpha=1       <span style="text-decoration: underline;">3</span>602. <span style="text-decoration: underline;">4</span>728. <span style="text-decoration: underline;">2</span>132. <span style="text-decoration: underline;">6</span>162. <span style="text-decoration: underline;">8</span>598.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> alpha=2       <span style="text-decoration: underline;">3</span>563. <span style="text-decoration: underline;">4</span>612. <span style="text-decoration: underline;">2</span>118. <span style="text-decoration: underline;">5</span>968. <span style="text-decoration: underline;">8</span>348.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> isoExp        <span style="text-decoration: underline;">3</span>602. <span style="text-decoration: underline;">4</span>729. <span style="text-decoration: underline;">2</span>132. <span style="text-decoration: underline;">6</span>171. <span style="text-decoration: underline;">8</span>598.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> GL1           <span style="text-decoration: underline;">3</span>602. <span style="text-decoration: underline;">4</span>729. <span style="text-decoration: underline;">2</span>132. <span style="text-decoration: underline;">6</span>164. <span style="text-decoration: underline;">8</span>599.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> GL2           <span style="text-decoration: underline;">3</span>562. <span style="text-decoration: underline;">4</span>611. <span style="text-decoration: underline;">2</span>115. <span style="text-decoration: underline;">6</span>013. <span style="text-decoration: underline;">8</span>410.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> alpha=1 bc    <span style="text-decoration: underline;">3</span>602. <span style="text-decoration: underline;">4</span>728. <span style="text-decoration: underline;">2</span>132. <span style="text-decoration: underline;">6</span>162. <span style="text-decoration: underline;">8</span>598.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> alpha=2 bc    <span style="text-decoration: underline;">3</span>561. <span style="text-decoration: underline;">4</span>599. <span style="text-decoration: underline;">2</span>116. <span style="text-decoration: underline;">5</span>950. <span style="text-decoration: underline;">8</span>333.</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="kriging">Kriging<a class="anchor" aria-label="anchor" href="#kriging"></a>
-</h2>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> alpha=1       <span style="text-decoration: underline;">3</span>605. <span style="text-decoration: underline;">4</span>738. <span style="text-decoration: underline;">2</span>133. <span style="text-decoration: underline;">6</span>179. <span style="text-decoration: underline;">8</span>615.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> alpha=2       <span style="text-decoration: underline;">3</span>556. <span style="text-decoration: underline;">4</span>547. <span style="text-decoration: underline;">2</span>111. <span style="text-decoration: underline;">5</span>854. <span style="text-decoration: underline;">8</span>272.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> isoExp        <span style="text-decoration: underline;">3</span>603. <span style="text-decoration: underline;">4</span>735. <span style="text-decoration: underline;">2</span>133. <span style="text-decoration: underline;">6</span>180. <span style="text-decoration: underline;">8</span>608.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> GL1           <span style="text-decoration: underline;">3</span>603. <span style="text-decoration: underline;">4</span>732. <span style="text-decoration: underline;">2</span>132. <span style="text-decoration: underline;">6</span>166. <span style="text-decoration: underline;">8</span>601.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> GL2           <span style="text-decoration: underline;">3</span>557. <span style="text-decoration: underline;">4</span>558. <span style="text-decoration: underline;">2</span>110. <span style="text-decoration: underline;">5</span>894. <span style="text-decoration: underline;">8</span>354.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> alpha=1 bc    <span style="text-decoration: underline;">3</span>605. <span style="text-decoration: underline;">4</span>737. <span style="text-decoration: underline;">2</span>133. <span style="text-decoration: underline;">6</span>169. <span style="text-decoration: underline;">8</span>613.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> alpha=2 bc    <span style="text-decoration: underline;">3</span>556. <span style="text-decoration: underline;">4</span>546. <span style="text-decoration: underline;">2</span>111. <span style="text-decoration: underline;">5</span>853. <span style="text-decoration: underline;">8</span>272.</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="kriging">Kriging<a class="anchor" aria-label="anchor" href="#kriging"></a>
+</h3>
 <p>We will now perform kriging with the different fitted models. Observe
 that for the Matérn Gaussian model based on the graph Laplacian and the
 Gaussian model with isotropic exponential covariance function, we
@@ -590,14 +622,14 @@ obtained on the mesh nodes, we can supply the fitted values into the
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-27-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now in region 2:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, data_size <span class="op">=</span> <span class="fl">2</span>, </span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-28-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Similarly, for <code>alpha=1</code> with boundary correction in
 region 1:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
@@ -608,7 +640,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-29-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha1_bc</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
@@ -618,7 +650,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-30-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now, for the Whittle-Matérn models with <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha2</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
@@ -632,7 +664,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-32-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and region 2:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha2</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
@@ -642,7 +674,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-33-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now with boundary correction:</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_alpha2_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
@@ -656,7 +688,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-35-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha2_bc</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
@@ -666,7 +698,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-36-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>We now move to the models based on the graph Laplacian:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_GL1</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
@@ -680,7 +712,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-38-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_GL1</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
@@ -690,7 +722,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-39-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and for <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_GL2</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
@@ -704,7 +736,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-41-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_GL2</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
@@ -714,7 +746,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-42-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Finally, for models with isotropic exponential covariance:</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_isoexp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_isoexp</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
@@ -728,7 +760,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-44-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_isoexp</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
@@ -738,7 +770,99 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-45-1.png" width="700"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="a-quick-diagnostic-analysis">A quick diagnostic analysis<a class="anchor" aria-label="anchor" href="#a-quick-diagnostic-analysis"></a>
+</h3>
+<p>The cross-validation suggests that the best model with respect to
+RMSE, MAE, CRPS and log-score is the Whittle-Matérn field with
+<code>alpha=2</code> and boundary corrections. Let the residual be given
+by <span class="math display">\[e_i = y_i - \mu -
+E(u(s_i)|y_1,\ldots,y_n), \quad i=1,\ldots, n.\]</span> We will consider
+a standardized version of the above residual where we normalize it by
+divinding by its standard deviation. Such standardized residuals are
+given when using the <code>augment</code> function when the argument
+<code>se_fit</code> is set to <code>TRUE</code>. Let us now compute such
+residuals, then do a simple QQ plot of them.</p>
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fitted_aug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span>, se_fit <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Now let us build the QQ-plot against the theoretical quantiles a
+standard Gaussian distribution:</p>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">fitted_aug</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="va">.std_resid</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>          <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">stat_qq</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">p</span>          </span></code></pre></div>
+<p><img src="comparison_files/figure-html/unnamed-chunk-47-1.png" width="672" style="display: block; margin: auto;"></p>
+<p>We will now do a parametric bootstrap procedure to obtain confidence
+bands (simulated envelopes) for the above QQ plot. We will consider
+<span class="math inline">\(B=100\)</span> bootstrap samples. We start
+by generating <span class="math inline">\(B\)</span> samples. This can
+be done by using the <code><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate()</a></code> method:</p>
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">samples_alpha2_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span>, nsim <span class="op">=</span> <span class="va">B</span><span class="op">)</span></span></code></pre></div>
+<p>To reduce computational cost, we will fix the latent parameters at
+the original fitted values, this can be done by passing the fitted model
+as the <code>previous_fit</code> argument, and setting
+<code>fix_coeff</code> to <code>TRUE</code>. We will compute the new
+standardized residuals based on these new samples:</p>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fitted_aug</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="va">B</span><span class="op">)</span></span>
+<span><span class="co"># We clone the graph to add new data</span></span>
+<span><span class="va">pems_graph_new</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">B</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="co"># We get the simulated response. Since we do not have replicates, </span></span>
+<span>  <span class="co"># all of them are in the first element of the list.</span></span>
+<span>  <span class="va">y_tmp</span> <span class="op">&lt;-</span> <span class="va">samples_alpha2_bc</span><span class="op">$</span><span class="va">samples</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>,<span class="va">i</span><span class="op">]</span></span>
+<span>  <span class="co"># Add new observations</span></span>
+<span>  <span class="va">pems_graph_new</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>y <span class="op">=</span> <span class="va">y_tmp</span><span class="op">)</span>, </span>
+<span>                                  clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="va">new_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, graph<span class="op">=</span><span class="va">pems_graph_new</span>, BC <span class="op">=</span> <span class="fl">1</span>, </span>
+<span>                                previous_fit <span class="op">=</span> <span class="va">fit_alpha2_bc</span>,</span>
+<span>                                model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"WhittleMatern"</span>, alpha <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                fix_coeff <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="va">new_fitted_aug</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">new_fit</span>, se_fit <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>        </span>
+<span>  <span class="va">simul_std_resid</span><span class="op">[</span>,<span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">new_fitted_aug</span><span class="op">[[</span><span class="st">".std_resid"</span><span class="op">]</span><span class="op">]</span>            </span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>We will now create the lower and upper bands with 95% confidence, as
+well as plot a median line. We being by extracting the lower, upper and
+median values.</p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">prob</span> <span class="op">&lt;-</span> <span class="fl">0.95</span></span>
+<span>  <span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">simul_std_resid</span><span class="op">)</span></span>
+<span>  <span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">simul_std_resid</span>, <span class="fl">1</span>, <span class="va">sort</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">simul_std_resid</span>, <span class="fl">2</span>, <span class="va">sort</span><span class="op">)</span></span>
+<span>  <span class="va">id1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">B</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">prob</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">id2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">B</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">prob</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">simul_std_resid</span><span class="op">[</span><span class="va">id2</span>, <span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">simul_std_resid</span>, <span class="fl">2</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">)</span>, <span class="va">simul_std_resid</span><span class="op">[</span><span class="va">id1</span>, <span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">bands</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">bands</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"upper"</span>, <span class="st">"median"</span>, <span class="st">"lower"</span><span class="op">)</span>  </span></code></pre></div>
+<p>Let us now produce the QQ plot with the confidence bands and median
+line. We start by obtaining the quantile values, and add them to the
+bands <code>data.frame</code>:</p>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tmp_quantiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html" class="external-link">qqnorm</a></span><span class="op">(</span><span class="va">fitted_aug</span><span class="op">[[</span><span class="st">".std_resid"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">bands</span><span class="op">[[</span><span class="st">"x"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">tmp_quantiles</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="va">bands</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">tmp_quantiles</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">bands</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, ymin <span class="op">=</span> <span class="va">lower</span>, ymax <span class="op">=</span> <span class="va">upper</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_path</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">x</span>, y <span class="op">=</span> <span class="va">median</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Theoretical Quantiles"</span>, y <span class="op">=</span> <span class="st">"Sample Quantiles"</span><span class="op">)</span></span>
+<span><span class="va">p</span></span></code></pre></div>
+<p><img src="comparison_files/figure-html/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;"></p>
+<p>By observing the QQ plot with confidence bands, we can see that the
+Gaussianity assumption is reasonable; however, the fit can likely be
+improved by considering non-stationary Gaussian models as latent fields.
+However, it is not the goal of this vignette, as we are only comparing
+exact models. Our package has an implementation for nonstationary
+Gaussian models using finite element approximations.</p>
+</div>
+<div class="section level3">
+<h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h3>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Anderes2020" class="csl-entry">
 Anderes, Ethan, Jesper Møller, and Jakob G Rasmussen. 2020.
@@ -759,6 +883,7 @@ Borovitskiy, Viacheslav, Iskander Azangulov, Alexander Terenin, Peter
 Mostowsky, Marc Deisenroth, and Nicolas Durrande. 2021. <span>“Matérn
 Gaussian Processes on Graphs.”</span> <em>International Conference on
 Artificial Intelligence and Statistics</em>.
+</div>
 </div>
 </div>
 </div>
