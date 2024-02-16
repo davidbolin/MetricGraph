@@ -645,4 +645,4 @@ p
 ```
 
 
-By observing the QQ plot with confidence bands, we can see that the Gaussianity assumption is reasonable, however, the fit can likely improved by considering as latent fields, non-stationary Gaussian models. However, it is not the goal of this vignette as we are only comparing exact models. Our package has implementation for nonstationary Gaussian models by using finite element approximations.
+By observing the QQ plot with confidence bands, we can see that the Gaussianity assumption is reasonable; however, the fit can likely be improved by considering non-stationary Gaussian models as latent fields. However, it is not the goal of this vignette, as we are only comparing exact models. Our package has an implementation for nonstationary Gaussian models using finite element approximations.
