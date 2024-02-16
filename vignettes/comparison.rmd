@@ -583,7 +583,7 @@ Now let us build the QQ-plot against the theoretical quantiles a standard Gaussi
 ```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 library(ggplot2)
 p <- fitted_aug %>% ggplot(aes(sample = .std_resid)) +
-          geom_qq()
+          stat_qq()
 p          
 ```
 
@@ -594,7 +594,7 @@ B <- 100
 samples_alpha2_bc <- simulate(fit_alpha2_bc, nsim = B)
 ```
 
-To reduce computational cost, we will fix the parameters at the original fitted values, this can be done by passing the fitted model as the `previous_fit` argument, and setting `fix_coeff` to `TRUE`. We will compute the new standardized residuals based on these new samples:
+To reduce computational cost, we will fix the latent parameters at the original fitted values, this can be done by passing the fitted model as the `previous_fit` argument, and setting `fix_coeff` to `TRUE`. We will compute the new standardized residuals based on these new samples:
 
 ```{r}
 simul_std_resid <- matrix(nrow = nrow(fitted_aug), ncol = B)
@@ -640,7 +640,9 @@ bands[["y"]] <- sort(tmp_quantiles$y)
 
 ```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 p <- bands %>% ggplot(aes(x = x, y = y)) + geom_point() +
-        geom_ribbon(aes(x = x, ymin = lower, ymax = upper), alpha = 0.2)
+        geom_ribbon(aes(x = x, ymin = lower, ymax = upper), alpha = 0.2) +
+        geom_path(aes(x=x, y = median), linetype = 2) + 
+        labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
 p
 ```
 
