@@ -109,9 +109,9 @@ modified: 2024-02-16.</h4>
 
     
     
-<div class="section level3">
-<h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h3>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
 <p>In this vignette our goal is to compare the predictive power of
 different models on metric graphs by cross-validation. More precisely,
 we consider the Whittle–Matérn fields introduced by <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin,
@@ -120,9 +120,9 @@ Simas, and Wallin (2023)</span></a>, a Gaussian random field with an
 isotropic exponential covariance function <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>, and
 Matérn Gaussian processes based on the graph Laplacian <a href="http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf" class="external-link"><span class="citation">Borovitskiy et al. (2021)</span></a>.</p>
 </div>
-<div class="section level3">
-<h3 id="the-dataset">The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
-</h3>
+<div class="section level2">
+<h2 id="the-dataset">The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
+</h2>
 <p>For this example we will consider the <code>pems</code> data
 contained in the <code>MetricGraph</code> package. The data consists of
 traffic speed observations on highways in the city of San Jose,
@@ -136,9 +136,9 @@ California. The variable <code>y</code> contains the traffic speeds.</p>
 <code class="sourceCode R"><span><span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level3">
-<h3 id="the-models">The models<a class="anchor" aria-label="anchor" href="#the-models"></a>
-</h3>
+<div class="section level2">
+<h2 id="the-models">The models<a class="anchor" aria-label="anchor" href="#the-models"></a>
+</h2>
 <p>We will assume that the data has the following structure:</p>
 <p><span class="math display">\[
 y_i = \mu + u(s_i) + \varepsilon_i, \quad i=1,\ldots,n,
@@ -188,7 +188,7 @@ Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 29</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  14.12102 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  14.12214 secs</span></span></code></pre></div>
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -228,7 +228,7 @@ Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 16</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  14.38118 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  14.59783 secs</span></span></code></pre></div>
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
@@ -272,7 +272,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 32</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  15.90697 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  16.03358 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -307,7 +307,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 18</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  16.08952 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  16.3562 secs</span></span></code></pre></div>
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -356,7 +356,7 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 205</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.34626 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.36544 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -391,7 +391,7 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 62</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  3.57308 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  3.63006 secs</span></span></code></pre></div>
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
@@ -435,7 +435,7 @@ function:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 40</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  9.63167 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  9.40667 secs</span></span></code></pre></div>
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -559,9 +559,10 @@ parameters and compare the results:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> GL2           <span style="text-decoration: underline;">3</span>557. <span style="text-decoration: underline;">4</span>558. <span style="text-decoration: underline;">2</span>110. <span style="text-decoration: underline;">5</span>894. <span style="text-decoration: underline;">8</span>354.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> alpha=1 bc    <span style="text-decoration: underline;">3</span>605. <span style="text-decoration: underline;">4</span>737. <span style="text-decoration: underline;">2</span>133. <span style="text-decoration: underline;">6</span>169. <span style="text-decoration: underline;">8</span>613.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> alpha=2 bc    <span style="text-decoration: underline;">3</span>556. <span style="text-decoration: underline;">4</span>546. <span style="text-decoration: underline;">2</span>111. <span style="text-decoration: underline;">5</span>853. <span style="text-decoration: underline;">8</span>272.</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="kriging">Kriging<a class="anchor" aria-label="anchor" href="#kriging"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="kriging">Kriging<a class="anchor" aria-label="anchor" href="#kriging"></a>
+</h2>
 <p>We will now perform kriging with the different fitted models. Observe
 that for the Matérn Gaussian model based on the graph Laplacian and the
 Gaussian model with isotropic exponential covariance function, we
@@ -772,9 +773,9 @@ region 1:</p>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
 <p><img src="comparison_files/figure-html/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
-<div class="section level3">
-<h3 id="a-quick-diagnostic-analysis">A quick diagnostic analysis<a class="anchor" aria-label="anchor" href="#a-quick-diagnostic-analysis"></a>
-</h3>
+<div class="section level2">
+<h2 id="a-quick-diagnostic-analysis">A quick diagnostic analysis<a class="anchor" aria-label="anchor" href="#a-quick-diagnostic-analysis"></a>
+</h2>
 <p>The cross-validation suggests that the best model with respect to
 RMSE, MAE, CRPS and log-score is the Whittle-Matérn field with
 <code>alpha=2</code> and boundary corrections. Let the residual be given
@@ -860,9 +861,9 @@ However, it is not the goal of this vignette, as we are only comparing
 exact models. Our package has an implementation for nonstationary
 Gaussian models using finite element approximations.</p>
 </div>
-<div class="section level3">
-<h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
-</h3>
+<div class="section level2 unnumbered">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Anderes2020" class="csl-entry">
 Anderes, Ethan, Jesper Møller, and Jakob G Rasmussen. 2020.
@@ -883,7 +884,6 @@ Borovitskiy, Viacheslav, Iskander Azangulov, Alexander Terenin, Peter
 Mostowsky, Marc Deisenroth, and Nicolas Durrande. 2021. <span>“Matérn
 Gaussian Processes on Graphs.”</span> <em>International Conference on
 Artificial Intelligence and Statistics</em>.
-</div>
 </div>
 </div>
 </div>
