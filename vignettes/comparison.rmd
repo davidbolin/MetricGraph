@@ -293,7 +293,7 @@ fit_isomat <- graph_lme(y ~ 1, graph = pems_graph,
 
 Indeed, the model could not be fitted.
 
-# Comparison by cross-validation
+## Comparison by cross-validation
 
 We will now use the function `posterior_crossvalidation()` to perform 
 leave-one-out cross validation based on the estimated parameters and compare
