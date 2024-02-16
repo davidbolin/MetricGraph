@@ -134,11 +134,11 @@ library(MetricGraph)
 set.seed(1)
 ```
 
-# Introduction
+## Introduction
 
 In this vignette our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian random field with an isotropic exponential covariance function [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
-# The dataset
+## The dataset
 
 For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose, California. The variable `y` contains the traffic speeds.
 
@@ -154,7 +154,7 @@ Let us take a look at the observations:
 pems_graph$plot(data = "y", vertex_size = 0)
 ```
 
-# The models
+## The models
 
 We will assume that the data has the following structure:
 
@@ -310,7 +310,7 @@ fitted_models_list <- list("alpha=1" = fit_alpha1,
 posterior_crossvalidation(fitted_models_list, factor = 1000)[["scores"]]
 ```
 
-# Kriging 
+## Kriging 
 
 We will now perform kriging with the different fitted models. Observe that for the Matérn Gaussian model based on the graph Laplacian and the Gaussian model with isotropic exponential covariance function, we actually modify the model when doing predictions. See the [On isotropic covariances on metric graphs with non-Euclidean edges](isotropic_noneuclidean.html) vignette for further details. 
 
@@ -566,11 +566,11 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
                     ylim(coordy_lwr2, coordy_upr2)                       
 ```
 
-# A quick diagnostic analysis
+## A quick diagnostic analysis
 
 The cross-validation suggests that the best model with respect to RMSE, MAE, CRPS and log-score is the Whittle-Matérn field with `alpha=2` and boundary corrections.
 Let the residual be given by
-$$e_i = y_i - E(u(s_i)|y_1,\ldots,y_n), \quad i=1,\ldots, n.$$
+$$e_i = y_i - \mu - E(u(s_i)|y_1,\ldots,y_n), \quad i=1,\ldots, n.$$
 We will consider a standardized version of the above residual where we normalize it by divinding by its standard deviation. Such standardized residuals are given when using the `augment` function when the argument `se_fit` is set to `TRUE`. 
 Let us now compute such residuals, then do a simple QQ plot of them.
 
@@ -648,3 +648,5 @@ p
 
 
 By observing the QQ plot with confidence bands, we can see that the Gaussianity assumption is reasonable; however, the fit can likely be improved by considering non-stationary Gaussian models as latent fields. However, it is not the goal of this vignette, as we are only comparing exact models. Our package has an implementation for nonstationary Gaussian models using finite element approximations.
+
+## References 
