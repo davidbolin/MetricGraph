@@ -621,12 +621,11 @@ graph_lme <- function(formula, graph,
                                                fix_vec = fix_vec,
                                                fix_v_val = fix_v_val)
   } else if(model_type == "isocov") {
-
   if (is.character(model[["cov_function"]]) && !par_vec) {
     if(model[["cov_function"]] %in% c("WM1","WM2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
       par_names <- c("tau", "kappa")
-    } else{
+    } else if (is.character(model[["cov_function"]])){
       model_cov <- "isoCov"
       if(model[["cov_function"]] == "exp_covariance"){
         model[["cov_function"]] <- exp_covariance
@@ -649,10 +648,12 @@ graph_lme <- function(formula, graph,
     } else{
     model[["cov_function_name"]] <- "other"
     model_cov <- "isoCov"
-    if(model[["cov_function"]] == "exp_covariance"){
-        model[["cov_function"]] <- exp_covariance
-        model[["cov_function_name"]] <- "exp_covariance"
-    }    
+    if(is.character(model[["cov_function"]])){
+      if(model[["cov_function"]] == "exp_covariance"){
+          model[["cov_function"]] <- exp_covariance
+          model[["cov_function_name"]] <- "exp_covariance"
+      }    
+    }
 
     # fix_vec <- model_options$fix_par_vec
     # fix_v_val <- model_options$start_par_values

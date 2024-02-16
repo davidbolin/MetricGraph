@@ -411,6 +411,12 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     X_cov <- NULL
   }
 
+  if(all(dim(X_cov) == c(0,1))){
+    names_temp <- colnames(X_cov)
+    X_cov <- matrix(1, nrow = length(y_graph))
+    colnames(X_cov) <- names_temp
+  }
+
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
   repl <- unique(repl_vec)
 
@@ -427,9 +433,9 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
         y_cv <- y_graph_repl[-i]
         v_cv <- y_cv
         if(!is.null(X_cov)){
-          X_cov_repl <- X_cov[idx_repl,]
-          v_cv <- v_cv - as.vector(X_cov_repl[-i, ] %*% beta_cov)
-          mu_fe <- as.vector(X_cov_repl[i, ] %*% beta_cov)
+          X_cov_repl <- X_cov[idx_repl, , drop = FALSE]
+          v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+          mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
         } else {
           mu_fe <- 0
         }
@@ -459,9 +465,9 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
           y_cv <- y_graph_repl[-i]
           v_cv <- y_cv
           if(!is.null(X_cov)){
-            X_cov_repl <- X_cov[idx_repl,]
-            v_cv <- v_cv - as.vector(X_cov_repl[-i, ] %*% beta_cov)
-            mu_fe <- as.vector(X_cov_repl[i, ] %*% beta_cov)
+            X_cov_repl <- X_cov[idx_repl,, drop = FALSE]
+            v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+            mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
           } else {
             mu_fe <- 0
           }
@@ -619,8 +625,8 @@ posterior_crossvalidation_covariance <- function(object)
     y_cv <- y_graph[-i]
     v_cv <- y_cv
     if(!is.null(X_cov)){
-      v_cv <- v_cv - as.vector(X_cov[-i, ] %*% beta_cov)
-      mu_fe <- as.vector(X_cov[i, ] %*% beta_cov)
+      v_cv <- v_cv - as.vector(X_cov[-i, , drop = FALSE] %*% beta_cov)
+      mu_fe <- as.vector(X_cov[i, , drop = FALSE] %*% beta_cov)
     } else {
       mu_fe <- 0
     }

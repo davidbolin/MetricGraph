@@ -521,7 +521,7 @@ graph_starting_values <- function(graph,
       graph$compute_laplacian()
     }
     h <- mean(graph$edge_lengths)
-    k <- sqrt(8 * 0.5) / prior.range.nominal
+    k <- sqrt(8 * 1.5) / prior.range.nominal
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
     if(is.null(start_sigma)){
       if(data){

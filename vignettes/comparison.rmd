@@ -159,16 +159,16 @@ pems_graph$plot(data = "y", vertex_size = 0)
 We will assume that the data has the following structure:
 
 $$
-y_i = u(s_i) + \varepsilon_i, \quad i=1,\ldots,n,
+y_i = \mu + u(s_i) + \varepsilon_i, \quad i=1,\ldots,n,
 $$
-where $u(\cdot)$ is a Gaussian random field, $s_i\in \Gamma$ are observation locations and $\varepsilon_i$ are
+where $\mu$ is a constant that represents the mean of the field, $u(\cdot)$ is a Gaussian random field, $s_i\in \Gamma$ are observation locations and $\varepsilon_i$ are
 independent centered Gaussian variables $N(0,\sigma_e^2)$ representing 
 measurement noise. 
 
 Let us fit the different models, that is, we will assume several different possible latent fields $u(\cdot)$. We start by fitting a Whittle-Matérn field with `alpha = 1`:
 
 ```{r}
-fit_alpha1 <- graph_lme(y ~ -1, graph=pems_graph, 
+fit_alpha1 <- graph_lme(y ~ 1, graph=pems_graph, 
             model = list(type = "WhittleMatern", alpha = 1))
 ```
 
@@ -181,7 +181,7 @@ summary(fit_alpha1)
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
 
 ```{r}
-fit_alpha2 <- graph_lme(y ~ -1, graph=pems_graph, 
+fit_alpha2 <- graph_lme(y ~ 1, graph=pems_graph, 
             model = list(type = "WhittleMatern", alpha = 2))
 ```
 
@@ -195,10 +195,10 @@ We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`, and by pe
 
 
 ```{r}
-fit_alpha1_bc <- graph_lme(y ~ -1, graph=pems_graph, BC = 1,
+fit_alpha1_bc <- graph_lme(y ~ 1, graph=pems_graph, BC = 1,
         model = list(type = "WhittleMatern", alpha = 1))
 
-fit_alpha2_bc <- graph_lme(y ~ -1, graph=pems_graph, BC = 1,
+fit_alpha2_bc <- graph_lme(y ~ 1, graph=pems_graph, BC = 1,
         model = list(type = "WhittleMatern", alpha = 2))
 ```
 
@@ -215,10 +215,10 @@ summary(fit_alpha2_bc)
 Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`:
 
 ```{r}
-fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
+fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
             model = list(type = "graphLaplacian", alpha = 1))
 
-fit_GL2 <- graph_lme(y ~ -1, graph=pems_graph, 
+fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,
             model = list(type = "graphLaplacian", alpha = 2))
 ```
 
@@ -239,7 +239,7 @@ Observe that the default optimizer (L-BFGS-B) failed to converge, thus an altern
 Let us now fit a Gaussian field with isotropic exponential covariance function:
 
 ```{r}
-fit_isoexp <- graph_lme(y ~ -1, graph=pems_graph, 
+fit_isoexp <- graph_lme(y ~ 1, graph=pems_graph, 
                 model = list(type = "isoCov"))
 ```
 
@@ -286,7 +286,7 @@ cov_mat <- function(h,theta){
 Let us now fit the model:
 
 ```{r, error=TRUE}
-fit_isomat <- graph_lme(y ~ -1, graph = pems_graph, 
+fit_isomat <- graph_lme(y ~ 1, graph = pems_graph, 
                             model = list(type = "isoCov", cov_function = cov_mat), 
                                     model_options = list(start_par_vec = c(1,1)))
 ```
@@ -378,7 +378,7 @@ pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 Now in region 2:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
 pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
                     edge_width = 0, p = p) + 
                     xlim(coordx_lwr2, coordx_upr2) + 
@@ -607,7 +607,7 @@ for(i in 1:B){
   # Add new observations
   pems_graph_new$add_observations(data = pems_graph$mutate(y = y_tmp), 
                                   clear_obs = TRUE, verbose = 0)
-  new_fit <- graph_lme(y ~ -1, graph=pems_graph_new, BC = 1, 
+  new_fit <- graph_lme(y ~ 1, graph=pems_graph_new, BC = 1, 
                                 previous_fit = fit_alpha2_bc,
                                 model = list(type = "WhittleMatern", alpha = 2),
                                 fix_coeff = TRUE)
@@ -643,3 +643,6 @@ p <- bands %>% ggplot(aes(x = x, y = y)) + geom_point() +
         geom_ribbon(aes(x = x, ymin = lower, ymax = upper), alpha = 0.2)
 p
 ```
+
+
+By observing the QQ plot with confidence bands, we can see that the Gaussianity assumption is reasonable, however, the fit can likely improved by considering as latent fields, non-stationary Gaussian models. However, it is not the goal of this vignette as we are only comparing exact models. Our package has implementation for nonstationary Gaussian models by using finite element approximations.
