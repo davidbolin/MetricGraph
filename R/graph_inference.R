@@ -262,8 +262,7 @@ posterior_crossvalidation_manual <- function(theta,
 
 
 #' Leave-one-out crossvalidation for `graph_lme` models assuming observations at
-#' the vertices of metric graphs,
-#' for WM2 alpha=2 requries observations at nodes
+#' the vertices of metric graphs
 #'
 #' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
 #' @param factor Which factor to multiply the scores. The default is 1.
