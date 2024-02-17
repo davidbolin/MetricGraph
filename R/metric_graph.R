@@ -119,7 +119,7 @@ metric_graph <-  R6Class("metric_graph",
                         vertex_unit = NULL,
                         length_unit = vertex_unit,
                         edge_weights = 1,
-                        kirchhoff_weight = NULL,
+                        kirchhoff_weights = NULL,
                         longlat = FALSE,
                         crs = NULL,
                         proj4string = NULL,
@@ -592,7 +592,8 @@ metric_graph <-  R6Class("metric_graph",
     # Checking if graph is connected
     if (check_connected) {
       g <- graph(edges = c(t(self$E)), directed = FALSE)
-      components <- igraph::clusters(g, mode="weak")
+      # components <- igraph::clusters(g, mode="weak")
+      components <- igraph::components(g, mode="weak")
       nc <- components$no
       if(nc>1){
         message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
@@ -622,7 +623,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Sets the edge weights
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge.
-  #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
+  #' @param kirchhoff_weights If non-null, the name (or number) of the column of `weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `weights` is a single number and those are the Kirchhoff weights.
   #' @return No return value. Called for its side effects.
 
   set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights){
@@ -639,20 +640,20 @@ metric_graph <-  R6Class("metric_graph",
           if(!is.character(kirchhoff_weights)){
             stop("'kirchhoff_weights' must be either a number of a string.")
           }
-          if(!(kirchhoff_weights%in%colnames(edge_weights))){
-            stop(paste(kirchhoff_weights, "is not a column of 'edge_weights'!"))
+          if(!(kirchhoff_weights%in%colnames(weights))){
+            stop(paste(kirchhoff_weights, "is not a column of 'weights'!"))
           }
         } else{
-          if(!is.data.frame(edge_weights)){
+          if(!is.data.frame(weights)){
             if(kirchhoff_weights != 1){
-              stop("Since 'edge_weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
+              stop("Since 'weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
             }
           } else{
             if(kirchhoff_weights %%1 != 0){
               stop("'kirchhoff_weights' must be an integer.")
             }
-            if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(edge_weights))){
-              stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'edge_weights'.")
+            if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(weights))){
+              stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
             }
           }
         }
@@ -3191,7 +3192,7 @@ metric_graph <-  R6Class("metric_graph",
             # w[j] <- attr(self$edges[[E.e]],"weight")
             kw <- attr(self$edges[[E.e]], "kirchhoff_weight")
             w_tmp <- attr(self$edges[[E.e]],"weight")     
-            w[j] <- w_tmp[kw]
+            w[j] <- w_tmp[[kw]]
             h[j] <- self$mesh$h_e[edges.mesh[j]]
           }
           for(j in 2:attr(self$vertices[[i]],"degree")){
@@ -5840,7 +5841,8 @@ graph_components <-  R6::R6Class("graph_components",
 
      g <- graph(edges = c(t(graph$E)), directed = FALSE)
      igraph::E(g)$weight <- graph$edge_lengths
-     components <- igraph::clusters(g, mode="weak")
+    #  components <- igraph::clusters(g, mode="weak")
+    components <- igraph::components(g, mode="weak")
 
      self$n <- components$no
      if(self$n > 1) {
