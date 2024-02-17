@@ -6,6 +6,7 @@
 * `sf` objects containing data can also be directly added by using the `add_observations()` method in the `data` argument.
 * Added the possibility of using a `graph_lme` object to provide starting values when fitting a model using `graph_lme()`.
 * Added the option of fitting a directional Whittle-Matérn model with `alpha=1` when using `graph_lme()`.
+* Added `kirchhoff_weights` argument to obtain weights for Kirchhoff vertex conditions from `edge_weights`.
 
 # MetricGraph 1.2.0
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.

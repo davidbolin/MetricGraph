@@ -75,6 +75,7 @@ metric_graph <-  R6Class("metric_graph",
   #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
   #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
+  #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
@@ -118,6 +119,7 @@ metric_graph <-  R6Class("metric_graph",
                         vertex_unit = NULL,
                         length_unit = vertex_unit,
                         edge_weights = 1,
+                        kirchhoff_weight = NULL,
                         longlat = FALSE,
                         crs = NULL,
                         proj4string = NULL,
@@ -149,6 +151,35 @@ metric_graph <-  R6Class("metric_graph",
            )
          }
          lines <- NULL
+       }
+
+       if(!is.null(kirchhoff_weights)){
+        if(length(kirchhoff_weights)>1){
+          warning("Only the first entry of 'kirchhoff_weights' was used.")
+          kirchhoff_weights <- kirchhoff_weights[[1]]
+        }
+        if(!is.numeric(kirchhoff_weights)){
+          if(!is.character(kirchhoff_weights)){
+            stop("'kirchhoff_weights' must be either a number of a string.")
+          }
+          if(!(kirchhoff_weights%in%colnames(edge_weights))){
+            stop(paste(kirchhoff_weights, "is not a column of 'edge_weights'!"))
+          }
+        } else{
+          if(!is.data.frame(edge_weights)){
+            if(kirchhoff_weights != 1){
+              stop("Since 'edge_weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
+            }
+          } else{
+            if(kirchhoff_weights %%1 != 0){
+              stop("'kirchhoff_weights' must be an integer.")
+            }
+            if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(edge_weights))){
+              stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'edge_weights'.")
+            }
+          }
+        }
+        private$kirchhoff_weights <- kirchhoff_weights
        }
 
       if (is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
@@ -570,7 +601,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     private$create_update_vertices()
 
-    self$set_edge_weights(weights = private$edge_weights)
+    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
 
     # Adding IDs to edges and setting up their class
 
@@ -591,12 +622,42 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Sets the edge weights
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge.
+  #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
   #' @return No return value. Called for its side effects.
 
-  set_edge_weights = function(weights = rep(1, self$nE)){
+  set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights){
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
     }
+
+    if(!is.null(kirchhoff_weights)){
+        if(length(kirchhoff_weights)>1){
+          warning("Only the first entry of 'kirchhoff_weights' was used.")
+          kirchhoff_weights <- kirchhoff_weights[[1]]
+        }
+        if(!is.numeric(kirchhoff_weights)){
+          if(!is.character(kirchhoff_weights)){
+            stop("'kirchhoff_weights' must be either a number of a string.")
+          }
+          if(!(kirchhoff_weights%in%colnames(edge_weights))){
+            stop(paste(kirchhoff_weights, "is not a column of 'edge_weights'!"))
+          }
+        } else{
+          if(!is.data.frame(edge_weights)){
+            if(kirchhoff_weights != 1){
+              stop("Since 'edge_weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
+            }
+          } else{
+            if(kirchhoff_weights %%1 != 0){
+              stop("'kirchhoff_weights' must be an integer.")
+            }
+            if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(edge_weights))){
+              stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'edge_weights'.")
+            }
+          }
+        }
+        private$kirchhoff_weights <- kirchhoff_weights
+       }
 
     edge_lengths_ <- self$get_edge_lengths()
 
@@ -626,6 +687,7 @@ metric_graph <-  R6Class("metric_graph",
       attr(edge, "crs") <- private$crs$input
       attr(edge, "length") <- edge_lengths_[i]
       attr(edge, "id") <- i
+      attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights 
       class(edge) <- "metric_graph_edge"
       return(edge)
     })
@@ -1459,6 +1521,7 @@ metric_graph <-  R6Class("metric_graph",
         } else{
           attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
         }
+        attr(self$edges[[i]], "kirchhoff_weight") <- private$kirchhoff_weights         
       }
    })
    if(verbose == 2){
@@ -1630,7 +1693,7 @@ metric_graph <-  R6Class("metric_graph",
     private$create_update_vertices()
 
     # Updating the edge attributes
-    self$set_edge_weights(weights = private$edge_weights)
+    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
 
     for(j in 1:length(self$edges)){
         attr(self$edges[[j]], "PtE") <- NULL
@@ -3114,7 +3177,8 @@ metric_graph <-  R6Class("metric_graph",
     self$mesh$K <- Diagonal(dim(self$mesh$C)[1],
                             c(rep(0, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
 
-    if(!all(self$get_edge_weights()==1)){
+    # if(!all(self$get_edge_weights()==1)){
+    if(!is.null(private$kirchhoff_weights)){
       for(i in 1:self$nV) {
         if(attr(self$vertices[[i]],"degree") > 1) {
           edges.i <- which(rowSums(self$E==i)>0)
@@ -3124,7 +3188,10 @@ metric_graph <-  R6Class("metric_graph",
           for(j in 1:length(edges.mesh)) {
             V.e <- self$mesh$E[edges.mesh[j],which(self$mesh$E[edges.mesh[j],]!=i)]
             E.e <- self$mesh$VtE[V.e,1] #the edge the mesh node is on
-            w[j] <- attr(self$edges[[E.e]],"weight")
+            # w[j] <- attr(self$edges[[E.e]],"weight")
+            kw <- attr(self$edges[[E.e]], "kirchhoff_weight")
+            w_tmp <- attr(self$edges[[E.e]],"weight")     
+            w[j] <- w_tmp[kw]
             h[j] <- self$mesh$h_e[edges.mesh[j]]
           }
           for(j in 2:attr(self$vertices[[i]],"degree")){
@@ -3133,6 +3200,7 @@ metric_graph <-  R6Class("metric_graph",
         }
       }
     }
+    # }
 
     if(petrov) {
       self$mesh$Cpet <- fem_temp$Cpet
@@ -5089,6 +5157,10 @@ metric_graph <-  R6Class("metric_graph",
   # group columns
 
   group_col = NULL,
+
+  # Kichhoff weights
+
+  kirchhoff_weights = NULL,
 
   clear_initial_info = function(){
     private$addinfo = FALSE

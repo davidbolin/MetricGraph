@@ -1641,6 +1641,11 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
     } else{
       cat("Weight:", attr(x[[i]], "weight"),"\n\n")
     }
+    if(!is.null(attr(x[[i]], "kirchhoff_weight"))){
+      kw <- attr(x[[i]], "kirchhoff_weight")
+      w_tmp <- attr(x[[i]], "weight")
+      cat("Kirchhoff weight:", w_tmp[kw],"\n\n")
+    }
     
   }
   if(n < length(x)){
@@ -1722,6 +1727,11 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
     } else{
       cat("Weight:", attr(x, "weight"),"\n")
     }
+    if(!is.null(attr(x, "kirchhoff_weight"))){
+      kw <- attr(x, "kirchhoff_weight")
+      w_tmp <- attr(x, "weight")
+      cat("Kirchhoff weight:", w_tmp[kw],"\n\n")
+    }    
 
 }
 
