@@ -7,6 +7,8 @@
 * Added the possibility of using a `graph_lme` object to provide starting values when fitting a model using `graph_lme()`.
 * Added the option of fitting a directional Whittle-Matérn model with `alpha=1` when using `graph_lme()`.
 * Added `kirchhoff_weights` argument to obtain weights for Kirchhoff vertex conditions from `edge_weights`.
+* Improved handling of edge weights, e.g., if pruning changes any edge weight, a warning will be given.
+* Added the `edgeweight_to_data()` method that turns edge weights into data in the internal metric graph format.
 
 # MetricGraph 1.2.0
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.
