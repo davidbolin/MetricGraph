@@ -91,6 +91,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-get_edge_lengths}{\code{metric_graph$get_edge_lengths()}}
 \item \href{#method-metric_graph-get_locations}{\code{metric_graph$get_locations()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
+\item \href{#method-metric_graph-edgeweight_to_data}{\code{metric_graph$edgeweight_to_data()}}
 \item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-metric_graph-process_data}{\code{metric_graph$process_data()}}
@@ -132,6 +133,7 @@ Create a new \code{metric_graph} object.
   vertex_unit = NULL,
   length_unit = vertex_unit,
   edge_weights = 1,
+  kirchhoff_weights = NULL,
   longlat = FALSE,
   crs = NULL,
   proj4string = NULL,
@@ -166,6 +168,8 @@ If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit
 
 \item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
 each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}
+
+\item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{edge_weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{edge_weights} is a single number and those are the Kirchhoff weights.}
 
 \item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
@@ -235,7 +239,7 @@ A \code{metric_graph} object.
 \subsection{Method \code{set_edge_weights()}}{
 Sets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(weights = rep(1, self$nE))}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(weights = rep(1, self$nE), kirchhoff_weights)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -243,6 +247,8 @@ Sets the edge weights
 \describe{
 \item{\code{weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
 each row gives a vector of weights to its corresponding edge.}
+
+\item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{weights} is a single number and those are the Kirchhoff weights.}
 }
 \if{html}{\out{</div>}}
 }
@@ -727,6 +733,53 @@ No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-edgeweight_to_data"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-edgeweight_to_data}{}}}
+\subsection{Method \code{edgeweight_to_data()}}{
+Turns edge weights into data on the metric graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$edgeweight_to_data(
+  loc = NULL,
+  mesh = FALSE,
+  weight_col = NULL,
+  add = TRUE,
+  data_coords = c("PtE", "spatial"),
+  normalized = FALSE,
+  tibble = TRUE,
+  verbose = 1,
+  return = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{loc}}{A \code{matrix} or \code{data.frame} with two columns containing the locations to generate the data from the edge weights. If \code{data_coords} is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If \code{data_coords} is 'PtE', the first column must be the edge number and the second column must be the distance on edge.}
+
+\item{\code{mesh}}{Should the data be generated to the mesh locations? In this case, the \code{loc} argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option.}
+
+\item{\code{weight_col}}{Which columns of the edge weights should be turned into data? If \code{NULL}, all columns will be turned into data.}
+
+\item{\code{add}}{Should the data generated be added to the metric graph internal data?}
+
+\item{\code{data_coords}}{To be used only if \code{mesh} is \code{FALSE}. It decides which
+coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
+\code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
+\code{coord_x} and \code{coord_y}.}
+
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
+assumed to be normalized to (0,1). Default FALSE.}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{return}}{Should the data be returned? If \code{return_removed} is \code{TRUE}, only the removed locations will be return (if there is any).}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_mesh_locations"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-get_mesh_locations}{}}}
 \subsection{Method \code{get_mesh_locations()}}{
@@ -818,7 +871,7 @@ the y coordinate. If not supplied, the column with name "coord_x" will be
 chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
 \code{PtE}.}
 
-\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+\item{\code{data_coords}}{It decides which
 coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
 \code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
 \code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
@@ -830,8 +883,7 @@ which the group variables are stored. It will be stored as a single column \code
 \item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
-assumed to be normalized to (0,1). Default FALSE. Will not be used if
-\code{Spoints} is not \code{NULL}.}
+assumed to be normalized to (0,1). Default FALSE.}
 
 \item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
 
@@ -913,7 +965,7 @@ the y coordinate. If not supplied, the column with name "coord_x" will be
 chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
 \code{PtE}.}
 
-\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+\item{\code{data_coords}}{It decides which
 coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
 \code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
 \code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
@@ -925,8 +977,7 @@ which the group variables are stored. It will be stored as a single column \code
 \item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
-assumed to be normalized to (0,1). Default FALSE. Will not be used if
-\code{Spoints} is not \code{NULL}.}
+assumed to be normalized to (0,1). Default FALSE.}
 
 \item{\code{clear_obs}}{Should the existing observations be removed before adding the data?}
 

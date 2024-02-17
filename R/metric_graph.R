@@ -701,7 +701,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @return A vector containing the edge weights.
 
   get_edge_weights = function(){
-    return(private$edge_weights)
+    tmp <- private$edge_weights
+    row.names(tmp) <- NULL
+    return(tmp)
   },
 
 
@@ -1706,6 +1708,116 @@ metric_graph <-  R6Class("metric_graph",
 
   },
 
+  #' @description Turns edge weights into data on the metric graph
+  #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
+  #' @param mesh Should the data be generated to the mesh locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option.
+  #' @param weight_col Which columns of the edge weights should be turned into data? If `NULL`, all columns will be turned into data.
+  #' @param add Should the data generated be added to the metric graph internal data?
+  #' @param data_coords To be used only if `mesh` is `FALSE`. It decides which
+  #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
+  #' `distance_on_edge`, otherwise if `spatial`, the user must provide
+  #' `coord_x` and `coord_y`.
+  #' @param normalized if TRUE, then the distances in `distance_on_edge` are
+  #' assumed to be normalized to (0,1). Default FALSE.
+  #' @param tibble Should the data be returned as a `tidyr::tibble`?
+  #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @param return Should the data be returned? If `return_removed` is `TRUE`, only the removed locations will be return (if there is any).
+  edgeweight_to_data = function(loc = NULL, mesh = FALSE, 
+                weight_col = NULL, add = TRUE, 
+                data_coords = c("PtE", "spatial"),    
+                normalized = FALSE,    
+                tibble = TRUE,                
+                verbose = 1,                                  
+                return = FALSE){
+              
+              if(is.null(loc) && !mesh){
+                stop("Either 'loc' must be provided or 'mesh' must be TRUE.")
+              }
+              if(mesh){
+                if(is.null(self$mesh)){
+                  stop("There is no mesh! Build a mesh using the build_mesh() method.")
+                }
+                loc <- self$mesh$VtE
+                normalized <- TRUE
+                data_coords <- "PtE"
+              }
+
+              data_coords <- data_coords[[1]]
+
+              if(tolower(data_coords) == "pte"){
+                df_ew <- data.frame(.edge_number = loc[,1], 
+                .distance_on_edge = loc[,2])
+                if(normalized){
+                  if(max(loc[,2])>1){
+                    stop("distance_on_edge of normalized locations cannot be greater than 1!")
+                    }
+                  }
+              } else if(tolower(data_coords) == "spatial"){
+                loc_tmp <- self$coordinates(XY = loc)
+                nr_tmp <- nrow(loc_tmp)
+                loc_tmp <- unique(loc_tmp)
+                if(nr_tmp != nrow(loc_tmp)){
+                  warning("Some locations were projected to the same point of the metric graph and were not considered.")
+                }
+                df_ew <- data.frame(.edge_number = loc_tmp[,1], 
+                .distance_on_edge = loc_tmp[,2])
+                normalized <- TRUE
+              } else{
+                stop("'data_coords' must be either 'PtE' or 'spatial'!")
+              }
+
+              if(!is.null(private$data[[".group"]])){
+                df_ew <- cbind(df_ew, .group = rep(unique(private$data[[".group"]]), 
+                            each = nrow(df_ew)))
+              }
+
+              ew <- self$get_edge_weights()
+
+              if(is.vector(ew)){
+                ew <- data.frame(weight = ew)
+              }
+
+              if(!is.null(weight_col)){
+                ew <- ew[, weight_col]
+              }
+
+              ew[[".edge_number"]] <- 1:nrow(ew)
+
+              ew[[".edge_lengths"]] <- self$edge_lengths
+
+              df_ew <- merge(df_ew, ew, by = ".edge_number")     
+
+              if(!normalized){
+                if(max(df_ew[[".distance_on_edge"]]/df_ew[[".edge_lengths"]]) > 1){
+                  stop("There is at least one distance on edge that is greater than the corresponding edge length!")
+                }     
+              }
+
+              if(add){
+                self$add_observations(data = df_ew,
+                                      edge_number = ".edge_number",
+                                      distance_on_edge = ".distance_on_edge",
+                                      data_coords = "PtE",
+                                      group = ".group",
+                                      tibble = tibble,
+                                      normalized = normalized,
+                                      verbose = verbose)                     
+              }
+
+              if(return){
+                  return(self$process_data(data = df_ew,
+                                      edge_number = ".edge_number",
+                                      distance_on_edge = ".distance_on_edge",
+                                      data_coords = "PtE",
+                                      group = ".group",
+                                      normalized = normalized,
+                                      tibble = tibble,
+                                      verbose = verbose))
+              } else{
+                return(invisible(NULL))
+              }
+  },
+
   #' @description Returns a list or a matrix with the mesh locations.
   #' @param bru Should an 'inlabru'-friendly list be returned?
   #' @param loc If `bru` is set to `TRUE`, the name of the location variable.
@@ -1766,7 +1878,7 @@ metric_graph <-  R6Class("metric_graph",
   #' the y coordinate. If not supplied, the column with name "coord_x" will be
   #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
   #' `PtE`.
-  #' @param data_coords To be used only if `Spoints` is `NULL`. It decides which
+  #' @param data_coords It decides which
   #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
   #' `distance_on_edge`, otherwise if `spatial`, the user must provide
   #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
@@ -1775,8 +1887,7 @@ metric_graph <-  R6Class("metric_graph",
   #' which the group variables are stored. It will be stored as a single column `.group` with the combined entries.
   #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
-  #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
-  #' `Spoints` is not `NULL`.
+  #' assumed to be normalized to (0,1). Default FALSE. 
   #' @param tibble Should the data be returned as a `tidyr::tibble`?
   #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
   #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
@@ -1786,8 +1897,8 @@ metric_graph <-  R6Class("metric_graph",
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
-  #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
   #' @param verbose If `TRUE`, report steps and times.
+  #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
 
@@ -2190,7 +2301,7 @@ metric_graph <-  R6Class("metric_graph",
   #' the y coordinate. If not supplied, the column with name "coord_x" will be
   #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
   #' `PtE`.
-  #' @param data_coords To be used only if `Spoints` is `NULL`. It decides which
+  #' @param data_coords It decides which
   #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
   #' `distance_on_edge`, otherwise if `spatial`, the user must provide
   #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
@@ -2199,8 +2310,7 @@ metric_graph <-  R6Class("metric_graph",
   #' which the group variables are stored. It will be stored as a single column `.group` with the combined entries.
   #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
-  #' assumed to be normalized to (0,1). Default FALSE. Will not be used if
-  #' `Spoints` is not `NULL`.
+  #' assumed to be normalized to (0,1). Default FALSE. 
   #' @param clear_obs Should the existing observations be removed before adding the data?
   #' @param tibble Should the data be returned as a `tidyr::tibble`?
   #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
