@@ -1560,6 +1560,10 @@ metric_graph <-  R6Class("metric_graph",
     self$build_mesh(h = max_h)
    }
    private$pruned <- TRUE
+   if(private$prune_warning){
+    warning("At least two edges with different weights were merged due to pruning. Only one of the weights has been assigned to the merged edge. Please, review carefully.")
+    private$prune_warning <- FALSE
+   }
   },
 
   #' @description Gets the groups from the data.
@@ -5014,10 +5018,15 @@ metric_graph <-  R6Class("metric_graph",
 
       self$nE <- self$nE - 1
 
-
       if(is.vector(private$edge_weights)){
+        if(private$edge_weights[e_rem[2]] != private$edge_weights[e_rem[1]]){
+            private$prune_warning <- TRUE
+        }
         private$edge_weights <- private$edge_weights[-e_rem[2]]
       } else{
+        if(any(private$edge_weights[e_rem[2],] != private$edge_weights[e_rem[1],])){
+            private$prune_warning <- TRUE
+        }        
         private$edge_weights <- private$edge_weights[-e_rem[2],]
       }
 
@@ -5162,6 +5171,10 @@ metric_graph <-  R6Class("metric_graph",
   # Kichhoff weights
 
   kirchhoff_weights = NULL,
+
+  # Warning if edges with different weights have been merged
+
+  prune_warning = FALSE,
 
   clear_initial_info = function(){
     private$addinfo = FALSE
