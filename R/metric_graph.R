@@ -626,7 +626,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `weights` is a single number and those are the Kirchhoff weights.
   #' @return No return value. Called for its side effects.
 
-  set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights){
+  set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights = NULL){
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
     }
@@ -3559,6 +3559,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.
+  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1. 
+  #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. 
   #' @param edge_color For 3D plot, color of edges.
   #' @param line_width For 3D plot, line width of the function curve.
   #' @param line_color Color of the function curve.
@@ -6010,6 +6012,7 @@ graph_components <-  R6::R6Class("graph_components",
    #' tolerance is given in km.
    #' @param by_length Sort the components by total edge length? If `FALSE`,
    #' the components are sorted by the number of vertices.
+    #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
    #' @param ... Additional arguments used when specifying the graphs
    #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
    #' @return A `graph_components` object.
@@ -6017,9 +6020,9 @@ graph_components <-  R6::R6Class("graph_components",
                          V = NULL,
                          E = NULL,
                          by_length = TRUE,
+                         edge_weights = NULL,
                          ...,
                          lines = deprecated()) {
-
 
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
@@ -6045,14 +6048,20 @@ graph_components <-  R6::R6Class("graph_components",
         dots_list[["V"]] <- V
         dots_list[["E"]] <- E
         dots_list[["check_connected"]] <- FALSE
+        dots_list[["edge_weights"]] <- edge_weights
         graph <- do.call(metric_graph$new, dots_list)
       } else{
             graph <- metric_graph$new(edges = edges, V = V, E = E,
-                               check_connected = FALSE, ...)
+                               check_connected = FALSE, edge_weights = edge_weights,...)
       }
 
 
      g <- graph(edges = c(t(graph$E)), directed = FALSE)
+
+    if(!is.null(edge_weights)){
+      edge_weights <- graph$get_edge_weights(data.frame=TRUE)
+    }
+
      igraph::E(g)$weight <- graph$edge_lengths
     #  components <- igraph::clusters(g, mode="weak")
     components <- igraph::components(g, mode="weak")
@@ -6070,9 +6079,15 @@ graph_components <-  R6::R6Class("graph_components",
          edge_keep <- setdiff(1:graph$nE, edge_rem)
          ind_keep <- rep(0,graph$nE)
          ind_keep[edge_keep] <- 1
+         if(is.null(edge_weights)){
+          ew_tmp <- NULL
+         } else{
+            ew_tmp <- edge_weights[which(ind_keep!=0), , drop= FALSE]
+         }
          if(length(graph$edges[which(ind_keep!=0)]) > 0){
           self$graphs[[k]] = metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
-                                             check_connected = FALSE, ...)
+                                             check_connected = FALSE, 
+                                             edge_weights = ew_tmp, ...)
          }
        }
        for(i in self$n:1){

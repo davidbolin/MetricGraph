@@ -59,6 +59,7 @@ Create metric graphs for connected components}
   V = NULL,
   E = NULL,
   by_length = TRUE,
+  edge_weights = NULL,
   ...,
   lines = deprecated()
 )}\if{html}{\out{</div>}}
@@ -75,6 +76,8 @@ Create metric graphs for connected components}
 
 \item{\code{by_length}}{Sort the components by total edge length? If \code{FALSE},
 the components are sorted by the number of vertices.}
+
+\item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where}
 
 \item{\code{...}}{Additional arguments used when specifying the graphs}
 

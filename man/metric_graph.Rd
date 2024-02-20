@@ -239,7 +239,10 @@ A \code{metric_graph} object.
 \subsection{Method \code{set_edge_weights()}}{
 Sets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(weights = rep(1, self$nE), kirchhoff_weights)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(
+  weights = rep(1, self$nE),
+  kirchhoff_weights = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -262,11 +265,18 @@ No return value. Called for its side effects.
 \subsection{Method \code{get_edge_weights()}}{
 Gets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights(data.frame = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data.frame}}{If the edge weights are given as vectors, should the result be returned as a data.frame?}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
-A vector containing the edge weights.
+A vector or \code{data.frame} containing the edge weights.
 }
 }
 \if{html}{\out{<hr>}}
@@ -1401,6 +1411,7 @@ Plots the metric graph.
   newdata = NULL,
   group = 1,
   plotly = FALSE,
+  interactive = FALSE,
   vertex_size = 3,
   vertex_color = "black",
   edge_width = 0.3,
@@ -1414,6 +1425,8 @@ Plots the metric graph.
   p = NULL,
   degree = FALSE,
   direction = FALSE,
+  edge_weight = NULL,
+  edge_width_weight = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -1433,11 +1446,13 @@ is a character, then the group will be chosen by its name.}
 \item{\code{plotly}}{Use plot_ly for 3D plot (default \code{FALSE}). This option
 requires the 'plotly' package.}
 
+\item{\code{interactive}}{Only works for 2d plots. If \code{TRUE}, an interactive plot will be displayed. Unfortunately, \code{interactive} is not compatible with \code{edge_weight}.}
+
 \item{\code{vertex_size}}{Size of the vertices.}
 
 \item{\code{vertex_color}}{Color of vertices.}
 
-\item{\code{edge_width}}{Line width for edges.}
+\item{\code{edge_width}}{Line width for edges. If \code{edge_width_weight} is not \code{NULL}, this determines the maximum edge width.}
 
 \item{\code{edge_color}}{Color of edges.}
 
@@ -1459,6 +1474,11 @@ requires the 'plotly' package.}
 \item{\code{degree}}{Show the degrees of the vertices?}
 
 \item{\code{direction}}{Show the direction of the edges?}
+
+\item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.
+\code{edge_weight} is only available for 2d plots. For 3d plots with edge weights, please use the \code{plot_function()} method.}
+
+\item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
 
 \item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
@@ -1508,6 +1528,8 @@ Plots continuous function on the graph.
   plotly = FALSE,
   improve_plot = FALSE,
   continuous = TRUE,
+  edge_weight = NULL,
+  edge_width_weight = NULL,
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
@@ -1542,6 +1564,10 @@ the package 'plotly'.}
 \item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
 
 \item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
+
+\item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.}
+
+\item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
