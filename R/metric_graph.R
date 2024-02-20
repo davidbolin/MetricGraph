@@ -3512,7 +3512,7 @@ metric_graph <-  R6Class("metric_graph",
                            support_color = support_color,
                            support_width = support_width,
                            p = p,
-                           edge_weight = edge_weight,
+                           edge_width_weight = edge_width_weight,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees" && !private$transform){
@@ -4671,7 +4671,7 @@ metric_graph <-  R6Class("metric_graph",
                      direction = FALSE,
                      edge_weight = NULL,
                      edge_width_weight = NULL,
-                     scale_color_weights = scale_color_viridis(option = "H"),
+                     scale_color_weights = scale_color_viridis(option = "C"),
                      ...){
     xyl <- c()
 
@@ -4691,7 +4691,7 @@ metric_graph <-  R6Class("metric_graph",
       e_weights <- self$get_edge_weights(data.frame = TRUE)
       e_weights <- e_weights[,edge_width_weight, drop = FALSE]
       e_weights[,1] <- e_weights[,1] * line_width / max(e_weights[,1])
-      e_weights[,1] <- factor(e_weights[,1])
+      e_weights[,1] <- e_weights[,1]
       colnames(e_weights) <- "widths"
       e_weights["grp"] <- 1:self$nE
       df_plot <- merge(df_plot, e_weights)      
@@ -4704,12 +4704,12 @@ metric_graph <-  R6Class("metric_graph",
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   color = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_weights + ggnewscale::new_scale_color()
+                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + ggnewscale::new_scale_color()
       } else{
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp, linewidth = widths),
                                   # linewidth = line_width,
-                                  ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
+                                  ...) + ggplot2::scale_linewidth_identity()
       }
     } else {
       if(!is.null(edge_weight)){
@@ -4838,6 +4838,7 @@ metric_graph <-  R6Class("metric_graph",
                      p = NULL,
                      support_width = 0.5,
                     support_color = "gray",
+                    edge_width_weight = NULL,
                      ...){
       x <- y <- ei <- NULL
       for (i in 1:self$nE) {
@@ -4850,17 +4851,30 @@ metric_graph <-  R6Class("metric_graph",
       }
       data.plot <- data.frame(x = x, y = y, z = rep(0,length(x)), i = ei)
 
+    if(!is.null(edge_width_weight)){
+        edge_width_weight <- edge_width_weight[[1]]
+        e_weights <- self$get_edge_weights(data.frame = TRUE)
+        e_weights <- e_weights[,edge_width_weight, drop = FALSE]
+        e_weights[,1] <- e_weights[,1] * line_width / max(e_weights[,1])
+        e_weights[,1] <- e_weights[,1]
+        colnames(e_weights) <- "widths"
+        e_weights["i"] <- 1:self$nE
+        data.plot <- merge(data.plot, e_weights)      
+    } else{
+      data.plot[["widths"]] <- rep(line_width, nrow(df_plot))
+    }
+
     if(is.null(p)) {
       p <- plotly::plot_ly(data=data.plot, x = ~y, y = ~x, z = ~z,...)
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
-                           line = list(width = line_width,
+                           line = list(width = ~widths,
                                        color = edge_color),
                            split = ~i, showlegend = FALSE)
     } else {
       p <- plotly::add_trace(p, data = data.plot, x = ~y, y = ~x, z = ~z,
                            mode = "lines", type = "scatter3d",
-                           line = list(width = line_width,
+                           line = list(width = ~widths,
                                        color = edge_color),
                            split = ~i, showlegend = FALSE)
     }
