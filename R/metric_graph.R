@@ -4671,6 +4671,7 @@ metric_graph <-  R6Class("metric_graph",
                      direction = FALSE,
                      edge_weight = NULL,
                      edge_width_weight = NULL,
+                     scale_color_weights = scale_color_viridis(option = "H"),
                      ...){
     xyl <- c()
 
@@ -4702,22 +4703,22 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
-                                  color = weights, linewidth = factor(widths)),
-                                  ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_viridis() + ggnewscale::new_scale_color()
+                                  color = weights, linewidth = widths),
+                                  ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_weights + ggnewscale::new_scale_color()
       } else{
         p <- ggplot() + geom_path(data = df_plot,
-                                  mapping = aes(x = x, y = y, group = grp, linewidth = factor(widths)),
+                                  mapping = aes(x = x, y = y, group = grp, linewidth = widths),
                                   # linewidth = line_width,
                                   ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
       }
     } else {
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp, color = weights, linewidth = factor(widths)),
-                           ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_viridis()+ ggnewscale::new_scale_color()
+                           mapping = aes(x = x, y = y, group = grp, color = weights, linewidth =widths),
+                           ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_weights+ ggnewscale::new_scale_color()
       } else{
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp,  linewidth = factor(widths)), ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
+                           mapping = aes(x = x, y = y, group = grp,  linewidth = widths), ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
       }
     }
     if(direction) {
