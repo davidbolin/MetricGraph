@@ -48,6 +48,7 @@
 #' @importFrom tidyr drop_na
 #' @importFrom magrittr %>%
 #' @importFrom zoo na.approx
+#' @importFrom ggnewscale new_scale_color
 #' @export %>%
 #' @export summarise
 #' @export mutate

@@ -4734,7 +4734,7 @@ metric_graph <-  R6Class("metric_graph",
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   colour = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + ggnewscale::new_scale_color()
+                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + new_scale_color()
       } else{
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp, linewidth = widths),
@@ -4745,7 +4745,7 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights+ ggnewscale::new_scale_color()
+                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights+ new_scale_color()
       } else{
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp,  linewidth = widths), ...) + ggplot2::scale_linewidth_identity()
