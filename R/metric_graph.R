@@ -698,11 +698,15 @@ metric_graph <-  R6Class("metric_graph",
 
 
   #' @description Gets the edge weights
-  #' @return A vector containing the edge weights.
+  #' @param data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+  #' @return A vector or `data.frame` containing the edge weights.
 
-  get_edge_weights = function(){
+  get_edge_weights = function(data.frame = FALSE){
     tmp <- private$edge_weights
     row.names(tmp) <- NULL
+    if(!is.data.frame(tmp) && data.frame){
+      tmp <- data.frame(weights = tmp)
+    }
     return(tmp)
   },
 
@@ -3417,6 +3421,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param p Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to
   #' @param degree Show the degrees of the vertices?
   #' @param direction Show the direction of the edges?
+  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
 ##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
@@ -3441,6 +3446,7 @@ metric_graph <-  R6Class("metric_graph",
                   p = NULL,
                   degree = FALSE,
                   direction = FALSE,
+                  edge_weight = NULL,
                   # mutate = NULL,
                   # filter = NULL,
                   # summarise = NULL,
@@ -3475,6 +3481,7 @@ metric_graph <-  R6Class("metric_graph",
                            p = p,
                            degree = degree,
                            direction = direction,
+                           edge_weight = edge_weight,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees" && !private$transform){
@@ -3499,6 +3506,7 @@ metric_graph <-  R6Class("metric_graph",
                            support_color = support_color,
                            support_width = support_width,
                            p = p,
+                           edge_weight = edge_weight,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees" && !private$transform){
@@ -4651,27 +4659,46 @@ metric_graph <-  R6Class("metric_graph",
                      p = NULL,
                      degree = FALSE,
                      direction = FALSE,
+                     edge_weight = NULL,
                      ...){
     xyl <- c()
 
     nc <- do.call(rbind,lapply(self$edges, function(x) dim(x)[1]))
     xyl <- cbind(do.call(rbind,self$edges), rep(1:length(nc), times = nc))
+    df_plot <- data.frame(x = xyl[, 1], y = xyl[, 2], grp = xyl[, 3])    
+    if(!is.null(edge_weight)){
+      edge_weight <- edge_weight[[1]]
+      e_weights <- self$get_edge_weights(data.frame = TRUE)
+      e_weights <- e_weights[,edge_weight, drop = FALSE]
+      colnames(e_weights) <- "weights"
+      e_weights["grp"] <- 1:self$nE
+      df_plot <- merge(df_plot, e_weights)      
+    } 
+
 
     if(is.null(p)){
-        p <- ggplot() + geom_path(data = data.frame(x = xyl[, 1],
-                                                    y = xyl[, 2],
-                                                    grp = xyl[, 3]),
+      if(!is.null(edge_weight)){
+        p <- ggplot() + geom_path(data = df_plot,
+                                  mapping = aes(x = x, y = y, group = grp,
+                                  color = weights),
+                                  linewidth = line_width,
+                                  ...) + scale_color_viridis() + ggnewscale::new_scale_color()
+      } else{
+        p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp),
                                   linewidth = line_width,
-                                  colour = edge_color,
                                   ...)
+      }
     } else {
-        p <- p + geom_path(data = data.frame(x = xyl[, 1],
-                                             y = xyl[,2],
-                                             grp = xyl[,3]),
+      if(!is.null(edge_weight)){
+        p <- p + geom_path(data = df_plot,
+                           mapping = aes(x = x, y = y, group = grp, color = weights),
+                           linewidth = line_width, ...) + scale_color_viridis()+ ggnewscale::new_scale_color()
+      } else{
+        p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp),
-                           linewidth = line_width,
-                           colour = edge_color, ...)
+                           linewidth = line_width, ...)
+      }
     }
     if(direction) {
       mid.l <- self$coordinates(PtE = cbind(1:self$nE, rep(0.49,self$nE)))
