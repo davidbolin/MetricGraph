@@ -368,7 +368,10 @@ viewed as a vertex.</p>
 <h3 id="method-set-edge-weights-">Method <code>set_edge_weights()</code><a class="anchor" aria-label="anchor" href="#method-set-edge-weights-"></a></h3>
 <p>Sets the edge weights</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">set_edge_weights</span><span class="op">(</span>weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">self</span><span class="op">$</span><span class="va">nE</span><span class="op">)</span>, <span class="va">kirchhoff_weights</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">set_edge_weights</span><span class="op">(</span></span>
+<span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">self</span><span class="op">$</span><span class="va">nE</span><span class="op">)</span>,</span>
+<span>  kirchhoff_weights <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -393,12 +396,20 @@ each row gives a vector of weights to its corresponding edge.</p></dd>
 <h3 id="method-get-edge-weights-">Method <code>get_edge_weights()</code><a class="anchor" aria-label="anchor" href="#method-get-edge-weights-"></a></h3>
 <p>Gets the edge weights</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span>data.frame <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
+<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>data.frame</code></dt>
+<dd><p>If the edge weights are given as vectors, should the result be returned as a data.frame?</p></dd>
+
+
+</dl><p></p></div>
+</div>
+<div class="section">
 <h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
-<p>A vector containing the edge weights.</p>
+<p>A vector or <code>data.frame</code> containing the edge weights.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-get_vertices_incomp_dir"></a><div class="section">
@@ -426,7 +437,7 @@ each row gives a vector of weights to its corresponding edge.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
+<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>messages</code></dt>
 <dd><p>Should message explaining how to build the results be given for missing quantities?</p></dd>
 
@@ -470,7 +481,7 @@ each row gives a vector of weights to its corresponding edge.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
+<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>check_euclidean</code></dt>
 <dd><p>Also check if the graph has Euclidean edges? This essentially means that the distance consistency check will also be perfomed. If the graph does not have Euclidean edges due to another reason rather than the distance consistency, then it will already be indicated that the graph does not have Euclidean edges.</p></dd>
 
@@ -520,7 +531,7 @@ graph</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
+<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>full</code></dt>
 <dd><p>Should the geodesic distances be computed for all
 the available locations? If <code>FALSE</code>, it will be computed
@@ -558,7 +569,7 @@ graph.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Points to compute the metric for.</p></dd>
 
@@ -608,7 +619,7 @@ locations.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>full</code></dt>
 <dd><p>Should the resistance distances be computed for all
 the available locations. If <code>FALSE</code>, it will be computed
@@ -655,7 +666,7 @@ locations.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Points to compute the metric for.</p></dd>
 
@@ -688,7 +699,7 @@ Laplacian matrix?</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
+<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>which</code></dt>
 <dd><p>If "degree", returns the degree of the vertex. If "indegree", returns the indegree,
 and if "outdegree", it returns the outdegree.</p></dd>
@@ -736,7 +747,7 @@ object.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
+<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>full</code></dt>
 <dd><p>Should the resistance distances be computed for all
 the available locations. If <code>FALSE</code>, it will be computed
@@ -769,7 +780,7 @@ in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</
 </div>
 
 <div class="section">
-<h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
+<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>verbose</code></dt>
 <dd><p>Show progress? Default is <code>FALSE</code>.</p></dd>
 
@@ -795,7 +806,7 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
+<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>get_cols</code></dt>
 <dd><p>Should the names of the columns that created the group variable be returned?</p></dd>
 
@@ -815,7 +826,7 @@ would be merged are compatible in terms of direction.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
+<h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>group</code></dt>
 <dd><p>For which group, should the PtE be returned? <code>NULL</code> means that all PtEs available will be returned.</p></dd>
 
@@ -841,7 +852,7 @@ observation locations.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
+<h4 id="arguments-14">Arguments<a class="anchor" aria-label="anchor" href="#arguments-14"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>unit</code></dt>
 <dd><p>If non-NULL, changes from <code>length_unit</code> from the graph construction to <code>unit</code>.</p></dd>
 
@@ -873,7 +884,7 @@ observation locations.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-14">Arguments<a class="anchor" aria-label="anchor" href="#arguments-14"></a></h4>
+<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>tolerance</code></dt>
 <dd><p>Observations locations are merged to a single vertex if
 they are closer than this number (given in relative edge distance between
@@ -913,7 +924,7 @@ they are closer than this number (given in relative edge distance between
 </div>
 
 <div class="section">
-<h4 id="arguments-15">Arguments<a class="anchor" aria-label="anchor" href="#arguments-15"></a></h4>
+<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>loc</code></dt>
 <dd><p>A <code>matrix</code> or <code>data.frame</code> with two columns containing the locations to generate the data from the edge weights. If <code>data_coords</code> is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If <code>data_coords</code> is 'PtE', the first column must be the edge number and the second column must be the distance on edge.</p></dd>
 
@@ -965,7 +976,7 @@ assumed to be normalized to (0,1). Default FALSE.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-16">Arguments<a class="anchor" aria-label="anchor" href="#arguments-16"></a></h4>
+<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>bru</code></dt>
 <dd><p>Should an 'inlabru'-friendly list be returned?</p></dd>
 
@@ -1024,7 +1035,7 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-17">Arguments<a class="anchor" aria-label="anchor" href="#arguments-17"></a></h4>
+<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.frame</code> or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
@@ -1147,7 +1158,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-18">Arguments<a class="anchor" aria-label="anchor" href="#arguments-18"></a></h4>
+<h4 id="arguments-19">Arguments<a class="anchor" aria-label="anchor" href="#arguments-19"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.frame</code> or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
@@ -1257,7 +1268,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-19">Arguments<a class="anchor" aria-label="anchor" href="#arguments-19"></a></h4>
+<h4 id="arguments-20">Arguments<a class="anchor" aria-label="anchor" href="#arguments-20"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">dplyr::mutate()</a></code>.</p></dd>
 
@@ -1290,7 +1301,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-20">Arguments<a class="anchor" aria-label="anchor" href="#arguments-20"></a></h4>
+<h4 id="arguments-21">Arguments<a class="anchor" aria-label="anchor" href="#arguments-21"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">tidyr::drop_na()</a></code>.</p></dd>
 
@@ -1315,7 +1326,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-21">Arguments<a class="anchor" aria-label="anchor" href="#arguments-21"></a></h4>
+<h4 id="arguments-22">Arguments<a class="anchor" aria-label="anchor" href="#arguments-22"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select()</a></code>.</p></dd>
 
@@ -1348,7 +1359,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-22">Arguments<a class="anchor" aria-label="anchor" href="#arguments-22"></a></h4>
+<h4 id="arguments-23">Arguments<a class="anchor" aria-label="anchor" href="#arguments-23"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter()</a></code>.</p></dd>
 
@@ -1387,7 +1398,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-23">Arguments<a class="anchor" aria-label="anchor" href="#arguments-23"></a></h4>
+<h4 id="arguments-24">Arguments<a class="anchor" aria-label="anchor" href="#arguments-24"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">dplyr::summarise()</a></code>.</p></dd>
 
@@ -1433,7 +1444,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-24">Arguments<a class="anchor" aria-label="anchor" href="#arguments-24"></a></h4>
+<h4 id="arguments-25">Arguments<a class="anchor" aria-label="anchor" href="#arguments-25"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>group</code></dt>
 <dd><p>A vector contaning which groups should be returned? The default is <code>NULL</code>, which gives the result for the all groups.</p></dd>
 
@@ -1461,7 +1472,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 </div>
 
 <div class="section">
-<h4 id="arguments-25">Arguments<a class="anchor" aria-label="anchor" href="#arguments-25"></a></h4>
+<h4 id="arguments-26">Arguments<a class="anchor" aria-label="anchor" href="#arguments-26"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>alpha</code></dt>
 <dd><p>how many derivatives the processes has</p></dd>
 
@@ -1487,7 +1498,7 @@ in the same vertex)</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-26">Arguments<a class="anchor" aria-label="anchor" href="#arguments-26"></a></h4>
+<h4 id="arguments-27">Arguments<a class="anchor" aria-label="anchor" href="#arguments-27"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>alpha</code></dt>
 <dd><p>the type of constraint (currently only supports 2)</p></dd>
 
@@ -1523,7 +1534,7 @@ in the same vertex)</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-27">Arguments<a class="anchor" aria-label="anchor" href="#arguments-27"></a></h4>
+<h4 id="arguments-28">Arguments<a class="anchor" aria-label="anchor" href="#arguments-28"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>h</code></dt>
 <dd><p>Maximum distance between mesh nodes (should be provided if n is
 not provided).</p></dd>
@@ -1576,7 +1587,7 @@ the <code>mesh</code> element of the <code>metric_graph</code> object.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-28">Arguments<a class="anchor" aria-label="anchor" href="#arguments-28"></a></h4>
+<h4 id="arguments-29">Arguments<a class="anchor" aria-label="anchor" href="#arguments-29"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>petrov</code></dt>
 <dd><p>Compute Petrov-Galerkin matrices? (default <code>FALSE</code>). These
 are defined as \(Cpet_{ij} = &lt;\phi_i, \psi_j&gt;\) and \(Gpet_{ij} = &lt;d\phi_i, \psi_j&gt;\),
@@ -1613,7 +1624,7 @@ matrices are stored in <code>Cpet</code> and <code>Gpet</code>.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-29">Arguments<a class="anchor" aria-label="anchor" href="#arguments-29"></a></h4>
+<h4 id="arguments-30">Arguments<a class="anchor" aria-label="anchor" href="#arguments-30"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Locations given as (edge number in graph, normalized location on
 edge)</p></dd>
@@ -1640,7 +1651,7 @@ elements \(A_{ij} = \phi_j(s_i)\).</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-30">Arguments<a class="anchor" aria-label="anchor" href="#arguments-30"></a></h4>
+<h4 id="arguments-31">Arguments<a class="anchor" aria-label="anchor" href="#arguments-31"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Locations given as (edge number in graph, normalized location on
 edge)</p></dd>
@@ -1683,6 +1694,7 @@ is at the end of the edge.</p>
 <span>  newdata <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  interactive <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  vertex_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  vertex_color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  edge_width <span class="op">=</span> <span class="fl">0.3</span>,</span>
@@ -1696,12 +1708,14 @@ is at the end of the edge.</p>
 <span>  p <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  degree <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  direction <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  edge_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  edge_width_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-31">Arguments<a class="anchor" aria-label="anchor" href="#arguments-31"></a></h4>
+<h4 id="arguments-32">Arguments<a class="anchor" aria-label="anchor" href="#arguments-32"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>Which column of the data to plot? If <code>NULL</code>, no data will be
 plotted.</p></dd>
@@ -1722,6 +1736,10 @@ is a character, then the group will be chosen by its name.</p></dd>
 requires the 'plotly' package.</p></dd>
 
 
+<dt><code>interactive</code></dt>
+<dd><p>Only works for 2d plots. If <code>TRUE</code>, an interactive plot will be displayed. Unfortunately, <code>interactive</code> is not compatible with <code>edge_weight</code>.</p></dd>
+
+
 <dt><code>vertex_size</code></dt>
 <dd><p>Size of the vertices.</p></dd>
 
@@ -1731,7 +1749,7 @@ requires the 'plotly' package.</p></dd>
 
 
 <dt><code>edge_width</code></dt>
-<dd><p>Line width for edges.</p></dd>
+<dd><p>Line width for edges. If <code>edge_width_weight</code> is not <code>NULL</code>, this determines the maximum edge width.</p></dd>
 
 
 <dt><code>edge_color</code></dt>
@@ -1773,6 +1791,15 @@ requires the 'plotly' package.</p></dd>
 
 <dt><code>direction</code></dt>
 <dd><p>Show the direction of the edges?</p></dd>
+
+
+<dt><code>edge_weight</code></dt>
+<dd><p>Which column from edge weights to plot? If <code>NULL</code> edge weights are not plotted. To plot the edge weights when the metric graph <code>edge_weights</code> is a vector instead of a <code>data.frame</code>, simply set to 1.
+<code>edge_weight</code> is only available for 2d plots. For 3d plots with edge weights, please use the <code>plot_function()</code> method.</p></dd>
+
+
+<dt><code>edge_width_weight</code></dt>
+<dd><p>Which column from edge weights to determine the edges widths? If <code>NULL</code> edge width will be determined from <code>edge_width</code>.</p></dd>
 
 
 <dt><code>...</code></dt>
@@ -1822,6 +1849,8 @@ requires the 'plotly' package.</p></dd>
 <span>  plotly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  improve_plot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  continuous <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  edge_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  edge_width_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  vertex_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  vertex_color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  edge_width <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -1836,7 +1865,7 @@ requires the 'plotly' package.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-32">Arguments<a class="anchor" aria-label="anchor" href="#arguments-32"></a></h4>
+<h4 id="arguments-33">Arguments<a class="anchor" aria-label="anchor" href="#arguments-33"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>Which column of the data to plot? If <code>NULL</code>, no data will be
 plotted.</p></dd>
@@ -1868,6 +1897,14 @@ the package 'plotly'.</p></dd>
 
 <dt><code>continuous</code></dt>
 <dd><p>Should continuity be assumed when the plot uses <code>newdata</code>?</p></dd>
+
+
+<dt><code>edge_weight</code></dt>
+<dd><p>Which column from edge weights to plot? If <code>NULL</code> edge weights are not plotted. To plot the edge weights when the metric graph <code>edge_weights</code> is a vector instead of a <code>data.frame</code>, simply set to 1.</p></dd>
+
+
+<dt><code>edge_width_weight</code></dt>
+<dd><p>Which column from edge weights to determine the edges widths? If <code>NULL</code> edge width will be determined from <code>edge_width</code>.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
@@ -1935,7 +1972,7 @@ the package 'plotly'.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-33">Arguments<a class="anchor" aria-label="anchor" href="#arguments-33"></a></h4>
+<h4 id="arguments-34">Arguments<a class="anchor" aria-label="anchor" href="#arguments-34"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>X</code></dt>
 <dd><p>A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.</p></dd>
@@ -1989,7 +2026,7 @@ package 'plotly'.</p></dd>
 </div>
 
 <div class="section">
-<h4 id="arguments-34">Arguments<a class="anchor" aria-label="anchor" href="#arguments-34"></a></h4>
+<h4 id="arguments-35">Arguments<a class="anchor" aria-label="anchor" href="#arguments-35"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.frame</code> or named list containing the observations.
 In case of groups, the data.frames for the groups should be stacked vertically,
@@ -2031,7 +2068,7 @@ coordinates.</p><div class="section">
 </div>
 
 <div class="section">
-<h4 id="arguments-35">Arguments<a class="anchor" aria-label="anchor" href="#arguments-35"></a></h4>
+<h4 id="arguments-36">Arguments<a class="anchor" aria-label="anchor" href="#arguments-36"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>Matrix with locations on the graph (edge number and normalized
 position on the edge).</p></dd>
@@ -2065,7 +2102,7 @@ data List containing data on the metric graph.</p>
 </div>
 
 <div class="section">
-<h4 id="arguments-36">Arguments<a class="anchor" aria-label="anchor" href="#arguments-36"></a></h4>
+<h4 id="arguments-37">Arguments<a class="anchor" aria-label="anchor" href="#arguments-37"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
@@ -2092,7 +2129,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.91 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.94 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

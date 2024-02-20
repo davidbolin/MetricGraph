@@ -128,6 +128,7 @@ Create metric graphs for connected components</p></dd>
 <span>  V <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  E <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  by_length <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  edge_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
@@ -150,6 +151,10 @@ Create metric graphs for connected components</p></dd>
 <dt><code>by_length</code></dt>
 <dd><p>Sort the components by total edge length? If <code>FALSE</code>,
 the components are sorted by the number of vertices.</p></dd>
+
+
+<dt><code>edge_weights</code></dt>
+<dd><p>Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a <code>data.frame</code> with the number of rows being equal to the number of edges, where</p></dd>
 
 
 <dt><code>...</code></dt>
@@ -267,7 +272,7 @@ be used when plotting each graph.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.88 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.92 secs</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Starting graph creation...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> The current tolerances are:</span>
@@ -276,7 +281,7 @@ be used when plotting each graph.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.86 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.90 secs</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Starting graph creation...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> The current tolerances are:</span>
@@ -284,7 +289,7 @@ be used when plotting each graph.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Vertex-Edge 0.001</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.43 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.45 secs</span>
 <span class="r-in"><span><span class="va">graphs</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="graph_components-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>

@@ -78,6 +78,8 @@
 <li>Added the possibility of using a <code>graph_lme</code> object to provide starting values when fitting a model using <code><a href="../reference/graph_lme.html">graph_lme()</a></code>.</li>
 <li>Added the option of fitting a directional Whittle-Matérn model with <code>alpha=1</code> when using <code><a href="../reference/graph_lme.html">graph_lme()</a></code>.</li>
 <li>Added <code>kirchhoff_weights</code> argument to obtain weights for Kirchhoff vertex conditions from <code>edge_weights</code>.</li>
+<li>Improved handling of edge weights, e.g., if pruning changes any edge weight, a warning will be given.</li>
+<li>Added the <code>edgeweight_to_data()</code> method that turns edge weights into data in the internal metric graph format.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="metricgraph-120">MetricGraph 1.2.0<a class="anchor" aria-label="anchor" href="#metricgraph-120"></a></h2><p class="text-muted">CRAN release: 2023-11-07</p>
