@@ -1782,7 +1782,7 @@ metric_graph <-  R6Class("metric_graph",
               }
 
               if(!is.null(weight_col)){
-                ew <- ew[, weight_col]
+                ew <- ew[, weight_col, drop=FALSE]
               }
 
               ew[[".edge_number"]] <- 1:nrow(ew)
@@ -3574,6 +3574,8 @@ metric_graph <-  R6Class("metric_graph",
                            plotly = FALSE,
                            improve_plot = FALSE,
                            continuous = TRUE,
+                           edge_weight = NULL,
+                           edge_width_weight = NULL,
                            vertex_size = 5,
                            vertex_color = "black",
                            edge_width = 1,
@@ -3590,8 +3592,32 @@ metric_graph <-  R6Class("metric_graph",
 
     mesh <- FALSE
 
-    if(is.null(data) && is.null(X)){
-      stop("You should provide either 'data' or 'X'.")
+    if(!is.null(edge_weight)){
+      edge_weight <- edge_weight[[1]]
+      continuous <- FALSE
+      newdata <- do.call(rbind, self$edges)
+      newdata <- self$edgeweight_to_data(loc = newdata, weight_col = edge_weight,
+                                        data_coords = "spatial",
+                                        add = FALSE,
+                                        return = TRUE,
+                                        verbose = 0)
+      data <- edge_weight                                    
+    } 
+
+    if(!is.null(edge_width_weight)){
+      edge_width_weight <- edge_width_weight[[1]]
+      e_w_weights <- self$get_edge_weights(data.frame = TRUE)
+      e_w_weights <- e_weights[,edge_width_weight, drop = FALSE]
+      e_w_weights[,1] <- e_w_weights[,1] * edge_width / max(e_w_weights[,1])
+      e_w_weights[,1] <- e_w_weights[,1]
+      colnames(e_w_weights) <- "widths"
+      e_w_weights["i"] <- 1:self$nE    
+    } else{
+      e_w_weigths <- data.frame(i = 1:self$nE, widths = rep(line_width, self$nE))
+    }
+
+    if(is.null(data) && is.null(X) && is.null(edge_weight)){
+      stop("You should provide either 'data', 'X' or 'edge_weight'.")
     }
 
     if(!is.null(data) && !is.null(X)){
@@ -4121,7 +4147,7 @@ metric_graph <-  R6Class("metric_graph",
 
     }
 
-    data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc)
+    data <- data.frame(x = x.loc, y = y.loc, i = i.loc, z = z.loc)
 
     if(plotly){
       requireNamespace("plotly")
@@ -4158,13 +4184,13 @@ metric_graph <-  R6Class("metric_graph",
 
     } else {
       if(is.null(p)) {
-          p <- ggplot(data = data, aes(x = x, y = y,
+          p <- ggplot(data = data) +
+          geom_path( mapping = aes(x = x, y = y,
                                      group = i,
-                                     colour = z)) +
-          geom_path(linewidth = line_width) + scale_color_viridis() +
+                                     colour = z), linewidth = line_width) + scale_color_viridis() +
           labs(colour = "")
       } else {
-        p <- p + geom_path(data = data,
+        p <- p + geom_path(data = data, mapping = 
                            aes(x = x, y = y,
                                group = i, colour = z),
                            linewidth = line_width) +
@@ -4685,7 +4711,9 @@ metric_graph <-  R6Class("metric_graph",
       colnames(e_weights) <- "weights"
       e_weights["grp"] <- 1:self$nE
       df_plot <- merge(df_plot, e_weights)      
-    } 
+    } else{
+      df_plot[["weigths"]] <- rep(1, nrow(df_plot))
+    }
     if(!is.null(edge_width_weight)){
       edge_width_weight <- edge_width_weight[[1]]
       e_weights <- self$get_edge_weights(data.frame = TRUE)
@@ -4703,7 +4731,7 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
-                                  color = weights, linewidth = widths),
+                                  colour = weights, linewidth = widths),
                                   ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + ggnewscale::new_scale_color()
       } else{
         p <- ggplot() + geom_path(data = df_plot,
@@ -4714,11 +4742,11 @@ metric_graph <-  R6Class("metric_graph",
     } else {
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp, color = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_weights+ ggnewscale::new_scale_color()
+                           mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
+                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights+ ggnewscale::new_scale_color()
       } else{
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp,  linewidth = widths), ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
+                           mapping = aes(x = x, y = y, group = grp,  linewidth = widths), ...) + ggplot2::scale_linewidth_identity()
       }
     }
     if(direction) {
@@ -4861,7 +4889,7 @@ metric_graph <-  R6Class("metric_graph",
         e_weights["i"] <- 1:self$nE
         data.plot <- merge(data.plot, e_weights)      
     } else{
-      data.plot[["widths"]] <- rep(line_width, nrow(df_plot))
+      data.plot[["widths"]] <- rep(line_width, nrow(data.plot))
     }
 
     if(is.null(p)) {
