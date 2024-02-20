@@ -5940,6 +5940,9 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   edge_weights = NULL,
 
     set_first_weights = function(weights = rep(1, self$nE)){
+      if(is.null(weights)){
+        weights <- rep(1, self$nE)
+      }
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
     }
