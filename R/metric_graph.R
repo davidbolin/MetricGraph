@@ -3407,9 +3407,10 @@ metric_graph <-  R6Class("metric_graph",
   #' is a character, then the group will be chosen by its name.
   #' @param plotly Use plot_ly for 3D plot (default `FALSE`). This option
   #' requires the 'plotly' package.
+  #' @param interactive Only works for 2d plots. If `TRUE`, an interactive plot will be displayed. Unfortunately, `interactive` is not compatible with `edge_weight`.
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
-  #' @param edge_width Line width for edges.
+  #' @param edge_width Line width for edges. If `edge_width_weight` is not `NULL`, this determines the maximum edge width.
   #' @param edge_color Color of edges.
   #' @param data_size Size of markers for data.
   #' @param support_width For 3D plot, width of support lines.
@@ -3421,7 +3422,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @param p Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to
   #' @param degree Show the degrees of the vertices?
   #' @param direction Show the direction of the edges?
-  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
+  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1. 
+  #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
+    #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. 
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
 ##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
@@ -3433,6 +3436,7 @@ metric_graph <-  R6Class("metric_graph",
                   newdata = NULL,
                   group = 1,
                   plotly = FALSE,
+                  interactive = FALSE,
                   vertex_size = 3,
                   vertex_color = 'black',
                   edge_width = 0.3,
@@ -3447,6 +3451,7 @@ metric_graph <-  R6Class("metric_graph",
                   degree = FALSE,
                   direction = FALSE,
                   edge_weight = NULL,
+                  edge_width_weight = NULL,
                   # mutate = NULL,
                   # filter = NULL,
                   # summarise = NULL,
@@ -3482,6 +3487,7 @@ metric_graph <-  R6Class("metric_graph",
                            degree = degree,
                            direction = direction,
                            edge_weight = edge_weight,
+                           edge_width_weight = edge_width_weight,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees" && !private$transform){
@@ -3515,6 +3521,10 @@ metric_graph <-  R6Class("metric_graph",
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
         }
       }
+    }
+    if(interactive && !plotly){
+      print(plotly::ggplotly(p))
+      return(invisible(p))
     }
     return(p)
   },
@@ -4660,6 +4670,7 @@ metric_graph <-  R6Class("metric_graph",
                      degree = FALSE,
                      direction = FALSE,
                      edge_weight = NULL,
+                     edge_width_weight = NULL,
                      ...){
     xyl <- c()
 
@@ -4674,30 +4685,39 @@ metric_graph <-  R6Class("metric_graph",
       e_weights["grp"] <- 1:self$nE
       df_plot <- merge(df_plot, e_weights)      
     } 
-
+    if(!is.null(edge_width_weight)){
+      edge_width_weight <- edge_width_weight[[1]]
+      e_weights <- self$get_edge_weights(data.frame = TRUE)
+      e_weights <- e_weights[,edge_width_weight, drop = FALSE]
+      e_weights[,1] <- e_weights[,1] * line_width / max(e_weights[,1])
+      e_weights[,1] <- factor(e_weights[,1])
+      colnames(e_weights) <- "widths"
+      e_weights["grp"] <- 1:self$nE
+      df_plot <- merge(df_plot, e_weights)      
+    } else{
+      df_plot[["widths"]] <- rep(line_width, nrow(df_plot))
+    }
 
     if(is.null(p)){
       if(!is.null(edge_weight)){
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
-                                  color = weights),
-                                  linewidth = line_width,
-                                  ...) + scale_color_viridis() + ggnewscale::new_scale_color()
+                                  color = weights, linewidth = factor(widths)),
+                                  ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_viridis() + ggnewscale::new_scale_color()
       } else{
         p <- ggplot() + geom_path(data = df_plot,
-                                  mapping = aes(x = x, y = y, group = grp),
-                                  linewidth = line_width,
-                                  ...)
+                                  mapping = aes(x = x, y = y, group = grp, linewidth = factor(widths)),
+                                  # linewidth = line_width,
+                                  ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
       }
     } else {
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp, color = weights),
-                           linewidth = line_width, ...) + scale_color_viridis()+ ggnewscale::new_scale_color()
+                           mapping = aes(x = x, y = y, group = grp, color = weights, linewidth = factor(widths)),
+                           ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths)) + scale_color_viridis()+ ggnewscale::new_scale_color()
       } else{
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp),
-                           linewidth = line_width, ...)
+                           mapping = aes(x = x, y = y, group = grp,  linewidth = factor(widths)), ...) + ggplot2::scale_linewidth_manual(values = unique(df_plot$widths))
       }
     }
     if(direction) {
