@@ -9,6 +9,9 @@
 * Added `kirchhoff_weights` argument to obtain weights for Kirchhoff vertex conditions from `edge_weights`.
 * Improved handling of edge weights, e.g., if pruning changes any edge weight, a warning will be given.
 * Added the `edgeweight_to_data()` method that turns edge weights into data in the internal metric graph format.
+* Added `edge_weight` and `edge_width_weight` to the `plot()` method, so one can produce plots on metric graphs with the weights providing colors to the edges, and also with (possibly different) weights providing the thickness of the edges.
+* Added `edge_weights` to `graph_components`, so the connected components will have the correct corresponding edge weights.
+* Added `edge_weight` and `edge_width_weight` to the `plot_function()` method, in which they work in a similar manner to its counterpart for the `plot()` method. The difference being that the weights are plotted as piecewise constant functions.
 
 # MetricGraph 1.2.0
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.
