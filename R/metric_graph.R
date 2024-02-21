@@ -3485,7 +3485,7 @@ metric_graph <-  R6Class("metric_graph",
   #' is a character, then the group will be chosen by its name.
   #' @param plotly Use plot_ly for 3D plot (default `FALSE`). This option
   #' requires the 'plotly' package.
-  #' @param interactive Only works for 2d plots. If `TRUE`, an interactive plot will be displayed. Unfortunately, `interactive` is not compatible with `edge_weight`.
+  #' @param interactive Only works for 2d plots. If `TRUE`, an interactive plot will be displayed. Unfortunately, `interactive` is not compatible with `edge_weight` if `add_new_scale_weights` is TRUE.
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Line width for edges. If `edge_width_weight` is not `NULL`, this determines the maximum edge width.
@@ -4825,9 +4825,9 @@ metric_graph <-  R6Class("metric_graph",
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   colour = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_identity() 
+                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights 
           if(add_new_scale_weights){
-            p <- p + new_scale_color() + scale_color_weights 
+            p <- p + new_scale_color() 
           }
       } else{
         p <- ggplot() + geom_path(data = df_plot,
@@ -4839,9 +4839,9 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_identity() 
+                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights 
           if(add_new_scale_weights){
-            p <- p + new_scale_color() + scale_color_weights 
+            p <- p + new_scale_color() 
           }
       } else{
         p <- p + geom_path(data = df_plot,

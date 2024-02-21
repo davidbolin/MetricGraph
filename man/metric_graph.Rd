@@ -1464,7 +1464,7 @@ is a character, then the group will be chosen by its name.}
 \item{\code{plotly}}{Use plot_ly for 3D plot (default \code{FALSE}). This option
 requires the 'plotly' package.}
 
-\item{\code{interactive}}{Only works for 2d plots. If \code{TRUE}, an interactive plot will be displayed. Unfortunately, \code{interactive} is not compatible with \code{edge_weight}.}
+\item{\code{interactive}}{Only works for 2d plots. If \code{TRUE}, an interactive plot will be displayed. Unfortunately, \code{interactive} is not compatible with \code{edge_weight} if \code{add_new_scale_weights} is TRUE.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
