@@ -1443,6 +1443,7 @@ Plots the metric graph.
   direction = FALSE,
   edge_weight = NULL,
   edge_width_weight = NULL,
+  scale_color_weights = scale_color_viridis(option = "C"),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -1495,6 +1496,8 @@ requires the 'plotly' package.}
 \code{edge_weight} is only available for 2d plots. For 3d plots with edge weights, please use the \code{plot_function()} method.}
 
 \item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
+
+\item{\code{scale_color_weights}}{Color scale for the edge weights.}
 
 \item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
