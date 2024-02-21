@@ -782,8 +782,10 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
     idx_new_entries <- idx_new_entries[["idx"]]
     idx_old_entries <- merge(old_df, data_coords, all = FALSE, sort = FALSE)
     idx_old_entries <- idx_old_entries[["idx"]]
+
+    print(intersect(old_colnames,new_colnames))
     if(!suppress_warnings){
-      if(length(intersect(idx_old_entries, idx_new_entries)) > 0 && length(intersect(old_colnames,new_colnames))>0){
+      if(length(intersect(idx_old_entries, idx_new_entries)) > 0 && length(intersect(old_colnames,new_colnames))>2){
         warning("Some of the data were not added because data for the same column already exists at the same location for the same group.")
       }
     }
