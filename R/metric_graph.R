@@ -3503,7 +3503,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1. 
   #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. 
-    #' @param scale_color_weights Color scale for the edge weights.
+    #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
+    #' @param add_new_scale_weights Should a new color scale for the edge weights be created? 
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
 ##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
@@ -3532,6 +3533,7 @@ metric_graph <-  R6Class("metric_graph",
                   edge_weight = NULL,
                   edge_width_weight = NULL,
                   scale_color_weights = scale_color_viridis(option = "C"),
+                  add_new_scale_weights = TRUE,
                   # mutate = NULL,
                   # filter = NULL,
                   # summarise = NULL,
@@ -3569,6 +3571,7 @@ metric_graph <-  R6Class("metric_graph",
                            edge_weight = edge_weight,
                            edge_width_weight = edge_width_weight,
                            scale_color_weights = scale_color_weights,
+                           add_new_scale_weights = add_new_scale_weights,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees" && !private$transform){
@@ -4787,6 +4790,7 @@ metric_graph <-  R6Class("metric_graph",
                      edge_weight = NULL,
                      edge_width_weight = NULL,
                      scale_color_weights = scale_color_viridis(option = "C"),
+                     add_new_scale_weights = TRUE,
                      ...){
     xyl <- c()
 
@@ -4821,7 +4825,10 @@ metric_graph <-  R6Class("metric_graph",
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   colour = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + new_scale_color()
+                                  ...) + ggplot2::scale_linewidth_identity() 
+          if(add_new_scale_weights){
+            p <- p + new_scale_color() + scale_color_weights 
+          }
       } else{
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp, linewidth = widths),
@@ -4832,7 +4839,10 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights+ new_scale_color()
+                           ...) + ggplot2::scale_linewidth_identity() 
+          if(add_new_scale_weights){
+            p <- p + new_scale_color() + scale_color_weights 
+          }
       } else{
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp,  linewidth = widths), ...) + ggplot2::scale_linewidth_identity()
