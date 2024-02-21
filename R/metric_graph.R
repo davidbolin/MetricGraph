@@ -2198,8 +2198,8 @@ metric_graph <-  R6Class("metric_graph",
 
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(!is.null(closest_points)){
-                      data <- lapply(data, function(dat){dat[!closest_points]})    
                       removed_data <-  lapply(data, function(dat){dat[closest_points]})                                    
+                      data <- lapply(data, function(dat){dat[!closest_points]})    
                     }
                     if(any(far_points)){
                       if(!suppress_warnings){
@@ -2653,8 +2653,8 @@ metric_graph <-  R6Class("metric_graph",
 
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(!is.null(closest_points)){
-                      data <- lapply(data, function(dat){dat[!closest_points]})    
                       removed_data <-  lapply(data, function(dat){dat[closest_points]})                                    
+                      data <- lapply(data, function(dat){dat[!closest_points]})    
                     }
                     if(any(far_points)){
                         if(!suppress_warnings){
