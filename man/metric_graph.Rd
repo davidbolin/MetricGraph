@@ -1444,6 +1444,7 @@ Plots the metric graph.
   edge_weight = NULL,
   edge_width_weight = NULL,
   scale_color_weights = scale_color_viridis(option = "C"),
+  add_new_scale_weights = TRUE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -1497,7 +1498,9 @@ requires the 'plotly' package.}
 
 \item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
 
-\item{\code{scale_color_weights}}{Color scale for the edge weights.}
+\item{\code{scale_color_weights}}{Color scale for the edge weights. Will only be used if \code{add_new_scale_weights} is TRUE.}
+
+\item{\code{add_new_scale_weights}}{Should a new color scale for the edge weights be created?}
 
 \item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
