@@ -3503,6 +3503,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1. 
   #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. 
+    #' @param scale_color_weights Color scale for the edge weights.
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
 ##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
@@ -3530,6 +3531,7 @@ metric_graph <-  R6Class("metric_graph",
                   direction = FALSE,
                   edge_weight = NULL,
                   edge_width_weight = NULL,
+                  scale_color_weights = scale_color_viridis(option = "C"),
                   # mutate = NULL,
                   # filter = NULL,
                   # summarise = NULL,
@@ -3566,6 +3568,7 @@ metric_graph <-  R6Class("metric_graph",
                            direction = direction,
                            edge_weight = edge_weight,
                            edge_width_weight = edge_width_weight,
+                           scale_color_weights = scale_color_weights,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degrees" && !private$transform){
