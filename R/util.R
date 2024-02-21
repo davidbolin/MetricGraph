@@ -784,7 +784,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
     idx_old_entries <- idx_old_entries[["idx"]]
     if(!suppress_warnings){
       if(length(intersect(idx_old_entries, idx_new_entries)) > 0 && length(intersect(old_colnames,new_colnames))>0){
-        warning("Some of the data was not added since there already exists data for the same column at the same location for the same group.")
+        warning("Some of the data were not added because data for the same column already exists at the same location for the same group.")
       }
     }
     list_result <- vector(mode = "list", length(full_colnames))
