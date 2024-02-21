@@ -2329,7 +2329,7 @@ metric_graph <-  R6Class("metric_graph",
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
     data <- process_data_add_obs(PtE, new_data = data, old_data = NULL,
-                                        group_vector)
+                                        group_vector, suppress_warnings = suppress_warnings)
     ## convert to Spoints and add
     group_1 <- data[[".group"]]
     group_1 <- which(group_1 == group_1[1])
@@ -2780,7 +2780,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     private$data <- process_data_add_obs(PtE, new_data = data, private$data,
-                                        group_vector)
+                                        group_vector, suppress_warnings = suppress_warnings)
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()

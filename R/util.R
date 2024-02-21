@@ -677,7 +677,7 @@ exp_covariance <- function(h, theta){
 
 #' Processing data to be used in add_observations
 #' @noRd
-process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
+process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings){
   new_data[[".edge_number"]] <- PtE[,1]
   new_data[[".distance_on_edge"]] <- PtE[,2]
 
@@ -782,6 +782,11 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     idx_new_entries <- idx_new_entries[["idx"]]
     idx_old_entries <- merge(old_df, data_coords, all = FALSE, sort = FALSE)
     idx_old_entries <- idx_old_entries[["idx"]]
+    if(!suppress_warnings){
+      if(length(intersect(idx_old_entries, idx_new_entries)) > 0 && length(intersect(old_colnames,new_colnames))>0){
+        warning("Some of the data was not added since there already exists data for the same column at the same location for the same group.")
+      }
+    }
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
