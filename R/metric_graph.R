@@ -1486,18 +1486,18 @@ metric_graph <-  R6Class("metric_graph",
 
     if(check_weights){
       idx_tmp <- which(degrees == 2 & !problematic)
-      problematic_weights <- c()
+      problematic_weights <- rep(FALSE,self$nV)
       for(i in idx_tmp) {
         start.deg <- sum(self$E[,1]==i)
         end.deg <- sum(self$E[,2]==i)
 
         if(is.vector(private$edge_weights)){
           if(private$edge_weights[start.deg] != private$edge_weights[end.deg]){
-                 problematic_weights <- c(problematic_weights, i)
+                 problematic_weights[i] <- TRUE
           }
         } else{
           if(any(private$edge_weights[start.deg,] != private$edge_weights[end.deg,])){
-                  problematic_weights <- c(problematic_weights, i)          
+                  problematic_weights[i] <- TRUE
           }        
         }        
       }
