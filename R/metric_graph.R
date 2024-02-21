@@ -2262,7 +2262,7 @@ metric_graph <-  R6Class("metric_graph",
                         warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
                       }
                     }                          
-                    PtE <- PtE[!far_points,,drop=FALSE]
+                    # PtE <- PtE[!far_points,,drop=FALSE]
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                 
                     }
@@ -2717,7 +2717,7 @@ metric_graph <-  R6Class("metric_graph",
                         warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
                       }
                     }                          
-                    PtE <- PtE[!far_points,,drop=FALSE]
+                    # PtE <- PtE[!far_points,,drop=FALSE]
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                 
                     }
