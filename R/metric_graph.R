@@ -532,18 +532,6 @@ metric_graph <-  R6Class("metric_graph",
     # End of cond of having more than 1 edge
     }
 
-    if (remove_deg2) {
-      if (verbose > 0) {
-        message("Remove degree 2 vertices")
-      }
-      t <- system.time(
-        self$prune_vertices(verbose = verbose)
-      )
-      if(verbose == 2){
-        message(sprintf("time: %.3f s", t[["elapsed"]]))
-      }
-    }
-
     # Cleaning the edges
 
     if(verbose == 2){
@@ -604,6 +592,18 @@ metric_graph <-  R6Class("metric_graph",
 
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
 
+
+    if (remove_deg2) {
+      if (verbose > 0) {
+        message("Remove degree 2 vertices")
+      }
+      t <- system.time(
+        self$prune_vertices(verbose = verbose)
+      )
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
+    }
     # Adding IDs to edges and setting up their class
 
     # for(i in 1:length(self$edges)){
@@ -1487,23 +1487,25 @@ metric_graph <-  R6Class("metric_graph",
     if(check_weights){
       idx_tmp <- which(degrees == 2 & !problematic)
       problematic_weights <- rep(FALSE,self$nV)
+      
       for(i in idx_tmp) {
-        start.deg <- sum(self$E[,1]==i)
-        end.deg <- sum(self$E[,2]==i)
+        start.deg <- which(self$E[,1]==i)
+        end.deg <- which(self$E[,2]==i)
+        edges_tmp <- c(start.deg,end.deg)
 
         if(is.vector(private$edge_weights)){
-          if(private$edge_weights[start.deg] != private$edge_weights[end.deg]){
+          if(private$edge_weights[edges_tmp[1]] != private$edge_weights[edges_tmp[2]]){
                  problematic_weights[i] <- TRUE
           }
         } else{
-          if(any(private$edge_weights[start.deg,] != private$edge_weights[end.deg,])){
+          if(any(private$edge_weights[edges_tmp[1],] != private$edge_weights[edges_tmp[2],])){
                   problematic_weights[i] <- TRUE
           }        
         }        
       }
-      problematic <- problematic | problematic_weights
+      problematic <- (problematic | problematic_weights)
       if((verbose > 0) && (sum(problematic_weights)>0)){
-        message(paste(sum(problematic_weights), "vertices were not pruned due to incompatible weights."))
+        message(paste(sum(problematic_weights), "vertices were not pruned due to incompatible weights. Turn 'check_weights' to FALSE to prune these vertices."))
       }
     }
 
