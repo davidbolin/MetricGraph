@@ -265,13 +265,15 @@ No return value. Called for its side effects.
 \subsection{Method \code{get_edge_weights()}}{
 Gets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights(data.frame = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights(data.frame = FALSE, tibble = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{data.frame}}{If the edge weights are given as vectors, should the result be returned as a data.frame?}
+
+\item{\code{tibble}}{Should the edge weights be returned as tibble?}
 }
 \if{html}{\out{</div>}}
 }
@@ -753,6 +755,7 @@ Turns edge weights into data on the metric graph
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$edgeweight_to_data(
   loc = NULL,
   mesh = FALSE,
+  data_loc = FALSE,
   weight_col = NULL,
   add = TRUE,
   data_coords = c("PtE", "spatial"),
@@ -769,7 +772,9 @@ Turns edge weights into data on the metric graph
 \describe{
 \item{\code{loc}}{A \code{matrix} or \code{data.frame} with two columns containing the locations to generate the data from the edge weights. If \code{data_coords} is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If \code{data_coords} is 'PtE', the first column must be the edge number and the second column must be the distance on edge.}
 
-\item{\code{mesh}}{Should the data be generated to the mesh locations? In this case, the \code{loc} argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option.}
+\item{\code{mesh}}{Should the data be generated to the mesh locations? In this case, the \code{loc} argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.}
+
+\item{\code{data_loc}}{Should the data be generated to the data locations? In this case, the \code{loc} argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.}
 
 \item{\code{weight_col}}{Which columns of the edge weights should be turned into data? If \code{NULL}, all columns will be turned into data.}
 
@@ -1722,6 +1727,9 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned.
+Gets the edge weights
+data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+A vector or \code{data.frame} containing the edge weights.
 data List containing data on the metric graph.
 }
 }
