@@ -976,7 +976,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     stop("alpha must be positive!")
   }
 
-  graph$compute_laplacian(full = TRUE)
+  graph$compute_laplacian(full = FALSE)
 
   # if(covariates){
   #   if(is.null(graph$covariates)){
@@ -1028,6 +1028,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     A <- graph$.__enclos_env__$private$A(group = ".all", drop_all_na = FALSE, drop_na = FALSE)
 
     u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
+
     for(repl_y in 1:length(u_repl)){
       K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]]
       Q <- K
@@ -1070,6 +1071,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       v <- v - A.repl%*%mu.p
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }
+
     if(maximize){
       return(as.double(l))
     } else{
