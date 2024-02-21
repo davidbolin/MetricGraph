@@ -1725,6 +1725,7 @@ metric_graph <-  R6Class("metric_graph",
   #' assumed to be normalized to (0,1). Default FALSE.
   #' @param tibble Should the data be returned as a `tidyr::tibble`?
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param return Should the data be returned? If `return_removed` is `TRUE`, only the removed locations will be return (if there is any).
   edgeweight_to_data = function(loc = NULL, mesh = FALSE, 
                 weight_col = NULL, add = TRUE, 
@@ -1732,6 +1733,7 @@ metric_graph <-  R6Class("metric_graph",
                 normalized = FALSE,    
                 tibble = TRUE,                
                 verbose = 1,                                  
+                suppress_warnings = FALSE,
                 return = FALSE){
               
               if(is.null(loc) && !mesh){
@@ -1761,7 +1763,9 @@ metric_graph <-  R6Class("metric_graph",
                 nr_tmp <- nrow(loc_tmp)
                 loc_tmp <- unique(loc_tmp)
                 if(nr_tmp != nrow(loc_tmp)){
-                  warning("Some locations were projected to the same point of the metric graph and were not considered.")
+                  if(!suppress_warnings){
+                    warning("Some locations were projected to the same point of the metric graph and were not considered.")
+                  }
                 }
                 df_ew <- data.frame(.edge_number = loc_tmp[,1], 
                 .distance_on_edge = loc_tmp[,2])
@@ -1902,6 +1906,7 @@ metric_graph <-  R6Class("metric_graph",
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
   #' @param verbose If `TRUE`, report steps and times.
+  #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
@@ -1921,6 +1926,7 @@ metric_graph <-  R6Class("metric_graph",
                               only_return_removed = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE,
+                              suppress_warnings = FALSE,
                               Spoints = lifecycle::deprecated()) {
 
 
@@ -2063,7 +2069,9 @@ metric_graph <-  R6Class("metric_graph",
         }
 
         if(nrow(unique(data_tmp)) != nrow(data_tmp)){
-          warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+          if(!suppress_warnings){
+            warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+          }
         }
 
 
@@ -2131,7 +2139,9 @@ metric_graph <-  R6Class("metric_graph",
                     PtE <- PtE_new
 
                     if(sum(dup_points)>0){
+                      if(!suppress_warnings){
                         warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
+                      }
                     }       
 
                     data <- lapply(data, function(dat){dat[!far_points]})
@@ -2140,7 +2150,9 @@ metric_graph <-  R6Class("metric_graph",
                       removed_data <-  lapply(data, function(dat){dat[closest_points]})                                    
                     }
                     if(any(far_points)){
+                      if(!suppress_warnings){
                         warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                      }
                     }      
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                    
@@ -2194,7 +2206,9 @@ metric_graph <-  R6Class("metric_graph",
                     PtE <- PtE_new
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
-                      warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                      if(!suppress_warnings){
+                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                      }
                     }                          
                     PtE <- PtE[!far_points,,drop=FALSE]
                     if(include_distance_to_graph){
@@ -2326,6 +2340,7 @@ metric_graph <-  R6Class("metric_graph",
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
@@ -2345,6 +2360,7 @@ metric_graph <-  R6Class("metric_graph",
                               include_distance_to_graph = TRUE,
                               return_removed = TRUE,
                               verbose = 1,
+                              suppress_warnings = FALSE,
                               Spoints = lifecycle::deprecated()) {
 
     if(clear_obs){
@@ -2508,7 +2524,9 @@ metric_graph <-  R6Class("metric_graph",
         }
 
         if(nrow(unique(data_tmp)) != nrow(data_tmp)){
-          warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+          if(!suppress_warnings){
+            warning("There is at least one 'column' of the data with repeated (possibly different) values at the same location for the same group variable. Only one of these values will be used. Consider using the group variable to differentiate between these values or provide different names for such variables.")
+          }
         }
 
         t <- system.time({
@@ -2574,7 +2592,9 @@ metric_graph <-  R6Class("metric_graph",
                     PtE <- PtE_new
 
                     if(sum(dup_points)>0){
-                        warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
+                        if(!suppress_warnings){
+                          warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
+                        }
                     }       
 
                     data <- lapply(data, function(dat){dat[!far_points]})
@@ -2583,7 +2603,9 @@ metric_graph <-  R6Class("metric_graph",
                       removed_data <-  lapply(data, function(dat){dat[closest_points]})                                    
                     }
                     if(any(far_points)){
-                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                        if(!suppress_warnings){
+                          warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                        }
                     }      
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY                    
@@ -2637,7 +2659,9 @@ metric_graph <-  R6Class("metric_graph",
                     PtE <- PtE_new
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
-                      warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                      if(!suppress_warnings){
+                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                      }
                     }                          
                     PtE <- PtE[!far_points,,drop=FALSE]
                     if(include_distance_to_graph){
@@ -3602,7 +3626,8 @@ metric_graph <-  R6Class("metric_graph",
                                         data_coords = "spatial",
                                         add = FALSE,
                                         return = TRUE,
-                                        verbose = 0)
+                                        verbose = 0,
+                                        suppress_warnings = TRUE)
       data <- edge_weight                                    
     } 
 
