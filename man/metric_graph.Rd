@@ -757,6 +757,7 @@ Turns edge weights into data on the metric graph
   normalized = FALSE,
   tibble = TRUE,
   verbose = 1,
+  suppress_warnings = FALSE,
   return = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -783,6 +784,8 @@ assumed to be normalized to (0,1). Default FALSE.}
 \item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
 
 \item{\code{return}}{Should the data be returned? If \code{return_removed} is \code{TRUE}, only the removed locations will be return (if there is any).}
 }
@@ -850,6 +853,7 @@ Process data to the metric graph data format.
   only_return_removed = FALSE,
   tolerance = max(self$edge_lengths)/2,
   verbose = FALSE,
+  suppress_warnings = FALSE,
   Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
@@ -911,6 +915,8 @@ This helps detecting mistakes on the input locations when adding new data.}
 
 \item{\code{verbose}}{If \code{TRUE}, report steps and times.}
 
+\item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
+
 \item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
 }
 \if{html}{\out{</div>}}
@@ -943,6 +949,7 @@ Add observations to the metric graph.
   include_distance_to_graph = TRUE,
   return_removed = TRUE,
   verbose = 1,
+  suppress_warnings = FALSE,
   Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
@@ -1006,6 +1013,8 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 \item{\code{return_removed}}{Should the removed data (if it exists) when using 'closest' \code{duplicated_strategy} be returned?}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
 
 \item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
 }
