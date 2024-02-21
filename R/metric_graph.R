@@ -2595,6 +2595,7 @@ metric_graph <-  R6Class("metric_graph",
                     #   }
                       far_points_grp <- (norm_XY_grp > tolerance)                
                       PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
+                      XY_new_grp <- XY_new_grp[!far_points_grp,,drop=FALSE]
                       dup_points_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast=TRUE)                     
                       norm_XY_grp <- norm_XY_grp[!far_points_grp]
                       if(any(dup_points_grp)){
