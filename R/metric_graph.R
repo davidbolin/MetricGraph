@@ -3740,6 +3740,8 @@ metric_graph <-  R6Class("metric_graph",
                 PtE_tmp <- cbind(PtE_tmp, NA)
                 vals <- rbind(vals,PtE_tmp)
           }
+
+          if(nrow(vals)>0){
             ord_idx <- order(vals[,1])
             vals <- vals[ord_idx,]
             if(vals[1,1] > 0){
@@ -3755,6 +3757,7 @@ metric_graph <-  R6Class("metric_graph",
                                                       na.rm=FALSE, ties = "mean"),
                                                max_val), min_val))
             vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+          }
         }
 
 
@@ -4109,21 +4112,23 @@ metric_graph <-  R6Class("metric_graph",
                 colnames(PtE_tmp) <- c(".distance_on_edge", data)
                 vals <- rbind(vals,PtE_tmp)
           }
-            ord_idx <- order(vals[,1])
-            vals <- vals[ord_idx,]
-            if(vals[1,1] > 0){
-              vals <- rbind(c(0,NA), vals)
+            if(nrow(vals)>0){
+              ord_idx <- order(vals[,1])
+              vals <- vals[ord_idx,]
+              if(vals[1,1] > 0){
+                vals <- rbind(c(0,NA), vals)
+              }
+              if(vals[nrow(vals),1] < 1){
+                vals <- rbind(vals, c(1,NA))
+              }
+              max_val <- max(vals[,2], na.rm=TRUE)
+              min_val <- min(vals[,2], na.rm=TRUE)
+              vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+                                                    x = vals[,1],
+                                                        na.rm=FALSE, ties = "mean"),
+                                                 max_val), min_val))
+              vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
             }
-            if(vals[nrow(vals),1] < 1){
-              vals <- rbind(vals, c(1,NA))
-            }
-            max_val <- max(vals[,2], na.rm=TRUE)
-            min_val <- min(vals[,2], na.rm=TRUE)
-            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-                                                  x = vals[,1],
-                                                      na.rm=FALSE, ties = "mean"),
-                                               max_val), min_val))
-            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
 
       }
       }
