@@ -1456,12 +1456,13 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Removes vertices of degree 2 from the metric graph.
   #' @return No return value. Called for its side effects.
-  #' @param verbose Show progress? Default is `FALSE`.
+  #' @param check_weights If `TRUE` will only prune edges with different weights. 
+ #' @param verbose Print progress of pruning. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @details
     #' Vertices of degree 2 are removed as long as the corresponding edges that
     #' would be merged are compatible in terms of direction.
     #'
-  prune_vertices = function(verbose = FALSE){
+  prune_vertices = function(check_weights = TRUE, verbose = FALSE){
     t <- system.time({
     degrees <- private$compute_degrees()$degrees
 
@@ -1479,8 +1480,35 @@ metric_graph <-  R6Class("metric_graph",
       problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
     }
 
+    if((verbose > 0) && (sum(problematic) > 0)){
+      message(paste(sum(problematic), "vertices were not pruned due to incompatible directions."))
+    }
+
+    if(check_weights){
+      idx_tmp <- which(degrees == 2 & !problematic)
+      problematic_weights <- c()
+      for(i in idx_tmp) {
+        start.deg <- sum(self$E[,1]==i)
+        end.deg <- sum(self$E[,2]==i)
+
+        if(is.vector(private$edge_weights)){
+          if(private$edge_weights[start.deg] != private$edge_weights[end.deg]){
+                 problematic_weights <- c(problematic_weights, i)
+          }
+        } else{
+          if(any(private$edge_weights[start.deg,] != private$edge_weights[end.deg,])){
+                  problematic_weights <- c(problematic_weights, i)          
+          }        
+        }        
+      }
+      problematic <- problematic | problematic_weights
+      if((verbose > 0) && (sum(problematic_weights)>0)){
+        message(paste(sum(problematic_weights), "vertices were not pruned due to incompatible weights."))
+      }
+    }
+
     res <- list(degrees = degrees, problematic = problematic)
-    if(verbose == 2){
+    if(verbose > 0){
       to.prune <- sum(res$degrees==2 & !res$problematic)
       k <- 1
       message(sprintf("removing %d vertices", to.prune))
@@ -1501,7 +1529,7 @@ metric_graph <-  R6Class("metric_graph",
      res <- private$remove.first.deg2(res)
    }
    })
-    if(verbose == 2){
+    if(verbose  > 0){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
     # if(verbose && to.prune > 0){
@@ -1537,7 +1565,7 @@ metric_graph <-  R6Class("metric_graph",
 
 
    if(!is.null(private$data)){
-    if(verbose == 2){
+    if(verbose > 0){
       message("Updating data locations.")
     }
       t <- system.time({
@@ -1550,7 +1578,7 @@ metric_graph <-  R6Class("metric_graph",
       order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
       private$data <- lapply(private$data, function(dat){dat[order_idx]})
       })
-      if(verbose == 2){
+      if(verbose > 0){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
    }
