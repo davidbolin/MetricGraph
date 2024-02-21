@@ -620,13 +620,15 @@ in the \code{Laplacian} element in the \code{metric_graph} object.
 \subsection{Method \code{prune_vertices()}}{
 Removes vertices of degree 2 from the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(verbose = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(check_weights = TRUE, verbose = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{verbose}}{Show progress? Default is \code{FALSE}.}
+\item{\code{check_weights}}{If \code{TRUE} will only prune edges with different weights.}
+
+\item{\code{verbose}}{Print progress of pruning. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
