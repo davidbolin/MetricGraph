@@ -699,13 +699,20 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Gets the edge weights
   #' @param data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+  #' @param tibble Should the edge weights be returned as tibble?
   #' @return A vector or `data.frame` containing the edge weights.
 
-  get_edge_weights = function(data.frame = FALSE){
+  get_edge_weights = function(data.frame = FALSE, tibble = TRUE){
     tmp <- private$edge_weights
     row.names(tmp) <- NULL
     if(!is.data.frame(tmp) && data.frame){
       tmp <- data.frame(weights = tmp)
+    }
+    if(tibble){
+      if(!is.data.frame(tmp)){
+        tmp <- data.frame(weights = tmp)
+      }
+      tmp <- dplyr::as_tibble(tmp)
     }
     return(tmp)
   },
@@ -1744,7 +1751,8 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Turns edge weights into data on the metric graph
   #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
-  #' @param mesh Should the data be generated to the mesh locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option.
+  #' @param data_loc Should the data be generated to the data locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.
+  #' @param mesh Should the data be generated to the mesh locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.
   #' @param weight_col Which columns of the edge weights should be turned into data? If `NULL`, all columns will be turned into data.
   #' @param add Should the data generated be added to the metric graph internal data?
   #' @param data_coords To be used only if `mesh` is `FALSE`. It decides which
@@ -1758,6 +1766,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param return Should the data be returned? If `return_removed` is `TRUE`, only the removed locations will be return (if there is any).
   edgeweight_to_data = function(loc = NULL, mesh = FALSE, 
+                data_loc = FALSE,
                 weight_col = NULL, add = TRUE, 
                 data_coords = c("PtE", "spatial"),    
                 normalized = FALSE,    
@@ -1766,14 +1775,23 @@ metric_graph <-  R6Class("metric_graph",
                 suppress_warnings = FALSE,
                 return = FALSE){
               
-              if(is.null(loc) && !mesh){
-                stop("Either 'loc' must be provided or 'mesh' must be TRUE.")
+              if(is.null(loc) && !mesh && !data_loc){
+                stop("Either 'loc' must be provided, 'mesh' must be TRUE or 'data_loc' must be TRUE.")
               }
               if(mesh){
                 if(is.null(self$mesh)){
                   stop("There is no mesh! Build a mesh using the build_mesh() method.")
                 }
                 loc <- self$mesh$VtE
+                normalized <- TRUE
+                data_coords <- "PtE"
+              }
+
+              if(data_loc){
+                if(is.null(private$data)){
+                  stop("The graph has no data!")
+                }
+                loc <- self$get_PtE()
                 normalized <- TRUE
                 data_coords <- "PtE"
               }
@@ -1809,7 +1827,7 @@ metric_graph <-  R6Class("metric_graph",
                             each = nrow(df_ew)))
               }
 
-              ew <- self$get_edge_weights()
+              ew <- private$get_edge_weights_internal()
 
               if(is.vector(ew)){
                 ew <- data.frame(weight = ew)
@@ -1830,6 +1848,8 @@ metric_graph <-  R6Class("metric_graph",
                   stop("There is at least one distance on edge that is greater than the corresponding edge length!")
                 }     
               }
+
+              df_ew[[".edge_lengths"]] <- NULL
 
               if(add){
                 self$add_observations(data = df_ew,
@@ -2075,7 +2095,7 @@ metric_graph <-  R6Class("metric_graph",
 
         ## convert everything to PtE
         if(verbose > 0){
-          if(data_coords == "spatial" || !is.null(Spoints)){
+          if(data_coords == "spatial"){
           message("Converting data to PtE")
           if(private$longlat){
             message("This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.")
@@ -2142,6 +2162,8 @@ metric_graph <-  R6Class("metric_graph",
                     #   }
                       far_points_grp <- (norm_XY_grp > tolerance)                
                       PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
+                      XY_new_grp <- XY_new_grp[!far_points_grp,,drop=FALSE]                      
+                      point_coords_grp <- point_coords_grp[!far_points_grp,,drop=FALSE]                      
                       dup_points_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast=TRUE)                     
                       norm_XY_grp <- norm_XY_grp[!far_points_grp]
                       if(any(dup_points_grp)){
@@ -2596,6 +2618,7 @@ metric_graph <-  R6Class("metric_graph",
                       far_points_grp <- (norm_XY_grp > tolerance)                
                       PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
                       XY_new_grp <- XY_new_grp[!far_points_grp,,drop=FALSE]
+                      point_coords_grp <- point_coords_grp[!far_points_grp,,drop=FALSE]
                       dup_points_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast=TRUE)                     
                       norm_XY_grp <- norm_XY_grp[!far_points_grp]
                       if(any(dup_points_grp)){
@@ -3351,7 +3374,7 @@ metric_graph <-  R6Class("metric_graph",
     self$mesh$K <- Diagonal(dim(self$mesh$C)[1],
                             c(rep(0, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
 
-    # if(!all(self$get_edge_weights()==1)){
+    # if(!all(private$get_edge_weights_internal()==1)){
     if(!is.null(private$kirchhoff_weights)){
       for(i in 1:self$nV) {
         if(attr(self$vertices[[i]],"degree") > 1) {
@@ -3664,7 +3687,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if(!is.null(edge_width_weight)){
       edge_width_weight <- edge_width_weight[[1]]
-      e_w_weights <- self$get_edge_weights(data.frame = TRUE)
+      e_w_weights <- private$get_edge_weights_internal(data.frame = TRUE)
       e_w_weights <- e_weights[,edge_width_weight, drop = FALSE]
       e_w_weights[,1] <- e_w_weights[,1] * edge_width / max(e_w_weights[,1])
       e_w_weights[,1] <- e_w_weights[,1]
@@ -4769,7 +4792,7 @@ metric_graph <-  R6Class("metric_graph",
     df_plot <- data.frame(x = xyl[, 1], y = xyl[, 2], grp = xyl[, 3])    
     if(!is.null(edge_weight)){
       edge_weight <- edge_weight[[1]]
-      e_weights <- self$get_edge_weights(data.frame = TRUE)
+      e_weights <- private$get_edge_weights_internal(data.frame = TRUE)
       e_weights <- e_weights[,edge_weight, drop = FALSE]
       colnames(e_weights) <- "weights"
       e_weights["grp"] <- 1:self$nE
@@ -4779,7 +4802,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     if(!is.null(edge_width_weight)){
       edge_width_weight <- edge_width_weight[[1]]
-      e_weights <- self$get_edge_weights(data.frame = TRUE)
+      e_weights <- private$get_edge_weights_internal(data.frame = TRUE)
       e_weights <- e_weights[,edge_width_weight, drop = FALSE]
       e_weights[,1] <- e_weights[,1] * line_width / max(e_weights[,1])
       e_weights[,1] <- e_weights[,1]
@@ -4944,7 +4967,7 @@ metric_graph <-  R6Class("metric_graph",
 
     if(!is.null(edge_width_weight)){
         edge_width_weight <- edge_width_weight[[1]]
-        e_weights <- self$get_edge_weights(data.frame = TRUE)
+        e_weights <- private$get_edge_weights_internal(data.frame = TRUE)
         e_weights <- e_weights[,edge_width_weight, drop = FALSE]
         e_weights[,1] <- e_weights[,1] * line_width / max(e_weights[,1])
         e_weights[,1] <- e_weights[,1]
@@ -5376,6 +5399,20 @@ metric_graph <-  R6Class("metric_graph",
         }
         return(A)
       }
+  },
+
+
+  #'  Gets the edge weights
+  #'  data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+  #'  A vector or `data.frame` containing the edge weights.
+
+  get_edge_weights_internal = function(data.frame = FALSE){
+    tmp <- private$edge_weights
+    row.names(tmp) <- NULL
+    if(!is.data.frame(tmp) && data.frame){
+      tmp <- data.frame(weights = tmp)
+    }
+    return(tmp)
   },
 
 
