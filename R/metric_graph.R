@@ -2205,7 +2205,7 @@ metric_graph <-  R6Class("metric_graph",
                     }
                     if(any(far_points)){
                       if(!suppress_warnings){
-                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                          warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
                       }
                     }      
                     if(include_distance_to_graph){
@@ -2261,7 +2261,7 @@ metric_graph <-  R6Class("metric_graph",
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
                       if(!suppress_warnings){
-                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                              warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
                       }
                     }                          
                     # PtE <- PtE[!far_points,,drop=FALSE]
@@ -2660,7 +2660,7 @@ metric_graph <-  R6Class("metric_graph",
                     }
                     if(any(far_points)){
                         if(!suppress_warnings){
-                          warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                          warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
                         }
                     }      
                     if(include_distance_to_graph){
@@ -2716,7 +2716,7 @@ metric_graph <-  R6Class("metric_graph",
                     data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
                       if(!suppress_warnings){
-                        warning("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance.")
+                            warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
                       }
                     }                          
                     # PtE <- PtE[!far_points,,drop=FALSE]
