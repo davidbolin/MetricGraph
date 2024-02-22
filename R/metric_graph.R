@@ -4807,7 +4807,7 @@ metric_graph <-  R6Class("metric_graph",
       e_weights["grp"] <- 1:self$nE
       df_plot <- merge(df_plot, e_weights)      
     } else{
-      df_plot[["weigths"]] <- rep(1, nrow(df_plot))
+      df_plot[["weights"]] <- rep(edge_color, nrow(df_plot))
     }
     if(!is.null(edge_width_weight)){
       edge_width_weight <- edge_width_weight[[1]]
@@ -4833,7 +4833,7 @@ metric_graph <-  R6Class("metric_graph",
           }
       } else{
         p <- ggplot() + geom_path(data = df_plot,
-                                  mapping = aes(x = x, y = y, group = grp, linewidth = widths),
+                                  mapping = aes(x = x, y = y, group = grp, linewidth = widths), color = edge_color,
                                   # linewidth = line_width,
                                   ...) + ggplot2::scale_linewidth_identity()
       }
@@ -4847,7 +4847,7 @@ metric_graph <-  R6Class("metric_graph",
           }
       } else{
         p <- p + geom_path(data = df_plot,
-                           mapping = aes(x = x, y = y, group = grp,  linewidth = widths), ...) + ggplot2::scale_linewidth_identity()
+                           mapping = aes(x = x, y = y, group = grp,  linewidth = widths), color = edge_color, ...) + ggplot2::scale_linewidth_identity()
       }
     }
     if(direction) {
