@@ -3645,8 +3645,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.
-  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1. 
-  #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. 
+  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.  
   #' @param edge_color For 3D plot, color of edges.
   #' @param line_width For 3D plot, line width of the function curve.
   #' @param line_color Color of the function curve.
@@ -3663,7 +3662,6 @@ metric_graph <-  R6Class("metric_graph",
                            improve_plot = FALSE,
                            continuous = TRUE,
                            edge_weight = NULL,
-                           edge_width_weight = NULL,
                            vertex_size = 5,
                            vertex_color = "black",
                            edge_width = 1,
@@ -3693,17 +3691,17 @@ metric_graph <-  R6Class("metric_graph",
       data <- edge_weight                                    
     } 
 
-    if(!is.null(edge_width_weight)){
-      edge_width_weight <- edge_width_weight[[1]]
-      e_w_weights <- private$get_edge_weights_internal(data.frame = TRUE)
-      e_w_weights <- e_weights[,edge_width_weight, drop = FALSE]
-      e_w_weights[,1] <- e_w_weights[,1] * edge_width / max(e_w_weights[,1])
-      e_w_weights[,1] <- e_w_weights[,1]
-      colnames(e_w_weights) <- "widths"
-      e_w_weights["i"] <- 1:self$nE    
-    } else{
-      e_w_weigths <- data.frame(i = 1:self$nE, widths = rep(line_width, self$nE))
-    }
+    # if(!is.null(edge_width_weight)){
+    #   edge_width_weight <- edge_width_weight[[1]]
+    #   e_w_weights <- private$get_edge_weights_internal(data.frame = TRUE)
+    #   e_w_weights <- e_weights[,edge_width_weight, drop = FALSE]
+    #   e_w_weights[,1] <- e_w_weights[,1] * edge_width / max(e_w_weights[,1])
+    #   e_w_weights[,1] <- e_w_weights[,1]
+    #   colnames(e_w_weights) <- "widths"
+    #   e_w_weights["i"] <- 1:self$nE    
+    # } else{
+    #   e_w_weigths <- data.frame(i = 1:self$nE, widths = rep(line_width, self$nE))
+    # }
 
     if(is.null(data) && is.null(X) && is.null(edge_weight)){
       stop("You should provide either 'data', 'X' or 'edge_weight'.")
