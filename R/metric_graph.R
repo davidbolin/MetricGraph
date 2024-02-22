@@ -1169,7 +1169,8 @@ metric_graph <-  R6Class("metric_graph",
 
       graph.temp$add_observations(data = df_temp,
                                      normalized = normalized,
-                                     verbose=0)
+                                     verbose=0,
+                  suppress_warnings = TRUE)
       graph.temp$observation_to_vertex(mesh_warning = FALSE)
       g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
       E(g)$weight <- graph.temp$edge_lengths
@@ -1314,7 +1315,8 @@ metric_graph <-  R6Class("metric_graph",
       df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
       graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized, verbose = 0)
+                                     normalized = normalized, verbose = 0,
+                  suppress_warnings = TRUE)
 
         graph.temp$observation_to_vertex(mesh_warning=FALSE)
         graph.temp$compute_geodist(full=TRUE)
@@ -5629,7 +5631,8 @@ metric_graph <-  R6Class("metric_graph",
 
     df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
-    graph.temp$add_observations(data = df_temp, normalized = normalized, verbose = 0)
+    graph.temp$add_observations(data = df_temp, normalized = normalized, verbose = 0,
+                  suppress_warnings = TRUE)
     graph.temp$observation_to_vertex(mesh_warning = FALSE)
     Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
 
