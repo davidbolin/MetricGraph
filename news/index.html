@@ -80,6 +80,11 @@
 <li>Added <code>kirchhoff_weights</code> argument to obtain weights for Kirchhoff vertex conditions from <code>edge_weights</code>.</li>
 <li>Improved handling of edge weights, e.g., if pruning changes any edge weight, a warning will be given.</li>
 <li>Added the <code>edgeweight_to_data()</code> method that turns edge weights into data in the internal metric graph format.</li>
+<li>Added <code>edge_weight</code> and <code>edge_width_weight</code> to the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, so one can produce plots on metric graphs with the weights providing colors to the edges, and also with (possibly different) weights providing the thickness of the edges.</li>
+<li>Added <code>edge_weights</code> to <code>graph_components</code>, so the connected components will have the correct corresponding edge weights.</li>
+<li>Added <code>edge_weight</code> and <code>edge_width_weight</code> to the <code>plot_function()</code> method, in which they work in a similar manner to its counterpart for the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method. The difference being that the weights are plotted as piecewise constant functions.</li>
+<li>
+<code>prune_vertices</code> now has an option to not prune vertices whose edges have incompatible edge weights.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="metricgraph-120">MetricGraph 1.2.0<a class="anchor" aria-label="anchor" href="#metricgraph-120"></a></h2><p class="text-muted">CRAN release: 2023-11-07</p>

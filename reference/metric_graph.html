@@ -396,13 +396,17 @@ each row gives a vector of weights to its corresponding edge.</p></dd>
 <h3 id="method-get-edge-weights-">Method <code>get_edge_weights()</code><a class="anchor" aria-label="anchor" href="#method-get-edge-weights-"></a></h3>
 <p>Gets the edge weights</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span>data.frame <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span>data.frame <span class="op">=</span> <span class="cn">FALSE</span>, tibble <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data.frame</code></dt>
 <dd><p>If the edge weights are given as vectors, should the result be returned as a data.frame?</p></dd>
+
+
+<dt><code>tibble</code></dt>
+<dd><p>Should the edge weights be returned as tibble?</p></dd>
 
 
 </dl><p></p></div>
@@ -776,13 +780,17 @@ in the <code>Laplacian</code> element in the <code>metric_graph</code> object.</
 <h3 id="method-prune-vertices-">Method <code>prune_vertices()</code><a class="anchor" aria-label="anchor" href="#method-prune-vertices-"></a></h3>
 <p>Removes vertices of degree 2 from the metric graph.</p><div class="section">
 <h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span>verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span>check_weights <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>verbose</code></dt>
-<dd><p>Show progress? Default is <code>FALSE</code>.</p></dd>
+<p></p><div class="arguments"><dl><dt><code>check_weights</code></dt>
+<dd><p>If <code>TRUE</code> will only prune edges with different weights.</p></dd>
+
+
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of pruning. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 </dl><p></p></div>
@@ -913,12 +921,14 @@ they are closer than this number (given in relative edge distance between
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">edgeweight_to_data</span><span class="op">(</span></span>
 <span>  loc <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mesh <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  data_loc <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  weight_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  add <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  data_coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PtE"</span>, <span class="st">"spatial"</span><span class="op">)</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tibble <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  suppress_warnings <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -930,7 +940,11 @@ they are closer than this number (given in relative edge distance between
 
 
 <dt><code>mesh</code></dt>
-<dd><p>Should the data be generated to the mesh locations? In this case, the <code>loc</code> argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option.</p></dd>
+<dd><p>Should the data be generated to the mesh locations? In this case, the <code>loc</code> argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.</p></dd>
+
+
+<dt><code>data_loc</code></dt>
+<dd><p>Should the data be generated to the data locations? In this case, the <code>loc</code> argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.</p></dd>
 
 
 <dt><code>weight_col</code></dt>
@@ -959,6 +973,10 @@ assumed to be normalized to (0,1). Default FALSE.</p></dd>
 
 <dt><code>verbose</code></dt>
 <dd><p>Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
+
+
+<dt><code>suppress_warnings</code></dt>
+<dd><p>Suppress warnings related to duplicated observations?</p></dd>
 
 
 <dt><code>return</code></dt>
@@ -1030,6 +1048,7 @@ assumed to be normalized to (0,1). Default TRUE.</p></dd>
 <span>  only_return_removed <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">self</span><span class="op">$</span><span class="va">edge_lengths</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  suppress_warnings <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  Spoints <span class="op">=</span> <span class="fu">lifecycle</span><span class="fu">::</span><span class="fu"><a href="https://lifecycle.r-lib.org/reference/deprecated.html" class="external-link">deprecated</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -1120,6 +1139,10 @@ This helps detecting mistakes on the input locations when adding new data.</p></
 <dd><p>If <code>TRUE</code>, report steps and times.</p></dd>
 
 
+<dt><code>suppress_warnings</code></dt>
+<dd><p>Suppress warnings related to duplicated observations?</p></dd>
+
+
 <dt><code>Spoints</code></dt>
 <dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>data</code> instead.</p></dd>
 
@@ -1153,6 +1176,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 <span>  include_distance_to_graph <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  return_removed <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  suppress_warnings <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  Spoints <span class="op">=</span> <span class="fu">lifecycle</span><span class="fu">::</span><span class="fu"><a href="https://lifecycle.r-lib.org/reference/deprecated.html" class="external-link">deprecated</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -1246,6 +1270,10 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 
 <dt><code>verbose</code></dt>
 <dd><p>Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
+
+
+<dt><code>suppress_warnings</code></dt>
+<dd><p>Suppress warnings related to duplicated observations?</p></dd>
 
 
 <dt><code>Spoints</code></dt>
@@ -1710,6 +1738,7 @@ is at the end of the edge.</p>
 <span>  direction <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  edge_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  edge_width_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale_color_weights <span class="op">=</span> <span class="fu">scale_color_viridis</span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -1800,6 +1829,10 @@ requires the 'plotly' package.</p></dd>
 
 <dt><code>edge_width_weight</code></dt>
 <dd><p>Which column from edge weights to determine the edges widths? If <code>NULL</code> edge width will be determined from <code>edge_width</code>.</p></dd>
+
+
+<dt><code>scale_color_weights</code></dt>
+<dd><p>Color scale for the edge weights.</p></dd>
 
 
 <dt><code>...</code></dt>
@@ -2091,6 +2124,9 @@ normalized locations.</p></dd>
 <p>If <code>PtE</code> is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If <code>XY</code> is provided, then a matrix with the
 closest locations on the graph is returned.
+Gets the edge weights
+data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+A vector or <code>data.frame</code> containing the edge weights.
 data List containing data on the metric graph.</p>
 </div>
 
@@ -2129,7 +2165,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.94 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.95 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
