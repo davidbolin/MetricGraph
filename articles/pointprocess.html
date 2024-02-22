@@ -250,8 +250,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.352446 0.0894752   0.199609 0.345676    0.54796 0.332893</span></span>
-<span><span class="co">## range   2.251670 1.5661700   0.669182 1.799720    6.49450 1.248390</span></span></code></pre>
+<span><span class="co">## std.dev 0.352439 0.0894622   0.199617 0.345673   0.547918 0.333001</span></span>
+<span><span class="co">## range   2.250900 1.5649400   0.669148 1.799390   6.490230 1.248270</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -269,8 +269,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3524463 0.3328934</span></span>
-<span><span class="co">## 2     range  1.5 2.2516711 1.2483894</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3524394 0.3330014</span></span>
+<span><span class="co">## 2     range  1.5 2.2508956 1.2482725</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -358,9 +358,9 @@ exposure terms</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.433306 0.016229   0.402474 0.432924   0.466222 0.432066</span></span>
-<span><span class="co">## range   1.519890 0.121571   1.297450 1.514050   1.774660 1.500990</span></span></code></pre>
+<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.433307 0.0162286   0.402476 0.432925   0.466223 0.432066</span></span>
+<span><span class="co">## range   1.519900 0.1215830   1.297430 1.514050   1.774700 1.500990</span></span></code></pre>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -376,8 +376,8 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4333064 0.4320656</span></span>
-<span><span class="co">## 2     range  1.5 1.5198940 1.5009919</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4333074 0.4320664</span></span>
+<span><span class="co">## 2     range  1.5 1.5198991 1.5009938</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
