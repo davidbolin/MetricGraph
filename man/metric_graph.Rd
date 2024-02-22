@@ -1551,7 +1551,6 @@ Plots continuous function on the graph.
   improve_plot = FALSE,
   continuous = TRUE,
   edge_weight = NULL,
-  edge_width_weight = NULL,
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
@@ -1588,8 +1587,6 @@ the package 'plotly'.}
 \item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
 
 \item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.}
-
-\item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
 
