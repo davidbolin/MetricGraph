@@ -54,6 +54,7 @@
 #' @param previous_fit An object of class `graph_lme`. Use the fitted coefficients as starting values.
 #' @param fix_coeff If using a previous fit, should all coefficients be fixed at the starting values?
 #' @param optim_method The method to be used with `optim` function.
+#' @param possible_methods Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'Nelder-Mead' and 'L-BFGS-B' are considered.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
 #' (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
@@ -78,6 +79,7 @@ graph_lme <- function(formula, graph,
                 model = list(type = "linearModel"),
                 which_repl = NULL,
                 optim_method = "L-BFGS-B",
+                possible_methods = c("Nelder-Mead", "L-BFGS-B"),
                 model_options = list(),
                 BC = 0,
                 previous_fit = NULL,
@@ -108,6 +110,12 @@ graph_lme <- function(formula, graph,
             "wm" = list(type = "WhittleMatern", fem = TRUE),
             'wmd1' = list(type = "WhittleMatern", fem = FALSE, alpha = 1, directional=1)
             )
+  }
+
+  possible_methods <- intersect(possible_methods, c("Nelder-Mead", "L-BFGS-B", "BFGS", "SANN", "CG"))
+
+  if(length(possible_methods) == 0){
+    possible_methods <- optim_method[[1]]
   }
 
   model_type <- model[["type"]]
@@ -733,7 +741,7 @@ graph_lme <- function(formula, graph,
           #                   loginfo = FALSE))
 
           res <- optimParallel::optimParallel(start_values,
-                        likelihood_new, method = optim_method,
+                        likelihood_new,
                         control = optim_controls,
                         hessian = hessian,
                         parallel = list(forward = FALSE, cl = cl,
@@ -773,7 +781,7 @@ graph_lme <- function(formula, graph,
         }
 
       } else{
-        possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")  
+        # possible_methods <- c("Nelder-Mead", "L-BFGS-B", "BFGS", "CG")  
         start_fit <- Sys.time()
         # res <- withCallingHandlers(tryCatch(optim(start_values_fix(start_values, fix_par_vec, n_cov),
         #           likelihood_new2, method = optim_method,
