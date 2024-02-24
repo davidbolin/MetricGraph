@@ -112,6 +112,7 @@ graph_lme <- function(formula, graph,
             )
   }
 
+  possible_methods <- unique(c(optim_method,possible_methods))
   possible_methods <- intersect(possible_methods, c("Nelder-Mead", "L-BFGS-B", "BFGS", "SANN", "CG"))
 
   if(length(possible_methods) == 0){
