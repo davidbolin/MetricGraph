@@ -4797,6 +4797,7 @@ metric_graph <-  R6Class("metric_graph",
     nc <- do.call(rbind,lapply(self$edges, function(x) dim(x)[1]))
     xyl <- cbind(do.call(rbind,self$edges), rep(1:length(nc), times = nc))
     df_plot <- data.frame(x = xyl[, 1], y = xyl[, 2], grp = xyl[, 3])    
+
     if(!is.null(edge_weight)){
       edge_weight <- edge_weight[[1]]
       e_weights <- private$get_edge_weights_internal(data.frame = TRUE)
@@ -4825,13 +4826,14 @@ metric_graph <-  R6Class("metric_graph",
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   colour = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights 
+                                  ...) + ggplot2::scale_linewidth_identity()# + scale_color_weights 
           if(add_new_scale_weights){
             p <- p + new_scale_color() 
           }
       } else{
         p <- ggplot() + geom_path(data = df_plot,
-                                  mapping = aes(x = x, y = y, group = grp, linewidth = widths), color = edge_color,
+                                  mapping = aes(x = x, y = y, group = grp, linewidth = widths), 
+                                  color = edge_color,
                                   # linewidth = line_width,
                                   ...) + ggplot2::scale_linewidth_identity()
       }
@@ -4839,7 +4841,7 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights 
+                           ...) + ggplot2::scale_linewidth_identity() #+ scale_color_weights 
           if(add_new_scale_weights){
             p <- p + new_scale_color() 
           }
@@ -4848,6 +4850,7 @@ metric_graph <-  R6Class("metric_graph",
                            mapping = aes(x = x, y = y, group = grp,  linewidth = widths), color = edge_color, ...) + ggplot2::scale_linewidth_identity()
       }
     }
+
     if(direction) {
       mid.l <- self$coordinates(PtE = cbind(1:self$nE, rep(0.49,self$nE)))
       mid.u <- self$coordinates(PtE = cbind(1:self$nE, rep(0.5,self$nE)))
@@ -4858,6 +4861,7 @@ metric_graph <-  R6Class("metric_graph",
                          arrow = ggplot2::arrow(),
                           size= marker_size/2, ...)
     }
+
     if (marker_size > 0) {
       if(degree) {
         x <- self$V[,1]
@@ -4918,8 +4922,8 @@ metric_graph <-  R6Class("metric_graph",
                                             y = y[!is.na(as.vector(y_plot))],
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
-                          size = data_size, ...) +
-        scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
+                          size = data_size, ...) #+
+        # scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
     if (mesh) {
@@ -4944,8 +4948,8 @@ metric_graph <-  R6Class("metric_graph",
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(X)),
                           mapping = aes(x, y, color = val),
-                          size = data_size) +
-        scale_color_viridis() + labs(colour = "")
+                          size = data_size) + labs(colour = "") #+ 
+        # scale_color_viridis()
     }
     p <- p + coord_fixed()
     return(p)
