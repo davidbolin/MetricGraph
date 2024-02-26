@@ -39,7 +39,6 @@
 #' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq 
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete
 #' @importFrom igraph E E<-
-#' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
 #' @importFrom R6 R6Class
 #' @importFrom graphics layout
