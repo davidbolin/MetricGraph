@@ -89,6 +89,7 @@ covariance functions.</p>
 <span>  model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"linearModel"</span><span class="op">)</span>,</span>
 <span>  which_repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  optim_method <span class="op">=</span> <span class="st">"L-BFGS-B"</span>,</span>
+<span>  possible_methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Nelder-Mead"</span>, <span class="st">"L-BFGS-B"</span><span class="op">)</span>,</span>
 <span>  model_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  BC <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  previous_fit <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -163,6 +164,10 @@ the model. If <code>NULL</code> all replicates will be considered.</p></dd>
 
 <dt>optim_method</dt>
 <dd><p>The method to be used with <code>optim</code> function.</p></dd>
+
+
+<dt>possible_methods</dt>
+<dd><p>Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'Nelder-Mead' and 'L-BFGS-B' are considered.</p></dd>
 
 
 <dt>model_options</dt>

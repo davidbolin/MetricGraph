@@ -1738,7 +1738,9 @@ is at the end of the edge.</p>
 <span>  direction <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  edge_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  edge_width_weight <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  scale_color_weights <span class="op">=</span> <span class="fu">scale_color_viridis</span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
+<span>  scale_color_main <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span>,</span>
+<span>  scale_color_weights <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
+<span>  scale_color_degree <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_d</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span>,</span>
 <span>  add_new_scale_weights <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
@@ -1832,8 +1834,16 @@ requires the 'plotly' package.</p></dd>
 <dd><p>Which column from edge weights to determine the edges widths? If <code>NULL</code> edge width will be determined from <code>edge_width</code>.</p></dd>
 
 
+<dt><code>scale_color_main</code></dt>
+<dd><p>Color scale for the data to be plotted.</p></dd>
+
+
 <dt><code>scale_color_weights</code></dt>
 <dd><p>Color scale for the edge weights. Will only be used if <code>add_new_scale_weights</code> is TRUE.</p></dd>
+
+
+<dt><code>scale_color_degree</code></dt>
+<dd><p>Color scale for the degrees.</p></dd>
 
 
 <dt><code>add_new_scale_weights</code></dt>
@@ -1894,6 +1904,7 @@ requires the 'plotly' package.</p></dd>
 <span>  edge_color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  line_width <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  line_color <span class="op">=</span> <span class="st">"rgb(0,0,200)"</span>,</span>
+<span>  scale_color <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"d"</span><span class="op">)</span>,</span>
 <span>  support_width <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  support_color <span class="op">=</span> <span class="st">"gray"</span>,</span>
 <span>  p <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -1962,6 +1973,10 @@ the package 'plotly'.</p></dd>
 
 <dt><code>line_color</code></dt>
 <dd><p>Color of the function curve.</p></dd>
+
+
+<dt><code>scale_color</code></dt>
+<dd><p>Color scale to be used for data and weights.</p></dd>
 
 
 <dt><code>support_width</code></dt>
@@ -2165,7 +2180,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.93 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.95 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
