@@ -1,3 +1,5 @@
+# MetricGraph (development version)
+
 # MetricGraph 1.3.0
 * Added handlers in `add_observations()` for the situation in which observations that are being projected at the same location. More precisely, the `duplicated_strategy` argument.
 * Added `simulate` method for `graph_lme` objects. 
