@@ -1,22 +1,22 @@
 # MetricGraph (development version)
 
 # MetricGraph 1.3.0
-* Added handlers in `add_observations()` for the situation in which observations that are being projected at the same location. More precisely, the `duplicated_strategy` argument.
-* Added `simulate` method for `graph_lme` objects. 
-* Added the possibility to fix parameters when estimating.
-* Deprecated the `Spoints` argument in `add_observations()`. `SpatialPointsDataFrame` can now be added in the `data` argument.
-* `sf` objects containing data can also be directly added by using the `add_observations()` method in the `data` argument.
-* Added the possibility of using a `graph_lme` object to provide starting values when fitting a model using `graph_lme()`.
-* Added the option of fitting a directional Whittle-Matérn model with `alpha=1` when using `graph_lme()`.
-* Added `kirchhoff_weights` argument to obtain weights for Kirchhoff vertex conditions from `edge_weights`.
-* Improved handling of edge weights, e.g., if pruning changes any edge weight, a warning will be given.
-* Added the `edgeweight_to_data()` method that turns edge weights into data in the internal metric graph format.
-* Added `edge_weight` and `edge_width_weight` to the `plot()` method, so one can produce plots on metric graphs with the weights providing colors to the edges, and also with (possibly different) weights providing the thickness of the edges.
-* Added `edge_weights` to `graph_components`, so the connected components will have the correct corresponding edge weights.
-* Added `edge_weight` and `edge_width_weight` to the `plot_function()` method, in which they work in a similar manner to its counterpart for the `plot()` method. The difference being that the weights are plotted as piecewise constant functions.
-* `prune_vertices` now has an option to not prune vertices whose edges have incompatible edge weights.
-* `plot` method has an `interactive` argument that returns the 2d plot as a plotly object that is interactive by using `ggplotly`.
-* Removing the dependence on the `viridis` package.
+* Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.
+* A `simulate` method was added for `graph_lme` objects.
+* The possibility of fixing parameters during estimation was added.
+* The `Spoints` argument in `add_observations()` has been deprecated. Now, `SpatialPointsDataFrame` can be added directly in the `data` argument.
+* `sf` objects containing data can also be directly added using the `add_observations()` method in the `data` argument.
+* The option of using a `graph_lme` object to provide starting values when fitting a model using `graph_lme()` was added.
+* The option of fitting a directional Whittle-Matérn model with `alpha=1` when using `graph_lme()` was added.
+* The `kirchhoff_weights` argument was added to obtain weights for Kirchhoff vertex conditions from `edge_weights`.
+* Handling of edge weights was improved. For example, if pruning changes any edge weight, a warning will be given.
+* The `edgeweight_to_data()` method was added to turn edge weights into data in the internal metric graph format.
+* `edge_weight` and `edge_width_weight` were added to the `plot()` method so that plots on metric graphs can be produced with the weights providing colors to the edges, and also with (possibly different) weights providing the thickness of the edges.
+* `edge_weights` were added to `graph_components` so that the connected components will have the correct corresponding edge weights.
+* `edge_weight` and `edge_width_weight` were added to the `plot_function()` method, where they work in a similar manner to their counterparts for the `plot()` method. The difference is that the weights are plotted as piecewise constant functions.
+* The `prune_vertices` now has an option to not prune vertices whose edges have incompatible edge weights.
+* The `plot` method has an `interactive` argument that returns the 2D plot as a plotly object, which is interactive when using `ggplotly`.
+* The dependency on the `viridis` package has been removed.
 
 # MetricGraph 1.2.0
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.
