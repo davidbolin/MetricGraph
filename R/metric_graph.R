@@ -3505,7 +3505,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1. 
   #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. 
+    #' @param scale_color_main Color scale for the data to be plotted.
     #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
+    #' @param scale_color_degree Color scale for the degrees.
     #' @param add_new_scale_weights Should a new color scale for the edge weights be created? 
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
@@ -3534,7 +3536,9 @@ metric_graph <-  R6Class("metric_graph",
                   direction = FALSE,
                   edge_weight = NULL,
                   edge_width_weight = NULL,
-                  scale_color_weights = scale_color_viridis(option = "C"),
+                  scale_color_main = ggplot2::scale_color_viridis_c(option = "d"),
+                  scale_color_weights = ggplot2::scale_color_viridis_c(option = "a"),
+                  scale_color_degree = ggplot2::scale_color_viridis_d(option = "d"),
                   add_new_scale_weights = TRUE,
                   # mutate = NULL,
                   # filter = NULL,
@@ -3572,7 +3576,9 @@ metric_graph <-  R6Class("metric_graph",
                            direction = direction,
                            edge_weight = edge_weight,
                            edge_width_weight = edge_width_weight,
+                           scale_color_main = scale_color_main,
                            scale_color_weights = scale_color_weights,
+                           scale_color_degree = scale_color_degree,
                            add_new_scale_weights = add_new_scale_weights,
                            ...)
       if(!is.null(private$vertex_unit)){
@@ -3649,6 +3655,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edge_color For 3D plot, color of edges.
   #' @param line_width For 3D plot, line width of the function curve.
   #' @param line_color Color of the function curve.
+  #' @param scale_color Color scale to be used for data and weights.
   #' @param support_width For 3D plot, width of support lines.
   #' @param support_color For 3D plot, color of support lines.
   #' @param p Previous plot to which the new plot should be added.
@@ -3668,6 +3675,7 @@ metric_graph <-  R6Class("metric_graph",
                            edge_color = 'black',
                            line_width = NULL,
                            line_color = 'rgb(0,0,200)',
+                           scale_color = ggplot2::scale_color_viridis_c(option = "d"),                     
                            support_width = 0.5,
                            support_color = "gray",
                            p = NULL,
@@ -4279,14 +4287,12 @@ metric_graph <-  R6Class("metric_graph",
           p <- ggplot(data = data) +
           geom_path( mapping = aes(x = x, y = y,
                                      group = i,
-                                     colour = z), linewidth = line_width) + scale_color_viridis() +
-          labs(colour = "")
+                                     colour = z), linewidth = line_width) + labs(colour = "") + scale_color # + scale_color_viridis() +
       } else {
         p <- p + geom_path(data = data, mapping = 
                            aes(x = x, y = y,
                                group = i, colour = z),
-                           linewidth = line_width) +
-          scale_color_viridis() + labs(colour = "")
+                           linewidth = line_width) + labs(colour = "") + scale_color # + scale_color_viridis()
       }
           p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
@@ -4789,7 +4795,9 @@ metric_graph <-  R6Class("metric_graph",
                      direction = FALSE,
                      edge_weight = NULL,
                      edge_width_weight = NULL,
-                     scale_color_weights = scale_color_viridis(option = "C"),
+                     scale_color_main = ggplot2::scale_color_viridis_c(option = "d"),
+                     scale_color_weights = ggplot2::scale_color_viridis_c(option = "a"),
+                     scale_color_degree = ggplot2::scale_color_viridis_d(option = "d"),
                      add_new_scale_weights = TRUE,
                      ...){
     xyl <- c()
@@ -4826,7 +4834,7 @@ metric_graph <-  R6Class("metric_graph",
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   colour = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_identity()# + scale_color_weights 
+                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights
           if(add_new_scale_weights){
             p <- p + new_scale_color() 
           }
@@ -4841,7 +4849,7 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(edge_weight)){
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_identity() #+ scale_color_weights 
+                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights 
           if(add_new_scale_weights){
             p <- p + new_scale_color() 
           }
@@ -4871,8 +4879,8 @@ metric_graph <-  R6Class("metric_graph",
                                               y = self$V[, 2],
                                               degree = degrees),
                             mapping = aes(x, y, colour = factor(degree)),
-                            size= marker_size, ...) +
-    scale_color_viridis(discrete = TRUE, guide_legend(title = ""))
+                            size= marker_size, ...) + scale_color_degree # +
+    # scale_color_viridis(discrete = TRUE, guide_legend(title = ""))
       } else if (direction) {
         degrees <- self$get_degrees()
         start.deg <- end.deg <- rep(0,self$nV)
@@ -4922,7 +4930,7 @@ metric_graph <-  R6Class("metric_graph",
                                             y = y[!is.na(as.vector(y_plot))],
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
-                          size = data_size, ...) #+
+                          size = data_size, ...) + scale_color_main #+
         # scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
@@ -4948,7 +4956,7 @@ metric_graph <-  R6Class("metric_graph",
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(X)),
                           mapping = aes(x, y, color = val),
-                          size = data_size) + labs(colour = "") #+ 
+                          size = data_size) + labs(colour = "") + scale_color_main #+ 
         # scale_color_viridis()
     }
     p <- p + coord_fixed()

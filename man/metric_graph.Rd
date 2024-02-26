@@ -1443,7 +1443,9 @@ Plots the metric graph.
   direction = FALSE,
   edge_weight = NULL,
   edge_width_weight = NULL,
-  scale_color_weights = scale_color_viridis(option = "C"),
+  scale_color_main = ggplot2::scale_color_viridis_c(option = "d"),
+  scale_color_weights = ggplot2::scale_color_viridis_c(option = "a"),
+  scale_color_degree = ggplot2::scale_color_viridis_d(option = "d"),
   add_new_scale_weights = TRUE,
   ...
 )}\if{html}{\out{</div>}}
@@ -1498,7 +1500,11 @@ requires the 'plotly' package.}
 
 \item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
 
+\item{\code{scale_color_main}}{Color scale for the data to be plotted.}
+
 \item{\code{scale_color_weights}}{Color scale for the edge weights. Will only be used if \code{add_new_scale_weights} is TRUE.}
+
+\item{\code{scale_color_degree}}{Color scale for the degrees.}
 
 \item{\code{add_new_scale_weights}}{Should a new color scale for the edge weights be created?}
 
@@ -1557,6 +1563,7 @@ Plots continuous function on the graph.
   edge_color = "black",
   line_width = NULL,
   line_color = "rgb(0,0,200)",
+  scale_color = ggplot2::scale_color_viridis_c(option = "d"),
   support_width = 0.5,
   support_color = "gray",
   p = NULL,
@@ -1599,6 +1606,8 @@ the package 'plotly'.}
 \item{\code{line_width}}{For 3D plot, line width of the function curve.}
 
 \item{\code{line_color}}{Color of the function curve.}
+
+\item{\code{scale_color}}{Color scale to be used for data and weights.}
 
 \item{\code{support_width}}{For 3D plot, width of support lines.}
 

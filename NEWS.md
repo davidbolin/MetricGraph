@@ -14,6 +14,7 @@
 * Added `edge_weight` and `edge_width_weight` to the `plot_function()` method, in which they work in a similar manner to its counterpart for the `plot()` method. The difference being that the weights are plotted as piecewise constant functions.
 * `prune_vertices` now has an option to not prune vertices whose edges have incompatible edge weights.
 * `plot` method has an `interactive` argument that returns the 2d plot as a plotly object that is interactive by using `ggplotly`.
+* Removing the dependence on the `viridis` package.
 
 # MetricGraph 1.2.0
 * Changed argument `data` to `newdata` in `predict` methods. The argument `data` was deprecated.
