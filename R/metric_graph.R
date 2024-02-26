@@ -4930,7 +4930,7 @@ metric_graph <-  R6Class("metric_graph",
                                             y = y[!is.na(as.vector(y_plot))],
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
-                          size = data_size, ...) + scale_color_main #+
+                          size = data_size, ...) + labs(color = data) + scale_color_main #+
         # scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
