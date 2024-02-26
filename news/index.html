@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,25 +69,29 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="metricgraph-development-version">MetricGraph (development version)<a class="anchor" aria-label="anchor" href="#metricgraph-development-version"></a></h2>
-<ul><li>Added handlers in <code>add_observations()</code> for the situation in which observations that are being projected at the same location. More precisely, the <code>duplicated_strategy</code> argument.</li>
-<li>Added <code>simulate</code> method for <code>graph_lme</code> objects.</li>
-<li>Added the possibility to fix parameters when estimating.</li>
-<li>Deprecated the <code>Spoints</code> argument in <code>add_observations()</code>. <code>SpatialPointsDataFrame</code> can now be added in the <code>data</code> argument.</li>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.3.0" id="metricgraph-130">MetricGraph 1.3.0<a class="anchor" aria-label="anchor" href="#metricgraph-130"></a></h2>
+<ul><li>Handlers were added in <code>add_observations()</code> for situations where observations are projected at the same location, specifically for the <code>duplicated_strategy</code> argument.</li>
+<li>A <code>simulate</code> method was added for <code>graph_lme</code> objects.</li>
+<li>The possibility of fixing parameters during estimation was added.</li>
+<li>The <code>Spoints</code> argument in <code>add_observations()</code> has been deprecated. Now, <code>SpatialPointsDataFrame</code> can be added directly in the <code>data</code> argument.</li>
 <li>
-<code>sf</code> objects containing data can also be directly added by using the <code>add_observations()</code> method in the <code>data</code> argument.</li>
-<li>Added the possibility of using a <code>graph_lme</code> object to provide starting values when fitting a model using <code><a href="../reference/graph_lme.html">graph_lme()</a></code>.</li>
-<li>Added the option of fitting a directional Whittle-Matérn model with <code>alpha=1</code> when using <code><a href="../reference/graph_lme.html">graph_lme()</a></code>.</li>
-<li>Added <code>kirchhoff_weights</code> argument to obtain weights for Kirchhoff vertex conditions from <code>edge_weights</code>.</li>
-<li>Improved handling of edge weights, e.g., if pruning changes any edge weight, a warning will be given.</li>
-<li>Added the <code>edgeweight_to_data()</code> method that turns edge weights into data in the internal metric graph format.</li>
-<li>Added <code>edge_weight</code> and <code>edge_width_weight</code> to the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, so one can produce plots on metric graphs with the weights providing colors to the edges, and also with (possibly different) weights providing the thickness of the edges.</li>
-<li>Added <code>edge_weights</code> to <code>graph_components</code>, so the connected components will have the correct corresponding edge weights.</li>
-<li>Added <code>edge_weight</code> and <code>edge_width_weight</code> to the <code>plot_function()</code> method, in which they work in a similar manner to its counterpart for the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method. The difference being that the weights are plotted as piecewise constant functions.</li>
+<code>sf</code> objects containing data can also be directly added using the <code>add_observations()</code> method in the <code>data</code> argument.</li>
+<li>The option of using a <code>graph_lme</code> object to provide starting values when fitting a model using <code><a href="../reference/graph_lme.html">graph_lme()</a></code> was added.</li>
+<li>The option of fitting a directional Whittle-Matérn model with <code>alpha=1</code> when using <code><a href="../reference/graph_lme.html">graph_lme()</a></code> was added.</li>
+<li>The <code>kirchhoff_weights</code> argument was added to obtain weights for Kirchhoff vertex conditions from <code>edge_weights</code>.</li>
+<li>Handling of edge weights was improved. For example, if pruning changes any edge weight, a warning will be given.</li>
+<li>The <code>edgeweight_to_data()</code> method was added to turn edge weights into data in the internal metric graph format.</li>
 <li>
-<code>prune_vertices</code> now has an option to not prune vertices whose edges have incompatible edge weights.</li>
+<code>edge_weight</code> and <code>edge_width_weight</code> were added to the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method so that plots on metric graphs can be produced with the weights providing colors to the edges, and also with (possibly different) weights providing the thickness of the edges.</li>
 <li>
-<code>plot</code> method has an <code>interactive</code> argument that returns the 2d plot as a plotly object that is interactive by using <code>ggplotly</code>.</li>
-<li>Removing the dependence on the <code>viridis</code> package.</li>
+<code>edge_weights</code> were added to <code>graph_components</code> so that the connected components will have the correct corresponding edge weights.</li>
+<li>
+<code>edge_weight</code> and <code>edge_width_weight</code> were added to the <code>plot_function()</code> method, where they work in a similar manner to their counterparts for the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method. The difference is that the weights are plotted as piecewise constant functions.</li>
+<li>The <code>prune_vertices</code> now has an option to not prune vertices whose edges have incompatible edge weights.</li>
+<li>The <code>plot</code> method has an <code>interactive</code> argument that returns the 2D plot as a plotly object, which is interactive when using <code>ggplotly</code>.</li>
+<li>The dependency on the <code>viridis</code> package has been removed.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="metricgraph-120">MetricGraph 1.2.0<a class="anchor" aria-label="anchor" href="#metricgraph-120"></a></h2><p class="text-muted">CRAN release: 2023-11-07</p>
