@@ -10,14 +10,17 @@ graph_lme(
   model = list(type = "linearModel"),
   which_repl = NULL,
   optim_method = "L-BFGS-B",
-  starting_values_latent = NULL,
-  start_sigma_e = NULL,
-  BC = 1,
+  possible_methods = c("Nelder-Mead", "L-BFGS-B"),
+  model_options = list(),
+  BC = 0,
+  previous_fit = NULL,
+  fix_coeff = FALSE,
   parallel = FALSE,
   n_cores = parallel::detectCores() - 1,
   optim_controls = list(),
   improve_hessian = FALSE,
-  hessian_args = list()
+  hessian_args = list(),
+  check_euclidean = TRUE
 )
 }
 \arguments{
@@ -34,6 +37,7 @@ precision matrices, respectively; 'WM' for Whittle-Matern models where one
 also estimates the smoothness parameter via finite-element method; 'isoExp'
 for a model with isotropic exponential covariance; 'GL1' and 'GL2' for a
 SPDE model based on graph Laplacian with \eqn{\alpha} = 1 and 2, respectively.
+'WMD1' is the directed Whittle-Matern with  \eqn{\alpha}=1.
 There is also the option to provide it as a list containing the elements
 \code{type}, which can be \code{linearModel}, \code{WhittleMatern}, \code{graphLaplacian} or \code{isoCov}.
 \code{linearModel} corresponds to a linear model without random effects.
@@ -71,19 +75,17 @@ the model. If \code{NULL} all replicates will be considered.}
 
 \item{optim_method}{The method to be used with \code{optim} function.}
 
-\item{starting_values_latent}{A vector containing the starting values for the
-latent model. If the latent model is \code{WhittleMatern} or \code{graphLaplacian}, then
-the starting values should be provided as a vector of the form c(sigma,kappa)
-or c(sigma,range) depending on the parameterization. If the model is \code{isoCov},
-then the starting values should be provided as a vector containing the parameters
-of the covariance function.}
+\item{possible_methods}{Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'Nelder-Mead' and 'L-BFGS-B' are considered.}
 
-\item{start_sigma_e}{Starting value for the standard deviation of the measurament
-error.}
+\item{model_options}{A list containing additional options to be used in the model. Currently, it is possible to fix parameters during the estimation or change the starting values of the parameters. The general structure of the elements of the list is \code{fix_parname} and \code{start_parname}, where \code{parname} stands for the name of the parameter. If \code{fix_parname} is not \code{NULL}, then the model with be fitted with the \code{parname} being fixed at the value that was passed. If \code{start_parname} is not \code{NULL}, the model will be fitted using the value passed as starting value for \code{parname}. the For 'WM' models, the possible elements of the list are: \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_nu}, \code{start_nu}, \code{fix_sigma}, \code{start_sigma}, \code{fix_range}, \code{start_range}. Alternatively, one can use \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_nu}, \code{start_nu}, \code{fix_tau}, \code{start_tau}, \code{fix_kappa}, \code{start_kappa}. For 'WM1', 'WM2', 'isoExp', 'GL1' and 'GL2' models, the possible elements of the list are \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_sigma}, \code{start_sigma}, \code{fix_range}, \code{start_range}. Alternatively, one can use \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_tau}, \code{start_tau}, \code{fix_kappa}, \code{start_kappa}. For 'isoCov' models, the possible values are \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_par_vec}, \code{start_par_vec}. Observe that contrary to the other models, for 'isoCov' models, both \code{fix_par_vec} and \code{start_par_vec} should be given as vectors of the size of the dimension of the vector for the input of the covariance function passed to the 'isoCov' model. Furthermore, for 'isoCov' models, \code{fix_par_vec} is a logical vector, indicating which parameters to be fixed, and the values will be kept fixed to the values given to \code{start_par_vec}, one can also use \code{fix_sigma_e} and \code{start_sigma_e} for controlling the std. deviation of the measurement error.}
 
 \item{BC}{For \code{WhittleMatern} models, decides which boundary condition to use
 (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
 conditions.}
+
+\item{previous_fit}{An object of class \code{graph_lme}. Use the fitted coefficients as starting values.}
+
+\item{fix_coeff}{If using a previous fit, should all coefficients be fixed at the starting values?}
 
 \item{parallel}{logical. Indicating whether to use \code{optimParallel()} or not.}
 
@@ -99,6 +101,8 @@ The list can contain the arguments to be passed to the \code{method.args} argume
 in the \code{hessian} function. See the help of the \code{hessian} function in 'numDeriv'
 package for details. Observet that it only accepts the "Richardson" method for
 now, the method "complex" is not supported.}
+
+\item{check_euclidean}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 }
 \value{
 A list containing the fitted model.

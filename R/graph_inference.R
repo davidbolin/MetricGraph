@@ -193,7 +193,7 @@ posterior_crossvalidation_manual <- function(theta,
   #setup matrices for prediction
   if(model == "isoExp"){
     graph$compute_resdist()
-    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(tau^(-2) * exp(-kappa*graph$res_dist[[".complete"]]))
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
@@ -322,9 +322,13 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     sigma <- object$coeff$random_effects[1]
   } else if(tolower(object$latent_model$type) == "whittlematern"){
     if(object$latent_model$alpha == 1){
-      model <- "alpha1"
+      if(object$latent_model$directional==0){
+        model <- "WM alpha1"
+      }else{
+        model <- "WMD alpha1"
+      }
     } else {
-      model <- "alpha2"
+      model <- "WM alpha2"
     }
   } else{
     graph$compute_laplacian(full=TRUE)
@@ -340,10 +344,18 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
   #setup matrices for prediction
   if(model == "isoExp"){
     graph$compute_resdist(full = TRUE)
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[".complete"]]))
+
+    # nV <- nrow(graph$res_dist[[".complete"]]) - length(graph$get_data()[[".group"]])
+
+    # Sigma <- Sigma[-c(1:nV), -c(1:nV)]
+
     Sigma.o <- Sigma
+
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
-  } else if(model == "alpha2"){
+  } else if(model == "WM alpha2"){
+    if(is.null(graph$C))
+      graph$buildC(2)
     n.c <- 1:length(graph$CoB$S)
     Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
@@ -356,8 +368,23 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
-  } else if (model %in% c("alpha1", "GL1", "GL2")) {
-    if(model == "alpha1"){
+  }else if(model == "WMD alpha1"){
+    if(is.null(graph$C))
+      graph$buildDirectionalConstraints(1)
+
+    Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=1, build=TRUE)
+    n_const <- length(graph$CoB$S)
+    ind.const <- c(1:n_const)
+    Tc <- graph$CoB$T[-ind.const, ]
+    Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
+    Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
+    PtE = graph$get_PtE()
+    index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-0.001) + 1
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+    Sigma.o <- Sigma
+    diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
+  }else if (model %in% c("WM alpha1", "GL1", "GL2")) {
+    if(model == "WM alpha1"){
       Q <- Qalpha1(c(tau, kappa), graph, BC = BC)
     } else if(model == "GL1"){
       Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) * tau^2
@@ -383,6 +410,14 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     X_cov <- NULL
   }
 
+  if(!is.null(X_cov)){
+    if(all(dim(X_cov) == c(0,1))){
+      names_temp <- colnames(X_cov)
+      X_cov <- matrix(1, nrow = length(y_graph))
+      colnames(X_cov) <- names_temp
+    }
+  }
+
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
   repl <- unique(repl_vec)
 
@@ -399,14 +434,14 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
         y_cv <- y_graph_repl[-i]
         v_cv <- y_cv
         if(!is.null(X_cov)){
-          X_cov_repl <- X_cov[idx_repl,]
-          v_cv <- v_cv - as.vector(X_cov_repl[-i, ] %*% beta_cov)
-          mu_fe <- as.vector(X_cov_repl[i, ] %*% beta_cov)
+          X_cov_repl <- X_cov[idx_repl, , drop = FALSE]
+          v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+          mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
         } else {
           mu_fe <- 0
         }
 
-        if(model == "isoExp" || model == "alpha2"){
+        if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1" ){
           mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
           Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                               Sigma.o[-i, i])
@@ -431,14 +466,14 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
           y_cv <- y_graph_repl[-i]
           v_cv <- y_cv
           if(!is.null(X_cov)){
-            X_cov_repl <- X_cov[idx_repl,]
-            v_cv <- v_cv - as.vector(X_cov_repl[-i, ] %*% beta_cov)
-            mu_fe <- as.vector(X_cov_repl[i, ] %*% beta_cov)
+            X_cov_repl <- X_cov[idx_repl,, drop = FALSE]
+            v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+            mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
           } else {
             mu_fe <- 0
           }
-  
-          if(model == "isoExp" || model == "alpha2"){
+
+          if(model == "isoExp" || model == "WM alpha2"|| model == "WMD alpha1"){
             mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
             Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
                                                                 Sigma.o[-i, i])
@@ -519,7 +554,7 @@ posterior_crossvalidation_covariance <- function(object)
     if(object$latent_model$alpha == 1){
       model <- "alpha1"
     } else {
-      model <- "alpha2"
+      model <- "WM alpha2"
     }
   } else{
     graph$compute_laplacian(full=TRUE)
@@ -550,7 +585,7 @@ posterior_crossvalidation_covariance <- function(object)
   if (model == "alpha1") {
     Q <- Qalpha1(c(tau, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
-  } else if (model == "alpha2") {
+  } else if (model == "WM alpha2") {
 
     graph$buildC(2,BC==0)
     n.c <- 1:length(graph$CoB$S)
@@ -572,7 +607,7 @@ posterior_crossvalidation_covariance <- function(object)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "isoExp"){
     graph$compute_resdist(full = TRUE)
-    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[1]]))
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[".complete"]]))
   } else {
     stop("wrong model choice")
   }
@@ -591,8 +626,8 @@ posterior_crossvalidation_covariance <- function(object)
     y_cv <- y_graph[-i]
     v_cv <- y_cv
     if(!is.null(X_cov)){
-      v_cv <- v_cv - as.vector(X_cov[-i, ] %*% beta_cov)
-      mu_fe <- as.vector(X_cov[i, ] %*% beta_cov)
+      v_cv <- v_cv - as.vector(X_cov[-i, , drop = FALSE] %*% beta_cov)
+      mu_fe <- as.vector(X_cov[i, , drop = FALSE] %*% beta_cov)
     } else {
       mu_fe <- 0
     }

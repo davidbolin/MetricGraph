@@ -32,8 +32,8 @@ references:
     given: Vivek
   - family: Simas
     given: Alexandre B.
-  container-title: arXiv:2302.03995
-  type: preprint
+  container-title: Mathematics of Computation
+  type: article
   issued:
     year: 2023
 ---
@@ -47,8 +47,8 @@ references:
 
 In this vignette we will introduce how to fit Whittle--Matérn fields with
 general smoothness based on finite element and rational approximations.
-The theory for this approach is provided in [@graph_fem](https://arxiv.org/abs/2302.03995) and
-[@xiong22](https://arxiv.org/abs/2209.04670).
+The theory for this approach is provided in [@graph_fem](https://doi.org/10.1090/mcom/3929) and
+[@xiong22](https://doi.org/10.1080/10618600.2023.2231051).
 For the implementation, we make use of the [`rSPDE` package](https://davidbolin.github.io/rSPDE/) for the rational approximations.
 
 These models are thus implemented using finite element approximations. Such
@@ -73,7 +73,7 @@ We begin by loading the `rSPDE` and `MetricGraph` packages:
 ```
 
 As an example, we consider the following metric graph
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
   edge1 <- rbind(c(0,0),c(1,0))
   edge2 <- rbind(c(0,0),c(0,1))
   edge3 <- rbind(c(0,1),c(-1,1))
@@ -618,8 +618,7 @@ Let us now build the auxiliary data to be used with the `graph_data_rspde()` fun
 data_rspde_bru <- graph_data_rspde(rspde_model, loc_name = "loc")
 ```
 
-Now, we can directly fit the model of the
-`graph_data_spde()` function:
+Now, we can directly fit the model, by using the `data` element of `data_rspde_bru`:
 ```{r}
   rspde_bru_fit <-
     bru(cmp,
@@ -806,7 +805,7 @@ one simply let the corresponding column to be nonzero on both `B.sigma` and `B.r
 For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose,
 California. The variable `y` contains the traffic speeds.
 
-```{r}
+```{r, message=FALSE}
  pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
  pems_graph$add_observations(data = pems$data, normalized=TRUE)
  pems_graph$prune_vertices()

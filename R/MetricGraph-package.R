@@ -29,37 +29,36 @@
 #'
 #' For a more detailed introduction to the package, see the 'MetricGraph' Vignettes.
 #'
-#' @docType package
-#' @name MetricGraph
-#' @aliases MetricGraph-package
+"_PACKAGE"
 #' @import Matrix
 #' @export Cholesky t
 #' @importFrom igraph graph distances is_tree
 #' @importFrom rSPDE matern.covariance gg_df
 #' @importFrom methods is slot new
 #' @export gg_df
-#' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq
+#' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq 
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete
 #' @importFrom igraph E E<-
-#' @importFrom viridis scale_color_viridis viridis
 #' @importFrom Rcpp evalCpp
 #' @importFrom R6 R6Class
 #' @importFrom graphics layout
 #' @importFrom lifecycle deprecated
 #' @importFrom dplyr mutate filter select summarise
 #' @importFrom tidyr drop_na
-#' @importFrom magrittr `%>%`
+#' @importFrom magrittr %>%
 #' @importFrom zoo na.approx
-#' @export `%>%`
+#' @importFrom ggnewscale new_scale_color
+#' @export %>%
 #' @export summarise
 #' @export mutate
 #' @export filter
 #' @export select
 #' @export drop_na
-#' @importFrom broom glance augment 
+#' @importFrom broom glance augment
 # @importFrom broom tidy
 #' @export glance
 #' @export augment
 # @export tidy
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL
+

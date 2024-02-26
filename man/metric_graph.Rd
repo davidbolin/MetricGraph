@@ -91,6 +91,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-get_edge_lengths}{\code{metric_graph$get_edge_lengths()}}
 \item \href{#method-metric_graph-get_locations}{\code{metric_graph$get_locations()}}
 \item \href{#method-metric_graph-observation_to_vertex}{\code{metric_graph$observation_to_vertex()}}
+\item \href{#method-metric_graph-edgeweight_to_data}{\code{metric_graph$edgeweight_to_data()}}
 \item \href{#method-metric_graph-get_mesh_locations}{\code{metric_graph$get_mesh_locations()}}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-metric_graph-process_data}{\code{metric_graph$process_data()}}
@@ -101,6 +102,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-filter}{\code{metric_graph$filter()}}
 \item \href{#method-metric_graph-summarise}{\code{metric_graph$summarise()}}
 \item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
+\item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
@@ -131,20 +133,21 @@ Create a new \code{metric_graph} object.
   vertex_unit = NULL,
   length_unit = vertex_unit,
   edge_weights = 1,
+  kirchhoff_weights = NULL,
   longlat = FALSE,
   crs = NULL,
   proj4string = NULL,
   which_longlat = "sp",
-  project = TRUE,
+  project = FALSE,
   project_data = FALSE,
   which_projection = "Winkel tripel",
-  tolerance = list(vertex_vertex = 1e-07, vertex_edge = 1e-07, edge_edge = 0),
+  tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
   merge_close_vertices = TRUE,
   factor_merge_close_vertices = 1,
   remove_circles = TRUE,
-  verbose = FALSE,
+  verbose = 1,
   lines = deprecated()
 )}\if{html}{\out{</div>}}
 }
@@ -166,6 +169,8 @@ If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit
 \item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
 each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}
 
+\item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{edge_weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{edge_weights} is a single number and those are the Kirchhoff weights.}
+
 \item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
 \code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
@@ -176,7 +181,7 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{which_longlat}}{Compute the distance using which package? The options are \code{sp} and \code{sf}. The default is \code{sp}.}
 
-\item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{TRUE}. When \code{TRUE}, the construction of the graph is faster.}
+\item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
 
 \item{\code{project_data}}{If \code{longlat} is \code{TRUE} should the vertices be project to planar coordinates? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
 
@@ -209,7 +214,7 @@ initialization. Default is \code{FALSE}.}
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
 are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}
 
-\item{\code{verbose}}{Print progress of graph creation.}
+\item{\code{verbose}}{Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
 \item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
 }
@@ -234,7 +239,10 @@ A \code{metric_graph} object.
 \subsection{Method \code{set_edge_weights()}}{
 Sets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(weights = rep(1, self$nE))}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(
+  weights = rep(1, self$nE),
+  kirchhoff_weights = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -242,6 +250,8 @@ Sets the edge weights
 \describe{
 \item{\code{weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
 each row gives a vector of weights to its corresponding edge.}
+
+\item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{weights} is a single number and those are the Kirchhoff weights.}
 }
 \if{html}{\out{</div>}}
 }
@@ -255,11 +265,20 @@ No return value. Called for its side effects.
 \subsection{Method \code{get_edge_weights()}}{
 Gets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights(data.frame = FALSE, tibble = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data.frame}}{If the edge weights are given as vectors, should the result be returned as a data.frame?}
+
+\item{\code{tibble}}{Should the edge weights be returned as tibble?}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
-A vector containing the edge weights.
+A vector or \code{data.frame} containing the edge weights.
 }
 }
 \if{html}{\out{<hr>}}
@@ -452,7 +471,13 @@ on the mesh are stored in \code{mesh$geo_dist} in the \code{metric_graph} object
 Computes the resistance distance between the observation
 locations.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist(
+  full = FALSE,
+  obs = TRUE,
+  group = NULL,
+  check_euclidean = FALSE,
+  include_vertices = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -467,6 +492,10 @@ locations?}
 
 \item{\code{group}}{Vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
+
+\item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
+
+\item{\code{include_vertices}}{Should the vertices of the graph be also included in the resulting matrix when using \code{FULL=TRUE}?}
 }
 \if{html}{\out{</div>}}
 }
@@ -485,7 +514,8 @@ locations.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_resdist_PtE(
   PtE,
   normalized = TRUE,
-  include_vertices = FALSE
+  include_vertices = FALSE,
+  check_euclidean = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -498,6 +528,8 @@ locations.
 
 \item{\code{include_vertices}}{Should the original vertices be included in the
 Laplacian matrix?}
+
+\item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 }
 \if{html}{\out{</div>}}
 }
@@ -590,13 +622,15 @@ in the \code{Laplacian} element in the \code{metric_graph} object.
 \subsection{Method \code{prune_vertices()}}{
 Removes vertices of degree 2 from the metric graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(verbose = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$prune_vertices(check_weights = TRUE, verbose = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{verbose}}{Show progress? Default is \code{FALSE}.}
+\item{\code{check_weights}}{If \code{TRUE} will only prune edges with different weights.}
+
+\item{\code{verbose}}{Print progress of pruning. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
@@ -713,6 +747,59 @@ No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-edgeweight_to_data"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-edgeweight_to_data}{}}}
+\subsection{Method \code{edgeweight_to_data()}}{
+Turns edge weights into data on the metric graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$edgeweight_to_data(
+  loc = NULL,
+  mesh = FALSE,
+  data_loc = FALSE,
+  weight_col = NULL,
+  add = TRUE,
+  data_coords = c("PtE", "spatial"),
+  normalized = FALSE,
+  tibble = TRUE,
+  verbose = 1,
+  suppress_warnings = FALSE,
+  return = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{loc}}{A \code{matrix} or \code{data.frame} with two columns containing the locations to generate the data from the edge weights. If \code{data_coords} is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If \code{data_coords} is 'PtE', the first column must be the edge number and the second column must be the distance on edge.}
+
+\item{\code{mesh}}{Should the data be generated to the mesh locations? In this case, the \code{loc} argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.}
+
+\item{\code{data_loc}}{Should the data be generated to the data locations? In this case, the \code{loc} argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.}
+
+\item{\code{weight_col}}{Which columns of the edge weights should be turned into data? If \code{NULL}, all columns will be turned into data.}
+
+\item{\code{add}}{Should the data generated be added to the metric graph internal data?}
+
+\item{\code{data_coords}}{To be used only if \code{mesh} is \code{FALSE}. It decides which
+coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
+\code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
+\code{coord_x} and \code{coord_y}.}
+
+\item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
+assumed to be normalized to (0,1). Default FALSE.}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
+
+\item{\code{return}}{Should the data be returned? If \code{return_removed} is \code{TRUE}, only the removed locations will be return (if there is any).}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-get_mesh_locations"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-get_mesh_locations}{}}}
 \subsection{Method \code{get_mesh_locations()}}{
@@ -758,7 +845,6 @@ No return value. Called for its side effects.
 Process data to the metric graph data format.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$process_data(
-  Spoints = NULL,
   data = NULL,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
@@ -769,18 +855,19 @@ Process data to the metric graph data format.
   group_sep = ".",
   normalized = FALSE,
   tibble = TRUE,
+  duplicated_strategy = "closest",
+  include_distance_to_graph = TRUE,
+  only_return_removed = FALSE,
   tolerance = max(self$edge_lengths)/2,
-  verbose = FALSE
+  verbose = FALSE,
+  suppress_warnings = FALSE,
+  Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Spoints}}{\code{SpatialPoints} or \code{SpatialPointsDataFrame} containing the
-observations. It may include the coordinates of the observations only, or
-the coordinates as well as the observations.}
-
 \item{\code{data}}{A \code{data.frame} or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
 with a column indicating the index of the group. If \code{data} is not \code{NULL},
@@ -805,7 +892,7 @@ the y coordinate. If not supplied, the column with name "coord_x" will be
 chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
 \code{PtE}.}
 
-\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+\item{\code{data_coords}}{It decides which
 coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
 \code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
 \code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
@@ -817,10 +904,16 @@ which the group variables are stored. It will be stored as a single column \code
 \item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
-assumed to be normalized to (0,1). Default FALSE. Will not be used if
-\code{Spoints} is not \code{NULL}.}
+assumed to be normalized to (0,1). Default FALSE.}
 
 \item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+
+\item{\code{duplicated_strategy}}{Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.}
+
+\item{\code{include_distance_to_graph}}{When \code{data_coord} is 'spatial', should the distance of the observations to the graph be included as a column?}
+
+\item{\code{only_return_removed}}{Should the removed data (if it exists) when using 'closest' \code{duplicated_strategy} be returned instead of the processed data?}
 
 \item{\code{tolerance}}{Parameter to control a warning when adding observations.
 If the distance of some location and the closest point on the graph is
@@ -828,6 +921,10 @@ greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.}
 
 \item{\code{verbose}}{If \code{TRUE}, report steps and times.}
+
+\item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
+
+\item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -843,7 +940,6 @@ stored in the \code{data} element of the \code{metric_graph} object.
 Add observations to the metric graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$add_observations(
-  Spoints = NULL,
   data = NULL,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
@@ -856,21 +952,23 @@ Add observations to the metric graph.
   clear_obs = FALSE,
   tibble = FALSE,
   tolerance = max(self$edge_lengths)/2,
-  verbose = FALSE
+  duplicated_strategy = "closest",
+  include_distance_to_graph = TRUE,
+  return_removed = TRUE,
+  verbose = 1,
+  suppress_warnings = FALSE,
+  Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{Spoints}}{\code{SpatialPoints} or \code{SpatialPointsDataFrame} containing the
-observations. It may include the coordinates of the observations only, or
-the coordinates as well as the observations.}
-
 \item{\code{data}}{A \code{data.frame} or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
-with a column indicating the index of the group. If \code{data} is not \code{NULL},
-it takes priority over any eventual data in \code{Spoints}.}
+with a column indicating the index of the group. \code{data} can also be an \code{sf} object or a
+\code{SpatialPointsDataFrame} object.
+in which case \code{data_coords} will automatically be spatial, and there is no need to specify the \code{coord_x} or \code{coord_y} arguments.}
 
 \item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that
 contains the edge numbers. If not supplied, the column with name
@@ -891,7 +989,7 @@ the y coordinate. If not supplied, the column with name "coord_x" will be
 chosen. Will not be used if \code{Spoints} is not \code{NULL} or if \code{data_coords} is
 \code{PtE}.}
 
-\item{\code{data_coords}}{To be used only if \code{Spoints} is \code{NULL}. It decides which
+\item{\code{data_coords}}{It decides which
 coordinate system to use. If \code{PtE}, the user must provide \code{edge_number} and
 \code{distance_on_edge}, otherwise if \code{spatial}, the user must provide
 \code{coord_x} and \code{coord_y}. The option \code{euclidean} is \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Use \code{spatial} instead.}
@@ -903,8 +1001,7 @@ which the group variables are stored. It will be stored as a single column \code
 \item{\code{group_sep}}{separator character for creating the new group variable when grouping two or more variables.}
 
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
-assumed to be normalized to (0,1). Default FALSE. Will not be used if
-\code{Spoints} is not \code{NULL}.}
+assumed to be normalized to (0,1). Default FALSE.}
 
 \item{\code{clear_obs}}{Should the existing observations be removed before adding the data?}
 
@@ -915,7 +1012,18 @@ If the distance of some location and the closest point on the graph is
 greater than the tolerance, the function will display a warning.
 This helps detecting mistakes on the input locations when adding new data.}
 
-\item{\code{verbose}}{If \code{TRUE}, report steps and times.}
+\item{\code{duplicated_strategy}}{Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
+The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.}
+
+\item{\code{include_distance_to_graph}}{When \code{data_coord} is 'spatial', should the distance of the observations to the graph be included as a column?}
+
+\item{\code{return_removed}}{Should the removed data (if it exists) when using 'closest' \code{duplicated_strategy} be returned?}
+
+\item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
+
+\item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1096,6 +1204,31 @@ Return the internal data with the option to filter by groups.
 \item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-buildDirectionalConstraints"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-buildDirectionalConstraints}{}}}
+\subsection{Method \code{buildDirectionalConstraints()}}{
+Build directional ODE constraint matrix from edges.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$buildDirectionalConstraints(alpha = 1)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{alpha}}{how many derivatives the processes has}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+Currently not implemented for circles (edges that start and end
+in the same vertex)
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
@@ -1294,6 +1427,7 @@ Plots the metric graph.
   newdata = NULL,
   group = 1,
   plotly = FALSE,
+  interactive = FALSE,
   vertex_size = 3,
   vertex_color = "black",
   edge_width = 0.3,
@@ -1307,6 +1441,12 @@ Plots the metric graph.
   p = NULL,
   degree = FALSE,
   direction = FALSE,
+  edge_weight = NULL,
+  edge_width_weight = NULL,
+  scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
+  scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
+  scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
+  add_new_scale_weights = TRUE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -1326,11 +1466,13 @@ is a character, then the group will be chosen by its name.}
 \item{\code{plotly}}{Use plot_ly for 3D plot (default \code{FALSE}). This option
 requires the 'plotly' package.}
 
+\item{\code{interactive}}{Only works for 2d plots. If \code{TRUE}, an interactive plot will be displayed. Unfortunately, \code{interactive} is not compatible with \code{edge_weight} if \code{add_new_scale_weights} is TRUE.}
+
 \item{\code{vertex_size}}{Size of the vertices.}
 
 \item{\code{vertex_color}}{Color of vertices.}
 
-\item{\code{edge_width}}{Line width for edges.}
+\item{\code{edge_width}}{Line width for edges. If \code{edge_width_weight} is not \code{NULL}, this determines the maximum edge width.}
 
 \item{\code{edge_color}}{Color of edges.}
 
@@ -1352,6 +1494,19 @@ requires the 'plotly' package.}
 \item{\code{degree}}{Show the degrees of the vertices?}
 
 \item{\code{direction}}{Show the direction of the edges?}
+
+\item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.
+\code{edge_weight} is only available for 2d plots. For 3d plots with edge weights, please use the \code{plot_function()} method.}
+
+\item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
+
+\item{\code{scale_color_main}}{Color scale for the data to be plotted.}
+
+\item{\code{scale_color_weights}}{Color scale for the edge weights. Will only be used if \code{add_new_scale_weights} is TRUE.}
+
+\item{\code{scale_color_degree}}{Color scale for the degrees.}
+
+\item{\code{add_new_scale_weights}}{Should a new color scale for the edge weights be created?}
 
 \item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
@@ -1401,12 +1556,14 @@ Plots continuous function on the graph.
   plotly = FALSE,
   improve_plot = FALSE,
   continuous = TRUE,
+  edge_weight = NULL,
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
   edge_color = "black",
   line_width = NULL,
   line_color = "rgb(0,0,200)",
+  scale_color = ggplot2::scale_color_viridis_c(option = "d"),
   support_width = 0.5,
   support_color = "gray",
   p = NULL,
@@ -1436,6 +1593,8 @@ the package 'plotly'.}
 
 \item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
 
+\item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.}
+
 \item{\code{vertex_size}}{Size of the vertices.}
 
 \item{\code{vertex_color}}{Color of vertices.}
@@ -1447,6 +1606,8 @@ the package 'plotly'.}
 \item{\code{line_width}}{For 3D plot, line width of the function curve.}
 
 \item{\code{line_color}}{Color of the function curve.}
+
+\item{\code{scale_color}}{Color scale to be used for data and weights.}
 
 \item{\code{support_width}}{For 3D plot, width of support lines.}
 
@@ -1578,6 +1739,9 @@ normalized locations.}
 If \code{PtE} is specified, then a matrix with Euclidean coordinates of
 the locations is returned. If \code{XY} is provided, then a matrix with the
 closest locations on the graph is returned.
+Gets the edge weights
+data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+A vector or \code{data.frame} containing the edge weights.
 data List containing data on the metric graph.
 }
 }

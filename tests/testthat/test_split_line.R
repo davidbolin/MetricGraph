@@ -24,8 +24,7 @@ yc = c(0.4, 0.25,0,0.4)
 Spoints = sp::SpatialPoints(cbind(xc, yc))
 Spoints = sp::SpatialPointsDataFrame(Spoints,  data.frame(a=1:4))
 
-df_2 <- data.frame(y = c(1,2,3,4))
-graph$add_observations(Spoints, data = df_2)
+graph$add_observations(data = Spoints)
 expect_equal(42,42)
 })
 

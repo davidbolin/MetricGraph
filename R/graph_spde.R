@@ -171,7 +171,7 @@ graph_spde <- function(graph_object,
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
       start_values_vector <- graph_starting_values(graph_spde,
-                      model = model_start, data=FALSE)
+                      model = model_start, data=FALSE)$start_values
 
       prior_kappa$meanlog <- log(start_values_vector[3])
       prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
@@ -1065,7 +1065,9 @@ predict.inla_metric_graph_spde <- function(object,
                   edge_number = ".edge_number",
                   distance_on_edge = ".distance_on_edge",
                   data_coords = "PtE",
-                  normalized = TRUE)
+                  normalized = TRUE,
+                  verbose=0,
+                  suppress_warnings = TRUE)
 
   new_data <- data
   new_data[[name_locations]] <- NULL
@@ -1093,7 +1095,9 @@ predict.inla_metric_graph_spde <- function(object,
                   coord_x = ".coord_x",
                   coord_y = ".coord_y",
                   data_coords = data_coords,
-                  normalized = normalized)
+                  normalized = normalized,
+                  verbose=0,
+                  suppress_warnings = TRUE)
 
   dummy1 <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]]
 
@@ -1109,7 +1113,7 @@ predict.inla_metric_graph_spde <- function(object,
   # graph_tmp$add_observations(data = original_data,
   #                   coord_x = ".coord_x",
   #                   coord_y = ".coord_y",
-  #                   data_coords = "euclidean")
+  #                   data_coords = "euclidean", verbose=0)
 
   graph_tmp$observation_to_vertex(mesh_warning=FALSE)
 

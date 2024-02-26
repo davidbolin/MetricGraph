@@ -55,7 +55,7 @@ posterior_mean_obs_alpha1 <- function(theta,
                                       PtE_resp,
                                       PtE_pred,
                                       type = "PtE",
-                                      leave.edge.out = FALSE) {
+                                      leave.edge.out = FALSE, no_nugget = FALSE) {
 
   sigma_e <- theta[1]
   tau <- theta[2]
@@ -65,7 +65,7 @@ posterior_mean_obs_alpha1 <- function(theta,
                        alpha = 1, graph = graph)
   if(leave.edge.out == FALSE)
     V.post <- posterior_mean_alpha1(theta = theta, graph = graph,
-                                    resp = resp, PtE_resp = PtE_resp)
+                                    resp = resp, PtE_resp = PtE_resp, no_nugget = no_nugget)
 
   Qpmu <- rep(0, nrow(graph$V))
   if(type == "obs") {
@@ -82,7 +82,7 @@ posterior_mean_obs_alpha1 <- function(theta,
     if(leave.edge.out == TRUE)
       V.post <- posterior_mean_alpha1(theta = theta, graph = graph,
                                       rem.edge = e, resp = resp,
-                                      PtE_resp = PtE_resp)
+                                      PtE_resp = PtE_resp, no_nugget = no_nugget)
 
     obs.id <- which(PtE_resp[,1] == e)
     obs.loc <- PtE_resp[obs.id,2]
@@ -100,7 +100,9 @@ posterior_mean_obs_alpha1 <- function(theta,
       if(leave.edge.out == FALSE){
         Sigma_i <- S[Obs.ind, Obs.ind] - S[Obs.ind, E.ind] %*% Bt
         Sigma_noise <- Sigma_i
-        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        if(!no_nugget){
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2  
+        }
 
         y_hat[obs.id] <- y_hat[obs.id] + Sigma_i %*% solve(Sigma_noise,
                                                            y_i-y_hat[obs.id])
@@ -119,8 +121,10 @@ posterior_mean_obs_alpha1 <- function(theta,
       if(leave.edge.out == FALSE && length(obs.loc)>0){
         Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
         Sigma_noise <- S[Obs.ind, Obs.ind] - S[Obs.ind, E.ind] %*% Bt
-        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
         Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
+        if(!no_nugget){
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        }
         y_hat_obs <- t(Bt) %*% V.post[graph$E[e, ]]
 
         y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
@@ -150,7 +154,8 @@ posterior_mean_obs_alpha2 <- function(theta,
                                       PtE_resp,
                                       PtE_pred,
                                       type = "PtE",
-                                      leave.edge.out = FALSE) {
+                                      leave.edge.out = FALSE,
+                                      no_nugget = FALSE) {
 
 
   if(type == "obs" && leave.edge.out) {
@@ -169,7 +174,8 @@ posterior_mean_obs_alpha2 <- function(theta,
 
   if(leave.edge.out == FALSE)
     E.post <- posterior_mean_alpha2(theta = theta, graph = graph,
-                                    resp = resp, PtE_resp = PtE_resp)
+                                    resp = resp, PtE_resp = PtE_resp,
+                                    no_nugget = no_nugget)
 
   y_hat <- rep(0, length(resp))
 
@@ -184,7 +190,7 @@ posterior_mean_obs_alpha2 <- function(theta,
   for(e in obs.edges){
 
     if(leave.edge.out == TRUE)
-      E.post <- posterior_mean_alpha2(theta, graph, rem.edge = e)
+      E.post <- posterior_mean_alpha2(theta, graph, rem.edge = e, no_nugget = no_nugget)
 
     obs.id <- which(PtE_resp[, 1] == e)
     obs.loc <- PtE_resp[obs.id, 2]
@@ -216,7 +222,9 @@ posterior_mean_obs_alpha2 <- function(theta,
         Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
           S[Obs.ind, E.ind, drop = FALSE] %*% Bt
         Sigma_noise  <- Sigma_i
-        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        if(!no_nugget){
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        }
 
         y_hat[obs.id] <- y_hat[obs.id] + Sigma_i%*%solve(Sigma_noise,
                                                          y_i - y_hat[obs.id])
@@ -253,8 +261,10 @@ posterior_mean_obs_alpha2 <- function(theta,
         Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
         Sigma_noise <- S[Obs.ind, Obs.ind, drop = FALSE] -
           S[Obs.ind, E.ind, drop = FALSE] %*% Bt
-        diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
         Sigma_op <- S[Obs.ind, Pred.ind] - S[Obs.ind, E.ind] %*% Bt_p
+        if(!no_nugget){
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        }
         Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind])
         u_e <- E.post[4 * (e - 1) + c(2, 4, 1, 3)]
         y_hat_obs <- t(Bt) %*% u_e
@@ -273,13 +283,14 @@ posterior_mean_obs_alpha2 <- function(theta,
 #' @param rem.edge  - remove edge
 #' @noRd
 posterior_mean_alpha1 <- function(theta, graph, resp,
-                                  PtE_resp, rem.edge = FALSE) {
+                                  PtE_resp, rem.edge = FALSE,
+                                  no_nugget = FALSE) {
 
   sigma_e <- theta[1]
   tau <- theta[2]
   kappa <- theta[3]
 
-  Qp.list <- spde_precision(kappa = theta[3], tau = 1/theta[2], alpha = 1,
+  Qp.list <- spde_precision(kappa = theta[3], tau = theta[2], alpha = 1,
                             graph = graph, build = FALSE)
   #build BSIGMAB
   Qpmu <- rep(0, graph$nV)
@@ -305,7 +316,9 @@ posterior_mean_alpha1 <- function(theta, graph, resp,
     Obs.ind <- -E.ind
     Bt <- solve(S[E.ind, E.ind],S[E.ind, Obs.ind])
     Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
-    diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    if(!no_nugget){
+      diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    }
     R <- base::chol(Sigma_i)
     Sigma_iB <- solve(Sigma_i, t(Bt))
     BtSinvB <- Bt %*% Sigma_iB
@@ -351,7 +364,8 @@ posterior_mean_alpha1 <- function(theta, graph, resp,
 #' @param graph metric_graph object
 #' @noRd
 posterior_mean_alpha2 <- function(theta, graph, resp,
-                                  PtE_resp, rem.edge = NULL) {
+                                  PtE_resp, rem.edge = NULL,
+                                  no_nugget = FALSE) {
 
   sigma_e <- theta[1]
   tau <- theta[2]
@@ -366,7 +380,7 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const,]
 
-  Q <- spde_precision(kappa = theta[3], tau = 1/theta[2],
+  Q <- spde_precision(kappa = theta[3], tau = theta[2],
                       alpha = 2, graph = graph)
 
 
@@ -405,7 +419,9 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
                 S[E.ind, Obs.ind, drop = FALSE])
     Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
       S[Obs.ind, E.ind, drop = FALSE] %*% Bt
-    diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    if(!no_nugget){
+      diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    }
 
     R <- base::chol(Sigma_i, pivot=T)
     Sigma_iB <- t(Bt)

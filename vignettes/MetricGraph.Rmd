@@ -21,8 +21,10 @@ references:
     given: Jonas
   container-title: Bernoulli
   type: article
+  issue: 30
+  pages: 1611-1639
   issued:
-    year: 2023
+    year: 2024
 - id: BSW2022b
   title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
   author:
@@ -177,14 +179,14 @@ lines <- SpatialLines(data$osm_lines@lines)
 ```
 
 We can now create the metric graph as follows. In the command we set the argument `longlat = TRUE` since the coordinates of the vertices are given in Longitude and Latitude.
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph <- metric_graph$new(lines, longlat = TRUE)
 graph$plot(vertex_size = 0.5)
 ```
 
 We can note the warning that the graph is not connected, so let us create a 
 `graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graphs <- graph_components$new(edges = lines, longlat = TRUE)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
@@ -687,7 +689,8 @@ cmp <- y ~ Intercept(1) + lon + lat + field(loc, model = spde_model)
 This formula is very simple since we are not assuming mean zero, so that we do not need an intercept, and we do not have any other covariates or model components. However, the setup is exactly  the same for more complicated models, with the only exception that we would have more terms in the formla. Now, we directly fit the model:
 
 ```{r}
-spde_bru_fit <- bru(cmp, data=graph_data_spde(spde_model, loc = "loc")[["data"]])
+spde_bru_fit <- bru(cmp, data = 
+              graph_data_spde(spde_model, loc_name = "loc")[["data"]])
 ```
 
 The advantage / difference between the estimates we obtain here and those above is that the `bru` function does full Bayesian inference (assuming priors for the model parameters). We used the default priors when creating the `graph_spde` model (see the help text for that function). The advantage now is that we do not only obtain point estimates but entire posterior distributions for the parameters. To view the estimates we can use the `spde_metric_graph_result()` function, then
@@ -769,10 +772,11 @@ field_pred <- predict(spde_model,
 Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_field_prd <- field_pred$pred[,1]
-graph$plot_function(X = mean_field_prd, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = mean_field_prd, improve_plot = TRUE,
+                      vertex_size = 0, edge_width = 0.5)
 ```
 
-Fin §ally, let us plot predictions of the observed data at the mesh locations:
+Finally, let us plot predictions of the observed data at the mesh locations:
 
 ```{r}
 obs_pred <- predict(spde_model, 
@@ -783,9 +787,11 @@ obs_pred <- predict(spde_model,
 ```
 
 Let us plot the predictions:
+
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_obs_prd <- obs_pred$pred[,1]
-graph$plot_function(X = mean_obs_prd, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = mean_obs_prd, improve_plot = TRUE,
+                    vertex_size = 0, edge_width = 0.5)
 ```
 
 # References {-}

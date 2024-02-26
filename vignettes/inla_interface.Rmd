@@ -19,8 +19,10 @@ references:
     given: Jonas
   container-title: Bernoulli
   type: article
+  issue: 30
+  pages: 1611-1639
   issued:
-    year: 2023
+    year: 2024
 - id: BSW2022b
   title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
   author:
@@ -81,7 +83,7 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 Let us begin by loading the `MetricGraph` package
 and creating a metric graph:
 
-```{r}
+```{r, message=FALSE}
 library(MetricGraph)
 
 edge1 <- rbind(c(0,0),c(1,0))

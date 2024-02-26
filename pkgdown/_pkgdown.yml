@@ -35,6 +35,10 @@ navbar:
         href: articles/fem_models.html
       - text: Log-Gaussian Cox processes on metric graphs
         href: articles/pointprocess.html
+      - text: Comparison of different models using real data
+        href: articles/comparison.html        
+      - text: On isotropic covariances on metric graphs with non-Euclidean edges
+        href: articles/isotropic_noneuclidean.html                
     twitter:
       icon: fa-twitter
       href: https://twitter.com/jdavidbolin
@@ -74,6 +78,7 @@ reference:
     contents:
     - graph_lme
     - predict.graph_lme
+    - simulate.graph_lme
     - summary.graph_lme
     - posterior_crossvalidation
     - graph_starting_values

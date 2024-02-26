@@ -13,7 +13,9 @@ graph_starting_values(
   nu = FALSE,
   manual_data = NULL,
   like_format = FALSE,
-  log_scale = FALSE
+  log_scale = FALSE,
+  model_options = list(),
+  rec_tau = TRUE
 )
 }
 \arguments{
@@ -38,6 +40,10 @@ last element? This is the format for the likelihood constructor from the
 'rSPDE' package.}
 
 \item{log_scale}{Should the initial values be returned in log scale?}
+
+\item{model_options}{List object containing the model options.}
+
+\item{rec_tau}{Should a starting value for the reciprocal of tau be given?}
 }
 \value{
 A vector, \code{c(start_sigma_e, start_sigma, start_kappa)}

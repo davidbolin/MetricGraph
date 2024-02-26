@@ -29,6 +29,81 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
   }
 }
 
+#' The precision matrix for all edges in the alpha=1 case assumes
+#' that the edges are not connected
+#' @param theta - tau, kappa
+#' @param graph metric_graph object
+#' @param w ([0,1]) how two weight the top edge
+#' @param build (bool) if TRUE return the precision matrix otherwise return
+#' a list(i,j,x, nv)
+#' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
+#' boundary conditions and BC=1 ....
+#' @return Precision matrix or list
+#' @noRd
+Qalpha1_edges <- function(theta, graph, w, BC = 0, build = TRUE) {
+
+  kappa <- theta[2]
+  tau <- theta[1]
+  i_ <- j_ <- x_ <- rep(0, graph$nE*4)
+  count <- 0
+  for(i in 1:graph$nE){
+    l_e <- graph$edge_lengths[i]
+    c1 <- exp(-kappa*l_e)
+    c2 <- c1^2
+    one_m_c2 = 1-c2
+    c_1_upper = w + c2/one_m_c2
+    c_1_lower = (1-w) + c2/one_m_c2
+    c_2 = -c1/one_m_c2
+
+       #u upper
+      i_[count + 1] <- 2 * ( i - 1) + 1
+      j_[count + 1] <- 2 * ( i - 1) + 1
+      x_[count + 1] <- c_1_upper
+
+      #u lower
+      i_[count + 2] <- 2 * ( i - 1) + 2
+      j_[count + 2] <- 2 * ( i - 1) + 2
+      x_[count + 2] <- c_1_lower
+
+
+      i_[count + 3] <- 2 * ( i - 1) + 1
+      j_[count + 3] <- 2 * ( i - 1) + 2
+      x_[count + 3] <- c_2
+
+      i_[count + 4] <- 2 * ( i - 1) + 2
+      j_[count + 4] <- 2 * ( i - 1) + 1
+      x_[count + 4] <- c_2
+      count <- count + 4
+  }
+  if(BC> 0){
+    empty.in <- which(graph$get_degrees("indegree")==0)
+
+    for (v in empty.in) {
+      edge <- which(graph$E[,1]==v)[1] #only put stationary of one of indices
+      ind <- 2 * ( edge - 1) + 1
+      i_ <- c(i_, ind)
+      j_ <- c(j_, ind)
+      x_ <- c(x_, 1-w)
+      count <- count + 1
+    }
+  }
+  if(build){
+    Q <- Matrix::sparseMatrix(i = i_[1:count],
+                              j = j_[1:count],
+                              x = (2 * kappa * tau^2) * x_[1:count],
+                              dims = c(2*graph$nE, 2*graph$nE))
+
+
+    return(Q)
+  } else {
+    return(list(i = i_[1:count],
+                j = j_[1:count],
+                x = (2 * kappa * tau^2) * x_[1:count],
+                dims = c(2*graph$nE, 2*graph$nE)))
+  }
+}
+
+
 #' The precision matrix for all vertices in the alpha=1 case
 #' @param theta - tau, kappa
 #' @param graph metric_graph object
@@ -235,27 +310,33 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
   }
 
-  if(BC == 1){
+  if(BC> 0){
     #Vertices with of degree 1
     i.table <- table(c(graph$E))
     index <- as.integer(names(which(i.table == 1)))
     #for this vertices locate position
-    lower.edges <- which(graph$E[, 1] %in% index)
-    upper.edges <- which(graph$E[, 2] %in% index)
-    for (le in lower.edges) {
-      ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
 
-      i_ <- c(i_, ind)
-      j_ <- c(j_, ind)
-      x_ <- c(x_, 0.5*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
-      count <- count + 2
+
+    if(BC==1 || BC==2){
+      lower.edges <- which(graph$E[, 1] %in% index)
+      for (le in lower.edges) {
+        ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
+
+        i_ <- c(i_, ind)
+        j_ <- c(j_, ind)
+        x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+        count <- count + 2
+      }
     }
-    for (ue in upper.edges) {
-      ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
-      i_ <- c(i_, ind)
-      j_ <- c(j_, ind)
-      x_ <- c(x_, 0.5 * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
-      count <- count + 2
+    if(BC==1 || BC==3){
+      upper.edges <- which(graph$E[, 2] %in% index)
+      for (ue in upper.edges) {
+        ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
+        i_ <- c(i_, ind)
+        j_ <- c(j_, ind)
+        x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+        count <- count + 2
+      }
     }
   }
   if (build) {
@@ -288,7 +369,6 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 #' @noRd
 Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
 
-  #TODO: fix BC=1 problem
   kappa <- theta[2]
   tau <- theta[1]
   i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
@@ -330,8 +410,9 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
   }
 
   if(BC>0){
+    BC_all <- graph$get_degrees()
     if(BC==1 || BC==2){
-      BC_in <- graph$get_degrees("indegree")==1
+      BC_in <- graph$get_degrees("indegree")==1 & BC_all==1
       if(length(BC_in)>0){
         BC_in <- which(BC_in)
         i_ <- c(i_[1:count], BC_in)
@@ -341,7 +422,7 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
       }
     }
     if(BC==1 || BC==3){
-      BC_out <- graph$get_degrees("outdegree")==1
+      BC_out <- graph$get_degrees("outdegree")==1 & BC_all==1
       if(length(BC_out)>0){
         BC_out <- which(BC_out)
         i_ <- c(i_[1:count], BC_out)

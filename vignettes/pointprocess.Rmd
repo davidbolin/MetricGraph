@@ -36,8 +36,10 @@ references:
     given: David
   container-title: Bernoulli
   type: article
+  issue: 30
+  pages: 1611-1639
   issued:
-  year: 2023
+    year: 2024
 - id: graph_fem
   title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
   author:
@@ -49,8 +51,8 @@ references:
     given: Vivek
   - family: Simas
     given: Alexandre B.
-  container-title: arXiv:2302.03995
-  type: preprint
+  container-title: Mathematics of Computation
+  type: article
   issued:
   year: 2023
 - id: BSW2023PPST
@@ -91,7 +93,7 @@ library(INLA)
 
 As an example, we consider the default graph in the package:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE, message=FALSE}
 graph <- metric_graph$new(tolerance = list(vertex_vertex = 1e-1, vertex_edge = 1e-3, edge_edge = 1e-3),
                           remove_deg2 = TRUE)
 graph$plot()

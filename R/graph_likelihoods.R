@@ -70,6 +70,174 @@
 
 
 
+#' Log-likelihood calculation for alpha=1 model directional
+#' @param theta (sigma_e, reciprocal_tau, kappa)
+#' @param graph metric_graph object
+#' @param data_name name of the response variable
+#' @param repl replicates
+#' @param X_cov matrix of covariates
+#' @noRd
+likelihood_alpha1_directional <- function(theta, graph, data_name = NULL, manual_y = NULL,
+                                          X_cov = NULL, repl = NULL, parameterization="matern") {
+  #build Q
+  if(is.null(graph$C)){
+    graph$buildDirectionalConstraints(alpha = 1)
+  }
+
+
+
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+
+  if(is.null(repl)){
+    repl <- unique(repl_vec)
+  }
+
+  sigma_e <- exp(theta[1])
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  reciprocal_tau <- exp(theta[2])
+  Q.list <- Qalpha1_edges(c( 1/reciprocal_tau,kappa),
+                           graph,
+                           w = 0,
+                           BC=1, build=FALSE)
+  n_const <- length(graph$CoB$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CoB$T[-ind.const, ]
+  Q <- Matrix::sparseMatrix(i = Q.list$i,
+                            j = Q.list$j,
+                            x = Q.list$x,
+                            dims = Q.list$dims)
+  R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
+                        LDL = FALSE, perm = TRUE)
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
+
+  #build BSIGMAB
+  PtE <- graph$get_PtE()
+  obs.edges <- unique(PtE[, 1])
+
+  i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
+
+  if(is.null(repl)){
+    u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
+
+  loglik <- 0
+
+  det_R_count <- NULL
+  if(is.null(manual_y)){
+    y_resp <- graph$.__enclos_env__$private$data[[data_name]]
+  } else if(is.null(data_name)){
+    y_resp <- manual_y
+  } else{
+    stop("Either data_name or manual_y must be not NULL")
+  }
+  n.o <- sum(ind_repl)
+
+  for(repl_y in 1:length(u_repl)){
+    loglik <- loglik + det_R
+    count <- 0
+    Qpmu <- rep(0, 2*nrow(graph$E))
+    for (e in obs.edges) {
+      ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
+      obs.id <- PtE[,1] == e
+      y_i <- y_resp[ind_repl]
+      y_i <- y_i[obs.id]
+      idx_na <- is.na(y_i)
+      y_i <- y_i[!idx_na]
+
+      if(sum(!idx_na) == 0){
+        next
+      }
+
+      if(!is.null(X_cov)){
+        n_cov <- ncol(X_cov)
+        if(n_cov == 0){
+          X_cov_repl <- 0
+        } else{
+          X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
+          X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
+          X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
+          y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
+        }
+      }
+
+      l <- graph$edge_lengths[e]
+
+      PtE_temp <- PtE[obs.id, 2]
+      PtE_temp <- PtE_temp[!idx_na]
+
+      D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
+
+      S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
+
+      #covariance update see Art p.17
+      E.ind <- c(1:2)
+      Obs.ind <- -E.ind
+
+      Bt <- solve(S[E.ind, E.ind, drop = FALSE], S[E.ind, Obs.ind, drop = FALSE])
+      Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+        S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+      diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+      R <- base::chol(Sigma_i)
+      Sigma_iB <- solve(Sigma_i, t(Bt))
+      BtSinvB <- Bt %*% Sigma_iB
+
+      E <- graph$E[e, ]
+      if (E[1] == E[2]) {
+        Qpmu[2*(e-1)+1] <- Qpmu[2*(e-1)+1] + sum(t(Sigma_iB) %*% y_i)
+        i_[count + 1] <- 2*(e-1)+1
+        j_[count + 1] <- 2*(e-1)+1
+        x_[count + 1] <- sum(Bt %*% Sigma_iB)
+      } else {
+        Qpmu[2*(e-1) + c(1, 2)] <- Qpmu[2*(e-1) + c(1, 2)] + t(Sigma_iB) %*% y_i
+        i_[count + (1:4)] <- c(2*(e-1)+1, 2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+2)
+        j_[count + (1:4)] <- c(2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+1, 2*(e-1)+2)
+        x_[count + (1:4)] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
+                               BtSinvB[1, 2], BtSinvB[2, 2])
+        count <- count + 4
+      }
+
+      loglik <- loglik - 0.5 * t(y_i) %*% solve(Sigma_i, y_i)
+      loglik <- loglik - sum(log(diag(R)))
+
+    }
+
+    if(is.null(det_R_count)){
+      i_ <- c(Q.list$i, i_[1:count])
+      j_ <- c(Q.list$j, j_[1:count])
+      x_ <- c(Q.list$x, x_[1:count])
+
+
+      Qp <- Matrix::sparseMatrix(i = i_,
+                                 j = j_,
+                                 x = x_,
+                                 dims = Q.list$dims)
+      Qp <- Tc %*% Qp %*% t(Tc)
+      R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
+      det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
+    }
+
+    loglik <- loglik - det_R_count
+
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu,
+                                                          system = "P"),
+                                   system = "L")))
+
+    loglik <- loglik + 0.5  * t(v) %*% v - 0.5 * n.o * log(2*pi)
+  }
+
+  return(loglik[1])
+}
+
+
 #' Computes the log likelihood function fo theta for the graph object
 #' @param theta parameters (sigma_e, reciprocal_tau, kappa)
 #' @param graph  metric_graph object
@@ -151,18 +319,6 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         obs.id <- PtE[,1] == e
 
         y_i <- y_rep[obs.id]
-        # if(covariates){
-        #   n_cov <- ncol(graph$covariates[[1]])
-        # if(length(graph$covariates)==1){
-        #   X_cov <- graph$covariates[[1]]
-        # } else if(length(graph$covariates) == ncol(graph$y)){
-        #   X_cov <- graph$covariates[[repl_y]]
-        # } else{
-        #   stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-        # }
-        #           X_cov <- X_cov[obs.id,]
-        #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
-        # }
 
       if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
@@ -294,7 +450,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         loglik <- loglik - 0.5  * t(y_i)%*%solve(Sigma_i, y_i)
         loglik <- loglik - sum(log(diag(R)))
         # loglik <- loglik - 0.5 * c(determinant(R, logarithm = TRUE)$modulus)
-        
+
       }
       if(is.null(det_R_count)){
         i_ <- i_[1:count]
@@ -582,6 +738,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 }
 
 
+
 #' Function factory for likelihood evaluation not using sparsity
 #' @param graph A `metric_graph` object.
 #' @param model Type of model: "alpha1" gives SPDE with alpha=1, "GL1" gives
@@ -629,7 +786,10 @@ likelihood_graph_covariance <- function(graph,
                                         X_cov = NULL,
                                         repl,
                                         log_scale = TRUE,
-                                        maximize = FALSE) {
+                                        maximize = FALSE,
+                                        fix_vec = NULL,
+                                        fix_v_val = NULL,
+                                        check_euclidean = TRUE) {
 
   # check <- check_graph(graph)
 
@@ -638,36 +798,47 @@ likelihood_graph_covariance <- function(graph,
   }
 
   loglik <- function(theta){
+
       if(!is.null(X_cov)){
             n_cov <- ncol(X_cov)
       } else{
             n_cov <- 0
       }
+
+    if(!is.null(fix_v_val)){
+      # new_theta <- fix_v_val
+      fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+      fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+      new_theta <- fix_v_val_full
+      new_theta[!fix_vec_full] <- theta
+    } else{
+      new_theta <- theta
+    }
+
+
       if(model == "isoCov"){
         if(log_scale){
-          sigma_e <- exp(theta[1])
-          theta_cov <- exp(theta[2:(length(theta)-n_cov)])
+          sigma_e <- exp(new_theta[1])
+          theta_cov <- exp(new_theta[2:(length(new_theta)-n_cov)])
         } else{
-          sigma_e <- theta[1]
-          theta_cov <- theta[2:(length(theta)-n_cov)]
+          sigma_e <- new_theta[1]
+          theta_cov <- new_theta[2:(length(new_theta)-n_cov)]
         }
       } else{
         if(log_scale){
-          sigma_e <- exp(theta[1])
-          reciprocal_tau <- exp(theta[2])
-          kappa <- exp(theta[3])
+          sigma_e <- exp(new_theta[1])
+          reciprocal_tau <- exp(new_theta[2])
+          kappa <- exp(new_theta[3])
         } else{
-          sigma_e <- theta[1]
-          reciprocal_tau <- theta[2]
-          kappa <- theta[3]
+          sigma_e <- new_theta[1]
+          reciprocal_tau <- new_theta[2]
+          kappa <- new_theta[3]
         }
       }
 
-      if(!is.null(X_cov)){
-        theta_covariates <- theta[(length(theta)-n_cov+1):length(theta)]
+      if(n_cov >0){
+        theta_covariates <- new_theta[(length(new_theta)-n_cov+1):length(new_theta)]
       }
-
-
 
       if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
         graph$compute_laplacian()
@@ -713,10 +884,13 @@ likelihood_graph_covariance <- function(graph,
         }
 
         if(is.null(graph$res_dist)){
-          graph$compute_resdist(full = TRUE)
+          graph$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
         }
 
-        Sigma <- as.matrix(cov_function(graph$res_dist[[1]], theta_cov))
+        Sigma <- as.matrix(cov_function(as.matrix(graph$res_dist[[".complete"]]), theta_cov))
+        # nV <- nrow(graph$res_dist[[".complete"]]) - nrow(graph$get_PtE())
+
+        # Sigma <- Sigma[(nV+1):nrow(Sigma), (nV+1):nrow(Sigma)]
       })
 
       diag(Sigma) <- diag(Sigma) + sigma_e^2
@@ -747,7 +921,8 @@ likelihood_graph_covariance <- function(graph,
               } else{
                 X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], ,
                                     drop=FALSE]
-                v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+                # v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+                v <- v - X_cov_repl %*% theta_covariates
               }
           }
 
@@ -788,7 +963,8 @@ likelihood_graph_covariance <- function(graph,
 #' covariates.
 #' @noRd
 likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
-              X_cov = NULL, maximize = FALSE, parameterization) {
+              X_cov = NULL, maximize = FALSE, parameterization,
+              fix_vec = NULL, fix_v_val = NULL) {
 
   check <- check_graph(graph)
 
@@ -800,7 +976,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     stop("alpha must be positive!")
   }
 
-  graph$compute_laplacian(full = TRUE)
+  graph$compute_laplacian(full = FALSE)
 
   # if(covariates){
   #   if(is.null(graph$covariates)){
@@ -809,6 +985,26 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
   # }
 
   loglik <- function(theta){
+
+      if(!is.null(X_cov)){
+            n_cov <- ncol(X_cov)
+      } else{
+            n_cov <- 0
+      }
+
+    if(!is.null(fix_v_val)){
+      # new_theta <- fix_v_val
+      fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+      fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+      new_theta <- fix_v_val_full
+    }
+    if(!is.null(fix_vec)){
+      new_theta[!fix_vec_full] <- theta
+    } else{
+      new_theta <- theta
+    }
+
+
     repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
     if(is.null(repl)){
@@ -818,12 +1014,12 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     }
 
 
-    sigma_e <- exp(theta[1])
-    reciprocal_tau <- exp(theta[2])
+    sigma_e <- exp(new_theta[1])
+    reciprocal_tau <- exp(new_theta[2])
     if(parameterization == "matern"){
-      kappa = sqrt(8 * (alpha-0.5)) / exp(theta[3])
+      kappa = sqrt(8 * (alpha-0.5)) / exp(new_theta[3])
     } else{
-      kappa = exp(theta[3])
+      kappa = exp(new_theta[3])
     }
 
     y_resp <- y_graph
@@ -832,6 +1028,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     A <- graph$.__enclos_env__$private$A(group = ".all", drop_all_na = FALSE, drop_na = FALSE)
 
     u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
+
     for(repl_y in 1:length(u_repl)){
       K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]]
       Q <- K
@@ -865,7 +1062,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           } else{
             X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
             X_cov_repl <- X_cov_repl[!na.obs, , drop = FALSE]
-            v <- v - X_cov_repl %*% theta[4:(3+n_cov)]
+            v <- v - X_cov_repl %*% new_theta[4:(3+n_cov)]
           }
       }
 
@@ -874,6 +1071,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
       v <- v - A.repl%*%mu.p
       l <- l - 0.5*(t(mu.p)%*%Q%*%mu.p + t(v)%*%v/sigma_e^2) - 0.5 * n.o*log(2*pi)
     }
+
     if(maximize){
       return(as.double(l))
     } else{

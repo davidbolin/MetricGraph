@@ -1,5 +1,39 @@
 library(ggplot2)
 library(viridis)
+
+#'
+#' @param theta (sigma_e, reciprocal_tau, kappa)
+#'
+Sigma.vertices.dalpha1 <- function(theta, graph, parameterization="matern"){
+
+
+  sigma_e <- exp(theta[1])
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  reciprocal_tau <- exp(theta[2])
+  tau <- 1/reciprocal_tau
+  if(is.null(graph$C)){
+    graph$buildDirectionalConstraints(1)
+  }
+
+  Q_edges <- MetricGraph:::Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=1, build=TRUE)
+  n_const <- length(graph$CoB$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CoB$T[-ind.const, ]
+  Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
+  Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
+  PtE = graph$get_PtE()
+  index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-0.001) + 1
+  Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+  Sigma.o <- Sigma
+  diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
+  return(list(Sigma = Sigma,Sigma.o =  Sigma.overdetermined, Q= Q_edges))
+}
+
 #simple example
 edge2 <- rbind(c(2,1), c(1,0))
 edge3 <- rbind(c(2,-1), c(1,0))
@@ -9,7 +43,7 @@ edges = list(edge2, edge3, edge4, edge7)
 
 
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
+graph$build_mesh(h=0.1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
 v <- rep(0, dim(graph$mesh$V)[1]); v[4] = 1; graph$plot_function(v, plotly = TRUE)
 
@@ -19,7 +53,19 @@ hfull <- c(rep(1/(1+kappa), graph$mesh$n.bc),graph$mesh$h_e)
 hfull[graph$mesh$h0] = 0
 
 L <- kappa*graph$mesh$Cpet + graph$mesh$Gpet
-Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
+Sigma <- sqrt(8 * 0.5)*solve(L,diag(hfull)%*%t(solve(L)))
+ind_ <- (graph$get_degrees("indegree") == 1 & graph$get_degrees("outdegree") == 1) | graph$get_degrees()==1
+Sigma_V <- Sigma[1:graph$nV,1:graph$nV]
+Sigma_V <- Sigma_V[ind_, ind_]
+I <- 1:graph$nV
+data <- data.frame(edge_number      = graph$mesh$PtE[I[ind_],1],
+                   distance_on_edge = graph$mesh$PtE[I[ind_],2],
+                   y                = NA)
+graph$add_observations(data = data, normalized = TRUE)
+#graph$observation_to_vertex()
+Sigma.vert <- Sigma.vertices.dalpha1(c(-Inf, log(2)/2, 2*log(kappa)),graph,"")$Sigma
+print(Sigma_V - Sigma.vert)
+
 p <- graph$plot(direction = TRUE)
 graph$plot_function(diag(Sigma), p = p)
 
@@ -31,7 +77,7 @@ edge4 <- rbind(c(2,-1),c(3,0))
 edge5 <- rbind(c(2,-1),c(3,-2))
 edges = list(edge1, edge2, edge3, edge4, edge5)
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
+graph$build_mesh(h=0.1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh=TRUE, direction = TRUE)
 
 graph$compute_fem(petrov = TRUE)
@@ -40,7 +86,19 @@ hfull <- c(rep(1/(1+kappa), graph$mesh$n.bc),graph$mesh$h_e)
 hfull[graph$mesh$h0] = 0
 
 L <- kappa*graph$mesh$Cpet + graph$mesh$Gpet
-Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
+Sigma <- sqrt(8 * 0.5)*solve(L,diag(hfull)%*%t(solve(L)))
+ind_ <- (graph$get_degrees("indegree") == 1 & graph$get_degrees("outdegree") == 1) | graph$get_degrees()==1
+Sigma_V <- Sigma[1:graph$nV,1:graph$nV]
+Sigma_V <- Sigma_V[ind_, ind_]
+I <- 1:graph$nV
+data <- data.frame(edge_number      = graph$mesh$PtE[I[ind_],1],
+                   distance_on_edge = graph$mesh$PtE[I[ind_],2],
+                   y                = NA)
+graph$add_observations(data = data, normalized = TRUE)
+#graph$observation_to_vertex()
+Sigma.vert <- Sigma.vertices.dalpha1(c(-Inf, log(2)/2, 2*log(kappa)),graph,"")$Sigma
+print(Sigma_V - Sigma.vert)
+
 p <- graph$plot(direction = TRUE)
 p1 <- graph$plot_function(diag(Sigma), p = p)
 p1
@@ -60,7 +118,8 @@ edge6 <- rbind(c(2,-1), c(1,-2))
 edges = list(edge1, edge2, edge3, edge4, edge5)
 
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
+
+graph$build_mesh(h=0.1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
 
 graph$compute_fem(petrov=TRUE)
@@ -70,7 +129,18 @@ hfull <- c(rep(1/(1+kappa), graph$mesh$n.bc),graph$mesh$h_e)
 hfull[graph$mesh$h0] = 0
 
 L <- kappa*graph$mesh$Cpet + graph$mesh$Gpet
-Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
+Sigma <- sqrt(8*0.5)*solve(L,diag(hfull)%*%t(solve(L)))
+ind_ <- (graph$get_degrees("indegree") == 1 & graph$get_degrees("outdegree") == 1) | graph$get_degrees()==1
+Sigma_V <- Sigma[1:graph$nV,1:graph$nV]
+Sigma_V <- Sigma_V[ind_, ind_]
+I <- 1:graph$nV
+data <- data.frame(edge_number      = graph$mesh$PtE[I[ind_],1],
+                   distance_on_edge = graph$mesh$PtE[I[ind_],2],
+                   y                = NA)
+graph$add_observations(data = data, normalized = TRUE)
+#graph$observation_to_vertex()
+Sigma.vert <- Sigma.vertices.dalpha1(c(-Inf, log(2)/2, 2*log(kappa)),graph,"")$Sigma
+print(Sigma_V - Sigma.vert)
 p2 <- graph$plot_function(diag(Sigma), p = p)
 p2
 
@@ -91,7 +161,7 @@ edges = list(edge1, edge2, edge3, edge4, edge5, edge6, edge7)
 
 
 graph <- metric_graph$new(edges = edges)
-graph$build_mesh(h=1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
+graph$build_mesh(h=0.1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
 
 graph$compute_fem(petrov=TRUE)
@@ -101,7 +171,18 @@ hfull <- c(rep(1/(1+kappa), graph$mesh$n.bc),graph$mesh$h_e)
 hfull[graph$mesh$h0] = 0
 
 L <- kappa*graph$mesh$Cpet + graph$mesh$Gpet
-Sigma <- solve(L,diag(hfull)%*%t(solve(L)))
+Sigma <- sqrt(8*0.5)*solve(L,diag(hfull)%*%t(solve(L)))
+ind_ <- (graph$get_degrees("indegree") == 1 & graph$get_degrees("outdegree") == 1) | graph$get_degrees()==1
+Sigma_V <- Sigma[1:graph$nV,1:graph$nV]
+Sigma_V <- Sigma_V[ind_, ind_]
+I <- 1:graph$nV
+data <- data.frame(edge_number      = graph$mesh$PtE[I[ind_],1],
+                   distance_on_edge = graph$mesh$PtE[I[ind_],2],
+                   y                = NA)
+graph$add_observations(data = data, normalized = TRUE)
+#graph$observation_to_vertex()
+Sigma.vert <- Sigma.vertices.dalpha1(c(-Inf, log(2)/2, 2*log(kappa)),graph,"")$Sigma
+print(Sigma_V - Sigma.vert)
 p <- graph$plot(direction = TRUE)
 p3 <- graph$plot_function(diag(Sigma), p = p)
 p3
