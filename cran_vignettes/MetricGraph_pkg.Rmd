@@ -157,6 +157,10 @@ We have the following vignettes for the `MetricGraph` package:
 
 * [Log-Gaussian Cox processes on metric graphs](https://davidbolin.github.io/MetricGraph/articles/pointprocess.html)
 
+* [Comparison of different models using real data](https://davidbolin.github.io/MetricGraph/articles/comparison.html)
+
+* [On isotropic covariances on metric graphs with non-Euclidean edges](https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html)
+
 # Function Manuals
 
 Detailed references for functions including several examples can be found in the [Function References](https://davidbolin.github.io/MetricGraph/reference/index.html).
