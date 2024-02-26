@@ -1443,9 +1443,9 @@ Plots the metric graph.
   direction = FALSE,
   edge_weight = NULL,
   edge_width_weight = NULL,
-  scale_color_main = ggplot2::scale_color_viridis_c(option = "d"),
-  scale_color_weights = ggplot2::scale_color_viridis_c(option = "a"),
-  scale_color_degree = ggplot2::scale_color_viridis_d(option = "d"),
+  scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
+  scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
+  scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
   add_new_scale_weights = TRUE,
   ...
 )}\if{html}{\out{</div>}}
