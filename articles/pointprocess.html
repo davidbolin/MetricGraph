@@ -249,9 +249,9 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.35245 0.0894815   0.199605 0.345677   0.547981 0.332894</span></span>
-<span><span class="co">## range   2.25203 1.5667500   0.669200 1.799870   6.496490 1.248450</span></span></code></pre>
+<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.352455 0.0894926   0.199598  0.34568   0.548018 0.332895</span></span>
+<span><span class="co">## range   2.252660 1.5677300   0.669236  1.80013   6.499820 1.248550</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -269,8 +269,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3524496 0.3328942</span></span>
-<span><span class="co">## 2     range  1.5 2.2520334 1.2484458</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3524554 0.3328954</span></span>
+<span><span class="co">## 2     range  1.5 2.2526617 1.2485468</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -377,7 +377,7 @@ exposure terms</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
 <span><span class="co">## 1   std.dev  0.5 0.4551305 0.4523965</span></span>
-<span><span class="co">## 2     range  1.5 1.7205389 1.6916043</span></span></code></pre>
+<span><span class="co">## 2     range  1.5 1.7205388 1.6916042</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
