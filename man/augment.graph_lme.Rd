@@ -9,17 +9,19 @@
   x,
   newdata = NULL,
   which_repl = NULL,
+  sd_post_re = FALSE,
   se_fit = FALSE,
   conf_int = FALSE,
   pred_int = FALSE,
   level = 0.95,
-  n_samples = 100,
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
   coord_x = "coord_x",
   coord_y = "coord_y",
   data_coords = c("PtE", "spatial"),
   normalized = FALSE,
+  no_nugget = FALSE,
+  check_euclidean = FALSE,
   ...
 )
 }
@@ -32,15 +34,15 @@ number and the distance on edge for the locations to obtain the prediction. If \
 \item{which_repl}{Which replicates to obtain the prediction. If \code{NULL} predictions
 will be obtained for all replicates. Default is \code{NULL}.}
 
-\item{se_fit}{Logical indicating whether or not a .se.fit column should be added to the augmented output. If TRUE, it only returns a non-NA value if type of prediction is 'link'.}
+\item{sd_post_re}{Logical indicating whether or not a .sd_post_re column should be added to the augmented output containing the posterior standard deviations of the random effects.}
 
-\item{conf_int}{Logical indicating whether or not confidence intervals for the fitted variable should be built.}
+\item{se_fit}{Logical indicating whether or not a .se_fit column should be added to the augmented output containing the standard errors of the fitted values. If \code{TRUE}, the posterior standard deviations of the random effects will also be returned.}
 
-\item{pred_int}{Logical indicating whether or not prediction intervals for future observations should be built.}
+\item{conf_int}{Logical indicating whether or not confidence intervals for the posterior mean of the random effects should be built.}
+
+\item{pred_int}{Logical indicating whether or not prediction intervals for the fitted values should be built. If \code{TRUE}, the confidence intervals for the posterior random effects will also be built.}
 
 \item{level}{Level of confidence and prediction intervals if they are constructed.}
-
-\item{n_samples}{Number of samples when computing prediction intervals.}
 
 \item{edge_number}{Name of the variable that contains the edge number, the
 default is \code{edge_number}.}
@@ -65,20 +67,26 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 
 \item{normalized}{Are the distances on edges normalized?}
 
+\item{no_nugget}{Should the prediction be done without nugget?}
+
+\item{check_euclidean}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
+
 \item{...}{Additional arguments.}
 }
 \value{
 A \code{\link[tidyr:reexports]{tidyr::tibble()}} with columns:
 \itemize{
 \item \code{.fitted} Fitted or predicted value.
-\item \code{.fittedlwrconf} Lower bound of the confidence interval, if conf_int = TRUE
-\item \code{.fitteduprconf} Upper bound of the confidence interval, if conf_int = TRUE
-\item \code{.fittedlwrpred} Lower bound of the prediction interval, if pred_int = TRUE
-\item \code{.fitteduprpred} Upper bound of the prediction interval, if pred_int = TRUE
+\item \code{.relwrconf} Lower bound of the confidence interval of the random effects, if conf_int = TRUE
+\item \code{.reuprconf} Upper bound of the confidence interval of the random effects, if conf_int = TRUE
+\item \code{.fittedlwrpred} Lower bound of the prediction interval, if conf_int = TRUE
+\item \code{.fitteduprpred} Upper bound of the prediction interval, if conf_int = TRUE
 \item \code{.fixed} Prediction of the fixed effects.
 \item \code{.random} Prediction of the random effects.
 \item \code{.resid} The ordinary residuals, that is, the difference between observed and fitted values.
+\item \code{.std_resid} The standardized residuals, that is, the ordinary residuals divided by the standard error of the fitted values (by the prediction standard error), if se_fit = TRUE or pred_int = TRUE.
 \item \code{.se_fit} Standard errors of fitted values, if se_fit = TRUE.
+\item \code{.sd_post_re} Standard deviation of the posterior mean of the random effects, if se_fit = TRUE.
 }
 }
 \description{

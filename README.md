@@ -30,9 +30,9 @@ remotes::install_github("davidbolin/metricgraph", ref = "devel")
 ```
 
 # References #
-D. Bolin, A. Simas, J. Wallin (2023) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. Bernoulli. In press.
+D. Bolin, A. Simas, J. Wallin (2024) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. Bernoulli, 30, 1611-1639.
 
-D. Bolin, M. Kovács, V. Kumar, A. Simas (2023) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. ArXiv:2302.03995
+D. Bolin, M. Kovács, V. Kumar, A. Simas (2023) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. Mathematics of Computation. In press.
 
 D. Bolin, A. Simas, J. Wallin (2023) [Markov properties of Gaussian random fields on compact metric graphs][ref3]. ArXiv:2304.03190
 
@@ -76,22 +76,23 @@ For non `master` and `devel` branches that collaborators need access to (e.g. re
 
   * Prepare a new stable release with CRAN submission:
 ```
+# If git flow was not initialized, initialize it with
+git flow init
+# When initializing git flow, choose the tag prefix as v
+# Now, start the release 
 git flow release start major.(minor+1).0
-
 # In R, the following updates the version number in DESCRIPTION and NEWS:
 usethis::use_version("minor") 
 ## At this point, see the CRAN submission section below.
 git flow release finish 'VERSION'
 # In the stable merge, accept all incoming changes.
-# Push the changes and do adjustments if needed.
-# Create a tag with 
-
+# Do adjustments if needed and push the changes.
+# Check the existing tags with
+git tag
+# If a tag was not created, create one with 
 git tag vX.X.X -m "Tag for version X.X.X"
-
 # After pushing the merge, also push the tag:
-
 git push origin vX.X.X
-
 # After handling the stable branch, merge back with devel.
 # In R, the following updates the dev version number in DESCRIPTION and NEWS:
 usethis::use_dev_version() 
@@ -112,8 +113,8 @@ git flow hotfix finish hotfix_branch_name
 ## If not accepted then do more bugfixes and repeat
 ```
 
-[ref1]: https://arxiv.org/abs/2205.06163 "Gaussian Whittle-Matérn fields on metric graphs"
-[ref2]: https://arxiv.org/abs/2302.03995 "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
+[ref1]: http://doi.org/10.3150/23-BEJ1647 "Gaussian Whittle-Matérn fields on metric graphs"
+[ref2]: https://doi.org/10.1090/mcom/3929 "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
 [ref3]: https://arxiv.org/abs/2304.03190 "Markov properties of Gaussian random fields on compact metric graphs"
 [ref4]: https://arxiv.org/abs/2304.10372 "Statistical inference for Gaussian Whittle-Matérn fields on metric graphs"
 [ref5]: https://r-inla.org "INLA homepage"

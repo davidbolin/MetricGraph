@@ -1,7 +1,7 @@
 #' Samples a Whittle-Matérn field on a metric graph
-#' 
+#'
 #' Obtains samples of a Whittle-Matérn field on a metric graph.
-#' 
+#'
 #' @details Samples a Gaussian Whittle-Matérn field on a metric graph, either
 #' from the prior or conditionally on observations
 #' \deqn{y_i = u(t_i) + \sigma_e e_i}{y_i = u(t_i) + \sigma_e e_i}
@@ -126,7 +126,8 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
           }
           df_graph <- data.frame(y = y_tmp, edge_number = PtE[,1],
                       distance_on_edge = PtE[,2])
-          graph_tmp$add_observations(data = df_graph, normalized=TRUE)
+          graph_tmp$add_observations(data = df_graph, normalized=TRUE,
+                  suppress_warnings = TRUE, verbose=0)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
         } else if(type == "obs"){
@@ -139,7 +140,8 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
           y_tmp <- rep(NA, n_obs_mesh)
           df_graph <- data.frame(y = y_tmp, edge_number = graph$mesh$PtE[,1],
                       distance_on_edge = graph$mesh$PtE[,2])
-          graph_tmp$add_observations(data = df_graph, normalized=TRUE)
+          graph_tmp$add_observations(data = df_graph, normalized=TRUE,
+                  suppress_warnings = TRUE, verbose=0)
           graph_tmp$observation_to_vertex()
           Q_tmp <- Qalpha1(theta = c(tau, kappa), graph_tmp, BC=BC)
           n_obs_tmp <- dim(Q_tmp)[1]
@@ -245,9 +247,10 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
 #' @param l_e (1 x 1) line length
 #' @param  t (n x 1) distance on the line to be sampled from (not end points)
 #' @param  nt (1 x 1) number of equidistance points to sample from if t is  null
-#' @param  py  (n x 1) observation locations
-#' @param  y (n x 1) observations
+#' @param  py  (m x 1) observation locations
+#' @param  y (m x 1) observations
 #' @param  sample (bool) if true sample else return posterior mean
+#' @return x (n x 2)  1- position on the edge, 2- value of the simulations
 #' @noRd
 sample_alpha1_line <- function(kappa, tau, sigma_e,
                                u_e, l_e, t = NULL,

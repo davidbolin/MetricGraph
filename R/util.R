@@ -32,7 +32,7 @@ matern_neumann_free <- function(s, t, kappa, sigma, nu=3/2, L = 1, deriv = c(0,0
     }else if(nu==1/2){
 
     }else{
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
     D <- outer(s, t, "-")
     phi_t <- phi1(t, kappa, sigma, nu, L, deriv = deriv[2])
@@ -65,7 +65,7 @@ matern_neumann_free2 <- function(s, t, C, kappa, sigma=1, nu=3/2, L = 1, deriv =
     if(nu==3/2){
 
     }else{
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
     D <- outer(s, t, "-")
     phi_t <- phi(t, kappa, sigma, nu, L, deriv = deriv[2])
@@ -134,7 +134,7 @@ corrector_neumann_free <- function(kappa, sigma, nu=3/2, L = 1){
         B11 <- -matern.covariance(D,kappa=kappa,nu=3/2,sigma=sigma)
         B11[1,2] <- B11[2,1] <-  -B11[1,2]
     }else{
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
     return(solve(B11))
 }
@@ -156,7 +156,7 @@ corrector <- function(kappa, sigma, nu=3/2, L = 1){
     }else if(nu==3/2){
         B <- cbind( rbind(B$B11, B$B12) , rbind(t(B$B12), B$B22) )
     }else{
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
     A <- solve(B)
     return(A)
@@ -208,7 +208,7 @@ phi2 <- function(t, kappa, sigma, nu=3/2, L=1, deriv=0){
 
         return(r)
     }else{
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
 }
 
@@ -243,7 +243,7 @@ phi <- function(t, kappa, sigma, nu=3/2, L=1, deriv=0)
         }
     }else{
 
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
     return(r)
 }
@@ -276,7 +276,7 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
         B22 <- -matern_derivative(D,kappa=kappa,nu=3/2,sigma=sigma,2)
         B.element$B22 <- B22
     }else{
-        stop('nu not yet implimented')
+        stop('nu not yet implemented')
     }
     return(B.element)
 }
@@ -301,6 +301,8 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' last element? This is the format for the likelihood constructor from the
 #' 'rSPDE' package.
 #' @param log_scale Should the initial values be returned in log scale?
+#' @param rec_tau Should a starting value for the reciprocal of tau be given?
+#' @param model_options List object containing the model options.
 #'
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
@@ -313,7 +315,9 @@ graph_starting_values <- function(graph,
                                   nu = FALSE,
                                   manual_data = NULL,
                                   like_format = FALSE,
-                                  log_scale = FALSE){
+                                  log_scale = FALSE,
+                                  model_options = list(),
+                                  rec_tau = TRUE){
 
   check_graph(graph)
 
@@ -342,36 +346,137 @@ graph_starting_values <- function(graph,
     data_std <- NA
   }
 
-  if(is.null(graph$geo_dist)){
-        graph$compute_geodist(obs=FALSE)
+  if(is.null(model_options$start_range)){
+    if(is.null(graph$geo_dist)){
+          graph$compute_geodist(obs=FALSE)
+    }
+    finite_geodist <- is.finite(graph$geo_dist[[".vertices"]])
+    finite_geodist <- graph$geo_dist[[".vertices"]][finite_geodist]
+    prior.range.nominal <- max(finite_geodist) * 0.2
+  } else{
+    prior.range.nominal <- model_options$start_range
   }
-  finite_geodist <- is.finite(graph$geo_dist[[".vertices"]])
-  finite_geodist <- graph$geo_dist[[".vertices"]][finite_geodist]
-  prior.range.nominal <- max(finite_geodist) * 0.2
+
+  if(!is.null(model_options$fix_range)){
+    prior.range.nominal <- model_options$fix_range
+  }
+
+  start_sigma <- NULL
+
+  if(nu){
+      start_sigma <- 1
+      start_nu <- 1
+      if(!is.null(model_options$start_nu)){
+        start_nu <- model_options$start_nu
+      }
+
+  }
+
+  if(!is.null(model_options$start_sigma)){
+      start_sigma <- model_options$start_sigma
+  }       
+
+  if(!is.null(model_options[["fix_sigma"]])){
+    start_sigma <- model_options[["fix_sigma"]]
+  }
+
+  if(!is.null(model_options[["fix_sigma_e"]])){
+    start_sigma_e <- model_options[["fix_sigma_e"]]
+  }
+
+  if(!is.null(model_options$fix_nu)){
+    start_nu <- model_options$fix_nu
+  }
+
+
 
   if (model == "alpha1") {
     start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
     #variance is sigma^2/2 kappa
-    if(data){
-      start_sigma <- sqrt(2*start_kappa) * data_std
-    } else{
-      start_sigma <- 1
-    }
+    if(is.null(start_sigma)){
+      if(data){
+        start_sigma <- sqrt(2*start_kappa) * data_std
+      } else{
+        start_sigma <- 1
+      }
+    } 
+    nu_tmp <- 0.5
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))
+
+  if(!is.null(model_options$start_tau)){
+      start_tau <- model_options$start_tau
+  }       
+
+  if(!is.null(model_options$fix_tau)){
+    start_tau <- model_options$fix_tau
+  }
+
+  if(!is.null(model_options$start_kappa)){
+      start_kappa <- model_options$start_kappa
+  }       
+
+  if(!is.null(model_options$fix_kappa)){
+    start_kappa <- model_options$fix_kappa
+  }
+
   } else if (model == "alpha2") {
     start_kappa <- sqrt(8 * 1.5) / prior.range.nominal
-    if(data){
-      #variance is sigma^2/(4 * kappa^3)
-      start_sigma <- sqrt(4*start_kappa^3) * data_std
-    } else{
-      start_sigma <- 1
+    if(is.null(start_sigma)){
+      if(data){
+        #variance is sigma^2/(4 * kappa^3)
+        start_sigma <- sqrt(4*start_kappa^3) * data_std
+      } else{
+        start_sigma <- 1
+      }
     }
+    nu_tmp <- 1.5
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))   
+
+  if(!is.null(model_options$start_tau)){
+      start_tau <- model_options$start_tau
+  }       
+
+  if(!is.null(model_options$fix_tau)){
+    start_tau <- model_options$fix_tau
+  }
+
+  if(!is.null(model_options$start_kappa)){
+      start_kappa <- model_options$start_kappa
+  }       
+
+  if(!is.null(model_options$fix_kappa)){
+    start_kappa <- model_options$fix_kappa
+  }  
+
   } else if (model == "isoExp") {
     start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
-    if(data){
-      start_sigma <- data_std
-    } else{
-      start_sigma <- 1
+    if(is.null(start_sigma)){
+      if(data){
+        start_sigma <- data_std
+      } else{
+        start_sigma <- 1
+      }
     }
+    nu_tmp <- 0.5
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))    
+
+  if(!is.null(model_options$start_tau)){
+      start_tau <- model_options$start_tau
+  }       
+
+  if(!is.null(model_options$fix_tau)){
+    start_tau <- model_options$fix_tau
+  }
+
+  if(!is.null(model_options$start_kappa)){
+      start_kappa <- model_options$start_kappa
+  }       
+
+  if(!is.null(model_options$fix_kappa)){
+    start_kappa <- model_options$fix_kappa
+  }  
+
+
   } else if (model == "GL1") {
     if(is.null(graph$Laplacian)) {
       graph$compute_laplacian()
@@ -380,75 +485,173 @@ graph_starting_values <- function(graph,
     k <- sqrt(8 * 0.5) / prior.range.nominal
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
 
-    if(data){
-      Q <- start_kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
-      v <- rep(0,graph$nV)
-      v[1] <- 1
-      s2 <- solve(Q,v)[1]
-      start_sigma <- data_std / sqrt(s2)
-    } else{
-      start_sigma <- 1
+    if(is.null(start_sigma)){
+      if(data){
+        Q <- start_kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
+        v <- rep(0,graph$nV)
+        v[1] <- 1
+        s2 <- solve(Q,v)[1]
+        start_sigma <- data_std / sqrt(s2)
+      } else{
+        start_sigma <- 1
+      }
     }
+    nu_tmp <- 0.5
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))    
+
+  if(!is.null(model_options$start_tau)){
+      start_tau <- model_options$start_tau
+  }       
+
+  if(!is.null(model_options$fix_tau)){
+    start_tau <- model_options$fix_tau
+  }
+
+  if(!is.null(model_options$start_kappa)){
+      start_kappa <- model_options$start_kappa
+  }       
+
+  if(!is.null(model_options$fix_kappa)){
+    start_kappa <- model_options$fix_kappa
+  }  
+
 
   } else if (model == "GL2") {
     if(is.null(graph$Laplacian)) {
       graph$compute_laplacian()
     }
     h <- mean(graph$edge_lengths)
-    k <- sqrt(8 * 0.5) / prior.range.nominal
+    k <- sqrt(8 * 1.5) / prior.range.nominal
     start_kappa <- exp(-k*h)/(1-exp(-2*k*h)) + 2*exp(-k*h) - 2
-    if(data){
-      Q <- start_kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
-      v <- rep(0,graph$nV)
-      v[1] <- 1
-      s2 <- solve(Q %*% Q,v)[1]
-      start_sigma <- data_std / sqrt(s2)
-    } else{
-      start_sigma <- 1
+    if(is.null(start_sigma)){
+      if(data){
+        Q <- start_kappa^2*Matrix::Diagonal(graph$nV, 1) + graph$Laplacian[[1]]
+        v <- rep(0,graph$nV)
+        v[1] <- 1
+        s2 <- solve(Q %*% Q,v)[1]
+        start_sigma <- data_std / sqrt(s2)
+      } else{
+        start_sigma <- 1
+      }
     }
+    nu_tmp <- 1.5
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))    
+
+  if(!is.null(model_options$start_tau)){
+      start_tau <- model_options$start_tau
+  }       
+
+  if(!is.null(model_options$fix_tau)){
+    start_tau <- model_options$fix_tau
+  }
+
+  if(!is.null(model_options$start_kappa)){
+      start_kappa <- model_options$start_kappa
+  }       
+
+  if(!is.null(model_options$fix_kappa)){
+    start_kappa <- model_options$fix_kappa
+  }  
+
 
   } else {
     stop("wrong model choice")
-  }
+  } 
+
+  out_vec <- c()
+
+  # reciprocal tau 
+
   if(like_format){
-      if(!nu){
-        out_vec <- start_sigma
-      } else{
-        out_vec <- 1
+      if(is.null(model_options[["fix_sigma"]]) && is.null(model_options$fix_tau)){
+        if(rec_tau){
+          out_vec <- 1/start_tau
+        } else{
+          out_vec <- start_tau
+        }
       }
 
-      if(range_par){
-        out_vec <- c(out_vec, prior.range.nominal)
-      } else{
-        out_vec <- c(out_vec, start_kappa)
+      if(is.null(model_options$fix_range) && is.null(model_options$fix_kappa)){
+        if(range_par){
+          out_vec <- c(out_vec, prior.range.nominal)
+        } else{
+          out_vec <- c(out_vec, start_kappa)
+        }
       }
-      if(nu){
-        out_vec <- c(out_vec,1)
+
+      if(is.null(model_options$fix_nu)){
+        if(nu){
+          out_vec <- c(out_vec,start_nu)
+        }
       }
-      out_vec <- c(out_vec, 0.1 * data_std)
+      
+      if(is.null(model_options[["fix_sigma_e"]])){
+        if(is.null(model_options$start_sigma_e)){
+          out_vec <- c(out_vec, 0.1 * data_std)
+        } else{
+          out_vec <- c(out_vec, model_options$start_sigma_e)
+        }
+      }
   } else{
-      if(!nu){
-        out_vec <- c(0.1 * data_std,start_sigma)
-      } else{
-        out_vec <- c(0.1 * data_std,1)
+      if(is.null(model_options[["fix_sigma_e"]])){
+        if(is.null(model_options$start_sigma_e)){
+          out_vec <- c(out_vec, 0.1 * data_std)
+        } else{
+          out_vec <- c(out_vec, model_options$start_sigma_e)
+        }
       }
 
-      if(range_par){
-        out_vec <- c(out_vec, prior.range.nominal)
-      } else{
-        out_vec <- c(out_vec, start_kappa)
+      if(is.null(model_options[["fix_sigma"]]) && is.null(model_options$fix_tau)){
+        out_vec <- c(out_vec, 1/start_tau)
       }
 
-      if(nu){
-        out_vec <- c(out_vec,1)
+      if(is.null(model_options$fix_range) && is.null(model_options$fix_kappa)){
+        if(range_par){
+          out_vec <- c(out_vec, prior.range.nominal)
+        } else{
+          out_vec <- c(out_vec, start_kappa)
+        }
       }
+
+      if(is.null(model_options$fix_nu)){
+        if(nu){
+          out_vec <- c(out_vec,start_nu)
+        }
+      }
+  }
+
+  out_fixed <- list()
+
+  if(!is.null(model_options[["fix_sigma_e"]])){
+    out_fixed <- c(out_fixed, fixed_sigma_e = start_sigma_e)
+  }
+
+  if(!is.null(model_options[["fix_sigma"]]) || !is.null(model_options$fix_tau)){
+    if(rec_tau){
+      out_fixed <- c(out_fixed, fixed_tau = 1/start_tau)
+    } else{
+      out_fixed <- c(out_fixed, fixed_tau = start_tau)
+    }
+  }
+
+  if(!is.null(model_options$fix_range) || !is.null(model_options$fix_kappa)){
+    out_fixed <- c(out_fixed, fixed_kappa = start_kappa)
+  }
+
+  if(!is.null(model_options$fix_nu)){
+    out_fixed <- c(out_fixed, fixed_nu = start_nu)
   }
 
   if(log_scale){
-    out_vec <- log(out_vec)
+    if(length(out_vec)>1){
+      out_vec <- log(out_vec)
+    }
+    out_fixed <- lapply(out_fixed, log)  
   }
 
-  return(out_vec)
+  out_list <- list(start_values = out_vec, fixed_values = out_fixed)
+
+  return(out_list)
 }
 
 
@@ -474,7 +677,7 @@ exp_covariance <- function(h, theta){
 
 #' Processing data to be used in add_observations
 #' @noRd
-process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
+process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings){
   new_data[[".edge_number"]] <- PtE[,1]
   new_data[[".distance_on_edge"]] <- PtE[,2]
 
@@ -579,6 +782,12 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector){
     idx_new_entries <- idx_new_entries[["idx"]]
     idx_old_entries <- merge(old_df, data_coords, all = FALSE, sort = FALSE)
     idx_old_entries <- idx_old_entries[["idx"]]
+
+    if(!suppress_warnings){
+      if(length(intersect(idx_old_entries, idx_new_entries)) > 0 && length(intersect(old_colnames,new_colnames))>2){
+        warning("Some of the data were not added because data for the same column already exists at the same location for the same group.")
+      }
+    }
     list_result <- vector(mode = "list", length(full_colnames))
     names(list_result) <- full_colnames
     list_result[1:length(list_result)] <- full_colnames
@@ -875,7 +1084,8 @@ make_Aprd <- function(graph, edge_number, distance_on_edge){
 
 #' @noRd
 
-change_parameterization_graphlme <- function(likelihood, nu, par, hessian
+change_parameterization_graphlme <- function(#likelihood, 
+nu, par, hessian, fix_vec
 ){
   tau <- par[1]
   kappa <- par[2]
@@ -890,8 +1100,11 @@ change_parameterization_graphlme <- function(likelihood, nu, par, hessian
                     nu * range^(nu-1) * C2/(sigma * C1^nu),
                     -C1/range^2), nrow = 2, ncol=2)
 
-
-  new_observed_fisher <- t(grad_par) %*% hessian %*% (grad_par)
+  if(all(!fix_vec)){
+    new_observed_fisher <- t(grad_par[!fix_vec,!fix_vec]) %*% hessian[!fix_vec,!fix_vec] %*% (grad_par[!fix_vec,!fix_vec])
+  } else{
+    new_observed_fisher <- grad_par[!fix_vec,!fix_vec] * hessian[!fix_vec,!fix_vec] * (grad_par[!fix_vec,!fix_vec])
+  }
 
   # No need to include the additional term as the gradient is approximately zero.
   # from some numerical experiments, the approximation without the additional term
@@ -903,7 +1116,10 @@ change_parameterization_graphlme <- function(likelihood, nu, par, hessian
 
   std_err <- sqrt(diag(inv_fisher))
 
-  return(list(coeff = c(sigma, range), std_random = std_err))
+  std_err_tmp <- c(NA,NA)
+  std_err_tmp[!fix_vec] <- std_err
+
+  return(list(coeff = c(sigma, range), std_random = std_err_tmp))
 }
 
 #' @noRd 
@@ -1081,7 +1297,7 @@ check_lines_input <- function(lines){
 #' @noRd 
 #' 
 
-compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data){
+compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data, transform){
   if(!is.null(edge)){
       class(edge) <- setdiff(class(edge), "metric_graph_edge")
   }
@@ -1091,6 +1307,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
     } else if(which_longlat == "sf"){
       if(!is.null(edge)){
         linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
+        # linestring <- sf::st_transform(linestring,  crs = 4326)        
         length <- sf::st_length(linestring)
         units(length) <- unit
         units(length) <- NULL
@@ -1099,8 +1316,20 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
         return(0)
       }
     } else{
-      Line <- sp::Line(edge)
-      length <- sp::LineLength(Line, longlat = longlat)
+      # Line <- sp::Line(edge)
+      # Line <- sp::Lines(Line, ID = 1)
+      # Line <- sp::SpatialLines(list(Line), proj4string =  proj4string)
+      # Line <- sp::spTransform(Line, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
+      # Line <- sp::Line(sp::coordinates(Line))
+      if(!transform){
+        length <- sp::LineLength(edge, longlat = longlat)
+      } else{
+        Line <- sf::st_as_sf(as.data.frame(edge), coords = 1:2, crs = crs)
+        Line <- sf::st_transform(Line, crs = 4326)
+        Line <- sf::st_coordinates(Line) 
+        length <- sp::LineLength(Line, longlat = longlat)
+      }
+
       fact <- process_factor_unit(vertex_unit, unit)
       return(length * fact)
     }
@@ -1110,7 +1339,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 #' @noRd 
 #' 
 
-compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit){
+compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit, transform){
   if(!is.null(points)){
     class(points) <- setdiff(class(points), "metric_graph_edge")
   }
@@ -1130,20 +1359,32 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
       }
     } else if (which_longlat == "sf") {
         sf_points <- sf::st_as_sf(as.data.frame(lines), coords = 1:2, crs = crs)
+        if(transform){
+          sf_points <- sf::st_transform(sf_points,  crs = 4326)
+        }
         if(is.null(points)){
           dists <- sf::st_distance(sf_points, which = "Great Circle")
         } else{
           sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
+          if(transform){
+            sf_p_points <- sf::st_transform(sf_p_points,  crs = 4326)
+          }
           dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle", by_element = TRUE)
         }
         units(dists) <- length_unit
         units(dists) <- NULL
     } else{
         sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string) 
+        if(transform){
+          sp_points <- sp::spTransform(sp_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
+        }
         if(is.null(points)){
           dists <- sp::spDists(sp_points, longlat = TRUE) * fact
         } else{
           sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
+          if(transform){
+            sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))          
+          }
           dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) * fact
         }
     }
@@ -1406,6 +1647,11 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
     } else{
       cat("Weight:", attr(x[[i]], "weight"),"\n\n")
     }
+    if(!is.null(attr(x[[i]], "kirchhoff_weight"))){
+      kw <- attr(x[[i]], "kirchhoff_weight")
+      w_tmp <- attr(x[[i]], "weight")
+      cat("Kirchhoff weight:", w_tmp[[kw]],"\n\n")
+    }
     
   }
   if(n < length(x)){
@@ -1487,6 +1733,11 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
     } else{
       cat("Weight:", attr(x, "weight"),"\n")
     }
+    if(!is.null(attr(x, "kirchhoff_weight"))){
+      kw <- attr(x, "kirchhoff_weight")
+      w_tmp <- attr(x, "weight")
+      cat("Kirchhoff weight:", w_tmp[[kw]],"\n\n")
+    }    
 
 }
 
@@ -1543,4 +1794,138 @@ na.const <- function(x){
     x[(max_nonna+1):length(x)] <- x[max_nonna]
   }
   return(x)
+}
+
+
+#' @noRd 
+
+# Function factory to fix some variables, and return a new function to be passed to the likelihood
+# func -> original function
+# num_var -> dimension of the original parameter vector
+# fix_vec -> boolean vector of size num_var with the variables to be fixed
+# fix_val -> values to be fixed
+# n_cov -> number of covariates
+
+function_factory_fix_var <- function(func, fix_vec, num_var, fix_val, n_cov) {
+  ret_fun <- function(theta){
+    new_theta <- numeric(num_var)
+    fix_vec_latent <- c(fix_vec, rep(FALSE,n_cov))
+    new_theta[fix_vec_latent] <- fix_val
+    new_theta[!fix_vec_latent] <- theta
+    return(func(new_theta))
+  }
+  return(ret_fun)
+}
+
+#' @noRd 
+
+# Get the starting values to be passed to optim when fixing variables
+
+# start_values -> original starting values
+# fix_vec -> boolean vec
+
+start_values_fix <- function(start_values, fix_vec, n_cov){
+  fix_vec_latent <- c(fix_vec, rep(FALSE,n_cov))
+  return(start_values[!fix_vec_latent])
+}
+
+#' @noRd 
+
+get_fixed_values <- function(start_values, fix_vec, n_cov){
+  fix_vec_latent <- c(fix_vec, rep(FALSE,n_cov))
+    return(start_values[!fix_vec_latent])
+}
+
+
+#' @noRd 
+
+create_fix_vec_val <- function(fixed_values){
+    if(is.null(fixed_values$fixed_sigma_e)){
+      fix_vec <- FALSE
+      fix_v_val <- NA
+    } else{
+      fix_vec <- TRUE
+      fix_v_val <- fixed_values$fixed_sigma_e
+    }
+
+    if(is.null(fixed_values$fixed_tau)){
+      fix_vec <- c(fix_vec, FALSE)
+      fix_v_val <- c(fix_v_val, NA)
+    } else{
+      fix_vec <- c(fix_vec,TRUE)
+      fix_v_val <- c(fix_v_val, fixed_values$fixed_tau)
+    }
+
+    if(is.null(fixed_values$fixed_kappa)){
+      fix_vec <- c(fix_vec, FALSE)
+      fix_v_val <- c(fix_v_val, NA)
+    } else{
+      fix_vec <- c(fix_vec,TRUE)
+      fix_v_val <- c(fix_v_val, fixed_values$fixed_kappa)
+    }
+
+  return(list(fix_vec = fix_vec, fix_v_val = fix_v_val))
+}
+
+
+#' @noRd 
+
+check_model_options <- function(model_options){
+  if(length(model_options[["fix_tau"]]) > 1){
+    stop("'fix_tau' must have length 1!")
+  }
+  if(length(model_options[["fix_sigma"]]) > 1){
+    stop("'fix_sigma' must have length 1!")
+  }
+  if(length(model_options[["fix_sigma_e"]]) > 1){
+    stop("'fix_sigma_e' must have length 1!")
+  }
+  if(length(model_options[["fix_kappa"]]) > 1){
+    stop("'fix_kappa' must have length 1!")
+  }  
+  if(length(model_options[["fix_range"]]) > 1){
+    stop("'fix_range' must have length 1!")
+  }
+  if(length(model_options[["fix_nu"]]) > 1){
+    stop("'fix_nu' must have length 1!")
+  }
+  if(!is.null(model_options[["fix_sigma"]])){
+    if(model_options[["fix_sigma"]] <= 0){
+      stop("'fix_sigma' must be positive!")
+    }
+  }
+  if(!is.null(model_options[["fix_tau"]])){
+    if(model_options[["fix_tau"]] <= 0){
+      stop("'fix_tau' must be positive!")
+    }
+  }  
+  if(!is.null(model_options[["fix_kappa"]])){
+    if(model_options[["fix_kappa"]] <= 0){
+      stop("'fix_kappa' must be positive!")
+    }
+  }
+  if(!is.null(model_options[["fix_range"]])){
+    if(model_options[["fix_range"]] <= 0){
+      stop("'fix_range' must be positive!")
+    }
+  }
+  if(!is.null(model_options[["fix_nu"]])){
+    if(model_options[["fix_nu"]] <= 0){
+      stop("'fix_nu' must be positive!")
+    }
+  }  
+  if(!is.null(model_options[["fix_sigma_e"]])){
+    if(model_options[["fix_sigma_e"]] < 0){
+      stop("'fix_sigma_e' must be non-negative!")
+    }
+  }
+}
+
+#' @noRd 
+
+get_only_first <- function(vec){
+  idx <- which(vec)
+  vec <- rep(FALSE, length(vec))
+  vec[idx[1]] <- TRUE
+  return(vec)
 }

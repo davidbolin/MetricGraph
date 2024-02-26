@@ -26,14 +26,14 @@ test_that("Check likelihoods for alternative models", {
   df_temp <- data.frame(y = y, edge_number = PtE[,1], distance_on_edge = PtE[,2])
 
   graph$add_observations(data=df_temp, normalized = TRUE)
-  graph$compute_resdist()
-  lik.exp.v1 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, repl = NULL, X_cov = NULL, y_graph = graph$get_data()$y)
+  graph$compute_resdist(full = TRUE)
+  lik.exp.v1 <- MetricGraph:::likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, repl = NULL, X_cov = NULL, y_graph = graph$get_data()$y)
   lik.exp.v1 <- lik.exp.v1(theta)
 
 
   graph$observation_to_vertex()
-  graph$compute_geodist()
-  graph$compute_resdist()
+  graph$compute_geodist(full=TRUE)
+  graph$compute_resdist(full=TRUE)
   lik.exp.v2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, y_graph = graph$get_data()$y, X_cov = NULL, repl = NULL)
   lik.exp.v2 <- lik.exp.v2(theta)
 
