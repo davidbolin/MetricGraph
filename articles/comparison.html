@@ -101,7 +101,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-09. Last
-modified: 2024-02-26.</h4>
+modified: 2024-02-29.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/comparison.rmd" class="external-link"><code>vignettes/comparison.rmd</code></a></small>
       <div class="d-none name"><code>comparison.rmd</code></div>
@@ -188,7 +188,7 @@ Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 29</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  14.41123 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  14.45475 secs</span></span></code></pre></div>
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -228,7 +228,7 @@ Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 16</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  14.59076 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  14.50481 secs</span></span></code></pre></div>
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
@@ -272,7 +272,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 32</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  16.05731 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  16.29239 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -307,7 +307,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 18</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  16.35831 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  16.48072 secs</span></span></code></pre></div>
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -356,7 +356,7 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 205</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.36734 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.37258 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -391,7 +391,7 @@ Laplacian for <code>alpha=1</code> and <code>alpha=2</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 62</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  3.60747 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  3.59614 secs</span></span></code></pre></div>
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
@@ -435,7 +435,7 @@ function:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 40</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  9.53589 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  9.62477 secs</span></span></code></pre></div>
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -864,7 +864,7 @@ Gaussian models using finite element approximations.</p>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-Anderes2020" class="csl-entry">
 Anderes, Ethan, Jesper Møller, and Jakob G Rasmussen. 2020.
 <span>“Isotropic Covariance Functions on Graphs and Their Edges.”</span>

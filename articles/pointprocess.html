@@ -101,7 +101,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-02-26.</h4>
+modified: 2024-02-29.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -250,8 +250,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.352437 0.0894579    0.19962 0.345672   0.547903 0.333001</span></span>
-<span><span class="co">## range   2.250630 1.5645100    0.66914 1.799280   6.488740 1.248230</span></span></code></pre>
+<span><span class="co">## std.dev 0.352426 0.0894375   0.199631 0.345667   0.547835 0.332998</span></span>
+<span><span class="co">## range   2.249320 1.5624200   0.669096 1.798740   6.481530 1.249020</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -268,9 +268,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3524372 0.333001</span></span>
-<span><span class="co">## 2     range  1.5 2.2506272 1.248234</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.3524257 0.3329978</span></span>
+<span><span class="co">## 2     range  1.5 2.2493245 1.2490189</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -358,9 +358,9 @@ exposure terms</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.45513 0.0163626   0.424939 0.454398   0.489151 0.452396</span></span>
-<span><span class="co">## range   1.72054 0.1658380   1.421220 1.711160   2.072020 1.691600</span></span></code></pre>
+<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.455131 0.0163627   0.424939 0.454398   0.489151 0.452396</span></span>
+<span><span class="co">## range   1.720540 0.1658380   1.421220 1.711160   2.072020 1.691600</span></span></code></pre>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -376,12 +376,12 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4551304 0.4523964</span></span>
-<span><span class="co">## 2     range  1.5 1.7205391 1.6916046</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4551306 0.4523965</span></span>
+<span><span class="co">## 2     range  1.5 1.7205388 1.6916043</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-BSW2023PPST" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023. <span>“Log-Cox
 Gaussian Processes and Space-Time Models on Compact Metric
