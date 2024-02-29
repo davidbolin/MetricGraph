@@ -1,8 +1,8 @@
 # MetricGraph <a href="https://davidbolin.github.io/MetricGraph/"><img src="/man/figures/logo.png" align="right" height="138" /></a>
 
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version-last-release/MetricGraph)](https://cran.r-project.org/package=MetricGraph)
+[![CRAN_Downloads](https://cranlogs.r-pkg.org/badges/grand-total/MetricGraph)](https://cranlogs.r-pkg.org/badges/grand-total/MetricGraph)
 [![R-CMD-check](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml)
-[![R-CMD-check-windows](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml)
 
 ## Overview 
 
