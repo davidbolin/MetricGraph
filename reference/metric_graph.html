@@ -531,7 +531,12 @@ The result is displayed when the graph is printed.</p>
 <p>Computes shortest path distances between the vertices in the
 graph</p><div class="section">
 <h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_geodist</span><span class="op">(</span>full <span class="op">=</span> <span class="cn">FALSE</span>, obs <span class="op">=</span> <span class="cn">TRUE</span>, group <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_geodist</span><span class="op">(</span></span>
+<span>  full <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  obs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -552,6 +557,10 @@ locations?</p></dd>
 for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 
 
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
+
+
 </dl><p></p></div>
 </div>
 <div class="section">
@@ -568,7 +577,8 @@ graph.</p><div class="section">
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_geodist_PtE</span><span class="op">(</span></span>
 <span>  <span class="va">PtE</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  include_vertices <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  include_vertices <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -585,6 +595,10 @@ graph.</p><div class="section">
 <dt><code>include_vertices</code></dt>
 <dd><p>Should the original vertices be included in the
 distance matrix?</p></dd>
+
+
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 </dl><p></p></div>
@@ -618,7 +632,8 @@ locations.</p><div class="section">
 <span>  obs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  check_euclidean <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  include_vertices <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  include_vertices <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -648,6 +663,10 @@ for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
 <dd><p>Should the vertices of the graph be also included in the resulting matrix when using <code>FULL=TRUE</code>?</p></dd>
 
 
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
+
+
 </dl><p></p></div>
 </div>
 <div class="section">
@@ -665,7 +684,8 @@ locations.</p><div class="section">
 <span>  <span class="va">PtE</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  include_vertices <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  check_euclidean <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  check_euclidean <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -686,6 +706,10 @@ Laplacian matrix?</p></dd>
 
 <dt><code>check_euclidean</code></dt>
 <dd><p>Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.</p></dd>
+
+
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 </dl><p></p></div>
@@ -747,7 +771,12 @@ object.</p>
 <h3 id="method-compute-laplacian-">Method <code>compute_laplacian()</code><a class="anchor" aria-label="anchor" href="#method-compute-laplacian-"></a></h3>
 <p>Computes the weigthed graph Laplacian for the graph.</p><div class="section">
 <h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_laplacian</span><span class="op">(</span>full <span class="op">=</span> <span class="cn">FALSE</span>, obs <span class="op">=</span> <span class="cn">TRUE</span>, group <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">compute_laplacian</span><span class="op">(</span></span>
+<span>  full <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  obs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -766,6 +795,10 @@ locations? It will only compute for locations in which there is at least one obs
 <dt><code>group</code></dt>
 <dd><p>Vector or list containing which groups to compute the
 Laplacian for. If <code>NULL</code>, it will be computed for all groups.</p></dd>
+
+
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of the computation of the Laplacian. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 </dl><p></p></div>
@@ -2180,7 +2213,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.78 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.90 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
