@@ -1460,7 +1460,7 @@ plotted.}
 \item{\code{newdata}}{A dataset of class \code{metric_graph_data}, obtained by any \code{get_data()}, \code{mutate()}, \code{filter()}, \code{summarise()}, \code{drop_na()} methods of metric graphs, see the vignette on data manipulation for more details.}
 
 \item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
-number, it will be the index of the group as stored internally. If \code{group}
+number and \code{newdata} is \code{NULL}, it will be the index of the group as stored internally and if \code{newdata} is provided, it will be the index of the group stored in \code{newdata}. If \code{group}
 is a character, then the group will be chosen by its name.}
 
 \item{\code{plotly}}{Use plot_ly for 3D plot (default \code{FALSE}). This option
@@ -1563,7 +1563,7 @@ Plots continuous function on the graph.
   edge_color = "black",
   line_width = NULL,
   line_color = "rgb(0,0,200)",
-  scale_color = ggplot2::scale_color_viridis_c(option = "d"),
+  scale_color = ggplot2::scale_color_viridis_c(option = "D"),
   support_width = 0.5,
   support_color = "gray",
   p = NULL,
