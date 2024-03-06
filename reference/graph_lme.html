@@ -132,7 +132,7 @@ one can choose between a finite element approximation of the precision matrix
 by adding <code>fem = TRUE</code> to the list, or to use the exact precision matrix
 (by setting <code>fem = FALSE</code>). If <code>fem</code> is <code>FALSE</code>, there is also the parameter
 <code>alpha</code>, to determine the order of the SPDE, which is either 1 or 2. If <code>fem</code>
-is <code>TRUE</code> and <code>alpha</code> is not specified, then the default value of <code>alpha=1</code>
+is <code>FALSE</code> and <code>alpha</code> is not specified, then the default value of <code>alpha=1</code>
 will be used. If <code>fem</code> is <code>TRUE</code> and one does not specify <code>alpha</code>, it will be
 estimated from the data. However, if one wants to have <code>alpha</code> fixed to some
 value, the user can specify either <code>alpha</code> or <code>nu</code> in the list. See the
