@@ -396,7 +396,12 @@ The result is displayed when the graph is printed.
 Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(
+  full = FALSE,
+  obs = TRUE,
+  group = NULL,
+  verbose = 0
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -411,6 +416,8 @@ locations?}
 
 \item{\code{group}}{Vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
+
+\item{\code{verbose}}{Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
@@ -429,7 +436,8 @@ graph.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist_PtE(
   PtE,
   normalized = TRUE,
-  include_vertices = TRUE
+  include_vertices = TRUE,
+  verbose = 0
 )}\if{html}{\out{</div>}}
 }
 
@@ -442,6 +450,8 @@ graph.
 
 \item{\code{include_vertices}}{Should the original vertices be included in the
 distance matrix?}
+
+\item{\code{verbose}}{Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
@@ -476,7 +486,8 @@ locations.
   obs = TRUE,
   group = NULL,
   check_euclidean = FALSE,
-  include_vertices = FALSE
+  include_vertices = FALSE,
+  verbose = 0
 )}\if{html}{\out{</div>}}
 }
 
@@ -496,6 +507,8 @@ for. If \code{NULL}, it will be computed for all groups.}
 \item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 
 \item{\code{include_vertices}}{Should the vertices of the graph be also included in the resulting matrix when using \code{FULL=TRUE}?}
+
+\item{\code{verbose}}{Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
@@ -515,7 +528,8 @@ locations.
   PtE,
   normalized = TRUE,
   include_vertices = FALSE,
-  check_euclidean = FALSE
+  check_euclidean = FALSE,
+  verbose = 0
 )}\if{html}{\out{</div>}}
 }
 
@@ -530,6 +544,8 @@ locations.
 Laplacian matrix?}
 
 \item{\code{check_euclidean}}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
+
+\item{\code{verbose}}{Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
@@ -593,7 +609,12 @@ object.
 \subsection{Method \code{compute_laplacian()}}{
 Computes the weigthed graph Laplacian for the graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(full = FALSE, obs = TRUE, group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_laplacian(
+  full = FALSE,
+  obs = TRUE,
+  group = NULL,
+  verbose = 0
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -608,6 +629,8 @@ locations? It will only compute for locations in which there is at least one obs
 
 \item{\code{group}}{Vector or list containing which groups to compute the
 Laplacian for. If \code{NULL}, it will be computed for all groups.}
+
+\item{\code{verbose}}{Print progress of the computation of the Laplacian. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }

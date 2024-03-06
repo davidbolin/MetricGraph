@@ -1095,9 +1095,10 @@ metric_graph <-  R6Class("metric_graph",
   #' locations?
   #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
+  #' @param verbose Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects. The computed geodesic
   #' distances are stored in the `geo_dist` element of the `metric_graph` object.
-  compute_geodist = function(full = FALSE, obs = TRUE, group = NULL) {
+  compute_geodist = function(full = FALSE, obs = TRUE, group = NULL, verbose = 0) {
     if(is.null(self$geo_dist)){
       self$geo_dist <- list()
     }
@@ -1106,13 +1107,29 @@ metric_graph <-  R6Class("metric_graph",
       obs <- FALSE
     }
     if(!obs){
-      g <- graph(edges = c(t(self$E)), directed = FALSE)
-      E(g)$weight <- self$edge_lengths
-      self$geo_dist[[".vertices"]] <- distances(g)
+      if(verbose == 2){
+        message("Creating auxiliary graph...")
+      }
+      t <- system.time({
+        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        E(g)$weight <- self$edge_lengths
+      })
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
+      if(verbose > 0){
+        message("Computing geodesic distances...")
+      }
+      t <- system.time(
+        self$geo_dist[[".vertices"]] <- distances(g)
+      )
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }      
     } else if(full){
       PtE_full <- self$get_PtE()
       self$geo_dist[[".complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
-                                                              normalized = TRUE)
+                                                              normalized = TRUE, verbose = verbose)
     } else{
       if(is.null(group)){
           group <- unique(private$data[[".group"]])
@@ -1123,7 +1140,7 @@ metric_graph <-  R6Class("metric_graph",
           PtE_group <- cbind(data_grp[[".edge_number"]][idx_notna],
                      data_grp[[".distance_on_edge"]][idx_notna])
           self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group,
-                                                              normalized = TRUE)
+                                                              normalized = TRUE, verbose = verbose)
       }
     }
   },
@@ -1133,48 +1150,83 @@ metric_graph <-  R6Class("metric_graph",
   #' @param normalized are the locations in PtE in normalized distance?
   #' @param include_vertices Should the original vertices be included in the
   #' distance matrix?
+  #' @param verbose Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return A matrix containing the geodesic distances.
   compute_geodist_PtE = function(PtE,
                                  normalized = TRUE,
-                                 include_vertices = TRUE){
-      graph.temp <- self$clone()
-      graph.temp$clear_observations()
-      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                                 include_vertices = TRUE, verbose = 0){
+      if(verbose == 2){
+        message("Processing the graph locations...")
+      }
+      t <- system.time({      
+        graph.temp <- self$clone()
+        graph.temp$clear_observations()
+        df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                             edge_number = PtE[,1],
                             distance_on_edge = PtE[,2])
-      if(sum(duplicated(df_temp))>0){
-        warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
-        df_temp <- unique(df_temp)
-      }
+        if(sum(duplicated(df_temp))>0){
+          warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
+          df_temp <- unique(df_temp)
+        }
 
-      graph.temp$build_mesh(h = 10000)
+        graph.temp$build_mesh(h = 10000)
 
-      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+        df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
-      df_temp$included <- TRUE
-      temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+        df_temp$included <- TRUE
+        temp_merge <- merge(df_temp, df_temp2, all = TRUE)
 
-      df_temp$included <- NULL
+        df_temp$included <- NULL
 
-      df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+        df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
 
-      nV_new <- sum(is.na(temp_merge["included"]))
+        nV_new <- sum(is.na(temp_merge["included"]))
 
-      df_temp2$included <- NULL
+        df_temp2$included <- NULL
 
-      df_temp <- rbind(df_temp2, df_temp)
+        df_temp <- rbind(df_temp2, df_temp)
 
-      df_temp[["__dummy"]] <- 1:nrow(df_temp)
+        df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
-      graph.temp$add_observations(data = df_temp,
+        graph.temp$add_observations(data = df_temp,
                                      normalized = normalized,
                                      verbose=0,
                   suppress_warnings = TRUE)
-      graph.temp$observation_to_vertex(mesh_warning = FALSE)
-      g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
-      E(g)$weight <- graph.temp$edge_lengths
-      geodist_temp <- distances(g)
+      })
+
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
+
+      if(verbose == 2){
+        message("Turning observations of the auxiliary graph to vertices...")
+      }      
+      t <- system.time(
+        graph.temp$observation_to_vertex(mesh_warning = FALSE)
+      )
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }
+      if(verbose == 2){
+        message("Creating auxiliary graph...")
+      }
+      t <- system.time({
+        g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
+        E(g)$weight <- graph.temp$edge_lengths
+      })
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }
+      if(verbose>0){
+        message("Computing geodesic distances...")
+      }      
+      t <- system.time(
+        geodist_temp <- distances(g)
+      )
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }      
 
       if(length(graph.temp$PtV)[1]!=nrow(geodist_temp)){
         un_PtV <- unique(graph.temp$PtV)
@@ -1223,10 +1275,11 @@ metric_graph <-  R6Class("metric_graph",
   #' for. If `NULL`, it will be computed for all groups.
   #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
   #' @param include_vertices Should the vertices of the graph be also included in the resulting matrix when using `FULL=TRUE`?
+  #' @param verbose Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects. The geodesic distances
   #' are stored in the `res_dist` element of the `metric_graph` object.
   compute_resdist = function(full = FALSE, obs = TRUE, group = NULL,
-                                 check_euclidean = FALSE, include_vertices = FALSE) {
+                                 check_euclidean = FALSE, include_vertices = FALSE, verbose = 0) {
     self$res_dist <- list()
     if(is.null(private$data)){
       obs <- FALSE
@@ -1239,17 +1292,17 @@ metric_graph <-  R6Class("metric_graph",
       rm(graph.temp)
       self$res_dist[[".vertices"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE,
-                                                                       check_euclidean = check_euclidean)
+                                                                       check_euclidean = check_euclidean, verbose = verbose)
     } else if(full){
       PtE <- self$get_PtE()
       if(!include_vertices){
         self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE, include_vertices = FALSE,
-                                                                       check_euclidean = check_euclidean)
+                                                                       check_euclidean = check_euclidean, verbose = verbose)
       } else{
         self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
                                                                 normalized=TRUE, include_vertices = TRUE,
-                                                                       check_euclidean = check_euclidean)
+                                                                       check_euclidean = check_euclidean, verbose = verbose)
       }
 
     } else{
@@ -1266,7 +1319,7 @@ metric_graph <-  R6Class("metric_graph",
                      data_grp[[".distance_on_edge"]][idx_notna])
         self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE,
                                                                        normalized=TRUE,
-                                                                       check_euclidean = check_euclidean)
+                                                                       check_euclidean = check_euclidean, verbose = verbose)
       }
     }
   },
@@ -1278,80 +1331,113 @@ metric_graph <-  R6Class("metric_graph",
   #' @param include_vertices Should the original vertices be included in the
   #' Laplacian matrix?
   #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
+  #' @param verbose Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return A matrix containing the resistance distances.
   compute_resdist_PtE = function(PtE,
                                  normalized = TRUE,
                                  include_vertices = FALSE,
-                                 check_euclidean = FALSE) {
-      graph.temp <- self$clone()
-      graph.temp$clear_observations()
-      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+                                 check_euclidean = FALSE, verbose = 0) {
+      if(verbose == 2){
+        message("Processing the graph locations...")
+      }
+      t <- system.time({                                              
+        graph.temp <- self$clone()
+        graph.temp$clear_observations()
+        df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                             edge_number = PtE[,1],
                             distance_on_edge = PtE[,2])
-      if(sum(duplicated(df_temp))>0){
-        warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
-        df_temp <- unique(df_temp)
-      }
+        if(sum(duplicated(df_temp))>0){
+          warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
+          df_temp <- unique(df_temp)
+        }
 
-      graph.temp$build_mesh(h = 1000)
+        graph.temp$build_mesh(h = 1000)
 
-      df_temp2 <- data.frame(y = 0,
+        df_temp2 <- data.frame(y = 0,
                              edge_number = graph.temp$mesh$VtE[1:nrow(self$V), 1],
                              distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V), 2])
 
-      df_temp$included <- TRUE
-      temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+        df_temp$included <- TRUE
+        temp_merge <- merge(df_temp, df_temp2, all = TRUE)
 
-      df_temp$included <- NULL
+        df_temp$included <- NULL
 
-      df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+        df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
 
-      nV_new <- sum(is.na(temp_merge["included"]))
+        nV_new <- sum(is.na(temp_merge["included"]))
 
-      df_temp2$included <- NULL
+        df_temp2$included <- NULL
 
-      df_temp <- rbind(df_temp2, df_temp)
+        df_temp <- rbind(df_temp2, df_temp)
 
-      df_temp[["__dummy"]] <- 1:nrow(df_temp)
+        df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
-      graph.temp$add_observations(data = df_temp,
+        graph.temp$add_observations(data = df_temp,
                                      normalized = normalized, verbose = 0,
                   suppress_warnings = TRUE)
-
+      })
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }                  
+      if(verbose == 2){
+        message("Turning observations of the auxiliary graph to vertices...")
+      }  
+      t <- system.time(      
         graph.temp$observation_to_vertex(mesh_warning=FALSE)
-        graph.temp$compute_geodist(full=TRUE)
+      )
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }
+      if(verbose > 0){
+        message("Computing auxiliary geodesic distances...")
+      }               
+      t <- system.time(
+        graph.temp$compute_geodist(full=TRUE,verbose = verbose)
+      )
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }     
 
         if(check_euclidean){
           graph.temp$check_euclidean()
           is_euclidean <- graph.temp$characteristics$euclidean
         }
 
+      if(verbose > 0){
+        message("Computing the resistance distances...")
+      }
+      t <- system.time({
         geodist_temp <- graph.temp$geo_dist[[".complete"]]
         geodist_temp[graph.temp$PtV, graph.temp$PtV] <- geodist_temp
 
-      L <- Matrix(0, graph.temp$nV, graph.temp$nV)
+        L <- Matrix(0, graph.temp$nV, graph.temp$nV)
 
-      for (i in 1:graph.temp$nE) {
-        tmp <- -1 / geodist_temp[graph.temp$E[i, 1],
+        for (i in 1:graph.temp$nE) {
+          tmp <- -1 / geodist_temp[graph.temp$E[i, 1],
                                                          graph.temp$E[i, 2]]
-        L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
-        L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
-      }
-      for(i in 1:graph.temp$nV){
-        L[i, i] <- -sum(L[i, -i])
-      }
-      L[1, 1] <- L[1, 1] + 1
+          L[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- tmp
+          L[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- tmp
+        }
+        for(i in 1:graph.temp$nV){
+          L[i, i] <- -sum(L[i, -i])
+        }
+        L[1, 1] <- L[1, 1] + 1
 
-      Li <- solve(L)
-      R <- -2*Li + t(diag(Li)) %x% rep(1, graph.temp$nV) +
-        t(rep(1, graph.temp$nV)) %x% diag(Li)
+        Li <- solve(L)
+        R <- -2*Li + t(diag(Li)) %x% rep(1, graph.temp$nV) +
+          t(rep(1, graph.temp$nV)) %x% diag(Li)
 
-      R <- R[graph.temp$PtV, graph.temp$PtV]
-      R[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- R
+        R <- R[graph.temp$PtV, graph.temp$PtV]
+        R[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- R
 
-      if(!include_vertices){
-        R <- R[(nV_new+1):nrow(R), (nV_new+1):nrow(R)]
-      }
+        if(!include_vertices){
+          R <- R[(nV_new+1):nrow(R), (nV_new+1):nrow(R)]
+        }
+      })
+
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }      
 
       if(check_euclidean){
         attr(R, "euclidean") <- is_euclidean
@@ -1426,9 +1512,10 @@ metric_graph <-  R6Class("metric_graph",
   #' locations? It will only compute for locations in which there is at least one observations that is not NA.
   #' @param group Vector or list containing which groups to compute the
   #' Laplacian for. If `NULL`, it will be computed for all groups.
+  #' @param verbose Print progress of the computation of the Laplacian. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1. 
   #' @return No reutrn value. Called for its side effects. The Laplacian is stored
   #' in the `Laplacian` element in the `metric_graph` object.
-  compute_laplacian = function(full = FALSE, obs = TRUE, group = NULL) {
+  compute_laplacian = function(full = FALSE, obs = TRUE, group = NULL, verbose = 0) {
     self$Laplacian <- list()
     if(is.null(private$data)){
       obs <- FALSE
@@ -1440,11 +1527,11 @@ metric_graph <-  R6Class("metric_graph",
       PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
       rm(graph.temp)
       self$Laplacian[[".vertices"]] <- private$compute_laplacian_PtE(PtE,
-                                                            normalized = TRUE)
+                                                            normalized = TRUE, verbose = verbose)
     } else if(full){
       PtE <- self$get_PtE()
       self$Laplacian[[".complete"]] <- private$compute_laplacian_PtE(PtE,
-                                                            normalized = TRUE)
+                                                            normalized = TRUE, verbose = verbose)
     } else{
       if(is.null(group)){
           group <- unique(private$data[[".group"]])
@@ -1458,7 +1545,7 @@ metric_graph <-  R6Class("metric_graph",
             stop("All the observations are NA.")
           }
           self$Laplacian[[grp]] <- private$compute_laplacian_PtE(PtE,
-                                                              normalized = TRUE)
+                                                              normalized = TRUE, verbose = verbose)
       }
     }
   },
@@ -1504,7 +1591,7 @@ metric_graph <-  R6Class("metric_graph",
 
         if(is.vector(private$edge_weights)){
           cnd_tmp <- private$edge_weights[edges_tmp[1]] != private$edge_weights[edges_tmp[2]]
-          if(is.null(cnd_tmp)){
+          if(length(cnd_tmp) == 0){
             cnd_tmp <- FALSE
           }          
           if(cnd_tmp){
@@ -1512,7 +1599,7 @@ metric_graph <-  R6Class("metric_graph",
           }
         } else{
           cnd_tmp <- any(private$edge_weights[edges_tmp[1],] != private$edge_weights[edges_tmp[2],])
-          if(is.null(cnd_tmp)){
+          if(length(cnd_tmp) == 0){
             cnd_tmp <- FALSE
           }
           if(cnd_tmp){
@@ -5624,50 +5711,70 @@ metric_graph <-  R6Class("metric_graph",
     }
   },
 
-  compute_laplacian_PtE = function(PtE, normalized = TRUE) {
-
-    graph.temp <- self$clone()
-    graph.temp$clear_observations()
-    df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
+  compute_laplacian_PtE = function(PtE, normalized = TRUE, verbose = verbose) {
+      if(verbose == 2){
+        message("Processing the graph locations...")
+      }
+    t <- system.time({
+      graph.temp <- self$clone()
+      graph.temp$clear_observations()
+      df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                          edge_number = PtE[,1],
                          distance_on_edge = PtE[,2])
-    if(sum(duplicated(df_temp))>0){
-      warning("Duplicated locations were found when computing the laplacian. The returned values are given for unique locations.")
-      df_temp <- unique(df_temp)
-    }
+      if(sum(duplicated(df_temp))>0){
+        warning("Duplicated locations were found when computing the laplacian. The returned values are given for unique locations.")
+        df_temp <- unique(df_temp)
+      }
 
-    graph.temp$build_mesh(h = 1000)
+      graph.temp$build_mesh(h = 1000)
 
-    df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+      df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
-    df_temp$included <- TRUE
-    temp_merge <- merge(df_temp, df_temp2, all = TRUE)
+      df_temp$included <- TRUE
+      temp_merge <- merge(df_temp, df_temp2, all = TRUE)
 
-    df_temp$included <- NULL
-    df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
-    df_temp2$included <- NULL
-    df_temp <- rbind(df_temp2, df_temp)
+      df_temp$included <- NULL
+      df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
+      df_temp2$included <- NULL
+      df_temp <- rbind(df_temp2, df_temp)
 
-    nV_new <- sum(is.na(temp_merge["included"]))
+      nV_new <- sum(is.na(temp_merge["included"]))
 
-    df_temp[["__dummy"]] <- 1:nrow(df_temp)
+      df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
-    graph.temp$add_observations(data = df_temp, normalized = normalized, verbose = 0,
+      graph.temp$add_observations(data = df_temp, normalized = normalized, verbose = 0,
                   suppress_warnings = TRUE)
-    graph.temp$observation_to_vertex(mesh_warning = FALSE)
-    Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
-
-    for (i in 1:graph.temp$nE) {
-      Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1 / graph.temp$edge_lengths[i]
-      Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1 / graph.temp$edge_lengths[i]
+    })
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }   
+      if(verbose == 2){
+        message("Turning observations of the auxiliary graph to vertices...")
+      }  
+    t <- system.time(        
+      graph.temp$observation_to_vertex(mesh_warning = FALSE)
+    )
+    if(verbose > 0){
+      message("Computing the Laplacian...")
     }
-    Laplacian <- Matrix::Diagonal(graph.temp$nV,
+    t <- system.time({
+      Wmat <- Matrix(0,graph.temp$nV,graph.temp$nV)
+
+      for (i in 1:graph.temp$nE) {
+        Wmat[graph.temp$E[i, 1], graph.temp$E[i, 2]] <- 1 / graph.temp$edge_lengths[i]
+        Wmat[graph.temp$E[i, 2], graph.temp$E[i, 1]] <- 1 / graph.temp$edge_lengths[i]
+      }
+      Laplacian <- Matrix::Diagonal(graph.temp$nV,
                                   as.vector(Matrix::rowSums(Wmat))) - Wmat
 
-    # Reordering from vertices to points
-    Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
+      # Reordering from vertices to points
+      Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
     # Order back to the input order
-    Laplacian[graph.temp$.__enclos_env__$private$data[["__dummy"]], graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- Laplacian
+      Laplacian[graph.temp$.__enclos_env__$private$data[["__dummy"]], graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- Laplacian
+    })
+    if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+       }    
 
     attr(Laplacian, "nV_idx") <- nV_new
 
