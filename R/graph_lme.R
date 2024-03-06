@@ -25,7 +25,7 @@
 #' by adding `fem = TRUE` to the list, or to use the exact precision matrix
 #' (by setting `fem = FALSE`). If `fem` is `FALSE`, there is also the parameter
 #' `alpha`, to determine the order of the SPDE, which is either 1 or 2. If `fem`
-#' is `TRUE` and `alpha` is not specified, then the default value of `alpha=1`
+#' is `FALSE` and `alpha` is not specified, then the default value of `alpha=1`
 #' will be used. If `fem` is `TRUE` and one does not specify `alpha`, it will be
 #' estimated from the data. However, if one wants to have `alpha` fixed to some
 #' value, the user can specify either `alpha` or `nu` in the list. See the

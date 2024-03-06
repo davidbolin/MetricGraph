@@ -1503,11 +1503,19 @@ metric_graph <-  R6Class("metric_graph",
         edges_tmp <- c(start.deg,end.deg)
 
         if(is.vector(private$edge_weights)){
-          if(private$edge_weights[edges_tmp[1]] != private$edge_weights[edges_tmp[2]]){
+          cnd_tmp <- private$edge_weights[edges_tmp[1]] != private$edge_weights[edges_tmp[2]]
+          if(is.null(cnd_tmp)){
+            cnd_tmp <- FALSE
+          }          
+          if(cnd_tmp){
                  problematic_weights[i] <- TRUE
           }
         } else{
-          if(any(private$edge_weights[edges_tmp[1],] != private$edge_weights[edges_tmp[2],])){
+          cnd_tmp <- any(private$edge_weights[edges_tmp[1],] != private$edge_weights[edges_tmp[2],])
+          if(is.null(cnd_tmp)){
+            cnd_tmp <- FALSE
+          }
+          if(cnd_tmp){
                   problematic_weights[i] <- TRUE
           }        
         }        
@@ -3483,7 +3491,7 @@ metric_graph <-  R6Class("metric_graph",
   #' plotted.
   #' @param newdata A dataset of class `metric_graph_data`, obtained by any `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods of metric graphs, see the vignette on data manipulation for more details.
   #' @param group If there are groups, which group to plot? If `group` is a
-  #' number, it will be the index of the group as stored internally. If `group`
+  #' number and `newdata` is `NULL`, it will be the index of the group as stored internally and if `newdata` is provided, it will be the index of the group stored in `newdata`. If `group`
   #' is a character, then the group will be chosen by its name.
   #' @param plotly Use plot_ly for 3D plot (default `FALSE`). This option
   #' requires the 'plotly' package.
@@ -3546,11 +3554,14 @@ metric_graph <-  R6Class("metric_graph",
                   # summarise_group_by = NULL,
                   # summarise_by_graph_group = FALSE,
                   ...) {
-    if(!is.null(data) && is.null(private$data)) {
+    if(!is.null(data) && is.null(private$data) && is.null(newdata)) {
       stop("The graph does not contain data.")
     }
-    if(is.numeric(group) && !is.null(data)) {
+    if(is.numeric(group) && !is.null(data) && is.null(newdata)) {
       unique_group <- unique(private$data[[".group"]])
+      group <- unique_group[group]
+    } else if(!is.null(newdata) && is.numeric(group)){
+      unique_group <- unique(newdata[[".group"]])
       group <- unique_group[group]
     }
     if(!is.null(newdata)){
