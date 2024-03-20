@@ -145,7 +145,6 @@ For this example we will consider the `pems` data contained in the `MetricGraph`
 ```{r, message=FALSE}
  pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
  pems_graph$add_observations(data = pems$data, normalized=TRUE)
- pems_graph$prune_vertices()
 ```
 
 Let us take a look at the observations:
@@ -212,14 +211,19 @@ and
 summary(fit_alpha2_bc)
 ```
 
-Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`:
+Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`. For these, we first fit the models without fixed effects, 
+and then use those results as starting values for the complete optimization. The reason for this is that the estimation otherwise is slightly unstable for these models. 
 
 ```{r}
-fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
+fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
             model = list(type = "graphLaplacian", alpha = 1))
+fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
+            model = list(type = "graphLaplacian", alpha = 1), previous_fit = fit_GL1)
 
-fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,
+fit_GL2 <- graph_lme(y ~ -1, graph=pems_graph,
             model = list(type = "graphLaplacian", alpha = 2))
+fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,
+            model = list(type = "graphLaplacian", alpha = 2), previous_fit = fit_GL2)
 ```
 
 and look at their summaries:
@@ -300,14 +304,23 @@ leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
 ```{r}
-fitted_models_list <- list("alpha=1" = fit_alpha1, 
-                    "alpha=2" = fit_alpha2, 
-                    "isoExp" = fit_isoexp, 
-                    "GL1" = fit_GL1, "GL2" = fit_GL2,
-                    "alpha=1 bc" = fit_alpha1_bc,
-                    "alpha=2 bc" = fit_alpha2_bc)
+fitted_models_list <- list("isoExp" = fit_isoexp, 
+                           "GL1" = fit_GL1,
+                           "alpha=1" = fit_alpha1, 
+                           "alpha=1 bc" = fit_alpha1_bc,
+                           "GL2" = fit_GL2,
+                           "alpha=2" = fit_alpha2, 
+                           "alpha=2 bc" = fit_alpha2_bc)
 
-posterior_crossvalidation(fitted_models_list, factor = 1000)[["scores"]]
+res <- posterior_crossvalidation(fitted_models_list, factor = 1000)
+#collect the results in a table including the log likelihood values:
+results <- as.data.frame(res[["scores"]])[c(1,6,5,2,3,4)]
+results[,-1] <- results[,-1]/1000
+results[,7] <- -c(fit_isoexp$loglik, fit_GL1$loglik, fit_alpha1$loglik,
+                  fit_alpha1_bc$loglik, fit_GL2$loglik, fit_alpha2$loglik,
+                  fit_alpha2_bc$loglik)
+colnames(results)[7] <- "neg. log-lik"
+results
 ```
 
 ## Kriging 
