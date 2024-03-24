@@ -332,7 +332,8 @@ fitted_models_list <- list("isoExp" = fit_isoexp,
                            "alpha=2" = fit_alpha2, 
                            "alpha=2 bc" = fit_alpha2_bc)
 
-posterior_crossvalidation(fitted_models_list)
+res <- posterior_crossvalidation(fitted_models_list, tibble=FALSE)
+res$scores
 ```
 
 ## Kriging 
