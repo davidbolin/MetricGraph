@@ -296,7 +296,6 @@ fit_isomat <- graph_lme(y ~ 1, graph = pems_graph,
 ```
 
 Indeed, the model could not be fitted.
-
 Let us now quickly look at the likelihoods of the fitted models. We begin by creating a list with the fitted models:
 
 ```{r}
@@ -311,9 +310,10 @@ fitted_models_list <- list("alpha=1" = fit_alpha1,
 Now, the likelihoods:
 
 ```{r}
-table_lik <- sapply(fitted_models_list, LogLik)
+table_lik <- sapply(fitted_models_list, logLik)
 
-table_lik
+# Printing the negative likelihoods:
+-table_lik
 ```
 
 
