@@ -219,11 +219,8 @@ fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph,
             model = list(type = "graphLaplacian", alpha = 1))
 fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
             model = list(type = "graphLaplacian", alpha = 1), previous_fit = fit_GL1)
-
-fit_GL2 <- graph_lme(y ~ -1, graph=pems_graph,
-            model = list(type = "graphLaplacian", alpha = 2))
 fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,
-            model = list(type = "graphLaplacian", alpha = 2), previous_fit = fit_GL2)
+            model = list(type = "graphLaplacian", alpha = 2), previous_fit = fit_GL1)
 ```
 
 and look at their summaries:
@@ -275,24 +272,22 @@ Therefore, even after adding the observations as vertices, the metric graph is s
 
 Let us check if we can fit an isotropic model with isotropic Matérn covariance function with smoothness parameter `nu=1.5` (which corresponds to `alpha=2` for Whittle-Matérn fields and Matérn Gaussian models based on the graph Laplacian). Recall that by the results in [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), it is not guaranteed that such a function will be a valid covariance function even on an metric graph with Euclidean edges.
 
-We start by defining the Matérn covariance:
+We start by defining the Matérn covariance corresponding to `alpha=2`:
 
 ```{r}
 cov_mat <- function(h,theta){
-    nu <- 1.5
-    sigma <- theta[1]
-    kappa <- theta[2]
-    (sigma^2/(2^(nu - 1) * gamma(nu))) * ((kappa * abs(h))^nu) * 
-            besselK(kappa * abs(h), nu)
-        }
+  tau <- theta[1]
+  kappa <- theta[2]
+  1/tau * (1 + kappa * abs(h)) * exp(- kappa * abs(h))
+}
 ```
 
 Let us now fit the model:
 
 ```{r, error=TRUE}
 fit_isomat <- graph_lme(y ~ 1, graph = pems_graph, 
-                            model = list(type = "isoCov", cov_function = cov_mat), 
-                                    model_options = list(start_par_vec = c(1,1)))
+                model = list(type = "isoCov", cov_function = cov_mat), 
+                model_options = list(start_par_vec = fit_alpha2$coeff$random_effects))
 ```
 
 Indeed, the model could not be fitted.

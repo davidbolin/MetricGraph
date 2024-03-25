@@ -54,7 +54,7 @@
 #' @param previous_fit An object of class `graph_lme`. Use the fitted coefficients as starting values.
 #' @param fix_coeff If using a previous fit, should all coefficients be fixed at the starting values?
 #' @param optim_method The method to be used with `optim` function.
-#' @param possible_methods Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'Nelder-Mead' and 'L-BFGS-B' are considered.
+#' @param possible_methods Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'L-BFGS-B' is considered.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
 #' (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
@@ -79,7 +79,7 @@ graph_lme <- function(formula, graph,
                 model = list(type = "linearModel"),
                 which_repl = NULL,
                 optim_method = "L-BFGS-B",
-                possible_methods = c("Nelder-Mead", "L-BFGS-B"),
+                possible_methods = "L-BFGS-B",
                 model_options = list(),
                 BC = 0,
                 previous_fit = NULL,
@@ -522,6 +522,8 @@ graph_lme <- function(formula, graph,
     }
   }
 
+  start_values_orig <- start_values
+
   if(ncol(X_cov)>0 && model_type != "linearmodel"){
     names_tmp <- colnames(X_cov)
     data_tmp <- cbind(y_graph, X_cov)
@@ -665,8 +667,9 @@ graph_lme <- function(formula, graph,
     # fix_vec <- model_options$fix_par_vec
     # fix_v_val <- model_options$start_par_values
     fix_vec <- fixed_values
-    fix_v_val <- start_values
-    start_values <- start_values[!fix_vec]
+    fix_vec_full <- c(fix_vec, rep(FALSE, ncol(X_cov)))
+    fix_v_val <- start_values_orig
+    start_values <- start_values[!fix_vec_full]
 
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
                                                 y_graph = y_graph,
