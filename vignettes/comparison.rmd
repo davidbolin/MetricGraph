@@ -136,7 +136,7 @@ set.seed(1)
 
 ## Introduction
 
-In this vignette our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian random field with an isotropic exponential covariance function [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
+This vignette contains the details of the Application section of [@BSW2022b](https://arxiv.org/abs/2304.10372). Our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian random field with an isotropic exponential covariance function [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
 ## The dataset
 
@@ -214,7 +214,7 @@ summary(fit_alpha2_bc)
 Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`. For these, we first fit the models without fixed effects, 
 and then use those results as starting values for the complete optimization. The reason for this is that the estimation otherwise is slightly unstable for these models. 
 
-```{r}
+```{r, warning=FALSE}
 fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
             model = list(type = "graphLaplacian", alpha = 1))
 fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
