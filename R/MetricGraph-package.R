@@ -62,3 +62,10 @@
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL
 
+.onAttach <- function(libname, pkgname) {
+  version <- utils::packageVersion("MetricGraph")
+   packageStartupMessage(
+    "This is MetricGraph ", version, "\n",
+    "- See https://davidbolin.github.io/MetricGraph for vignettes and manuals."
+  )
+}

@@ -185,7 +185,7 @@ graph$plot(data = "y")
 ```
 
 We can now fit the model. To this end, we use the `graph_lme()` function and set the model to `'WM`'.
-```{r}
+```{r, warning=FALSE, message=FALSE}
 fit <- graph_lme(y ~ x1 + x2, graph = graph, model = "WM")
 ```
 
@@ -279,7 +279,7 @@ graph$add_observations(data = df_data_repl, normalized = TRUE,
 
 We can now fit the model in the same way as before by using the `rspde_lme()` function. Note that we can optimize in parallel by setting `parallel` to `TRUE`. If we do not specify which replicate to consider, in the `which_repl` argument, all replicates will be considered.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", parallel = TRUE)
 ```
 
@@ -291,7 +291,7 @@ summary(fit_repl)
 
 Let us, then, follow the suggestion from the warning and refit the model setting `improve_hessian` to `TRUE`. This will obtain a more precise estimate of the Hessian, which can possibly fix this issue:
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", 
                       parallel = TRUE, improve_hessian = TRUE)
 ```
@@ -606,7 +606,7 @@ Let us now load the `inlabru` package and create the component (which is `inlabr
 `inlabru` will also obtain the locations from the graph, thus, there is no need to provide the locations. However, we need a name for the locations 
 for using inlabru's `predict` method. Therefore, we can choose any name for the location that is not a name being used in the graph's data. In our
 case we will use the name `loc`:
-```{r}
+```{r, message=FALSE, warning=FALSE}
     library(inlabru)
     cmp <-
     y ~ -1 + Intercept(1) + x1 + x2 + field(loc, 
@@ -855,7 +855,7 @@ pems_graph$add_observations(data = pems_graph$mutate(cov_obs = cov_obs),
 
 We are now in position to fit this model using the `graph_lme()` function. We will also add `cov_obs` as a covariate for the model.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 fit <- graph_lme(y ~ cov_obs, graph = pems_graph, model = list(type = "WhittleMatern", 
                     B.sigma = B.sigma, B.range = B.range, fem = TRUE))
 ```
@@ -923,7 +923,7 @@ Let us now create the `data.frame()` and the vector with the replicates indexes:
 
 Let us create the component and fit. 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, message=FALSE}
 cmp_nonstat <-
   y ~ -1 + Intercept(1) + cov_obs + field(loc,
     model = rspde_model_nonstat
