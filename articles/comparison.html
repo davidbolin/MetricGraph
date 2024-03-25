@@ -101,7 +101,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-09. Last
-modified: 2024-03-20.</h4>
+modified: 2024-03-24.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/comparison.rmd" class="external-link"><code>vignettes/comparison.rmd</code></a></small>
       <div class="d-none name"><code>comparison.rmd</code></div>
@@ -187,7 +187,7 @@ Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 28</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  21.12801 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  20.54077 secs</span></span></code></pre></div>
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -227,7 +227,7 @@ Whittle-Matérn field with <code>alpha = 1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 29</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  35.34538 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  35.49504 secs</span></span></code></pre></div>
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
@@ -271,7 +271,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 32</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  23.6936 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  23.82794 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -306,7 +306,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 28</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  36.04633 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  34.98188 secs</span></span></code></pre></div>
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>. For these,
 we first fit the models without fixed effects, and then use those
@@ -360,7 +360,7 @@ models.</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 20</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.52063 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.38317 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -395,7 +395,7 @@ models.</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 14</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.54761 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.2662 secs</span></span></code></pre></div>
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
@@ -439,7 +439,7 @@ function:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 35</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  11.06133 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  10.65628 secs</span></span></code></pre></div>
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -536,7 +536,24 @@ even on an metric graph with Euclidean edges.</p>
 <span><span class="co">#&gt; Warning in new_theta[!fix_vec_full] &lt;- theta: number of items to replace is not</span></span>
 <span><span class="co">#&gt; a multiple of replacement length</span></span>
 <span><span class="co">#&gt; Error in chol.default(Sigma_non_na): the leading minor of order 1 is not positive</span></span></code></pre></div>
-<p>Indeed, the model could not be fitted.</p>
+<p>Indeed, the model could not be fitted. Let us now quickly look at the
+likelihoods of the fitted models. We begin by creating a list with the
+fitted models:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fitted_models_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"alpha=1"</span> <span class="op">=</span> <span class="va">fit_alpha1</span>, </span>
+<span>                    <span class="st">"alpha=2"</span> <span class="op">=</span> <span class="va">fit_alpha2</span>, </span>
+<span>                    <span class="st">"isoExp"</span> <span class="op">=</span> <span class="va">fit_isoexp</span>, </span>
+<span>                    <span class="st">"GL1"</span> <span class="op">=</span> <span class="va">fit_GL1</span>, <span class="st">"GL2"</span> <span class="op">=</span> <span class="va">fit_GL2</span>,</span>
+<span>                    <span class="st">"alpha=1 bc"</span> <span class="op">=</span> <span class="va">fit_alpha1_bc</span>,</span>
+<span>                    <span class="st">"alpha=2 bc"</span> <span class="op">=</span> <span class="va">fit_alpha2_bc</span><span class="op">)</span></span></code></pre></div>
+<p>Now, the likelihoods:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">table_lik</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">fitted_models_list</span>, <span class="va">logLik</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Printing the negative likelihoods:</span></span>
+<span><span class="op">-</span><span class="va">table_lik</span></span>
+<span><span class="co">#&gt;    alpha=1    alpha=2     isoExp        GL1        GL2 alpha=1 bc alpha=2 bc </span></span>
+<span><span class="co">#&gt;   1221.225   1207.996   1223.688   1221.383   1208.703   1221.377   1208.179</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="comparison-by-cross-validation">Comparison by cross-validation<a class="anchor" aria-label="anchor" href="#comparison-by-cross-validation"></a>
@@ -544,7 +561,7 @@ even on an metric graph with Euclidean edges.</p>
 <p>We will now use the function <code><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation()</a></code>
 to perform leave-one-out cross validation based on the estimated
 parameters and compare the results:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fitted_models_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"isoExp"</span> <span class="op">=</span> <span class="va">fit_isoexp</span>, </span>
 <span>                           <span class="st">"GL1"</span> <span class="op">=</span> <span class="va">fit_GL1</span>,</span>
 <span>                           <span class="st">"alpha=1"</span> <span class="op">=</span> <span class="va">fit_alpha1</span>, </span>
@@ -553,23 +570,16 @@ parameters and compare the results:</p>
 <span>                           <span class="st">"alpha=2"</span> <span class="op">=</span> <span class="va">fit_alpha2</span>, </span>
 <span>                           <span class="st">"alpha=2 bc"</span> <span class="op">=</span> <span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation</a></span><span class="op">(</span><span class="va">fitted_models_list</span>, factor <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="co">#collect the results in a table including the log likelihood values:</span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">res</span><span class="op">[[</span><span class="st">"scores"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">6</span>,<span class="fl">5</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">4</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">results</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="fl">1000</span></span>
-<span><span class="va">results</span><span class="op">[</span>,<span class="fl">7</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_isoexp</span><span class="op">$</span><span class="va">loglik</span>, <span class="va">fit_GL1</span><span class="op">$</span><span class="va">loglik</span>, <span class="va">fit_alpha1</span><span class="op">$</span><span class="va">loglik</span>,</span>
-<span>                  <span class="va">fit_alpha1_bc</span><span class="op">$</span><span class="va">loglik</span>, <span class="va">fit_GL2</span><span class="op">$</span><span class="va">loglik</span>, <span class="va">fit_alpha2</span><span class="op">$</span><span class="va">loglik</span>,</span>
-<span>                  <span class="va">fit_alpha2_bc</span><span class="op">$</span><span class="va">loglik</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"neg. log-lik"</span></span>
-<span><span class="va">results</span></span>
-<span><span class="co">#&gt;        Model     rmse      mae logscore     crps    scrps neg. log-lik</span></span>
-<span><span class="co">#&gt; 1     isoExp 8.606109 6.177213 3.603170 4.733602 2.132627     1223.688</span></span>
-<span><span class="co">#&gt; 2        GL1 8.610865 6.174910 3.604521 4.737168 2.133211     1221.383</span></span>
-<span><span class="co">#&gt; 3    alpha=1 8.613469 6.177526 3.604623 4.737561 2.133209     1221.225</span></span>
-<span><span class="co">#&gt; 4 alpha=1 bc 8.611471 6.167904 3.604420 4.736101 2.133070     1221.377</span></span>
-<span><span class="co">#&gt; 5        GL2 8.303655 5.852550 3.551302 4.530800 2.106781     1208.703</span></span>
-<span><span class="co">#&gt; 6    alpha=2 8.255849 5.840261 3.549369 4.521774 2.106920     1207.996</span></span>
-<span><span class="co">#&gt; 7 alpha=2 bc 8.254988 5.842477 3.548987 4.520623 2.106720     1208.179</span></span></code></pre></div>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation</a></span><span class="op">(</span><span class="va">fitted_models_list</span>, tibble<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">scores</span></span>
+<span><span class="co">#&gt;            logscore     crps    scrps      mae     rmse</span></span>
+<span><span class="co">#&gt; isoExp     3.603170 4.733602 2.132627 6.177213 8.606109</span></span>
+<span><span class="co">#&gt; GL1        3.604521 4.737168 2.133211 6.174910 8.610865</span></span>
+<span><span class="co">#&gt; alpha=1    3.604623 4.737561 2.133209 6.177526 8.613469</span></span>
+<span><span class="co">#&gt; alpha=1 bc 3.604420 4.736101 2.133070 6.167904 8.611471</span></span>
+<span><span class="co">#&gt; GL2        3.551302 4.530800 2.106781 5.852550 8.303655</span></span>
+<span><span class="co">#&gt; alpha=2    3.549369 4.521774 2.106920 5.840261 8.255849</span></span>
+<span><span class="co">#&gt; alpha=2 bc 3.548987 4.520623 2.106720 5.842477 8.254988</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="kriging">Kriging<a class="anchor" aria-label="anchor" href="#kriging"></a>
@@ -587,7 +597,7 @@ used to obtain predictions. Such inconsistency is not present in the
 Whittle-Matérn models on metric graphs.</p>
 <p>Let us begin by building a mesh on the metric graph and create a
 <code><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame()</a></code> with such mesh locations:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pems_graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">df_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>edge_number <span class="op">=</span> <span class="va">pems_graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">PtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
@@ -595,13 +605,13 @@ Whittle-Matérn models on metric graphs.</p>
 <p>As the region is very large, we will select two smaller subregions to
 ``zoom in’’, so we can see the predictions with more details. Let us
 create variables containing the coordinates of such regions:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">coordx_lwr1</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">121.905</span></span>
 <span><span class="va">coordx_upr1</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">121.875</span></span>
 <span><span class="va">coordy_lwr1</span> <span class="op">&lt;-</span> <span class="fl">37.316</span></span>
 <span><span class="va">coordy_upr1</span> <span class="op">&lt;-</span> <span class="fl">37.328</span></span></code></pre></div>
 <p>Now, for the second region:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">coordx_lwr2</span><span class="op">&lt;-</span> <span class="op">-</span><span class="fl">121.94</span></span>
 <span><span class="va">coordx_upr2</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">121.88</span></span>
 <span><span class="va">coordy_lwr2</span> <span class="op">&lt;-</span> <span class="fl">37.35</span></span>
@@ -610,18 +620,18 @@ create variables containing the coordinates of such regions:</p>
 <code><a href="../reference/augment.graph_lme.html">augment()</a></code> method to obtain such predictions. We start by
 obtaining predictions for the Whittle-Matérn models with
 <code>alpha=1</code>:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_alpha1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha1</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>and with boundary correction:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_alpha1_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha1_bc</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let plot the predictions with the corresponding observed values.
 First for the model without boundary correction. As the predictions were
 obtained on the mesh nodes, we can supply the fitted values into the
 <code>X</code> argument of the <code>plot_function()</code> method:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha1</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
@@ -629,22 +639,22 @@ obtained on the mesh nodes, we can supply the fitted values into the
 <span>                edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span></code></pre></div>
 <p>We can now add the original observations obtain the plot in region
 1:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, data_size <span class="op">=</span> <span class="fl">2</span>, </span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now in region 2:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, data_size <span class="op">=</span> <span class="fl">2</span>, </span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Similarly, for <code>alpha=1</code> with boundary correction in
 region 1:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha1_bc</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
 <span>              improve_plot<span class="op">=</span><span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -652,9 +662,9 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha1_bc</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
 <span>              improve_plot<span class="op">=</span><span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -662,13 +672,13 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now, for the Whittle-Matérn models with <code>alpha=2</code>:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha2</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now build the plot for region 1:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha2</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
 <span>                    improve_plot<span class="op">=</span><span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -676,9 +686,9 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and region 2:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha2</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
 <span>                    improve_plot<span class="op">=</span><span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -686,13 +696,13 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now with boundary correction:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_alpha2_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>the plot in region 1:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha2_bc</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
 <span>                    improve_plot<span class="op">=</span><span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -700,9 +710,9 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_alpha2_bc</span>, data <span class="op">=</span> <span class="st">".fitted"</span>,</span>
 <span>                    improve_plot<span class="op">=</span><span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -710,13 +720,13 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>We now move to the models based on the graph Laplacian:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_GL1</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>the plot in region 1:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_GL1</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
 <span>                    improve_plot <span class="op">=</span> <span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -724,9 +734,9 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_GL1</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
 <span>                    improve_plot <span class="op">=</span> <span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -734,13 +744,13 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and for <code>alpha=2</code>:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_GL2</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>the plot in region 1:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_GL2</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
 <span>                    improve_plot <span class="op">=</span> <span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -748,9 +758,9 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-43-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_GL2</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
 <span>                    improve_plot <span class="op">=</span> <span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -758,13 +768,13 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Finally, for models with isotropic exponential covariance:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_isoexp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_isoexp</span>, newdata <span class="op">=</span> <span class="va">df_pred</span>,</span>
 <span>                        normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>and the corresponding plot in region 1:</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_isoexp</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
 <span>                    improve_plot <span class="op">=</span> <span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -772,9 +782,9 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr1</span>, <span class="va">coordx_upr1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr1</span>, <span class="va">coordy_upr1</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>and in region 2:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>newdata <span class="op">=</span> <span class="va">pred_isoexp</span>, data <span class="op">=</span> <span class="st">".fitted"</span>, </span>
 <span>                    improve_plot <span class="op">=</span> <span class="cn">TRUE</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> </span>
@@ -782,7 +792,7 @@ region 1:</p>
 <span>                    edge_width <span class="op">=</span> <span class="fl">0</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">xlim</a></span><span class="op">(</span><span class="va">coordx_lwr2</span>, <span class="va">coordx_upr2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>                    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="va">coordy_lwr2</span>, <span class="va">coordy_upr2</span><span class="op">)</span>                       </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-47-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="a-quick-diagnostic-analysis">A quick diagnostic analysis<a class="anchor" aria-label="anchor" href="#a-quick-diagnostic-analysis"></a>
@@ -797,22 +807,22 @@ divinding by its standard deviation. Such standardized residuals are
 given when using the <code>augment</code> function when the argument
 <code>se_fit</code> is set to <code>TRUE</code>. Let us now compute such
 residuals, then do a simple QQ plot of them.</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fitted_aug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span>, se_fit <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Now let us build the QQ-plot against the theoretical quantiles a
 standard Gaussian distribution:</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">fitted_aug</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="va">.std_resid</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>          <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">stat_qq</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p</span>          </span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-47-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>We will now do a parametric bootstrap procedure to obtain confidence
 bands (simulated envelopes) for the above QQ plot. We will consider
 <span class="math inline">\(B=100\)</span> bootstrap samples. We start
 by generating <span class="math inline">\(B\)</span> samples. This can
 be done by using the <code><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate()</a></code> method:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">samples_alpha2_bc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span>, nsim <span class="op">=</span> <span class="va">B</span><span class="op">)</span></span></code></pre></div>
 <p>To reduce computational cost, we will fix the latent parameters at
@@ -820,7 +830,7 @@ the original fitted values, this can be done by passing the fitted model
 as the <code>previous_fit</code> argument, and setting
 <code>fix_coeff</code> to <code>TRUE</code>. We will compute the new
 standardized residuals based on these new samples:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">fitted_aug</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="va">B</span><span class="op">)</span></span>
 <span><span class="co"># We clone the graph to add new data</span></span>
 <span><span class="va">pems_graph_new</span> <span class="op">&lt;-</span> <span class="va">pems_graph</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span><span class="op">)</span></span>
@@ -841,7 +851,7 @@ standardized residuals based on these new samples:</p>
 <p>We will now create the lower and upper bands with 95% confidence, as
 well as plot a median line. We being by extracting the lower, upper and
 median values.</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">prob</span> <span class="op">&lt;-</span> <span class="fl">0.95</span></span>
 <span>  <span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">simul_std_resid</span><span class="op">)</span></span>
 <span>  <span class="va">simul_std_resid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">simul_std_resid</span>, <span class="fl">1</span>, <span class="va">sort</span><span class="op">)</span><span class="op">)</span></span>
@@ -854,17 +864,17 @@ median values.</p>
 <p>Let us now produce the QQ plot with the confidence bands and median
 line. We start by obtaining the quantile values, and add them to the
 bands <code>data.frame</code>:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tmp_quantiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html" class="external-link">qqnorm</a></span><span class="op">(</span><span class="va">fitted_aug</span><span class="op">[[</span><span class="st">".std_resid"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">bands</span><span class="op">[[</span><span class="st">"x"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">tmp_quantiles</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">bands</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">tmp_quantiles</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">bands</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, ymin <span class="op">=</span> <span class="va">lower</span>, ymax <span class="op">=</span> <span class="va">upper</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_path</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">x</span>, y <span class="op">=</span> <span class="va">median</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Theoretical Quantiles"</span>, y <span class="op">=</span> <span class="st">"Sample Quantiles"</span><span class="op">)</span></span>
 <span><span class="va">p</span></span></code></pre></div>
-<p><img src="comparison_files/figure-html/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="comparison_files/figure-html/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>By observing the QQ plot with confidence bands, we can see that the
 Gaussianity assumption is reasonable; however, the fit can likely be
 improved by considering non-stationary Gaussian models as latent fields.
