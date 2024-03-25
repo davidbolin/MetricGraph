@@ -300,12 +300,13 @@ Indeed, the model could not be fitted.
 Let us now quickly look at the likelihoods of the fitted models. We begin by creating a list with the fitted models:
 
 ```{r}
-fitted_models_list <- list("alpha=1" = fit_alpha1, 
-                    "alpha=2" = fit_alpha2, 
-                    "isoExp" = fit_isoexp, 
-                    "GL1" = fit_GL1, "GL2" = fit_GL2,
-                    "alpha=1 bc" = fit_alpha1_bc,
-                    "alpha=2 bc" = fit_alpha2_bc)
+fitted_models_list <- list("isoExp" = fit_isoexp, 
+                            "GL1" = fit_GL1,
+                            "alpha=1" = fit_alpha1, 
+                            "alpha=1 bc" = fit_alpha1_bc,
+                            "GL2" = fit_GL2,
+                            "alpha=2" = fit_alpha2, 
+                            "alpha=2 bc" = fit_alpha2_bc)
 ```
 
 Now, the likelihoods:
