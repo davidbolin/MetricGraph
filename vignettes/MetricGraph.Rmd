@@ -598,7 +598,8 @@ above with this model. We can use the `graph_lme()` function. Also, observe that
 use the `compute_laplacian()` function, as it is done internally. We now set the `model` argument as a list with the `type` being `"GraphLaplacian"` (alternatively, one can also write `model = 'GL1'`) to obtain a graph Laplacian model with `alpha=1`:
 
 ```{r}
-res_gl <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "GraphLaplacian"))
+res_gl <- graph_lme(y ~ lon + lat, graph = graph, model = list(type = "GraphLaplacian"), 
+                            optim_method = "Nelder-Mead")
 summary(res_gl)
 ```
 
@@ -644,7 +645,8 @@ graph_pred$add_observations(data = new_data, normalized = TRUE)
 Let us now fit the model with all data:
 
 ```{r}
-res_gl_pred <- graph_lme(y ~ lon + lat, graph = graph_pred, model = list(type = "GraphLaplacian"))
+res_gl_pred <- graph_lme(y ~ lon + lat, graph = graph_pred, model = list(type = "GraphLaplacian"),
+                                optim_method = "Nelder-Mead")
 summary(res_gl_pred)
 ```
 

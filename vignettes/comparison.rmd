@@ -216,7 +216,7 @@ and then use those results as starting values for the complete optimization. The
 
 ```{r, warning=FALSE}
 fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
-            model = list(type = "graphLaplacian", alpha = 1))
+            model = list(type = "graphLaplacian", alpha = 1), optim_method = "Nelder-Mead")
 fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
             model = list(type = "graphLaplacian", alpha = 1), previous_fit = fit_GL1)
 fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,

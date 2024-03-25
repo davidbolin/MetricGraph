@@ -498,6 +498,7 @@ graph_lme <- function(formula, graph,
                     rec_tau = rec_tau)
                 
       start_values <- start_fixed_values$start_values
+      start_values_orig <- start_values
       fixed_values <- start_fixed_values$fixed_values
     }
   } else if(model_type != "linearmodel") {
@@ -508,6 +509,8 @@ graph_lme <- function(formula, graph,
     } else{
       start_values <- c(log(model_options$start_sigma_e),log(model_options$start_par_vec))
     }
+
+    start_values_orig <- start_values
     
     par_names <- names(model_options$start_par_vec)
     if(is.null(model_options$fix_sigma_e)){
@@ -521,8 +524,6 @@ graph_lme <- function(formula, graph,
       fixed_values <- c(fixed_values, model_options$fix_par_vec)
     }
   }
-
-  start_values_orig <- start_values
 
   if(ncol(X_cov)>0 && model_type != "linearmodel"){
     names_tmp <- colnames(X_cov)
