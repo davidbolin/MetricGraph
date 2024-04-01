@@ -259,7 +259,7 @@ help of the `gg_df()` function:
 
 Finally, we can plot the estimated field $u$:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-n.obs <- length(graph$data$y)
+n.obs <- length(graph$get_data()$y)
 n.field <- dim(graph$mesh$VtE)[1]
 u_posterior <- spde_fit$summary.linear.predictor$mean[(n.obs+1):(n.obs+n.field)]
 graph$plot_function(X = u_posterior, vertex_size = 0)
