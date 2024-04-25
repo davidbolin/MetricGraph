@@ -589,6 +589,8 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
     private$create_update_vertices()
+    # creating/updating reference edges
+    private$ref_edges <- map_into_reference_edge(self)
 
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
 
@@ -1169,10 +1171,15 @@ metric_graph <-  R6Class("metric_graph",
           df_temp <- unique(df_temp)
         }
 
+        df_temp <- standardize_df_positions(df_temp, self)
+
         graph.temp$build_mesh(h = 10000)
 
         df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
+
+
+        df_temp2 <- standardize_df_positions(df_temp2, self)
 
         df_temp$included <- TRUE
         temp_merge <- merge(df_temp, df_temp2, all = TRUE)
@@ -1648,6 +1655,8 @@ metric_graph <-  R6Class("metric_graph",
 
    t <- system.time({
       private$create_update_vertices()
+      # creating/updating reference edges
+      private$ref_edges <- map_into_reference_edge(self)      
       for(i in 1:length(self$edges)){
          attr(self$edges[[i]], "id") <- i
          attr(self$edges[[i]], "longlat") <- private$longlat
@@ -1836,6 +1845,8 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     private$create_update_vertices()
+    # creating/updating reference edges
+    private$ref_edges <- map_into_reference_edge(self)    
 
     # Updating the edge attributes
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
@@ -5955,6 +5966,10 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     return(list(degrees = degrees, indegrees = degrees_in,
               outdegrees = degrees_out))
   },
+
+  # Reference edges for the vertices
+
+  ref_edges = NULL,
 
   #  Creates/updates the vertices element of the metric graph list
 

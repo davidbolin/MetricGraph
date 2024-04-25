@@ -1929,3 +1929,49 @@ get_only_first <- function(vec){
   vec[idx[1]] <- TRUE
   return(vec)
 }
+
+
+#' @noRd 
+# Create a map from vertices into reference edges
+
+map_into_reference_edge <- function(graph){
+  ref_edge <- matrix(nrow=graph$nV,ncol=2)
+  for(i in 1:graph$nV){
+    idx_pos_0 <- which(graph$E[,1] == i)
+    if(length(idx_pos_0)>0){
+      ref_edge[i,1] <- min(idx_pos_0)
+      ref_edge[i,2] <- 0
+    } else{
+      ref_edge[i,1] <- min(which(graph$E[,2] == i))
+      ref_edge[i,2] <- 1
+    }
+  }
+  return(ref_edge)
+}
+
+#' @no Rd 
+# Converts distance on edge equal 1 to distance on edge equal to 0
+
+standardize_df_positions <- function(df, graph){
+  idx_pos1 <- which(df[["distance_on_edge"]] == 1)
+  idx_pos0 <- which(df[["distance_on_edge"]] == 0)
+  if(length(idx_pos1) + length(idx_pos0) == 0){
+    return(df)
+  }
+
+  ref_edges <- graph$.__enclos_env__$private$ref_edges
+  
+  if(length(idx_pos1)>0){
+    edge_num_pos1 <- df[["edge_number"]][idx_pos1]
+    vertices_pos1 <- graph$E[edge_num_pos1, 2]
+    df[idx_pos1,c("edge_number", "distance_on_edge")] <- ref_edges[vertices_pos1,]
+  }
+
+  if(length(idx_pos0)>0){
+    edge_num_pos0 <- df[["edge_number"]][idx_pos0]
+    vertices_pos0 <- graph$E[edge_num_pos0, 1]
+    df[idx_pos0,c("edge_number", "distance_on_edge")] <- ref_edges[vertices_pos0,]
+  }
+
+  return(df)
+}
