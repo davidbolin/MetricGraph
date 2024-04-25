@@ -1949,12 +1949,12 @@ map_into_reference_edge <- function(graph){
   return(ref_edge)
 }
 
-#' @no Rd 
+#' @noRd 
 # Converts distance on edge equal 1 to distance on edge equal to 0
 
-standardize_df_positions <- function(df, graph){
-  idx_pos1 <- which(df[["distance_on_edge"]] == 1)
-  idx_pos0 <- which(df[["distance_on_edge"]] == 0)
+standardize_df_positions <- function(df, graph, edge_number = "edge_number", distance_on_edge = "distance_on_edge"){
+  idx_pos1 <- which(df[[distance_on_edge]] == 1)
+  idx_pos0 <- which(df[[distance_on_edge]] == 0)
   if(length(idx_pos1) + length(idx_pos0) == 0){
     return(df)
   }
@@ -1962,15 +1962,17 @@ standardize_df_positions <- function(df, graph){
   ref_edges <- graph$.__enclos_env__$private$ref_edges
   
   if(length(idx_pos1)>0){
-    edge_num_pos1 <- df[["edge_number"]][idx_pos1]
+    edge_num_pos1 <- df[[edge_number]][idx_pos1]
     vertices_pos1 <- graph$E[edge_num_pos1, 2]
-    df[idx_pos1,c("edge_number", "distance_on_edge")] <- ref_edges[vertices_pos1,]
+    df[[edge_number]][idx_pos1] <- ref_edges[vertices_pos1,1]
+    df[[distance_on_edge]][idx_pos1] <- ref_edges[vertices_pos1,2]
   }
 
   if(length(idx_pos0)>0){
-    edge_num_pos0 <- df[["edge_number"]][idx_pos0]
+    edge_num_pos0 <- df[[edge_number]][idx_pos0]
     vertices_pos0 <- graph$E[edge_num_pos0, 1]
-    df[idx_pos0,c("edge_number", "distance_on_edge")] <- ref_edges[vertices_pos0,]
+    df[[edge_number]][idx_pos0] <- ref_edges[vertices_pos0,1]
+    df[[distance_on_edge]][idx_pos0] <- ref_edges[vertices_pos0,2]
   }
 
   return(df)
