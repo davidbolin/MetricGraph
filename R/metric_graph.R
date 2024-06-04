@@ -579,7 +579,7 @@ metric_graph <-  R6Class("metric_graph",
 
     # Checking if graph is connected
     if (check_connected) {
-      g <- graph(edges = c(t(self$E)), directed = FALSE)
+      g <- make_graph(edges = c(t(self$E)), directed = FALSE)
       # components <- igraph::clusters(g, mode="weak")
       components <- igraph::components(g, mode="weak")
       nc <- components$no
@@ -1075,7 +1075,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(is.null(self$geo_dist[[".vertices"]])){
-      g <- graph(edges = c(t(self$E)), directed = FALSE)
+      g <- make_graph(edges = c(t(self$E)), directed = FALSE)
       E(g)$weight <- self$edge_lengths
       self$geo_dist[[".vertices"]] <- distances(g)
     }
@@ -1113,7 +1113,7 @@ metric_graph <-  R6Class("metric_graph",
         message("Creating auxiliary graph...")
       }
       t <- system.time({
-        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        g <- make_graph(edges = c(t(self$E)), directed = FALSE)
         E(g)$weight <- self$edge_lengths
       })
       if(verbose == 2){
@@ -1219,7 +1219,7 @@ metric_graph <-  R6Class("metric_graph",
         message("Creating auxiliary graph...")
       }
       t <- system.time({
-        g <- graph(edges = c(t(graph.temp$E)), directed = FALSE)
+        g <- make_graph(edges = c(t(graph.temp$E)), directed = FALSE)
         E(g)$weight <- graph.temp$edge_lengths
       })
       if(verbose == 2){
@@ -1268,7 +1268,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @return No return value. Called for its side effects. The geodesic distances
   #' on the mesh are stored in `mesh$geo_dist` in the `metric_graph` object.
   compute_geodist_mesh = function() {
-    g <- graph(edges = c(t(self$mesh$E)), directed = FALSE)
+    g <- make_graph(edges = c(t(self$mesh$E)), directed = FALSE)
     E(g)$weight <- self$mesh$h_e
     self$mesh$geo_dist <- distances(g)
   },
@@ -3739,14 +3739,14 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Plots the connections in the graph
   #' @return No return value. Called for its side effects.
   plot_connections = function(){
-        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        g <- make_graph(edges = c(t(self$E)), directed = FALSE)
         plot(g)
   },
 
   #' @description Checks if the graph is a tree (without considering directions)
   #' @return TRUE if the graph is a tree and FALSE otherwise.
   is_tree = function(){
-        g <- graph(edges = c(t(self$E)), directed = FALSE)
+        g <- make_graph(edges = c(t(self$E)), directed = FALSE)
         return(igraph::is_tree(g, mode = "all"))
   },
 
@@ -6322,7 +6322,7 @@ graph_components <-  R6::R6Class("graph_components",
       }
 
 
-     g <- graph(edges = c(t(graph$E)), directed = FALSE)
+     g <- make_graph(edges = c(t(graph$E)), directed = FALSE)
 
     if(!is.null(edge_weights)){
       edge_weights <- graph$get_edge_weights(data.frame=TRUE)

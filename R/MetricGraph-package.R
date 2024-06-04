@@ -32,7 +32,7 @@
 "_PACKAGE"
 #' @import Matrix
 #' @export Cholesky t
-#' @importFrom igraph graph distances is_tree
+#' @importFrom igraph make_graph distances is_tree
 #' @importFrom rSPDE matern.covariance gg_df
 #' @importFrom methods is slot new
 #' @export gg_df

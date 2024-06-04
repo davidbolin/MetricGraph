@@ -12,7 +12,7 @@ template:
 navbar:
   bg: primary
   structure:
-    left:  [intro, reference, articles, news]
+    left:  [intro, reference, articles, custom, news]
     right: [search, github, twitter]
   components:
     reference:
@@ -39,6 +39,11 @@ navbar:
         href: articles/comparison.html        
       - text: On isotropic covariances on metric graphs with non-Euclidean edges
         href: articles/isotropic_noneuclidean.html                
+    custom:
+        icon: fa-comments-o
+        text: Discussions
+        href: https://github.com/davidbolin/MetricGraph/discussions
+
     twitter:
       icon: fa-twitter
       href: https://twitter.com/jdavidbolin

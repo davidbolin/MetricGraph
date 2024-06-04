@@ -6,7 +6,7 @@ test_that("Check agreement covariance function agrees", {
   c <- 1/(4*kappa^3)
   x <- seq(0,1,length.out=10)
   expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa),
-               rSPDE::matern.covariance(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+               rSPDE::matern.covariance(x, kappa, 3/2, sigma)*c, tol=1e-9)
 })
 
 
