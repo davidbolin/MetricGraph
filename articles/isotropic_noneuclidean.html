@@ -64,6 +64,13 @@
   </div>
 </li>
 <li class="nav-item">
+  <a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions">
+    <span class="fa fa-comments-o"></span>
+     
+    Discussions
+  </a>
+</li>
+<li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
 </li>
       </ul>
@@ -101,7 +108,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-11. Last
-modified: 2024-05-08.</h4>
+modified: 2024-06-04.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/isotropic_noneuclidean.rmd" class="external-link"><code>vignettes/isotropic_noneuclidean.rmd</code></a></small>
       <div class="d-none name"><code>isotropic_noneuclidean.rmd</code></div>
@@ -280,8 +287,9 @@ which the observations were turned into vertices).</p>
 <code class="sourceCode R"><span><span class="va">df_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>edge_number <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>, distance_on_edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Adding observations...</span></span>
-<span></span>
+<span><span class="co">#&gt; Adding observations...</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
 <p>Let us now compute the resistance distances between the original
@@ -290,12 +298,12 @@ method with the arguments <code>full=TRUE</code> to compute the
 resistance distance at all available locations, and
 <code>include_vertices=TRUE</code> to include the original vertices of
 the metric graph in the result.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">compute_resdist</span><span class="op">(</span>full<span class="op">=</span><span class="cn">TRUE</span>, include_vertices <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Since we have 3 vertices, the resistance distances between the
 original vertices are given by the elements 1 to 3 of the resulting
 matrix:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_dist_orig</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">res_dist</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span>
 <span><span class="va">res_dist_orig</span></span>
 <span><span class="co">#&gt; 3 x 3 Matrix of class "dgeMatrix"</span></span>
@@ -309,7 +317,7 @@ distances on non-Euclidean metric graphs is severe.</p>
 <p>In particular, the impact on the covariance function is severe. For
 example, let us consider an exponential covariance function with
 <code>sigma=1</code> and <code>kappa=1</code>:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/exp_covariance.html">exp_covariance</a></span><span class="op">(</span><span class="va">res_dist_graph</span>, theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 3 x 3 Matrix of class "dgeMatrix"</span></span>
 <span><span class="co">#&gt;           [,1]       [,2]       [,3]</span></span>
@@ -317,7 +325,7 @@ example, let us consider an exponential covariance function with
 <span><span class="co">#&gt; [2,] 0.3678794 1.00000000 0.07647977</span></span>
 <span><span class="co">#&gt; [3,] 0.2078936 0.07647977 1.00000000</span></span></code></pre></div>
 <p>and</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/exp_covariance.html">exp_covariance</a></span><span class="op">(</span><span class="va">res_dist_orig</span>, theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 3 x 3 Matrix of class "dgeMatrix"</span></span>
 <span><span class="co">#&gt;           [,1]      [,2]      [,3]</span></span>
