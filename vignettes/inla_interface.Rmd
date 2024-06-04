@@ -191,7 +191,7 @@ data_stk <- inla.stack.data(stk_dat)
 Finally, we fit the model:
 
 ```{r, message=FALSE, warning=FALSE}
-spde_fit <- inla(f.s, data = data_stk)
+spde_fit <- inla(f.s, data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)))
 ```
 
 Let us now obtain the estimates in the original scale
