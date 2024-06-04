@@ -65,7 +65,9 @@ graph_spde <- function(graph_object,
 
   graph_spde <- graph_object$clone()
 
-  graph_spde$observation_to_vertex(mesh_warning=FALSE)
+  if(!is.null(graph_spde$.__enclos_env__$private$data)){
+    graph_spde$observation_to_vertex(mesh_warning=FALSE)
+  }
 
   parameterization <- parameterization[[1]]
   if(!(alpha%in%c(1,2))){
@@ -328,7 +330,7 @@ if(alpha == 1){
             parameterization = parameterization))
 }
 model$graph_spde <- graph_spde
-model$data_PtE <- graph_object$get_PtE()
+model$data_PtE <- suppressWarnings(graph_object$get_PtE())
 model$parameterization <- parameterization
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
