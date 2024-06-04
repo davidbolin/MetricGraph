@@ -193,7 +193,7 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 #' lower and upper edge end points
 #' @return Precision matrix or list
 #' @noRd
-Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
+Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_points = NULL) {
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -214,8 +214,8 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
     l_e <- graph$edge_lengths[i]
     #lots of redundant caculations
-    d_ <- c(0, l_e)
-    D <- outer(d_, d_, "-")
+    # d_ <- c(0, l_e)
+    # D <- outer(d_, d_, "-")
     r_0l <-   r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
     r_11 <- - r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
     # order by node not derivative
@@ -310,34 +310,56 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
   }
 
-  if(BC> 0){
-    #Vertices with of degree 1
-    i.table <- table(c(graph$E))
-    index <- as.integer(names(which(i.table == 1)))
-    #for this vertices locate position
+  if(is.null(stationary_points)){
+      if(BC> 0){
+        #Vertices with of degree 1
+        i.table <- table(c(graph$E))
+        index <- as.integer(names(which(i.table == 1)))
+        #for this vertices locate position
 
 
-    if(BC==1 || BC==2){
-      lower.edges <- which(graph$E[, 1] %in% index)
-      for (le in lower.edges) {
-        ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
+        if(BC==1 || BC==2){
+          lower.edges <- which(graph$E[, 1] %in% index)
+          for (le in lower.edges) {
+            ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
 
-        i_ <- c(i_, ind)
-        j_ <- c(j_, ind)
-        x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
-        count <- count + 2
-      }
-    }
-    if(BC==1 || BC==3){
-      upper.edges <- which(graph$E[, 2] %in% index)
-      for (ue in upper.edges) {
-        ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
-        i_ <- c(i_, ind)
-        j_ <- c(j_, ind)
-        x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
-        count <- count + 2
-      }
-    }
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
+        }
+        if(BC==1 || BC==3){
+          upper.edges <- which(graph$E[, 2] %in% index)
+          for (ue in upper.edges) {
+            ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
+        }
+      } 
+  } else{
+    index <- stationary_points
+    lower.edges <- which(graph$E[, 1] %in% index)
+          for (le in lower.edges) {
+            ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
+
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
+
+          upper.edges <- which(graph$E[, 2] %in% index)
+          for (ue in upper.edges) {
+            ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }          
   }
   if (build) {
     Q <- Matrix::sparseMatrix(i    = i_[1:count],

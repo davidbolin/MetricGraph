@@ -72,7 +72,7 @@ graph_spde <- function(graph_object,
     stop("alpha must be either 1 or 2!")
   }
   if(alpha == 2){
-    stop("Only alpha=1 implemented.")
+    stop("alpha 2 implementation under development.")
   }
   nu <- alpha - 0.5
   V <- graph_spde$V
@@ -82,90 +82,123 @@ graph_spde <- function(graph_object,
   i_ <- j_ <- rep(0, dim(V)[1]*4)
   nE <- dim(EtV)[1]
   count <- 0
-  for(i in 1:nE){
-    l_e <- El[i]
-
-    if(EtV[i,1]!=EtV[i,2]){
-
-      i_[count + 1] <- EtV[i,1] - 1
-      j_[count + 1] <- EtV[i,1] - 1
-
-      i_[count + 2] <- EtV[i,2] - 1
-      j_[count + 2] <- EtV[i,2] - 1
-
-
-      i_[count + 3] <- EtV[i,1] - 1
-      j_[count + 3] <- EtV[i,2] - 1
-
-      i_[count + 4] <- EtV[i,2] - 1
-      j_[count + 4] <- EtV[i,1] - 1
-      count <- count + 4
-    }else{
-      i_[count + 1] <- EtV[i,1] - 1
-      j_[count + 1] <- EtV[i,1] - 1
-      count <- count + 1
+  if(alpha == 1){
+      for(i in 1:nE){
+        l_e <- El[i]
+    
+        if(EtV[i,1]!=EtV[i,2]){
+        
+          i_[count + 1] <- EtV[i,1] - 1
+          j_[count + 1] <- EtV[i,1] - 1
+    
+          i_[count + 2] <- EtV[i,2] - 1
+          j_[count + 2] <- EtV[i,2] - 1
+    
+    
+          i_[count + 3] <- EtV[i,1] - 1
+          j_[count + 3] <- EtV[i,2] - 1
+    
+          i_[count + 4] <- EtV[i,2] - 1
+          j_[count + 4] <- EtV[i,1] - 1
+          count <- count + 4
+        }else{
+          i_[count + 1] <- EtV[i,1] - 1
+          j_[count + 1] <- EtV[i,1] - 1
+          count <- count + 1
+        }
+      }
+      n.v <- dim(V)[1]
+    
+      if(stationary_endpoints == "all"){
+        i.table <- table(i_[1:count])
+        index <- as.integer(names(which(i.table<3)))
+        index <- index
+      } else if(stationary_endpoints == "none"){
+        index <- NULL
+      } else{
+        index <- stationary_endpoints - 1
+      }
+        if(!is.null(index)){
+        #does this work for circle?
+            i_ <- c(i_[1:count], index)
+            j_ <- c(j_[1:count], index)
+            count <- count + length(index)
+        }
+    
+        if(is.null(index)){
+            index <- -1
+        }
+    
+        EtV2 <- EtV[,1]
+        EtV3 <- EtV[,2]
+        El <- as.vector(El)
+    
+    
+      idx_ij <- order(i_, j_)
+      j_ <- j_[idx_ij]
+      i_ <- i_[idx_ij]
+    
+      idx_sub <- which(i_ <= j_)
+      j_ <- j_[idx_sub]
+      i_ <- i_[idx_sub]
+    
+      graph_matrix_1 <- cbind(i_, j_)
+      graph_matrix <- unique(graph_matrix_1)
+    
+      count_idx <- numeric(nrow(graph_matrix))
+    
+      row_tmp <- 1
+      for(i in 1:nrow(graph_matrix)){
+        count_tmp <- 0
+        j <- row_tmp
+        while(j <= nrow(graph_matrix_1) && all(graph_matrix[i,]==graph_matrix_1[j,])){
+          count_tmp <- count_tmp + 1
+          j <- j + 1
+        }
+        row_tmp <- j
+        count_idx[i] <- count_tmp
+      }
+    
+      i_ <- graph_matrix[,1]
+      j_ <- graph_matrix[,2]
+    
+      idx_ij <- idx_ij[idx_sub]
+      idx_ij <- sort(idx_ij, index.return=TRUE)
+      idx_ij <- idx_ij$ix
+    
+      idx_ij <- idx_ij - 1
+  } else if(alpha == 2){
+    if(stationary_endpoints == "all"){
+        i.table <- table(c(graph$E))
+        index <- as.integer(names(which(i.table == 1)))
+        BC = 1
+    } else if(stationary_endpoints == "none"){
+      index <- NULL
+      BC = 0
+    } else{
+        index <- stationary_endpoints - 1
+        BC = 1
     }
-  }
-  n.v <- dim(V)[1]
-
-  if(stationary_endpoints == "all"){
-    i.table <- table(i_[1:count])
-    index <- as.integer(names(which(i.table<3)))
-    index <- index
-  } else if(stationary_endpoints == "none"){
-    index <- NULL
-  } else{
-    index <- stationary_endpoints - 1
-  }
-    if(!is.null(index)){
-    #does this work for circle?
-        i_ <- c(i_[1:count], index)
-        j_ <- c(j_[1:count], index)
-        count <- count + length(index)
+    Q_tmp <- spde_precision(kappa = 1, tau = 1,
+                      alpha = 2, graph = graph_object, BC=BC, stationary_points=stationary_points)
+    if(is.null(graph$CoB)){
+      graph_object$buildC(2, edge_constraint = BC)
     }
-
+    n_const <- length(graph$CoB$S)
+    ind.const <- c(1:n_const)
+    Tc <- graph$CoB$T[-ind.const, ]                      
+    Q_tmp <- Tc%*%Q%*%t(Tc)
+    Q_tmp <- as(as(Q_tmp, "dsCMatrix"), "dsTMatrix")
+    i_ <- Q_tmp@i
+    j_ <- Q_tmp@j
     if(is.null(index)){
-        index <- -1
+      index <- -1
     }
-
-    EtV2 <- EtV[,1]
-    EtV3 <- EtV[,2]
-    El <- as.vector(El)
-
-
-  idx_ij <- order(i_, j_)
-  j_ <- j_[idx_ij]
-  i_ <- i_[idx_ij]
-
-  idx_sub <- which(i_ <= j_)
-  j_ <- j_[idx_sub]
-  i_ <- i_[idx_sub]
-
-  graph_matrix_1 <- cbind(i_, j_)
-  graph_matrix <- unique(graph_matrix_1)
-
-  count_idx <- numeric(nrow(graph_matrix))
-
-  row_tmp <- 1
-  for(i in 1:nrow(graph_matrix)){
-    count_tmp <- 0
-    j <- row_tmp
-    while(j <= nrow(graph_matrix_1) && all(graph_matrix[i,]==graph_matrix_1[j,])){
-      count_tmp <- count_tmp + 1
-      j <- j + 1
-    }
-    row_tmp <- j
-    count_idx[i] <- count_tmp
-  }
-
-  i_ <- graph_matrix[,1]
-  j_ <- graph_matrix[,2]
-
-  idx_ij <- idx_ij[idx_sub]
-  idx_ij <- sort(idx_ij, index.return=TRUE)
-  idx_ij <- idx_ij$ix
-
-  idx_ij <- idx_ij - 1
+    Tc <- as(Tc, "dgTMatrix")
+    i_Tc <- Tc@i
+    j_Tc <- Tc@j
+    x_Tc <- Tc@x
+  } 
 
 
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
@@ -250,7 +283,7 @@ graph_spde <- function(graph_object,
     }
   }
 
-
+if(alpha == 1){
   model <-
         do.call(eval(parse(text='INLA::inla.cgeneric.define')),
         list(model="inla_cgeneric_gpgraph_alpha1_model",
@@ -271,6 +304,29 @@ graph_spde <- function(graph_object,
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
             parameterization = parameterization))
+} else{
+    model <-
+        do.call(eval(parse(text='INLA::inla.cgeneric.define')),
+        list(model="inla_cgeneric_gpgraph_alpha2_model",
+            shlib=gpgraph_lib,
+            n=as.integer(n.v), debug=debug,
+            prec_graph_i = as.integer(i_),
+            prec_graph_j = as.integer(j_),
+            i_Tc = as.integer(i_Tc),
+            j_Tc = as.integer(j_Tc),
+            x_Tc = x_Tc,
+            EtV2 = EtV2,
+            EtV3 = EtV3,
+            El = El,
+            stationary_endpoints = as.integer(index),
+            start_theta = start_theta,
+            start_lsigma = start_lsigma,
+            prior_theta_meanlog = prior_theta$meanlog,
+            prior_theta_sdlog = prior_theta$sdlog,
+            prior_sigma_meanlog = prior_sigma$meanlog,
+            prior_sigma_sdlog = prior_sigma$sdlog,
+            parameterization = parameterization))
+}
 model$graph_spde <- graph_spde
 model$data_PtE <- graph_object$get_PtE()
 model$parameterization <- parameterization
@@ -1329,7 +1385,16 @@ predict.rspde_metric_graph <- function(object,
 graph_bru_process_data <- function(data, edge_number = "edge_number",
                                         distance_on_edge = "distance_on_edge",
                                         loc = "loc"){
-
+                                        if(inherits(data, "metric_graph_data")){
+                                          edge_number <- ".edge_number"
+                                          distance_on_edge = ".distance_on_edge"
+                                        }
+                                        if(is.null(data[[edge_number]])){
+                                          stop(paste("No column",edge_number,"was found in data."))
+                                        }
+                                        if(is.null(data[[distance_on_edge]])){
+                                          stop(paste("No column",distance_on_edge,"was found in data."))
+                                        }                                        
                                         data[[loc]] <- cbind(data[[edge_number]], data[[distance_on_edge]])
                                         data[[edge_number]] <- NULL
                                         data[[distance_on_edge]] <- NULL
