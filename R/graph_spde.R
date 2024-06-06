@@ -212,8 +212,8 @@ graph_spde <- function(graph_object,
     lower.edges <- NULL
     upper.edges <- NULL
     if(!is.null(index)){
-      lower.edges <- which(graph$E[, 1] %in% index)
-      upper.edges <- which(graph$E[, 2] %in% index)
+      lower.edges <- which(graph_object$E[, 1] %in% index)
+      upper.edges <- which(graph_object$E[, 2] %in% index)
     }
 
     lower_edges_len <- length(lower.edges)
@@ -252,8 +252,12 @@ graph_spde <- function(graph_object,
   }
 
   if(is.null(prior_sigma$meanlog)){
+    # the prior for sigma
     prior_sigma$meanlog <- 0
   }
+  # converting to reciprocal tau
+  const_tmp <-  sqrt(gamma(nu) / (exp(prior_kappa$meanlog)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
+  prior_sigma$meanlog <- log(exp(prior_sigma$meanlog)/const_tmp)
 
   if(is.null(prior_sigma$sdlog)){
     prior_sigma$sdlog <- sqrt(10)
@@ -269,6 +273,9 @@ graph_spde <- function(graph_object,
   } else{
     start_lsigma <- log(start_sigma)
   }
+  # converting to reciprocal tau
+  const_tmp <-  sqrt(gamma(nu) / (exp(start_lkappa)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
+  start_lsigma <- log(exp(start_lsigma)/const_tmp)
   if(is.null(start_range)){
     start_lrange <- prior_range$meanlog
   } else{
@@ -357,6 +364,7 @@ model$graph_spde <- graph_spde
 model$data_PtE <- suppressWarnings(graph_object$get_PtE())
 model$parameterization <- parameterization
 model$Tc <- Tc
+model$alpha <- alpha
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
 }
@@ -645,6 +653,9 @@ spde_metric_graph_result <- function(inla, name,
 
   result <- list()
 
+  alpha <- metric_graph_spde$alpha
+  nu <- alpha - 0.5
+
   parameterization <- metric_graph_spde$parameterization
 
     if(parameterization == "spde"){
@@ -718,9 +729,9 @@ spde_metric_graph_result <- function(inla, name,
             reciprocal_tau_est <- exp(hyperpar_sample[, paste0('Theta1 for ',name)])
             tau_est <- 1/reciprocal_tau_est
             range_est <- exp(hyperpar_sample[, paste0('Theta2 for ',name)])
-            kappa_est <- sqrt(4)/range_est
-            sigma_est <- sqrt(gamma(0.5) / (tau_est^2 * kappa_est^(2 * 0.5) *
-                    (4 * pi)^(1 / 2) * gamma(0.5 + 1 / 2)))
+            kappa_est <- sqrt(8*nu)/range_est
+            sigma_est <- sqrt(gamma(nu) / (tau_est^2 * kappa_est^(2 * nu) *
+                    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
 
             density_sigma <- stats::density(sigma_est, n = n_density)
 

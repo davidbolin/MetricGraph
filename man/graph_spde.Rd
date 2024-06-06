@@ -25,7 +25,7 @@ graph_spde(
 \item{alpha}{The order of the SPDE.}
 
 \item{stationary_endpoints}{Which vertices of degree 1 should contain
-stationary boundary conditions?}
+stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.}
 
 \item{parameterization}{Which parameterization to be used? The options are
 'matern' (sigma and range) and 'spde' (sigma and kappa).}
