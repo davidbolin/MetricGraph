@@ -12,9 +12,11 @@ graph_spde(
   start_range = NULL,
   prior_range = NULL,
   start_kappa = NULL,
-  start_sigma = NULL,
   prior_kappa = NULL,
+  start_sigma = NULL,
   prior_sigma = NULL,
+  start_tau = NULL,
+  prior_tau = NULL,
   shared_lib = "detect",
   debug = FALSE
 )
@@ -38,13 +40,18 @@ the log scale. Will not be used if prior.kappa is non-null.}
 
 \item{start_kappa}{Starting value for kappa.}
 
-\item{start_sigma}{Starting value for sigma.}
-
 \item{prior_kappa}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of kappa on the log scale.}
 
+\item{start_sigma}{Starting value for sigma.}
+
 \item{prior_sigma}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.}
+
+\item{start_tau}{Starting value for tau.}
+
+\item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
+\code{sdlog}, that is, the mean and standard deviation of tau on the log scale.}
 
 \item{shared_lib}{Which shared lib to use for the cgeneric implementation?
 If "detect", it will check if the shared lib exists locally, in which case it will

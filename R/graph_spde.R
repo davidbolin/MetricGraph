@@ -13,6 +13,9 @@
 #' @param start_sigma Starting value for sigma.
 #' @param prior_sigma a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of sigma on the log scale.
+#' @param start_tau Starting value for tau.
+#' @param prior_tau a `list` containing the elements `meanlog` and
+#' `sdlog`, that is, the mean and standard deviation of tau on the log scale.
 #' @param start_range Starting value for range parameter.
 #' @param prior_range a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of the range parameter on
@@ -57,9 +60,11 @@ graph_spde <- function(graph_object,
                        start_range = NULL,
                        prior_range = NULL,
                        start_kappa = NULL,
-                       start_sigma = NULL,
                        prior_kappa = NULL,
+                       start_sigma = NULL,
                        prior_sigma = NULL,
+                       start_tau = NULL,
+                       prior_tau = NULL,
                        shared_lib = "detect",
                        debug = FALSE){
 
@@ -259,6 +264,10 @@ graph_spde <- function(graph_object,
   const_tmp <-  sqrt(gamma(nu) / (exp(prior_kappa$meanlog)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
   prior_sigma$meanlog <- log(exp(prior_sigma$meanlog)/const_tmp)
 
+  if(!is.null(prior_tau$meanlog)){
+    prior_sigma$meanlog <- -prior_tau$meanlog
+  }
+
   if(is.null(prior_sigma$sdlog)){
     prior_sigma$sdlog <- sqrt(10)
   }
@@ -276,6 +285,9 @@ graph_spde <- function(graph_object,
   # converting to reciprocal tau
   const_tmp <-  sqrt(gamma(nu) / (exp(start_lkappa)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
   start_lsigma <- log(exp(start_lsigma)/const_tmp)
+  if(!is.null(start_tau)){
+    start_lsigma <- -log(start_tau)
+  }
   if(is.null(start_range)){
     start_lrange <- prior_range$meanlog
   } else{

@@ -146,7 +146,7 @@ Tc <- graph$CoB$T[-ind.const, ]
 Q <- Tc%*%Q%*%t(Tc)
 
 spde_model_check <- graph_spde(graph, alpha = 2, start_kappa = kappa,
-                                    start_sigma = 1/tau,
+                                    start_sigma = sigma,
                                     parameterization = "spde", stationary_endpoints="none")
 
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
@@ -166,7 +166,7 @@ Tc <- graph$CoB$T[-ind.const, ]
 Q <- Tc%*%Q%*%t(Tc)
 
 spde_model_check <- graph_spde(graph, alpha = 2, start_kappa = kappa,
-                                    start_sigma = 1/tau,
+                                    start_sigma = sigma,
                                     parameterization = "spde", stationary_endpoints="all")
 
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
