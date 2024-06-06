@@ -1,4 +1,4 @@
-test_that("Check cgeneric precision matrices", {
+test_that("Check cgeneric precision matrices for alpha = 1", {
 set.seed(1)
 testthat::skip_on_cran()
   if (!requireNamespace("INLA", quietly=TRUE))
@@ -76,6 +76,80 @@ spde_model <- graph_spde(graph)
 spde_model_check <- graph_spde(graph, start_kappa = kappa,
                                     start_sigma = 1/tau,
                                     parameterization = "spde")
+
+Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
+
+expect_equal(sum((Q_chk@i - Q@i)^2), 0)
+expect_equal(sum((Q_chk@p - Q@p)^2), 0)
+expect_equal(sum((Q_chk@x-Q@x)^2), 0)
+
+  INLA::inla.setOption(num.threads = old_threads)
+})
+
+test_that("Check cgeneric precision matrices for alpha = 2", {
+set.seed(1)
+testthat::skip_on_cran()
+  if (!requireNamespace("INLA", quietly=TRUE))
+    testthat::skip(message = 'INLA package is not installed. (see www.r-inla.org/download-install)')
+  
+  old_threads <- INLA::inla.getOption("num.threads")
+  INLA::inla.setOption(num.threads = "1:1")
+
+
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph <- metric_graph$new(edges = edges)
+
+obs.per.edge <- 100
+obs.loc <- NULL
+for(i in 1:(graph$nE)) {
+  obs.loc <- rbind(obs.loc,
+                   cbind(rep(i,obs.per.edge), runif(obs.per.edge) * 
+                          graph$edge_lengths[i]))
+}
+
+n.obs <- nrow(obs.loc)
+
+y <- rep(NA, obs.per.edge * graph$nE)
+
+df_temp <- data.frame(y = y, edge_number = obs.loc[,1], distance_on_edge = obs.loc[,2])
+
+graph$add_observations(data = df_temp, normalized = FALSE)
+
+graph$observation_to_vertex()
+
+A <- graph$.__enclos_env__$private$A()
+
+sigma <- 1
+
+sigma.e <- 0.1
+
+nu <- 1.5
+
+r <- 0.3
+
+kappa <- sqrt(8 * nu) / r
+
+tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
+
+theta <- c(sigma, kappa)
+
+Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 1)
+
+graph$buildC(2)
+n_const <- length(graph$CoB$S)
+ind.const <- c(1:n_const)
+Tc <- graph$CoB$T[-ind.const, ]         
+
+Q <- Tc%*%Q%*%t(Tc)
+
+spde_model_check <- graph_spde(graph, alpha = 2, start_kappa = kappa,
+                                    start_sigma = 1/tau,
+                                    parameterization = "spde", stationary_endpoints="none")
 
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
 

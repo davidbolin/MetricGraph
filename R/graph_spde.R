@@ -7,7 +7,7 @@
 #' @param graph_object A `metric_graph` object.
 #' @param alpha The order of the SPDE.
 #' @param stationary_endpoints Which vertices of degree 1 should contain
-#' stationary boundary conditions?
+#' stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.
 #' @param parameterization Which parameterization to be used? The options are
 #' 'matern' (sigma and range) and 'spde' (sigma and kappa).
 #' @param start_sigma Starting value for sigma.
@@ -179,7 +179,7 @@ graph_spde <- function(graph_object,
         index <- stationary_endpoints - 1
         BC = 1
     }
-    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_object, BC=BC, stationary_points=stationary_endpoints)
+    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_object, BC=BC, stationary_points=index)
     if(is.null(graph_object$CoB)){
       graph_object$buildC(2, edge_constraint = BC)
     }
@@ -209,18 +209,7 @@ graph_spde <- function(graph_object,
     x_Tc <- Tc@x
     lower.edges <- NULL
     upper.edges <- NULL
-
-    if(is.null(stationary_endpoints)){
-      if(BC> 0){
-        #Vertices with of degree 1
-        i.table <- table(c(graph$E))
-        index <- as.integer(names(which(i.table == 1)))
-        #for this vertices locate position
-        lower.edges <- which(graph$E[, 1] %in% index)
-        upper.edges <- which(graph$E[, 2] %in% index)
-        }
-      } else{
-      index <- stationary_endpoints
+    if(!is.null(index)){
       lower.edges <- which(graph$E[, 1] %in% index)
       upper.edges <- which(graph$E[, 2] %in% index)
     }
