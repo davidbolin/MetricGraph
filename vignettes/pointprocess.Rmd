@@ -120,7 +120,7 @@ $$
 For this we can use the function `graph_lgcp` as follows:
 ```{r}
   sigma <- 0.5
-  range <- 1.5
+  range <- 2
   alpha <- 2
   lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma,
                             range = range, alpha = alpha,
@@ -275,7 +275,7 @@ Let us now test show an example with replicates. Let us first simulate replicate
 ```{r}
   n.rep <- 30
   sigma <- 0.5
-  range <- 1.5
+  range <- 2
   alpha <- 2
   lgcp_sample <- graph_lgcp(n = n.rep, intercept = 1, sigma = sigma,
                             range = range, alpha = alpha,

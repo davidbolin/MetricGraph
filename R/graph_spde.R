@@ -23,8 +23,8 @@
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
 #' If "detect", it will check if the shared lib exists locally, in which case it will
 #' use it. Otherwise it will use 'INLA's shared library.
-#' If 'INLA', it will use the shared lib from 'INLA's installation. If 'MetricGraph', then
-#' it will use the local installation (does not work if your installation is from CRAN).
+#' If 'INLA', it will use the shared lib from 'INLA's installation. If 'rSPDE', then
+#' it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
 #'
@@ -73,9 +73,7 @@ graph_spde <- function(graph_object,
   if(!(alpha%in%c(1,2))){
     stop("alpha must be either 1 or 2!")
   }
-  if(alpha == 2){
-    stop("alpha 2 implementation under development.")
-  }
+
   nu <- alpha - 0.5
   V <- graph_spde$V
   EtV <- graph_spde$E
@@ -171,7 +169,7 @@ graph_spde <- function(graph_object,
       idx_ij <- idx_ij - 1
   } else if(alpha == 2){
     if(stationary_endpoints == "all"){
-        i.table <- table(c(graph$E))
+        i.table <- table(c(graph_spde$E))
         index <- as.integer(names(which(i.table == 1)))
         BC = 1
     } else if(stationary_endpoints == "none"){
@@ -181,26 +179,62 @@ graph_spde <- function(graph_object,
         index <- stationary_endpoints - 1
         BC = 1
     }
-    Q_tmp <- spde_precision(kappa = 1, tau = 1,
-                      alpha = 2, graph = graph_object, BC=BC, stationary_points=stationary_points)
-    if(is.null(graph$CoB)){
+    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_object, BC=BC, stationary_points=stationary_endpoints)
+    if(is.null(graph_object$CoB)){
       graph_object$buildC(2, edge_constraint = BC)
     }
-    n_const <- length(graph$CoB$S)
+    n_const <- length(graph_object$CoB$S)
     ind.const <- c(1:n_const)
-    Tc <- graph$CoB$T[-ind.const, ]                      
-    Q_tmp <- Tc%*%Q%*%t(Tc)
-    Q_tmp <- as(as(Q_tmp, "dsCMatrix"), "dsTMatrix")
+    Tc <- graph_object$CoB$T[-ind.const, ]                      
+    Q_tmp <- Tc%*%Q_tmp%*%t(Tc)
+
+    Q_tmp <- INLA::inla.as.sparse(Q_tmp)
+    ii <- Q_tmp@i
+    Q_tmp@i <- Q_tmp@j
+    Q_tmp@j <- ii
+    idx <- which(Q_tmp@i <= Q_tmp@j)
+    Q_tmp@i <- Q_tmp@i[idx]
+    Q_tmp@j <- Q_tmp@j[idx]
+    Q_tmp@x <- Q_tmp@x[idx]
+    
     i_ <- Q_tmp@i
     j_ <- Q_tmp@j
+
     if(is.null(index)){
       index <- -1
     }
-    Tc <- as(Tc, "dgTMatrix")
+    Tc <- as(Tc, "TsparseMatrix")
     i_Tc <- Tc@i
     j_Tc <- Tc@j
     x_Tc <- Tc@x
+    lower.edges <- NULL
+    upper.edges <- NULL
+
+    if(is.null(stationary_endpoints)){
+      if(BC> 0){
+        #Vertices with of degree 1
+        i.table <- table(c(graph$E))
+        index <- as.integer(names(which(i.table == 1)))
+        #for this vertices locate position
+        lower.edges <- which(graph$E[, 1] %in% index)
+        upper.edges <- which(graph$E[, 2] %in% index)
+        }
+      } else{
+      index <- stationary_endpoints
+      lower.edges <- which(graph$E[, 1] %in% index)
+      upper.edges <- which(graph$E[, 2] %in% index)
+    }
+
+    lower_edges_len <- length(lower.edges)
+    upper_edges_len <- length(upper.edges)
+    if(length(lower.edges) == 0){
+      lower.edges <- -1
+    }
+    if(length(upper.edges)==0){
+      upper.edges <- -1
+    }
   } 
+  
 
 
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
@@ -264,19 +298,19 @@ graph_spde <- function(graph_object,
 
   if(shared_lib == "INLA"){
     gpgraph_lib <- INLA::inla.external.lib('rSPDE')
-  } else if(shared_lib == "MetricGraph"){
-    gpgraph_lib <- system.file('shared', package='MetricGraph')
+  } else if(shared_lib == "rSPDE"){
+    gpgraph_lib <- system.file('shared', package='rSPDE')
     if(Sys.info()['sysname']=='Windows') {
-		gpgraph_lib <- paste0(gpgraph_lib, "/gpgraph_cgeneric_models.dll")
+		gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.dll")
             } else {
-		gpgraph_lib <- paste0(gpgraph_lib, "/gpgraph_cgeneric_models.so")
+		gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.so")
             }
   } else if(shared_lib == "detect"){
-    gpgraph_lib_local <- system.file('shared', package='MetricGraph')
+    gpgraph_lib_local <- system.file('shared', package='rSPDE')
     if(Sys.info()['sysname']=='Windows') {
-		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/gpgraph_cgeneric_models.dll")
+		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.dll")
             } else {
-		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/gpgraph_cgeneric_models.so")
+		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.so")
             }
     if(file.exists(gpgraph_lib_local)){
       gpgraph_lib <- gpgraph_lib_local
@@ -311,16 +345,15 @@ if(alpha == 1){
         do.call(eval(parse(text='INLA::inla.cgeneric.define')),
         list(model="inla_cgeneric_gpgraph_alpha2_model",
             shlib=gpgraph_lib,
-            n=as.integer(n.v), debug=debug,
+            n=dim(Q_tmp)[1], debug=debug,
             prec_graph_i = as.integer(i_),
             prec_graph_j = as.integer(j_),
-            i_Tc = as.integer(i_Tc),
-            j_Tc = as.integer(j_Tc),
-            x_Tc = x_Tc,
-            EtV2 = EtV2,
-            EtV3 = EtV3,
+            Tc = Tc,
             El = El,
-            stationary_endpoints = as.integer(index),
+            upper_edges = as.integer(upper.edges),
+            lower_edges = as.integer(lower.edges),
+            upper_edges_len = upper_edges_len,
+            lower_edges_len = lower_edges_len,
             start_theta = start_theta,
             start_lsigma = start_lsigma,
             prior_theta_meanlog = prior_theta$meanlog,

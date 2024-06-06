@@ -290,14 +290,6 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
       j_[count + 14] <- 4 * (i - 1) + 2
       x_[count + 14] <- Q_adj[2, 3]
 
-      #lower edge  u', upper edge  u,
-      i_[count + 13] <- 4 * (i - 1) + 2
-      j_[count + 13] <- 4 * (i - 1) + 3
-      x_[count + 13] <- Q_adj[2, 3]
-      i_[count + 14] <- 4 * (i - 1) + 3
-      j_[count + 14] <- 4 * (i - 1) + 2
-      x_[count + 14] <- Q_adj[2, 3]
-
       #lower edge  u', upper edge  u',
       i_[count + 15] <- 4 * (i - 1) + 2
       j_[count + 15] <- 4 * (i - 1) + 4
