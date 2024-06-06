@@ -74,6 +74,8 @@ graph_spde <- function(graph_object,
     stop("alpha must be either 1 or 2!")
   }
 
+
+  Tc <- NULL
   nu <- alpha - 0.5
   V <- graph_spde$V
   EtV <- graph_spde$E
@@ -354,6 +356,7 @@ if(alpha == 1){
 model$graph_spde <- graph_spde
 model$data_PtE <- suppressWarnings(graph_object$get_PtE())
 model$parameterization <- parameterization
+model$Tc <- Tc
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
 }

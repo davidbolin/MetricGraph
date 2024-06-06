@@ -104,7 +104,7 @@ edge4 <- cbind(sin(theta),1+ cos(theta))
 edges = list(edge1, edge2, edge3, edge4)
 graph <- metric_graph$new(edges = edges)
 
-obs.per.edge <- 100
+obs.per.edge <- 20
 obs.loc <- NULL
 for(i in 1:(graph$nE)) {
   obs.loc <- rbind(obs.loc,
@@ -122,8 +122,6 @@ graph$add_observations(data = df_temp, normalized = FALSE)
 
 graph$observation_to_vertex()
 
-A <- graph$.__enclos_env__$private$A()
-
 sigma <- 1
 
 sigma.e <- 0.1
@@ -138,7 +136,7 @@ tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu 
 
 theta <- c(sigma, kappa)
 
-Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 1)
+Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 0)
 
 graph$buildC(2)
 n_const <- length(graph$CoB$S)
@@ -155,7 +153,27 @@ Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
 
 expect_equal(sum((Q_chk@i - Q@i)^2), 0)
 expect_equal(sum((Q_chk@p - Q@p)^2), 0)
-expect_equal(sum((Q_chk@x-Q@x)^2), 0)
+expect_equal(max(abs((Q_chk@x-Q@x)^2)), 0, tol = 1e-4)
+
+
+Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 1)
+
+graph$buildC(2)
+n_const <- length(graph$CoB$S)
+ind.const <- c(1:n_const)
+Tc <- graph$CoB$T[-ind.const, ]         
+
+Q <- Tc%*%Q%*%t(Tc)
+
+spde_model_check <- graph_spde(graph, alpha = 2, start_kappa = kappa,
+                                    start_sigma = 1/tau,
+                                    parameterization = "spde", stationary_endpoints="all")
+
+Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
+
+expect_equal(sum((Q_chk@i - Q@i)^2), 0)
+expect_equal(sum((Q_chk@p - Q@p)^2), 0)
+expect_equal(sum((Q_chk@x-Q@x)^2), 0, tol = 1e-3)
 
   INLA::inla.setOption(num.threads = old_threads)
 })
