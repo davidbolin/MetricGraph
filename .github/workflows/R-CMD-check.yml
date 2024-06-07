@@ -53,7 +53,9 @@ jobs:
       - name: Install system dependencies on Linux (GL)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update -y && sudo apt-get install -y libglu1-mesa-dev
+          sudo apt-get update -y && sudo apt-get install -y libglu1-mesa-dev libeigen3-dev
+          sudo ln -s /usr/bin/gcc /usr/local/bin/gcc
+          sudo ln -s /usr/bin/g++ /usr/local/bin/g++          
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"all"'
