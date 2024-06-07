@@ -74,7 +74,7 @@ graph$.__enclos_env__$private$data$y <- as.vector(y)
 spde_model <- graph_spde(graph)
 
 spde_model_check <- graph_spde(graph, start_kappa = kappa,
-                                    start_sigma = 1/tau,
+                                    start_tau = tau,
                                     parameterization = "spde")
 
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
@@ -134,14 +134,13 @@ kappa <- sqrt(8 * nu) / r
 
 tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
 
-theta <- c(sigma, kappa)
 
-Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 0)
+Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph2, BC = 0)
 
-graph$buildC(2)
-n_const <- length(graph$CoB$S)
+graph2$buildC(2)
+n_const <- length(graph2$CoB$S)
 ind.const <- c(1:n_const)
-Tc <- graph$CoB$T[-ind.const, ]         
+Tc <- graph2$CoB$T[-ind.const, ]         
 
 Q <- Tc%*%Q%*%t(Tc)
 
@@ -153,7 +152,7 @@ Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
 
 expect_equal(sum((Q_chk@i - Q@i)^2), 0)
 expect_equal(sum((Q_chk@p - Q@p)^2), 0)
-expect_equal(max(abs((Q_chk@x-Q@x)^2)), 0, tol = 1e-4)
+expect_equal(sum((Q_chk@x-Q@x)^2), 0, tol = 1e-3)
 
 
 Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 1)

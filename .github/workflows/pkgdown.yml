@@ -23,7 +23,9 @@ jobs:
       - name: Install system dependencies on Linux (GL)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update -y && sudo apt-get install -y libglu1-mesa-dev
+          sudo apt-get update -y && sudo apt-get install -y libglu1-mesa-dev libeigen3-dev
+          sudo ln -s /usr/bin/gcc /usr/local/bin/gcc
+          sudo ln -s /usr/bin/g++ /usr/local/bin/g++     
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -39,7 +41,7 @@ jobs:
       - name: Installing rSPDE
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rSPDE")
+          remotes::install_github("davidbolin/rSPDE", ref = "devel-src")
         shell: Rscript {0}   
       - name: Install package
         run: R CMD INSTALL .

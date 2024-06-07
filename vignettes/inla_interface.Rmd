@@ -334,10 +334,10 @@ Let us now simulate the data with `alpha=2`. We will now sample in these observa
 and plot the latent field:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-sigma <- 1.7
+sigma <- 2
 alpha <- 2
 nu <- alpha - 0.5
-r <- 0.2 # r stands for range
+r <- 0.15 # r stands for range
 
 
 u <- sample_spde(range = r, sigma = sigma, alpha = alpha,
@@ -424,7 +424,7 @@ the true values:
 We can also plot the posterior marginal densities with the 
 help of the `gg_df()` function:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-  posterior_df_fit <- gg_df(spde_result)
+  posterior_df_fit <- gg_df(spde_result_alpha2)
 
   library(ggplot2)
 
