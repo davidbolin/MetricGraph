@@ -92,9 +92,11 @@ in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.</p>
 <span>  start_range <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_range <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  start_kappa <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  start_sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_kappa <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  start_sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  start_tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  prior_tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  shared_lib <span class="op">=</span> <span class="st">"detect"</span>,</span>
 <span>  debug <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -112,7 +114,7 @@ in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.</p>
 
 <dt>stationary_endpoints</dt>
 <dd><p>Which vertices of degree 1 should contain
-stationary boundary conditions?</p></dd>
+stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.</p></dd>
 
 
 <dt>parameterization</dt>
@@ -134,13 +136,13 @@ the log scale. Will not be used if prior.kappa is non-null.</p></dd>
 <dd><p>Starting value for kappa.</p></dd>
 
 
-<dt>start_sigma</dt>
-<dd><p>Starting value for sigma.</p></dd>
-
-
 <dt>prior_kappa</dt>
 <dd><p>a <code>list</code> containing the elements <code>meanlog</code> and
 <code>sdlog</code>, that is, the mean and standard deviation of kappa on the log scale.</p></dd>
+
+
+<dt>start_sigma</dt>
+<dd><p>Starting value for sigma.</p></dd>
 
 
 <dt>prior_sigma</dt>
@@ -148,12 +150,21 @@ the log scale. Will not be used if prior.kappa is non-null.</p></dd>
 <code>sdlog</code>, that is, the mean and standard deviation of sigma on the log scale.</p></dd>
 
 
+<dt>start_tau</dt>
+<dd><p>Starting value for tau.</p></dd>
+
+
+<dt>prior_tau</dt>
+<dd><p>a <code>list</code> containing the elements <code>meanlog</code> and
+<code>sdlog</code>, that is, the mean and standard deviation of tau on the log scale.</p></dd>
+
+
 <dt>shared_lib</dt>
 <dd><p>Which shared lib to use for the cgeneric implementation?
 If "detect", it will check if the shared lib exists locally, in which case it will
 use it. Otherwise it will use 'INLA's shared library.
-If 'INLA', it will use the shared lib from 'INLA's installation. If 'MetricGraph', then
-it will use the local installation (does not work if your installation is from CRAN).
+If 'INLA', it will use the shared lib from 'INLA's installation. If 'rSPDE', then
+it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
 Otherwise, you can directly supply the path of the .so (or .dll) file.</p></dd>
 
 

@@ -108,7 +108,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-06-04.</h4>
+modified: 2024-06-07.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -161,7 +161,7 @@ specified by <span class="math display">\[
 follows:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
-<span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
+<span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span>  <span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span>  <span class="va">lgcp_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lgcp.html">graph_lgcp</a></span><span class="op">(</span>intercept <span class="op">=</span> <span class="fl">1</span>, sigma <span class="op">=</span> <span class="va">sigma</span>,</span>
 <span>                            range <span class="op">=</span> <span class="va">range</span>, alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
@@ -257,8 +257,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.348408 0.0922831   0.190391 0.341797   0.548884 0.328823</span></span>
-<span><span class="co">## range   2.145370 1.3760100   0.684650 1.761930   5.847860 1.267590</span></span></code></pre>
+<span><span class="co">## std.dev 0.365505 0.0982025   0.197949 0.358244    0.57945 0.343971</span></span>
+<span><span class="co">## range   2.081110 0.9192970   0.845333 1.894760    4.39442 1.576910</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -276,8 +276,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3484082 0.3288232</span></span>
-<span><span class="co">## 2     range  1.5 2.1453654 1.2675897</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3655053 0.3439712</span></span>
+<span><span class="co">## 2     range  2.0 2.0811116 1.5769050</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -309,7 +309,7 @@ simulate replicates of a latent field</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">n.rep</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
 <span>  <span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
-<span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
+<span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span>  <span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span>  <span class="va">lgcp_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lgcp.html">graph_lgcp</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n.rep</span>, intercept <span class="op">=</span> <span class="fl">1</span>, sigma <span class="op">=</span> <span class="va">sigma</span>,</span>
 <span>                            range <span class="op">=</span> <span class="va">range</span>, alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
@@ -365,9 +365,9 @@ exposure terms</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## std.dev 0.454637 0.0169282   0.422179 0.454366   0.488669 0.45391</span></span>
-<span><span class="co">## range   1.714560 0.1532390   1.435400 1.706770   2.035770 1.69020</span></span></code></pre>
+<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.499984 0.0170322   0.466982 0.499854    0.53388 0.499813</span></span>
+<span><span class="co">## range   2.180410 0.1630560   1.878730 2.173900    2.51881 2.160710</span></span></code></pre>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -383,8 +383,8 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4546365 0.4539098</span></span>
-<span><span class="co">## 2     range  1.5 1.7145567 1.6902007</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4999837 0.4998125</span></span>
+<span><span class="co">## 2     range  2.0 2.1804085 2.1607149</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>

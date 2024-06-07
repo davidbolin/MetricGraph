@@ -108,7 +108,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-23. Last
-modified: 2024-06-04.</h4>
+modified: 2024-06-07.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/inla_interface.Rmd" class="external-link"><code>vignettes/inla_interface.Rmd</code></a></small>
       <div class="d-none name"><code>inla_interface.Rmd</code></div>
@@ -205,22 +205,20 @@ observations to the graph, which we will do with the
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, edge_number <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
 <span>                        distance_on_edge <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co"># Adding observations and turning them to vertices</span></span>
-<span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data<span class="op">=</span><span class="va">df_graph</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Adding observations</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data<span class="op">=</span><span class="va">df_graph</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="inla_interface_files/figure-html/unnamed-chunk-5-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Now, we load the <code>R-INLA</code> package and create the
 <code>inla</code> model object with the <code>graph_spde</code>
 function. By default we have <code>alpha=1</code>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">INLA</span><span class="op">)</span></span>
 <span><span class="va">spde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we need to create the data object with the
 <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function, in which we need to provide a
 name for the random effect, which we will call <code>field</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_spde</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span>graph_spde <span class="op">=</span> <span class="va">spde_model</span>, name <span class="op">=</span> <span class="st">"field"</span><span class="op">)</span></span></code></pre></div>
 <p>The remaining is standard in <code>R-INLA</code>. We create the
 formula object and the <code>inla.stack</code> object with the
@@ -229,7 +227,7 @@ formula object and the <code>inla.stack</code> object with the
 and should be supplied to the stack by the components of the
 <code>data_spde</code> list obtained from the
 <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f.s</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">stk_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_spde</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
@@ -239,24 +237,24 @@ and should be supplied to the stack by the components of the
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Intercept <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span>    <span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we use the <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data()</a></code> function:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span></span></code></pre></div>
 <p>Finally, we fit the model:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s</span>, data <span class="op">=</span> <span class="va">data_stk</span>, control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now obtain the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##            mean        sd 0.025quant  0.5quant 0.975quant      mode</span></span>
-<span><span class="co">## sigma 1.6493900 0.1330270   1.407500 1.6426200   1.930870 1.6350200</span></span>
-<span><span class="co">## range 0.0864173 0.0170472   0.058453 0.0844799   0.125169 0.0805831</span></span></code></pre>
+<span><span class="co">## sigma 1.6498900 0.1329870  1.4080800 1.6430100   1.931520 1.6349300</span></span>
+<span><span class="co">## range 0.0863837 0.0171034  0.0584214 0.0844029   0.125349 0.0804038</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">r</span><span class="op">)</span>,</span>
@@ -271,11 +269,11 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true       mean       mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.64939282 1.63502347</span></span>
-<span><span class="co">## 2     range 0.15 0.08641735 0.08058314</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 1.64989230 1.63492908</span></span>
+<span><span class="co">## 2     range 0.15 0.08638368 0.08040382</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">posterior_df_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -288,11 +286,11 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 </h3>
 <p>Let us begin by obtaining an evenly spaced mesh with respect to the
 base graph:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obs_per_edge_prd</span> <span class="op">&lt;-</span> <span class="fl">50</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>n <span class="op">=</span> <span class="va">obs_per_edge_prd</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot the resulting graph:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>mesh<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="inla_interface_files/figure-html/unnamed-chunk-15-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>We will now add the observations on the mesh locations to the graph
@@ -300,7 +298,7 @@ we fitted the <code>R-INLA</code> model. To this end we will use the
 <code>add_mesh_observations()</code> method. We will enter the response
 variables as <code>NA</code>. We can get the number of mesh nodes by
 counting the number of rows of the <code>mesh$PtE</code> attribute.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_obs_mesh</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">PtE</span><span class="op">)</span></span>
 <span><span class="va">y_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="va">n_obs_mesh</span><span class="op">)</span></span>
 <span><span class="va">data_mesh</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y_prd</span><span class="op">)</span></span>
@@ -309,17 +307,17 @@ counting the number of rows of the <code>mesh$PtE</code> attribute.</p>
 <p>We will now fit a new model with <code>R-INLA</code> with this new
 graph that contains the prediction locations. To this end, we create a
 new model object with the <code><a href="../reference/graph_spde.html">graph_spde()</a></code> function:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_model_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>Now, let us create a new data object for prediction. Observe that we
 need to set <code>drop_all_na</code> to <code>FALSE</code> in order to
 not remove the prediction locations:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_spde_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span><span class="va">spde_model_prd</span>, drop_all_na <span class="op">=</span> <span class="cn">FALSE</span>, name<span class="op">=</span><span class="st">"field"</span><span class="op">)</span></span></code></pre></div>
 <p>We will create a new vector of response variables, concatenating
 <code>y</code> to <code>y_prd</code>, then create a new formula object
 and the <code>inla.stack</code> object:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f_s_prd</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model_prd</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">stk_dat_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_spde_prd</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
@@ -330,25 +328,121 @@ and the <code>inla.stack</code> object:</p>
 <span>    <span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we use the <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data()</a></code> function and fit the
 model:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_stk_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat_prd</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">spde_fit_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_prd</span>, data <span class="op">=</span> <span class="va">data_stk_prd</span><span class="op">)</span></span></code></pre></div>
 <p>We will now extract the means at the prediction locations:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">idx_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">data_spde_prd</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">m_prd</span> <span class="op">&lt;-</span> <span class="va">spde_fit_prd</span><span class="op">$</span><span class="va">summary.fitted.values</span><span class="op">$</span><span class="va">mean</span><span class="op">[</span><span class="va">idx_prd</span><span class="op">]</span></span></code></pre></div>
 <p>To improve visualization, we will plot the posterior means using the
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">m_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="inla_interface_files/figure-html/unnamed-chunk-22-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, we can plot the predictions together with the data:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">m_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, data_size <span class="op">=</span> <span class="fl">2</span>, p <span class="op">=</span> <span class="va">p</span>, edge_width <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="inla_interface_files/figure-html/unnamed-chunk-23-1.png" width="700" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="an-example-with-alpha-2">An example with <code>alpha = 2</code><a class="anchor" aria-label="anchor" href="#an-example-with-alpha-2"></a>
+</h3>
+<p>We will now show an example where the parameter <code>alpha</code> is
+equal to 2. There is essentially no change in the commands above. Let us
+first clear the observations:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Let us now simulate the data with <code>alpha=2</code>. We will now
+sample in these observation locations and plot the latent field:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span><span class="va">nu</span> <span class="op">&lt;-</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">0.5</span></span>
+<span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">0.15</span> <span class="co"># r stands for range</span></span>
+<span></span>
+<span></span>
+<span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_spde.html">sample_spde</a></span><span class="op">(</span>range <span class="op">=</span> <span class="va">r</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>                 graph <span class="op">=</span> <span class="va">graph</span>, PtE <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span></code></pre></div>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-25-1.png" width="700" style="display: block; margin: auto;"></p>
+<p>In the same way as before we will generate <code>y</code> and add the
+observations:</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">u</span><span class="op">)</span></span>
+<span><span class="va">sigma.e</span> <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
+<span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">u</span> <span class="op">+</span> <span class="va">sigma.e</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df_graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, edge_number <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
+<span>                        distance_on_edge <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data<span class="op">=</span><span class="va">df_graph</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Let us now create the model object for <code>alpha=2</code>:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spde_model_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span>, alpha <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<p>Now, we will create the new data object with the
+<code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function, in which we need to provide a
+name for the random effect, which we will call <code>field</code>:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">data_spde_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span>graph_spde <span class="op">=</span> <span class="va">spde_model_alpha2</span>, name <span class="op">=</span> <span class="st">"field"</span><span class="op">)</span></span></code></pre></div>
+<p>We now proceed as before to prepare to fit the model:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">f.s.2</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model_alpha2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stk_dat2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_spde_alpha2</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>                        A <span class="op">=</span> <span class="va">data_spde_alpha2</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>                        effects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      <span class="va">data_spde_alpha2</span><span class="op">[[</span><span class="st">"index"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Intercept <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span>    <span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">data_stk2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat2</span><span class="op">)</span></span></code></pre></div>
+<p>Finally, we fit the model:</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spde_fit_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s.2</span>, data <span class="op">=</span> <span class="va">data_stk2</span>, control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Let us now obtain the estimates in the original scale by using the
+<code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spde_result_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit_alpha2</span>, <span class="st">"field"</span>, <span class="va">spde_model_alpha2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_alpha2</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 2.17745 0.2415750   1.745020 2.161610   2.692110 2.128750</span></span>
+<span><span class="co">## range 0.15745 0.0168758   0.126931 0.156513   0.193147 0.154691</span></span></code></pre>
+<p>We will now compare the means of the estimated values with the true
+values:</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">result_df_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
+<span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">r</span><span class="op">)</span>,</span>
+<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      <span class="va">spde_result_alpha2</span><span class="op">$</span><span class="va">summary.sigma</span><span class="op">$</span><span class="va">mean</span>,</span>
+<span>      <span class="va">spde_result_alpha2</span><span class="op">$</span><span class="va">summary.range</span><span class="op">$</span><span class="va">mean</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      <span class="va">spde_result_alpha2</span><span class="op">$</span><span class="va">summary.sigma</span><span class="op">$</span><span class="va">mode</span>,</span>
+<span>      <span class="va">spde_result_alpha2</span><span class="op">$</span><span class="va">summary.range</span><span class="op">$</span><span class="va">mode</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_alpha2</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev 2.00 2.1774542 2.1287514</span></span>
+<span><span class="co">## 2     range 0.15 0.1574498 0.1546909</span></span></code></pre>
+<p>We can also plot the posterior marginal densities with the help of
+the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">posterior_df_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df</a></span><span class="op">(</span><span class="va">spde_result_alpha2</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">posterior_df_fit</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">parameter</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-33-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="fitting-r-inla-models-with-replicates">Fitting <code>R-INLA</code> models with replicates<a class="anchor" aria-label="anchor" href="#fitting-r-inla-models-with-replicates"></a>
@@ -357,11 +451,11 @@ model:</p>
 implementation to fit models with replicates.</p>
 <p>To simplify exposition, we will use the same base graph. So, we begin
 by clearing the observations.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>We will use the same observation locations as for the previous cases.
 Let us sample 30 replicates:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_rep</span> <span class="op">&lt;-</span> <span class="fl">1.5</span></span>
 <span><span class="va">alpha_rep</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
 <span><span class="va">nu_rep</span> <span class="op">&lt;-</span> <span class="va">alpha_rep</span> <span class="op">-</span> <span class="fl">0.5</span></span>
@@ -376,7 +470,7 @@ Let us sample 30 replicates:</p>
 <span>                 nsim <span class="op">=</span> <span class="va">n_repl</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now generate the observed responses, which we will call
 <code>y_rep</code>.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_obs_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">u_rep</span><span class="op">)</span></span>
 <span><span class="va">sigma_e</span> <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
 <span></span>
@@ -385,7 +479,7 @@ Let us sample 30 replicates:</p>
 <p>The <code><a href="../reference/sample_spde.html">sample_spde()</a></code> function returns a matrix in which
 each replicate is a column. We need to stack the columns together and a
 column to indicate the replicate:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dl_graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">y_rep</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y_rep</span><span class="op">[</span>,<span class="va">i</span><span class="op">]</span>,</span>
 <span>                                          edge_number <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>,</span>
 <span>                                          distance_on_edge <span class="op">=</span> <span class="va">obs_loc</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>,</span>
@@ -393,7 +487,7 @@ column to indicate the replicate:</p>
 <span><span class="va">dl_graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">dl_graph</span><span class="op">)</span></span></code></pre></div>
 <p>We can now add the the observations by setting the <code>group</code>
 argument to <code>repl</code>:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">dl_graph</span>, normalized<span class="op">=</span><span class="cn">TRUE</span>, </span>
 <span>                            group <span class="op">=</span> <span class="st">"repl"</span>,</span>
 <span>                            edge_number <span class="op">=</span> <span class="st">"edge_number"</span>,</span>
@@ -403,15 +497,15 @@ argument to <code>repl</code>:</p>
 replicate. We can select the other replicates with the
 <code>group</code> argument. See the <a href="metric_graphs.html">Working with metric graphs</a> for more
 details.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-29-1.png" width="700"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-39-1.png" width="700"></p>
 <p>Let us plot another replicate:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span>, group<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-30-1.png" width="700"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-40-1.png" width="700"></p>
 <p>Let us now create the model object:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_model_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>Let us first consider a case in which we do not use all replicates.
 Then, we consider the case in which we use all replicates.</p>
@@ -420,12 +514,12 @@ and 9. To this end, we the index object by using the
 <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function with the argument
 <code>repl</code> set to the replicates we want, in this case
 <code>c(1,3,5,7,9)</code>:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_spde</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span>graph_spde<span class="op">=</span><span class="va">spde_model_rep</span>,</span>
 <span>                      name<span class="op">=</span><span class="st">"field"</span>, repl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">5</span>,<span class="fl">7</span>,<span class="fl">9</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Next, we create the stack object, remembering that we need to input
 the components from <code>data_spde</code>:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stk_dat_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_spde</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                        A <span class="op">=</span> <span class="va">data_spde</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                        effects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -436,28 +530,29 @@ the components from <code>data_spde</code>:</p>
 our case <code>field</code>) attached with <code>.repl</code> a the
 <code>replicate</code> argument inside the <code><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f()</a></code>
 function.</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f_s_rep</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> </span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model_rep</span>, </span>
 <span>        replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span></span></code></pre></div>
 <p>Then, we create the stack object with The
 <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data()</a></code> function:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_stk_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we fit the model:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, data <span class="op">=</span> <span class="va">data_stk_rep</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, data <span class="op">=</span> <span class="va">data_stk_rep</span>, </span>
+<span>                control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let us see the estimated values in the original scale:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit_rep</span>, </span>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.700920 0.0895042    1.53781 1.696890   1.887340 1.689820</span></span>
-<span><span class="co">## range 0.231351 0.0265315    0.18626 0.228761   0.290146 0.222605</span></span></code></pre>
+<span><span class="co">## sigma 1.607770 0.0829043    1.45239 1.604280   1.776690 1.596850</span></span>
+<span><span class="co">## range 0.223361 0.0254770    0.17767 0.221886   0.277598 0.218889</span></span></code></pre>
 <p>Let us compare with the true values:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma_rep</span>, <span class="va">r_rep</span><span class="op">)</span>,</span>
@@ -472,17 +567,17 @@ function.</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.7009210 1.6898195</span></span>
-<span><span class="co">## 2     range  0.2 0.2313511 0.2226054</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.6077726 1.5968463</span></span>
+<span><span class="co">## 2     range  0.2 0.2233606 0.2188886</span></span></code></pre>
 <p>Now, let us consider the case with all replicates. We create a new
 data object by using the <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function with
 the argument <code>repl</code> set to <code>.all</code>:</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_spde_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span>graph_spde<span class="op">=</span><span class="va">spde_model_rep</span>, </span>
 <span>                    name<span class="op">=</span><span class="st">"field"</span>, </span>
 <span>                    repl <span class="op">=</span> <span class="st">".all"</span><span class="op">)</span></span></code></pre></div>
 <p>Now the stack:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stk_dat_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_spde_rep</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                        A <span class="op">=</span> <span class="va">data_spde_rep</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                        effects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -490,28 +585,28 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Intercept <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span>    <span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We now create the formula object in the same way as before:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">f_s_rep</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> </span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model_rep</span>, </span>
 <span>        replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span></span></code></pre></div>
 <p>Then, we create the stack object with The
 <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data()</a></code> function:</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_stk_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we fit the model:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, data <span class="op">=</span> <span class="va">data_stk_rep</span><span class="op">)</span></span></code></pre></div>
 <p>Let us see the estimated values in the original scale:</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit_rep</span>, </span>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean         sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.502910 0.03000590   1.444750 1.502960   1.561600 1.504120</span></span>
-<span><span class="co">## range 0.190474 0.00854038   0.174295 0.190253   0.207846 0.189795</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.527080 0.0329974   1.464510 1.526310   1.594060 1.526170</span></span>
+<span><span class="co">## range 0.222929 0.0105994   0.202993 0.222617   0.244577 0.221933</span></span></code></pre>
 <p>Let us compare with the true values:</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma_rep</span>, <span class="va">r_rep</span><span class="op">)</span>,</span>
@@ -526,8 +621,8 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.5029078 1.5041212</span></span>
-<span><span class="co">## 2     range  0.2 0.1904745 0.1897947</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.5270770 1.5261717</span></span>
+<span><span class="co">## 2     range  0.2 0.2229287 0.2219335</span></span></code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-BSW2022b" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023.
