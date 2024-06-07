@@ -1,4 +1,5 @@
 # MetricGraph (development version)
+* Added an INLA implementation for `alpha=2`.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.
