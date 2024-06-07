@@ -49,6 +49,16 @@ jobs:
           brew install pkg-config
           brew install proj@9
           brew install gdal
+          brew install gcc
+          brew install eigen
+          brew install gcc@14
+          sudo mkdir -p /usr/local/include
+          sudo mkdir -p /usr/local/bin
+          sudo ln -s $(brew --prefix gcc@14)/bin/gcc-14 /usr/local/bin/gcc
+          sudo ln -s $(brew --prefix gcc@14)/bin/g++-14 /usr/local/bin/g++
+          sudo ln -s $(brew --prefix eigen)/include/eigen3 /usr/local/include/eigen3
+          sudo ln -s $(brew --prefix)/lib /usr/local/brewlib
+          sudo ln -s $(brew --prefix)/include /usr/local/brewinclude
       - name: Install system dependencies on Linux (GL)
         if: runner.os == 'Linux'
         run: |
@@ -67,7 +77,7 @@ jobs:
       - name: Installing rSPDE and MatrixModels
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rSPDE")
+          remotes::install_github("davidbolin/rSPDE", ref = "devel-src")
           install.packages("Matrix", type="source", repos = "http://R-Forge.R-project.org")
           install.packages("MatrixModels", type="source", repos = "http://R-Forge.R-project.org")
         shell: Rscript {0}        
