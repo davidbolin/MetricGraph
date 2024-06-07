@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_spde.R
 \name{graph_spde_basis}
 \alias{graph_spde_basis}
-\title{Observation/prediction matrices for 'SPDE' models}
+\title{Deprecated - Observation/prediction matrices for 'SPDE' models}
 \usage{
 graph_spde_basis(graph_spde, repl = NULL, drop_na = FALSE, drop_all_na = TRUE)
 }

@@ -186,13 +186,13 @@ graph_spde <- function(graph_object,
         index <- stationary_endpoints - 1
         BC = 1
     }
-    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_object, BC=BC, stationary_points=index)
-    if(is.null(graph_object$CoB)){
-      graph_object$buildC(2, edge_constraint = BC)
+    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=index)
+    if(is.null(graph_spde$CoB)){
+      graph_spde$buildC(2, edge_constraint = BC)
     }
-    n_const <- length(graph_object$CoB$S)
+    n_const <- length(graph_spde$CoB$S)
     ind.const <- c(1:n_const)
-    Tc <- graph_object$CoB$T[-ind.const, ]                      
+    Tc <- graph_spde$CoB$T[-ind.const, ]                      
     Q_tmp <- Tc%*%Q_tmp%*%t(Tc)
 
     Q_tmp <- INLA::inla.as.sparse(Q_tmp)
@@ -217,8 +217,8 @@ graph_spde <- function(graph_object,
     lower.edges <- NULL
     upper.edges <- NULL
     if(!is.null(index)){
-      lower.edges <- which(graph_object$E[, 1] %in% index)
-      upper.edges <- which(graph_object$E[, 2] %in% index)
+      lower.edges <- which(graph_spde$E[, 1] %in% index)
+      upper.edges <- which(graph_spde$E[, 2] %in% index)
     }
 
     lower_edges_len <- length(lower.edges)
@@ -229,10 +229,11 @@ graph_spde <- function(graph_object,
     if(length(upper.edges)==0){
       upper.edges <- -1
     }
-  } 
+  }
+
+
+  ## End of alpha = 2 
   
-
-
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
       start_values_vector <- graph_starting_values(graph_spde,
@@ -401,7 +402,7 @@ graph_spde_make_index <- function (name,
                                    n.group = 1,
                                    n.repl = 1,
                                    ...) {
-    n.spde <- dim(graph_spde$graph_spde$V)[1]
+    n.spde <- graph_spde$f$n
     name.group <- paste(name, ".group", sep = "")
     name.repl <- paste(name, ".repl", sep = "")
     out <- list()
@@ -412,7 +413,7 @@ graph_spde_make_index <- function (name,
 }
 
 
-#' Observation/prediction matrices for 'SPDE' models
+#' Deprecated - Observation/prediction matrices for 'SPDE' models
 #'
 #' Constructs observation/prediction weight matrices
 #' for metric graph models.
@@ -427,6 +428,8 @@ graph_spde_make_index <- function (name,
 #' @export
 
 graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all_na = TRUE) {
+    lifecycle::deprecate_warn("1.3.0", "graph_spde_basis()", "graph_data_spde()")
+    warning("This function only works for alpha = 1. Use graph_data_spde() function for alpha = 1 and alpha = 2.")
    return(graph_spde$graph_spde$.__enclos_env__$private$A(group = repl, drop_na = drop_na, drop_all_na = drop_all_na))
 }
 
@@ -444,6 +447,7 @@ graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all
 
 graph_spde_make_A <- function(graph_spde, repl = NULL){
   lifecycle::deprecate_warn("1.2.0", "graph_spde_make_A()", "graph_spde_basis()")
+    warning("This function only works for alpha = 1. Use graph_data_spde() function for alpha = 1 and alpha = 2.")
   return(graph_spde_basis(graph_spde, repl = repl, drop_na = FALSE, drop_all_na = FALSE))
 }
 
@@ -496,6 +500,9 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
 
   ret <- list()
 
+  alpha <- graph_spde$alpha
+  Tc <- graph_spde$Tc
+
   graph_tmp <- graph_spde$graph_spde$clone()
 
   if(is.null((graph_tmp$.__enclos_env__$private$data))){
@@ -541,8 +548,18 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
         } else{
           idx_notna <- rep(TRUE, length(data_group_repl[[".group"]]))
         }
-        # nV_tmp <- sum(idx_notna)
-        A <- Matrix::bdiag(A, Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ])
+        # nV_tmp <- sum(idx_notna)        
+        if(alpha == 1){
+          A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
+        } else{
+          A_tmp <- t(Tc)
+          PtE_tmp <- graph_spde$graph_spde$get_PtE()
+          index.obs1 <- 2 * (PtE_tmp[,1] - 1)+ 3.0 * (abs(PtE_tmp[, 2]) > 1e-14) +
+              +1.0 * (abs(PtE_tmp[, 2]) < 1e-14)
+          index.obs1 <- index.obs1[idx_notna]
+          A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=
+        }
+        A <- Matrix::bdiag(A, A_tmp)
     }
    }
 
@@ -719,7 +736,7 @@ spde_metric_graph_result <- function(inla, name,
 
     if(parameterization == "spde"){
             result[[paste0("marginals.",name_theta1_t)]] <- lapply(
-              result[[paste0("marginals.log.",name_theta1_t)]],
+              result[[paste0("marginals.log.",name_theta1)]],
               function(x) {
                 INLA::inla.tmarginal(
                   function(y) exp(-y),
@@ -727,6 +744,7 @@ spde_metric_graph_result <- function(inla, name,
                 )
               }
             )
+            names(result[[paste0("marginals.",name_theta1_t)]]) <- name_theta1_t
             result[[paste0("marginals.",name_theta2)]] <- lapply(
               result[[paste0("marginals.log.",name_theta2)]],
               function(x) {

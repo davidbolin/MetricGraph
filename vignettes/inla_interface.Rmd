@@ -142,10 +142,10 @@ We are now in a position to fit the model with our
 we need to add the observations to the graph, which we 
 will do with the `add_observations()` method. 
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
                         distance_on_edge = obs_loc[,2])
-# Adding observations and turning them to vertices
+# Adding observations
 graph$add_observations(data=df_graph, normalized=TRUE)
 graph$plot(data="y")
 ```
@@ -322,6 +322,117 @@ p <- graph$plot_function(X = m_prd, vertex_size = 0, edge_width = 1)
 graph$plot(data="y", vertex_size = 0, data_size = 2, p = p, edge_width = 0)
 ```
 
+## An example with `alpha = 2`
+
+We will now show an example where the parameter `alpha` is equal to 2. There is essentially no change in the commands above. Let us first clear the observations:
+
+```{r}
+graph$clear_observations()
+```
+
+Let us now simulate the data with `alpha=2`. We will now sample in these observation locations
+and plot the latent field:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+sigma <- 1.7
+alpha <- 2
+nu <- alpha - 0.5
+r <- 0.2 # r stands for range
+
+
+u <- sample_spde(range = r, sigma = sigma, alpha = alpha,
+                 graph = graph, PtE = obs_loc)
+graph$plot(X = u, X_loc = obs_loc)
+```
+
+In the same way as before we will generate `y` and add the observations:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+n_obs <- length(u)
+sigma.e <- 0.1
+
+y <- u + sigma.e * rnorm(n_obs)
+
+df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
+                        distance_on_edge = obs_loc[,2])
+
+graph$add_observations(data=df_graph, normalized=TRUE)
+```
+
+Let us now create the model object for `alpha=2`:
+```{r}
+spde_model_alpha2 <- graph_spde(graph, alpha = 2)
+```
+
+Now, we will create the new data object with the `graph_data_spde()` function, in which we need to provide a name for the random effect, which we will call `field`:
+
+```{r}
+data_spde_alpha2 <- graph_data_spde(graph_spde = spde_model_alpha2, name = "field")
+```
+
+We now proceed as before to prepare to fit the model:
+
+```{r}
+f.s.2 <- y ~ -1 + Intercept + f(field, model = spde_model_alpha2)
+
+stk_dat2 <- inla.stack(data = data_spde_alpha2[["data"]], 
+                        A = data_spde_alpha2[["basis"]], 
+                        effects = c(
+      data_spde_alpha2[["index"]],
+      list(Intercept = 1)
+    ))
+
+data_stk2 <- inla.stack.data(stk_dat2)
+```
+
+Finally, we fit the model:
+
+```{r, message=FALSE, warning=FALSE}
+spde_fit_alpha2 <- inla(f.s.2, data = data_stk2, control.predictor=list(A=inla.stack.A(stk_dat2)))
+```
+
+Let us now obtain the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+      
+```{r}
+spde_result_alpha2 <- spde_metric_graph_result(spde_fit_alpha2, "field", spde_model_alpha2)
+
+summary(spde_result_alpha2)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_df_alpha2 <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, r),
+    mean = c(
+      spde_result_alpha2$summary.sigma$mean,
+      spde_result_alpha2$summary.range$mean
+    ),
+    mode = c(
+      spde_result_alpha2$summary.sigma$mode,
+      spde_result_alpha2$summary.range$mode
+    )
+  )
+  print(result_df_alpha2)
+```
+
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
+  posterior_df_fit <- gg_df(spde_result)
+
+  library(ggplot2)
+
+  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+
 ## Fitting `R-INLA` models with replicates
 
 We will now illustrate how to use our `R-INLA` implementation to 
@@ -443,7 +554,8 @@ data_stk_rep <- inla.stack.data(stk_dat_rep)
 ```
 Now, we fit the model:
 ```{r}
-spde_fit_rep <- inla(f_s_rep, data = data_stk_rep)
+spde_fit_rep <- inla(f_s_rep, data = data_stk_rep, 
+                control.predictor=list(A=inla.stack.A(stk_dat_rep)))
 ```
 
 Let us see the estimated values in the original scale:
