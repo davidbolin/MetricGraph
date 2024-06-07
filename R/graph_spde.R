@@ -553,13 +553,9 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
           A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
         } else{
           A_tmp <- t(Tc)
-          PtE_tmp <- graph_spde$graph_spde$get_PtE()
-          index.obs1 <- 2 * (PtE_tmp[,1] - 1)+ 3.0 * (abs(PtE_tmp[, 2]) > 1e-14) +
-              +1.0 * (abs(PtE_tmp[, 2]) < 1e-14)
+          index.obs1 <- 1 + 4 * (0:(nrow(A_tmp)/4-1))                    
+          index.obs1 <- index.obs1[graph_spde$graph_spde$PtV]
           index.obs1 <- index.obs1[idx_notna]
-          index.obs1 <- 1 + 4 * (0:(nrow(A_tmp)/4-1))
-          index.obs1 <- index.obs1[5:length(index.obs1)]
-          print(length(index.obs1))
           A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=
         }
         A <- Matrix::bdiag(A, A_tmp)
