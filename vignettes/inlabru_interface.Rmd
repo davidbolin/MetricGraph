@@ -406,6 +406,31 @@ help of the `gg_df()` function:
 ```
 
 
+Let us now do prediction with `alpha=2`. We proceed as before, and we will use the same data list `data_list` to do prediction on the mesh locations.
+Thus, we will obtain predictions by using the `predict()` method. Observe
+that, again, we will use our `predict` method, instead of the default one from `inlabru`.
+
+```{r}
+field_pred_alpha2 <- predict(spde_model_alpha2, 
+                                cmp_alpha2,
+                                spde_bru_fit_alpha2, 
+                                newdata = data_list,
+                                formula = ~field)
+```
+
+Finally, we can plot the predictions together with
+the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
+plot(field_pred_alpha2)
+```
+
+We can also obtain a 3d plot by setting `plotly` to `TRUE`:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
+plot(field_pred_alpha2, plotly = TRUE)
+```
+
+
 ## Fitting `inlabru` models with replicates
 
 We will now illustrate how to use our `inlabru` implementation to 
