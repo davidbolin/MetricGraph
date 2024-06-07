@@ -47,7 +47,7 @@ test_that("Test resistance metric", {
 
   PtE.order <- PtE[reo, ]
   y.order <- y[reo]
-  graph <- metric_graph$new(lines = Lines)
+  graph <- metric_graph$new(edges = Lines)
   df_temp <- data.frame(y = y.order, edge_number = PtE.order[,1], distance_on_edge = PtE.order[,2])
   graph$add_observations(data=df_temp, normalized = TRUE)
   graph$compute_resdist(full = TRUE)

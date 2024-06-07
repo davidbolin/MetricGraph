@@ -367,7 +367,8 @@ spde_model_alpha2 <- graph_spde(graph, alpha = 2)
 Now, we will create the new data object with the `graph_data_spde()` function, in which we need to provide a name for the random effect, which we will call `field`:
 
 ```{r}
-data_spde_alpha2 <- graph_data_spde(graph_spde = spde_model_alpha2, name = "field")
+data_spde_alpha2 <- graph_data_spde(graph_spde = spde_model_alpha2, 
+                            name = "field")
 ```
 
 We now proceed as before to prepare to fit the model:
@@ -388,7 +389,8 @@ data_stk2 <- inla.stack.data(stk_dat2)
 Finally, we fit the model:
 
 ```{r, message=FALSE, warning=FALSE}
-spde_fit_alpha2 <- inla(f.s.2, data = data_stk2, control.predictor=list(A=inla.stack.A(stk_dat2)))
+spde_fit_alpha2 <- inla(f.s.2, data = data_stk2, 
+          control.predictor=list(A=inla.stack.A(stk_dat2)))
 ```
 
 Let us now obtain the estimates in the original scale
@@ -396,7 +398,8 @@ by using the `spde_metric_graph_result()` function, then
 taking a `summary()`:
       
 ```{r}
-spde_result_alpha2 <- spde_metric_graph_result(spde_fit_alpha2, "field", spde_model_alpha2)
+spde_result_alpha2 <- spde_metric_graph_result(spde_fit_alpha2, 
+                            "field", spde_model_alpha2)
 
 summary(spde_result_alpha2)
 ```

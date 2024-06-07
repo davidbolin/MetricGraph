@@ -79,7 +79,7 @@ graph_spde <- function(graph_object,
     stop("alpha must be either 1 or 2!")
   }
 
-
+  A_tmp <- NULL
   Tc <- NULL
   nu <- alpha - 0.5
   V <- graph_spde$V
@@ -378,6 +378,26 @@ model$data_PtE <- suppressWarnings(graph_object$get_PtE())
 model$parameterization <- parameterization
 model$Tc <- Tc
 model$alpha <- alpha
+if(alpha == 2){
+    A_tmp <- t(Tc)
+    index.obs1 <- which(graph_spde$E[,1] %in% graph_spde$PtV)
+    index.obs1 <- sapply(graph_spde$PtV, function(i){idx_temp <- i == graph_spde$E[,1]
+                                                                      idx_temp <- which(idx_temp)
+                                                                      return(idx_temp[1])})
+    index.obs1 <- (index.obs1-1)*4+1
+    index.obs2 <- NULL
+    na_obs1 <- is.na(index.obs1)
+    if(any(na_obs1)){
+          idx_na <- which(na_obs1)
+          PtV_NA <- graph_spde$PtV[idx_na]
+          index.obs2 <- sapply(PtV_NA, function(i){idx_temp <- i == graph_spde$E[,2]
+                                                                      idx_temp <- which(idx_temp)
+                                                                      return(idx_temp[1])})
+          index.obs1[na_obs1] <- (index.obs2-1)*4 + 3                                                                      
+          }
+    A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=    
+}
+model$A <- A_tmp
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
 }
@@ -552,24 +572,8 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
         if(alpha == 1){
           A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
         } else{
-          A_tmp <- t(Tc)
-          index.obs1 <- which(graph_spde$graph_spde$E[,1] %in% graph_spde$graph_spde$PtV)
-          index.obs1 <- sapply(graph_spde$graph_spde$PtV, function(i){idx_temp <- i == graph_spde$graph_spde$E[,1]
-                                                                      idx_temp <- which(idx_temp)
-                                                                      return(idx_temp[1])})
-          index.obs2 <- NULL
-          na_obs1 <- is.na(index.obs1)
-          if(any(na_obs1)){
-              idx_na <- which(na_obs1)
-              PtV_NA <- graph_spde$graph_spde$PtV[idx_na]
-              index.obs2 <- sapply(PtV_NA, function(i){idx_temp <- i == graph_spde$graph_spde$E[,2]
-                                                                      idx_temp <- which(idx_temp)
-                                                                      return(idx_temp[1])})
-          }
-          index.obs1 <- (index.obs1-1)*4+1
-          index.obs1[na_obs1] <- (index.obs2-1)*4 + 3
-          index.obs1 <- index.obs1[idx_notna]
-          A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=
+          A_tmp <- graph_spde$A 
+          A_tmp <- A_tmp[idx_notna,]
         }
         A <- Matrix::bdiag(A, A_tmp)
     }
@@ -992,12 +996,21 @@ ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   model <- mapper[["model"]]
-  pte_tmp <- model$graph_spde$get_PtE()
-  input_list <- lapply(1:nrow(input), function(i){input[i,]})
-  pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
-  idx_tmp <- match(input_list, pte_tmp_list)
-  A_tmp <- model$graph_spde$.__enclos_env__$private$A()
-  return(A_tmp[idx_tmp,])
+  if(model$alpha == 1){
+    pte_tmp <- model$graph_spde$get_PtE()
+    input_list <- lapply(1:nrow(input), function(i){input[i,]})
+    pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
+    idx_tmp <- match(input_list, pte_tmp_list)
+    A_tmp <- model$graph_spde$.__enclos_env__$private$A()
+    return(A_tmp[idx_tmp,])
+  } else{
+    pte_tmp <- model$graph_spde$get_PtE()
+    input_list <- lapply(1:nrow(input), function(i){input[i,]})
+    pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
+    idx_tmp <- match(input_list, pte_tmp_list)
+    A_tmp <- model$A
+    return(A_tmp[idx_tmp,])    
+  }
 }
 
 

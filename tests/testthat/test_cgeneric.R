@@ -135,12 +135,12 @@ kappa <- sqrt(8 * nu) / r
 tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
 
 
-Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph2, BC = 0)
+Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2, graph = graph, BC = 0)
 
-graph2$buildC(2)
-n_const <- length(graph2$CoB$S)
+graph$buildC(2)
+n_const <- length(graph$CoB$S)
 ind.const <- c(1:n_const)
-Tc <- graph2$CoB$T[-ind.const, ]         
+Tc <- graph$CoB$T[-ind.const, ]         
 
 Q <- Tc%*%Q%*%t(Tc)
 
