@@ -538,6 +538,8 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
     repl_col <- ".group"
   }
 
+  alpha <- graph_spde$alpha
+
   ret_list <- list()
 
   for(lik in like_val){
@@ -581,22 +583,28 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
       n.group <- length(unique(group))
     }
   
-     A <- Matrix::Diagonal(0)  
-  
-     for(i in 1:n.repl){
-      for(j in 1:n.group){
-          data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], repl_col = repl_col, group = group[j], group_col = group_col)
-          if(drop_na){
-            idx_notna <- idx_not_any_NA(data_group_repl)
-          } else if(drop_all_na){
-            idx_notna <- idx_not_all_NA(data_group_repl)
-          } else{
-            idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
-          }
-          # nV_tmp <- sum(idx_notna)
-          A <- Matrix::bdiag(A, Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ])
-      }
+    A <- Matrix::Diagonal(0)  
+
+    for(i in 1:n.repl){
+     for(j in 1:n.group){
+         data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], repl_col = repl_col, group = group[j], group_col = group_col)
+         if(drop_na){
+           idx_notna <- idx_not_any_NA(data_group_repl)
+         } else if(drop_all_na){
+           idx_notna <- idx_not_all_NA(data_group_repl)
+         } else{
+           idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
+         }
+         # nV_tmp <- sum(idx_notna)        
+         if(alpha == 1){
+           A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
+         } else{
+           A_tmp <- graph_spde$A 
+           A_tmp <- A_tmp[idx_notna,]
+         }
+         A <- Matrix::bdiag(A, A_tmp)
      }
+    }
    
     if(tibble){
       ret[["data"]] <-tidyr::as_tibble(ret[["data"]])
