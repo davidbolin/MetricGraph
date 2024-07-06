@@ -1,5 +1,6 @@
 # MetricGraph (development version)
 * Added an INLA implementation for `alpha=2`.
+* Added a vignette for handling multiple likelihoods in `R-INLA`, and updated the `graph_spde_data()` function for such case.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.

@@ -38,7 +38,9 @@ navbar:
       - text: Comparison of different models using real data
         href: articles/comparison.html        
       - text: On isotropic covariances on metric graphs with non-Euclidean edges
-        href: articles/isotropic_noneuclidean.html                
+        href: articles/isotropic_noneuclidean.html     
+      - text: An example with multiple likelihoods in INLA and inlabru       
+        href: articles/multi_likelihood.html
     custom:
         icon: fa-comments-o
         text: Discussions

@@ -482,10 +482,14 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `.all`.
+#' @param repl_col Column containing the replicates. If the replicate is the internal group variable, the default `NULL` can be used.
 #' @param group Which groups? If there is no groups, one
 #' can set `group` to `NULL`. If one wants all groups,
 #' then one sets to `group` to `.all`.
 #' @param group_col Which "column" of the data contains the group variable?
+#' @param likelihood_col If only a single likelihood, this variable should be `NULL`. In case of multiple likelihoods, which column contains the variable indicating the number of the likelihood to be considered?
+#' @param resp_col If only a single likelihood, this variable should be `NULL`. In case of multiple likelihoods, column containing the response variable.
+#' @param covariates Vector containing the column names of the covariates. If no covariates, then it should be `NULL`.
 #' @param only_pred Should only return the `data.frame` to the prediction data?
 #' @param loc `r lifecycle::badge("deprecated")` Use `loc_name` instead.
 #' @param loc_name Character with the name of the location variable to be used in
@@ -496,8 +500,11 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
-graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NULL, 
+graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col = NULL, group = NULL, 
                                 group_col = NULL,
+                                likelihood_col = NULL,
+                                resp_col = NULL,
+                                covariates = NULL,
                                 only_pred = FALSE,
                                 loc_name = NULL,
                                 tibble = FALSE,
@@ -517,117 +524,148 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, group = NU
          }
          loc <- NULL
        }  
-
-  ret <- list()
-
-  alpha <- graph_spde$alpha
-  Tc <- graph_spde$Tc
-
-  graph_tmp <- graph_spde$graph_spde$clone()
-
-  if(is.null((graph_tmp$.__enclos_env__$private$data))){
-    stop("The graph has no data!")
-  }
-  if(only_pred){
-    idx_anyNA <- !idx_not_any_NA(graph_tmp$.__enclos_env__$private$data)
-    graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat){return(dat[idx_anyNA])})
-    drop_na <- FALSE
-    drop_all_na <- FALSE
-  }
-
-  if(is.null(repl)){
-    groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
-    repl <- groups[1]
-  } else if(repl[1] == ".all") {
-    groups <- graph_tmp$.__enclos_env__$private$data[[".group"]]
-    repl <- unique(groups)
-  } 
-
-   ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, group = group, group_col = group_col)   
-
-
-  n.repl <- length(unique(repl))
-
-  if(is.null(group)){
-    n.group <- 1
-  } else if (group[1] == ".all"){
-    n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
+  
+  if(!is.null(likelihood_col)){
+    like_val <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]])
+    if(is.null(resp_col)){
+      stop("If likelihood_col is non-NULL, then resp_col should be non-NULL!")
+    }
   } else{
-    n.group <- length(unique(group))
+    like_val <- 1
   }
 
-   A <- Matrix::Diagonal(0)  
+  if(is.null(repl_col)){
+    repl_col <- ".group"
+  }
 
-   for(i in 1:n.repl){
-    for(j in 1:n.group){
-        data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], group = group[j], group_col = group_col)
-        if(drop_na){
-          idx_notna <- idx_not_any_NA(data_group_repl)
-        } else if(drop_all_na){
-          idx_notna <- idx_not_all_NA(data_group_repl)
-        } else{
-          idx_notna <- rep(TRUE, length(data_group_repl[[".group"]]))
-        }
-        # nV_tmp <- sum(idx_notna)        
-        if(alpha == 1){
-          A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
-        } else{
-          A_tmp <- graph_spde$A 
-          A_tmp <- A_tmp[idx_notna,]
-        }
-        A <- Matrix::bdiag(A, A_tmp)
+  ret_list <- list()
+
+  for(lik in like_val){
+    ret <- list()
+    
+    graph_tmp <- graph_spde$graph_spde$clone()
+
+    if(is.null(repl) || repl[1] == ".all") {
+      groups <- graph_tmp$.__enclos_env__$private$data[[repl_col]]
+      repl <- unique(groups)
+    }     
+
+    graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik, group_col = likelihood_col)   
+    
+    if(is.null((graph_tmp$.__enclos_env__$private$data))){
+      stop("The graph has no data!")
     }
-   }
-
-  if(tibble){
-    ret[["data"]] <-tidyr::as_tibble(ret[["data"]])
-  }
-
-  if(drop_all_na){
-    is_tbl <- inherits(ret, "tbl_df")
-      idx_temp <- idx_not_all_NA(ret[["data"]])
-      ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]}) 
-      if(is_tbl){
-        ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
-      }
-  }    
-  if(drop_na){
-    if(!inherits(ret[["data"]], "tbl_df")){
-      idx_temp <- idx_not_any_NA(ret[["data"]])
-      ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]})
+    if(only_pred){
+      idx_anyNA <- !idx_not_any_NA(graph_tmp$.__enclos_env__$private$data)
+      graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat){return(dat[idx_anyNA])})
+      drop_na <- FALSE
+      drop_all_na <- FALSE
+    }
+  
+     ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col,  group = group, group_col = group_col)   
+  
+  
+    n.repl <- length(unique(repl))
+  
+    if(is.null(group)){
+      n.group <- 1
+    } else if (group[1] == ".all"){
+      n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
     } else{
-      ret[["data"]] <- tidyr::drop_na(ret[["data"]])
+      n.group <- length(unique(group))
+    }
+  
+     A <- Matrix::Diagonal(0)  
+  
+     for(i in 1:n.repl){
+      for(j in 1:n.group){
+          data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], repl_col = repl_col, group = group[j], group_col = group_col)
+          if(drop_na){
+            idx_notna <- idx_not_any_NA(data_group_repl)
+          } else if(drop_all_na){
+            idx_notna <- idx_not_all_NA(data_group_repl)
+          } else{
+            idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
+          }
+          # nV_tmp <- sum(idx_notna)
+          A <- Matrix::bdiag(A, Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ])
+      }
+     }
+   
+    if(tibble){
+      ret[["data"]] <-tidyr::as_tibble(ret[["data"]])
+    }
+  
+    if(drop_all_na){
+      is_tbl <- inherits(ret, "tbl_df")
+        idx_temp <- idx_not_all_NA(ret[["data"]])
+        ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]}) 
+        if(is_tbl){
+          ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+        }
+    }    
+    if(drop_na){
+      if(!inherits(ret[["data"]], "tbl_df")){
+        idx_temp <- idx_not_any_NA(ret[["data"]])
+        ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]})
+      } else{
+        ret[["data"]] <- tidyr::drop_na(ret[["data"]])
+      }
+    }
+    
+    if(!is.null(loc_name)){
+        ret[["data"]][[loc_name]] <- cbind(ret[["data"]][[".edge_number"]],
+                            ret[["data"]][[".distance_on_edge"]])
+    }
+  
+  
+    if(!inherits(ret[["data"]], "metric_graph_data")){
+      class(ret[["data"]]) <- c("metric_graph_data", class(ret))
+    }
+  
+    ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
+  
+  
+     ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
+                                     n.group = n.group,
+                                     n.repl = n.repl)
+    
+    if(!is.null(covariates)){
+      cov_tmp <- list()
+      for(cov_var in covariates){
+        cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
+        ret[["data"]][[cov_var]] <- NULL
+      }
+      ret[["index"]] <- list(ret[["index"]], cov_tmp)
+      ret[["basis"]] <- list(A, 1)
+    } else{
+      ret[["basis"]] <- A
+    }
+        
+
+    ret_list[[lik]] <- ret
+  }
+  
+  if(is.null(likelihood_col)){
+    return(ret)
+  } else{
+    count <- 1
+    for(lik in like_val){
+      tmp_data <- matrix(nrow = length(ret_list[[lik]][["data"]][[resp_col]]), ncol = length(like_val))
+      tmp_data[,count] <- ret_list[[lik]][["data"]][[resp_col]]
+      ret_list[[lik]][["data"]][[resp_col]] <- tmp_data
+      count <- count + 1
     }
   }
   
-  if(!is.null(loc_name)){
-      ret[["data"]][[loc_name]] <- cbind(ret[["data"]][[".edge_number"]],
-                          ret[["data"]][[".distance_on_edge"]])
-  }
-
-
-  if(!inherits(ret[["data"]], "metric_graph_data")){
-    class(ret[["data"]]) <- c("metric_graph_data", class(ret))
-  }
-
-  ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
-
-
-   ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
-                                   n.group = n.group,
-                                   n.repl = n.repl)
-  
-
-  ret[["basis"]] <- A
-  
-  return(ret)
+  return(ret_list)
 }
 
 
 #' Select replicate and group
 #' @noRd
 #'
-select_repl_group <- function(data_list, repl, group, group_col){
+select_repl_group <- function(data_list, repl, repl_col, group, group_col){
     if(!is.null(group) && is.null(group_col)){
       stop("If you specify group, you need to specify group_col!")
     }
@@ -635,12 +673,12 @@ select_repl_group <- function(data_list, repl, group, group_col){
       grp <- data_list[[group_col]]
       grp <- which(grp %in% group)
       data_result <- lapply(data_list, function(dat){dat[grp]})
-      replicates <- data_result[[".group"]]
+      replicates <- data_result[[repl_col]]
       replicates <- which(replicates %in% repl)
       data_result <- lapply(data_result, function(dat){dat[replicates]})
       return(data_result)
     } else{
-      replicates <- data_list[[".group"]]
+      replicates <- data_list[[repl_col]]
       replicates <- which(replicates %in% repl)
       data_result <- lapply(data_list, function(dat){dat[replicates]})
       return(data_result)
