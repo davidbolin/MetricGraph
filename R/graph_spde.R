@@ -550,7 +550,13 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
       repl <- unique(groups)
     }     
 
-    graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik, group_col = likelihood_col)   
+    lik_tmp <- lik
+
+    if(length(like_val) == 1){
+      lik_tmp <- NULL
+    } 
+
+    graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik_tmp, group_col = likelihood_col)   
     
     if(is.null((graph_tmp$.__enclos_env__$private$data))){
       stop("The graph has no data!")
