@@ -172,7 +172,9 @@ formula object and the
 Let us start by creating the formula:
 
 ```{r}
-f.s <- y ~ -1 + intercept_1 + intercept_2 + f(field, model = spde_model)
+f.s <- y ~ -1 + f(intercept_1, model = "linear") + 
+        f(intercept_2, model = "linear") + 
+        f(field, model = spde_model)
 ```
 
 Let us now create the `inla.stack` objects, one for each likelihood. To such an end, we simply supply the data in `data_spde` obtained from using `graph_data_spde`:
@@ -258,7 +260,92 @@ print(intercept_df)
 
 # Fitting models with multiple likelihoods in `inlabru`
 
-Under development.
+For this section recall the objects `spde_model` obtained above. Let us create a new data object. Observe that for `inlabru` we do not need to provide the `covariates` argument.
+
+```{r}
+data_spde_bru <- graph_data_spde(graph_spde = spde_model, 
+                name = "field", likelihood_col = "likelihood",
+                resp_col = "y", loc_name = "loc")
+```
+
+We begin by loading `inlabru` library and setting up the likelihoods. To this end, we will use the first entry of `data_spde_bru` to supply the data for the first likelihood, and the second entry to supply the data for the second likelihood.
+```{r}
+library(inlabru)
+
+lik1 <- like(formula = y ~ intercept_1 + field,
+            data=data_spde_bru[[1]][["data"]])
+
+lik2 <- like(formula = y ~ intercept_2 + field,
+            data=data_spde_bru[[2]][["data"]])            
+```
+
+Now, we create the model component:
+
+```{r}
+cmp <-  ~ -1 + intercept_1(intercept_1) + 
+        intercept_2(intercept_2) + 
+        field(loc, model = spde_model)
+```
+
+Then, we fit the model:
+
+```{r}
+spde_bru_fit <-  bru(cmp, lik1, lik2)
+```
+
+Let us now obtain the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+      
+```{r}
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model)
+
+summary(spde_bru_result)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_bru_df <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, r),
+    mean = c(
+      spde_bru_result$summary.sigma$mean,
+      spde_bru_result$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result$summary.sigma$mode,
+      spde_bru_result$summary.range$mode
+    )
+  )
+  print(result_bru_df)
+```
+
+Let us now look at the estimates of the measurement errors and compare with the true ones:
+
+```{r}
+meas_err_bru_df <- data.frame(
+    parameter = c("sigma1.e", "sigma2.e"),
+    true = c(sigma1.e, sigma2.e),
+    mean = sqrt(1/spde_bru_fit$summary.hyperpar$mean[1:2]),
+    mode = sqrt(1/spde_bru_fit$summary.hyperpar$mode[1:2])
+  )
+print(meas_err_bru_df)
+```
+
+Finally, let us look at the estimates of the intercepts:
+
+```{r}
+intercept_df <- data.frame(
+    parameter = c("beta1", "beta2"),
+    true = c(beta1, beta2),
+    mean = spde_bru_fit$summary.fixed$mean,
+    mode = spde_bru_fit$summary.fixed$mode
+  )
+print(intercept_df)
+```
+
 
 # A toy dataset with multiple likelihoods and replicates
 
@@ -459,5 +546,94 @@ print(intercept_df)
 
 # Fitting models with multiple likelihoods and replicates in `inlabru`
 
-Under development.
+For this section recall the objects `spde_model_rep` obtained above. Let us create a new data object:
+
+```{r}
+data_spde_bru_repl <- graph_data_spde(graph_spde = spde_model_rep, 
+                name="field", loc_name = "loc", 
+                repl = c(1,3,5,7,9), repl_col = "repl", 
+                likelihood_col = "likelihood", resp_col = "y")
+```
+
+Let us obtain the `repl` indexes from the `data_spde_bru_repl` object:
+
+```{r}
+repl <- data_spde_bru_repl[["repl"]]
+```
+
+Let us now construct the likelihoods:
+```{r}
+lik1_repl <- like(formula = y ~ intercept_1 + field,
+            data=data_spde_bru_repl[[1]][["data"]])
+
+lik2_repl <- like(formula = y ~ intercept_2 + field,
+            data=data_spde_bru_repl[[2]][["data"]])            
+```
+
+Now, we create the model component, using the replicates index we obtained above:
+
+```{r}
+cmp_repl <-  ~ -1 + intercept_1(intercept_1) + 
+        intercept_2(intercept_2) + 
+        field(loc, model = spde_model_rep, replicate = repl)
+```
+
+Then, we fit the model:
+
+```{r}
+spde_bru_fit_repl <-  bru(cmp_repl, lik1_repl, lik2_repl)
+```
+
+Let us now obtain the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+      
+```{r}
+spde_bru_result_repl <- spde_metric_graph_result(spde_bru_fit_repl, "field", spde_model_rep)
+
+summary(spde_bru_result_repl)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_bru_repl_df <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_bru_result_repl$summary.sigma$mean,
+      spde_bru_result_repl$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result_repl$summary.sigma$mode,
+      spde_bru_result_repl$summary.range$mode
+    )
+  )
+  print(result_bru_repl_df)
+```
+
+Let us now look at the estimates of the measurement errors and compare with the true ones:
+
+```{r}
+meas_err_bru_repl_df <- data.frame(
+    parameter = c("sigma1.e", "sigma2.e"),
+    true = c(sigma1.e, sigma2.e),
+    mean = sqrt(1/spde_bru_fit_repl$summary.hyperpar$mean[1:2]),
+    mode = sqrt(1/spde_bru_fit_repl$summary.hyperpar$mode[1:2])
+  )
+print(meas_err_bru_repl_df)
+```
+
+Finally, let us look at the estimbates of the intercepts:
+
+```{r}
+intercept_repl_df <- data.frame(
+    parameter = c("beta1", "beta2"),
+    true = c(beta1, beta2),
+    mean = spde_bru_fit_repl$summary.fixed$mean,
+    mode = spde_bru_fit_repl$summary.fixed$mode
+  )
+print(intercept_repl_df)
+```
 

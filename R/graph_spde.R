@@ -634,7 +634,9 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
       cov_tmp <- list()
       for(cov_var in covariates){
         cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
-        ret[["data"]][[cov_var]] <- NULL
+        if(is.null(loc_name)){
+          ret[["data"]][[cov_var]] <- NULL
+        }
       }
       ret[["index"]] <- list(ret[["index"]], cov_tmp)
       ret[["basis"]] <- list(A, 1)
@@ -648,7 +650,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
   
   if(is.null(likelihood_col)){
     return(ret)
-  } else{
+  } else if(is.null(loc_name)){
     count <- 1
     for(lik in like_val){
       tmp_data <- matrix(nrow = length(ret_list[[lik]][["data"]][[resp_col]]), ncol = length(like_val))
