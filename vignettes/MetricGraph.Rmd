@@ -235,7 +235,7 @@ Given that we have constructed the metric graph, we can now add data to it. For 
 As an example, let us sample some locations on edges at random and add data to them in the graph: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 n.obs <- 10
-data <- data.frame(edge_number = sample(1:graph$nE, n.obs),
+data <- data.frame(edge_number = sample(1:graph$nE, n.obs, replace=TRUE),
                    distance_on_edge = runif(n.obs),
                    y = rnorm(n.obs))
 graph$add_observations(data = data, normalized = TRUE)
@@ -244,7 +244,7 @@ graph$plot(data = "y", vertex_size = 0)
 
 One should note here that one needs to specify `normalized = TRUE` in the function to specify that the locations are in normalized distance on the edges. If this command is not set, the distances are interpreted as not being normalized. The `add_observations()` function accepts multiple types of inputs. One scenario that can be common in applications is to have the data as `SpatialPoints` objects, and one can then add the observations as a `SpatialPointsDataFrame`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPointsDataFrame` object which we add to the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-obs.loc <- cbind(sample(1:graph$nE, n.obs), runif(n.obs))
+obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 obs.lonlat <- graph$coordinates(PtE = obs.loc, normalized = TRUE)
 obs <- rnorm(n.obs)
 points <- SpatialPointsDataFrame(coords = obs.lonlat,
