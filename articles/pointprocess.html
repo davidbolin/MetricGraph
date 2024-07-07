@@ -61,6 +61,7 @@
     <a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a>
     <a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a>
     <a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a>
+    <a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a>
   </div>
 </li>
 <li class="nav-item">
@@ -108,7 +109,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-06-07.</h4>
+modified: 2024-07-07.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -257,8 +258,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## std.dev 0.366393 0.0965421   0.201571 0.359222   0.576867 0.34535</span></span>
-<span><span class="co">## range   2.085520 0.9194300   0.850694 1.898620   4.400320 1.58121</span></span></code></pre>
+<span><span class="co">## std.dev 0.366393 0.0965423   0.201570 0.359222   0.576868 0.34535</span></span>
+<span><span class="co">## range   2.085520 0.9194260   0.850696 1.898620   4.400310 1.58121</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -275,9 +276,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3663932 0.3453502</span></span>
-<span><span class="co">## 2     range  2.0 2.0855183 1.5812057</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.3663931 0.345350</span></span>
+<span><span class="co">## 2     range  2.0 2.0855154 1.581205</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -366,8 +367,8 @@ exposure terms</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.501318 0.0168917   0.469686 0.500751   0.535971 0.499119</span></span>
-<span><span class="co">## range   2.179360 0.1597570   1.882090 2.174080   2.509640 2.163090</span></span></code></pre>
+<span><span class="co">## std.dev 0.501318 0.0168916   0.469686  0.50075   0.535971 0.499119</span></span>
+<span><span class="co">## range   2.179360 0.1597590   1.882090  2.17408   2.509640 2.163090</span></span></code></pre>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -384,7 +385,7 @@ exposure terms</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
 <span><span class="co">## 1   std.dev  0.5 0.5013181 0.4991194</span></span>
-<span><span class="co">## 2     range  2.0 2.1793647 2.1630902</span></span></code></pre>
+<span><span class="co">## 2     range  2.0 2.1793646 2.1630898</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>

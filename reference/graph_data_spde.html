@@ -36,6 +36,7 @@
     <a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a>
     <a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a>
     <a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a>
+    <a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a>
   </div>
 </li>
 <li class="nav-item">
@@ -85,8 +86,12 @@
 <span>  <span class="va">graph_spde</span>,</span>
 <span>  name <span class="op">=</span> <span class="st">"field"</span>,</span>
 <span>  repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  repl_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  likelihood_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  resp_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  only_pred <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  loc_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tibble <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -113,6 +118,10 @@ can set <code>repl</code> to <code>NULL</code>. If one wants all replicates,
 then one sets to <code>repl</code> to <code>.all</code>.</p></dd>
 
 
+<dt>repl_col</dt>
+<dd><p>Column containing the replicates. If the replicate is the internal group variable, the default <code>NULL</code> can be used.</p></dd>
+
+
 <dt>group</dt>
 <dd><p>Which groups? If there is no groups, one
 can set <code>group</code> to <code>NULL</code>. If one wants all groups,
@@ -121,6 +130,18 @@ then one sets to <code>group</code> to <code>.all</code>.</p></dd>
 
 <dt>group_col</dt>
 <dd><p>Which "column" of the data contains the group variable?</p></dd>
+
+
+<dt>likelihood_col</dt>
+<dd><p>If only a single likelihood, this variable should be <code>NULL</code>. In case of multiple likelihoods, which column contains the variable indicating the number of the likelihood to be considered?</p></dd>
+
+
+<dt>resp_col</dt>
+<dd><p>If only a single likelihood, this variable should be <code>NULL</code>. In case of multiple likelihoods, column containing the response variable.</p></dd>
+
+
+<dt>covariates</dt>
+<dd><p>Vector containing the column names of the covariates. If no covariates, then it should be <code>NULL</code>.</p></dd>
 
 
 <dt>only_pred</dt>
