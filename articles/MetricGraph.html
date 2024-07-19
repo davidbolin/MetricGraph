@@ -44,9 +44,9 @@
 <li><a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a></li>
-    <li><a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matérn fields</a></li>
-    <li><a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matérn fields</a></li>
-    <li><a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matérn fields with general smoothness</a></li>
+    <li><a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a></li>
+    <li><a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matern fields</a></li>
+    <li><a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matern fields with general smoothness</a></li>
     <li><a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a></li>
     <li><a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a></li>
@@ -555,7 +555,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  43.92487 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  43.75349 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
@@ -771,7 +771,7 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## Number of function calls by 'optim' = 40</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  15.14221 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  14.8558 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
@@ -869,7 +869,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 491</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.36709 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.27131 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -959,7 +959,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 501</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.15543 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  7.0405 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -1031,8 +1031,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.865940 0.1020000   1.679680 1.861750    2.07999 1.841640</span></span>
-<span><span class="co">## range 0.179399 0.0273692   0.132663 0.176922    0.23990 0.171517</span></span></code></pre>
+<span><span class="co">## sigma 1.866020 0.1020100   1.679740 1.861820   2.080080 1.842530</span></span>
+<span><span class="co">## range 0.179403 0.0273729   0.132663 0.176924   0.239915 0.171519</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mi>κ</mi></mrow><annotation encoding="application/x-tex">2/\kappa</annotation></semantics></math>)
 instead of
@@ -1053,9 +1053,9 @@ estimated values with the true values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.8659445 1.8416413</span></span>
-<span><span class="co">## 2     range  0.2 0.1793988 0.1715171</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 1.8660211 1.842528</span></span>
+<span><span class="co">## 2     range  0.2 0.1794025 0.171519</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
