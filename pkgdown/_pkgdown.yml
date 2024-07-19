@@ -27,11 +27,11 @@ navbar:
         href: articles/random_fields.html
       - text: Data manipulation on metric graphs
         href: articles/metric_graph_data.html
-      - text: inlabru interface of Whittle--Matérn fields
+      - text: inlabru interface of Whittle--Matern fields
         href: articles/inlabru_interface.html
-      - text: INLA interface of Whittle--Matérn fields
+      - text: INLA interface of Whittle--Matern fields
         href: articles/inla_interface.html
-      - text: Whittle--Matérn fields with general smoothness
+      - text: Whittle--Matern fields with general smoothness
         href: articles/fem_models.html
       - text: Log-Gaussian Cox processes on metric graphs
         href: articles/pointprocess.html
@@ -122,3 +122,4 @@ reference:
   - title: Datasets
     contents:
     - pems
+    - pems_repl
