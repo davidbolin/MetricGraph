@@ -526,6 +526,21 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
        }  
   
   if(!is.null(likelihood_col)){
+    # Processing likelihoods
+    if(any(is.na(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]]))){
+      tmp_group_col_val <- graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]
+      tmp_unique_group_val <- unique(tmp_group_col_val)
+      for(tmp_i in tmp_unique_group_val){
+        idx_tmp <- (tmp_group_col_val == tmp_i)
+        idx_like_val_temp <- !is.na(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]][idx_tmp])
+        like_val_temp <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]][idx_tmp][idx_like_val_temp])
+        if(length(like_val_temp)>1){
+          stop("Likelihood processing error. There was something wrong when grouping the likelihood data.")
+        }
+        graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]][idx_tmp] <- like_val_temp
+      }
+    }
+
     like_val <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]])
     if(is.null(resp_col)){
       stop("If likelihood_col is non-NULL, then resp_col should be non-NULL!")
@@ -560,6 +575,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
 
     graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik_tmp, group_col = likelihood_col)   
     
+
     if(is.null((graph_tmp$.__enclos_env__$private$data))){
       stop("The graph has no data!")
     }
@@ -571,7 +587,6 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
     }
   
      ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col,  group = group, group_col = group_col)   
-  
   
     n.repl <- length(unique(repl))
   
@@ -631,7 +646,6 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
         ret[["data"]][[loc_name]] <- cbind(ret[["data"]][[".edge_number"]],
                             ret[["data"]][[".distance_on_edge"]])
     }
-  
   
     if(!inherits(ret[["data"]], "metric_graph_data")){
       class(ret[["data"]]) <- c("metric_graph_data", class(ret))
