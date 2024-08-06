@@ -77,8 +77,13 @@
 #' @param repl replicates
 #' @param X_cov matrix of covariates
 #' @noRd
-likelihood_alpha1_directional <- function(theta, graph, data_name = NULL, manual_y = NULL,
-                                          X_cov = NULL, repl = NULL, parameterization="matern") {
+likelihood_alpha1_directional <- function(theta,
+                                          graph,
+                                          data_name = NULL,
+                                          manual_y = NULL,
+                                          X_cov = NULL,
+                                          repl = NULL,
+                                          parameterization="matern") {
   #build Q
   if(is.null(graph$C)){
     graph$buildDirectionalConstraints(alpha = 1)
