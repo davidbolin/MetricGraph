@@ -53,7 +53,6 @@ fig <- ggplot(clear.df) +
   geom_text(data = dplyr::filter(clear, clear$date == ymd('2012-08-01')),
             aes(x = UTM_Xcoord, y = UTM_Ycoord+1000, label = locID),size = 2)+
   scale_size_manual(values = seq(0.2,2,length.out = 5))+
-  scale_color_viridis(option = 'C')+
   scale_shape_manual(values = c(16))+
   ylab("Latitude") +
   xlab("Longitude")+

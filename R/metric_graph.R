@@ -3182,7 +3182,41 @@ metric_graph <-  R6Class("metric_graph",
     }
     return(data_temp)
   },
+ DirectionalWeightFunction_col_name = 'weights',
+ DirectionalWeightFunction_in  =NULL,
+ DirectionalWeightFunction_out  = NULL,
+ #' @description Define the columns to be used for creating the directional vertex
+ #' weights. Also possible to supply user defined functions for input and output
+ #' to create ones own weights.
+ #' @param name_column the names of the colummns used for f_in, f_out
+ #' @param f_in functions for the input vertex (default `w/sum(w)`) uses the columns of name_column
+ #' @param f_out functions for the output vertex (deafult `rep(-1,length(w))`) uses the columns of name_column
+ #' @details For more details see paper (that does not exists yet).
+ #' @return No return value.
+ setDirectionalWeightFunction = function(name_column = "",
+                                         f_in = NULL,
+                                         f_out = NULL){
 
+
+   self$DirectionalWeightFunction_col_name <- name_column
+  if(!is.null(self$C)){
+    warning('The constraint matrix has been deleted')
+  }
+   self$C     = NULL
+   self$CoB   = NULL
+   self$CoB$T = NULL
+
+   if(!is.null(f_in)){
+     self$DirectionalWeightFunction_in = f_in
+   }else{
+     self$DirectionalWeightFunction_in  = function(w){ w/sum(w)}
+   }
+   if(!is.null(f_out)){
+     self$DirectionalWeightFunction_out = f_out
+   }else{
+     self$DirectionalWeightFunction_out = function(w){ rep(-1,length(w))}
+   }
+  },
 
  #' @description Build directional ODE constraint matrix from edges.
  #' @param alpha how many derivatives the processes has
@@ -3214,15 +3248,11 @@ metric_graph <-  R6Class("metric_graph",
           i_[count + 1:(n_in+1)] <- count_constraint + 1
           j_[count + 1:(n_in+1)] <- c(2 * alpha * (out_edges[i]-1) + der,
                                       2 * alpha * (in_edges-1)  + alpha + der)
-          if(dim(weight)[2]!=2){
-            x_[count + 1:(n_in+1)] <- c(-1,
-                                        rep(1/n_in,n_in))
-          }else{
-            x_[count + 1:(n_in+1)] <- c(weight$out.weight[out_edges],
-                                        weight$in.weight[in_edges])
-          }
-          #c(-1,
-          #rep(w_i,n_in))
+
+
+          x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges,self$DirectionalWeightFunction_col_name])),
+                                      as.matrix(self$DirectionalWeightFunction_in(weight[in_edges,self$DirectionalWeightFunction_col_name])))
+
           count <- count + (n_in+1)
           count_constraint <- count_constraint + 1
         }

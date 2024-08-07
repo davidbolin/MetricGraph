@@ -56,26 +56,11 @@ res.cross.dir <-posterior_crossvalidation(res.dir)
 
 
 graph <- metric_graph$new(mf04p$edges$geometry, longlat = FALSE)
-graph$set_edge_weights(weights=data.frame(out.weight= -1,
-                                          in.weight = rep(1, graph$nE)))
-
 graph$add_observations(data = data,
                        data_coords = "spatial",
                        coord_x = "coordx",
                        coord_y = "coordy")
 graph$observation_to_vertex()
-V_indegree = graph$get_degrees("indegree")
-V_outdegree = graph$get_degrees("outdegree")
-index_outdegree <- V_outdegree > 0 & V_indegree >0
-index_in0      <- V_indegree == 0
-Vs <- which(index_outdegree)
-W <- graph$get_edge_weights()
-
-for (v in Vs) {
-  in_edges    <- which(graph$E[, 2] %in% v)
-  W[in_edges,2] <- sqrt(W[in_edges,2]/sum(W[in_edges,2]))
-}
-graph$set_edge_weights(W)
 res.dir.root <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
 res.cross.dir.root <-posterior_crossvalidation(res.dir.root)
 
@@ -97,8 +82,7 @@ Sigma.dir.root <- t(as.matrix(Tc))%*%Sigma%*%(as.matrix(Tc))
 #
 ###
 graph <- metric_graph$new(mf04p$edges$geometry, longlat = FALSE)
-graph$set_edge_weights(weights=data.frame(out.weight= -1,
-                                          in.weight = mf04p$edges$h2oAreaKm2))
+graph$set_edge_weights(weights=data.frame(h2 = mf04p$edges$h2oAreaKm2))
 
 
 graph$add_observations(data = data,
@@ -106,20 +90,8 @@ graph$add_observations(data = data,
                        coord_x = "coordx",
                        coord_y = "coordy")
 graph$observation_to_vertex()
-V_indegree = graph$get_degrees("indegree")
-V_outdegree = graph$get_degrees("outdegree")
-index_outdegree <- V_outdegree > 0 & V_indegree >0
-index_in0      <- V_indegree == 0
-Vs <- which(index_outdegree)
-W <- graph$get_edge_weights()
-W_old <- W
-for (v in Vs) {
-  in_edges    <- which(graph$E[, 2] %in% v)
-  W[in_edges,2] <- sqrt(W_old[in_edges,2]/sum(W_old[in_edges,2]))
-}
+graph$setDirectionalWeightFunction("h2", f_in = function(x){sqrt(x/sum(x))})
 
-
-graph$set_edge_weights(W)
 res.dir_weightroot <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
 res.cross.dir_weightroot <-posterior_crossvalidation(res.dir_weightroot)
 
