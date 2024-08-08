@@ -103,7 +103,7 @@ posterior_mean_obs_alpha1 <- function(theta,
         Sigma_i <- S[Obs.ind, Obs.ind] - S[Obs.ind, E.ind] %*% Bt
         Sigma_noise <- Sigma_i
         if(!no_nugget){
-          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2  
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
         }
 
         y_hat[obs.id] <- y_hat[obs.id] + Sigma_i %*% solve(Sigma_noise,
@@ -284,8 +284,11 @@ posterior_mean_obs_alpha2 <- function(theta,
 #' @param graph - metric_graph object
 #' @param rem.edge  - remove edge
 #' @noRd
-posterior_mean_alpha1 <- function(theta, graph, resp,
-                                  PtE_resp, rem.edge = FALSE,
+posterior_mean_alpha1 <- function(theta,
+                                  graph,
+                                  resp,
+                                  PtE_resp,
+                                  rem.edge = FALSE,
                                   no_nugget = FALSE) {
 
   sigma_e <- theta[1]
@@ -361,6 +364,19 @@ posterior_mean_alpha1 <- function(theta, graph, resp,
 
 }
 
+#'
+#' computes the posterior mean for alpha = 1 directional model
+#' @param theta (sigma_e, tau, kappa)
+#' @param graph metric_graph object
+#' @param PtE_resp
+#' @param rem.edge
+#' @param no_nugget
+#' @noRd
+posterior_mean_alpha1_directional <- function(theta, graph, resp,
+                                  PtE_resp, rem.edge = NULL,
+                                  no_nugget = FALSE) {
+
+}
 #' Computes the posterior mean for alpha = 2
 #' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph metric_graph object

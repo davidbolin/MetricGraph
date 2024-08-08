@@ -7,6 +7,7 @@
 graph_spde(
   graph_object,
   alpha = 1,
+  directional = FALSE,
   stationary_endpoints = "all",
   parameterization = c("matern", "spde"),
   start_range = NULL,
@@ -25,6 +26,8 @@ graph_spde(
 \item{graph_object}{A \code{metric_graph} object.}
 
 \item{alpha}{The order of the SPDE.}
+
+\item{directional}{Should a directional model be used? Currently only implemented for \code{alpha=1}.}
 
 \item{stationary_endpoints}{Which vertices of degree 1 should contain
 stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.}
