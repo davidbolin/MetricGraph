@@ -198,6 +198,13 @@ graph_spde <- function(graph_object,
     } else{
       BC <- 1
     }
+
+    ind_stat_indices <- NULL
+
+    for (v in stat_indices) {
+      edge <- which(graph_spde$E[,1]==v)[1] #only put stationary of one of indices
+      ind_stat_indices <- c(ind_stat_indices, 2 * ( edge - 1) + 1)
+    }
     
     if(is.null(graph_spde$CoB)){
       graph_spde$buildDirectionalConstraints(alpha = 1)
@@ -428,7 +435,7 @@ if(alpha == 1){
             parameterization = parameterization,
             w = weights_directional,
             BC = as.integer(BC),
-            stat_indices = stat_indices))
+            ind_stat_indices = as.integer(ind_stat_indices)))
   }
 
 } else{
@@ -454,13 +461,13 @@ if(alpha == 1){
             parameterization = parameterization))
 }
 model$graph_spde <- graph_spde
+model$directional <- directional
 model$data_PtE <- suppressWarnings(graph_object$get_PtE())
 model$parameterization <- parameterization
 model$Tc <- Tc
 model$alpha <- alpha
 if(alpha == 2){
     A_tmp <- t(Tc)
-    index.obs1 <- which(graph_spde$E[,1] %in% graph_spde$PtV)
     index.obs1 <- sapply(graph_spde$PtV, function(i){idx_temp <- i == graph_spde$E[,1]
                                                                       idx_temp <- which(idx_temp)
                                                                       return(idx_temp[1])})
@@ -476,6 +483,23 @@ if(alpha == 2){
           index.obs1[na_obs1] <- (index.obs2-1)*4 + 3                                                                      
           }
     A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=    
+} else if(directional){
+    A_tmp <- t(Tc)
+    index.obs1 <- sapply(graph_spde$PtV, function(i){idx_temp <- i == graph_spde$E[,1]
+                                                                      idx_temp <- which(idx_temp)
+                                                                      return(idx_temp[1])})
+    index.obs1 <- (index.obs1-1)*2+1
+    index.obs2 <- NULL
+    na_obs1 <- is.na(index.obs1)
+    if(any(na_obs1)){
+          idx_na <- which(na_obs1)
+          PtV_NA <- graph_spde$PtV[idx_na]
+          index.obs2 <- sapply(PtV_NA, function(i){idx_temp <- i == graph_spde$E[,2]
+                                                                      idx_temp <- which(idx_temp)
+                                                                      return(idx_temp[1])})
+          index.obs1[na_obs1] <- (index.obs2-1)*2 + 2                                                                      
+          }
+    A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=   
 }
 model$A <- A_tmp
 class(model) <- c("inla_metric_graph_spde", class(model))
@@ -692,7 +716,12 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
          }
          # nV_tmp <- sum(idx_notna)        
          if(alpha == 1){
-           A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
+          if(!graph_spde$directional){
+            A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
+          } else{
+           A_tmp <- graph_spde$A 
+           A_tmp <- A_tmp[idx_notna,]
+          }
          } else{
            A_tmp <- graph_spde$A 
            A_tmp <- A_tmp[idx_notna,]
@@ -1144,7 +1173,7 @@ ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   model <- mapper[["model"]]
-  if(model$alpha == 1){
+  if(model$alpha == 1 && !(model$directional)){
     pte_tmp <- model$graph_spde$get_PtE()
     input_list <- lapply(1:nrow(input), function(i){input[i,]})
     pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
