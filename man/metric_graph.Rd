@@ -102,6 +102,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-filter}{\code{metric_graph$filter()}}
 \item \href{#method-metric_graph-summarise}{\code{metric_graph$summarise()}}
 \item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
+\item \href{#method-metric_graph-setDirectionalWeightFunction}{\code{metric_graph$setDirectionalWeightFunction()}}
 \item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
@@ -134,6 +135,7 @@ Create a new \code{metric_graph} object.
   length_unit = vertex_unit,
   edge_weights = 1,
   kirchhoff_weights = NULL,
+  directional_weights = NULL,
   longlat = FALSE,
   crs = NULL,
   proj4string = NULL,
@@ -170,6 +172,8 @@ If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit
 each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}
 
 \item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{edge_weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{edge_weights} is a single number and those are the Kirchhoff weights.}
+
+\item{\code{directional_weights}}{If non-null, the name (or number) of the column of \code{edge_weights} that contain the directional weights. The default is the first column of the edge weights.}
 
 \item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
@@ -241,7 +245,8 @@ Sets the edge weights
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(
   weights = rep(1, self$nE),
-  kirchhoff_weights = NULL
+  kirchhoff_weights = NULL,
+  directional_weights = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -252,6 +257,8 @@ Sets the edge weights
 each row gives a vector of weights to its corresponding edge.}
 
 \item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{weights} is a single number and those are the Kirchhoff weights.}
+
+\item{\code{directional_weights}}{If non-null, the name (or number) of the column of \code{weights} that contain the directional weights.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1230,6 +1237,34 @@ Return the internal data with the option to filter by groups.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-setDirectionalWeightFunction"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-setDirectionalWeightFunction}{}}}
+\subsection{Method \code{setDirectionalWeightFunction()}}{
+Define the columns to be used for creating the directional vertex
+weights. Also possible to supply user defined functions for input and output
+to create ones own weights.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$setDirectionalWeightFunction(f_in = NULL, f_out = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{f_in}}{functions for the input vertex (default \code{w/sum(w)}) uses the columns of name_column}
+
+\item{\code{f_out}}{functions for the output vertex (deafult \code{rep(-1,length(w))}) uses the columns of name_column}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+For more details see paper (that does not exists yet).
+}
+
+\subsection{Returns}{
+No return value.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-buildDirectionalConstraints"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-buildDirectionalConstraints}{}}}
 \subsection{Method \code{buildDirectionalConstraints()}}{
@@ -1242,6 +1277,8 @@ Build directional ODE constraint matrix from edges.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{alpha}}{how many derivatives the processes has}
+
+\item{\code{weight}}{weighting for each vertex used in the constraint (E x 2)}
 }
 \if{html}{\out{</div>}}
 }

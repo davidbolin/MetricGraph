@@ -1,0 +1,134 @@
+---
+title: "An example with graph models"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{An example with graph models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: Bernoulli
+  type: article
+  issue: 30
+  pages: 1611-1639
+  issued:
+    year: 2024
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2304.10372
+  type: preprint
+  issued:
+    year: 2023
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+library(MetricGraph)
+```
+
+# Introduction
+
+In this vignette we explore how to build a directional graph model on a river network. The data is imported from the package `SNR2`.
+
+
+# Setting up the data
+Here we take the data as is described in the [Vignette  of `SNR2` ](https://cran.r-project.org/web/packages/SSN2/vignettes/introduction.html). We will use the `geometry` object from the `SSN` object to build the `metricGraph` object. We also load the observations and the relevant covariates. We assume that in the `geometry` object the lines are so that they go downwards along the river.
+```{r, message=FALSE}
+library(MetricGraph)
+library(SSN2)
+
+copy_lsn_to_temp()
+mf04p <- ssn_import(paste0(tempdir(), "/MiddleFork04.ssn"),
+                    predpts = c("pred1km.shp", "Knapp"),
+                    overwrite = TRUE)
+
+graph <- metric_graph$new(mf04p$edges$geometry, longlat = FALSE)
+data <- data.frame(coordx      = mf04p$obs$NEAR_X,
+                   coordy      = mf04p$obs$NEAR_Y,
+                   y                = mf04p$obs$Summer_mn,
+                   elev             = mf04p$obs$ELEV_DEM,
+                   slope            = mf04p$obs$SLOPE,
+                   netid            = as.factor(mf04p$obs$netID))
+graph$add_observations(data = data,
+                       data_coords = "spatial",
+                       coord_x = "coordx",
+                       coord_y = "coordy")
+```
+
+
+We can now visualize the river and the data 
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+graph$plot(data = "y", vertex_size = 0.5)
+```
+# Non directional models
+We start with fitting the non directional models. 
+```{r, message=FALSE}
+#fitting model with different smoothness
+model.wm1 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'WM1')
+model.wm2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'WM2')
+
+```
+We also create the cross validation results to see how the models perform. Here we see that setting $\alpha=2$, i.e. one time differential, has a much worse performance compared to $\alpha=1$, i.e. continuous but non-differential.
+
+```{r, echo=TRUE}
+cross.wm1 <-posterior_crossvalidation(model.wm1)
+cross.wm2 <-posterior_crossvalidation(model.wm2)
+
+cross.scores <- rbind(cross.wm1$scores,cross.wm2$scores)
+rownames(cross.scores) <- c("alpha=1","alpha=2")
+print(cross.scores)
+```
+# Directional models
+We now start with fitting various directional model. 
+We start with having the "boundary condition" that at an edge the sum of the downward vertices should equal the upward vertices. That is if we have three edges $e_1,e_2,e_3$ connected so that $e_1,e_2$ merge into $e_3$ we have at the vertex connecting them
+$$
+u_{e_3}(v) = u_{e_1}(v) + u_{e_2}(v).
+$$
+This is the default option in `metricGraph` and is created by:
+
+```{r, echo=FALSE,message=FALSE}
+res.wm1.dir <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
+```
+Here one can see a big improvement by adding using the directional model over the non directional.
+```{r, echo=TRUE}
+cross.wm1.dir <-posterior_crossvalidation(res.wm1.dir)
+cross.scores <- rbind(cross.scores,cross.wm1.dir$scores)
+print(cross.scores)
+```
+
+We could use other constraints. For instance in .. the authors used constraint not so the sum is equal but rather the variance of the in is constant which is obtained by
+$$
+u_{e_3}(v) = \sqrt{w_1}u_{e_1}(v) + \sqrt{w_2}u_{e_2}(v).
+$$
+here the weights are set by the edge variable `h2`.
+To make this work in the metricgraph package one uses the following line
+```{r, echo=FALSE}
+graph$set_edge_weights(weights= data.frame(h2 = mf04p$edges$h2oAreaKm2), directional_weights = 'h2')
+graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
+res.wm1.dir2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
+```
+
+Here we see a slight dip in performance but still much better than the symmetric version.
+```{r, echo=TRUE}
+cross.wm1.dir2 <-posterior_crossvalidation(res.wm1.dir2)
+cross.scores <- rbind(cross.scores,cross.wm1.dir2$scores)
+print(cross.scores)
+```
