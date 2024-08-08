@@ -18,6 +18,8 @@ Sigma.vertices.dalpha1 <- function(theta, graph, parameterization="matern"){
   tau <- 1/reciprocal_tau
   if(is.null(graph$C)){
     graph$buildDirectionalConstraints(1)
+  } else if(graph$CoB$alpha == 2){
+    graph$buildDirectionalConstraints(1)
   }
 
   Q_edges <- MetricGraph:::Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=1, build=TRUE)

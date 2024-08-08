@@ -354,8 +354,12 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
 
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "WM alpha2"){
-    if(is.null(graph$C))
+    if(is.null(graph$C)){
       graph$buildC(2)
+    } else if(graph$CoB$alpha == 1){
+      graph$buildC(2)
+    }
+
     n.c <- 1:length(graph$CoB$S)
     Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
     Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
@@ -369,8 +373,11 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   }else if(model == "WMD alpha1"){
-    if(is.null(graph$C))
+    if(is.null(graph$C)){
       graph$buildDirectionalConstraints(1)
+    } else if(graph$CoB$alpha == 2){
+      graph$buildDirectionalConstraints(1)
+    }
 
     Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=1, build=TRUE)
     n_const <- length(graph$CoB$S)

@@ -77,6 +77,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
+  #' @param directional_weights If non-null, the name (or number) of the column of `edge_weights` that contain the directional weights. The default is the first column of the edge weights.
   #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
@@ -121,6 +122,7 @@ metric_graph <-  R6Class("metric_graph",
                         length_unit = vertex_unit,
                         edge_weights = 1,
                         kirchhoff_weights = NULL,
+                        directional_weights = NULL,
                         longlat = FALSE,
                         crs = NULL,
                         proj4string = NULL,
@@ -182,6 +184,36 @@ metric_graph <-  R6Class("metric_graph",
         }
         private$kirchhoff_weights <- kirchhoff_weights
        }
+
+
+
+      if(!is.null(directional_weights)){
+        if(!is.numeric(directional_weights)){
+          if(!is.character(directional_weights)){
+            stop("'directional_weights' must be either a numerical vector of a string vector.")
+          }
+          if(!(directional_weights%in%colnames(edge_weights))){
+            stop(paste(directional_weights, "is not a column of 'weights'!"))
+          }
+        } else{
+          if(!is.data.frame(edge_weights)){
+            if(directional_weights != 1){
+              stop("Since 'weights' is not a data.frame, 'directional_weights' must be either NULL or 1.")
+            }
+          } else{
+            if(directional_weights %%1 != 0){
+              stop("'directional_weights' must be an integer.")
+            }
+            if((directional_weights < 1) || (directional_weights > ncol(edge_weights))){
+              stop("'directional_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
+            }
+          }
+        }
+        private$directional_weights <- directional_weights
+       } else{
+        private$directional_weights <- 1
+       }
+
 
       if (is.null(tolerance$vertex_edge) && !is.null(tolerance$vertex_line)) {
            lifecycle::deprecate_warn("1.2.0", "metric_graph$new(tolerance = 'must contain either vertex_vertex, vertex_edge or edge_edge')",
@@ -593,8 +625,8 @@ metric_graph <-  R6Class("metric_graph",
     # creating/updating reference edges
     private$ref_edges <- map_into_reference_edge(self)
 
-    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
-
+    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights)
+    self$setDirectionalWeightFunction()
 
     if (remove_deg2) {
       if (verbose > 0) {
@@ -627,9 +659,11 @@ metric_graph <-  R6Class("metric_graph",
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge.
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `weights` is a single number and those are the Kirchhoff weights.
+  #' @param directional_weights If non-null, the name (or number) of the column of `weights` that contain the directional weights. 
   #' @return No return value. Called for its side effects.
 
-  set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights = NULL){
+  set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights = NULL,
+      directional_weights = NULL){
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
     }
@@ -663,6 +697,33 @@ metric_graph <-  R6Class("metric_graph",
         private$kirchhoff_weights <- kirchhoff_weights
        }
 
+      if(!is.null(directional_weights)){
+        if(!is.numeric(directional_weights)){
+          if(!is.character(directional_weights)){
+            stop("'directional_weights' must be either a numerical vector of a string vector.")
+          }
+          if(!(directional_weights%in%colnames(weights))){
+            stop(paste(directional_weights, "is not a column of 'weights'!"))
+          }
+        } else{
+          if(!is.data.frame(weights)){
+            if(directional_weights != 1){
+              stop("Since 'weights' is not a data.frame, 'directional_weights' must be either NULL or 1.")
+            }
+          } else{
+            if(directional_weights %%1 != 0){
+              stop("'directional_weights' must be an integer.")
+            }
+            if((directional_weights < 1) || (directional_weights > ncol(weights))){
+              stop("'directional_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
+            }
+          }
+        }
+        private$directional_weights <- directional_weights
+       } else{
+        private$directional_weights <- 1
+       }
+
     edge_lengths_ <- self$get_edge_lengths()
 
     if(is.vector(weights)){
@@ -692,6 +753,7 @@ metric_graph <-  R6Class("metric_graph",
       attr(edge, "length") <- edge_lengths_[i]
       attr(edge, "id") <- i
       attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
+      attr(edge, "directional_weights") <- private$directional_weights
       class(edge) <- "metric_graph_edge"
       return(edge)
     })
@@ -3188,17 +3250,14 @@ metric_graph <-  R6Class("metric_graph",
  #' @description Define the columns to be used for creating the directional vertex
  #' weights. Also possible to supply user defined functions for input and output
  #' to create ones own weights.
- #' @param name_column the names of the colummns used for f_in, f_out
  #' @param f_in functions for the input vertex (default `w/sum(w)`) uses the columns of name_column
  #' @param f_out functions for the output vertex (deafult `rep(-1,length(w))`) uses the columns of name_column
  #' @details For more details see paper (that does not exists yet).
  #' @return No return value.
- setDirectionalWeightFunction = function(name_column = "",
-                                         f_in = NULL,
+ setDirectionalWeightFunction = function(f_in = NULL,
                                          f_out = NULL){
 
 
-   self$DirectionalWeightFunction_col_name <- name_column
   if(!is.null(self$C)){
     warning('The constraint matrix has been deleted')
   }
@@ -3227,6 +3286,7 @@ metric_graph <-  R6Class("metric_graph",
   buildDirectionalConstraints = function(alpha = 1){
 
     weight <- self$get_edge_weights()
+    weight <- weight[,private$directional_weights]
     V_indegree = self$get_degrees("indegree")
     V_outdegree = self$get_degrees("outdegree")
     index_outdegree <- V_outdegree > 0 & V_indegree >0
@@ -3250,8 +3310,8 @@ metric_graph <-  R6Class("metric_graph",
                                       2 * alpha * (in_edges-1)  + alpha + der)
 
 
-          x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges,self$DirectionalWeightFunction_col_name])),
-                                      as.matrix(self$DirectionalWeightFunction_in(weight[in_edges,self$DirectionalWeightFunction_col_name])))
+          x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges,])),
+                                      as.matrix(self$DirectionalWeightFunction_in(weight[in_edges,])))
 
           count <- count + (n_in+1)
           count_constraint <- count_constraint + 1
@@ -3284,6 +3344,7 @@ metric_graph <-  R6Class("metric_graph",
     self$C = C
     self$CoB <- c_basis2(self$C)
     self$CoB$T <- t(self$CoB$T)
+    self$CoB$alpha <- 1
   },
 
 
@@ -3343,6 +3404,7 @@ metric_graph <-  R6Class("metric_graph",
 
       self$CoB <- c_basis2(self$C)
       self$CoB$T <- t(self$CoB$T)
+      self$CoB$alpha <- 2
     }else{
       error("only alpha=2 implemented")
     }
@@ -6238,6 +6300,9 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   # edge_weights
 
   edge_weights = NULL,
+
+  # 
+  directional_weights = NULL,
 
     set_first_weights = function(weights = rep(1, self$nE)){
       if(is.null(weights)){

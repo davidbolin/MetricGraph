@@ -164,8 +164,11 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
 
       Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 2, graph = graph, BC = BC)
-      if(is.null(graph$C))
+      if(is.null(graph$C)){
         graph$buildC(2)
+      } else if(graph$CoB$alpha == 1){
+        graph$buildC(2)
+      }
 
       Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
       Qtilde <- Qmod[-c(1:dim(graph$CoB$U)[1]),-c(1:dim(graph$CoB$U)[1])]

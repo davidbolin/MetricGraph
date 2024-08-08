@@ -33,6 +33,8 @@ spde_posterior_mean <- function(theta,
   } else if (alpha == 2) {
     if(is.null(graph$CoB)){
       graph$buildC(2)
+    } else if(graph$CoB$alpha == 1){
+      graph$buildC(2)
     }
     return(posterior_mean_obs_alpha2(theta = theta, graph = graph,
                                      type = type,

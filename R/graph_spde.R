@@ -6,6 +6,7 @@
 #'
 #' @param graph_object A `metric_graph` object.
 #' @param alpha The order of the SPDE.
+#' @param directional Should a directional model be used? Currently only implemented for `alpha=1`. 
 #' @param stationary_endpoints Which vertices of degree 1 should contain
 #' stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.
 #' @param parameterization Which parameterization to be used? The options are
@@ -55,6 +56,7 @@
 #' @export
 graph_spde <- function(graph_object,
                        alpha = 1,
+                       directional = FALSE,
                        stationary_endpoints = "all",
                        parameterization = c("matern", "spde"),
                        start_range = NULL,
@@ -90,6 +92,7 @@ graph_spde <- function(graph_object,
   nE <- dim(EtV)[1]
   count <- 0
   if(alpha == 1){
+    if(!directional){
       for(i in 1:nE){
         l_e <- El[i]
     
@@ -174,7 +177,59 @@ graph_spde <- function(graph_object,
       idx_ij <- idx_ij$ix
     
       idx_ij <- idx_ij - 1
+    } else{
+    weights_directional <- 0
+    Q_tmp <- Qalpha1_edges(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=stationary_endpoints, w = weights_directional)
+    
+    if(is.character(stationary_endpoints)){
+      stationary_endpoints <- stationary_endpoints[[1]]
+      if(!(stationary_endpoints %in% c("all", "none"))){
+        stop("If stationary_endpoints is a string, it must be either 'all' or 'none', otherwise it must be a numeric vector.")
+      }
+      stat_indices <- which(graph_spde$get_degrees("indegree")==0)
+    } else{
+      stat_indices <- stationary_endpoints
+      if(!is.numeric(stat_indices)){
+        stop("stationary_endpoints must be either numeric or a string.")
+      }
+    }
+    if(stationary_endpoints == "none"){
+      BC <- 0
+    } else{
+      BC <- 1
+    }
+    
+    if(is.null(graph_spde$CoB)){
+      graph_spde$buildDirectionalConstraints(alpha = 1)
+    } else if(graph_spde$CoB$alpha == 2){
+      graph_spde$buildDirectionalConstraints(alpha = 1)
+    }
+    n_const <- length(graph_spde$CoB$S)
+    ind.const <- c(1:n_const)
+    Tc <- graph_spde$CoB$T[-ind.const, ]                      
+    Q_tmp <- Tc%*%Q_tmp%*%t(Tc)
+
+    Q_tmp <- INLA::inla.as.sparse(Q_tmp)
+    ii <- Q_tmp@i
+    Q_tmp@i <- Q_tmp@j
+    Q_tmp@j <- ii
+    idx <- which(Q_tmp@i <= Q_tmp@j)
+    Q_tmp@i <- Q_tmp@i[idx]
+    Q_tmp@j <- Q_tmp@j[idx]
+    Q_tmp@x <- Q_tmp@x[idx]
+    
+    i_ <- Q_tmp@i
+    j_ <- Q_tmp@j
+
+    Tc <- as(Tc, "TsparseMatrix")
+    i_Tc <- Tc@i
+    j_Tc <- Tc@j
+    x_Tc <- Tc@x
+    }
   } else if(alpha == 2){
+    if(directional){
+      stop("Directional models are currently not implemented for 'alpha=2'.")
+    }
     if(stationary_endpoints == "all"){
         i.table <- table(c(graph_spde$E))
         index <- as.integer(names(which(i.table == 1)))
@@ -188,6 +243,8 @@ graph_spde <- function(graph_object,
     }
     Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=index)
     if(is.null(graph_spde$CoB)){
+      graph_spde$buildC(2, edge_constraint = BC)
+    } else if(graph_spde$CoB$alpha == 1){
       graph_spde$buildC(2, edge_constraint = BC)
     }
     n_const <- length(graph_spde$CoB$S)
@@ -331,7 +388,8 @@ graph_spde <- function(graph_object,
   }
 
 if(alpha == 1){
-  model <-
+  if(!directional){
+      model <-
         do.call(eval(parse(text='INLA::inla.cgeneric.define')),
         list(model="inla_cgeneric_gpgraph_alpha1_model",
             shlib=gpgraph_lib,
@@ -351,6 +409,28 @@ if(alpha == 1){
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
             parameterization = parameterization))
+  } else{
+      model <-
+        do.call(eval(parse(text='INLA::inla.cgeneric.define')),
+        list(model="inla_cgeneric_gpgraph_alpha1_directional_model",
+            shlib=gpgraph_lib,
+            n=dim(Q_tmp)[1], debug=debug,
+            prec_graph_i = as.integer(i_),
+            prec_graph_j = as.integer(j_),
+            Tc = Tc,
+            El = El,
+            start_theta = start_theta,
+            start_lsigma = start_lsigma,
+            prior_theta_meanlog = prior_theta$meanlog,
+            prior_theta_sdlog = prior_theta$sdlog,
+            prior_sigma_meanlog = prior_sigma$meanlog,
+            prior_sigma_sdlog = prior_sigma$sdlog,
+            parameterization = parameterization,
+            w = weights_directional,
+            BC = as.integer(BC),
+            stat_indices = stat_indices))
+  }
+
 } else{
     model <-
         do.call(eval(parse(text='INLA::inla.cgeneric.define')),

@@ -27,8 +27,11 @@ test_that("Check if Matern(2) has equal variance on the edges on a circle", {
   sigma <- theta[2]
   #compute covarains of the two edges of EP[1]
   Q <- spde_precision(kappa = kappa, tau = 1/sigma, alpha = 2, graph = graph)
-  if(is.null(graph$CoB))
+  if(is.null(graph$CoB)){
     graph$buildC(2, FALSE)
+  } else if(graph$CoB$alpha == 1){
+    graph$buildC(2, FALSE)
+  }
 
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)

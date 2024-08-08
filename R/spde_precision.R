@@ -38,9 +38,10 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 #' a list(i,j,x, nv)
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 ....
+#' @param stationary_points The indices of the endpoints (inward degree zero) to have stationary boundary conditions.
 #' @return Precision matrix or list
 #' @noRd
-Qalpha1_edges <- function(theta, graph, w, BC = 0, build = TRUE) {
+Qalpha1_edges <- function(theta, graph, w, BC = 0, stationary_points = "all", build = TRUE) {
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -75,10 +76,32 @@ Qalpha1_edges <- function(theta, graph, w, BC = 0, build = TRUE) {
       x_[count + 4] <- c_2
       count <- count + 4
   }
+
+  if(is.character(stationary_points)){
+    stationary_points <- stationary_points[[1]]
+    if(!(stationary_points %in% c("all", "none"))){
+      stop("If stationary_points is a string, it must be either 'all' or 'none', otherwise it must be a numeric vector.")
+    }
+    stat_indices <- which(graph$get_degrees("indegree")==0)
+  } else{
+    stat_indices <- stationary_points
+    if(!is.numeric(stat_indices)){
+      stop("stationary_points must be either numeric or a string.")
+    }
+  }
+  if(stationary_points == "none"){
+    BC <- 0
+  } else{
+    BC <- 1
+  }
   if(BC> 0){
     empty.in <- which(graph$get_degrees("indegree")==0)
+    if(any(!(stat_indices%in%empty.in))){
+      stop("stationary_points should only contain vertices with inward degree zero!")
+    }
 
-    for (v in empty.in) {
+
+    for (v in stat_indices) {
       edge <- which(graph$E[,1]==v)[1] #only put stationary of one of indices
       ind <- 2 * ( edge - 1) + 1
       i_ <- c(i_, ind)
