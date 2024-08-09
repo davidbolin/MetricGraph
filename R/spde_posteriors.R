@@ -368,15 +368,127 @@ posterior_mean_alpha1 <- function(theta,
 #' computes the posterior mean for alpha = 1 directional model
 #' @param theta (sigma_e, tau, kappa)
 #' @param graph metric_graph object
-#' @param PtE_resp
-#' @param rem.edge
+#' @param resp response variable
+#' @param PtE_resp point on the edges
+#' @param rem.edge don't use edge for prediction (used for crossvalidation)
 #' @param no_nugget
 #' @noRd
 posterior_mean_alpha1_directional <- function(theta, graph, resp,
                                   PtE_resp, rem.edge = NULL,
-                                  no_nugget = FALSE) {
+                                  no_nugget = FALSE,
+                                  parameterization="matern") {
+
+
+  sigma_e <- exp(theta[1])
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  reciprocal_tau <- exp(theta[2])
+
+
+
+  PtE <- PtE_resp
+
+  if(is.null(graph$C)){
+    graph$buildDirectionalConstraints(alpha = 1)
+  } else if(graph$CoB$alpha == 2){
+    graph$buildDirectionalConstraints(alpha = 1)
+  }
+
+
+
+  n_const <- length(graph$CoB$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CoB$T[-ind.const,]
+  Q.list <- Qalpha1_edges(c( 1/reciprocal_tau,kappa),
+                          graph,
+                          w = 0,
+                          BC=1, build=FALSE)
+  n_const <- length(graph$CoB$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CoB$T[-ind.const, ]
+
+  #build BSIGMAB
+  if(is.null(PtE_resp)){
+    PtE_resp <- graph$get_PtE()
+  }
+  obs.edges <- unique(PtE[, 1])
+  if(is.logical(rem.edge) == FALSE)
+    obs.edges <- setdiff(obs.edges, rem.edge)
+
+  Qpmu <- rep(0, 2*nrow(graph$E))
+
+  i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
+  count <- 0
+  for (e in obs.edges) {
+    obs.id <- PtE[, 1] == e
+    y_i <- resp[obs.id]
+    l <- graph$edge_lengths[e]
+    PtE_temp <- PtE[obs.id, 2]
+
+    D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
+
+    S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
+
+
+    #covariance update see Art p.17
+    E.ind <- c(1:2)
+    Obs.ind <- -E.ind
+
+    Bt <- solve(S[E.ind, E.ind, drop = FALSE], S[E.ind, Obs.ind, drop = FALSE])
+    Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+      S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+    diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    Sigma_iB <- solve(Sigma_i, t(Bt))
+    BtSinvB <- Bt %*% Sigma_iB
+
+    E <- graph$E[e, ]
+    if (E[1] == E[2]) {
+      Qpmu[2*(e-1)+1] <- Qpmu[2*(e-1)+1] + sum(t(Sigma_iB) %*% y_i)
+      i_[count + 1] <- 2*(e-1)+1
+      j_[count + 1] <- 2*(e-1)+1
+      x_[count + 1] <- sum(Bt %*% Sigma_iB)
+    } else {
+      Qpmu[2*(e-1) + c(1, 2)] <- Qpmu[2*(e-1) + c(1, 2)] + t(Sigma_iB) %*% y_i
+      i_[count + (1:4)] <- c(2*(e-1)+1, 2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+2)
+      j_[count + (1:4)] <- c(2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+1, 2*(e-1)+2)
+      x_[count + (1:4)] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
+                             BtSinvB[1, 2], BtSinvB[2, 2])
+      count <- count + 4
+    }
+  }
+  i_ <- c(Q.list$i, i_[1:count])
+  j_ <- c(Q.list$j, j_[1:count])
+  x_ <- c(Q.list$x, x_[1:count])
+
+
+  Qp <- Matrix::sparseMatrix(i = i_,
+                             j = j_,
+                             x = x_,
+                             dims = Q.list$dims)
+  Qp <- Tc %*% Qp %*% t(Tc)
+  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+
+  v <- c(as.matrix(Matrix::solve(R,
+                                 Matrix::solve(R,
+                                               Tc%*%Qpmu,
+                                               system = 'P'),
+                                 system='L')))
+  Qpmu <- as.vector(Matrix::solve(R,
+                                  Matrix::solve(R,
+                                                v,
+                                                system = 'Lt'),
+                                  system='Pt'))
+
+  return(t(Tc)%*%Qpmu)
+
 
 }
+
+
 #' Computes the posterior mean for alpha = 2
 #' @param theta parameters (sigma_e, tau, kappa)
 #' @param graph metric_graph object
