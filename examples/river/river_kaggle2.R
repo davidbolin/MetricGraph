@@ -82,7 +82,7 @@ data_spde_time <- graph_data_spde(graph_spde = spde_model_bru_time,
                             loc_name = "loc", group_col = "fact_date")
 
 spde_bru_fit_time <-
-    bru(cmp_time, data=data_spde_time[["data"]])
+    bru(cmp_time, data=data_spde_time[["data"]], options=list(verbose=TRUE))
 
 
 spde_result <- spde_metric_graph_result(spde_bru_fit_time, "field", spde_model_bru_time)
@@ -106,7 +106,11 @@ stk_dat <- inla.stack(data = data_spde[["data"]],
     )
 data_stk <- inla.stack.data(stk_dat)
 
-spde_fit <- inla(f.s, data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)),verbose=TRUE,debug=TRUE)
+spde_fit <- inla(f.s, data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)))
+
+spde_result2 <- spde_metric_graph_result(spde_fit, "field", spde_model_bru_time)
+
+summary(spde_result2)
 
 
 
