@@ -586,7 +586,8 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @param repl Which replicates? If there is no replicates, one
 #' can set `repl` to `NULL`. If one wants all replicates,
 #' then one sets to `repl` to `.all`.
-#' @param repl_col Column containing the replicates. If the replicate is the internal group variable, the default `NULL` can be used.
+#' @param repl_col Column containing the replicates. If the replicate is the internal group variable, set the replicates
+#' to ".group". If not replicates, set to `NULL`.
 #' @param group Which groups? If there is no groups, one
 #' can set `group` to `NULL`. If one wants all groups,
 #' then one sets to `group` to `.all`.
@@ -628,6 +629,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
          }
          loc <- NULL
        }  
+
   
   if(!is.null(likelihood_col)){
     # Processing likelihoods
@@ -654,7 +656,8 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
   }
 
   if(is.null(repl_col)){
-    repl_col <- ".group"
+    graph_spde$graph_spde$.__enclos_env__$private$data[[".dummy_repl_col"]] <- rep(1,length(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]))
+    repl_col <- ".dummy_repl_col"
   }
 
   alpha <- graph_spde$alpha
@@ -678,7 +681,6 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
     } 
 
     graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik_tmp, group_col = likelihood_col)   
-    
 
     if(is.null((graph_tmp$.__enclos_env__$private$data))){
       stop("The graph has no data!")
@@ -691,13 +693,19 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
     }
   
      ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col,  group = group, group_col = group_col)   
-  
+
     n.repl <- length(unique(repl))
   
     if(is.null(group)){
-      n.group <- 1
+      if(!is.null(group_col)){
+        n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
+        group <- unique(graph_tmp$.__enclos_env__$private$data[[group_col]])
+      } else{
+        n.group <- 1
+      }
     } else if (group[1] == ".all"){
       n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
+      group <- unique(graph_tmp$.__enclos_env__$private$data[[group_col]])
     } else{
       n.group <- length(unique(group))
     }

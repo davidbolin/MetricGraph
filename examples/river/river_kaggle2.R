@@ -1,6 +1,5 @@
 
 library('tidyverse')
-library('Rcpp')
 library('abind')
 library('SSN2')
 library('bayesplot')
@@ -39,7 +38,8 @@ clear$dataset[locs] <- 'test' # creates a testing dataset
 library(MetricGraph)
 
 metric.obj <- metric_graph$new(n$edges$geometry)
-clear.dat <- clear[is.na(clear$temp_backup)==F,]
+# clear.dat <- clear[!is.na(clear$temp_backup),]
+clear.dat <- clear
 
 Y.pos <- metric.obj$coordinates(XY = cbind(clear.dat$NEAR_X,clear.dat$NEAR_Y))
 
@@ -53,13 +53,13 @@ metric.obj$add_observations(data = clear.dat, normalized = TRUE, group = "fact_d
 
 ## Fitting a model first treating time as replicates 
 
-spde_model_bru <- graph_spde(metric.obj, alpha=1, directional=table(TRUE))
+spde_model_bru <- graph_spde(metric.obj, alpha=1, directional=TRUE)
 
 cmp <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
     field(loc, model = spde_model_bru, replicate = fact_date)
 
 data_spde_dir <- graph_data_spde(graph_spde = spde_model_bru, 
-                            loc_name = "loc")
+                            loc_name = "loc", repl_col = "fact_date")
 
 library(inlabru)
 
@@ -73,12 +73,7 @@ summary(spde_result)
 sigma_start <- summary(spde_result)[,"mean"][1]
 range_start <- summary(spde_result)[,"mean"][2]
 
-sigma_start <- 1.31
-range_start <- 5000
-
-
-
-spde_model_bru_time <- graph_spde(metric.obj, alpha=1, directional=TRUE, start_range = range_start, start_sigma = sigma_start)
+spde_model_bru_time <- graph_spde(metric.obj, alpha=1, directional=TRUE)
 
 cmp_time <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
     field(loc, model = spde_model_bru_time, group = fact_date, control.group = list(model = 'ar1')) 
@@ -93,6 +88,25 @@ spde_bru_fit_time <-
 spde_result <- spde_metric_graph_result(spde_bru_fit_time, "field", spde_model_bru_time)
 
 summary(spde_result)
+
+
+
+####
+
+library(INLA)
+
+data_spde <- graph_data_spde(graph_spde = spde_model_bru_time, name = "field", group_col = "fact_date", covariates = c("SLOPE", "elev", "h2o_area","air_temp", "sin","cos"))
+f.s <- y ~ f(SLOPE,model="linear") + f(elev,model="linear") + f(h2o_area,model="linear") + 
+f(air_temp,model="linear") + f(sin ,model="linear") + f(cos,model="linear") + f(field, model = spde_model_bru_time, group = field.group, control.group = list(model = 'ar1')) 
+
+stk_dat <- inla.stack(data = data_spde[["data"]], 
+                        A = data_spde[["basis"]], 
+                        effects = 
+      data_spde[["index"]]
+    )
+data_stk <- inla.stack.data(stk_dat)
+
+spde_fit <- inla(f.s, data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)),verbose=TRUE,debug=TRUE)
 
 
 
