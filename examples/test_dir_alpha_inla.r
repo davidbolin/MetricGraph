@@ -35,12 +35,14 @@ graph_bru$add_observations(data = df_graph, normalized=TRUE)
 
 library(INLA)
 library(inlabru)
-spde_model_bru <- graph_spde(graph_bru, directional=TRUE, parameterization = "spde", stationary_endpoints = "all")
+kappa_start <- 15
+tau_start <- 1
+spde_model_bru <- graph_spde(graph_bru, directional=TRUE, parameterization = "spde", 
+stationary_endpoints = "all", start_kappa=kappa_start,start_tau=tau_start)
 
 tmp <- inla.cgeneric.q(spde_model_bru)
 
 Q0 <- tmp$Q
-Q0alt <- tmp$Q
 
 kappa0 <- exp(tmp$theta[2])
 
@@ -52,3 +54,4 @@ Tc <- spde_model_bru$Tc
 Qnew <- Tc%*%Q1%*%t(Tc)
 
 sum((Q0-Qnew)^2)
+

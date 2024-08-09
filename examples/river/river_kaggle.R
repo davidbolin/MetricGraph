@@ -8,6 +8,8 @@
 #remotes::install_github("EdgarSantos-Fernandez/SSNdata", ref = "HEAD",
 #                        upgrade_dependencies = F,
 #                        dependencies = F)
+
+## remotes::install_github("shrektan/ymd")
 library('SSNbayes')
 library('SSNdata')
 library(RSQLite)
@@ -119,4 +121,5 @@ Q_0 <- kronecker(Qtime,Q_space)
 R <- Matrix::Cholesky(Q_0,
                       LDL = FALSE, perm = TRUE)
 det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
+
 
