@@ -1,0 +1,100 @@
+---
+title: "An example with directional models"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{An example with graph models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: BSW2022a
+  title: "Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: Bernoulli
+  type: article
+  issue: 30
+  pages: 1611-1639
+  issued:
+    year: 2024
+- id: BSW2022b
+  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
+  author:
+  - family: Bolin
+    given: David
+  - family: Simas
+    given: Alexandre B.
+  - family: Wallin
+    given: Jonas
+  container-title: arXiv:2304.10372
+  type: preprint
+  issued:
+    year: 2023
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+library(MetricGraph)
+```
+
+# Introduction
+
+This is a tutorial for working with directional models.
+
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+  edge1 <- rbind(c(1,0),c(0,0))
+  edge2 <- rbind(c(1,1),c(1,0))
+  edge3 <- rbind(c(1,-1),c(1,0))
+  edges = list(edge1,edge2,edge3)
+  graph <- metric_graph$new(edges = edges)
+  graph$plot(direction = T)
+
+```
+
+The covariance is assymetric on nodes
+```{r, echo=T}
+
+graph$build_mesh(h=0.01)
+kappa <- 1 
+tau   <- 1
+P <- c(1, 0.5)
+C<-spde_covariance(P,kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph,
+                            directional = T)
+graph$plot_function(X = C, plotly = TRUE)
+```
+
+The covariance is upstream
+```{r, echo=T}
+
+graph$build_mesh(h=0.01)
+kappa <- 1 
+tau   <- 1
+P <- c(3, 0.5)
+C<-spde_covariance(P,kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph,
+                            directional = T)
+graph$plot_function(X = C, plotly = TRUE)
+```
+
+
+Using istotropic varians
+```{r, echo=T}
+
+graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
+C<-spde_covariance(P,kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph,
+                            directional = T)
+graph$plot_function(X = C, plotly = TRUE)
+```

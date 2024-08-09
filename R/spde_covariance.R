@@ -1,7 +1,7 @@
 #' Covariance function for Whittle-Matérn fields
-#' 
+#'
 #' Computes the covariance function for a Whittle-Matérn field.
-#' 
+#'
 #' @param P Location (edge number and normalized location on the edge) for the
 #' location to evaluate the covariance function at.
 #' @param kappa Parameter kappa from the SPDE.
@@ -10,13 +10,21 @@
 #' @param sigma Standard deviation parameter.
 #' @param alpha Smoothness parameter (1 or 2).
 #' @param graph A `metric_graph` object.
+#' @param directional bool is the model a directional or not. directional only works for alpha=1
 #' @details Compute the covariance function \eqn{\rho(P,s_i)}{\rho(P,s_i)} where
 #' P is the provided location and \eqn{s_i}{s_i} are all locations in the mesh
 #' of the graph.
 #' @return Vector with the covariance function evaluate at the mesh locations.
 #' @export
 #'
-spde_covariance <- function(P, kappa, tau, range, sigma, alpha, graph) {
+spde_covariance <- function(P,
+                            kappa,
+                            tau,
+                            range,
+                            sigma,
+                            alpha,
+                            graph,
+                            directional = F) {
 
   check <- check_graph(graph)
 
@@ -34,16 +42,43 @@ spde_covariance <- function(P, kappa, tau, range, sigma, alpha, graph) {
                                  (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
     }
 
-    #compute covarains of the two edges of EP[1]
-    Q <- spde_precision(kappa = kappa, tau = tau,
-                        alpha = 1, graph = graph)
-    R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
-    Vs <- graph$E[P[1],]
-    Z <- matrix(0, nrow = dim(graph$V)[1], ncol = 2)
-    Z[Vs[1], 1] = 1
-    Z[Vs[2], 2] = 1
-    V  <- solve(R, solve(R,Z,system = 'P'), system='L')
-    CV <- solve(R, solve(R,V,system = 'Lt'), system='Pt')
+
+    #compute covariance of the two edges of EP[1]
+    #vs every other edge
+    if(!directional){
+      Q <- spde_precision(kappa = kappa, tau = tau,
+                          alpha = 1, graph = graph)
+      R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
+      Vs <- graph$E[P[1],]
+      Z <- matrix(0, nrow = dim(graph$V)[1], ncol = 2)
+      Z[Vs[1], 1] = 1
+      Z[Vs[2], 2] = 1
+      V  <- solve(R, solve(R,Z,system = 'P'), system='L')
+      CV <- solve(R, solve(R,V,system = 'Lt'), system='Pt')
+    }else{
+      Q <- Qalpha1_edges(c( tau,kappa),
+                              graph,
+                              w = 0,
+                              BC=1, build=T)
+      if(is.null(graph$C)){
+        graph$buildDirectionalConstraints(alpha = 1)
+      }
+      n_const <- length(graph$CoB$S)
+      ind.const <- c(1:n_const)
+      Tc <- graph$CoB$T[-ind.const,]
+      Q <- Tc %*% Q %*% t(Tc)
+      R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
+      Z <- matrix(0, nrow = 2*dim(graph$E)[1], ncol = 2)
+      Z[2*P[1] - 1, 1] = 1
+      Z[2*P[1], 2] = 1
+      TZ = Tc %*% Z
+      V  <- Matrix::solve(R, Matrix::solve(R,TZ,system = 'P'),
+                          system='L')
+      TCV <- Matrix::solve(R,Matrix::solve(R,V,system = 'Lt'),
+                           system='Pt')
+      CV <- t(Tc) %*% TCV
+
+    }
 
     # compute covariance between two edges and the point
     t_norm <- P[2]
@@ -57,11 +92,21 @@ spde_covariance <- function(P, kappa, tau, range, sigma, alpha, graph) {
     # covariance of a point to an edge
     #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
     CV_P <- CV %*% t(B)
-    C <- c(as.vector(CV_P))
+    if(!directional){
+      C <- c(as.vector(CV_P))
+    }else{
+      VtE <- graph$VtEfirst()
+      C <- CV_P[ 2*(VtE[,1]-1)  + 1 + VtE[,2]]
+    }
     inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
     for (i in inds_PtE) {
       l <- graph$edge_lengths[i]
       t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+      if(!directional){
+        ind <- graph$E[i, ]
+      }else{
+        ind <- c(2*(i-1)+1,2*(i-1)+2)
+      }
       if (i == P[1]) {
         D_matrix <- as.matrix(dist(c(0, l, l * t_norm, l * t_s)))
         S <- r_1(D_matrix, kappa = kappa, tau = tau)
@@ -73,7 +118,7 @@ spde_covariance <- function(P, kappa, tau, range, sigma, alpha, graph) {
                     S[E.ind, Obs.ind,drop=FALSE])
         Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
           S[Obs.ind, E.ind, drop = FALSE] %*% Bt
-        C_P <- CV_P[graph$E[i, ]] %*% Bt[, -1] + Sigma_i[1, -1]
+          C_P <- CV_P[ind] %*% Bt[, -1] + Sigma_i[1, -1]
       } else {
         D_matrix <- as.matrix(dist(c(0, l, l * t_s)))
         S <- r_1(D_matrix, kappa = kappa, tau = tau)
@@ -83,7 +128,7 @@ spde_covariance <- function(P, kappa, tau, range, sigma, alpha, graph) {
         Obs.ind <- -E.ind
         Bt <- solve(S[E.ind, E.ind, drop = FALSE],
                     S[E.ind, Obs.ind, drop = FALSE])
-        C_P <- CV_P[graph$E[i, ]] %*% Bt
+          C_P <- CV_P[ind] %*% Bt
       }
       C <- c(C, C_P)
     }
