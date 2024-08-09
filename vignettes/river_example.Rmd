@@ -56,13 +56,20 @@ library(MetricGraph)
 library(SSN2)
 
 copy_lsn_to_temp()
-mf04p <- ssn_import(paste0(tempdir(), "/MiddleFork04.ssn"),
-                    predpts = c("pred1km.shp", "Knapp"),
-                    overwrite = TRUE)
+path <- file.path(tempdir(), "MiddleFork04.ssn")
+
+mf04p <- ssn_import(
+  path = path,
+  predpts = c("pred1km", "CapeHorn"),
+  overwrite = TRUE
+)
 
 graph <- metric_graph$new(mf04p$edges$geometry, longlat = FALSE)
-data <- data.frame(coordx      = mf04p$obs$NEAR_X,
-                   coordy      = mf04p$obs$NEAR_Y,
+
+obs_coords <- sf::st_coordinates(mf04p$obs)
+
+data <- data.frame(coordx      = obs_coords[,1],
+                   coordy      = obs_coords[,2],
                    y                = mf04p$obs$Summer_mn,
                    elev             = mf04p$obs$ELEV_DEM,
                    slope            = mf04p$obs$SLOPE,
@@ -107,6 +114,7 @@ This is the default option in `metricGraph` and is created by:
 ```{r, echo=FALSE,message=FALSE}
 res.wm1.dir <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
 ```
+
 Here one can see a big improvement by adding using the directional model over the non directional.
 ```{r, echo=TRUE}
 cross.wm1.dir <-posterior_crossvalidation(res.wm1.dir)
