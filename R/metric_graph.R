@@ -659,7 +659,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge.
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `weights` is a single number and those are the Kirchhoff weights.
-  #' @param directional_weights If non-null, the name (or number) of the column of `weights` that contain the directional weights. 
+  #' @param directional_weights If non-null, the name (or number) of the column of `weights` that contain the directional weights.
   #' @return No return value. Called for its side effects.
 
   set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights = NULL,
@@ -3291,7 +3291,7 @@ metric_graph <-  R6Class("metric_graph",
     V_outdegree = self$get_degrees("outdegree")
     index_outdegree <- V_outdegree > 0 & V_indegree >0
     index_in0      <- V_indegree == 0
-    nC = sum(V_outdegree[index_outdegree] *(1 + V_indegree[index_outdegree]) + sum(V_outdegree[index_in0]-1)) * alpha
+    nC = (sum(V_outdegree[index_outdegree] *(1 + V_indegree[index_outdegree])) + sum(V_outdegree[index_in0]-1)) * alpha
     i_  =  rep(0, nC)
     j_  =  rep(0, nC)
     x_  =  rep(0, nC)
@@ -6301,7 +6301,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 
   edge_weights = NULL,
 
-  # 
+  #
   directional_weights = NULL,
 
     set_first_weights = function(weights = rep(1, self$nE)){
