@@ -354,7 +354,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
             count <- count + 2
           }
         }
-      } 
+      }
   } else{
     index <- stationary_points
     lower.edges <- which(graph$E[, 1] %in% index)
@@ -374,7 +374,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
             j_ <- c(j_, ind)
             x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
             count <- count + 2
-          }          
+          }
   }
   if (build) {
     Q <- Matrix::sparseMatrix(i    = i_[1:count],
