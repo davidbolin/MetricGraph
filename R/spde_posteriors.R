@@ -19,7 +19,6 @@ posterior_mean_obs_alpha1 <- function(theta,
                                       type = "PtE",
                                       directional = FALSE,
                                       leave.edge.out = FALSE, no_nugget = FALSE) {
-
   sigma_e <- theta[1]
   tau <- theta[2]
   kappa <- theta[3]
