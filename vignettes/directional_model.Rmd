@@ -51,8 +51,8 @@ This is a tutorial for working with directional models.
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
   edge1 <- rbind(c(1,0),c(0,0))
-  edge2 <- rbind(c(1,1),c(1,0))
-  edge3 <- rbind(c(1,-1),c(1,0))
+  edge2 <- rbind(c(1.75,1),c(1,0))
+  edge3 <- rbind(c(1.75,-1),c(1,0))
   edges = list(edge1,edge2,edge3)
   graph <- metric_graph$new(edges = edges)
   graph$plot(direction = T)
@@ -75,10 +75,6 @@ graph$plot_function(X = C, plotly = TRUE)
 
 The covariance is upstream
 ```{r, echo=T}
-
-graph$build_mesh(h=0.01)
-kappa <- 1 
-tau   <- 1
 P <- c(3, 0.5)
 C<-spde_covariance(P,kappa=kappa,tau=tau,
                             alpha=1,
@@ -88,7 +84,7 @@ graph$plot_function(X = C, plotly = TRUE)
 ```
 
 
-Using istotropic varians
+Using istotropic variances
 ```{r, echo=T}
 
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
@@ -97,4 +93,12 @@ C<-spde_covariance(P,kappa=kappa,tau=tau,
                             graph=graph,
                             directional = T)
 graph$plot_function(X = C, plotly = TRUE)
+```
+
+Lets examine the posterior mean by adding two locations
+```{r, echo=T}
+
+u <- sample_spde(kappa = kappa, tau = tau, alpha = alpha, directional=T,
+                 graph = graph, type = "mesh")
+graph$plot_function(X = u, plotly = TRUE)
 ```
