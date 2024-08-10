@@ -1388,7 +1388,6 @@ predict.inla_metric_graph_spde <- function(object,
     }
     data <- NULL
   }
-
   data <- newdata
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
@@ -1401,6 +1400,9 @@ predict.inla_metric_graph_spde <- function(object,
   original_data[[".edge_number"]] <- object$data_PtE[,1]
   original_data[[".distance_on_edge"]] <- object$data_PtE[,2]
 
+  group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
+
+  if(group_variables == ".none"){
   graph_tmp$add_observations(data = original_data,
                   edge_number = ".edge_number",
                   distance_on_edge = ".distance_on_edge",
@@ -1408,6 +1410,16 @@ predict.inla_metric_graph_spde <- function(object,
                   normalized = TRUE,
                   verbose=0,
                   suppress_warnings = TRUE)
+  } else{
+      graph_tmp$add_observations(data = original_data,
+                  edge_number = ".edge_number",
+                  distance_on_edge = ".distance_on_edge",
+                  data_coords = "PtE",
+                  normalized = TRUE,
+                  verbose=0,
+                  group = group_variables,
+                  suppress_warnings = TRUE)
+  }
 
   new_data <- data
   new_data[[name_locations]] <- NULL
@@ -1475,12 +1487,12 @@ predict.inla_metric_graph_spde <- function(object,
 
   new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
                                               new_data_list[[".distance_on_edge"]])
-
   spde____model <- graph_spde(graph_tmp)
   cmp_c <- as.character(cmp)
   name_model <- deparse(substitute(object))
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
+
   bru_fit_new <- inlabru::bru(cmp,
           data = graph_data_spde(spde____model, loc_name = name_locations, drop_all_na = FALSE, drop_na = FALSE)[["data"]])
   pred <- predict(object = bru_fit_new,
@@ -1494,6 +1506,7 @@ predict.inla_metric_graph_spde <- function(object,
                     exclude = exclude,
                     drop = drop,
                     ...)
+
   pred_list <- list()
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE

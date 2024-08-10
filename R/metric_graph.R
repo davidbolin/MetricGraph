@@ -1756,7 +1756,9 @@ metric_graph <-  R6Class("metric_graph",
       private$data[[".edge_number"]] <- new_PtE[,1]
       private$data[[".distance_on_edge"]] <- new_PtE[,2]
       order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
+      old_group_variable <- attr(private$data, "group_variable")
       private$data <- lapply(private$data, function(dat){dat[order_idx]})
+      attr(private$data, "group_variable") <- old_group_variable
       })
       if(verbose > 0){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -1886,7 +1888,9 @@ metric_graph <-  R6Class("metric_graph",
               PtE2 = private$data[[".distance_on_edge"]],
               group = private$data[[".group"]])
     index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
+    old_group_variable <- attr(private$data, "group_variable")
     private$data <- lapply(private$data, function(dat){ dat[index_order]})
+    attr(private$data, "group_variable") <- old_group_variable
 
     self$PtV <- self$PtV[index_order[1:length(self$PtV)]]
 
@@ -2517,6 +2521,11 @@ metric_graph <-  R6Class("metric_graph",
       data <- tidyr::as_tibble(data)
     }
     class(data) <- c("metric_graph_data", class(data))
+        if(!is.null(group)){
+      attr(data, "group_variables") <- group
+    } else{
+      attr(data, "group_variables") <- ".none"
+    }
     })
           if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -2970,6 +2979,11 @@ metric_graph <-  R6Class("metric_graph",
     private$group_col <- group
     # distance_graph_tmp <- private$data[[".distance_to_graph"]]
     class(private$data) <- c("metric_graph_data", class(private$data))
+    if(!is.null(group)){
+      attr(private$data, "group_variables") <- group
+    } else{
+      attr(private$data, "group_variables") <- ".none"
+    }
     # attr(private$data, "distance_to_graph") <- distance_graph_tmp
     })
           if(verbose == 2) {
@@ -5710,6 +5724,10 @@ metric_graph <-  R6Class("metric_graph",
   # Kichhoff weights
 
   kirchhoff_weights = NULL,
+
+  #grouping variables when adding data
+
+  group_variables = NULL,
 
   # Warning if edges with different weights have been merged
 

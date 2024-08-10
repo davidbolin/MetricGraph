@@ -85,7 +85,7 @@ data_spde_time <- graph_data_spde(graph_spde = spde_model_bru_time,
 group <- data_spde_time[["group"]]
 
 cmp_time <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
-    field(loc, model = spde_model_bru_time, group = group, control.group = list(model = 'ar1', hyper = prior_rho))  
+    field(loc, model = spde_model_bru_time, group = fact_date, control.group = list(model = 'ar1', hyper = prior_rho))  
 
 spde_bru_fit_time <-
     bru(cmp_time, data=data_spde_time[["data"]], options=list(verbose=TRUE))
@@ -94,6 +94,39 @@ spde_result <- spde_metric_graph_result(spde_bru_fit_time, "field", spde_model_b
 
 summary(spde_result)
 summary(spde_bru_fit_time)
+
+### Prediction
+
+data_pred <- clear
+
+data_spde_time <- graph_data_spde(graph_spde = spde_model_bru_time, 
+                            loc_name = "loc", group_col = "fact_date")
+
+graph_data <- metric.obj$get_data()
+idx_pred <- which(graph_data$dataset == "test")
+data_list <- lapply(graph_data, function(i){i[idx_pred]})
+data_list[["loc"]] <- cbind(graph_data[idx_pred, ".edge_number"], graph_data[idx_pred,".distance_on_edge"])
+
+
+group <- data_list$fact_date
+field_pred <- predict(spde_model_bru_time, 
+                                cmp_time,
+                                spde_bru_fit_time, 
+                                newdata = data_list,
+                                formula = ~ Intercept + SLOPE + elev + h2o_area + air_temp + sin_cov + cos_cov + field)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ####
