@@ -10,6 +10,7 @@
 #' @param directional use directional model
 #' @param leave.edge.out compute the mean of the graph if the observations
 #' are not on the edge
+#' @param no_nugget depricated set theta[1]=0 to fix
 #' @noRd
 posterior_mean_obs_alpha1 <- function(theta,
                                       graph,
@@ -47,13 +48,14 @@ posterior_mean_obs_alpha1 <- function(theta,
 
   for (e in obs.edges) {
     if(leave.edge.out == TRUE){
-      V.post <- posterior_mean_alpha1(theta = theta, graph = graph,
+      if(!directional){
+        V.post <- posterior_mean_alpha1(theta = theta, graph = graph,
                                       rem.edge = e, resp = resp,
                                       PtE_resp = PtE_resp, no_nugget = no_nugget)}
-    else{
-
-      V.post <- posterior_mean_alpha1_directional(theta = theta, graph = graph,rem.edge = e,
+      else{
+        V.post <- posterior_mean_alpha1_directional(theta = theta, graph = graph,rem.edge = e,
                                                   resp = resp, PtE_resp = PtE_resp, no_nugget = no_nugget)
+      }
     }
 
     obs.id <- which(PtE_resp[,1] == e)
