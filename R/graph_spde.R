@@ -660,6 +660,11 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
     repl_col <- ".dummy_repl_col"
   }
 
+    if(is.null(group_col)){
+    graph_spde$graph_spde$.__enclos_env__$private$data[[".dummy_group_col"]] <- rep(1,length(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]))
+    group_col <- ".dummy_group_col"
+  }
+
   alpha <- graph_spde$alpha
 
   ret_list <- list()
@@ -768,8 +773,9 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
       class(ret[["data"]]) <- c("metric_graph_data", class(ret))
     }
   
-    ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde)
+    ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde, repl_col = repl_col)
   
+     ret[["group"]] <- bru_graph_rep(repl = group, graph_spde = graph_spde, repl_col = group_col)
   
      ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
                                      n.group = n.group,
@@ -1295,13 +1301,13 @@ create_summary_from_density <- function(density_df, name) {
 #' @return A vector of replicates to be used with 'inlabru'.
 #' @noRd
 
-bru_graph_rep <- function(repl, graph_spde){
-  groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]])
+bru_graph_rep <- function(repl, graph_spde, repl_col){
+  groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[repl_col]])
   if(repl[1] == ".all"){
     repl <- groups
   }
   n_groups <- length(groups)
-  length_resp <- sum(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]] == groups[1])
+  length_resp <- sum(graph_spde$graph_spde$.__enclos_env__$private$data[[repl_col]] == groups[1])
   return(rep(repl, each = length_resp ))
 }
 

@@ -55,11 +55,13 @@ metric.obj$add_observations(data = clear.dat, normalized = TRUE, group = "fact_d
 
 spde_model_bru <- graph_spde(metric.obj, alpha=1, directional=TRUE)
 
-cmp <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
-    field(loc, model = spde_model_bru, replicate = fact_date)
-
 data_spde_dir <- graph_data_spde(graph_spde = spde_model_bru, 
                             loc_name = "loc", repl_col = "fact_date")
+
+repl <- data_spde_dir[["repl"]]
+
+cmp <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
+    field(loc, model = spde_model_bru, replicate = repl)
 
 library(inlabru)
 
@@ -69,26 +71,29 @@ spde_bru_fit_repl <-
 spde_result <- spde_metric_graph_result(spde_bru_fit_repl, "field", spde_model_bru)
 
 summary(spde_result)
+summary(spde_bru_fit_repl)
 
-sigma_start <- summary(spde_result)[,"mean"][1]
-range_start <- summary(spde_result)[,"mean"][2]
+## Fitting the space-time model
 
-spde_model_bru_time <- graph_spde(metric.obj, alpha=1, directional=TRUE, 
-    prior_range = list(meanlog = log(range_start)), prior_sigma = list(meanlog = log(sigma_start)))
+spde_model_bru_time <- graph_spde(metric.obj, alpha=1, directional=TRUE)
 
-cmp_time <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
-    field(loc, model = spde_model_bru_time, group = fact_date, control.group = list(model = 'ar1')) 
+prior_rho <- list(rho = list(prior = 'normal', param = c(0.5, 40)))
 
 data_spde_time <- graph_data_spde(graph_spde = spde_model_bru_time, 
                             loc_name = "loc", group_col = "fact_date")
 
+group <- data_spde_time[["group"]]
+
+cmp_time <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
+    field(loc, model = spde_model_bru_time, group = group, control.group = list(model = 'ar1', hyper = prior_rho))  
+
 spde_bru_fit_time <-
-    bru(cmp_time, data=data_spde_time[["data"]])
+    bru(cmp_time, data=data_spde_time[["data"]], options=list(verbose=TRUE))
 
 spde_result <- spde_metric_graph_result(spde_bru_fit_time, "field", spde_model_bru_time)
 
 summary(spde_result)
-
+summary(spde_bru_fit_time)
 
 
 ####

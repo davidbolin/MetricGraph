@@ -20,8 +20,6 @@ alpha <- 1
 nu <- alpha - 0.5
 r <- 0.15 # r stands for range
 
-dim_time <- 15
-
 u <- sample_spde(range = r, sigma = sigma, alpha = alpha,
                      graph = graph_bru, PtE = obs_loc)
 
@@ -44,11 +42,11 @@ graph_bru$add_observations(data = df_graph, normalized=TRUE, clear_obs=TRUE)
 
 spde_model_bru <- graph_spde(graph_bru, alpha=alpha, directional=FALSE)
 
+data_spde <- graph_data_spde(graph_spde = spde_model_bru, 
+                            loc_name = "loc")
+
 cmp <- y ~ -1 + Intercept(1) + beta_1(beta_1) + beta_2(beta_2) + 
     field(loc, model = spde_model_bru) 
-
-data_spde <- graph_data_spde(graph_spde = spde_model_bru, 
-                            loc_name = "loc", group_col = "time")
 
 library(inlabru)
 
@@ -58,6 +56,7 @@ spde_bru_fit <-
 spde_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model_bru)
 
 summary(spde_result)
+summary(spde_bru_fit)
 
 
 ##################################
