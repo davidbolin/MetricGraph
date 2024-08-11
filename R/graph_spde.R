@@ -463,6 +463,7 @@ if(alpha == 1){
 model$graph_spde <- graph_spde
 model$directional <- directional
 model$data_PtE <- suppressWarnings(graph_object$get_PtE())
+model$original_data <- graph_object$.__enclos_env__$private$data
 model$parameterization <- parameterization
 model$Tc <- Tc
 model$alpha <- alpha
@@ -1330,6 +1331,15 @@ bru_graph_rep <- function(repl, graph_spde, repl_col){
 #' `euclidean`, the user must provide a data frame with the first column being
 #' the `x` Euclidean coordinates and the second column being the `y` Euclidean
 #' coordinates.
+#' @param repl Which replicates? If there is no replicates, one
+#' can set `repl` to `NULL`. If one wants all replicates,
+#' then one sets to `repl` to `.all`.
+#' @param repl_col Column containing the replicates. If the replicate is the internal group variable, set the replicates
+#' to ".group". If not replicates, set to `NULL`.
+#' @param group Which groups? If there is no groups, one
+#' can set `group` to `NULL`. If one wants all groups,
+#' then one sets to `group` to `.all`.
+#' @param group_col Which "column" of the data contains the group variable?
 #' @param  normalized if `TRUE`, then the distances in distance on edge are
 #' assumed to be normalized to (0,1). Default TRUE. Will not be
 #' used if `data_coords` is `euclidean`.
@@ -1365,6 +1375,10 @@ predict.inla_metric_graph_spde <- function(object,
                                            formula = NULL,
                                            data_coords = c("PtE", "euclidean"),
                                            normalized = TRUE,
+                                           repl = NULL,
+                                           repl_col = NULL,
+                                           group = NULL,
+                                           group_col = NULL,
                                            n.samples = 100,
                                            seed = 0L,
                                            probs = c(0.025, 0.5, 0.975),
@@ -1396,9 +1410,7 @@ predict.inla_metric_graph_spde <- function(object,
   graph_tmp <- object$graph_spde$get_initial_graph()
   # graph_tmp <- object$graph_spde$clone()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
-  original_data <- object$graph_spde$.__enclos_env__$private$data
-  original_data[[".edge_number"]] <- object$data_PtE[,1]
-  original_data[[".distance_on_edge"]] <- object$data_PtE[,2]
+  original_data <- object$original_data
 
   group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
 
@@ -1428,6 +1440,7 @@ predict.inla_metric_graph_spde <- function(object,
   names_columns <- setdiff(names_columns, c(".group", ".coord_x",
                                             ".coord_y", ".edge_number",
                                             ".distance_on_edge"))
+
   # for(name_column in names_columns){
   #   new_data[[name_column]] <- rep(NA, n_locations)
   # }
@@ -1441,6 +1454,10 @@ predict.inla_metric_graph_spde <- function(object,
 
   new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
 
+  if(group_variables == ".none"){
+    group_variables <- NULL
+  }
+
   graph_tmp$add_observations(data = new_data,
                   edge_number = ".edge_number",
                   distance_on_edge = ".distance_on_edge",
@@ -1448,6 +1465,7 @@ predict.inla_metric_graph_spde <- function(object,
                   coord_y = ".coord_y",
                   data_coords = data_coords,
                   normalized = normalized,
+                  group = group_variables,
                   verbose=0,
                   suppress_warnings = TRUE)
 
@@ -1487,14 +1505,24 @@ predict.inla_metric_graph_spde <- function(object,
 
   new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
                                               new_data_list[[".distance_on_edge"]])
-  spde____model <- graph_spde(graph_tmp)
+
+
+  spde____model <- graph_spde(graph_tmp, alpha = object$alpha, directional = object$directional)
   cmp_c <- as.character(cmp)
   name_model <- deparse(substitute(object))
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
 
+  new_data_tmp <- graph_data_spde(spde____model, loc_name = name_locations, 
+                        drop_all_na = FALSE, drop_na = FALSE, group = group, group_col = group_col,
+                        repl_col = repl_col, repl = repl)[["data"]]
+
+  info <- bru_fit[["bru_info"]]
+  info[["options"]] <- inlabru::bru_call_options(bru_options(info[["options"]]))
+
   bru_fit_new <- inlabru::bru(cmp,
-          data = graph_data_spde(spde____model, loc_name = name_locations, drop_all_na = FALSE, drop_na = FALSE)[["data"]])
+          data = new_data_tmp, options = info[["options"]])
+  
   pred <- predict(object = bru_fit_new,
                     newdata = new_data_list,
                     formula = formula,

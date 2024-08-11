@@ -5095,7 +5095,7 @@ metric_graph <-  R6Class("metric_graph",
                                            edge = c(1:self$nE,1:self$nE)),
                           mapping = aes(x = x, y = y, group = edge),
                          arrow = ggplot2::arrow(),
-                          size= marker_size/2, ...)
+                          linewidth = marker_size/2, ...)
     }
 
     if (marker_size > 0) {

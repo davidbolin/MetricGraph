@@ -220,3 +220,95 @@ spde_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model_bru)
 
 summary(spde_result)
 summary(spde_bru_fit)
+
+
+
+######################################################
+## alpha = 1 + directional = TRUE  - NEW SAMPLING ####
+######################################################
+
+
+sigma <- 2
+alpha <- 1
+nu <- alpha - 0.5
+r <- 0.15 # r stands for range
+
+kappa <- sqrt(8 * nu) / r
+tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
+(4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+
+dim_time <- 15
+
+spde_model_bru <- graph_spde(graph_bru, alpha=1, directional=TRUE)
+
+indep_field <- matrix(nrow = nrow(obs_loc), ncol = dim_time)
+
+for(ii in 1:dim_time){
+    indep_field[,ii] <- sample_spde(range = r, sigma = sigma, alpha = alpha,
+                     graph = graph_bru, PtE = obs_loc,directional=TRUE)
+}
+
+
+# correlation AR
+rho_ar <- 0.65
+
+## stationary initial condition
+field_time <- indep_field
+for (ii in 2:dim_time) {
+  field_time[, ii] <- rho_ar * field_time[, ii - 1] + sqrt(1 - rho_ar^2) * indep_field[, ii]
+}
+
+sigma_e <- 0.1
+n_obs <- nrow(obs_loc)
+
+beta_1 <- obs_loc[,1]
+beta_2 <- obs_loc[,2]
+
+y <- 2 - beta_1 + beta_2 + field_time + rnorm(n_obs * dim_time, 0, sigma_e)
+
+df_graph <- data.frame(y = as.vector(y), edge_number = rep(obs_loc[,1], dim_time),
+                          distance_on_edge = rep(obs_loc[,2],dim_time),
+                          beta_1 = rep(beta_1, dim_time),
+                          beta_2 = rep(beta_2, dim_time),
+                          time = rep(1:dim_time, each = n_obs),
+                          dummy = 1:length(beta_1))
+
+# Adding observations and turning them to vertices
+graph_bru$add_observations(data = df_graph, normalized=TRUE, group = "time", clear_obs=TRUE)
+
+spde_model_bru <- graph_spde(graph_bru, alpha=1, directional=TRUE)
+
+cmp <- y ~ -1 + Intercept(1) + beta_1(beta_1) + beta_2(beta_2) + 
+    field(loc, model = spde_model_bru, group = time, control.group = list(model = 'ar1')) 
+
+data_spde <- graph_data_spde(graph_spde = spde_model_bru, 
+                            loc_name = "loc", group_col = "time")
+
+library(inlabru)
+
+spde_bru_fit <-
+    bru(cmp, data=data_spde[["data"]])
+
+spde_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model_bru)
+
+summary(spde_result)
+summary(spde_bru_fit)
+
+graph_data <- graph_bru$get_data()
+idx_pred <- c(1,10,15,20,30)
+data_list <- lapply(graph_data, function(i){i[idx_pred]})
+data_list[["loc"]] <- cbind(graph_data[idx_pred, ".edge_number"], graph_data[idx_pred,".distance_on_edge"])
+
+
+
+field_pred <- predict(spde_model_bru, 
+                                cmp,
+                                spde_bru_fit, 
+                                newdata = data_list,
+                                group_col = "time",
+                                formula = ~ Intercept + beta_1 + beta_2 + field)
+
+
+data_list[["y"]]
+field_pred$pred$mean
+

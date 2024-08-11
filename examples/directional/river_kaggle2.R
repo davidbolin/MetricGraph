@@ -49,6 +49,11 @@ clear.dat[["distance_on_edge"]] <- Y.pos[,2]
 clear.dat[["fact_date"]] <- as.factor(clear.dat[,"date"])
 levels(clear.dat[["fact_date"]]) <- 1:length(unique(clear.dat[["fact_date"]]))
 
+library(fastDummies)
+clear.dat[["month"]] <- factor(as.character(as.numeric(clear.dat[["fact_date"]]) %% 12))
+
+clear.dat <- dummy_cols(clear.dat, select_columns = "month")
+
 metric.obj$add_observations(data = clear.dat, normalized = TRUE, group = "fact_date", clear_obs = TRUE)
 
 ## Fitting a model first treating time as replicates 
@@ -60,18 +65,44 @@ data_spde_dir <- graph_data_spde(graph_spde = spde_model_bru,
 
 repl <- data_spde_dir[["repl"]]
 
-cmp <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
-    field(loc, model = spde_model_bru, replicate = repl)
+cmp <- y ~ -1 + Intercept(1) + month_1(month_1) + 
+    month_2(month_2) + month_5(month_5) + month_8(month_8) +
+    month_3(month_3) + month_6(month_6) + month_9(month_9) +
+    month_4(month_4) + month_7(month_7) + month_10(month_10) +
+    month_11(month_11) +
+    SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
+    field(loc, model = spde_model_bru, replicate = fact_date)
 
 library(inlabru)
 
 spde_bru_fit_repl <-
-    bru(cmp, data=data_spde_dir[["data"]])
+    bru(cmp, data=data_spde_dir[["data"]], options = list(verbose=TRUE))
 
 spde_result <- spde_metric_graph_result(spde_bru_fit_repl, "field", spde_model_bru)
 
 summary(spde_result)
 summary(spde_bru_fit_repl)
+
+## Prediction
+
+graph_data <- metric.obj$get_data()
+idx_pred <- which(graph_data$dataset == "test")
+data_list <- lapply(graph_data, function(i){i[idx_pred]})
+data_list[["loc"]] <- cbind(graph_data[idx_pred, ".edge_number"], graph_data[idx_pred,".distance_on_edge"])
+
+
+field_pred <- predict(spde_model_bru, 
+                                cmp,
+                                spde_bru_fit_repl, 
+                                newdata = data_list,
+                                repl_col = "fact_date",
+                                formula = ~ Intercept + SLOPE + elev + h2o_area + air_temp + sin_cov + cos_cov + field)
+
+
+
+
+
+
 
 ## Fitting the space-time model
 
@@ -84,8 +115,12 @@ data_spde_time <- graph_data_spde(graph_spde = spde_model_bru_time,
 
 group <- data_spde_time[["group"]]
 
-cmp_time <- y ~ -1 + Intercept(1) + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
-    field(loc, model = spde_model_bru_time, group = fact_date, control.group = list(model = 'ar1', hyper = prior_rho))  
+cmp_time <- y ~ -1 + Intercept(1) + month_1(month_1) + 
+    month_2(month_2) + month_5(month_5) + month_8(month_8) +
+    month_3(month_3) + month_6(month_6) + month_9(month_9) +
+    month_4(month_4) + month_7(month_7) + month_10(month_10) +
+    month_11(month_11)  + SLOPE(SLOPE) + elev(elev) + h2o_area(h2o_area) + air_temp(air_temp) + sin_cov(sin) + cos_cov(cos) + 
+    field(loc, model = spde_model_bru_time, group = fact_date, control.group = list(model = 'ar1', hyper = list(rho = list(prior = 'normal', param = c(0.4, 100)))))  
 
 spde_bru_fit_time <-
     bru(cmp_time, data=data_spde_time[["data"]], options=list(verbose=TRUE))
@@ -113,6 +148,7 @@ field_pred <- predict(spde_model_bru_time,
                                 cmp_time,
                                 spde_bru_fit_time, 
                                 newdata = data_list,
+                                group_col = "fact_date",
                                 formula = ~ Intercept + SLOPE + elev + h2o_area + air_temp + sin_cov + cos_cov + field)
 
 
