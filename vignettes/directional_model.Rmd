@@ -102,3 +102,29 @@ u <- sample_spde(kappa = kappa, tau = tau, alpha = alpha, directional=T,
                  graph = graph, type = "mesh")
 graph$plot_function(X = u, plotly = TRUE)
 ```
+
+```{r, echo=T}
+PtE_resp <- rbind(c(2,0.5),
+               c(3,0.5))
+resp <- c(1,1)
+Eu <- posterior_mean_obs_alpha1(c(0,tau, kappa),
+                            graph,
+                            resp, #resp must be in the graph's internal order
+                            PtE_resp,
+                            graph$mesh$PtE,
+                            type = "PtE",
+                            directional = T)
+graph$plot_function(X = Eu, plotly = TRUE)
+```
+
+```{r, echo=T}
+graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
+Eu <- posterior_mean_obs_alpha1(c(0,tau, kappa),
+                            graph,
+                            resp, #resp must be in the graph's internal order
+                            PtE_resp,
+                            graph$mesh$PtE,
+                            type = "PtE",
+                            directional = T)
+graph$plot_function(X = Eu, plotly = TRUE)
+```
