@@ -50,6 +50,11 @@ metric_graph <-  R6Class("metric_graph",
   #' @field edges The coordinates of the edges in the graph.
   edges = NULL,
 
+  #' @field DirectionalWeightFunction_in Function for inwards weights in directional models
+ DirectionalWeightFunction_in  =NULL,
+  #' @field DirectionalWeightFunction_out Function for outwards weights in directional models
+ DirectionalWeightFunction_out  = NULL,
+
   #' @field vertices The coordinates of the vertices in the graph, along with several attributes.
   vertices = NULL,
 
@@ -3262,9 +3267,6 @@ metric_graph <-  R6Class("metric_graph",
     }
     return(data_temp)
   },
- DirectionalWeightFunction_col_name = 'weights',
- DirectionalWeightFunction_in  =NULL,
- DirectionalWeightFunction_out  = NULL,
  #' @description Define the columns to be used for creating the directional vertex
  #' weights. Also possible to supply user defined functions for input and output
  #' to create ones own weights.

@@ -4,7 +4,7 @@
 \alias{spde_covariance}
 \title{Covariance function for Whittle-Matérn fields}
 \usage{
-spde_covariance(P, kappa, tau, range, sigma, alpha, graph)
+spde_covariance(P, kappa, tau, range, sigma, alpha, graph, directional = F)
 }
 \arguments{
 \item{P}{Location (edge number and normalized location on the edge) for the
@@ -21,6 +21,8 @@ location to evaluate the covariance function at.}
 \item{alpha}{Smoothness parameter (1 or 2).}
 
 \item{graph}{A \code{metric_graph} object.}
+
+\item{directional}{bool is the model a directional or not. directional only works for alpha=1}
 }
 \value{
 Vector with the covariance function evaluate at the mesh locations.

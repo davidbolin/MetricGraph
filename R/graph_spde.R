@@ -1518,7 +1518,7 @@ predict.inla_metric_graph_spde <- function(object,
                         repl_col = repl_col, repl = repl)[["data"]]
 
   info <- bru_fit[["bru_info"]]
-  info[["options"]] <- inlabru::bru_call_options(bru_options(info[["options"]]))
+  info[["options"]] <- inlabru::bru_call_options(inlabru::bru_options(info[["options"]]))
 
   bru_fit_new <- inlabru::bru(cmp,
           data = new_data_tmp, options = info[["options"]])

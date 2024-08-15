@@ -348,7 +348,7 @@ posterior_mean_alpha1 <- function(theta,
 #' @param resp response variable
 #' @param PtE_resp point on the edges
 #' @param rem.edge don't use edge for prediction (used for crossvalidation)
-#' @param no_nugget
+#' @param no_nugget should a model without nuggets be considered?
 #' @noRd
 posterior_mean_alpha1_directional <- function(theta, graph, resp,
                                   PtE_resp, rem.edge = NULL,

@@ -51,6 +51,10 @@ locations.}
 
 \item{\code{edges}}{The coordinates of the edges in the graph.}
 
+\item{\code{DirectionalWeightFunction_in}}{Function for inwards weights in directional models}
+
+\item{\code{DirectionalWeightFunction_out}}{Function for outwards weights in directional models}
+
 \item{\code{vertices}}{The coordinates of the vertices in the graph, along with several attributes.}
 
 \item{\code{geo_dist}}{Geodesic distances between the vertices in the graph.}
