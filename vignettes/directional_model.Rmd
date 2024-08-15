@@ -4,7 +4,7 @@ author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{An example with graph models}
+  %\VignetteIndexEntry{AAn example with directional models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
@@ -65,6 +65,7 @@ The covariance is assymetric on nodes
 graph$build_mesh(h=0.01)
 kappa <- 1 
 tau   <- 1
+alpha <- 1
 P <- c(1, 0.5)
 C<-spde_covariance(P,kappa=kappa,tau=tau,
                             alpha=1,
@@ -107,7 +108,7 @@ graph$plot_function(X = u, plotly = TRUE)
 PtE_resp <- rbind(c(2,0.5),
                c(3,0.5))
 resp <- c(1,1)
-Eu <- posterior_mean_obs_alpha1(c(0,tau, kappa),
+Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph,
                             resp, #resp must be in the graph's internal order
                             PtE_resp,
@@ -119,7 +120,7 @@ graph$plot_function(X = Eu, plotly = TRUE)
 
 ```{r, echo=T}
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-Eu <- posterior_mean_obs_alpha1(c(0,tau, kappa),
+Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph,
                             resp, #resp must be in the graph's internal order
                             PtE_resp,
