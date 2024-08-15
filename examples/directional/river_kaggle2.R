@@ -58,6 +58,11 @@ metric.obj$add_observations(data = clear.dat, normalized = TRUE, group = "fact_d
 
 ## Fitting a model first treating time as replicates 
 
+res.wm1.dir <- graph_lme(y ~ SLOPE + elev + h2o_area + air_temp + sin + cos,
+    model = list(type = "WhittleMatern", fem = FALSE, alpha = 1, version = 1, directional=0), graph = metric.obj)
+
+summary(res.wm1.dir)
+
 spde_model_bru <- graph_spde(metric.obj, alpha=1, directional=TRUE)
 
 data_spde_dir <- graph_data_spde(graph_spde = spde_model_bru, 

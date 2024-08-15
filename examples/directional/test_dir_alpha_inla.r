@@ -38,7 +38,7 @@ library(inlabru)
 kappa_start <- 15
 tau_start <- 1
 spde_model_bru <- graph_spde(graph_bru, directional=TRUE, parameterization = "spde", 
-stationary_endpoints = "all", start_kappa=kappa_start,start_tau=tau_start)
+stationary_endpoints = "all", start_kappa=kappa_start,start_tau=tau_start, alpha=1)
 
 tmp <- inla.cgeneric.q(spde_model_bru)
 
@@ -48,10 +48,14 @@ kappa0 <- exp(tmp$theta[2])
 
 tau0 <- exp(-tmp$theta[1])
 
-Q1 <- MetricGraph:::Qalpha1_edges(theta = c(tau0,kappa0), graph = spde_model_bru$graph_spde, w = 0, stationary_points = "all")
+Q1 <- MetricGraph:::Qalpha1_edges(theta = c(tau0,kappa0), graph = spde_model_bru$graph_spde, w=0,
+stationary_points = "all")
 
 Tc <- spde_model_bru$Tc
 Qnew <- Tc%*%Q1%*%t(Tc)
 
 sum((Q0-Qnew)^2)
+
+
+
 

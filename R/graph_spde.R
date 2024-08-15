@@ -203,7 +203,7 @@ graph_spde <- function(graph_object,
 
     for (v in stat_indices) {
       edge <- which(graph_spde$E[,1]==v)[1] #only put stationary of one of indices
-      ind_stat_indices <- c(ind_stat_indices, 2 *  edge)
+      ind_stat_indices <- c(ind_stat_indices, 2 *  (edge-1))
     }
     
     if(is.null(graph_spde$CoB)){

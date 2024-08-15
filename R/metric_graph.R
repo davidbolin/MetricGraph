@@ -1775,6 +1775,10 @@ metric_graph <-  R6Class("metric_graph",
     self$mesh <- NULL
     self$build_mesh(h = max_h)
    }
+
+   self$C <- NULL
+   self$CoB <- NULL
+
    private$pruned <- TRUE
    if(private$prune_warning){
     warning("At least two edges with different weights were merged due to pruning. Only one of the weights has been assigned to the merged edge. Please, review carefully.")
