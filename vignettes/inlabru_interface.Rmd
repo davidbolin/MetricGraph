@@ -253,7 +253,7 @@ Let us begin by obtaining an evenly spaced mesh with respect to the base
 graph:
 
 ```{r}
-obs_per_edge_prd <- 50
+obs_per_edge_prd <- 30
 graph_bru$build_mesh(n = obs_per_edge_prd)
 ```
 
@@ -512,7 +512,8 @@ The `graph_data_spde()` acts as a helper function when building this vector. All
 ```{r}
 data_spde_bru <- graph_data_spde(spde_model_bru_rep, 
         loc_name = "loc",
-        repl=c(1,3,5,7,9))
+        repl=c(1,3,5,7,9),
+        repl_col = "repl")
 
 repl <- data_spde_bru[["repl"]]
 cmp_rep <-
@@ -562,7 +563,8 @@ function to `.all`.
 ```{r}
 data_spde_bru_rep <- graph_data_spde(spde_model_bru_rep, 
         loc_name = "loc",
-        repl=".all")
+        repl=".all",
+        repl_col = "repl")
 
 repl <- data_spde_bru_rep[["repl"]]
 

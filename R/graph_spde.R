@@ -248,7 +248,11 @@ graph_spde <- function(graph_object,
         index <- stationary_endpoints - 1
         BC = 1
     }
-    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=index)
+
+    start_val_tmp <- graph_starting_values(graph_spde,
+                      model = "alpha2", rec_tau = FALSE, data=FALSE)$start_values
+
+    Q_tmp <- Qalpha2(theta = c(start_val_tmp[2],start_val_tmp[3]), graph = graph_spde, BC=BC, stationary_points=index)
     if(is.null(graph_spde$CoB)){
       graph_spde$buildC(2, edge_constraint = BC)
     } else if(graph_spde$CoB$alpha == 1){
@@ -1505,7 +1509,6 @@ predict.inla_metric_graph_spde <- function(object,
 
   new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
                                               new_data_list[[".distance_on_edge"]])
-
 
   spde____model <- graph_spde(graph_tmp, alpha = object$alpha, directional = object$directional)
   cmp_c <- as.character(cmp)
