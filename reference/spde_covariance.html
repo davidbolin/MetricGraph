@@ -29,6 +29,8 @@
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a></li>
     <li><a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a></li>
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
+    <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
+    <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -54,7 +56,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">spde_covariance</span><span class="op">(</span><span class="va">P</span>, <span class="va">kappa</span>, <span class="va">tau</span>, <span class="va">range</span>, <span class="va">sigma</span>, <span class="va">alpha</span>, <span class="va">graph</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">spde_covariance</span><span class="op">(</span><span class="va">P</span>, <span class="va">kappa</span>, <span class="va">tau</span>, <span class="va">range</span>, <span class="va">sigma</span>, <span class="va">alpha</span>, <span class="va">graph</span>, directional <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -88,6 +90,10 @@ location to evaluate the covariance function at.</p></dd>
 
 <dt id="arg-graph">graph<a class="anchor" aria-label="anchor" href="#arg-graph"></a></dt>
 <dd><p>A <code>metric_graph</code> object.</p></dd>
+
+
+<dt id="arg-directional">directional<a class="anchor" aria-label="anchor" href="#arg-directional"></a></dt>
+<dd><p>bool is the model a directional or not. directional only works for alpha=1</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -29,6 +29,8 @@
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a></li>
     <li><a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a></li>
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
+    <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
+    <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -61,6 +63,7 @@
 <span>  <span class="va">sigma</span>,</span>
 <span>  sigma_e <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  directional <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">graph</span>,</span>
 <span>  PtE <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"manual"</span>,</span>
@@ -97,6 +100,10 @@
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
 <dd><p>Smoothness parameter.</p></dd>
+
+
+<dt id="arg-directional">directional<a class="anchor" aria-label="anchor" href="#arg-directional"></a></dt>
+<dd><p>should we use directional model currently only for alpha=1</p></dd>
 
 
 <dt id="arg-graph">graph<a class="anchor" aria-label="anchor" href="#arg-graph"></a></dt>

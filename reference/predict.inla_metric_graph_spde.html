@@ -31,6 +31,8 @@ using 'inlabru'."><meta property="og:image" content="https://davidbolin.github.i
     <li><a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a></li>
     <li><a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a></li>
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
+    <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
+    <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -66,6 +68,10 @@ using 'inlabru'.</p>
 <span>  formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  data_coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PtE"</span>, <span class="st">"euclidean"</span><span class="op">)</span>,</span>
 <span>  normalized <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  repl <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  repl_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  group <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  group_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n.samples <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  probs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span><span class="op">)</span>,</span>
@@ -120,6 +126,27 @@ coordinates.</p></dd>
 <dd><p>if <code>TRUE</code>, then the distances in distance on edge are
 assumed to be normalized to (0,1). Default TRUE. Will not be
 used if <code>data_coords</code> is <code>euclidean</code>.</p></dd>
+
+
+<dt id="arg-repl">repl<a class="anchor" aria-label="anchor" href="#arg-repl"></a></dt>
+<dd><p>Which replicates? If there is no replicates, one
+can set <code>repl</code> to <code>NULL</code>. If one wants all replicates,
+then one sets to <code>repl</code> to <code>.all</code>.</p></dd>
+
+
+<dt id="arg-repl-col">repl_col<a class="anchor" aria-label="anchor" href="#arg-repl-col"></a></dt>
+<dd><p>Column containing the replicates. If the replicate is the internal group variable, set the replicates
+to ".group". If not replicates, set to <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
+<dd><p>Which groups? If there is no groups, one
+can set <code>group</code> to <code>NULL</code>. If one wants all groups,
+then one sets to <code>group</code> to <code>.all</code>.</p></dd>
+
+
+<dt id="arg-group-col">group_col<a class="anchor" aria-label="anchor" href="#arg-group-col"></a></dt>
+<dd><p>Which "column" of the data contains the group variable?</p></dd>
 
 
 <dt id="arg-n-samples">n.samples<a class="anchor" aria-label="anchor" href="#arg-n-samples"></a></dt>
