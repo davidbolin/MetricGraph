@@ -1,10 +1,10 @@
 ---
-title: "An example with graph models"
+title: "An example with a river graph model"
 author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{An example with graph models}
+  %\VignetteIndexEntry{An example with a river graph model}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
