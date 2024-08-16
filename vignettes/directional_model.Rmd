@@ -4,7 +4,7 @@ author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{AAn example with directional models}
+  %\VignetteIndexEntry{An example with directional models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 references:
