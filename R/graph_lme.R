@@ -102,7 +102,7 @@ graph_lme <- function(formula, graph,
     }
     model <- switch(model,
             "lm" = list(type = "linearModel"),
-            "wm1" = list(type = "WhittleMatern", fem = FALSE, alpha = 1, version = 1),
+            "wm1" = list(type = "WhittleMatern", fem = FALSE, alpha = 1, version = 1, directional=0),
             "wm2" = list(type = "WhittleMatern", fem = FALSE, alpha = 2),
             "isoexp" = list(type = "isoCov"),
             "gl1" = list(type = "graphLaplacian", alpha = 1),

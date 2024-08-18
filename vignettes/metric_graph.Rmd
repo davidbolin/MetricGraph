@@ -335,8 +335,7 @@ To illustrate the useage of `metric_graph` on some real data, we use the
 we extract highways in the city of Copenhagen:
 ```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
 library(osmdata)
-set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
-call <- opq(bbox = c(12.4,55.5,12.65,55.9))
+call <- opq(getbb("Copenhagen"))
 call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
                                                       "secondary"))
 data <- osmdata_sp(call)

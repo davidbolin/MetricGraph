@@ -32,7 +32,8 @@ graph_data_spde(
 can set \code{repl} to \code{NULL}. If one wants all replicates,
 then one sets to \code{repl} to \code{.all}.}
 
-\item{repl_col}{Column containing the replicates. If the replicate is the internal group variable, the default \code{NULL} can be used.}
+\item{repl_col}{Column containing the replicates. If the replicate is the internal group variable, set the replicates
+to ".group". If not replicates, set to \code{NULL}.}
 
 \item{group}{Which groups? If there is no groups, one
 can set \code{group} to \code{NULL}. If one wants all groups,

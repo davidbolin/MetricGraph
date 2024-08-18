@@ -12,6 +12,10 @@
   formula = NULL,
   data_coords = c("PtE", "euclidean"),
   normalized = TRUE,
+  repl = NULL,
+  repl_col = NULL,
+  group = NULL,
+  group_col = NULL,
   n.samples = 100,
   seed = 0L,
   probs = c(0.025, 0.5, 0.975),
@@ -49,6 +53,19 @@ coordinates.}
 \item{normalized}{if \code{TRUE}, then the distances in distance on edge are
 assumed to be normalized to (0,1). Default TRUE. Will not be
 used if \code{data_coords} is \code{euclidean}.}
+
+\item{repl}{Which replicates? If there is no replicates, one
+can set \code{repl} to \code{NULL}. If one wants all replicates,
+then one sets to \code{repl} to \code{.all}.}
+
+\item{repl_col}{Column containing the replicates. If the replicate is the internal group variable, set the replicates
+to ".group". If not replicates, set to \code{NULL}.}
+
+\item{group}{Which groups? If there is no groups, one
+can set \code{group} to \code{NULL}. If one wants all groups,
+then one sets to \code{group} to \code{.all}.}
+
+\item{group_col}{Which "column" of the data contains the group variable?}
 
 \item{n.samples}{Integer setting the number of samples to draw in order to
 calculate the posterior statistics. The default is rather low but provides a

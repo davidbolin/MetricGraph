@@ -41,6 +41,10 @@ navbar:
         href: articles/isotropic_noneuclidean.html     
       - text: An example with multiple likelihoods in INLA and inlabru       
         href: articles/multi_likelihood.html
+      - text: An example with directional models
+        href: articles/directional_model.html        
+      - text: An example with a river graph model
+        href: articles/river_example.html           
     custom:
         icon: fa-comments-o
         text: Discussions

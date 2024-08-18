@@ -169,7 +169,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
                          graph,
                          w = 0,
                          BC=1, build=T)
-      if(is.null(graph$C)){
+      if(is.null(graph$C) || graph$CoB$alpha != 1){
         graph$buildDirectionalConstraints(alpha = 1)
       }
       n_const <- length(graph$CoB$S)

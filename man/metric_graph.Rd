@@ -51,6 +51,10 @@ locations.}
 
 \item{\code{edges}}{The coordinates of the edges in the graph.}
 
+\item{\code{DirectionalWeightFunction_in}}{Function for inwards weights in directional models}
+
+\item{\code{DirectionalWeightFunction_out}}{Function for outwards weights in directional models}
+
 \item{\code{vertices}}{The coordinates of the vertices in the graph, along with several attributes.}
 
 \item{\code{geo_dist}}{Geodesic distances between the vertices in the graph.}
@@ -86,6 +90,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-compute_resdist_mesh}{\code{metric_graph$compute_resdist_mesh()}}
 \item \href{#method-metric_graph-compute_laplacian}{\code{metric_graph$compute_laplacian()}}
 \item \href{#method-metric_graph-prune_vertices}{\code{metric_graph$prune_vertices()}}
+\item \href{#method-metric_graph-set_manual_edge_lengths}{\code{metric_graph$set_manual_edge_lengths()}}
 \item \href{#method-metric_graph-get_groups}{\code{metric_graph$get_groups()}}
 \item \href{#method-metric_graph-get_PtE}{\code{metric_graph$get_PtE()}}
 \item \href{#method-metric_graph-get_edge_lengths}{\code{metric_graph$get_edge_lengths()}}
@@ -143,6 +148,8 @@ Create a new \code{metric_graph} object.
   project = FALSE,
   project_data = FALSE,
   which_projection = "Winkel tripel",
+  manual_edge_lengths = NULL,
+  perform_merges = TRUE,
   tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
@@ -159,9 +166,9 @@ Create a new \code{metric_graph} object.
 \describe{
 \item{\code{edges}}{A list containing coordinates as \verb{m x 2} matrices (that is, of \code{matrix} type) or m x 2 data frames (\code{data.frame} type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type \code{SpatialLinesDataFrame} or \code{SpatialLines} (from \code{sp} package) or \code{MULTILINESTRING} (from \code{sf} package).}
 
-\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices.}
+\item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.}
 
-\item{\code{E}}{m x 2 matrix where each row represents one of the m edges.}
+\item{\code{E}}{m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.}
 
 \item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
 
@@ -191,6 +198,10 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{which_projection}}{Which projection should be used in case \code{project} is \code{TRUE}? The options are \code{Robinson}, \verb{Winkel tripel} or a proj4string. The default is \verb{Winkel tripel}.}
 
+\item{\code{manual_edge_lengths}}{If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the \code{perform_merges} argument to \code{FALSE} or use the \code{set_manual_edge_lengths()} method.}
+
+\item{\code{perform_merges}}{If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
+
 \item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
 \item \code{vertex_vertex} Vertices that are closer than this number are merged (default = 1e-7).
@@ -211,7 +222,7 @@ connected and a warning is given if this is not the case.}
 \item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
 initialization. Default is \code{FALSE}.}
 
-\item{\code{merge_close_vertices}}{should an additional step to merge close vertices be done?}
+\item{\code{merge_close_vertices}}{should an additional step to merge close vertices be done? This Step}
 
 \item{\code{factor_merge_close_vertices}}{Which factor to be multiplied by tolerance \code{vertex_vertex} when merging close vertices at the additional step?}
 
@@ -671,6 +682,28 @@ would be merged are compatible in terms of direction.
 
 \subsection{Returns}{
 No return value. Called for its side effects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-set_manual_edge_lengths"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-set_manual_edge_lengths}{}}}
+\subsection{Method \code{set_manual_edge_lengths()}}{
+Gets the groups from the data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_manual_edge_lengths(edge_lengths, unit = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{edge_lengths}}{edge lengths to be set to the metric graph edges.}
+
+\item{\code{unit}}{set or override the edge lengths unit.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+does not return anything. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
