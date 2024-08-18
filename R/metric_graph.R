@@ -450,6 +450,10 @@ metric_graph <-  R6Class("metric_graph",
 
     if(private$perform_merges){
 
+      if(!is.null(manual_edge_lengths)){
+        warning("Since 'perform_merges' is TRUE, the manual edge lengths will not be used. Either set 'perform_merges' to FALSE or use the 'set_manual_edge_lengths()' method on the graph after the graph construction.")
+      }
+
       t <- system.time(
         private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = private$longlat, factor_unit, verbose=verbose,
