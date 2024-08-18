@@ -6,7 +6,7 @@ path <- system.file("extdata/clearwater.ssn", package = "SSNdata")
 n <- ssn_import(path, predpts = "preds", overwrite = T)
 
 
-graph_bru <- metric_graph$new(n$edges$geometry)
+graph_bru <- metric_graph$new(n$edges$geometry, perform_merges=FALSE)
 
 obs_per_edge <- 10
 obs_loc <- NULL
