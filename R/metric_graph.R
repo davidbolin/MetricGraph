@@ -74,8 +74,8 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Create a new `metric_graph` object.
   #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
-  #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
-  #' @param E m x 2 matrix where each row represents one of the m edges.
+  #' @param V n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.
+  #' @param E m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
   #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
@@ -92,6 +92,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
+  #' @param manual_edge_lengths If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the `perform_merges` argument to `FALSE` or use the `set_manual_edge_lengths()` method.
+  #' @param perform_merges If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
   #' @param tolerance List that provides tolerances during the construction of the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged (default = 1e-7).
   #' - `vertex_edge` If a vertex at the end of one edge is closer than this
@@ -107,7 +109,7 @@ metric_graph <-  R6Class("metric_graph",
   #' connected and a warning is given if this is not the case.
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
-  #' @param merge_close_vertices should an additional step to merge close vertices be done?
+  #' @param merge_close_vertices should an additional step to merge close vertices be done? This Step
   #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance `vertex_vertex` when merging close vertices at the additional step?
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
@@ -135,6 +137,8 @@ metric_graph <-  R6Class("metric_graph",
                         project = FALSE,
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
+                        manual_edge_lengths = NULL,
+                        perform_merges = TRUE,
                         tolerance = list(vertex_vertex = 1e-3,
                                          vertex_edge = 1e-3,
                                          edge_edge = 0),
@@ -387,6 +391,12 @@ metric_graph <-  R6Class("metric_graph",
     PtE_tmp_edge_edge <- NULL
     PtE_tmp_edge_vertex <- NULL
 
+    if(!(perform_merges %in% c(TRUE,FALSE))){
+      stop("perform_merges should be either TRUE or FALSE.")
+    }
+
+    private$perform_merges <- perform_merges
+
     if(is.null(edges) && is.null(V) && is.null(E)) {
       edges <- logo_lines()
     }
@@ -421,190 +431,250 @@ metric_graph <-  R6Class("metric_graph",
         edges[[i]] <- rbind(V[E[i,1], ], V[E[i,2], ])
       }
       self$edges <- edges
+      self$E <- E
+      self$V <- V
+      private$perform_merges <- FALSE
     }
 
     self$nE <- length(self$edges)
 
     private$set_first_weights(weights = edge_weights)
 
+    if(!is.null(manual_edge_lengths)){
+      self$set_manual_edge_lengths(edge_lengths = manual_edge_lengths, unit = length_unit)
+    }
+
     if(verbose > 0){
       message("Setup edges and merge close vertices")
     }
 
-    t <- system.time(
-      private$line_to_vertex(tolerance = tolerance$vertex_vertex,
+    if(private$perform_merges){
+
+      t <- system.time(
+        private$line_to_vertex(tolerance = tolerance$vertex_vertex,
                            longlat = private$longlat, factor_unit, verbose=verbose,
                            private$crs, private$proj4string, which_longlat, private$length_unit, private$vertex_unit,
                            project, which_projection, project_data)
-      )
-
-    if(verbose == 2){
-      message(sprintf("time: %.3f s", t[["elapsed"]]))
-    }
-
-
-    if(length(self$edges) > 1){
-
-    if (tolerance$edge_edge > 0) {
-    private$addinfo <- TRUE
-
-    if(verbose > 0){
-      message("Find edge-edge intersections")
-    }
-
-    t <- system.time(
-      points_add <- private$find_edge_edge_points(tol = tolerance$edge_edge, verbose=verbose,
-      crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
-      )
-
-    if(verbose == 2){
-      message(sprintf("time: %.3f s", t[["elapsed"]]))
-    }
-
-    PtE <- points_add$PtE
-
-    PtE[,2] <- PtE[,2]/self$edge_lengths[PtE[,1]]
-
-    filter_tol <- ((PtE[,2] > max_tol/self$edge_lengths[PtE[,1]]) &
-                     (PtE[,2] < 1- max_tol/self$edge_lengths[PtE[,1]]))
-
-    PtE <- PtE[filter_tol,]
-
-    if(!is.null(PtE)){
-      if(nrow(PtE) == 0){
-        PtE <- NULL
-      }
-    }
-
-    if(!is.null(PtE)){
-      if(verbose == 2){
-        message(sprintf("Add %d new vertices", nrow(PtE)))
-      }
-
-      PtE <- na.omit(PtE)
-
-      t <- system.time(
-      private$add_vertices(PtE, tolerance = tolerance$edge_edge, verbose = verbose)
-      )
-
-      if(verbose == 2){
-        message(sprintf("time: %.3f s", t[["elapsed"]]))
-      }
-    }
-
-    private$clear_initial_info()
-    }
-
-    if(tolerance$vertex_edge > 0){
-      private$addinfo <- TRUE
-      if(verbose > 0){
-        message("Snap vertices to close edges")
-      }
-
-      t <- system.time(
-        PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
-                                              tolerance = tolerance$vertex_edge, verbose = verbose,
-      crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
         )
 
       if(verbose == 2){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
-      edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
+    
 
-      filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) &
-                       (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
 
-      PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
-      PtE_tmp <- unique(PtE_tmp)
-      PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
+      if(length(self$edges) > 1){
 
-      if(!is.null(PtE_tmp)){
-        if(nrow(PtE_tmp) == 0){
-          PtE_tmp <- NULL
+      if (tolerance$edge_edge > 0) {
+      private$addinfo <- TRUE
+
+      if(verbose > 0){
+        message("Find edge-edge intersections")
+      }
+
+      t <- system.time(
+        points_add <- private$find_edge_edge_points(tol = tolerance$edge_edge, verbose=verbose,
+        crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
+        )
+
+      if(verbose == 2){
+        message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
+
+      PtE <- points_add$PtE
+
+      PtE[,2] <- PtE[,2]/self$edge_lengths[PtE[,1]]
+
+      filter_tol <- ((PtE[,2] > max_tol/self$edge_lengths[PtE[,1]]) &
+                     (PtE[,2] < 1- max_tol/self$edge_lengths[PtE[,1]]))
+
+      PtE <- PtE[filter_tol,]
+
+      if(!is.null(PtE)){
+        if(nrow(PtE) == 0){
+          PtE <- NULL
         }
       }
 
-      if(!is.null(PtE_tmp)){
+      if(!is.null(PtE)){
         if(verbose == 2){
-          message(sprintf("Add %d new vertices", nrow(PtE_tmp)))
+          message(sprintf("Add %d new vertices", nrow(PtE)))
         }
 
-        PtE_tmp <- na.omit(PtE_tmp)
+        PtE <- na.omit(PtE)
 
         t <- system.time(
-          private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge, verbose=verbose)
+        private$add_vertices(PtE, tolerance = tolerance$edge_edge, verbose = verbose)
+        )
+
+        if(verbose == 2){
+          message(sprintf("time: %.3f s", t[["elapsed"]]))
+        }
+      }
+
+      private$clear_initial_info()
+      }
+
+      if(tolerance$vertex_edge > 0){
+        private$addinfo <- TRUE
+        if(verbose > 0){
+          message("Snap vertices to close edges")
+        }
+
+        t <- system.time(
+          PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
+                                              tolerance = tolerance$vertex_edge, verbose = verbose,
+          crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
           )
 
         if(verbose == 2){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
         }
-      }
-      private$clear_initial_info()
-    }
+        edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
 
-    if(merge_close_vertices){
-      private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
-    }
+        filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) &
+                       (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
 
-    if(is.logical(remove_circles)){
-      if(remove_circles){
-        private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
+        PtE_tmp <- unique(PtE_tmp)
+        PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
+
+        if(!is.null(PtE_tmp)){
+          if(nrow(PtE_tmp) == 0){
+            PtE_tmp <- NULL
+          }
+        }
+
+        if(!is.null(PtE_tmp)){
+          if(verbose == 2){
+            message(sprintf("Add %d new vertices", nrow(PtE_tmp)))
+          }
+
+          PtE_tmp <- na.omit(PtE_tmp)
+
+          t <- system.time(
+            private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge, verbose=verbose)
+            )
+
+          if(verbose == 2){
+            message(sprintf("time: %.3f s", t[["elapsed"]]))
+          }
+        }
+        private$clear_initial_info()
       }
-    } else {
+
+      if(merge_close_vertices){
+        private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
+      }
+
+      if(is.logical(remove_circles)){
+        if(remove_circles){
+          private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        }
+      } else {
         private$remove_circles(remove_circles, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
         remove_circles <- TRUE
-    }
-
-    if(merge_close_vertices || remove_circles){
-      if(verbose == 2){
-        message("Recomputing edge lengths")
       }
-      t <- system.time({
-        self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
-      })
+
+
+      if(merge_close_vertices || remove_circles){
+        if(verbose == 2){
+          message("Recomputing edge lengths")
+        }
+        t <- system.time({
+          self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
+        })
        if(verbose == 2){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
-       }
-    }
-    # End of cond of having more than 1 edge
-    }
+         }
+      }
+      # End of cond of having more than 1 edge
+      }
 
-    # Cleaning the edges
+      # Cleaning the edges
 
-    if(verbose == 2){
-      message("Post-processing the edges")
-    }
+      if(verbose == 2){
+        message("Post-processing the edges")
+      }
 
 
-    t <- system.time(
-          self$edges <- lapply(self$edges, function(edge){
-            tmp_edge <- edge[1:(nrow(edge)-1),]
-            tmp_edge <- unique(tmp_edge)
-            tmp_edge <- rbind(tmp_edge, edge[nrow(edge),,drop=FALSE])
-            if(nrow(tmp_edge)>2){
-              tmp_edge <- tmp_edge[2:nrow(tmp_edge),]
+      t <- system.time(
+            self$edges <- lapply(self$edges, function(edge){
+              tmp_edge <- edge[1:(nrow(edge)-1),]
               tmp_edge <- unique(tmp_edge)
-              tmp_edge <- rbind(edge[1,,drop=FALSE], tmp_edge)
+              tmp_edge <- rbind(tmp_edge, edge[nrow(edge),,drop=FALSE])
+              if(nrow(tmp_edge)>2){
+                tmp_edge <- tmp_edge[2:nrow(tmp_edge),]
+                tmp_edge <- unique(tmp_edge)
+                tmp_edge <- rbind(edge[1,,drop=FALSE], tmp_edge)
+              }
+              rownames(tmp_edge) <- NULL
+              return(tmp_edge)
             }
-            rownames(tmp_edge) <- NULL
-            return(tmp_edge)
-          }
-            )
-    )
+              )
+      )
 
-    if(verbose == 2){
-          message(sprintf("time: %.3f s", t[["elapsed"]]))
+      if(verbose == 2){
+            message(sprintf("time: %.3f s", t[["elapsed"]]))
+      }
+
+      # Checking if there is some edge with infinite length
+      if(any(!is.finite(self$edge_lengths))){
+        warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
+      }
+
+      # Checking if there is some edge with zero length
+      if(any(self$edge_lengths == 0)){
+        warning("There is at least one edge of length zero. Please, consider redefining the graph.")
+      }
+
+        # end of if do merges
+    } else{
+        edges_vertices <- lapply(self$edges, function(edge){
+          n_edge <- nrow(edge)
+          edge_vert <- edge[c(1,n_edge),]
+          return(edge_vert)
+        })
+
+      self$V <- do.call(rbind,edges_vertices)
+      self$V <- round(self$V * 10^(15))/10^(15)
+      self$V <- unique(self$V)
+      self$nV <- nrow(self$V)
+      if(merge_close_vertices){
+        private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
+      }
+
+    lvl <- matrix(0, nrow = length(self$edges), 2)
+      for(i in 1:length(self$edges)){
+        if(verbose == 2) {
+          bar_line_vertex$increment()
+        }
+        points <- self$edges[[i]]
+        n <- dim(points)[1]
+        line1 <- points[1,]
+        line2 <- points[n,]
+        #index of vertex corresponding to the start of the line
+        ind1 <- which.min((self$V[, 1] - line1[1])^2 +
+                          (self$V[, 2] - line1[2])^2)
+        #index of vertex corresponding to the end of the line
+        ind2 <- which.min((self$V[, 1] - line2[1])^2 +
+                          (self$V[, 2] - line2[2])^2)
+        lvl[i,] <- c(ind1, ind2)                          
+      }
+      self$E <- lvl[, 1:2, drop = FALSE]
     }
 
-    # Checking if there is some edge with infinite length
-    if(any(!is.finite(self$edge_lengths))){
-      warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
-    }
 
-    # Checking if there is some edge with zero length
-    if(any(self$edge_lengths == 0)){
-      warning("There is at least one edge of length zero. Please, consider redefining the graph.")
+    if(!private$perform_merges && is.null(manual_edge_lengths)){
+        if(verbose == 2){
+          message("Computing edge lengths")
+        }
+        t <- system.time({
+          self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
+        })
+       if(verbose == 2){
+      message(sprintf("time: %.3f s", t[["elapsed"]]))
+         }
     }
 
     end_construction_time <- Sys.time()
@@ -1791,6 +1861,26 @@ metric_graph <-  R6Class("metric_graph",
    }
   },
 
+
+  #' @description Gets the groups from the data.
+  #' @param edge_lengths edge lengths to be set to the metric graph edges.
+  #' @param unit set or override the edge lengths unit.
+  #' @return does not return anything. Called for its side effects.
+
+    set_manual_edge_lengths = function(edge_lengths, unit = NULL){
+      if(is.null(edge_lengths)){
+        warning("edge_lengths is NULL, edge lengths were not set.")
+        return(invisible(NULL))
+      }
+      if(length(edge_lengths)!=length(self$edges)){
+        stop("edge_lengths must have length equal to the number of edges.")
+      }
+      private$manual_edge_lengths <- TRUE
+      self$edge_lengths <- edge_lengths
+      private$length_unit <- unit
+      return(invisible(NULL))
+  },
+
   #' @description Gets the groups from the data.
   #' @param get_cols Should the names of the columns that created the group variable be returned?
   #' @return A vector containing the available groups in the internal data.
@@ -1872,7 +1962,6 @@ metric_graph <-  R6Class("metric_graph",
     for (i in 1:l) {
       e <- as.vector(private$temp_PtE[i, 1])
       t <- as.vector(private$temp_PtE[i, 2])
-      l_e <- self$edge_lengths[e]
       if (abs(t) < tolerance) {
         private$temp_PtE[i, 2] <- 0
         self$PtV[i] <- self$E[e, 1]
@@ -5386,6 +5475,7 @@ metric_graph <-  R6Class("metric_graph",
       dists <- compute_aux_distances(lines = self$V, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
       v.merge <- NULL
       k <- 0
+
       for (i in 2:self$nV) {
             if(!inherits(dists,"dist")){
                 i.min <- which.min(dists[i, 1:(i-1)])
@@ -5730,6 +5820,14 @@ metric_graph <-  R6Class("metric_graph",
   # Kichhoff weights
 
   kirchhoff_weights = NULL,
+
+  # manual edge lengths
+
+  manual_edge_lengths = FALSE,
+
+  # perform merges?
+
+  perform_merges = NULL,
 
   #grouping variables when adding data
 
