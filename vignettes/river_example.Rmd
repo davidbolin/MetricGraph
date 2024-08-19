@@ -46,11 +46,11 @@ library(MetricGraph)
 
 # Introduction
 
-In this vignette we explore how to build a directional graph model on a river network. The data is imported from the package `SNR2`.
+In this vignette we explore how to build a directional graph model on a river network. The data is imported from the package `SSN2`.
 
 
 # Setting up the data
-Here we take the data as is described in the [Vignette  of `SNR2` ](https://cran.r-project.org/web/packages/SSN2/vignettes/introduction.html). We will use the `geometry` object from the `SSN` object to build the `metricGraph` object. We also load the observations and the relevant covariates. We assume that in the `geometry` object the lines are so that they go downwards along the river.
+Here we take the data as is described in the [Vignette  of `SSN2` ](https://cran.r-project.org/web/packages/SSN2/vignettes/introduction.html). We will use the `geometry` object from the `SSN` object to build the `metricGraph` object. We also load the observations and the relevant covariates. We assume that in the `geometry` object the lines are so that they go downwards along the river.
 ```{r, message=FALSE}
 library(MetricGraph)
 library(SSN2)
@@ -89,9 +89,8 @@ graph$plot(data = "y", vertex_size = 0.5)
 We start with fitting the non directional models. 
 ```{r, message=FALSE}
 #fitting model with different smoothness
-model.wm1 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'WM1')
-model.wm2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'WM2')
-
+model.wm1 <- graph_lme(y ~ elev + slope + netid, graph = graph, model = 'wm1')
+model.wm2 <- graph_lme(y ~ elev + slope + netid, graph = graph, model = 'wm2')
 ```
 We also create the cross validation results to see how the models perform. Here we see that setting $\alpha=2$, i.e. one time differential, has a much worse performance compared to $\alpha=1$, i.e. continuous but non-differential.
 
@@ -112,7 +111,7 @@ $$
 This is the default option in `metricGraph` and is created by:
 
 ```{r, message=FALSE, warning=FALSE}
-res.wm1.dir <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1')
+res.wm1.dir <- graph_lme(y ~ elev + slope + netid, graph = graph, model = 'wmd1')
 ```
 
 Here one can see a big improvement by adding using the directional model over the non directional.
@@ -129,7 +128,8 @@ $$
 here the weights are set by the edge variable `h2`.
 To make this work in the metricgraph package one uses the following line
 ```{r, message=FALSE, warning=FALSE}
-graph$set_edge_weights(weights= data.frame(h2 = mf04p$edges$h2oAreaKm2), directional_weights = 'h2')
+graph$set_edge_weights(weights= data.frame(h2 = mf04p$edges$h2oAreaKm2), 
+                  directional_weights = 'h2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
 res.wm1.dir2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1')
 ```
