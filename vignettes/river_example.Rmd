@@ -111,7 +111,7 @@ u_{e_3}(v) = u_{e_1}(v) + u_{e_2}(v).
 $$
 This is the default option in `metricGraph` and is created by:
 
-```{r, echo=FALSE,message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 res.wm1.dir <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1')
 ```
 
@@ -128,10 +128,10 @@ u_{e_3}(v) = \sqrt{w_1}u_{e_1}(v) + \sqrt{w_2}u_{e_2}(v).
 $$
 here the weights are set by the edge variable `h2`.
 To make this work in the metricgraph package one uses the following line
-```{r, echo=FALSE}
+```{r, message=FALSE, warning=FALSE}
 graph$set_edge_weights(weights= data.frame(h2 = mf04p$edges$h2oAreaKm2), directional_weights = 'h2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-res.wm1.dir2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
+res.wm1.dir2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1')
 ```
 
 Here we see a slight dip in performance but still much better than the symmetric version.
