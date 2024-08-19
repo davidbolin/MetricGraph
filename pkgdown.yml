@@ -1,5 +1,5 @@
-pandoc: 3.1.11
-pkgdown: 2.1.0
+pandoc: 3.1.11.1
+pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
   comparison: comparison.html
@@ -15,11 +15,8 @@ articles:
   pointprocess: pointprocess.html
   random_fields: random_fields.html
   river_example: river_example.html
-<<<<<<< HEAD
 last_built: 2024-08-19T21:07Z
-=======
-last_built: 2024-08-19T07:02Z
->>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 urls:
   reference: https://davidbolin.github.io/MetricGraph/reference
   article: https://davidbolin.github.io/MetricGraph/articles
+
