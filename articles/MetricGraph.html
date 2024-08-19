@@ -5,7 +5,6 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="MetricGraph">
 <title>MetricGraph: Random Fields on Metric Graphs • MetricGraph</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
@@ -16,40 +15,31 @@
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.9/font.css" rel="stylesheet">
-<!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js" integrity="sha512-7O5pXpc0oCRrxk8RUfDYFgn0nO1t+jLuIOQdOMRp4APB7uZ4vSjspzp5y6YDtDs4VzUSTbWzBFZ/LKJhnyFOKw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="MetricGraph: Random Fields on Metric Graphs">
-<meta property="og:description" content="MetricGraph">
-<meta property="og:image" content="https://davidbolin.github.io/MetricGraph/logo.png">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="MetricGraph: Random Fields on Metric Graphs">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
-    
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-primary" data-bs-theme="dark"><div class="container">
-    
+
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
 
-    
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="active nav-item">
-  <a class="nav-link" href="../articles/MetricGraph.html">Get started</a>
-</li>
-<li class="nav-item">
-  <a class="nav-link" href="../reference/index.html">Functions</a>
-</li>
+<li class="active nav-item"><a class="nav-link" href="../articles/MetricGraph.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Functions</a></li>
 <li class="nav-item dropdown">
+<<<<<<< HEAD
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-vignettes">Vignettes</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-vignettes">
     <a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a>
@@ -75,29 +65,37 @@
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
+=======
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
+<li><a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a></li>
+    <li><a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matern fields</a></li>
+    <li><a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matern fields with general smoothness</a></li>
+    <li><a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a></li>
+    <li><a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a></li>
+    <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
+    <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
+    <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
+  </ul>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 </li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
-<form class="form-inline my-2 my-lg-0" role="search">
-        <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off">
-</form>
-
-      <ul class="navbar-nav">
-<li class="nav-item">
-  <a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/" aria-label="github">
-    <span class="fab fa fab fa-github fa-lg"></span>
-     
-  </a>
-</li>
-<li class="nav-item">
-  <a class="external-link nav-link" href="https://twitter.com/jdavidbolin" aria-label="Twitter">
-    <span class="fa fa-twitter"></span>
-     
-  </a>
-</li>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
+</form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://twitter.com/jdavidbolin" aria-label="Twitter"><span class="fa fa-twitter"></span></a></li>
       </ul>
 </div>
 
-    
+
   </div>
 </nav><div class="container template-article">
 
@@ -111,9 +109,13 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
+<<<<<<< HEAD
 modified: 2024-08-20.</h4>
+=======
+modified: 2024-08-19.</h4>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
       
-      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
     </div>
 
@@ -163,12 +165,25 @@ package.</p>
 <div class="section level2">
 <h2 id="the-metric_graph-class">The <code>metric_graph</code> class<a class="anchor" aria-label="anchor" href="#the-metric_graph-class"></a>
 </h2>
-<p>A compact metric graph <span class="math inline">\(\Gamma\)</span>
-consists of a set of finitely many vertices <span class="math inline">\(\mathcal{V}=\{v_i\}\)</span> and a finite set
-<span class="math inline">\(\mathcal{E}=\{e_j\}\)</span> of edges
-connecting the vertices. Each edge <span class="math inline">\(e\)</span> is defined by a pair of vertices <span class="math inline">\((v_i,v_k)\)</span> and a finite length <span class="math inline">\(l_e \in (0,\infty)\)</span>. An edge in the graph
-is a curve parametrized by arc-length, and a location <span class="math inline">\(s\in \Gamma\)</span> is a position on an edge, and
-can thus be represented as a touple <span class="math inline">\((e,t)\)</span> where <span class="math inline">\(t\in[0,l_e]\)</span>.</p>
+<p>A compact metric graph
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>
+consists of a set of finitely many vertices
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒱</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><msub><mi>v</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\mathcal{V}=\{v_i\}</annotation></semantics></math>
+and a finite set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℰ</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><msub><mi>e</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\mathcal{E}=\{e_j\}</annotation></semantics></math>
+of edges connecting the vertices. Each edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
+is defined by a pair of vertices
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>v</mi><mi>i</mi></msub><mo>,</mo><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(v_i,v_k)</annotation></semantics></math>
+and a finite length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>l</mi><mi>e</mi></msub><mo>∈</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>∞</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">l_e \in (0,\infty)</annotation></semantics></math>.
+An edge in the graph is a curve parametrized by arc-length, and a
+location
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>∈</mo><mi>Γ</mi></mrow><annotation encoding="application/x-tex">s\in \Gamma</annotation></semantics></math>
+is a position on an edge, and can thus be represented as a touple
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>e</mi><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(e,t)</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>∈</mo><mrow><mo stretchy="true" form="prefix">[</mo><mn>0</mn><mo>,</mo><msub><mi>l</mi><mi>e</mi></msub><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">t\in[0,l_e]</annotation></semantics></math>.</p>
 <div class="section level3">
 <h3 id="basic-constructions">Basic constructions<a class="anchor" aria-label="anchor" href="#basic-constructions"></a>
 </h3>
@@ -232,16 +247,21 @@ Thus, we can obtain the range of the edge lengths in the unit m as:</p>
 However, when specifying a position on the graph, it is not practical to
 work with Euclidean coordinates since not all locations in Euclidean
 space are locations on the graph. It is instead better to specify a
-location on the graph by the touple <span class="math inline">\((i,
-t)\)</span>, where <span class="math inline">\(i\)</span> denotes the
-number of the edge and <span class="math inline">\(t\)</span> is the
-location on the edge. The location <span class="math inline">\(t\)</span> can either be specified as the distance
-from the start of the edge (and then takes values between 0 and the
-length of the edge) or as the normalized distance from the start of the
-edge (and then takes values between 0 and 1). The function
-<code>coordinates</code> can be used to convert between coordinates in
-Euclidean space and locations on the graph. For example the location at
-normalized distance 0.2 from the start of the second edge is:</p>
+location on the graph by the touple
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(i, t)</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+denotes the number of the edge and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+is the location on the edge. The location
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+can either be specified as the distance from the start of the edge (and
+then takes values between 0 and the length of the edge) or as the
+normalized distance from the start of the edge (and then takes values
+between 0 and 1). The function <code>coordinates</code> can be used to
+convert between coordinates in Euclidean space and locations on the
+graph. For example the location at normalized distance 0.2 from the
+start of the second edge is:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.2</span><span class="op">)</span>, <span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          [,1]     [,2]</span></span>
@@ -325,10 +345,10 @@ that as 100m which is a bit coarse. So let us reduce the value of
 <code>h</code> to 10m and rebuild the mesh:</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">10</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
-<p>Suppose now that we want to display the function <span class="math inline">\(f(s) = \text{Longitude}(s) -
-\text{Latitude}(s)\)</span> on this graph. We then first evaluate it on
-the vertices of the mesh and then use the function
-<code>plot_function</code> to display it:</p>
+<p>Suppose now that we want to display the function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mtext mathvariant="normal">Longitude</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mtext mathvariant="normal">Latitude</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(s) = \text{Longitude}(s) - \text{Latitude}(s)</annotation></semantics></math>
+on this graph. We then first evaluate it on the vertices of the mesh and
+then use the function <code>plot_function</code> to display it:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lon</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">V</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">lat</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">V</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span></span>
@@ -342,11 +362,15 @@ package. When the first argument of <code>plot_function</code> is a
 vector, the function assumes that the values in the vector are the
 values of the function evaluated at the vertices of the mesh. As an
 alternative, one can also provide the first argument as a matrix
-consisting of the triplets <span class="math inline">\((i, t, f(i,
-t))\)</span>, where <span class="math inline">\(i\)</span> denotes the
-edge number, <span class="math inline">\(t\)</span> the location on the
-edge, and <span class="math inline">\(f(i, t)\)</span> the value at that
-point.</p>
+consisting of the triplets
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>t</mi><mo>,</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(i, t, f(i, t))</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+denotes the edge number,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+the location on the edge, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(i, t)</annotation></semantics></math>
+the value at that point.</p>
 </div>
 </div>
 <div class="section level2">
@@ -362,19 +386,26 @@ discrete models based on the graph Laplacian.</p>
 <h3 id="whittlematérn-fields">Whittle–Matérn fields<a class="anchor" aria-label="anchor" href="#whittlemat%C3%A9rn-fields"></a>
 </h3>
 <p>The Gaussian Whittle–Matérn fields are specified as solutions to the
-stochastic differential equation <span class="math display">\[
+stochastic differential equation
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mo>−</mo><mi>Δ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msup><mi>τ</mi><mi>u</mi><mo>=</mo><mi>𝒲</mi></mrow><annotation encoding="application/x-tex">
   (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}
-\]</span> on the metric graph <span class="math inline">\(\Gamma\)</span>. We can work with these models
-without and approximations if the smoothness parameter <span class="math inline">\(\alpha\)</span> is an integer, and this is what we
-focus on in this vignette. For details on the case of a general
-smoothness parameter, see <a href="fem_models.html">Whittle–Matérn
-fields with general smoothness</a>.</p>
+</annotation></semantics></math> on the metric graph
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>.
+We can work with these models without and approximations if the
+smoothness parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+is an integer, and this is what we focus on in this vignette. For
+details on the case of a general smoothness parameter, see <a href="fem_models.html">Whittle–Matérn fields with general
+smoothness</a>.</p>
 <div class="section level4">
 <h4 id="sampling">Sampling<a class="anchor" aria-label="anchor" href="#sampling"></a>
 </h4>
-<p>As an example, let us simulate the field <span class="math inline">\(u\)</span> on the graph using <span class="math inline">\(\alpha = 1\)</span>. To do so, we again draw some
-locations at random, then sample the field at these locations and plot
-the result</p>
+<p>As an example, let us simulate the field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+on the graph using
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha = 1</annotation></semantics></math>.
+To do so, we again draw some locations at random, then sample the field
+at these locations and plot the result</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">1.3</span></span>
 <span><span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">0.15</span> <span class="co"># range parameter</span></span>
@@ -402,9 +433,10 @@ the result</p>
 <span>                 graph <span class="op">=</span> <span class="va">graph</span>, type <span class="op">=</span> <span class="st">"mesh"</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-14-1.png" width="700" style="display: block; margin: auto;"></p>
-<p>Since <span class="math inline">\(\alpha=1\)</span>, these sample
-paths are continuous but not differentiable. To visualize the
-correlation structure of the field, we can compute and plot the
+<p>Since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>,
+these sample paths are continuous but not differentiable. To visualize
+the correlation structure of the field, we can compute and plot the
 covariances between some point and all other points in the graph as
 follows:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
@@ -413,7 +445,8 @@ follows:</p>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">C</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-15-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>To obtain a field with differentiable sample paths, we can change to
-<span class="math inline">\(\alpha=2\)</span> in the code above.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\alpha=2</annotation></semantics></math>
+in the code above.</p>
 </div>
 <div class="section level4">
 <h4 id="inference">Inference<a class="anchor" aria-label="anchor" href="#inference"></a>
@@ -421,14 +454,18 @@ follows:</p>
 <p>In the following examples we will consider models without replicates.
 Please, see the <a href="random_fields.html">Gaussian random fields on
 metric graphs</a> vignette for examples with replicates.</p>
-<p>Suppose that we have data of the form <span class="math display">\[
-y_i = \beta_1\text{lon}(s_i) +  \beta_1\text{lat}(s_i) +  u(s_i) +
-\varepsilon_i, \quad i=1,\ldots,n
-\]</span> where <span class="math inline">\(s_i\in \Gamma\)</span> are
-observation locations, lon and lat are the longitude and latitude of
-these locations, <span class="math inline">\(\beta_1,\beta_2\)</span>
-are some regression coefficients, and <span class="math inline">\(\varepsilon_i\)</span> are independent centered
-Gaussian variables <span class="math inline">\(N(0,\sigma_e^2)\)</span>
+<p>Suppose that we have data of the form
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><msub><mi>β</mi><mn>1</mn></msub><mtext mathvariant="normal">lon</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><mtext mathvariant="normal">lat</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>ε</mi><mi>i</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">
+y_i = \beta_1\text{lon}(s_i) +  \beta_1\text{lat}(s_i) +  u(s_i) + \varepsilon_i, \quad i=1,\ldots,n
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>s</mi><mi>i</mi></msub><mo>∈</mo><mi>Γ</mi></mrow><annotation encoding="application/x-tex">s_i\in \Gamma</annotation></semantics></math>
+are observation locations, lon and lat are the longitude and latitude of
+these locations,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>,</mo><msub><mi>β</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\beta_1,\beta_2</annotation></semantics></math>
+are some regression coefficients, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ε</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\varepsilon_i</annotation></semantics></math>
+are independent centered Gaussian variables
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mi>e</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">N(0,\sigma_e^2)</annotation></semantics></math>
 representing measurement noise.</p>
 <p>Let us create such observations, clear the current data in the graph,
 and finally add the data on the graph:</p>
@@ -473,8 +510,9 @@ and finally add the data on the graph:</p>
 <pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 1.07070750299905</span></span></code></pre>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-16-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Our goal now is to fit a linear mixed-effects model on this data
-assuming a Whittle-Mat'ern latent model with <span class="math inline">\(\alpha=1\)</span>. To this end, we can use the
-<code><a href="../reference/graph_lme.html">graph_lme()</a></code> function.</p>
+assuming a Whittle-Mat'ern latent model with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>.
+To this end, we can use the <code><a href="../reference/graph_lme.html">graph_lme()</a></code> function.</p>
 <p>If we do not specify the model, it will fit a linear regression
 model. So, let us first fit a simple linear regression model to
 illustrate:</p>
@@ -505,8 +543,9 @@ illustrate:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Log-Likelihood:  -927.3651</span></span></code></pre>
 <p>Let us now fit the linear mixed-effects model with a Whittle-Mat'ern
-latent model with <span class="math inline">\(\alpha=1\)</span>. To this
-end, we can either specify the <code>model</code> argument as
+latent model with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>.
+To this end, we can either specify the <code>model</code> argument as
 <code>'alpha1'</code> or as the following list:
 <code>list(type = 'WhittleMatern', alpha = 1)</code>. The list makes it
 easier to understand which model is being chosen as a random effect,
@@ -549,7 +588,11 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
+<<<<<<< HEAD
 <span><span class="co">## Time used to:     fit the model =  11.92144 secs</span></span></code></pre>
+=======
+<span><span class="co">## Time used to:     fit the model =  44.83893 secs</span></span></code></pre>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
@@ -575,9 +618,11 @@ the simplified form:</p>
 the field at locations in the graph. As an example, we now obtain
 predictions on the regular mesh that we previously constructed. First,
 we obtain the covariates on the mesh locations.</p>
-<p>Now, we can compute the predictions for <span class="math inline">\(y\)</span>. First, let us compute the posterior
-mean for the field at the observation locations and plot the residuals
-between the posterior means and the field:</p>
+<p>Now, we can compute the predictions for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>.
+First, let us compute the posterior mean for the field at the
+observation locations and plot the residuals between the posterior means
+and the field:</p>
 <div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">pred_u</span><span class="op">$</span><span class="va">resid_field</span> <span class="op">&lt;-</span> <span class="va">pred_u</span><span class="op">$</span><span class="va">re_mean</span> <span class="op">-</span> <span class="va">u</span></span>
@@ -628,8 +673,11 @@ mesh. In this case we use the <code>mean</code> component of the
 <code class="sourceCode R"><span><span class="va">y_est</span> <span class="op">&lt;-</span> <span class="va">pred</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-28-1.png" width="700" style="display: block; margin: auto;"></p>
-<p>The same procedure can be done with <span class="math inline">\(\alpha = 2\)</span>. One can also estimate <span class="math inline">\(\alpha\)</span> from data as described in the
-vignette <a href="fem_models.html">Whittle–Matérn fields with general
+<p>The same procedure can be done with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\alpha = 2</annotation></semantics></math>.
+One can also estimate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+from data as described in the vignette <a href="fem_models.html">Whittle–Matérn fields with general
 smoothness</a>.</p>
 </div>
 </div>
@@ -639,18 +687,21 @@ smoothness</a>.</p>
 <p>For metric graphs with Euclidean edges, <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a> showed
 that one can define valid Gaussian processes through various isotropic
 covariance functions if the distances between points are measured in the
-so-called resistance metric <span class="math inline">\(d(\cdot,\cdot)\)</span>. One example of a valid
-covariance function is the isotropic exponential covariance function
-<span class="math display">\[
+so-called resistance metric
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mrow><mo stretchy="true" form="prefix">(</mo><mo>⋅</mo><mo>,</mo><mo>⋅</mo><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">d(\cdot,\cdot)</annotation></semantics></math>.
+One example of a valid covariance function is the isotropic exponential
+covariance function
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mi>κ</mi><mi>d</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 r(d(s,t)) = \sigma^2\exp(-\kappa d(s,t)).
-\]</span> This covariance is very similar to that of the Whittle–Mat'ern
-fields with <span class="math inline">\(\alpha = 1\)</span>. Between the
-two, we recommend using the Whittle–Matérn model since it has Markov
-properties which makes inference much faster. Further, that covariance
-is well-defined for any compact metric graph, whereas the isotropic
-exponential is only guaranteed to be positive definite if the graph has
-Euclidean edges. See <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin, Simas, and Wallin (2023)</span></a> for further
-comparisons.</p>
+</annotation></semantics></math> This covariance is very similar to that
+of the Whittle–Mat'ern fields with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha = 1</annotation></semantics></math>.
+Between the two, we recommend using the Whittle–Matérn model since it
+has Markov properties which makes inference much faster. Further, that
+covariance is well-defined for any compact metric graph, whereas the
+isotropic exponential is only guaranteed to be positive definite if the
+graph has Euclidean edges. See <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
+Simas, and Wallin (2023)</span></a> for further comparisons.</p>
 <p>However, let us now illustrate how to use it for the data that we
 generated above. To work with the covariance function, the only
 cumbersome thing is to compute the metric. The <code>metric_graph</code>
@@ -757,7 +808,11 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## Number of function calls by 'optim' = 40</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
+<<<<<<< HEAD
 <span><span class="co">## Time used to:     fit the model =  5.76195 secs</span></span></code></pre>
+=======
+<span><span class="co">## Time used to:     fit the model =  14.26455 secs</span></span></code></pre>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
@@ -792,21 +847,24 @@ Let us estimate the observed values at the mesh locations:</p>
 <code>MetricGraph</code> is the Matérn type processes based on the graph
 Laplacian introduced by <a href="http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf" class="external-link"><span class="citation">Borovitskiy et al. (2021)</span></a>. These are
 multivariate Gaussian distributions, which are defined in the vertices
-through the equation <span class="math display">\[
-(\kappa^2\mathbf{I} - \mathbf{\Delta}_\Gamma)^{\alpha/2}\mathbf{u} =
-\mathbf{W}
-\]</span> Here <span class="math inline">\(\mathbf{W}\sim
-N(0,\sigma^2\mathbf{I})\)</span> is a vector with independent Gaussian
-variables and <span class="math inline">\(\mathbf{\Delta}_\Gamma\)</span> is the graph
-Laplacian. Further, <span class="math inline">\(\mathbf{u}\)</span> is a
-vector with the values of the process in the vertices of <span class="math inline">\(\Gamma\)</span>, which by definition has precision
-matrix <span class="math display">\[
-\mathbf{Q} = \sigma^{-2}(\kappa^2\mathbf{I} -
-\mathbf{\Delta}_\Gamma)^{\alpha}
-\]</span> Thus, to define these models, the only “difficult” thing is to
-compute the graph Laplacian. The (weighted) graph Laplacian, where the
-weights are specified by the edge lengths can be computed by the
-function <code>compute_laplacian()</code> in the
+through the equation
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mi>𝐈</mi><mo>−</mo><msub><mi>𝚫</mi><mi>Γ</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msup><mi>𝐮</mi><mo>=</mo><mi>𝐖</mi></mrow><annotation encoding="application/x-tex">
+(\kappa^2\mathbf{I} - \mathbf{\Delta}_\Gamma)^{\alpha/2}\mathbf{u} = \mathbf{W}
+</annotation></semantics></math> Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐖</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>𝐈</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbf{W}\sim N(0,\sigma^2\mathbf{I})</annotation></semantics></math>
+is a vector with independent Gaussian variables and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝚫</mi><mi>Γ</mi></msub><annotation encoding="application/x-tex">\mathbf{\Delta}_\Gamma</annotation></semantics></math>
+is the graph Laplacian. Further,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐮</mi><annotation encoding="application/x-tex">\mathbf{u}</annotation></semantics></math>
+is a vector with the values of the process in the vertices of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>,
+which by definition has precision matrix
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐐</mi><mo>=</mo><msup><mi>σ</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mi>𝐈</mi><mo>−</mo><msub><mi>𝚫</mi><mi>Γ</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>α</mi></msup></mrow><annotation encoding="application/x-tex">
+\mathbf{Q} = \sigma^{-2}(\kappa^2\mathbf{I} - \mathbf{\Delta}_\Gamma)^{\alpha}
+</annotation></semantics></math> Thus, to define these models, the only
+“difficult” thing is to compute the graph Laplacian. The (weighted)
+graph Laplacian, where the weights are specified by the edge lengths can
+be computed by the function <code>compute_laplacian()</code> in the
 <code>metric_graph</code> object. Suppose that we want to fit the data
 that we defined above with this model. We can use the
 <code><a href="../reference/graph_lme.html">graph_lme()</a></code> function. Also, observe that there is no need
@@ -852,7 +910,11 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 491</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
+<<<<<<< HEAD
 <span><span class="co">## Time used to:     fit the model =  1.42624 secs</span></span></code></pre>
+=======
+<span><span class="co">## Time used to:     fit the model =  3.36171 secs</span></span></code></pre>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -942,7 +1004,11 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 501</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
+<<<<<<< HEAD
 <span><span class="co">## Time used to:     fit the model =  3.13626 secs</span></span></code></pre>
+=======
+<span><span class="co">## Time used to:     fit the model =  7.20056 secs</span></span></code></pre>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -1014,12 +1080,19 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<<<<<<< HEAD
 <span><span class="co">## sigma 1.866020 0.1020100   1.679740 1.861820   2.080080 1.842520</span></span>
 <span><span class="co">## range 0.179402 0.0273724   0.132662 0.176924   0.239912 0.171519</span></span></code></pre>
+=======
+<span><span class="co">## sigma 1.866000 0.1020070   1.679720 1.861800    2.08005 1.841700</span></span>
+<span><span class="co">## range 0.179401 0.0273717   0.132663 0.176924    0.23991 0.171518</span></span></code></pre>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 <p>Here we are showing the estimate of the practical correlation range
-(<span class="math inline">\(2/\kappa\)</span>) instead of <span class="math inline">\(\kappa\)</span> since that is easier to interpret.
-We now compare the means of the estimated values with the true
-values:</p>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mi>κ</mi></mrow><annotation encoding="application/x-tex">2/\kappa</annotation></semantics></math>)
+instead of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math>
+since that is easier to interpret. We now compare the means of the
+estimated values with the true values:</p>
 <div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_bru</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -1035,8 +1108,13 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<<<<<<< HEAD
 <span><span class="co">## 1   std.dev  2.0 1.8660199 1.8425245</span></span>
 <span><span class="co">## 2     range  0.2 0.1794021 0.1715192</span></span></code></pre>
+=======
+<span><span class="co">## 1   std.dev  2.0 1.8659980 1.8416951</span></span>
+<span><span class="co">## 2     range  0.2 0.1794013 0.1715184</span></span></code></pre>
+>>>>>>> 7d5e007f72e1705b8671582ffb9468ceaaf4bada
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
@@ -1145,7 +1223,7 @@ R, Plotly, and Shiny</em>. Chapman and Hall/CRC.
 </div>
 </div>
 </div>
-  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
 
@@ -1156,15 +1234,15 @@ R, Plotly, and Shiny</em>. Chapman and Hall/CRC.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
     </footer>
 </div>
 
-  
 
-  
+
+
 
   </body>
 </html>
