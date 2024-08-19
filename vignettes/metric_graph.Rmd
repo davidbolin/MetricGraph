@@ -155,7 +155,8 @@ edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0.03),c(0,0.75))
 edge3 <- rbind(c(-1,1),c(0.5,0.03))
 edge4 <- rbind(c(0,0.75), c(0,1))
-edges =  list(edge1, edge2, edge3, edge4)
+edge5 <- rbind(c(-1,0), c(-1, 0.9995))
+edges =  list(edge1, edge2, edge3, edge4, edge5)
 graph3 <- metric_graph$new(edges = edges)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
@@ -200,6 +201,75 @@ Observe that one vertex of degree 2 was not removed. This is due to the fact tha
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3$plot(direction = TRUE)
 ```
+
+We can also avoid performing these merges by setting the `perform_merges` argument to `FALSE`:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph4 <- metric_graph$new(edges = edges, perform_merges = FALSE, merge_close_vertices=FALSE)
+graph4$plot(degree = TRUE)
+```
+
+Observe that the two vertices around the point $(-1,1)$ were merged. This is because there is an additional step to merge close vertices that is performed even 
+if we set `perform_merges` to `FALSE`. To also skip this merge, we can also set `merge_close_vertices` to `FALSE`:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph4 <- metric_graph$new(edges = edges, perform_merges = FALSE, merge_close_vertices=FALSE)
+graph4$plot(degree = TRUE)
+```
+
+We can see now that the two vertices around the point $(-1,1)$ were not merged.
+
+It is important to note that if one creates the metric graph passing `V` and `E` (instead of the `edges` argument) and `perform_merges` is `NULL`, then it will be set to `FALSE` internally. So, if one wants to create the metric graph from `V` and `E`, and wants to perform the merges, then, in this case, one needs to manually set `perform_merges` to `TRUE`.
+
+## Edge lengths
+
+Whenever we create a metric graph, the edge lengths will be automatically computed by obtaining the lengths of the edges. However, sometimes one might want to provide manual edge lengths.
+
+Let us consider the following example:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 25)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+
+graph <- metric_graph$new(edges = Lines)                 
+graph$plot()
+```
+
+We can obtain the edge lenghts by using the `get_edge_lengths()` method:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph$get_edge_lengths()
+```
+
+Observer that we know that the actual length of edge 4 is $\pi/2$, which is not quite right (observe that edge 4 is an approximation of a quarter of a circle by a polygon with 25 points):
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+pi/2 - graph$get_edge_lengths()[4]
+```
+
+We can provide the actual edge lengths, by using the `set_manual_edge_lengths()` method:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph$set_manual_edge_lengths(c(1,1,1,pi/2))
+graph$get_edge_lengths()
+```
+
+We can also manually provide the edge lengths when creating the metric graph:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph <- metric_graph$new(edges = Lines, manual_edge_lengths = c(1,1,1,pi/2))
+graph$get_edge_lengths() 
+```
+
+However, it is important to note that if one passes the manual_edge_lengths when creating the graph, it will automatically set `perform_merges` to `FALSE`, as there is no consistent way to obtain the edge lengths after the merges from the manual edge lengths. Nevertheless, `merge_close_vertices` can be set to `TRUE`.
 
 ## Characteristics of the graph
 
@@ -364,14 +434,55 @@ edge lengths, they are given in km:
 ```{r}
 range(graph5$get_edge_lengths())
 ```
+
+Alternatively, and more conveniently, whenever the `SpatialLines` object has a valid `proj4string`, it will automatically use this `proj4string` to set the
+correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osm_lines` object:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data$osm_lines)
+```
+
+We can see now that `graph5` automatically has the correct CRS:
+
+```{r}
+graph5
+```
+
+We can also check the edge lengths:
+
+```{r}
+range(graph5$get_edge_lengths())
+```
+
+The same idea also works is one has an `sf` object instead. Let us obtain the `sf` version from the `osmdata` object:
+
+```{r}
+data_sf <- osmdata_sf(call)
+```
+
+We can now directly create the metric graph object:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sf$osm_lines)
+```
+
+Let us check that `graph5` still has the correct CRS:
+
+```{r}
+graph5
+```
+and the correct edge lengths:
+```{r}
+range(graph5$get_edge_lengths())
+```
+
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
 the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE, message=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), 
-                                                    longlat = TRUE)
+graphs <- graph_components$new(data$osm_lines)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -396,7 +507,7 @@ min(graph5$get_edge_lengths(unit='m'))
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
+graphs <- graph_components$new(data$osm_lines,
                                tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0)
 ```

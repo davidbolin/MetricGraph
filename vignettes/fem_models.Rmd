@@ -87,7 +87,7 @@ As an example, we consider the following metric graph
 To construct a FEM approximation of a Whittle--Matérn field with general smoothness, 
 we must first construct a mesh on the graph. 
 ```{r}
-  graph$build_mesh(h = 0.5)
+  graph$build_mesh(h = 0.01)
   graph$plot(mesh=TRUE)
 ```
 
@@ -128,7 +128,7 @@ If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to mu
 by the function `fem_basis` in the metric graph object. To illustrate this, let us simulate 
 some observation locations on the graph and construct the matrix:
 ```{r} 
-obs.per.edge <- 100
+obs.per.edge <- 4
 obs.loc <- NULL
 for(i in 1:graph$nE) {
   obs.loc <- rbind(obs.loc,
@@ -622,9 +622,7 @@ Now, we can directly fit the model, by using the `data` element of `data_rspde_b
 ```{r}
   rspde_bru_fit <-
     bru(cmp,
-        data=data_rspde_bru[["data"]],
-      options=list(
-      family = "gaussian")
+        data=data_rspde_bru[["data"]]
     )
 ```
 Let us now obtain the estimates of the parameters in the
@@ -933,8 +931,7 @@ cmp_nonstat <-
 rspde_fit_nonstat <-
   bru(cmp_nonstat,
     data = data_rspde_bru_ns[["data"]],
-    family = "gaussian",
-    options = list(verbose = FALSE)
+    family = "gaussian"
   )
 ```
 

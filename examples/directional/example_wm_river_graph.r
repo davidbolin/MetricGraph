@@ -1,12 +1,14 @@
 
-library('SSN2')
 library(MetricGraph)
+
+devtools::load_all()
+library('SSN2')
 
 path <- system.file("extdata/clearwater.ssn", package = "SSNdata")
 n <- ssn_import(path, predpts = "preds", overwrite = T)
 
 
-graph_bru <- metric_graph$new(n$edges$geometry, perform_merges=FALSE)
+graph_bru <- metric_graph$new(n$edges$geometry, perform_merges = FALSE)
 
 obs_per_edge <- 10
 obs_loc <- NULL
@@ -19,7 +21,7 @@ for(i in 1:(graph_bru$nE)) {
 sigma <- 2
 alpha <- 1
 nu <- alpha - 0.5
-r <- 10^5*0.15 # r stands for range
+r <- 0.15 # r stands for range
 kappa <- sqrt(8 * nu) / r
 tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
                            (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
