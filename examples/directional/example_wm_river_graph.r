@@ -33,7 +33,6 @@ beta_1 <- obs_loc[,1]
 beta_2 <- obs_loc[,2]
 
 y <- 2 - beta_1 + beta_2 + u + rnorm(n_obs, 0, sigma_e)
-y <-  u + rnorm(n_obs, 0, sigma_e)
 df_graph <- data.frame(y = as.vector(y), u = as.vector(u), edge_number = obs_loc[,1],
                           distance_on_edge = obs_loc[,2],
                           beta_1 = beta_1,
