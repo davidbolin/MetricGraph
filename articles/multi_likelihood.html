@@ -55,13 +55,15 @@
     <a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a>
     <a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a>
     <a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a>
-    <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matérn fields</a>
-    <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matérn fields</a>
-    <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matérn fields with general smoothness</a>
+    <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a>
+    <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matern fields</a>
+    <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matern fields with general smoothness</a>
     <a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a>
     <a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a>
     <a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a>
     <a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a>
+    <a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a>
+    <a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a>
   </div>
 </li>
 <li class="nav-item">
@@ -109,7 +111,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-07-06. Last
-modified: 2024-07-07.</h4>
+modified: 2024-08-20.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/multi_likelihood.Rmd" class="external-link"><code>vignettes/multi_likelihood.Rmd</code></a></small>
       <div class="d-none name"><code>multi_likelihood.Rmd</code></div>
@@ -261,7 +263,7 @@ likelihood. To such an end, we simply supply the data in
 <code class="sourceCode R"><span><span class="va">data_stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span></span></code></pre></div>
 <p>Finally, we fit the model:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/INLA.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gaussian"</span>, <span class="st">"gaussian"</span><span class="op">)</span>, </span>
+<code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gaussian"</span>, <span class="st">"gaussian"</span><span class="op">)</span>, </span>
 <span>    data <span class="op">=</span> <span class="va">data_stk</span>, control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now obtain the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
@@ -271,8 +273,8 @@ likelihood. To such an end, we simply supply the data in
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.93718 0.1779510  1.6199400 1.928090   2.322420 1.929140</span></span>
-<span><span class="co">## range 0.13457 0.0270887  0.0909092 0.131188   0.196853 0.124146</span></span></code></pre>
+<span><span class="co">## sigma 1.93718 0.1779500  1.6199400 1.928080   2.322420 1.929140</span></span>
+<span><span class="co">## range 0.13457 0.0270887  0.0909091 0.131188   0.196853 0.124146</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
@@ -290,8 +292,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.9371771 1.9291394</span></span>
-<span><span class="co">## 2     range 0.15 0.1345703 0.1241462</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 1.9371762 1.9291403</span></span>
+<span><span class="co">## 2     range 0.15 0.1345702 0.1241461</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
@@ -303,7 +305,7 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meas_err_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1  sigma1.e  0.2 0.2232186 0.2383041</span></span>
+<span><span class="co">## 1  sigma1.e  0.2 0.2232185 0.2383042</span></span>
 <span><span class="co">## 2  sigma2.e  0.5 0.4963049 0.4984907</span></span></code></pre>
 <p>Finally, let us look at the estimates of the intercepts:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -359,7 +361,7 @@ and the second entry to supply the data for the second likelihood.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## sigma 1.937720 0.1751890  1.6212500 1.926700   2.311850 1.88843</span></span>
+<span><span class="co">## sigma 1.937740 0.1751710  1.6212500 1.926700   2.311850 1.88844</span></span>
 <span><span class="co">## range 0.134483 0.0271072  0.0905626 0.131193   0.196645 0.12446</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
@@ -378,7 +380,7 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_bru_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.9377238 1.8884274</span></span>
+<span><span class="co">## 1   std.dev 2.00 1.9377418 1.8884363</span></span>
 <span><span class="co">## 2     range 0.15 0.1344831 0.1244598</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
@@ -392,7 +394,7 @@ compare with the true ones:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meas_err_bru_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
 <span><span class="co">## 1  sigma1.e  0.2 0.2231640 0.2379497</span></span>
-<span><span class="co">## 2  sigma2.e  0.5 0.4964019 0.4985884</span></span></code></pre>
+<span><span class="co">## 2  sigma2.e  0.5 0.4964019 0.4985885</span></span></code></pre>
 <p>Finally, let us look at the estimates of the intercepts:</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">intercept_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -527,7 +529,7 @@ function.</p>
 <code class="sourceCode R"><span><span class="va">data_stk_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we fit the model:</p>
 <div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/INLA.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gaussian"</span>, <span class="st">"gaussian"</span><span class="op">)</span>, </span>
+<code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gaussian"</span>, <span class="st">"gaussian"</span><span class="op">)</span>, </span>
 <span>                data <span class="op">=</span> <span class="va">data_stk_rep</span>, </span>
 <span>                control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let us see the estimated values in the original scale:</p>
@@ -642,7 +644,7 @@ values:</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_bru_repl_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
 <span><span class="co">## 1   std.dev  1.5 1.4897491 1.482427</span></span>
-<span><span class="co">## 2     range  0.2 0.1973017 0.193364</span></span></code></pre>
+<span><span class="co">## 2     range  0.2 0.1973016 0.193364</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">

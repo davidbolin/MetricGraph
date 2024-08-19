@@ -1,8 +1,9 @@
-pandoc: 3.1.12.3
+pandoc: 3.1.11.1
 pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
   comparison: comparison.html
+  directional_model: directional_model.html
   fem_models: fem_models.html
   inla_interface: inla_interface.html
   inlabru_interface: inlabru_interface.html
@@ -13,7 +14,8 @@ articles:
   multi_likelihood: multi_likelihood.html
   pointprocess: pointprocess.html
   random_fields: random_fields.html
-last_built: 2024-07-06T23:30Z
+  river_example: river_example.html
+last_built: 2024-08-19T21:07Z
 urls:
   reference: https://davidbolin.github.io/MetricGraph/reference
   article: https://davidbolin.github.io/MetricGraph/articles

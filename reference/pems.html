@@ -32,13 +32,15 @@ California."><meta property="og:image" content="https://davidbolin.github.io/Met
     <a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a>
     <a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a>
     <a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a>
-    <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matérn fields</a>
-    <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matérn fields</a>
-    <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matérn fields with general smoothness</a>
+    <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a>
+    <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matern fields</a>
+    <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matern fields with general smoothness</a>
     <a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a>
     <a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a>
     <a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a>
     <a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a>
+    <a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a>
+    <a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a>
   </div>
 </li>
 <li class="nav-item">
@@ -95,17 +97,14 @@ California.</p>
 <h3 id="pems"><code>pems</code><a class="anchor" aria-label="anchor" href="#pems"></a></h3>
 
 
-<p>A list with three elements:</p><dl><dt>edges</dt>
+<p>A list with two elements:</p><dl><dt>edges</dt>
 <dd><p>A <code>list</code> object containing the coordinates of the road segments.</p></dd>
 
 <dt>data</dt>
 <dd><p>Locations of the observations on the road segments as a
-<code>data.frame</code> with 325 rows and 2 columns. The first column indicates the edge
-number and the second column indicates the distance on edge of the position.</p></dd>
-
-<dt>Y</dt>
-<dd><p>Observations of traffic speed. Consists of a vector with
-325 observations.</p></dd>
+<code>data.frame</code> with 325 rows and 3 columns. The first column indicates the edge
+number, the second column indicates the distance on edge of the position,
+and the third column indicates the average speed observed.</p></dd>
 
 
 </dl></div>
@@ -118,7 +117,7 @@ number and the second column indicates the distance on edge of the position.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Chen, C., K. Petty, A. Skabardonis, P. Varaiya, and Z. Jia (2001). Freeway performance measurement system: mining loop detector data. Transportation Research Record 1748(1), 96–102.</p>
+    <p>Chen, C., K. Petty, A. Skabardonis, P. Varaiya, and Z. Jia (2001). Freeway performance measurement system: mining loop detector data. Transportation Research Record 1748(1), 96-102.</p>
 <p>OpenStreetMap contributors (2017). Planet dump retrieved from https://planet.osm.org. https://www.openstreetmap.org.</p>
     </div>
 

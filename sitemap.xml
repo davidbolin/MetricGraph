@@ -10,6 +10,9 @@
     <loc>https://davidbolin.github.io/MetricGraph/articles/comparison.html</loc>
   </url>
   <url>
+    <loc>https://davidbolin.github.io/MetricGraph/articles/directional_model.html</loc>
+  </url>
+  <url>
     <loc>https://davidbolin.github.io/MetricGraph/articles/fem_models.html</loc>
   </url>
   <url>
@@ -38,6 +41,9 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/articles/random_fields.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/articles/river_example.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/authors.html</loc>
@@ -119,6 +125,9 @@
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/pems.html</loc>
+  </url>
+  <url>
+    <loc>https://davidbolin.github.io/MetricGraph/reference/pems_repl.html</loc>
   </url>
   <url>
     <loc>https://davidbolin.github.io/MetricGraph/reference/pipe.html</loc>

@@ -30,13 +30,15 @@
     <a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a>
     <a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a>
     <a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a>
-    <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matérn fields</a>
-    <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matérn fields</a>
-    <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matérn fields with general smoothness</a>
+    <a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a>
+    <a class="dropdown-item" href="../articles/inla_interface.html">INLA interface of Whittle--Matern fields</a>
+    <a class="dropdown-item" href="../articles/fem_models.html">Whittle--Matern fields with general smoothness</a>
     <a class="dropdown-item" href="../articles/pointprocess.html">Log-Gaussian Cox processes on metric graphs</a>
     <a class="dropdown-item" href="../articles/comparison.html">Comparison of different models using real data</a>
     <a class="dropdown-item" href="../articles/isotropic_noneuclidean.html">On isotropic covariances on metric graphs with non-Euclidean edges</a>
     <a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a>
+    <a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a>
+    <a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a>
   </div>
 </li>
 <li class="nav-item">
@@ -174,18 +176,18 @@ the components are sorted by the number of vertices.</p></dd>
 
 
 <dt><code>vertex_unit</code></dt>
-<dd><p>The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is <code>NULL</code>, which means no unit. However, if you set <code>length_unit</code>, you need to set <code>vertex_unit</code>.</p></dd>
+<dd><p>The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is <code>NULL</code>, which means no unit. However, if you set <code>length_unit</code>, you need to set <code>vertex_unit</code>.</p></dd>
 
 
 <dt><code>length_unit</code></dt>
 <dd><p>The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is <code>vertex_unit</code>. Observe that if <code>vertex_unit</code> is <code>NULL</code>, <code>length_unit</code> can only be <code>NULL</code>.
-If <code>vertex_unit</code> is 'degrees', then the default value for <code>length_unit</code> is 'km'.</p></dd>
+If <code>vertex_unit</code> is 'degree', then the default value for <code>length_unit</code> is 'km'.</p></dd>
 
 
 <dt><code>longlat</code></dt>
 <dd><p>If TRUE, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
-<code>vertex_unit</code> and <code>length_unit</code>, and is equivalent to <code>vertex_unit = 'degrees'</code> and <code>length_unit = 'm'</code>.</p></dd>
+<code>vertex_unit</code> and <code>length_unit</code>, and is equivalent to <code>vertex_unit = 'degree'</code> and <code>length_unit = 'm'</code>.</p></dd>
 
 
 <dt><code>tolerance</code></dt>
@@ -280,7 +282,7 @@ be used when plotting each graph.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.30 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.34 secs</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Starting graph creation...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> The current tolerances are:</span>
@@ -297,7 +299,7 @@ be used when plotting each graph.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Vertex-Edge 0.001</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.15 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.14 secs</span>
 <span class="r-in"><span><span class="va">graphs</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="graph_components-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>
