@@ -462,7 +462,7 @@ metric_graph <-  R6Class("metric_graph",
         warning("object initialized from edges, then E and V are ignored")
       }
       if (inherits(edges,"SpatialLinesDataFrame")) {
-        tmp_lines = SpatialLines(edges@lines)
+        tmp_lines = sp::SpatialLines(edges@lines)
         self$edges <- lapply(1:length(tmp_lines), function(i){tmp_lines@lines[[i]]@Lines[[1]]@coords})
       } else if (inherits(edges,"SpatialLines")) {
         self$edges = lapply(1:length(edges), function(i){edges@lines[[i]]@Lines[[1]]@coords})
@@ -6622,6 +6622,13 @@ graph_components <-  R6::R6Class("graph_components",
     components <- igraph::components(g, mode="weak")
 
      self$n <- components$no
+
+    dots_list[["longlat"]] <- graph$.__enclos_env__$private$longlat
+    dots_list[["crs"]] <- graph$.__enclos_env__$private$crs
+    dots_list[["proj4string"]] <- graph$.__enclos_env__$private$proj4string
+    dots_list[["which_longlat"]] <- graph$.__enclos_env__$private$which_longlat
+    dots_list[["check_connected"]] <- FALSE
+
      if(self$n > 1) {
        self$graphs <- vector(mode = "list", length = self$n)
        for(k in 1:self$n) {
@@ -6640,9 +6647,13 @@ graph_components <-  R6::R6Class("graph_components",
             ew_tmp <- edge_weights[which(ind_keep!=0), , drop= FALSE]
          }
          if(length(graph$edges[which(ind_keep!=0)]) > 0){
-          self$graphs[[k]] = metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
-                                             check_connected = FALSE,
-                                             edge_weights = ew_tmp, ...)
+          dots_list[["edges"]] <- graph$edges[which(ind_keep!=0)]
+          dots_list[["edge_weights"]] <- ew_tmp
+          self$graphs[[k]] = do.call(metric_graph$new, dots_list)
+          # metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
+          #                                    check_connected = FALSE,
+          #                                    edge_weights = ew_tmp, 
+          #                                    ...)
          }
        }
        for(i in self$n:1){
