@@ -177,7 +177,7 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway",
 data <- osmdata_sp(call)
 ```
 
-We can now create the metric graph as follows. In the command we set the argument `longlat = TRUE` since the coordinates of the vertices are given in Longitude and Latitude.
+We can now create the metric graph as follows. 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 graph <- metric_graph$new(data$osm_lines)
 graph$plot(vertex_size = 0.5)
@@ -191,7 +191,7 @@ graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
 ```
 
-The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$get_edge_lengths()` given in the unit km (since we specified `longlat = TRUE` in the construction). Thus, we can obtain the range of the edge lengths in the unit m as:
+The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$get_edge_lengths()` given in the unit km. Thus, we can obtain the range of the edge lengths in the unit m as:
 ```{r}
 range(graph$get_edge_lengths(unit="m")) 
 ```
