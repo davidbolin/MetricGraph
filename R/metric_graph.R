@@ -76,24 +76,23 @@ metric_graph <-  R6Class("metric_graph",
   #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.
   #' @param E m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.
-  #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
-  #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
-  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
+  #' @param vertex_unit The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
+  #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is 'km'.
   #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
   #' @param directional_weights If non-null, the name (or number) of the column of `edge_weights` that contain the directional weights. The default is the first column of the edge weights.
-  #' @param longlat If `TRUE`, then it is assumed that the coordinates are given.
+  #' @param longlat There are three options: `NULL`, `TRUE` or `FALSE`. If `NULL` (the default option), the `edges` argument will be checked to see if there is a CRS or proj4string available, if so, `longlat` will be set to `TRUE`, otherwise, it will be set to `FALSE`. If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
-  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
-  #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default is `sf::st_crs(4326)`.
-  #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default is `sp::CRS("+proj=longlat +datum=WGS84")`.
+  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'` and `length_unit = 'm'`.
+  #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default choice, if the `edges` object does not have CRS nor proj4string, is `sf::st_crs(4326)`.
+  #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default choice, if the `edges` object does not have CRS nor proj4string, is `sp::CRS("+proj=longlat +datum=WGS84")`.
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
   #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
   #' @param manual_edge_lengths If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the `perform_merges` argument to `FALSE` or use the `set_manual_edge_lengths()` method.
-  #' @param perform_merges If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
+  #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`. If `NULL`, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
   #' @param tolerance List that provides tolerances during the construction of the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged (default = 1e-7).
   #' - `vertex_edge` If a vertex at the end of one edge is closer than this
@@ -109,7 +108,7 @@ metric_graph <-  R6Class("metric_graph",
   #' connected and a warning is given if this is not the case.
   #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
   #' initialization. Default is `FALSE`.
-  #' @param merge_close_vertices should an additional step to merge close vertices be done? This Step
+  #' @param merge_close_vertices Should an additional step to merge close vertices be done? The options are `NULL` (the default), `TRUE` or `FALSE`. If `NULL`, it will be determined automatically. If `TRUE` this step will be performed even if `perfom_merges` is set to `FALSE`.
   #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance `vertex_vertex` when merging close vertices at the additional step?
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
@@ -126,11 +125,11 @@ metric_graph <-  R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         vertex_unit = NULL,
-                        length_unit = vertex_unit,
+                        length_unit = "km",
                         edge_weights = 1,
                         kirchhoff_weights = NULL,
                         directional_weights = NULL,
-                        longlat = FALSE,
+                        longlat = NULL,
                         crs = NULL,
                         proj4string = NULL,
                         which_longlat = "sp",
@@ -138,19 +137,76 @@ metric_graph <-  R6Class("metric_graph",
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
                         manual_edge_lengths = NULL,
-                        perform_merges = TRUE,
+                        perform_merges = NULL,
                         tolerance = list(vertex_vertex = 1e-3,
                                          vertex_edge = 1e-3,
                                          edge_edge = 0),
                         check_connected = TRUE,
                         remove_deg2 = FALSE,
-                        merge_close_vertices = TRUE,
+                        merge_close_vertices = NULL,
                         factor_merge_close_vertices = 1,
                         remove_circles = TRUE,
                         verbose = 1,
                         lines = deprecated()) {
 
       start_construction_time <- Sys.time()
+
+      if(!is.null(manual_edge_lengths)){
+        if(is.null(perform_merges)){
+          perform_merges <- FALSE
+        }
+      } else{
+        if(is.null(perform_merges)){
+          perform_merges <- TRUE
+        }
+      }
+
+      if(is.null(merge_close_vertices)){
+          merge_close_vertices <- TRUE
+      }
+
+      if (inherits(edges,"SpatialLines") || inherits(edges,"SpatialLinesDataFrame")) {
+        if(is.null(longlat)){
+          if(!is.na(sp::proj4string(edges))){
+            longlat <- TRUE
+            proj4string <- sp::proj4string(edges)
+            crs_tmp <- sf::st_crs(proj4string, parameters = TRUE)
+            if(is.null(vertex_unit)){
+              vertex_unit <- crs_tmp$units_gdal
+              if(vertex_unit == "metre"){
+                vertex_unit <- "m"
+              }
+            }
+            # if(is.null(length_unit)){
+            #   length_unit <- vertex_unit                     
+            # }
+          } else{
+            longlat <- FALSE
+          }
+        }
+      } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))){
+          if(!is.na(sf::st_crs(edges))){
+            longlat <- TRUE
+            crs <- sf::st_crs(edges)
+            crs_tmp <- sf::st_crs(edges, parameters = TRUE)
+            if(is.null(vertex_unit)){
+              vertex_unit <- crs_tmp$units_gdal
+              if(vertex_unit == "metre"){
+                vertex_unit <- "m"
+              }              
+            }
+            # if(is.null(length_unit)){
+            #   length_unit <- vertex_unit                     
+            # }
+          } else{
+            longlat <- FALSE
+          }
+      } else{
+        if(is.null(longlat)){
+          longlat <- FALSE
+        }
+      }
+
       if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
            lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)", "metric_graph$new(edges)",
@@ -250,7 +306,7 @@ metric_graph <-  R6Class("metric_graph",
           tolerance$line_line <- NULL
          }
 
-      valid_units_vertex <- c("m", "km", "miles", "degrees")
+      valid_units_vertex <- c("m", "km", "miles", "degree")
       valid_units_length <- c("m", "km", "miles")
 
       if(!(which_longlat %in% c("sp", "sf"))){
@@ -283,7 +339,7 @@ metric_graph <-  R6Class("metric_graph",
           private$which_longlat <- which_longlat
         }
         private$crs <- sf::st_crs(crs)
-        private$proj4string <- sp::CRS(crs$input)
+        private$proj4string <- sp::CRS(private$crs$proj4string)
         proj4string <- private$proj4string
         private$transform <- !(sf::st_is_longlat(private$crs))
       }
@@ -304,7 +360,7 @@ metric_graph <-  R6Class("metric_graph",
     # private$longlat <- longlat
 
     if((is.null(vertex_unit) && !is.null(length_unit)) || (is.null(length_unit) && !is.null(vertex_unit))){
-      stop("If one of 'vertex_unit' or 'length_unit' is NULL, then the other must also be NULL.")
+      stop("If one of 'vertex_unit' or 'length_unit' is NULL, and the edges are not sf nor sp objects, then the other must also be NULL.")
     }
 
     if(!is.null(vertex_unit)){
@@ -323,7 +379,7 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.character(length_unit)){
         stop("'length_unit' must be a string!")
       }
-      if(length_unit == "degrees"){
+      if(length_unit == "degree"){
         length_unit <- "km"
       }
       if(!(length_unit %in% valid_units_length)){
@@ -333,22 +389,23 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     if(longlat){
-      private$vertex_unit <- "degrees"
+      private$vertex_unit <- vertex_unit
+      if(is.null(vertex_unit)){
+        private$vertex_unit <- "degree"
+      }
       if(!is.null(length_unit)){
         private$length_unit <- length_unit
       } else{
         private$length_unit <- "km"
       }
     } else if(!is.null(vertex_unit)){
-        if(private$vertex_unit == "degrees"){
+        if(private$vertex_unit == "degree"){
           longlat <- TRUE
           private$longlat <- TRUE
         }
     }
 
     factor_unit <- process_factor_unit(private$vertex_unit, private$length_unit)
-
-
 
     tolerance_default = list(vertex_vertex = 1e-7,
                              vertex_edge = 1e-7,
@@ -409,7 +466,7 @@ metric_graph <-  R6Class("metric_graph",
         self$edges <- lapply(1:length(tmp_lines), function(i){tmp_lines@lines[[i]]@Lines[[1]]@coords})
       } else if (inherits(edges,"SpatialLines")) {
         self$edges = lapply(1:length(edges), function(i){edges@lines[[i]]@Lines[[1]]@coords})
-      } else if(inherits(edges, "MULTILINESTRING")) {
+      } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))) {
         coords_multilinestring <- sf::st_coordinates(edges)
         lines_ids <- unique(coords_multilinestring[,"L1"])
         self$edges <- lapply(1:length(lines_ids), function(i){coords_multilinestring[coords_multilinestring[,"L1"]==i ,1:2]})
@@ -644,9 +701,6 @@ metric_graph <-  R6Class("metric_graph",
       self$V <- round(self$V * 10^(15))/10^(15)
       self$V <- unique(self$V)
       self$nV <- nrow(self$V)
-      if(merge_close_vertices){
-        private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
-      }
 
     lvl <- matrix(0, nrow = length(self$edges), 2)
       for(i in 1:length(self$edges)){
@@ -666,6 +720,11 @@ metric_graph <-  R6Class("metric_graph",
         lvl[i,] <- c(ind1, ind2)                          
       }
       self$E <- lvl[, 1:2, drop = FALSE]
+
+      if(merge_close_vertices){
+        private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
+      }
+
     }
 
 
@@ -3909,7 +3968,7 @@ metric_graph <-  R6Class("metric_graph",
                            add_new_scale_weights = add_new_scale_weights,
                            ...)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees" && !private$transform){
+        if(private$vertex_unit == "degree" && !private$transform){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
@@ -3934,7 +3993,7 @@ metric_graph <-  R6Class("metric_graph",
                            edge_width_weight = edge_width_weight,
                            ...)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees" && !private$transform){
+        if(private$vertex_unit == "degree" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -4602,7 +4661,7 @@ metric_graph <-  R6Class("metric_graph",
       }
 
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees" && !private$transform){
+        if(private$vertex_unit == "degree" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -4624,7 +4683,7 @@ metric_graph <-  R6Class("metric_graph",
           p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                      vertex_color = vertex_color, p = p)
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees" && !private$transform){
+        if(private$vertex_unit == "degree" && !private$transform){
           p <- p + labs(x = "Longitude",  y = "Latitude")
         } else{
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
@@ -4753,7 +4812,7 @@ metric_graph <-  R6Class("metric_graph",
                              split = ~i, showlegend = FALSE, ...)
 
       if(!is.null(private$vertex_unit)){
-        if(private$vertex_unit == "degrees" && !private$transform){
+        if(private$vertex_unit == "degree" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
         } else{
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
@@ -5480,6 +5539,7 @@ metric_graph <-  R6Class("metric_graph",
       v.merge <- NULL
       k <- 0
 
+      if(self$nV>1){
       for (i in 2:self$nV) {
             if(!inherits(dists,"dist")){
                 i.min <- which.min(dists[i, 1:(i-1)])
@@ -5494,6 +5554,7 @@ metric_graph <-  R6Class("metric_graph",
           k <- k + 1
           v.merge <- rbind(v.merge, sort(c(i, i.min)))
         }
+      }
       }
       if(k>0){
         for( j in 1:k) {
@@ -6495,12 +6556,12 @@ graph_components <-  R6::R6Class("graph_components",
   #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
    #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
    #' @param E m x 2 matrix where each row represents an edge.
-  #' @param vertex_unit The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
+  #' @param vertex_unit The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
   #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
-  #' If `vertex_unit` is 'degrees', then the default value for `length_unit` is 'km'.
+  #' If `vertex_unit` is 'degree', then the default value for `length_unit` is 'km'.
   #' @param longlat If TRUE, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
-  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degrees'` and `length_unit = 'm'`.
+  #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'` and `length_unit = 'm'`.
    #' @param tolerance Vertices that are closer than this number are merged when
    #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
    #' tolerance is given in km.

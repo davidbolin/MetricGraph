@@ -37,7 +37,7 @@ clear$dataset[locs] <- 'test' # creates a testing dataset
 
 library(MetricGraph)
 
-metric.obj <- metric_graph$new(n$edges$geometry)
+metric.obj <- metric_graph$new(n$edges$geometry, perform_merges=FALSE)
 # clear.dat <- clear[!is.na(clear$temp_backup),]
 clear.dat <- clear
 
@@ -133,7 +133,7 @@ spde_bru_fit_time <-
 spde_result <- spde_metric_graph_result(spde_bru_fit_time, "field", spde_model_bru_time)
 
 summary(spde_result)
-summary(spde_bru_fit_time)
+Osummary(spde_bru_fit_time)
 
 ### Prediction
 

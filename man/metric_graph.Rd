@@ -137,11 +137,11 @@ Create a new \code{metric_graph} object.
   V = NULL,
   E = NULL,
   vertex_unit = NULL,
-  length_unit = vertex_unit,
+  length_unit = "km",
   edge_weights = 1,
   kirchhoff_weights = NULL,
   directional_weights = NULL,
-  longlat = FALSE,
+  longlat = NULL,
   crs = NULL,
   proj4string = NULL,
   which_longlat = "sp",
@@ -149,11 +149,11 @@ Create a new \code{metric_graph} object.
   project_data = FALSE,
   which_projection = "Winkel tripel",
   manual_edge_lengths = NULL,
-  perform_merges = TRUE,
+  perform_merges = NULL,
   tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
-  merge_close_vertices = TRUE,
+  merge_close_vertices = NULL,
   factor_merge_close_vertices = 1,
   remove_circles = TRUE,
   verbose = 1,
@@ -170,10 +170,9 @@ Create a new \code{metric_graph} object.
 
 \item{\code{E}}{m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.}
 
-\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
 
-\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
-If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is 'km'.}
 
 \item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
 each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}
@@ -182,13 +181,13 @@ each row gives a vector of weights to its corresponding edge. Can be changed by 
 
 \item{\code{directional_weights}}{If non-null, the name (or number) of the column of \code{edge_weights} that contain the directional weights. The default is the first column of the edge weights.}
 
-\item{\code{longlat}}{If \code{TRUE}, then it is assumed that the coordinates are given.
+\item{\code{longlat}}{There are three options: \code{NULL}, \code{TRUE} or \code{FALSE}. If \code{NULL} (the default option), the \code{edges} argument will be checked to see if there is a CRS or proj4string available, if so, \code{longlat} will be set to \code{TRUE}, otherwise, it will be set to \code{FALSE}. If \code{TRUE}, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. If \code{TRUE} it takes precedence over
-\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degree'} and \code{length_unit = 'm'}.}
 
-\item{\code{crs}}{Coordinate reference system to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sf}. Object of class crs. The default is \code{sf::st_crs(4326)}.}
+\item{\code{crs}}{Coordinate reference system to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sf}. Object of class crs. The default choice, if the \code{edges} object does not have CRS nor proj4string, is \code{sf::st_crs(4326)}.}
 
-\item{\code{proj4string}}{Projection string of class CRS-class to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sp}. The default is \code{sp::CRS("+proj=longlat +datum=WGS84")}.}
+\item{\code{proj4string}}{Projection string of class CRS-class to be used in case \code{longlat} is set to \code{TRUE} and \code{which_longlat} is \code{sp}. The default choice, if the \code{edges} object does not have CRS nor proj4string, is \code{sp::CRS("+proj=longlat +datum=WGS84")}.}
 
 \item{\code{which_longlat}}{Compute the distance using which package? The options are \code{sp} and \code{sf}. The default is \code{sp}.}
 
@@ -200,7 +199,7 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{manual_edge_lengths}}{If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the \code{perform_merges} argument to \code{FALSE} or use the \code{set_manual_edge_lengths()} method.}
 
-\item{\code{perform_merges}}{If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
+\item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. If \code{NULL}, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
@@ -222,7 +221,7 @@ connected and a warning is given if this is not the case.}
 \item{\code{remove_deg2}}{Set to \code{TRUE} to remove all vertices of degree 2 in the
 initialization. Default is \code{FALSE}.}
 
-\item{\code{merge_close_vertices}}{should an additional step to merge close vertices be done? This Step}
+\item{\code{merge_close_vertices}}{Should an additional step to merge close vertices be done? The options are \code{NULL} (the default), \code{TRUE} or \code{FALSE}. If \code{NULL}, it will be determined automatically. If \code{TRUE} this step will be performed even if \code{perfom_merges} is set to \code{FALSE}.}
 
 \item{\code{factor_merge_close_vertices}}{Which factor to be multiplied by tolerance \code{vertex_vertex} when merging close vertices at the additional step?}
 

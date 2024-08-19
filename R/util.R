@@ -1132,7 +1132,7 @@ process_factor_unit <- function(vertex_unit, length_unit){
   }
   if(vertex_unit == length_unit){
     return(1)
-  } else if(vertex_unit == "degrees"){
+  } else if(vertex_unit == "degree"){
     fact <- switch(length_unit, "km" = 1,
                         "m" = 1000,
                         "miles" = 0.621371192)
@@ -1306,6 +1306,9 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
       return(compute_length(edge) * fact)
     } else if(which_longlat == "sf"){
       if(!is.null(edge)){
+        if(!is.null(crs)){
+          fact <- 1
+        }
         linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
         # linestring <- sf::st_transform(linestring,  crs = 4326)        
         length <- sf::st_length(linestring)
@@ -1328,6 +1331,11 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
         Line <- sf::st_transform(Line, crs = 4326)
         Line <- sf::st_coordinates(Line) 
         length <- sp::LineLength(Line, longlat = longlat)
+        units(length) <- "km"
+        fact <- 1
+        units(length) <- unit
+        units(length) <- NULL
+        return(length)
       }
 
       fact <- process_factor_unit(vertex_unit, unit)
@@ -1371,6 +1379,7 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
           }
           dists <- sf::st_distance(x = sf_points, y = sf_p_points, which = "Great Circle", by_element = TRUE)
         }
+
         units(dists) <- length_unit
         units(dists) <- NULL
     } else{
@@ -1379,14 +1388,17 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
           sp_points <- sp::spTransform(sp_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
         }
         if(is.null(points)){
-          dists <- sp::spDists(sp_points, longlat = TRUE) * fact
+          dists <- sp::spDists(sp_points, longlat = TRUE) #* fact
         } else{
           sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
           if(transform){
             sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))          
           }
-          dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) * fact
+          dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) #* fact
         }
+        units(dists) <- "km"
+        units(dists) <- length_unit
+        units(dists) <- NULL
     }
     return(dists)
 }
