@@ -137,7 +137,7 @@ Create a new \code{metric_graph} object.
   V = NULL,
   E = NULL,
   vertex_unit = NULL,
-  length_unit = "km",
+  length_unit = NULL,
   edge_weights = 1,
   kirchhoff_weights = NULL,
   directional_weights = NULL,
@@ -172,7 +172,7 @@ Create a new \code{metric_graph} object.
 
 \item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
 
-\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is 'km'.}
+\item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default, when longlat is \code{TRUE}, or an \code{sf} or \code{sp} objects are provided, is 'km'.}
 
 \item{\code{edge_weights}}{Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a \code{data.frame} with the number of rows being equal to the number of edges, where
 each row gives a vector of weights to its corresponding edge. Can be changed by using the \code{set_edge_weights()} method.}

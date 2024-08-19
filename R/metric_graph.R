@@ -77,7 +77,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.
   #' @param E m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
-  #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is 'km'.
+  #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default, when longlat is `TRUE`, or an `sf` or `sp` objects are provided, is 'km'.
   #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
@@ -125,7 +125,7 @@ metric_graph <-  R6Class("metric_graph",
                         V = NULL,
                         E = NULL,
                         vertex_unit = NULL,
-                        length_unit = "km",
+                        length_unit = NULL,
                         edge_weights = 1,
                         kirchhoff_weights = NULL,
                         directional_weights = NULL,
@@ -177,9 +177,9 @@ metric_graph <-  R6Class("metric_graph",
                 vertex_unit <- "m"
               }
             }
-            # if(is.null(length_unit)){
-            #   length_unit <- vertex_unit                     
-            # }
+            if(is.null(length_unit)){
+              length_unit <- "km"          
+            }
           } else{
             longlat <- FALSE
           }
@@ -195,9 +195,9 @@ metric_graph <-  R6Class("metric_graph",
                 vertex_unit <- "m"
               }              
             }
-            # if(is.null(length_unit)){
-            #   length_unit <- vertex_unit                     
-            # }
+            if(is.null(length_unit)){
+              length_unit <- "km"              
+            }
           } else{
             longlat <- FALSE
           }
