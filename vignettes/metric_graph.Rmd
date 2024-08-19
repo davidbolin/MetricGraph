@@ -249,7 +249,7 @@ We can obtain the edge lenghts by using the `get_edge_lengths()` method:
 graph$get_edge_lengths()
 ```
 
-Observer that we know that the actual length of edge 4 is $pi/2$, which is not quite right (observe that edge 4 is an approximation of a quarter of a circle by a polygon with 25 points):
+Observer that we know that the actual length of edge 4 is $\pi/2$, which is not quite right (observe that edge 4 is an approximation of a quarter of a circle by a polygon with 25 points):
 
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 pi/2 - graph$get_edge_lengths()[4]
