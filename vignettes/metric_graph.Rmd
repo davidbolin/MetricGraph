@@ -155,7 +155,7 @@ edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0.03),c(0,0.75))
 edge3 <- rbind(c(-1,1),c(0.5,0.03))
 edge4 <- rbind(c(0,0.75), c(0,1))
-edge5 <- rbind(c(-1, 0.9995), c(-1,0))
+edge5 <- rbind(c(-1,0), c(-1, 0.9995))
 edges =  list(edge1, edge2, edge3, edge4, edge5)
 graph3 <- metric_graph$new(edges = edges)
 graph3$plot(degree = TRUE)
@@ -438,7 +438,7 @@ range(graph5$get_edge_lengths())
 Alternatively, and more conveniently, whenever the `SpatialLines` object has a valid `proj4string`, it will automatically use this `proj4string` to set the
 correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osm_lines` object:
 
-```{r}
+```{r, message=FALSE}
 graph5 <- metric_graph$new(data$osm_lines)
 ```
 
@@ -462,7 +462,7 @@ data_sf <- osmdata_sf(call)
 
 We can now directly create the metric graph object:
 
-```{r}
+```{r, message=FALSE}
 graph5 <- metric_graph$new(data_sf$osm_lines)
 ```
 
