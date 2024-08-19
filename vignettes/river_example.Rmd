@@ -64,7 +64,7 @@ mf04p <- ssn_import(
   overwrite = TRUE
 )
 
-graph <- metric_graph$new(mf04p$edges$geometry, longlat = FALSE)
+graph <- metric_graph$new(mf04p$edges$geometry, perform_merges = FALSE)
 
 obs_coords <- sf::st_coordinates(mf04p$obs)
 
@@ -112,7 +112,7 @@ $$
 This is the default option in `metricGraph` and is created by:
 
 ```{r, echo=FALSE,message=FALSE}
-res.wm1.dir <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1', optim_method='Nelder-Mead')
+res.wm1.dir <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1')
 ```
 
 Here one can see a big improvement by adding using the directional model over the non directional.
