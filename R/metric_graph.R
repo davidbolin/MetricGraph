@@ -166,15 +166,17 @@ metric_graph <-  R6Class("metric_graph",
       }
 
       if (inherits(edges,"SpatialLines") || inherits(edges,"SpatialLinesDataFrame")) {
-        if(is.null(longlat)){
+        if(is.null(longlat) || longlat){
           if(!is.na(sp::proj4string(edges))){
             longlat <- TRUE
-            proj4string <- sp::proj4string(edges)
-            crs_tmp <- sf::st_crs(proj4string, parameters = TRUE)
-            if(is.null(vertex_unit)){
-              vertex_unit <- crs_tmp$units_gdal
-              if(vertex_unit == "metre"){
-                vertex_unit <- "m"
+            if(is.null(proj4string) && is.null(crs)){
+              proj4string <- sp::proj4string(edges)
+              crs_tmp <- sf::st_crs(proj4string, parameters = TRUE)
+              if(is.null(vertex_unit)){
+                vertex_unit <- crs_tmp$units_gdal
+                if(vertex_unit == "metre"){
+                  vertex_unit <- "m"
+                }
               }
             }
             if(is.null(length_unit)){
@@ -185,16 +187,18 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
       } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))){
-        if(is.null(longlat)){
+        if(is.null(longlat) || longlat){
           if(!is.na(sf::st_crs(edges))){
             longlat <- TRUE
-            crs <- sf::st_crs(edges)
-            crs_tmp <- sf::st_crs(edges, parameters = TRUE)
-            if(is.null(vertex_unit)){
-              vertex_unit <- crs_tmp$units_gdal
-              if(vertex_unit == "metre"){
-                vertex_unit <- "m"
-              }              
+            if(is.null(proj4string) && is.null(crs)){
+              crs <- sf::st_crs(edges)
+              crs_tmp <- sf::st_crs(edges, parameters = TRUE)
+              if(is.null(vertex_unit)){
+                vertex_unit <- crs_tmp$units_gdal
+                if(vertex_unit == "metre"){
+                  vertex_unit <- "m"
+                }              
+              }
             }
             if(is.null(length_unit)){
               length_unit <- "km"              
