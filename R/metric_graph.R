@@ -185,6 +185,7 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
       } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))){
+        if(is.null(longlat)){
           if(!is.na(sf::st_crs(edges))){
             longlat <- TRUE
             crs <- sf::st_crs(edges)
@@ -201,6 +202,7 @@ metric_graph <-  R6Class("metric_graph",
           } else{
             longlat <- FALSE
           }
+        }
       } else{
         if(is.null(longlat)){
           longlat <- FALSE
