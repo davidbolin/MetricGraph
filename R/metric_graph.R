@@ -4666,6 +4666,8 @@ metric_graph <-  R6Class("metric_graph",
                              split = ~i, showlegend = FALSE)
       }
 
+      p <-  plotly::layout(p, scene = list(xaxis = list(autorange = "reversed")))
+
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degree" && !private$transform){
           p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
