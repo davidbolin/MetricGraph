@@ -462,14 +462,14 @@ graph5$get_edge_weights()
 
 If one does not want to have the edge weights added, one must set `include_edge_weights` to `FALSE`:
 
-```{r}
+```{r, message=FALSE}
 graph5 <- metric_graph$new(data_sp, include_edge_weights=FALSE)
 graph5$get_edge_weights()
 ```
 
 Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `bicycle` and `alt_name`:
 
-```{r}
+```{r. message=FALSE}
 graph5 <- metric_graph$new(data_sp, include_edge_weights=c("bicycle", "alt_name"))
 graph5$get_edge_weights()
 ```
@@ -610,15 +610,24 @@ river_graph$get_data()
 
 With respect to addition of data in `SSN` objects, we have the option `include_obs` that acts in the same manner as the `include_edge_weights` argument. For example, one can choose to not include the data by setting `include_obs` to `FALSE`:
 
-```{r, error=TRUE}
+```{r, message=FALSE}
 river_graph <- metric_graph$new(mf04p, include_obs = FALSE)
+```
+
+Let us confirm that no data was added:
+```{r, error=TRUE}
 river_graph$get_data()
 ```
 
 Finally, one can select which columns to add, by passing the names (or numbers) of the columns as the `include_edge_weights` argument.
 
-```{r, error=TRUE}
+```{r, message=FALSE}
 river_graph <- metric_graph$new(mf04p, include_obs = c("SLOPE", "Summer_mn"))
+```
+
+and the data:
+
+```{r}
 river_graph$get_data()
 ```
 
