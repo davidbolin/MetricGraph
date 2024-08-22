@@ -268,7 +268,7 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
 
-        if(!inherits(edges, "data.frame")){
+        if(inherits(edges, "data.frame")){
         if(is.null(include_edge_weights) || include_edge_weights[[1]] == TRUE){
             edge_weights <- sf::st_drop_geometry(edges)
         } else if(is.numeric(include_edge_weights) || is.character(include_edge_weights)){
