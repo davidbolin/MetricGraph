@@ -408,7 +408,7 @@ library(osmdata)
 call <- opq(getbb("Copenhagen"))
 call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
                                                       "secondary"))
-data <- osmdata_sp(call)
+data_sp <- osmdata_sp(call)
 
 graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
 graph5$plot(vertex_size = 0)
@@ -436,10 +436,10 @@ range(graph5$get_edge_lengths())
 ```
 
 Alternatively, and more conveniently, whenever the `SpatialLines` object has a valid `proj4string`, it will automatically use this `proj4string` to set the
-correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osm_lines` object:
+correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osmdata_sp` object:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data$osm_lines)
+graph5 <- metric_graph$new(data_sp)
 ```
 
 We can see now that `graph5` automatically has the correct CRS:
@@ -463,7 +463,7 @@ data_sf <- osmdata_sf(call)
 We can now directly create the metric graph object:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data_sf$osm_lines)
+graph5 <- metric_graph$new(data_sf)
 ```
 
 Let us check that `graph5` still has the correct CRS:
@@ -482,7 +482,7 @@ the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE, message=FALSE}
-graphs <- graph_components$new(data$osm_lines)
+graphs <- graph_components$new(data_sp)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -507,7 +507,7 @@ min(graph5$get_edge_lengths(unit='m'))
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
-graphs <- graph_components$new(data$osm_lines,
+graphs <- graph_components$new(data_sp,
                                tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0)
 ```
@@ -542,6 +542,29 @@ summary(graph5)
 ```
 
 We have that this graph does not have Euclidean edges. Also observe that we have the units for the vertices and lengths, and also the coordinate reference system being used by this object.
+
+Alternatively, one can also add create metric graphs from `SSN` objects. All one needs to do is to directly pass the `SSN` object as `edges`. This will also ensure that the correct `CRS` is used. For example:
+
+```{r, message=FALSE}
+library(SSN2)
+
+copy_lsn_to_temp()
+path <- file.path(tempdir(), "MiddleFork04.ssn")
+
+mf04p <- ssn_import(
+  path = path,
+  predpts = c("pred1km", "CapeHorn"),
+  overwrite = TRUE
+)
+
+river_graph <- metric_graph$new(mf04p)
+```
+
+Let us take a look at the graph:
+
+```{r}
+river_graph$plot()
+```
 
 # Adding data to the graph 
 
@@ -626,6 +649,45 @@ Finally, let us obtain a summary of the graph containing data:
 
 ```{r}
 summary(graph)
+```
+
+
+When dealing with `SSN` objects, one can also directly add the `SSN` object as data:
+
+```{r, message=FALSE}
+river_graph$add_observations(data = mf04p)
+```
+
+We can see that the data has been added correctly:
+
+```{r}
+river_graph$get_data()
+```
+
+We can also plot the data:
+
+```{r}
+river_graph$plot(data = "Summer_mn", vertex_size = 0.25)
+```
+
+Let us clear the observations from the river graph:
+
+```{r}
+river_graph$clear_observations()
+```
+
+One can also directly add `sf` objects into the metric graph. For example, the object `mf04p$obs` is an `sf` object.
+
+We can also add the obsevations as:
+
+```{r, message=FALSE}
+river_graph$add_observations(data = mf04p$obs)
+```
+
+We can see that the observations have been added accordingly:
+
+```{r}
+river_graph$get_data()
 ```
 
 # Working with functions on metric graphs

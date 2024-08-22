@@ -6613,6 +6613,14 @@ graph_components <-  R6::R6Class("graph_components",
          lines <- NULL
        }
 
+      if(inherits(edges, "SSN")){
+        edges <- edges$edges
+      }
+
+      if(inherits(edges, c("osmdata_sp", "osmdata_sf"))){
+        edges <- edges$osm_lines
+      }
+
 
       dots_args <- list(...)
       dots_list <- as.list(dots_args)
