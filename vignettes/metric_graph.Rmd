@@ -563,6 +563,12 @@ and
 graph5$edges
 ```
 
+Also observe that it has the corresponding edge weights:
+
+```{r}
+graph5$get_edge_weights()
+```
+
 It is also relevant to obtain a summary of this graph:
 
 ```{r}
