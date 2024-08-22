@@ -720,6 +720,7 @@ summary(graph)
 When dealing with `SSN` objects, one can also directly add the `SSN` object as data:
 
 ```{r, message=FALSE}
+river_graph$clear_observations()
 river_graph$add_observations(data = mf04p)
 ```
 
