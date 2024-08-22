@@ -301,6 +301,10 @@ metric_graph <-  R6Class("metric_graph",
          lines <- NULL
        }
 
+       if(is.null(edge_weights)){
+          edge_weights <- 1
+       }
+
        if(!is.null(kirchhoff_weights)){
         if(length(kirchhoff_weights)>1){
           warning("Only the first entry of 'kirchhoff_weights' was used.")
@@ -6728,7 +6732,6 @@ graph_components <-  R6::R6Class("graph_components",
                                check_connected = FALSE, edge_weights = edge_weights,...)
       }
 
-
      g <- make_graph(edges = c(t(graph$E)), directed = FALSE)
 
     if(!is.null(edge_weights)){
@@ -6766,7 +6769,11 @@ graph_components <-  R6::R6Class("graph_components",
          if(is.null(edge_weights)){
           ew_tmp <- NULL
          } else{
+          if(is.vector(edge_weights)){
+            ew_tmp <- edge_weights[which(ind_keep!=0)]
+          } else{
             ew_tmp <- edge_weights[which(ind_keep!=0), , drop= FALSE]
+          }
          }
          if(length(graph$edges[which(ind_keep!=0)]) > 0){
           dots_list[["edges"]] <- graph$edges[which(ind_keep!=0)]
