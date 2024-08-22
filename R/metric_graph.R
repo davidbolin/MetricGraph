@@ -73,7 +73,7 @@ metric_graph <-  R6Class("metric_graph",
   characteristics = NULL,
 
   #' @description Create a new `metric_graph` object.
-  #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
+  #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
   #' @param V n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.
   #' @param E m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.
   #' @param vertex_unit The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
@@ -163,6 +163,14 @@ metric_graph <-  R6Class("metric_graph",
 
       if(is.null(merge_close_vertices)){
           merge_close_vertices <- TRUE
+      }
+
+      if(inherits(edges, "SSN")){
+        edges <- edges$edges
+      }
+
+      if(inherits(edges, c("osmdata_sp", "osmdata_sf"))){
+        edges <- edges$osm_lines
       }
 
       if (inherits(edges,"SpatialLines") || inherits(edges,"SpatialLinesDataFrame")) {
@@ -2704,8 +2712,8 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Add observations to the metric graph.
   #' @param data A `data.frame` or named list containing the observations. In
   #' case of groups, the data.frames for the groups should be stacked vertically,
-  #' with a column indicating the index of the group. `data` can also be an `sf` object or a
-  #' `SpatialPointsDataFrame` object.
+  #' with a column indicating the index of the group. `data` can also be an `sf` object, a
+  #' `SpatialPointsDataFrame` object or an `SSN` object.
   #' in which case `data_coords` will automatically be spatial, and there is no need to specify the `coord_x` or `coord_y` arguments.
   #' @param edge_number Column (or entry on the list) of the `data` that
   #' contains the edge numbers. If not supplied, the column with name
@@ -2770,6 +2778,10 @@ metric_graph <-  R6Class("metric_graph",
       df_temp <- data
       self$clear_observations()
       data <- df_temp
+    }
+
+    if(inherits(data, "SSN")){
+      data <- data$obs
     }
 
     if(lifecycle::is_present(Spoints)){
