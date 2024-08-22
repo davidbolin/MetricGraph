@@ -1,183 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/404.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/MetricGraph.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/comparison.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/directional_model.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/fem_models.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/inla_interface.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/inlabru_interface.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/metric_graph.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/metric_graph_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/multi_likelihood.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/pointprocess.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/random_fields.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/articles/river_example.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/index.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/MetricGraph-package.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/augment.graph_lme.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/drop_na.metric_graph_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/exp_covariance.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/filter.metric_graph_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_bru_process_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_components.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_lgcp.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_lme.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_basis.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_make_A.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/graph_starting_values.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/logo_lines.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_euler.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_spacetime.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/metric_graph.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/mutate.metric_graph_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/pems.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/pems_repl.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/pipe.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_pred.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/predict.graph_lme.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/predict.inla_metric_graph_spde.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/predict.rspde_metric_graph.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/sample_spde.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/select.metric_graph_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/simulate.graph_lme.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/simulate_spacetime.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/spde_covariance.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/spde_precision.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/summarise.metric_graph_data.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/summary.graph_lme.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/summary.metric_graph.html</loc>
-  </url>
-  <url>
-    <loc>https://davidbolin.github.io/MetricGraph/reference/summary.metric_graph_spde_result.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://davidbolin.github.io/MetricGraph/404.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/MetricGraph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/comparison.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/directional_model.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/fem_models.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/index.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/inla_interface.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/inlabru_interface.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/metric_graph_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/multi_likelihood.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/pointprocess.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/random_fields.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/river_example.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/authors.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/index.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/news/index.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/MetricGraph-package.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/augment.graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/drop_na.metric_graph_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/exp_covariance.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/filter.metric_graph_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_bru_process_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_components.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_lgcp.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_basis.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_spde_make_A.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/graph_starting_values.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/index.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/logo_lines.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_euler.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_spacetime.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/mutate.metric_graph_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/pems.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/pems_repl.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/pipe.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_pred.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.inla_metric_graph_spde.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.rspde_metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/sample_spde.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/select.metric_graph_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate.graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate_spacetime.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/spde_covariance.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/spde_precision.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/summarise.metric_graph_data.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/summary.graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/summary.metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/summary.metric_graph_spde_result.html</loc></url>
 </urlset>
+
