@@ -74,7 +74,7 @@ graph <- metric_graph$new(mf04p, perform_merges = FALSE)
 
 We will now add observations. We can simply pass the `SSN` object as data:
 
-```{r}
+```{r, message=FALSE}
 graph$add_observations(data = mf04p)
 ```
 
@@ -101,7 +101,6 @@ cross.wm1 <-posterior_crossvalidation(model.wm1)
 cross.wm2 <-posterior_crossvalidation(model.wm2)
 
 cross.scores <- rbind(cross.wm1$scores,cross.wm2$scores)
-rownames(cross.scores) <- c("alpha=1","alpha=2")
 print(cross.scores)
 ```
 # Directional models
