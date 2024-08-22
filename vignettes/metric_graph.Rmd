@@ -454,6 +454,26 @@ We can also check the edge lengths:
 range(graph5$get_edge_lengths())
 ```
 
+Another advantage of adding the `osmdata` object, is that the metric graph automatically adds the edge observations as `edge_weights`:
+
+```{r}
+graph5$get_edge_weights()
+```
+
+If one does not want to have the edge weights added, one must set `include_edge_weights` to `FALSE`:
+
+```{r}
+graph5 <- metric_graph$new(data_sp, include_edge_weights=FALSE)
+graph5$get_edge_weights()
+```
+
+Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `bicycle` and `alt_name`:
+
+```{r}
+graph5 <- metric_graph$new(data_sp, include_edge_weights=c("bicycle", "alt_name"))
+graph5$get_edge_weights()
+```
+
 The same idea also works is one has an `sf` object instead. Let us obtain the `sf` version from the `osmdata` object:
 
 ```{r}
@@ -475,6 +495,14 @@ and the correct edge lengths:
 ```{r}
 range(graph5$get_edge_lengths())
 ```
+
+Also, that it has the edge weights:
+
+```{r}
+graph5$get_edge_weights()
+```
+
+The argument `include_edge_weights` can also be used in same manner for `osmdata_sf` objects.
 
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
@@ -564,6 +592,34 @@ Let us take a look at the graph:
 
 ```{r}
 river_graph$plot()
+```
+
+Similarly to `osmdata` objects, when using `SSN` objects, the edge observations are also added as edge weights:
+
+```{r}
+river_graph$get_edge_weights()
+```
+
+The argument `include_edge_weights` can also be used in same manner for `SSN` objects.
+
+However, for `SSN` objects, observations are also automatically added in the metric graph creation:
+
+```{r}
+river_graph$get_data()
+```
+
+With respect to addition of data in `SSN` objects, we have the option `include_obs` that acts in the same manner as the `include_edge_weights` argument. For example, one can choose to not include the data by setting `include_obs` to `FALSE`:
+
+```{r, error=TRUE}
+river_graph <- metric_graph$new(mf04p, include_obs = FALSE)
+river_graph$get_data()
+```
+
+Finally, one can select which columns to add, by passing the names (or numbers) of the columns as the `include_edge_weights` argument.
+
+```{r, error=TRUE}
+river_graph <- metric_graph$new(mf04p, include_obs = c("SLOPE", "Summer_mn"))
+river_graph$get_data()
 ```
 
 # Adding data to the graph 

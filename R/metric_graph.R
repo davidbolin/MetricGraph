@@ -85,6 +85,9 @@ metric_graph <-  R6Class("metric_graph",
   #' @param longlat There are three options: `NULL`, `TRUE` or `FALSE`. If `NULL` (the default option), the `edges` argument will be checked to see if there is a CRS or proj4string available, if so, `longlat` will be set to `TRUE`, otherwise, it will be set to `FALSE`. If `TRUE`, then it is assumed that the coordinates are given.
   #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'` and `length_unit = 'm'`.
+  #' @param include_obs If the object is of class `SSN`, should the observations be added? If `NULL` and the edges are of class `SSN`, the data will be automatically added. If `FALSE`, the data will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the observations to be added as observations.
+  #' @param add_obs_options List containing additional options to be passed to the `add_observations()` method when adding observations from `SSN` data?
+  #' @param include_edge_weights If the object is of class `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame`, `MULTILINESTRING`, `LINESTRING`, `sfc_LINESTRING`, `sfc_MULTILINESTRING`, should the edge data (if any) be added as edge weights? If `NULL`, the edge data will be added as edge weights, if `FALSE` they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default choice, if the `edges` object does not have CRS nor proj4string, is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default choice, if the `edges` object does not have CRS nor proj4string, is `sp::CRS("+proj=longlat +datum=WGS84")`.
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
@@ -133,6 +136,8 @@ metric_graph <-  R6Class("metric_graph",
                         crs = NULL,
                         proj4string = NULL,
                         which_longlat = "sp",
+                        include_obs = NULL,
+                        include_edge_weights = NULL,
                         project = FALSE,
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
@@ -147,9 +152,13 @@ metric_graph <-  R6Class("metric_graph",
                         factor_merge_close_vertices = 1,
                         remove_circles = TRUE,
                         verbose = 1,
+                        add_obs_options = list(return_removed = FALSE,
+                                                verbose = verbose),
                         lines = deprecated()) {
 
       start_construction_time <- Sys.time()
+
+      add_data_tmp <- FALSE
 
       if(!is.null(manual_edge_lengths)){
         if(is.null(perform_merges)){
@@ -166,11 +175,44 @@ metric_graph <-  R6Class("metric_graph",
       }
 
       if(inherits(edges, "SSN")){
-        edges <- edges$edges
+        if(is.null(include_obs) || include_obs[[1]] == TRUE){
+          dataset_tmp <- edges$obs
+          add_data_tmp <- TRUE
+        } else if(is.numeric(include_obs) || is.character(include_obs)){
+          dataset_tmp <- edges$obs[,include_obs]
+          add_data_tmp <- TRUE
+        } else if(!is.logical(include_obs[[1]])){
+          stop("invalid option passed to include_obs.")
+        }
+        edges <- edges$edges        
+        if(is.null(include_edge_weights) || include_edge_weights[[1]] == TRUE){
+          edge_weights <- sf::st_drop_geometry(edges)
+        } else if(is.numeric(include_edge_weights) || is.character(include_edge_weights)){
+          edge_weights <- sf::st_drop_geometry(edges)          
+          edge_weights <- edge_weights[,include_edge_weights]
+        } else if(!is.logical(include_edge_weights[[1]])){
+          stop("invalid option passed to include_edge_weights.")
+        }
       }
 
       if(inherits(edges, c("osmdata_sp", "osmdata_sf"))){
         edges <- edges$osm_lines
+        if(is.null(include_edge_weights) || include_edge_weights[[1]] == TRUE){
+          if(inherits(edges, "osmdata_sp")){
+            edge_weights <- edges@data
+          } else{
+            edge_weights <- sf::st_drop_geometry(edges)
+          }
+        } else if(is.numeric(include_edge_weights) || is.character(include_edge_weights)){
+          if(inherits(edges, "osmdata_sp")){
+            edge_weights <- edges@data
+          } else{
+            edge_weights <- sf::st_drop_geometry(edges)
+          }          
+          edge_weights <- edge_weights[,include_edge_weights]
+        } else if(!is.logical(include_edge_weights[[1]])){
+          stop("invalid option passed to include_edge_weights.")
+        }        
       }
 
       if (inherits(edges,"SpatialLines") || inherits(edges,"SpatialLinesDataFrame")) {
@@ -194,6 +236,16 @@ metric_graph <-  R6Class("metric_graph",
             longlat <- FALSE
           }
         }
+        if(inherits(edges,"SpatialLinesDataFrame")){
+          if(is.null(include_edge_weights) || include_edge_weights[[1]] == TRUE){
+            edge_weights <- edges@data
+        } else if(is.numeric(include_edge_weights) || is.character(include_edge_weights)){
+            edge_weights <- edges@data      
+            edge_weights <- edge_weights[,include_edge_weights]
+        } else if(!is.logical(include_edge_weights[[1]])){
+          stop("invalid option passed to include_edge_weights.")
+        }        
+        }
       } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))){
         if(is.null(longlat) || longlat){
           if(!is.na(sf::st_crs(edges))){
@@ -215,6 +267,20 @@ metric_graph <-  R6Class("metric_graph",
             longlat <- FALSE
           }
         }
+
+        if(!inherits(edges, "data.frame")){
+        if(is.null(include_edge_weights) || include_edge_weights[[1]] == TRUE){
+            edge_weights <- sf::st_drop_geometry(edges)
+        } else if(is.numeric(include_edge_weights) || is.character(include_edge_weights)){
+            edge_weights <- sf::st_drop_geometry(edges)    
+          edge_weights <- edge_weights[,include_edge_weights]
+        } else if(!is.logical(include_edge_weights[[1]])){
+          stop("invalid option passed to include_edge_weights.")
+        }        
+
+        }
+
+
       } else{
         if(is.null(longlat)){
           longlat <- FALSE
@@ -798,6 +864,12 @@ metric_graph <-  R6Class("metric_graph",
     #   class(self$edges[[i]]) <- "metric_graph_edge"
     # }
 
+    if(add_data_tmp){
+      add_obs_options[["data"]] <- dataset_tmp
+      do.call(self$add_observations, add_obs_options)
+    }
+
+
     # Cloning the initial graph
 
     private$initial_graph <- self$clone()
@@ -814,7 +886,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param directional_weights If non-null, the name (or number) of the column of `weights` that contain the directional weights.
   #' @return No return value. Called for its side effects.
 
-  set_edge_weights = function(weights = rep(1, self$nE), kirchhoff_weights = NULL,
+  set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
       directional_weights = NULL){
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
@@ -847,6 +919,12 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
         private$kirchhoff_weights <- kirchhoff_weights
+       } else{
+        if(is.vector(weights)){
+          private$kirchhoff_weights <- 1
+        } else{
+          private$kirchhoff_weights <- ".weights"
+        }        
        }
 
       if(!is.null(directional_weights)){
@@ -873,26 +951,34 @@ metric_graph <-  R6Class("metric_graph",
         }
         private$directional_weights <- directional_weights
        } else{
-        private$directional_weights <- 1
+        if(is.vector(weights)){
+          private$directional_weights <- 1
+        } else{
+          private$directional_weights <- ".weights"
+        }
        }
 
     edge_lengths_ <- self$get_edge_lengths()
 
-    if(is.vector(weights)){
-      if ( (length(weights) != 1) && (length(weights) != self$nE)){
-        stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
-      }
-      if(length(weights)==1){
-        private$edge_weights <- rep(weights, self$nE)
-      } else{
-        private$edge_weights <- weights
-      }
-    } else{
-      if(nrow(weights) != self$nE){
-        stop("The number of rows of weights must be equal to the number of edges!")
-      }
-      private$edge_weights <- weights
+    if(!is.null(weights)){
+        if(is.vector(weights)){
+          if ( (length(weights) != 1) && (length(weights) != self$nE)){
+            stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+          }
+          if(length(weights)==1){
+            private$edge_weights <- rep(weights, self$nE)
+          } else{
+            private$edge_weights <- weights
+          }
+        } else{
+          if(nrow(weights) != self$nE){
+            stop("The number of rows of weights must be equal to the number of edges!")
+          }
+          private$edge_weights <- weights
+          private$edge_weights[[".weights"]] <- rep(1, nrow(private$edge_weights))
+        }
     }
+
     self$edges <- lapply(1:self$nE, function(i){
       edge <- self$edges[[i]]
       if(is.vector(private$edge_weights)){
@@ -923,11 +1009,11 @@ metric_graph <-  R6Class("metric_graph",
     tmp <- private$edge_weights
     row.names(tmp) <- NULL
     if(!is.data.frame(tmp) && data.frame){
-      tmp <- data.frame(weights = tmp)
+      tmp <- data.frame(.weights = tmp)
     }
     if(tibble){
       if(!is.data.frame(tmp)){
-        tmp <- data.frame(weights = tmp)
+        tmp <- data.frame(.weights = tmp)
       }
       tmp <- dplyr::as_tibble(tmp)
     }
@@ -2182,7 +2268,7 @@ metric_graph <-  R6Class("metric_graph",
               ew <- private$get_edge_weights_internal()
 
               if(is.vector(ew)){
-                ew <- data.frame(weight = ew)
+                ew <- data.frame(.weight = ew)
               }
 
               if(!is.null(weight_col)){
@@ -5844,7 +5930,7 @@ metric_graph <-  R6Class("metric_graph",
     tmp <- private$edge_weights
     row.names(tmp) <- NULL
     if(!is.data.frame(tmp) && data.frame){
-      tmp <- data.frame(weights = tmp)
+      tmp <- data.frame(.weights = tmp)
     }
     return(tmp)
   },
