@@ -6712,15 +6712,6 @@ graph_components <-  R6::R6Class("graph_components",
          lines <- NULL
        }
 
-      if(inherits(edges, "SSN")){
-        edges <- edges$edges
-      }
-
-      if(inherits(edges, c("osmdata_sp", "osmdata_sf"))){
-        edges <- edges$osm_lines
-      }
-
-
       dots_args <- list(...)
       dots_list <- as.list(dots_args)
       if(!is.null(dots_list[["project_data"]])){
@@ -6755,6 +6746,10 @@ graph_components <-  R6::R6Class("graph_components",
     dots_list[["proj4string"]] <- graph$.__enclos_env__$private$proj4string
     dots_list[["which_longlat"]] <- graph$.__enclos_env__$private$which_longlat
     dots_list[["check_connected"]] <- FALSE
+
+    if(is.null(edge_weights)){
+      edge_weights <- graph$.__enclos_env__$private$edge_weights
+    }
 
      if(self$n > 1) {
        self$graphs <- vector(mode = "list", length = self$n)

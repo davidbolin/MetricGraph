@@ -179,14 +179,19 @@ data <- osmdata_sp(call)
 
 We can now create the metric graph as follows. 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph <- metric_graph$new(data$osm_lines)
+graph <- metric_graph$new(data)
 graph$plot(vertex_size = 0.5)
 ```
 
-We can note the warning that the graph is not connected, so let us create a 
+Observe that when we create this graph from `osmdata`, it also includes the edge data as edge weights:
+```{r}
+graph$get_edge_weights()
+```
+
+Now, note that when creating the graph there was a warning saying that the graph is not connected, so let us create a 
 `graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graphs <- graph_components$new(edges = data$osm_lines)
+graphs <- graph_components$new(edges = data)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
 ```
@@ -196,12 +201,28 @@ The `graph` object now contains all important features of the graph, such as the
 range(graph$get_edge_lengths(unit="m")) 
 ```
 
+Observe that it also contains the corresponding edge weights:
+
+```{r}
+graph$get_edge_weights()
+```
+
 We will also remove the vertices of degree 2 by using the `prune_vertices()` method:
 
 ```{r, fig.align = "center",echo=TRUE}
 graph$prune_vertices()
 graph$plot()
 ```
+
+Observe that no vertex of degree 2 was pruned. This means that the edge weights are different. If one wants to prune regardless of losing information from the
+edge weights, one can simply set the argument `check_weights` to `FALSE` in the `prune_vertices()` method:
+
+```{r}
+graph$prune_vertices(check_weights=FALSE)
+graph$plot()
+```
+
+However, note that a warning was given due to incompatible edge weights.
 
 ## Understanding coordinates on graphs
 The locations of the vertices are specified in Euclidean coordinates. However, 
