@@ -72,12 +72,15 @@ To create the graph, we simply pass the `SSN` object as edges. This will automat
 graph <- metric_graph$new(mf04p, perform_merges = FALSE)
 ```
 
-We will now add observations. We can simply pass the `SSN` object as data:
+Observe that this already added, by default, the observations and edge weights contained in the `SSN` object:
 
-```{r, message=FALSE}
-graph$add_observations(data = mf04p)
+```{r}
+graph$get_data()
 ```
-
+and
+```{r}
+graph$get_edge_weights()
+```
 
 We can now visualize the river and the data 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
@@ -126,11 +129,10 @@ We could use other constraints. For instance in .. the authors used constraint n
 $$
 u_{e_3}(v) = \sqrt{w_1}u_{e_1}(v) + \sqrt{w_2}u_{e_2}(v).
 $$
-here the weights are set by the edge variable `h2`.
+here the weights are set by the edge weight `h2oAreaKm2`.
 To make this work in the metricgraph package one uses the following line
 ```{r, message=FALSE, warning=FALSE}
-graph$set_edge_weights(weights= data.frame(h2 = mf04p$edges$h2oAreaKm2), 
-                  directional_weights = 'h2')
+graph$set_edge_weights(directional_weights = 'h2oAreaKm2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
 res.wm1.dir2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), graph = graph, model = 'wmd1')
 ```

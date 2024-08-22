@@ -328,6 +328,12 @@ metric_graph <-  R6Class("metric_graph",
           }
         }
         private$kirchhoff_weights <- kirchhoff_weights
+       } else{
+        if(is.vector(edge_weights)){
+          private$kirchhoff_weights <- 1
+        } else{
+          private$kirchhoff_weights <- ".weights"
+        }        
        }
 
 
@@ -356,7 +362,11 @@ metric_graph <-  R6Class("metric_graph",
         }
         private$directional_weights <- directional_weights
        } else{
-        private$directional_weights <- 1
+        if(is.vector(edge_weights)){
+          private$directional_weights <- 1
+        } else{
+          private$directional_weights <- ".weights"
+        }
        }
 
 
@@ -888,8 +898,29 @@ metric_graph <-  R6Class("metric_graph",
 
   set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
       directional_weights = NULL){
-    if(!is.vector(weights) && !is.data.frame(weights)){
+    if(!is.vector(weights) && !is.data.frame(weights) && !is.null(weights)){
       stop("'weights' must be either a vector or a data.frame!")
+    }
+
+    if(!is.null(weights)){
+        if(is.vector(weights)){
+          if ( (length(weights) != 1) && (length(weights) != self$nE)){
+            stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+          }
+          if(length(weights)==1){
+            private$edge_weights <- rep(weights, self$nE)
+          } else{
+            private$edge_weights <- weights
+          }
+        } else{
+          if(nrow(weights) != self$nE){
+            stop("The number of rows of weights must be equal to the number of edges!")
+          }
+          private$edge_weights <- weights
+          private$edge_weights[[".weights"]] <- rep(1, nrow(private$edge_weights))
+        }
+    } else{
+      weights <- private$edge_weights
     }
 
     if(!is.null(kirchhoff_weights)){
@@ -959,25 +990,6 @@ metric_graph <-  R6Class("metric_graph",
        }
 
     edge_lengths_ <- self$get_edge_lengths()
-
-    if(!is.null(weights)){
-        if(is.vector(weights)){
-          if ( (length(weights) != 1) && (length(weights) != self$nE)){
-            stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
-          }
-          if(length(weights)==1){
-            private$edge_weights <- rep(weights, self$nE)
-          } else{
-            private$edge_weights <- weights
-          }
-        } else{
-          if(nrow(weights) != self$nE){
-            stop("The number of rows of weights must be equal to the number of edges!")
-          }
-          private$edge_weights <- weights
-          private$edge_weights[[".weights"]] <- rep(1, nrow(private$edge_weights))
-        }
-    }
 
     self$edges <- lapply(1:self$nE, function(i){
       edge <- self$edges[[i]]
@@ -6619,6 +6631,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
         stop("The number of rows of weights must be equal to the number of edges!")
       }
       private$edge_weights <- weights
+      private$edge_weights[[".weights"]] <- rep(1, nrow(private$edge_weights))
     }
 
   }
