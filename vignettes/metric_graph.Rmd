@@ -410,7 +410,7 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
                                                       "secondary"))
 data_sp <- osmdata_sp(call)
 
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
+graph5 <- metric_graph$new(SpatialLines(data_sp$osm_lines@lines))
 graph5$plot(vertex_size = 0)
 ```
 
@@ -426,7 +426,7 @@ graph, and it also makes it difficult to interpret results (unless one has a
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+graph5 <- metric_graph$new(SpatialLines(data_sp$osm_lines@lines), longlat = TRUE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
 Latitude and that distances should be calculated in km. So if we now look at the
