@@ -124,27 +124,60 @@ system (CRS). We will also set <code>perform_merges</code> to
 <code>SSN</code> objects do not require merges.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">mf04p</span>, perform_merges <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>We will now add observations. We can simply pass the <code>SSN</code>
-object as data:</p>
+<p>Observe that this already added, by default, the observations and
+edge weights contained in the <code>SSN</code> object:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">mf04p</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##  [1] rid        pid        STREAMNAME COMID      AREAWTMAP  SLOPE     </span></span>
-<span><span class="co">##  [7] ELEV_DEM   Source     Summer_mn  MaxOver20  C16        C20       </span></span>
-<span><span class="co">## [13] C24        FlowCMS    AirMEANc   AirMWMTc   rcaAreaKm2 h2oAreaKm2</span></span>
-<span><span class="co">## [19] ratio      snapdist   upDist     afvArea    locID      netID     </span></span>
-<span><span class="co">## [25] netgeom    .coord_x   .coord_y  </span></span>
-<span><span class="co">## &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre>
-<p>We can now visualize the river and the data</p>
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 45 × 31</span></span></span>
+<span><span class="co">##      rid   pid STREAMNAME     COMID AREAWTMAP   SLOPE ELEV_DEM Source  Summer_mn</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>     1     3 Bear Valley 23<span style="text-decoration: underline;">519</span>365     <span style="text-decoration: underline;">1</span>001. 0.002<span style="text-decoration: underline;">74</span>     <span style="text-decoration: underline;">1</span>958 RMRS_M…      14.6</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>     1     2 Bear Valley 23<span style="text-decoration: underline;">519</span>365     <span style="text-decoration: underline;">1</span>001. 0.002<span style="text-decoration: underline;">74</span>     <span style="text-decoration: underline;">1</span>952 RMRS_M…      14.7</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>     1     1 Bear Valley 23<span style="text-decoration: underline;">519</span>365     <span style="text-decoration: underline;">1</span>001. 0.002<span style="text-decoration: underline;">74</span>     <span style="text-decoration: underline;">1</span>947 RMRS_M…      14.9</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>     5     5 Bear Valley 23<span style="text-decoration: underline;">519</span>297     <span style="text-decoration: underline;">1</span>007. 0.005<span style="text-decoration: underline;">68</span>     <span style="text-decoration: underline;">1</span>932 RMRS_M…      14.5</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>     5     4 Bear Valley 23<span style="text-decoration: underline;">519</span>297     <span style="text-decoration: underline;">1</span>007. 0.005<span style="text-decoration: underline;">68</span>     <span style="text-decoration: underline;">1</span>923 RMRS_M…      15.2</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>    10     6 Bear Valley 23<span style="text-decoration: underline;">519</span>307     <span style="text-decoration: underline;">1</span>009. 0.000<span style="text-decoration: underline;">42</span>     <span style="text-decoration: underline;">1</span>940 RMRS_M…      15.3</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>    13     7 Bear Valley 23<span style="text-decoration: underline;">519</span>313     <span style="text-decoration: underline;">1</span>010. 0           <span style="text-decoration: underline;">1</span>940 RMRS_M…      15.1</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>    15     8 Bear Valley 23<span style="text-decoration: underline;">519</span>317     <span style="text-decoration: underline;">1</span>013. 0.002<span style="text-decoration: underline;">97</span>     <span style="text-decoration: underline;">1</span>945 RMRS_M…      14.9</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>    17    10 Elk         23<span style="text-decoration: underline;">519</span>321     <span style="text-decoration: underline;">1</span>025. 0           <span style="text-decoration: underline;">1</span>950 RMRS_M…      15.0</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span>    17     9 Elk         23<span style="text-decoration: underline;">519</span>321     <span style="text-decoration: underline;">1</span>025. 0           <span style="text-decoration: underline;">1</span>948 RMRS_M…      15.0</span></span>
+<span><span class="co">## <span style="color: #949494;"># ℹ 35 more rows</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># ℹ 22 more variables: MaxOver20 &lt;dbl&gt;, C16 &lt;dbl&gt;, C20 &lt;dbl&gt;, C24 &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   FlowCMS &lt;dbl&gt;, AirMEANc &lt;dbl&gt;, AirMWMTc &lt;dbl&gt;, rcaAreaKm2 &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   h2oAreaKm2 &lt;dbl&gt;, ratio &lt;dbl&gt;, snapdist &lt;dbl&gt;, upDist &lt;dbl&gt;, afvArea &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   locID &lt;int&gt;, netID &lt;dbl&gt;, netgeom &lt;chr&gt;, .distance_to_graph &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   .edge_number &lt;dbl&gt;, .distance_on_edge &lt;dbl&gt;, .group &lt;dbl&gt;, .coord_x &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   .coord_y &lt;dbl&gt;</span></span></span></code></pre>
+<p>and</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 163 × 17</span></span></span>
+<span><span class="co">##      rid    COMID GNIS_NAME   REACHCODE FTYPE FCODE AREAWTMAP   SLOPE rcaAreaKm2</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span>     1 23<span style="text-decoration: underline;">519</span>365 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>001. 0.002<span style="text-decoration: underline;">74</span>     4.65  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span>     2 23<span style="text-decoration: underline;">519</span>367 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>002. 0.007<span style="text-decoration: underline;">1</span>      0.839 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span>     3 23<span style="text-decoration: underline;">519</span>369 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>003. 0.003<span style="text-decoration: underline;">6</span>      3.91  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span>     4 23<span style="text-decoration: underline;">519</span>295 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>010. 0.014<span style="text-decoration: underline;">7</span>      0.049<span style="text-decoration: underline;">5</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span>     5 23<span style="text-decoration: underline;">519</span>297 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>007. 0.005<span style="text-decoration: underline;">68</span>     5.02  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span>     6 23<span style="text-decoration: underline;">519</span>299 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>003. 0.001<span style="text-decoration: underline;">04</span>     0.992 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span>     7 23<span style="text-decoration: underline;">519</span>301 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>006. 0.002<span style="text-decoration: underline;">71</span>     1.46  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span>     8 23<span style="text-decoration: underline;">519</span>303 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>009. 0.000<span style="text-decoration: underline;">55</span>     0.597 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span>     9 23<span style="text-decoration: underline;">519</span>305 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>009. 0.000<span style="text-decoration: underline;">26</span>     1.32  </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span>    10 23<span style="text-decoration: underline;">519</span>307 Bear Valle… 17060205… Stre… <span style="text-decoration: underline;">46</span>006     <span style="text-decoration: underline;">1</span>009. 0.000<span style="text-decoration: underline;">42</span>     0.865 </span></span>
+<span><span class="co">## <span style="color: #949494;"># ℹ 153 more rows</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># ℹ 8 more variables: h2oAreaKm2 &lt;dbl&gt;, Length &lt;dbl&gt;, upDist &lt;dbl&gt;,</span></span></span>
+<span><span class="co">## <span style="color: #949494;">#   areaPI &lt;dbl&gt;, afvArea &lt;dbl&gt;, netID &lt;dbl&gt;, netgeom &lt;chr&gt;, .weights &lt;dbl&gt;</span></span></span></code></pre>
+<p>We can now visualize the river and the data</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"Summer_mn"</span>, vertex_size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="river_example_files/figure-html/unnamed-chunk-4-1.png" width="700" style="display: block; margin: auto;">
+<p><img src="river_example_files/figure-html/unnamed-chunk-5-1.png" width="700" style="display: block; margin: auto;">
 # Non directional models We start with fitting the non directional
 models. First for <code>alpha=1</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#fitting model with different smoothness</span></span>
 <span><span class="va">model.wm1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">Summer_mn</span> <span class="op">~</span> <span class="va">ELEV_DEM</span> <span class="op">+</span> <span class="va">SLOPE</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">netID</span><span class="op">)</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="st">'wm1'</span><span class="op">)</span></span></code></pre></div>
 <p>and then for <code>alpha=2</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model.wm2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">Summer_mn</span> <span class="op">~</span> <span class="va">ELEV_DEM</span> <span class="op">+</span> <span class="va">SLOPE</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">netID</span><span class="op">)</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="st">'wm2'</span><span class="op">)</span></span></code></pre></div>
 <p>We also create the cross validation results to see how the models
 perform. Here we see that setting
@@ -152,7 +185,7 @@ perform. Here we see that setting
 i.e. one time differential, has a much worse performance compared to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>,
 i.e. continuous but non-differential.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cross.wm1</span> <span class="op">&lt;-</span><span class="fu"><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation</a></span><span class="op">(</span><span class="va">model.wm1</span><span class="op">)</span></span>
 <span><span class="va">cross.wm2</span> <span class="op">&lt;-</span><span class="fu"><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation</a></span><span class="op">(</span><span class="va">model.wm2</span><span class="op">)</span></span>
 <span></span>
@@ -181,11 +214,11 @@ we have at the vertex connecting them
 u_{e_3}(v) = u_{e_1}(v) + u_{e_2}(v).
 </annotation></semantics></math> This is the default option in
 <code>metricGraph</code> and is created by:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res.wm1.dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">Summer_mn</span> <span class="op">~</span> <span class="va">ELEV_DEM</span> <span class="op">+</span> <span class="va">SLOPE</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">netID</span><span class="op">)</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="st">'wmd1'</span><span class="op">)</span></span></code></pre></div>
 <p>Here one can see a big improvement by adding using the directional
 model over the non directional.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cross.wm1.dir</span> <span class="op">&lt;-</span><span class="fu"><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation</a></span><span class="op">(</span><span class="va">res.wm1.dir</span><span class="op">)</span></span>
 <span><span class="va">cross.scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">cross.scores</span>,<span class="va">cross.wm1.dir</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">cross.scores</span><span class="op">)</span></span></code></pre></div>
@@ -201,16 +234,15 @@ constant which is obtained by
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><msub><mi>e</mi><mn>3</mn></msub></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msqrt><msub><mi>w</mi><mn>1</mn></msub></msqrt><msub><mi>u</mi><msub><mi>e</mi><mn>1</mn></msub></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msqrt><msub><mi>w</mi><mn>2</mn></msub></msqrt><msub><mi>u</mi><msub><mi>e</mi><mn>2</mn></msub></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 u_{e_3}(v) = \sqrt{w_1}u_{e_1}(v) + \sqrt{w_2}u_{e_2}(v).
 </annotation></semantics></math> here the weights are set by the edge
-variable <code>h2</code>. To make this work in the metricgraph package
-one uses the following line</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">set_edge_weights</span><span class="op">(</span>weights<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>h2 <span class="op">=</span> <span class="va">mf04p</span><span class="op">$</span><span class="va">edges</span><span class="op">$</span><span class="va">h2oAreaKm2</span><span class="op">)</span>, </span>
-<span>                  directional_weights <span class="op">=</span> <span class="st">'h2'</span><span class="op">)</span></span>
+weight <code>h2oAreaKm2</code>. To make this work in the metricgraph
+package one uses the following line</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">set_edge_weights</span><span class="op">(</span>directional_weights <span class="op">=</span> <span class="st">'h2oAreaKm2'</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">setDirectionalWeightFunction</span><span class="op">(</span>f_in <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">x</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">res.wm1.dir2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">Summer_mn</span> <span class="op">~</span> <span class="va">ELEV_DEM</span> <span class="op">+</span> <span class="va">SLOPE</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">netID</span><span class="op">)</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="st">'wmd1'</span><span class="op">)</span></span></code></pre></div>
 <p>Here we see a slight dip in performance but still much better than
 the symmetric version.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cross.wm1.dir2</span> <span class="op">&lt;-</span><span class="fu"><a href="../reference/posterior_crossvalidation.html">posterior_crossvalidation</a></span><span class="op">(</span><span class="va">res.wm1.dir2</span><span class="op">)</span></span>
 <span><span class="va">cross.scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">cross.scores</span>,<span class="va">cross.wm1.dir2</span><span class="op">$</span><span class="va">scores</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">cross.scores</span><span class="op">)</span></span></code></pre></div>

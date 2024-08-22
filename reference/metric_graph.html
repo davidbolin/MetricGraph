@@ -219,6 +219,8 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  crs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  proj4string <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  which_longlat <span class="op">=</span> <span class="st">"sp"</span>,</span>
+<span>  include_obs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  include_edge_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  project <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  project_data <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  which_projection <span class="op">=</span> <span class="st">"Winkel tripel"</span>,</span>
@@ -231,6 +233,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  factor_merge_close_vertices <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  remove_circles <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  add_obs_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>return_removed <span class="op">=</span> <span class="cn">FALSE</span>, verbose <span class="op">=</span> <span class="va">verbose</span><span class="op">)</span>,</span>
 <span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
@@ -238,7 +241,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>edges</code></dt>
-<dd><p>A list containing coordinates as <code>m x 2</code> matrices (that is, of <code>matrix</code> type) or m x 2 data frames (<code>data.frame</code> type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code> (from <code>sp</code> package) or <code>MULTILINESTRING</code> (from <code>sf</code> package).</p></dd>
+<dd><p>A list containing coordinates as <code>m x 2</code> matrices (that is, of <code>matrix</code> type) or m x 2 data frames (<code>data.frame</code> type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type <code>SSN</code>, <code>osmdata_sp</code>, <code>osmdata_sf</code>, <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code> (from <code>sp</code> package) or <code>MULTILINESTRING</code> (from <code>sf</code> package).</p></dd>
 
 
 <dt><code>V</code></dt>
@@ -286,6 +289,14 @@ in Longitude/Latitude and that distances should be computed in meters. If <code>
 
 <dt><code>which_longlat</code></dt>
 <dd><p>Compute the distance using which package? The options are <code>sp</code> and <code>sf</code>. The default is <code>sp</code>.</p></dd>
+
+
+<dt><code>include_obs</code></dt>
+<dd><p>If the object is of class <code>SSN</code>, should the observations be added? If <code>NULL</code> and the edges are of class <code>SSN</code>, the data will be automatically added. If <code>FALSE</code>, the data will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the observations to be added as observations.</p></dd>
+
+
+<dt><code>include_edge_weights</code></dt>
+<dd><p>If the object is of class <code>SSN</code>, <code>osmdata_sp</code>, <code>osmdata_sf</code>, <code>SpatialLinesDataFrame</code>, <code>MULTILINESTRING</code>, <code>LINESTRING</code>, <code>sfc_LINESTRING</code>, <code>sfc_MULTILINESTRING</code>, should the edge data (if any) be added as edge weights? If <code>NULL</code>, the edge data will be added as edge weights, if <code>FALSE</code> they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights</p></dd>
 
 
 <dt><code>project</code></dt>
@@ -347,6 +358,10 @@ are removed. If <code>TRUE</code>, the <code>vertex_vertex</code> tolerance will
 <dd><p>Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
+<dt><code>add_obs_options</code></dt>
+<dd><p>List containing additional options to be passed to the <code>add_observations()</code> method when adding observations from <code>SSN</code> data?</p></dd>
+
+
 <dt><code>lines</code></dt>
 <dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>edges</code> instead.</p></dd>
 
@@ -373,7 +388,7 @@ viewed as a vertex.</p>
 <p>Sets the edge weights</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">set_edge_weights</span><span class="op">(</span></span>
-<span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">self</span><span class="op">$</span><span class="va">nE</span><span class="op">)</span>,</span>
+<span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  kirchhoff_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  directional_weights <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
@@ -1252,8 +1267,8 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.frame</code> or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
-with a column indicating the index of the group. <code>data</code> can also be an <code>sf</code> object or a
-<code>SpatialPointsDataFrame</code> object.
+with a column indicating the index of the group. <code>data</code> can also be an <code>sf</code> object, a
+<code>SpatialPointsDataFrame</code> object or an <code>SSN</code> object.
 in which case <code>data_coords</code> will automatically be spatial, and there is no need to specify the <code>coord_x</code> or <code>coord_y</code> arguments.</p></dd>
 
 
@@ -2281,7 +2296,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> 	 Edge-Edge 0</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setup edges and merge close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Snap vertices to close edges</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.79 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.78 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
