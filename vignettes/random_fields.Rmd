@@ -447,9 +447,9 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), sort(runif(n.obs.per.edge))))
 }
 ## Removing problematic locations (locations very close) to improve numerical stability
-prob_points <- which(abs(diff(PtE[,2])) < 1e-3)
-prob_points <- c(prob_points, which(PtE[,2] < 1e-3))
-prob_points <- c(prob_points, which(PtE[,2] > 1 - 1e-3))
+prob_points <- which(abs(diff(PtE[,2])) < 5e-3)
+prob_points <- c(prob_points, which(PtE[,2] < 5e-3))
+prob_points <- c(prob_points, which(PtE[,2] > 1 - 5e-3))
 
 PtE <- PtE[!(1:nrow(PtE)%in%prob_points),]
 df_temp <- data.frame(y = 0, edge_number = PtE[,1],
@@ -479,15 +479,14 @@ y <- u + sigma_e*rnorm(length(u))
 df_GL <- data.frame(y = as.vector(y), edge_number = PtE[,1],
                         distance_on_edge = PtE[,2])
 
-graph$clear_observations()
-graph$add_observations(data = df_GL, normalized=TRUE)
+graph$add_observations(data = df_GL, normalized=TRUE, clear_obs = TRUE)
 graph$plot(data = "y")
 ```
 
 We can then fit the model to data similarly to how we fit the previous models, with the help
 of the function `graph_lme()`:
 ```{r}
-res_GL <- graph_lme(y ~ -1, graph = graph, model = list(type = "graphLaplacian"))
+res_GL <- graph_lme(y ~ -1, graph = graph, model = "GL1" )
 
 sigma_e_est <- res_GL$coeff$measurement_error
 tau_est <- res_GL$coeff$random_effects[1]
