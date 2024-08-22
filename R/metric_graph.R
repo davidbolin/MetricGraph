@@ -2085,7 +2085,7 @@ metric_graph <-  R6Class("metric_graph",
     private$ref_edges <- map_into_reference_edge(self)
 
     # Updating the edge attributes
-    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights)
+    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights)
 
     for(j in 1:length(self$edges)){
         attr(self$edges[[j]], "PtE") <- NULL
@@ -3464,7 +3464,7 @@ metric_graph <-  R6Class("metric_graph",
   buildDirectionalConstraints = function(alpha = 1){
 
     weight <- self$get_edge_weights()
-    weight <- weight[,private$directional_weights]
+    weight <- as.vector(weight[[private$directional_weights]])
     V_indegree = self$get_degrees("indegree")
     V_outdegree = self$get_degrees("outdegree")
     index_outdegree <- V_outdegree > 0 & V_indegree >0
@@ -3488,8 +3488,8 @@ metric_graph <-  R6Class("metric_graph",
                                       2 * alpha * (in_edges-1)  + alpha + der)
 
 
-          x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges,])),
-                                      as.matrix(self$DirectionalWeightFunction_in(weight[in_edges,])))
+          x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges])),
+                                      as.matrix(self$DirectionalWeightFunction_in(weight[in_edges])))
 
           count <- count + (n_in+1)
           count_constraint <- count_constraint + 1

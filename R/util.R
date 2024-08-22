@@ -1668,7 +1668,11 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
     if(!is.null(attr(x[[i]], "directional_weight"))){
       dw <- attr(x[[i]], "directional_weight")
       w_tmp <- attr(x[[i]], "weight")
-      cat("Directional weight:", w_tmp[[dw]],"\n\n")
+      if(is.data.frame(w_tmp)){
+        cat("Directional weight:", w_tmp[[dw]],"\n\n")
+      } else{
+        cat("Directional weight:", w_tmp,"\n\n")
+      }
     }
 
   }
