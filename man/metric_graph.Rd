@@ -151,7 +151,7 @@ Create a new \code{metric_graph} object.
   project_data = FALSE,
   which_projection = "Winkel tripel",
   manual_edge_lengths = NULL,
-  perform_merges = NULL,
+  perform_merges = FALSE,
   tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
@@ -206,7 +206,7 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{manual_edge_lengths}}{If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the \code{perform_merges} argument to \code{FALSE} or use the \code{set_manual_edge_lengths()} method.}
 
-\item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. If \code{NULL}, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
+\item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. The default option is \code{FALSE}. If \code{NULL}, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{

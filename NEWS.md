@@ -1,6 +1,13 @@
 # MetricGraph (development version)
 * Added an INLA implementation for `alpha=2`.
 * Added a vignette for handling multiple likelihoods in `R-INLA` and `inlabru`, and updated the `graph_spde_data()` function for such cases.
+* Added an INLA implementation for directional models.
+* Added support for directional edge weights.
+* Added support for creating metric graphs from `SSN`, `osmdata_sp` and `osmdata_sf` objects. In such cases, if available, edge weights and data will be automatically added to the graph.
+* Now if one creates the metric graph from `SpatialLinesDataFrame`, `LINESTRING`, `MULTILINESTRING`, etc., if the object contain edge data, they will be automatically added as edge weights.
+* Added an option to not perform merges (which is now the default), that makes the graph creation faster and using less memory.
+* Added vignettes with a river example and with an example of directional models.
+* Updated the vignettes to account for the additions.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.

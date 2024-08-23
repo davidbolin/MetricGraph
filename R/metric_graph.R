@@ -95,7 +95,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
   #' @param manual_edge_lengths If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the `perform_merges` argument to `FALSE` or use the `set_manual_edge_lengths()` method.
-  #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`. If `NULL`, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
+  #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`. The default option is `FALSE`. If `NULL`, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
   #' @param tolerance List that provides tolerances during the construction of the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged (default = 1e-7).
   #' - `vertex_edge` If a vertex at the end of one edge is closer than this
@@ -142,7 +142,7 @@ metric_graph <-  R6Class("metric_graph",
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
                         manual_edge_lengths = NULL,
-                        perform_merges = NULL,
+                        perform_merges = FALSE,
                         tolerance = list(vertex_vertex = 1e-3,
                                          vertex_edge = 1e-3,
                                          edge_edge = 0),
@@ -166,7 +166,7 @@ metric_graph <-  R6Class("metric_graph",
         }
       } else{
         if(is.null(perform_merges)){
-          perform_merges <- TRUE
+          perform_merges <- FALSE
         }
       }
 
@@ -849,7 +849,7 @@ metric_graph <-  R6Class("metric_graph",
       components <- igraph::components(g, mode="weak")
       nc <- components$no
       if(nc>1){
-        message("The graph is disconnected. You can use the function 'graph_components' to obtain the different connected components.")
+        message("The graph is disconnected. You can either use the function 'graph_components' to obtain the different connected components or set 'perform_merges' to 'TRUE' and adjust the 'tolerances' to create a single connected graph.")
         private$connected = FALSE
       }
     }

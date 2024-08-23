@@ -140,7 +140,7 @@ graph$plot()
 ```
 
 ## Tolerances for merging vertices and edges
-The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
+The constructor of the graph has one argument, `perform_merges` and an additional argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
 * `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
 * `vertex_edge` if a vertex at the end of one edge is closer than this number to another edge, this vertex is connected to that edge (the default value is `1e-7`)
@@ -149,7 +149,7 @@ vertex is added at that point and the two edges are connected (the default value
 
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
-following three edges:
+following three edges. We will set `perform_merges` to `TRUE`, to show how they are merged with the default choice of tolerances.
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0.03),c(0,0.75))
@@ -157,20 +157,22 @@ edge3 <- rbind(c(-1,1),c(0.5,0.03))
 edge4 <- rbind(c(0,0.75), c(0,1))
 edge5 <- rbind(c(-1,0), c(-1, 0.9995))
 edges =  list(edge1, edge2, edge3, edge4, edge5)
-graph3 <- metric_graph$new(edges = edges)
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
 ```
 
 We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three edges are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two edges are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05))
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                             tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first edge, so that the two edges there are connected. This can be done by adjusting the `vertex_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                       tolerance = list(vertex_vertex = 0.05,
                                                            vertex_edge = 0.1))
 graph3$plot(degree = TRUE)
 ```
@@ -179,7 +181,8 @@ We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from 
 
 Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                        tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001))
 graph3$plot(degree = TRUE)
@@ -189,7 +192,8 @@ Now, the structure of the metric graph does not change if we add or remove verti
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                        tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001),
                            remove_deg2 = TRUE)
@@ -202,24 +206,22 @@ Observe that one vertex of degree 2 was not removed. This is due to the fact tha
 graph3$plot(direction = TRUE)
 ```
 
-We can also avoid performing these merges by setting the `perform_merges` argument to `FALSE`:
+We can also avoid performing these merges by setting using the default constructor (which is equivalent to set the `perform_merges` argument to `FALSE`):
 
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph4 <- metric_graph$new(edges = edges, perform_merges = FALSE, merge_close_vertices=FALSE)
+graph4 <- metric_graph$new(edges = edges, merge_close_vertices=FALSE)
 graph4$plot(degree = TRUE)
 ```
 
 Observe that the two vertices around the point $(-1,1)$ were merged. This is because there is an additional step to merge close vertices that is performed even 
-if we set `perform_merges` to `FALSE`. To also skip this merge, we can also set `merge_close_vertices` to `FALSE`:
+with `perform_merges` set to `FALSE`. To also skip this merge, we can also set `merge_close_vertices` to `FALSE`:
 
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph4 <- metric_graph$new(edges = edges, perform_merges = FALSE, merge_close_vertices=FALSE)
+graph4 <- metric_graph$new(edges = edges, merge_close_vertices=FALSE)
 graph4$plot(degree = TRUE)
 ```
 
 We can see now that the two vertices around the point $(-1,1)$ were not merged.
-
-It is important to note that if one creates the metric graph passing `V` and `E` (instead of the `edges` argument) and `perform_merges` is `NULL`, then it will be set to `FALSE` internally. So, if one wants to create the metric graph from `V` and `E`, and wants to perform the merges, then, in this case, one needs to manually set `perform_merges` to `TRUE`.
 
 ## Edge lengths
 
