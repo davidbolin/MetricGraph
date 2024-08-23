@@ -6754,6 +6754,8 @@ graph_components <-  R6::R6Class("graph_components",
       edge_weights <- graph$.__enclos_env__$private$edge_weights
     }
 
+    data_tmp <- graph$.__enclos_env__$private$data
+
      if(self$n > 1) {
        self$graphs <- vector(mode = "list", length = self$n)
        for(k in 1:self$n) {
@@ -6775,10 +6777,24 @@ graph_components <-  R6::R6Class("graph_components",
             ew_tmp <- edge_weights[which(ind_keep!=0), , drop= FALSE]
           }
          }
+         if(!is.null(data_tmp)){
+          add_obs_opts <- dots_list[["add_obs_options"]]
+          if(is.null(add_obs_opts)){
+            add_obs_opts <- list()
+          }
+          idx_obs_add <- (data_tmp[[".edge_number"]]%in%edge_keep)
+          data_tmp_graph <- lapply(data_tmp, function(dat){dat[idx_obs_add]})
+          data_tmp_graph[[".edge_number"]] <- match(data_tmp_graph[[".edge_number"]], edge_keep)
+          class(data_tmp_graph) <- "metric_graph_data"
+          add_obs_opts[["data"]] <- data_tmp_graph
+         }
          if(length(graph$edges[which(ind_keep!=0)]) > 0){
           dots_list[["edges"]] <- graph$edges[which(ind_keep!=0)]
           dots_list[["edge_weights"]] <- ew_tmp
           self$graphs[[k]] = do.call(metric_graph$new, dots_list)
+          if(!is.null(data_tmp)){
+            do.call(self$graphs[[k]]$add_observations, add_obs_opts)
+          }
           # metric_graph$new(edges = graph$edges[which(ind_keep!=0)],
           #                                    check_connected = FALSE,
           #                                    edge_weights = ew_tmp, 
