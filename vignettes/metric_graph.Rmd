@@ -209,7 +209,7 @@ graph3$plot(direction = TRUE)
 We can also avoid performing these merges by setting using the default constructor (which is equivalent to set the `perform_merges` argument to `FALSE`):
 
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph4 <- metric_graph$new(edges = edges, merge_close_vertices=FALSE)
+graph4 <- metric_graph$new(edges = edges)
 graph4$plot(degree = TRUE)
 ```
 
