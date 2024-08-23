@@ -518,11 +518,13 @@ metric_graph <-  R6Class("metric_graph",
       message(paste("LongLat is set to",longlat))
       if(longlat){
         message(paste("The unit for edge lengths is", private$length_unit))
-        message(paste0("The current tolerances (in ",private$length_unit,") are:"))
-        message(paste("\t Vertex-Vertex", tolerance$vertex_vertex))
-        message(paste("\t Vertex-Edge", tolerance$vertex_edge))
-        message(paste("\t Edge-Edge", tolerance$edge_edge))
-      } else{
+        if(perform_merges){
+          message(paste0("The current tolerances (in ",private$length_unit,") are:"))
+          message(paste("\t Vertex-Vertex", tolerance$vertex_vertex))
+          message(paste("\t Vertex-Edge", tolerance$vertex_edge))
+          message(paste("\t Edge-Edge", tolerance$edge_edge))
+        }
+      } else if (perform_merges){
         message("The current tolerances are:")
         message(paste("\t Vertex-Vertex", tolerance$vertex_vertex))
         message(paste("\t Vertex-Edge", tolerance$vertex_edge))
@@ -595,11 +597,11 @@ metric_graph <-  R6Class("metric_graph",
       self$set_manual_edge_lengths(edge_lengths = manual_edge_lengths, unit = length_unit)
     }
 
+    if(private$perform_merges){
+
     if(verbose > 0){
       message("Setup edges and merge close vertices")
-    }
-
-    if(private$perform_merges){
+    }      
 
       if(!is.null(manual_edge_lengths)){
         warning("Since 'perform_merges' is TRUE, the manual edge lengths will not be used. Either set 'perform_merges' to FALSE or use the 'set_manual_edge_lengths()' method on the graph after the graph construction.")
@@ -785,6 +787,11 @@ metric_graph <-  R6Class("metric_graph",
 
         # end of if do merges
     } else{
+
+      if(verbose > 0){
+        message("Setting up edges")
+      }          
+
         edges_vertices <- lapply(self$edges, function(edge){
           n_edge <- nrow(edge)
           edge_vert <- edge[c(1,n_edge),]
@@ -797,6 +804,11 @@ metric_graph <-  R6Class("metric_graph",
       self$nV <- nrow(self$V)
 
     lvl <- matrix(0, nrow = length(self$edges), 2)
+
+      if(verbose==2){
+          bar_line_vertex <- msg_progress_bar(length(self$edges))
+      }
+
       for(i in 1:length(self$edges)){
         if(verbose == 2) {
           bar_line_vertex$increment()
@@ -816,6 +828,9 @@ metric_graph <-  R6Class("metric_graph",
       self$E <- lvl[, 1:2, drop = FALSE]
 
       if(merge_close_vertices){
+      if(verbose > 0){
+        message("Merging close vertices")
+      }        
         private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
       }
 
