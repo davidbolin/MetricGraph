@@ -1406,12 +1406,14 @@ predict.inla_metric_graph_spde <- function(object,
     }
     data <- NULL
   }
+
   data <- newdata
   data_coords <- data_coords[[1]]
   if(!(data_coords %in% c("PtE", "euclidean"))){
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }
   graph_tmp <- object$graph_spde$get_initial_graph()
+  graph_tmp$clear_observations()
   # graph_tmp <- object$graph_spde$clone()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
   original_data <- object$original_data
@@ -1508,9 +1510,10 @@ predict.inla_metric_graph_spde <- function(object,
   #                                             graph_tmp$data[[".distance_on_edge"]][idx_list])
 
   new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
-                                              new_data_list[[".distance_on_edge"]])
+                                              new_data_list[[".distance_on_edge"]])                                      
 
   spde____model <- graph_spde(graph_tmp, alpha = object$alpha, directional = object$directional)
+
   cmp_c <- as.character(cmp)
   name_model <- deparse(substitute(object))
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
@@ -1519,6 +1522,7 @@ predict.inla_metric_graph_spde <- function(object,
   new_data_tmp <- graph_data_spde(spde____model, loc_name = name_locations, 
                         drop_all_na = FALSE, drop_na = FALSE, group = group, group_col = group_col,
                         repl_col = repl_col, repl = repl)[["data"]]
+
 
   info <- bru_fit[["bru_info"]]
   info[["options"]] <- inlabru::bru_call_options(inlabru::bru_options(info[["options"]]))
