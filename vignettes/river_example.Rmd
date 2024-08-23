@@ -90,11 +90,13 @@ graph$plot(data = "Summer_mn", vertex_size = 0.5)
 We start with fitting the non directional models. First for `alpha=1`:
 ```{r, message=FALSE}
 #fitting model with different smoothness
-model.wm1 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), graph = graph, model = 'wm1')
+model.wm1 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+                          graph = graph, model = 'wm1')
 ```
 and then for `alpha=2`:
 ```{r, message=FALSE}
-model.wm2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), graph = graph, model = 'wm2')
+model.wm2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+                          graph = graph, model = 'wm2')
 ```
 
 We also create the cross validation results to see how the models perform. Here we see that setting $\alpha=2$, i.e. one time differential, has a much worse performance compared to $\alpha=1$, i.e. continuous but non-differential.
@@ -115,7 +117,9 @@ $$
 This is the default option in `metricGraph` and is created by:
 
 ```{r, message=FALSE, warning=FALSE}
-res.wm1.dir <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), graph = graph, model = 'wmd1')
+res.wm1.dir <- graph_lme(Summer_mn ~ ELEV_DEM + 
+                        SLOPE + as.factor(netID), 
+                        graph = graph, model = 'wmd1')
 ```
 
 Here one can see a big improvement by adding using the directional model over the non directional.
@@ -134,7 +138,8 @@ To make this work in the metricgraph package one uses the following line
 ```{r, message=FALSE, warning=FALSE}
 graph$set_edge_weights(directional_weights = 'h2oAreaKm2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-res.wm1.dir2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), graph = graph, model = 'wmd1')
+res.wm1.dir2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+                                    graph = graph, model = 'wmd1')
 ```
 
 Here we see a slight dip in performance but still much better than the symmetric version.

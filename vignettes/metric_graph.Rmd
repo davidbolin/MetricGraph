@@ -469,7 +469,7 @@ graph5$get_edge_weights()
 
 Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `bicycle` and `alt_name`:
 
-```{r. message=FALSE}
+```{r, message=FALSE}
 graph5 <- metric_graph$new(data_sp, include_edge_weights=c("bicycle", "alt_name"))
 graph5$get_edge_weights()
 ```
