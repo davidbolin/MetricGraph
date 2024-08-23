@@ -183,7 +183,7 @@ Technology (KAUST) as a <code>SpatialLines</code> object:</p>
 also includes the edge data as edge weights:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 489 × 11</span></span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 368 × 11</span></span></span>
 <span><span class="co">##    osm_id   name    bridge highway layer lit   maxspeed maxweight oneway surface</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 1</span> 38085402 Discov… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
@@ -196,7 +196,7 @@ also includes the edge data as edge weights:</p>
 <span><span class="co">## <span style="color: #BCBCBC;"> 8</span> 39426595 Najel … <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        yes    <span style="color: #BB0000;">NA</span>     </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 9</span> 39478848 Discov… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">10</span> 39478849 Explor… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 479 more rows</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># ℹ 358 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: .weights &lt;dbl&gt;</span></span></span></code></pre>
 <p>Now, note that when creating the graph there was a warning saying
 that the graph is not connected, so let us create a
@@ -217,11 +217,11 @@ Thus, we can obtain the range of the edge lengths in the unit m as:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="fu">get_edge_lengths</span><span class="op">(</span>unit<span class="op">=</span><span class="st">"m"</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## Units: [m]</span></span>
-<span><span class="co">## [1]    5.650044 2141.415006</span></span></code></pre>
+<span><span class="co">## [1]    7.120828 1674.529905</span></span></code></pre>
 <p>Observe that it also contains the corresponding edge weights:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">get_edge_weights</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 436 × 11</span></span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 317 × 11</span></span></span>
 <span><span class="co">##    osm_id   name    bridge highway layer lit   maxspeed maxweight oneway surface</span></span>
 <span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 1</span> 38085402 Discov… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
@@ -230,11 +230,11 @@ Thus, we can obtain the range of the edge lengths in the unit m as:</p>
 <span><span class="co">## <span style="color: #BCBCBC;"> 4</span> 39425484 Peace … <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 5</span> 39425550 Island… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
 <span><span class="co">## <span style="color: #BCBCBC;"> 6</span> 39425743 Coral … <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> 39425802 Hammou… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> 39426595 Najel … <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        yes    <span style="color: #BB0000;">NA</span>     </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> 39478848 Discov… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> 39478849 Explor… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
-<span><span class="co">## <span style="color: #949494;"># ℹ 426 more rows</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> 39426595 Najel … <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        yes    <span style="color: #BB0000;">NA</span>     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> 39478848 Discov… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> 39478849 Explor… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    yes   40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> 39478852 Transf… <span style="color: #BB0000;">NA</span>     reside… <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    40       <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>     </span></span>
+<span><span class="co">## <span style="color: #949494;"># ℹ 307 more rows</span></span></span>
 <span><span class="co">## <span style="color: #949494;"># ℹ 1 more variable: .weights &lt;dbl&gt;</span></span></span></code></pre>
 <p>We will also remove the vertices of degree 2 by using the
 <code>prune_vertices()</code> method:</p>
@@ -283,13 +283,13 @@ start of the second edge is:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.2</span><span class="op">)</span>, <span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          [,1]     [,2]</span></span>
-<span><span class="co">## [1,] 39.11751 22.31934</span></span></code></pre>
+<span><span class="co">## [1,] 39.11693 22.31903</span></span></code></pre>
 <p>The function can also be used to find the closest location on the
 graph for a location in Euclidean space:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>XY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">39.117</span>, <span class="fl">22.319</span><span class="op">)</span>, <span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##      [,1]      [,2]</span></span>
-<span><span class="co">## [1,]    2 0.2517662</span></span></code></pre>
+<span><span class="co">## [1,]    2 0.1967297</span></span></code></pre>
 <p>In this case, the <code>normalized</code> argument decides whether
 the returned value should be given in normalized distance or not.</p>
 </div>
@@ -308,7 +308,7 @@ to them in the graph:</p>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
-<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 1.07070750299905</span></span></code></pre>
+<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-11-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -334,7 +334,7 @@ graph:</p>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span><span class="va">points</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
-<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 1.07070750299905</span></span></code></pre>
+<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
 <pre><code><span><span class="co">## Converting data to PtE</span></span></code></pre>
 <pre><code><span><span class="co">## This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.</span></span></code></pre>
 <pre><code><span><span class="co">## [1] y        .coord_x .coord_y</span></span>
@@ -441,7 +441,7 @@ at these locations and plot the result</p>
 <span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
-<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 1.07070750299905</span></span></code></pre>
+<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
 <div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"u"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-16-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -525,7 +525,7 @@ and finally add the data on the graph:</p>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
-<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 1.07070750299905</span></span></code></pre>
+<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-19-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Our goal now is to fit a linear mixed-effects model on this data
 assuming a Whittle-Mat'ern latent model with
@@ -547,19 +547,19 @@ illustrate:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
-<span><span class="co">## (Intercept) -1.13093    0.06936  -16.31   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          0.93551    0.07075   13.22   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          2.04390    0.07075   28.89   &lt;2e-16 ***</span></span></code></pre>
+<span><span class="co">## (Intercept) -1.03352    0.08370  -12.35   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          0.97866    0.08792   11.13   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          2.15766    0.08792   24.54   &lt;2e-16 ***</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## No random effects.</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">## std. dev </span></span>
-<span><span class="co">## 1.550846 </span></span>
+<span><span class="co">## 1.871679 </span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -927.3651</span></span></code></pre>
+<span><span class="co">## Log-Likelihood:  -1021.383</span></span></code></pre>
 <p>Let us now fit the linear mixed-effects model with a Whittle-Mat'ern
 latent model with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>.
@@ -582,31 +582,31 @@ the simplified form:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.1003    0.1186  -9.276  &lt; 2e-16 ***</span></span>
-<span><span class="co">## lon           0.9520    0.1199   7.943 1.98e-15 ***</span></span>
-<span><span class="co">## lat           1.9809    0.1228  16.127  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.0401    0.1517  -6.857 7.04e-12 ***</span></span>
+<span><span class="co">## lon           0.9412    0.1470   6.405 1.50e-10 ***</span></span>
+<span><span class="co">## lat           2.1603    0.1568  13.780  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
-<span><span class="co">##        Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.114433  0.005426  21.088</span></span>
-<span><span class="co">## kappa 11.342685  1.720215   6.594</span></span>
+<span><span class="co">##       Estimate Std.error z-value</span></span>
+<span><span class="co">## tau   0.114200  0.004909  23.263</span></span>
+<span><span class="co">## kappa 8.603391  1.246493   6.902</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma  1.83474   0.09725  18.865</span></span>
-<span><span class="co">## range  0.17633   0.02626   6.715</span></span>
+<span><span class="co">## sigma  2.11098   0.11516  18.331</span></span>
+<span><span class="co">## range  0.23247   0.03349   6.941</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.07662   0.04495   1.704</span></span>
+<span><span class="co">## std. dev  0.07608   0.03744   2.032</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -793.2845 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 27</span></span>
+<span><span class="co">## Log-Likelihood:  -848.8771 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  46.91985 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  39.38221 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
@@ -614,7 +614,7 @@ the simplified form:</p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
 <span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model         alpha</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.076<span style="text-decoration: underline;">6</span>  -<span style="color: #BB0000;">793.</span> <span style="text-decoration: underline;">1</span>599. <span style="text-decoration: underline;">1</span>624.    <span style="text-decoration: underline;">1</span>587.         494 WhittleMatern     1</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.076<span style="text-decoration: underline;">1</span>  -<span style="color: #BB0000;">849.</span> <span style="text-decoration: underline;">1</span>710. <span style="text-decoration: underline;">1</span>735.    <span style="text-decoration: underline;">1</span>698.         494 WhittleMatern     1</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
 <div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -627,7 +627,7 @@ the simplified form:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             sigma_e    sigma     range</span></span>
 <span><span class="co">## Truth    0.10000000 2.000000 0.2000000</span></span>
-<span><span class="co">## Estimate 0.07661709 1.834737 0.1763251</span></span></code></pre>
+<span><span class="co">## Estimate 0.07608172 2.110982 0.2324665</span></span></code></pre>
 <p>Given these estimated parameters, we can now do kriging to estimate
 the field at locations in the graph. As an example, we now obtain
 predictions on the regular mesh that we previously constructed. First,
@@ -752,15 +752,15 @@ end, we need to use the <code>check_euclidean()</code> method:</p>
 the information:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span></span></code></pre></div>
-<pre><code><span><span class="co">## A metric graph with  248  vertices and  397  edges.</span></span>
+<pre><code><span><span class="co">## A metric graph with  183  vertices and  270  edges.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Vertices:</span></span>
-<span><span class="co">##   Degree 1: 12;  Degree 2: 1;  Degree 3: 164;  Degree 4: 67;  Degree 5: 4; </span></span>
-<span><span class="co">##   With incompatible directions:  1 </span></span>
+<span><span class="co">##   Degree 1: 36;  Degree 2: 2;  Degree 3: 84;  Degree 4: 57;  Degree 5: 4; </span></span>
+<span><span class="co">##   With incompatible directions:  2 </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Edges: </span></span>
 <span><span class="co">##   Lengths: </span></span>
-<span><span class="co">##       Min: 0.005650044  ; Max: 2.141415  ; Total: 64.48864 </span></span>
+<span><span class="co">##       Min: 0.009307252  ; Max: 1.67453  ; Total: 57.2171 </span></span>
 <span><span class="co">##   Weights: </span></span>
 <span><span class="co">##       Columns: osm_id name bridge highway layer lit maxspeed maxweight oneway surface .weights </span></span>
 <span><span class="co">##   That are circles:  0 </span></span>
@@ -803,33 +803,33 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.1399    0.1846  -6.175 6.61e-10 ***</span></span>
-<span><span class="co">## lon           0.9183    0.1423   6.454 1.09e-10 ***</span></span>
-<span><span class="co">## lat           2.0044    0.1644  12.194  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -0.7559    0.2414  -3.131  0.00174 ** </span></span>
+<span><span class="co">## lon           0.7939    0.1779   4.464 8.06e-06 ***</span></span>
+<span><span class="co">## lat           2.1339    0.2000  10.669  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    1.71966   0.09721  17.690</span></span>
-<span><span class="co">## kappa 14.04626   2.41997   5.804</span></span>
+<span><span class="co">## tau     1.9929    0.1169  17.041</span></span>
+<span><span class="co">## kappa  10.2489    1.6765   6.113</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.06769   0.04953   1.367</span></span>
+<span><span class="co">## std. dev  0.07373   0.03670   2.009</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -801.5418 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 40</span></span>
+<span><span class="co">## Log-Likelihood:  -855.5699 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 37</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  17.31538 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  16.3083 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
 <span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model  cov_function  </span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.067<span style="text-decoration: underline;">7</span>  -<span style="color: #BB0000;">802.</span> <span style="text-decoration: underline;">1</span>615. <span style="text-decoration: underline;">1</span>640.    <span style="text-decoration: underline;">1</span>603.         494 isoCov exp_covariance</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.073<span style="text-decoration: underline;">7</span>  -<span style="color: #BB0000;">856.</span> <span style="text-decoration: underline;">1</span>723. <span style="text-decoration: underline;">1</span>748.    <span style="text-decoration: underline;">1</span>711.         494 isoCov exp_covariance</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
@@ -896,38 +896,38 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.1225    0.1145  -9.801  &lt; 2e-16 ***</span></span>
-<span><span class="co">## lon           0.9618    0.1199   8.024 1.02e-15 ***</span></span>
-<span><span class="co">## lat           2.0373    0.1179  17.277  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.0756    0.1623  -6.626 3.45e-11 ***</span></span>
+<span><span class="co">## lon           0.9738    0.1742   5.591 2.26e-08 ***</span></span>
+<span><span class="co">## lat           2.1695    0.1734  12.515  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau   0.109437  0.006147  17.803</span></span>
-<span><span class="co">## kappa 2.993409  0.383903   7.797</span></span>
+<span><span class="co">## tau   0.112918  0.005124  22.037</span></span>
+<span><span class="co">## kappa 2.116053  0.273700   7.731</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma  3.73454   0.14569  25.633</span></span>
-<span><span class="co">## range  0.66813   0.07945   8.409</span></span>
+<span><span class="co">## sigma   4.3049    0.1988  21.654</span></span>
+<span><span class="co">## range   0.9452    0.1215   7.777</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.05041   0.08726   0.578</span></span>
+<span><span class="co">## std. dev  0.07861   0.03842   2.046</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -792.0891 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 491</span></span>
+<span><span class="co">## Log-Likelihood:  -853.8109 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 501</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.43174 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.50548 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
 <span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model          alpha</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.050<span style="text-decoration: underline;">4</span>  -<span style="color: #BB0000;">792.</span> <span style="text-decoration: underline;">1</span>596. <span style="text-decoration: underline;">1</span>621.    <span style="text-decoration: underline;">1</span>584.         494 GraphLaplacian     1</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.078<span style="text-decoration: underline;">6</span>  -<span style="color: #BB0000;">854.</span> <span style="text-decoration: underline;">1</span>720. <span style="text-decoration: underline;">1</span>745.    <span style="text-decoration: underline;">1</span>708.         494 GraphLaplacian     1</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
@@ -971,7 +971,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="va">graph_pred</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">new_data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
-<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 1.07070750299905</span></span></code></pre>
+<pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
 <p>Let us now fit the model with all data:</p>
 <div class="sourceCode" id="cb92"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_gl_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph_pred</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span>,</span>
@@ -986,31 +986,31 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept) -1.11486   0.09908  -11.25   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          0.92625   0.08130   11.39   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          2.07185   0.08080   25.64   &lt;2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -1.0393    0.1246  -8.343   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon           1.0647    0.1013  10.508   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat           2.1256    0.1062  20.022   &lt;2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.16682   0.02479   6.730</span></span>
-<span><span class="co">## kappa  1.74728   0.42127   4.148</span></span>
+<span><span class="co">## tau    0.13963   0.02073   6.737</span></span>
+<span><span class="co">## kappa  1.71054   0.43577   3.925</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   3.2066    0.1942  16.512</span></span>
-<span><span class="co">## range   1.1446    0.2376   4.817</span></span>
+<span><span class="co">## sigma   3.8720    0.2298  16.849</span></span>
+<span><span class="co">## range   1.1692    0.2470   4.734</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev   0.9317    0.1017   9.162</span></span>
+<span><span class="co">## std. dev   1.1062    0.1094   10.12</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -896.1099 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 501</span></span>
+<span><span class="co">## Log-Likelihood:  -984.1238 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 467</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  7.37986 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  6.24366 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -1082,8 +1082,8 @@ parameters. To view the estimates we can use the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.865990 0.1020060   1.679720 1.861790   2.080050 1.841690</span></span>
-<span><span class="co">## range 0.179401 0.0273715   0.132663 0.176923   0.239909 0.171518</span></span></code></pre>
+<span><span class="co">## sigma 2.141660 0.1245040   1.913750 2.135380   2.395570 2.105520</span></span>
+<span><span class="co">## range 0.228432 0.0343016   0.168755 0.225766   0.303213 0.220253</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mi>κ</mi></mrow><annotation encoding="application/x-tex">2/\kappa</annotation></semantics></math>)
 instead of
@@ -1104,9 +1104,9 @@ estimated values with the true values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 1.865991 1.8416900</span></span>
-<span><span class="co">## 2     range  0.2 0.179401 0.1715182</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 2.1416627 2.1055234</span></span>
+<span><span class="co">## 2     range  0.2 0.2284316 0.2202531</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">

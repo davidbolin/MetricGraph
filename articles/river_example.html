@@ -119,11 +119,10 @@ they go downwards along the river.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>To create the graph, we simply pass the <code>SSN</code> object as
 edges. This will automatically extract the correct coordinate reference
-system (CRS). We will also set <code>perform_merges</code> to
-<code>FALSE</code> to speed the creation. We have found that, typically,
-<code>SSN</code> objects do not require merges.</p>
+system (CRS). We have found that, typically, <code>SSN</code> objects do
+not require merges.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">mf04p</span>, perform_merges <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">mf04p</span><span class="op">)</span></span></code></pre></div>
 <p>Observe that this already added, by default, the observations and
 edge weights contained in the <code>SSN</code> object:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
