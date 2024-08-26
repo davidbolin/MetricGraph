@@ -10,7 +10,7 @@ Maintainer: David Bolin <davidbolin@gmail.com>
 Description: Facilitates creation and manipulation of metric graphs, such as street or river networks. Further facilitates operations and visualizations of data on metric graphs, and the creation of a large class of random fields and stochastic partial differential equations on such spaces. These random fields can be used for simulation, prediction and inference. In particular, linear mixed effects models including random field components can be fitted to data based on computationally efficient sparse matrix representations. Interfaces to the R packages 'INLA' and 'inlabru' are also provided, which facilitate working with Bayesian statistical models on metric graphs. The main references for the methods are Bolin, Simas and Wallin (2024) <doi:10.3150/23-BEJ1647>, Bolin, Kovacs, Kumar and Simas (2023) <doi:10.1090/mcom/3929> and Bolin, Simas and Wallin (2023) <doi:10.48550/arXiv.2304.03190> and <doi:10.48550/arXiv.2304.10372>.
 License: GPL (>=2)
 Imports: stats, ggplot2, igraph, sf, rSPDE (>= 2.3.3), Matrix, methods,  Rcpp (>= 1.0.5), R6, lifecycle, sp, dplyr, tidyr, magrittr, broom, zoo, ggnewscale
-Suggests: knitr, testthat, INLA (>= 22.12.14), inlabru, osmdata, sn,  plotly, parallel, optimParallel, numDeriv, SSN2
+Suggests: knitr, testthat, INLA (>= 22.12.14), inlabru, osmdata, sn,  plotly, parallel, optimParallel, numDeriv, SSN2, cowplot
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 BugReports: https://github.com/davidbolin/MetricGraph/issues
 URL: https://davidbolin.github.io/MetricGraph/
