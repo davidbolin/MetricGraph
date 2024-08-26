@@ -81,7 +81,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-08-08. Last
-modified: 2024-08-23.</h4>
+modified: 2024-08-26.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/river_example.Rmd" class="external-link"><code>vignettes/river_example.Rmd</code></a></small>
       <div class="d-none name"><code>river_example.Rmd</code></div>
@@ -195,8 +195,8 @@ i.e. continuous but non-differential.</p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 5</span></span></span>
 <span><span class="co">##   logscore  crps scrps   mae  rmse</span></span>
 <span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>    0.791 0.279 0.719 0.364 0.509</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span>    0.816 0.289 0.737 0.378 0.523</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>    0.787 0.277 0.717 0.358 0.503</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span>    0.814 0.287 0.737 0.375 0.517</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="directional-models">Directional models<a class="anchor" aria-label="anchor" href="#directional-models"></a>
@@ -228,9 +228,9 @@ model over the non directional.</p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 3 × 5</span></span></span>
 <span><span class="co">##   logscore  crps scrps   mae  rmse</span></span>
 <span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>    0.791 0.279 0.719 0.364 0.509</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span>    0.816 0.289 0.737 0.378 0.523</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span>    0.379 0.214 0.536 0.296 0.399</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>    0.787 0.277 0.717 0.358 0.503</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span>    0.814 0.287 0.737 0.375 0.517</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span>    0.382 0.214 0.538 0.296 0.399</span></span></code></pre>
 <p>We could use other constraints. For instance in .. the authors used
 constraint not so the sum is equal but rather the variance of the in is
 constant which is obtained by
@@ -253,10 +253,10 @@ the symmetric version.</p>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 4 × 5</span></span></span>
 <span><span class="co">##   logscore  crps scrps   mae  rmse</span></span>
 <span><span class="co">##      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>    0.791 0.279 0.719 0.364 0.509</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span>    0.816 0.289 0.737 0.378 0.523</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">3</span>    0.379 0.214 0.536 0.296 0.399</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">4</span>    0.498 0.228 0.597 0.320 0.408</span></span></code></pre>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>    0.787 0.277 0.717 0.358 0.503</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span>    0.814 0.287 0.737 0.375 0.517</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span>    0.382 0.214 0.538 0.296 0.399</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span>    0.503 0.228 0.597 0.318 0.409</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
