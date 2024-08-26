@@ -379,7 +379,7 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
       graph$buildDirectionalConstraints(1)
     }
 
-    Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=1, build=TRUE)
+    Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=BC, build=TRUE)
     n_const <- length(graph$CoB$S)
     ind.const <- c(1:n_const)
     Tc <- graph$CoB$T[-ind.const, ]

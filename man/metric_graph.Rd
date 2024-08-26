@@ -145,11 +145,13 @@ Create a new \code{metric_graph} object.
   crs = NULL,
   proj4string = NULL,
   which_longlat = "sp",
+  include_obs = NULL,
+  include_edge_weights = NULL,
   project = FALSE,
   project_data = FALSE,
   which_projection = "Winkel tripel",
   manual_edge_lengths = NULL,
-  perform_merges = NULL,
+  perform_merges = FALSE,
   tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
@@ -157,6 +159,7 @@ Create a new \code{metric_graph} object.
   factor_merge_close_vertices = 1,
   remove_circles = TRUE,
   verbose = 1,
+  add_obs_options = list(return_removed = FALSE, verbose = verbose),
   lines = deprecated()
 )}\if{html}{\out{</div>}}
 }
@@ -164,7 +167,7 @@ Create a new \code{metric_graph} object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{edges}}{A list containing coordinates as \verb{m x 2} matrices (that is, of \code{matrix} type) or m x 2 data frames (\code{data.frame} type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type \code{SpatialLinesDataFrame} or \code{SpatialLines} (from \code{sp} package) or \code{MULTILINESTRING} (from \code{sf} package).}
+\item{\code{edges}}{A list containing coordinates as \verb{m x 2} matrices (that is, of \code{matrix} type) or m x 2 data frames (\code{data.frame} type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type \code{SSN}, \code{osmdata_sp}, \code{osmdata_sf}, \code{SpatialLinesDataFrame} or \code{SpatialLines} (from \code{sp} package) or \code{MULTILINESTRING} (from \code{sf} package).}
 
 \item{\code{V}}{n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.}
 
@@ -191,6 +194,10 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{which_longlat}}{Compute the distance using which package? The options are \code{sp} and \code{sf}. The default is \code{sp}.}
 
+\item{\code{include_obs}}{If the object is of class \code{SSN}, should the observations be added? If \code{NULL} and the edges are of class \code{SSN}, the data will be automatically added. If \code{FALSE}, the data will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the observations to be added as observations.}
+
+\item{\code{include_edge_weights}}{If the object is of class \code{SSN}, \code{osmdata_sp}, \code{osmdata_sf}, \code{SpatialLinesDataFrame}, \code{MULTILINESTRING}, \code{LINESTRING}, \code{sfc_LINESTRING}, \code{sfc_MULTILINESTRING}, should the edge data (if any) be added as edge weights? If \code{NULL}, the edge data will be added as edge weights, if \code{FALSE} they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights}
+
 \item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
 
 \item{\code{project_data}}{If \code{longlat} is \code{TRUE} should the vertices be project to planar coordinates? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
@@ -199,7 +206,7 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{manual_edge_lengths}}{If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the \code{perform_merges} argument to \code{FALSE} or use the \code{set_manual_edge_lengths()} method.}
 
-\item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. If \code{NULL}, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
+\item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. The default option is \code{FALSE}. If \code{NULL}, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
@@ -230,6 +237,8 @@ are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If
 
 \item{\code{verbose}}{Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
+\item{\code{add_obs_options}}{List containing additional options to be passed to the \code{add_observations()} method when adding observations from \code{SSN} data?}
+
 \item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
 }
 \if{html}{\out{</div>}}
@@ -254,7 +263,7 @@ A \code{metric_graph} object.
 Sets the edge weights
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(
-  weights = rep(1, self$nE),
+  weights = NULL,
   kirchhoff_weights = NULL,
   directional_weights = NULL
 )}\if{html}{\out{</div>}}
@@ -1028,8 +1037,8 @@ Add observations to the metric graph.
 \describe{
 \item{\code{data}}{A \code{data.frame} or named list containing the observations. In
 case of groups, the data.frames for the groups should be stacked vertically,
-with a column indicating the index of the group. \code{data} can also be an \code{sf} object or a
-\code{SpatialPointsDataFrame} object.
+with a column indicating the index of the group. \code{data} can also be an \code{sf} object, a
+\code{SpatialPointsDataFrame} object or an \code{SSN} object.
 in which case \code{data_coords} will automatically be spatial, and there is no need to specify the \code{coord_x} or \code{coord_y} arguments.}
 
 \item{\code{edge_number}}{Column (or entry on the list) of the \code{data} that

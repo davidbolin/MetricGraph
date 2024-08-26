@@ -1662,13 +1662,21 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
     if(!is.null(attr(x[[i]], "kirchhoff_weight"))){
       kw <- attr(x[[i]], "kirchhoff_weight")
       w_tmp <- attr(x[[i]], "weight")
-      cat("Kirchhoff weight:", w_tmp[[kw]],"\n\n")
+      if(is.data.frame(w_tmp)){
+        cat("Kirchhoff weight:", w_tmp[[kw]],"\n\n")
+      } else{
+        cat("Kirchhoff weight:", w_tmp,"\n\n")
+      }
     }
     
     if(!is.null(attr(x[[i]], "directional_weight"))){
       dw <- attr(x[[i]], "directional_weight")
       w_tmp <- attr(x[[i]], "weight")
-      cat("Directional weight:", w_tmp[[dw]],"\n\n")
+      if(is.data.frame(w_tmp)){
+        cat("Directional weight:", w_tmp[[dw]],"\n\n")
+      } else{
+        cat("Directional weight:", w_tmp,"\n\n")
+      }
     }
 
   }
@@ -1754,9 +1762,21 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
     if(!is.null(attr(x, "kirchhoff_weight"))){
       kw <- attr(x, "kirchhoff_weight")
       w_tmp <- attr(x, "weight")
-      cat("Kirchhoff weight:", w_tmp[[kw]],"\n\n")
+      if(is.data.frame(w_tmp)){
+        cat("Kirchhoff weight:", w_tmp[[kw]],"\n\n")
+      } else{
+        cat("Kirchhoff weight:", w_tmp,"\n\n")
+      }
     }    
-
+    if(!is.null(attr(x, "directional_weight"))){
+      dw <- attr(x, "directional_weight")
+      w_tmp <- attr(x, "weight")
+      if(is.data.frame(w_tmp)){
+        cat("Directional weight:", w_tmp[[dw]],"\n\n")
+      } else{
+        cat("Directional weight:", w_tmp,"\n\n")
+      }
+    }
 }
 
 

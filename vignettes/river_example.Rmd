@@ -63,35 +63,41 @@ mf04p <- ssn_import(
   predpts = c("pred1km", "CapeHorn"),
   overwrite = TRUE
 )
-
-graph <- metric_graph$new(mf04p$edges$geometry, perform_merges = FALSE)
-
-obs_coords <- sf::st_coordinates(mf04p$obs)
-
-data <- data.frame(coordx      = obs_coords[,1],
-                   coordy      = obs_coords[,2],
-                   y                = mf04p$obs$Summer_mn,
-                   elev             = mf04p$obs$ELEV_DEM,
-                   slope            = mf04p$obs$SLOPE,
-                   netid            = as.factor(mf04p$obs$netID))
-graph$add_observations(data = data,
-                       data_coords = "spatial",
-                       coord_x = "coordx",
-                       coord_y = "coordy")
 ```
 
+To create the graph, we simply pass the `SSN` object as edges. This will automatically extract the correct coordinate reference system (CRS). We have found that, typically, `SSN` objects do not require merges.
+
+```{r, message=FALSE}
+graph <- metric_graph$new(mf04p)
+```
+
+Observe that this already added, by default, the observations and edge weights contained in the `SSN` object:
+
+```{r}
+graph$get_data()
+```
+and
+```{r}
+graph$get_edge_weights()
+```
 
 We can now visualize the river and the data 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
-graph$plot(data = "y", vertex_size = 0.5)
+graph$plot(data = "Summer_mn", vertex_size = 0.5)
 ```
 # Non directional models
-We start with fitting the non directional models. 
+We start with fitting the non directional models. First for `alpha=1`:
 ```{r, message=FALSE}
 #fitting model with different smoothness
-model.wm1 <- graph_lme(y ~ elev + slope + netid, graph = graph, model = 'wm1')
-model.wm2 <- graph_lme(y ~ elev + slope + netid, graph = graph, model = 'wm2')
+model.wm1 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+                          graph = graph, model = 'wm1')
 ```
+and then for `alpha=2`:
+```{r, message=FALSE}
+model.wm2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+                          graph = graph, model = 'wm2')
+```
+
 We also create the cross validation results to see how the models perform. Here we see that setting $\alpha=2$, i.e. one time differential, has a much worse performance compared to $\alpha=1$, i.e. continuous but non-differential.
 
 ```{r, echo=TRUE}
@@ -99,7 +105,6 @@ cross.wm1 <-posterior_crossvalidation(model.wm1)
 cross.wm2 <-posterior_crossvalidation(model.wm2)
 
 cross.scores <- rbind(cross.wm1$scores,cross.wm2$scores)
-rownames(cross.scores) <- c("alpha=1","alpha=2")
 print(cross.scores)
 ```
 # Directional models
@@ -111,7 +116,9 @@ $$
 This is the default option in `metricGraph` and is created by:
 
 ```{r, message=FALSE, warning=FALSE}
-res.wm1.dir <- graph_lme(y ~ elev + slope + netid, graph = graph, model = 'wmd1')
+res.wm1.dir <- graph_lme(Summer_mn ~ ELEV_DEM + 
+                        SLOPE + as.factor(netID), 
+                        graph = graph, model = 'wmd1')
 ```
 
 Here one can see a big improvement by adding using the directional model over the non directional.
@@ -125,13 +132,13 @@ We could use other constraints. For instance in .. the authors used constraint n
 $$
 u_{e_3}(v) = \sqrt{w_1}u_{e_1}(v) + \sqrt{w_2}u_{e_2}(v).
 $$
-here the weights are set by the edge variable `h2`.
+here the weights are set by the edge weight `h2oAreaKm2`.
 To make this work in the metricgraph package one uses the following line
 ```{r, message=FALSE, warning=FALSE}
-graph$set_edge_weights(weights= data.frame(h2 = mf04p$edges$h2oAreaKm2), 
-                  directional_weights = 'h2')
+graph$set_edge_weights(directional_weights = 'h2oAreaKm2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-res.wm1.dir2 <- graph_lme(y ~ elev+slope + netid, graph = graph, model = 'wmd1')
+res.wm1.dir2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+                                    graph = graph, model = 'wmd1')
 ```
 
 Here we see a slight dip in performance but still much better than the symmetric version.

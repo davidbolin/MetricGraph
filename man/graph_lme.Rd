@@ -12,7 +12,7 @@ graph_lme(
   optim_method = "L-BFGS-B",
   possible_methods = "L-BFGS-B",
   model_options = list(),
-  BC = 0,
+  BC = 1,
   previous_fit = NULL,
   fix_coeff = FALSE,
   parallel = FALSE,

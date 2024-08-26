@@ -50,7 +50,7 @@ library(plotly)
 This is a tutorial for working with directional models.
 
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
   edge1 <- rbind(c(1,0),c(0,0))
   edge2 <- rbind(c(1+sqrt(0.5),sqrt(0.5)),c(1,0))
   edge3 <- rbind(c(1+sqrt(0.5),-sqrt(0.5)),c(1,0))

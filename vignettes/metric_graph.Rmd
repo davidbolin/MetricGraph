@@ -140,7 +140,7 @@ graph$plot()
 ```
 
 ## Tolerances for merging vertices and edges
-The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
+The constructor of the graph has one argument, `perform_merges` and an additional argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
 * `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
 * `vertex_edge` if a vertex at the end of one edge is closer than this number to another edge, this vertex is connected to that edge (the default value is `1e-7`)
@@ -149,7 +149,7 @@ vertex is added at that point and the two edges are connected (the default value
 
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
-following three edges:
+following three edges. We will set `perform_merges` to `TRUE`, to show how they are merged with the default choice of tolerances.
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0.03),c(0,0.75))
@@ -157,20 +157,22 @@ edge3 <- rbind(c(-1,1),c(0.5,0.03))
 edge4 <- rbind(c(0,0.75), c(0,1))
 edge5 <- rbind(c(-1,0), c(-1, 0.9995))
 edges =  list(edge1, edge2, edge3, edge4, edge5)
-graph3 <- metric_graph$new(edges = edges)
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
 ```
 
 We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three edges are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two edges are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05))
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                             tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first edge, so that the two edges there are connected. This can be done by adjusting the `vertex_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                       tolerance = list(vertex_vertex = 0.05,
                                                            vertex_edge = 0.1))
 graph3$plot(degree = TRUE)
 ```
@@ -179,7 +181,8 @@ We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from 
 
 Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                        tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001))
 graph3$plot(degree = TRUE)
@@ -189,7 +192,8 @@ Now, the structure of the metric graph does not change if we add or remove verti
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                        tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001),
                            remove_deg2 = TRUE)
@@ -202,24 +206,22 @@ Observe that one vertex of degree 2 was not removed. This is due to the fact tha
 graph3$plot(direction = TRUE)
 ```
 
-We can also avoid performing these merges by setting the `perform_merges` argument to `FALSE`:
+We can also avoid performing these merges by setting using the default constructor (which is equivalent to set the `perform_merges` argument to `FALSE`):
 
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph4 <- metric_graph$new(edges = edges, perform_merges = FALSE, merge_close_vertices=FALSE)
+graph4 <- metric_graph$new(edges = edges)
 graph4$plot(degree = TRUE)
 ```
 
 Observe that the two vertices around the point $(-1,1)$ were merged. This is because there is an additional step to merge close vertices that is performed even 
-if we set `perform_merges` to `FALSE`. To also skip this merge, we can also set `merge_close_vertices` to `FALSE`:
+with `perform_merges` set to `FALSE`. To also skip this merge, we can also set `merge_close_vertices` to `FALSE`:
 
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph4 <- metric_graph$new(edges = edges, perform_merges = FALSE, merge_close_vertices=FALSE)
+graph4 <- metric_graph$new(edges = edges, merge_close_vertices=FALSE)
 graph4$plot(degree = TRUE)
 ```
 
 We can see now that the two vertices around the point $(-1,1)$ were not merged.
-
-It is important to note that if one creates the metric graph passing `V` and `E` (instead of the `edges` argument) and `perform_merges` is `NULL`, then it will be set to `FALSE` internally. So, if one wants to create the metric graph from `V` and `E`, and wants to perform the merges, then, in this case, one needs to manually set `perform_merges` to `TRUE`.
 
 ## Edge lengths
 
@@ -408,9 +410,9 @@ library(osmdata)
 call <- opq(getbb("Copenhagen"))
 call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
                                                       "secondary"))
-data <- osmdata_sp(call)
+data_sp <- osmdata_sp(call)
 
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
+graph5 <- metric_graph$new(SpatialLines(data_sp$osm_lines@lines))
 graph5$plot(vertex_size = 0)
 ```
 
@@ -426,7 +428,7 @@ graph, and it also makes it difficult to interpret results (unless one has a
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+graph5 <- metric_graph$new(SpatialLines(data_sp$osm_lines@lines), longlat = TRUE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
 Latitude and that distances should be calculated in km. So if we now look at the
@@ -436,10 +438,10 @@ range(graph5$get_edge_lengths())
 ```
 
 Alternatively, and more conveniently, whenever the `SpatialLines` object has a valid `proj4string`, it will automatically use this `proj4string` to set the
-correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osm_lines` object:
+correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osmdata_sp` object:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data$osm_lines)
+graph5 <- metric_graph$new(data_sp)
 ```
 
 We can see now that `graph5` automatically has the correct CRS:
@@ -454,6 +456,26 @@ We can also check the edge lengths:
 range(graph5$get_edge_lengths())
 ```
 
+Another advantage of adding the `osmdata` object, is that the metric graph automatically adds the edge observations as `edge_weights`:
+
+```{r}
+graph5$get_edge_weights()
+```
+
+If one does not want to have the edge weights added, one must set `include_edge_weights` to `FALSE`:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sp, include_edge_weights=FALSE)
+graph5$get_edge_weights()
+```
+
+Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `bicycle` and `alt_name`:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sp, include_edge_weights=c("bicycle", "alt_name"))
+graph5$get_edge_weights()
+```
+
 The same idea also works is one has an `sf` object instead. Let us obtain the `sf` version from the `osmdata` object:
 
 ```{r}
@@ -463,7 +485,7 @@ data_sf <- osmdata_sf(call)
 We can now directly create the metric graph object:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data_sf$osm_lines)
+graph5 <- metric_graph$new(data_sf)
 ```
 
 Let us check that `graph5` still has the correct CRS:
@@ -476,13 +498,21 @@ and the correct edge lengths:
 range(graph5$get_edge_lengths())
 ```
 
+Also, that it has the edge weights:
+
+```{r}
+graph5$get_edge_weights()
+```
+
+The argument `include_edge_weights` can also be used in same manner for `osmdata_sf` objects.
+
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
 the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE, message=FALSE}
-graphs <- graph_components$new(data$osm_lines)
+graphs <- graph_components$new(data_sp)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -507,7 +537,7 @@ min(graph5$get_edge_lengths(unit='m'))
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
-graphs <- graph_components$new(data$osm_lines,
+graphs <- graph_components$new(data_sp,
                                tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0)
 ```
@@ -535,6 +565,12 @@ and
 graph5$edges
 ```
 
+Also observe that it has the corresponding edge weights:
+
+```{r}
+graph5$get_edge_weights()
+```
+
 It is also relevant to obtain a summary of this graph:
 
 ```{r}
@@ -542,6 +578,66 @@ summary(graph5)
 ```
 
 We have that this graph does not have Euclidean edges. Also observe that we have the units for the vertices and lengths, and also the coordinate reference system being used by this object.
+
+Alternatively, one can also add create metric graphs from `SSN` objects. All one needs to do is to directly pass the `SSN` object as `edges`. This will also ensure that the correct `CRS` is used. For example:
+
+```{r, message=FALSE}
+library(SSN2)
+
+copy_lsn_to_temp()
+path <- file.path(tempdir(), "MiddleFork04.ssn")
+
+mf04p <- ssn_import(
+  path = path,
+  predpts = c("pred1km", "CapeHorn"),
+  overwrite = TRUE
+)
+
+river_graph <- metric_graph$new(mf04p)
+```
+
+Let us take a look at the graph:
+
+```{r}
+river_graph$plot()
+```
+
+Similarly to `osmdata` objects, when using `SSN` objects, the edge observations are also added as edge weights:
+
+```{r}
+river_graph$get_edge_weights()
+```
+
+The argument `include_edge_weights` can also be used in same manner for `SSN` objects.
+
+However, for `SSN` objects, observations are also automatically added in the metric graph creation:
+
+```{r}
+river_graph$get_data()
+```
+
+With respect to addition of data in `SSN` objects, we have the option `include_obs` that acts in the same manner as the `include_edge_weights` argument. For example, one can choose to not include the data by setting `include_obs` to `FALSE`:
+
+```{r, message=FALSE}
+river_graph <- metric_graph$new(mf04p, include_obs = FALSE)
+```
+
+Let us confirm that no data was added:
+```{r, error=TRUE}
+river_graph$get_data()
+```
+
+Finally, one can select which columns to add, by passing the names (or numbers) of the columns as the `include_edge_weights` argument.
+
+```{r, message=FALSE}
+river_graph <- metric_graph$new(mf04p, include_obs = c("SLOPE", "Summer_mn"))
+```
+
+and the data:
+
+```{r}
+river_graph$get_data()
+```
 
 # Adding data to the graph 
 
@@ -626,6 +722,46 @@ Finally, let us obtain a summary of the graph containing data:
 
 ```{r}
 summary(graph)
+```
+
+
+When dealing with `SSN` objects, one can also directly add the `SSN` object as data:
+
+```{r, message=FALSE}
+river_graph$clear_observations()
+river_graph$add_observations(data = mf04p)
+```
+
+We can see that the data has been added correctly:
+
+```{r}
+river_graph$get_data()
+```
+
+We can also plot the data:
+
+```{r}
+river_graph$plot(data = "Summer_mn", vertex_size = 0.25)
+```
+
+Let us clear the observations from the river graph:
+
+```{r}
+river_graph$clear_observations()
+```
+
+One can also directly add `sf` objects into the metric graph. For example, the object `mf04p$obs` is an `sf` object.
+
+We can also add the obsevations as:
+
+```{r, message=FALSE}
+river_graph$add_observations(data = mf04p$obs)
+```
+
+We can see that the observations have been added accordingly:
+
+```{r}
+river_graph$get_data()
 ```
 
 # Working with functions on metric graphs
