@@ -42,6 +42,7 @@ references:
 knitr::opts_chunk$set(echo = TRUE)
 set.seed(1)
 library(MetricGraph)
+library(plotly)
 ```
 
 # Introduction
@@ -51,8 +52,8 @@ This is a tutorial for working with directional models.
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
   edge1 <- rbind(c(1,0),c(0,0))
-  edge2 <- rbind(c(1.75,1),c(1,0))
-  edge3 <- rbind(c(1.75,-1),c(1,0))
+  edge2 <- rbind(c(1+sqrt(0.5),sqrt(0.5)),c(1,0))
+  edge3 <- rbind(c(1+sqrt(0.5),-sqrt(0.5)),c(1,0))
   edges = list(edge1,edge2,edge3)
   graph <- metric_graph$new(edges = edges)
   graph$plot(direction = T)
@@ -104,6 +105,8 @@ u <- sample_spde(kappa = kappa, tau = tau, alpha = alpha, directional=T,
 graph$plot_function(X = u, plotly = TRUE)
 ```
 
+
+
 ```{r, echo=T}
 PtE_resp <- rbind(c(2,0.5),
                c(3,0.5))
@@ -115,10 +118,9 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph$mesh$PtE,
                             type = "PtE",
                             directional = T)
-graph$plot_function(X = Eu, plotly = TRUE)
-```
-
-```{r, echo=T}
+fig<- graph$plot_function(X = Eu, plotly = TRUE)
+fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
+print(fig)
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
 Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph,
@@ -127,5 +129,8 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph$mesh$PtE,
                             type = "PtE",
                             directional = T)
-graph$plot_function(X = Eu, plotly = TRUE)
+fig <- graph$plot_function(X = Eu, plotly = TRUE)
+fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
+print(fig) 
+
 ```
