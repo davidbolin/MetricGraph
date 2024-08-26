@@ -1,3 +1,108 @@
+
+#' Variancefor Whittle-Matérn fields
+#'
+#' Computes the variance function for a Whittle-Matérn field.
+#' Warning is not feasible for large graph due to matrix inversion
+#' @param kappa Parameter kappa from the SPDE.
+#' @param tau Parameter tau from the SPDE.
+#' @param range Range parameter.
+#' @param sigma Standard deviation parameter.
+#' @param alpha Smoothness parameter (1 or 2).
+#' @param graph A `metric_graph` object.
+#' @param BC boundary conditions
+#' @param directional bool is the model a directional or not. directional only works for alpha=1
+#' @details Compute the variance \eqn{\rho(s_i,s_i)}{\rho(s_i,s_i)} where
+#' eqn{s_i}{s_i} are all locations in the mesh
+#' of the graph.
+#' @return Vector with the variance function evaluate at the mesh locations.
+#' @export
+#'
+spde_variance <- function( kappa,
+                           tau,
+                           range,
+                           sigma,
+                           alpha,
+                           graph,
+                           BC = 1,
+                           directional = F){
+
+
+  check <- check_graph(graph)
+
+  if(!check$has.mesh) {
+    stop("No mesh provided.")
+  }
+
+  if(alpha == 1) {
+    if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
+      stop("You should either provide either kappa and tau, or sigma and range.")
+    } else if(!missing(sigma) && !missing(range)){
+      nu <- 1 - 0.5
+      kappa <- sqrt(8 * nu) / range
+      tau <- sqrt(gamma(nu) / (sigma^2 * kappa^(2 * nu) *
+                                 (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+    }
+
+
+    #compute covariance of the two edges of EP[1]
+    #vs every other edge
+    if(!directional){
+      Q <- spde_precision(kappa = kappa, tau = tau,
+                          alpha = 1, graph = graph, BC)
+      Sigma <- solve(Q,sparse=FALSE)
+    }else{
+      Q <- Qalpha1_edges(c( tau,kappa),
+                         graph,
+                         w = 0,
+                         BC=1, build=T)
+      if(is.null(graph$C)){
+        graph$buildDirectionalConstraints(alpha = 1)
+      }
+      n_const <- length(graph$CoB$S)
+      ind.const <- c(1:n_const)
+      Tc <- graph$CoB$T[-ind.const,]
+      Q <- Tc %*% Q %*% t(Tc)
+      Sigma = t(Tc) %*% Matrix::solve(Q,Tc,sparse=F)
+    }
+
+
+    # compute covariance between two edges and the point
+    # covariance of a point to an edge
+    #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
+
+    C <- c()
+    inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
+    for (i in inds_PtE) {
+      l <- graph$edge_lengths[i]
+      t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+      if(!directional){
+        ind <- graph$E[i, ]
+      }else{
+        ind <- c(2*(i-1)+1,2*(i-1)+2)
+      }
+
+      D_matrix <- as.matrix(dist(c(0, l, l * t_s)))
+      S <- r_1(D_matrix, kappa = kappa, tau = tau)
+
+      #covariance update
+      E.ind <- c(1:2)
+      Obs.ind <- -E.ind
+      Bt <- solve(S[E.ind, E.ind, drop = FALSE],
+                  S[E.ind, Obs.ind, drop = FALSE])
+      C_P <-  S[Obs.ind, Obs.ind]   + t(Bt) %*% (Sigma[ind, ind] -S[E.ind, E.ind]) %*% Bt
+
+      C <- c(C, diag(C_P))
+    }
+
+  }else if (alpha == 2) {
+    stop("alpha 2 not yet implemented.")
+  } else {
+    stop("alpha should be 1 or 2.")
+  }
+  return(C)
+}
+
+
 #' Covariance function for Whittle-Matérn fields
 #'
 #' Computes the covariance function for a Whittle-Matérn field.

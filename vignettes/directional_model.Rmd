@@ -5,8 +5,8 @@ date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{An example with directional models}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 references:
 - id: BSW2022a
   title: "Gaussian Whittle--Matérn fields on metric graphs"
@@ -36,6 +36,26 @@ references:
   type: preprint
   issued:
     year: 2023
+- id: HPT2006
+  title: "Spatial statistical models that use flow and stream distance"
+  author:
+  - family: Ver Hoef
+    given: Jay M.
+  - family: Peterson
+    given: Erin
+  - family: Theobald
+    given: David
+  container-title: Environmental and Ecological Statistics
+  volume: 13
+  pages: 449-464
+  issued:
+    year: 2006
+  publisher: Springer
+  type: article
+
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -43,12 +63,17 @@ knitr::opts_chunk$set(echo = TRUE)
 set.seed(1)
 library(MetricGraph)
 library(plotly)
+library(cowplot)
 ```
 
 # Introduction
 
-This is a tutorial for working with directional models.
-
+This is a tutorial for working with Gaussian processes on directional
+tree graphs. We introduce how the directional models differ from the
+non-directional. We also show how a few different boundary conidtions
+gives different behavior, with boundary conditions we mean how edges are
+connected. As the basic graph we create a very simple directional graph
+$\Gamma$.
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
   edge1 <- rbind(c(1,0),c(0,0))
@@ -60,68 +85,127 @@ This is a tutorial for working with directional models.
 
 ```
 
-The covariance is assymetric on nodes
-```{r, echo=T}
+# Symmetric vs directional
 
+In [Gaussian random fields on metric graphs](random_fields.html) we have
+studied the symmetric Whittle--Matérn field which is the solution to $$
+  (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
+$$ Here we instead we instead looking for solution on the form $$
+  (\kappa - d_s)^{\alpha} \tau u = \mathcal{W}.
+$$ We only consider the case $\alpha=1$. The only difference between the
+process is how the boundary conditions are constructed. For the
+symmetric field we impose the boundary condition for a vertex $v$ $$
+\mathcal{K} = \left\{ \forall e,\tilde{e} \in \mathcal{E}_v : 
+        u_e(v) =  u_{\tilde{e}}
+        \right\}.
+$$ While the default boundary condition for the directional graph for
+vertex $v$ is to let the outgoing edges, \$ \mathcal{E}\^s_v\$, equal
+the average of the in-going edges, \$ \mathcal{E}\^s_v\$ i.e. 
+$$
+\mathcal{K}_1 = \left\{ \forall e \in \mathcal{E}_v^s : 
+        u_e(v) =  \frac{1}{|\mathcal{E}_v^e|}\sum_{\hat{e} \in \mathcal{E}_v^e} u_{\hat{e}}.
+        \right\}.
+$$
+We explore the covariance of both upstream dependence (against the direction) by examining node located at the middle of the first edge, $e_1(0.5)$,
+and the downstream behaviour through the node $e_3(0.5)$.
+
+```{r, echo=T}
 graph$build_mesh(h=0.01)
-kappa <- 1 
+kappa <- 0.1
 tau   <- 1
-alpha <- 1
-P <- c(1, 0.5)
-C<-spde_covariance(P,kappa=kappa,tau=tau,
+P1 <- c(1, 0.5)
+P2 <- c(3, 0.5)
+C.dir <-spde_covariance(P1,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
                             directional = T)
-graph$plot_function(X = C, plotly = TRUE)
-```
-
-The covariance is upstream
-```{r, echo=T}
-P <- c(3, 0.5)
-C<-spde_covariance(P,kappa=kappa,tau=tau,
+C.sym <-spde_covariance(P1,kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph,
+                            directional = F)
+fig.sym <- graph$plot_function(X = C.sym,line_width=2,vertex_size=2) 
+fig.dir <- graph$plot_function(X = C.dir,line_width=2,vertex_size=2) 
+C.dir2 <-spde_covariance(P2,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
                             directional = T)
-graph$plot_function(X = C, plotly = TRUE)
+C.sym2 <-spde_covariance(P2,kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph,
+                            directional = F)
+fig.sym2 <- graph$plot_function(X = C.sym2 ,line_width=2,vertex_size=2) 
+fig.dir2 <- graph$plot_function(X = C.dir2 ,line_width=2,vertex_size=2) 
+plot_grid(fig.sym + theme(legend.position="none"),
+          fig.dir + theme(legend.position="none"), 
+          fig.sym2 + theme(legend.position="none"),
+          fig.dir2 + theme(legend.position="none"))
 ```
 
 
-Using istotropic variances
-```{r, echo=T}
+Here one can see that the with directional model creates independence between edges that are meeting by inwards direction.
 
-graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-C<-spde_covariance(P,kappa=kappa,tau=tau,
+
+# Special boundary condition
+
+When imposing the boundary condition $\mathcal{K}$ or $\mathcal{K}_1$ the variance of the field is non-istorpic. Where the symmetric boundary conditions the variance around vertex of degree three has a smaller variability, while for the directional only the outward direction creates a smaller variability.
+
+```{r, echo=T}
+kappa = 1 #change to larger value for better figures
+var.dir <-spde_variance(P2,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
                             directional = T)
-graph$plot_function(X = C, plotly = TRUE)
+var.sym <-spde_variance(P2,kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph,
+                            directional = F)
+fig.sym <- graph$plot_function(X = var.sym ,line_width=2,vertex_size=2) 
+fig.dir <- graph$plot_function(X = var.dir ,line_width=2,vertex_size=2) 
+plot_grid(fig.sym + theme(legend.position="none"),
+          fig.dir + theme(legend.position="none"))
 ```
 
-Lets examine the posterior mean by adding two locations
+In [@HPT2006](https://link.springer.com/article/10.1007/s10651-006-0022-8) they introduced a different type of boundary condition namely
+$$
+\mathcal{K}_2 = \left\{ \forall e \in \mathcal{E}_v^s : 
+        u_e(v) =  \sum_{\hat{e} \in \mathcal{E}_v^e}\sqrt{\frac{1}{|\mathcal{E}_v^e|}} u_{\hat{e}}.
+        \right\}.
+$$
+If one imposes this boundary condition one gets that variance of the Gaussian processes on the graph is isotropic. In one line we can change the boundary conditions so they follow these boundary conditions:
+
 ```{r, echo=T}
-
-u <- sample_spde(kappa = kappa, tau = tau, alpha = alpha, directional=T,
-                 graph = graph, type = "mesh")
-graph$plot_function(X = u, plotly = TRUE)
+graph2 <- graph$clone()
+graph2$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
+```
+And we can see that the variance now isotropic:
+```{r, echo=T}
+C<-spde_variance(kappa=kappa,tau=tau,
+                            alpha=1,
+                            graph=graph2,
+                            directional = T)
+graph2$plot_function(X = C, plotly = F)
 ```
 
-
+However, the isotropic processes it creates non energy conserving conditional expectations, in that the posterior expectation of the outward direction is greater then the average of the inwards direction on a vertex of degree greater than two. This can be seen by adding two observations on the edge and plot the posterior mean of the field
 
 ```{r, echo=T}
 PtE_resp <- rbind(c(2,0.5),
                c(3,0.5))
 resp <- c(1,1)
 Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
-                            graph,
-                            resp, #resp must be in the graph's internal order
+                            graph2,
+                            resp, 
                             PtE_resp,
-                            graph$mesh$PtE,
+                            graph2$mesh$PtE,
                             type = "PtE",
                             directional = T)
-fig<- graph$plot_function(X = Eu, plotly = TRUE)
+fig<- graph2$plot_function(X = Eu, plotly = TRUE)
 fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
-print(fig)
-graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
+fig
+```
+
+While for $\mathcal{K}_1$ there is no increase in energy.
+```{r, echo=T}
 Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph,
                             resp, #resp must be in the graph's internal order
@@ -131,6 +215,5 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             directional = T)
 fig <- graph$plot_function(X = Eu, plotly = TRUE)
 fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
-print(fig) 
-
+fig
 ```

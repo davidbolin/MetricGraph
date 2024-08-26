@@ -54,6 +54,7 @@ export(simulate_spacetime)
 export(spde_covariance)
 export(spde_metric_graph_result)
 export(spde_precision)
+export(spde_variance)
 export(summarise)
 export(t)
 if (getRversion() >= "3.6.0") {
