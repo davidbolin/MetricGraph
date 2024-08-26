@@ -123,6 +123,7 @@ reference:
     contents:
     - exp_covariance
     - spde_covariance
+    - spde_variance
   - title: Datasets
     contents:
     - pems
