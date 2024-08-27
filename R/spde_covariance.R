@@ -11,8 +11,8 @@
 #' @param graph A `metric_graph` object.
 #' @param BC boundary conditions
 #' @param directional bool is the model a directional or not. directional only works for alpha=1
-#' @details Compute the variance \eqn{\rho(s_i,s_i)}{\rho(s_i,s_i)} where
-#' eqn{s_i}{s_i} are all locations in the mesh
+#' @details Compute the variance \eqn{\rho(s_i,s_i)} where
+#' \eqn{s_i} are all locations in the mesh
 #' of the graph.
 #' @return Vector with the variance function evaluate at the mesh locations.
 #' @export

@@ -31,7 +31,7 @@ Computes the variance function for a Whittle-Matérn field.
 Warning is not feasible for large graph due to matrix inversion
 }
 \details{
-Compute the variance \eqn{\rho(s_i,s_i)}{\rho(s_i,s_i)} where
-eqn{s_i}{s_i} are all locations in the mesh
+Compute the variance \eqn{\rho(s_i,s_i)} where
+\eqn{s_i} are all locations in the mesh
 of the graph.
 }
