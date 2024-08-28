@@ -72,6 +72,7 @@ graph. The weights are given by the edge lengths.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
+\item \href{#method-metric_graph-remove_small_circles}{\code{metric_graph$remove_small_circles()}}
 \item \href{#method-metric_graph-set_edge_weights}{\code{metric_graph$set_edge_weights()}}
 \item \href{#method-metric_graph-get_edge_weights}{\code{metric_graph$get_edge_weights()}}
 \item \href{#method-metric_graph-get_vertices_incomp_dir}{\code{metric_graph$get_vertices_incomp_dir()}}
@@ -254,6 +255,28 @@ viewed as a vertex.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-remove_small_circles"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-remove_small_circles}{}}}
+\subsection{Method \code{remove_small_circles()}}{
+Sets the edge weights
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$remove_small_circles(tolerance, verbose = 1)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{tolerance}}{Tolerance at which circles with length less than this will be removed.}
+
+\item{\code{verbose}}{Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}

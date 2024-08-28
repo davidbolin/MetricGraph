@@ -160,6 +160,8 @@ metric_graph <-  R6Class("metric_graph",
 
       add_data_tmp <- FALSE
 
+      private$project_data <- project_data
+
       if(!is.null(manual_edge_lengths)){
         if(is.null(perform_merges)){
           perform_merges <- FALSE
@@ -907,6 +909,16 @@ metric_graph <-  R6Class("metric_graph",
     private$initial_graph <- self$clone()
 
   },
+
+  #' @description Sets the edge weights
+  #' @param tolerance Tolerance at which circles with length less than this will be removed.
+#' @param verbose Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @return No return value. Called for its side effects.
+
+  remove_small_circles = function(tolerance, verbose = 1){
+    private$remove_circles(tolerance, verbose=verbose,longlat = private$longlat, unit=private$length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=private$which_longlat, vertex_unit=private$vertex_unit, project_data = private$project_data)
+  },
+
 
   #' @description Sets the edge weights
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
@@ -6048,6 +6060,8 @@ metric_graph <-  R6Class("metric_graph",
   #grouping variables when adding data
 
   group_variables = NULL,
+
+  project_data = NULL,
 
   # Warning if edges with different weights have been merged
 
