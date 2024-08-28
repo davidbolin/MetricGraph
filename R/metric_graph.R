@@ -1917,12 +1917,13 @@ metric_graph <-  R6Class("metric_graph",
   #' @description Removes vertices of degree 2 from the metric graph.
   #' @return No return value. Called for its side effects.
   #' @param check_weights If `TRUE` will only prune edges with different weights.
+  #' @param check_circles If `TRUE` will not prune a vertex such that the resulting edge is a circle.
  #' @param verbose Print progress of pruning. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @details
     #' Vertices of degree 2 are removed as long as the corresponding edges that
     #' would be merged are compatible in terms of direction.
     #'
-  prune_vertices = function(check_weights = TRUE, verbose = FALSE){
+  prune_vertices = function(check_weights = TRUE, check_circles = TRUE, verbose = FALSE){
     t <- system.time({
     degrees <- private$compute_degrees()$degrees
 
@@ -1996,8 +1997,13 @@ metric_graph <-  R6Class("metric_graph",
        #message(sprintf("removing vertex %d of %d.", k, to.prune))
        k <- k + 1
      }
-     res <- private$remove.first.deg2(res)
+     res <- private$remove.first.deg2(res, check_circles = check_circles)
    }
+    if(verbose == 2){
+      if(!is.null(res$circles_avoided)){
+        message("Some vertices were not pruned due in order to avoid creating circles. Turn 'check_circles' to FALSE to prune these vertices.")
+      }
+    }
    })
     if(verbose  > 0){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -5812,7 +5818,7 @@ metric_graph <-  R6Class("metric_graph",
   },
 
 
-  remove.first.deg2 = function(res) {
+  remove.first.deg2 = function(res, check_circles) {
     ind <- which(res$degrees==2 & !res$problematic)
     res.out <- res
     if(length(ind)>0) {
@@ -5820,92 +5826,95 @@ metric_graph <-  R6Class("metric_graph",
       ind <- ind[1]
       e1 <- which(self$E[,2]==ind)
       e2 <- which(self$E[,1]==ind)
-      order_edges <- order(c(e1,e2))
-      e_rem <- c(e1,e2)[order_edges]
 
-      # Finding the right order, so the edges can be merged.
+      if(!check_circles || (self$E[e1,1] != self$E[e2,2])){
+          order_edges <- order(c(e1,e2))
+          e_rem <- c(e1,e2)[order_edges]
 
-      which_line_starts <- which(order_edges == 1)
+          # Finding the right order, so the edges can be merged.
 
-      v1 <- setdiff(self$E[e_rem[1],],ind)
-      v2 <- setdiff(self$E[e_rem[2],],ind)
+          which_line_starts <- which(order_edges == 1)
 
-      if(v1 > ind) {
-        v1 <- v1-1
-      }
-      if(v2 > ind) {
-        v2 <- v2 - 1
-      }
+          v1 <- setdiff(self$E[e_rem[1],],ind)
+          v2 <- setdiff(self$E[e_rem[2],],ind)
 
-      # Making sure it is not a single circle
+          if(v1 > ind) {
+            v1 <- v1-1
+          }
+          if(v2 > ind) {
+            v2 <- v2 - 1
+          }
 
-      if( e_rem[1] != e_rem[2]){
+          # Making sure it is not a single circle
 
-         coords <- self$edges[[e_rem[1]]] #line from v1 to v.rem
-         tmp <- self$edges[[e_rem[2]]] #line from v.rem to v2
+          if( e_rem[1] != e_rem[2]){
+          
+             coords <- self$edges[[e_rem[1]]] #line from v1 to v.rem
+             tmp <- self$edges[[e_rem[2]]] #line from v.rem to v2
 
-        if(which_line_starts == 1){
-           coords <- rbind(coords, tmp)
-           E_new <- matrix(c(v1,v2),1,2)
-        } else{
-           coords <- rbind(tmp,coords)
-           E_new <- matrix(c(v2,v1),1,2)
-        }
+            if(which_line_starts == 1){
+               coords <- rbind(coords, tmp)
+               E_new <- matrix(c(v1,v2),1,2)
+            } else{
+               coords <- rbind(tmp,coords)
+               E_new <- matrix(c(v2,v1),1,2)
+            }
 
 
-      # } else{
-      #   E_new1 <- self$E[e1,1]
-      #   E_new2 <- self$E[e2,2]
+          # } else{
+          #   E_new1 <- self$E[e1,1]
+          #   E_new2 <- self$E[e2,2]
 
-      #   if(E_new1 > ind){
-      #     E_new1 <- E_new1 - 1
-      #   }
-      #   if(E_new2 > ind){
-      #     E_new2 <- E_new2 -1
-      #   }
-      #   E_new <- matrix(c(E_new1, E_new2),1,2)
-      # }
+          #   if(E_new1 > ind){
+          #     E_new1 <- E_new1 - 1
+          #   }
+          #   if(E_new2 > ind){
+          #     E_new2 <- E_new2 -1
+          #   }
+          #   E_new <- matrix(c(E_new1, E_new2),1,2)
+          # }
 
-      # Updating the merged graph
+          # Updating the merged graph
 
-      res.out$degrees <- res$degrees[-ind]
-      res.out$problematic <- res$problematic[-ind]
+          res.out$degrees <- res$degrees[-ind]
+          res.out$problematic <- res$problematic[-ind]
 
-      #update vertices
-      self$V <- self$V[-ind,]
-      self$vertices[[ind]] <- NULL
-      self$nV <- self$nV - 1
-      # for(i in ind:length(self$vertices)){
-      #   attr(self$vertices[[i]], "id") <- attr(self$vertices[[i]], "id") - 1
-      # }
+          #update vertices
+          self$V <- self$V[-ind,]
+          self$vertices[[ind]] <- NULL
+          self$nV <- self$nV - 1
+          # for(i in ind:length(self$vertices)){
+          #   attr(self$vertices[[i]], "id") <- attr(self$vertices[[i]], "id") - 1
+          # }
 
-      #update edges
-      self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
-      self$E <- self$E[-e_rem[2],,drop=FALSE]
-      self$E[e_rem[1],] <- E_new
-      self$edges[[e_rem[1]]] <- coords
-      self$edges <- self$edges[-e_rem[2]]
-      # for(i in e_rem[2]:length(self$edges)){
-      #     attr(self$edges[[i]], "id") <- attr(self$edges[[i]], "id") - 1
-      # }
-      # attr(self$edges[[e_rem[1]]], "id") <- e_rem[1]
+          #update edges
+          self$E[self$E >= ind] <- self$E[self$E >= ind] - 1
+          self$E <- self$E[-e_rem[2],,drop=FALSE]
+          self$E[e_rem[1],] <- E_new
+          self$edges[[e_rem[1]]] <- coords
+          self$edges <- self$edges[-e_rem[2]]
+          # for(i in e_rem[2]:length(self$edges)){
+          #     attr(self$edges[[i]], "id") <- attr(self$edges[[i]], "id") - 1
+          # }
+          # attr(self$edges[[e_rem[1]]], "id") <- e_rem[1]
 
-      self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
-      self$edge_lengths <- self$edge_lengths[-e_rem[2]]
+          self$edge_lengths[e_rem[1]] <- self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]
+          self$edge_lengths <- self$edge_lengths[-e_rem[2]]
 
-      self$nE <- self$nE - 1
+          self$nE <- self$nE - 1
 
-      if(is.vector(private$edge_weights)){
-        if(private$edge_weights[e_rem[2]] != private$edge_weights[e_rem[1]]){
-            private$prune_warning <- TRUE
-        }
-        private$edge_weights <- private$edge_weights[-e_rem[2]]
-      } else{
-        if(any(private$edge_weights[e_rem[2],] != private$edge_weights[e_rem[1],])){
-            private$prune_warning <- TRUE
-        }
-        private$edge_weights <- private$edge_weights[-e_rem[2],]
-      }
+          if(is.vector(private$edge_weights)){
+            if(private$edge_weights[e_rem[2]] != private$edge_weights[e_rem[1]]){
+                private$prune_warning <- TRUE
+            }
+            private$edge_weights <- private$edge_weights[-e_rem[2]]
+          } else{
+            if(any(private$edge_weights[e_rem[2],] != private$edge_weights[e_rem[1],])){
+                private$prune_warning <- TRUE
+            }
+            private$edge_weights <- private$edge_weights[-e_rem[2],]
+          }
+          }
 
       # attr(self$edges[[e_rem[1]]], "longlat") <- private$longlat
       # class(self$edges[[e_rem[1]]]) <- "metric_graph_edge"
@@ -5919,6 +5928,10 @@ metric_graph <-  R6Class("metric_graph",
       # } else{
       #   attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1],]
       # }
+      } else{
+          res.out$degrees <- res$degrees[-ind]
+          res.out$problematic <- res$problematic[-ind]
+          res.out$circles_avoided <- TRUE
       }
     }
     class(self$edges) <- "metric_graph_edges"

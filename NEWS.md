@@ -8,6 +8,7 @@
 * Added an option to not perform merges (which is now the default), that makes the graph creation faster and using less memory.
 * Added vignettes with a river example and with an example of directional models.
 * Updated the vignettes to account for the additions.
+* `prune_vertices` now has an option to avoid creating circles when pruning.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.
