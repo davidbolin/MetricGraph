@@ -3884,7 +3884,7 @@ metric_graph <-  R6Class("metric_graph",
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = petrov)
+    fem_temp <- MetricGraph:::assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = petrov)
     self$mesh$C <- fem_temp$C
     self$mesh$G <- fem_temp$G
     self$mesh$B <- fem_temp$B
@@ -3904,6 +3904,9 @@ metric_graph <-  R6Class("metric_graph",
           h <- rep(0,length(edges.mesh))
           for(j in 1:length(edges.mesh)) {
             V.e <- self$mesh$E[edges.mesh[j],which(self$mesh$E[edges.mesh[j],]!=i)]
+            if(length(V.e) == 0){
+              V.e <- self$mesh$E[edges.mesh[j],1]
+            }
             E.e <- self$mesh$VtE[V.e,1] #the edge the mesh node is on
             # w[j] <- attr(self$edges[[E.e]],"weight")
             kw <- attr(self$edges[[E.e]], "kirchhoff_weight")
@@ -5270,7 +5273,7 @@ metric_graph <-  R6Class("metric_graph",
         ind <- c(self$E[ei,1], self$E[ei,2])
         dists <- c(0,1)
       }
-
+      
       ind2 <- sort(sort(abs(dists - PtE[i, 2]), index.return = TRUE)$ix[1:2])
       v1 <- ind[ind2[1]] #vertex "before" the point
       v2 <- ind[ind2[2]] #vertex "after" the point
@@ -5278,26 +5281,36 @@ metric_graph <-  R6Class("metric_graph",
       d2 <- dists[ind2[2]] #distance on the edge of the point after
 
       #find the "edge" in the mesh on which the point is
-      e <- which(rowSums((self$mesh$E == v1) + (self$mesh$E == v2)) == 2)
-
+      if(v1 != v2){
+        # if they are different, only consider edges with different vertices as endpoints
+        valid_ind <- (rowSums(self$mesh$E == v1) > 0) & (rowSums(self$mesh$E == v2) > 0)
+        e <- which(valid_ind & (rowSums(self$mesh$E == v1) + rowSums(self$mesh$E == v2) == 2))
+      } else{
+        e <- which(rowSums((self$mesh$E == v1)) == 2)
+      }
       # Handle the case of multiple edges
       # In the case the edge lengths are different, we can identify
       # In the case they are equal, we cannot identify, but it does not matter, as there is no difference then.
+      e_bkp <- e
       if(length(e)>1){
        ind <- which(self$edge_lengths[ei] == self$mesh$h_e[e])
        e <- e[ind]
        e <- e[1]
       }
-
-    for(ei in e){
-      if (self$mesh$E[ei, 1] == v1) { #edge starts in the vertex before
-        d <- (PtE[i, 2] - d1)/(d2 - d1)
-      } else {
-        d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
+      # a loop might have been split into smaller parts, in this case, we simply get the first
+      if(self$edge_lengths[ei] == sum(self$mesh$h_e[e_bkp])){
+        e <- e_bkp[which(self$mesh$E[e_bkp,1] == v1)]
+        e <- e[1]
       }
-        PtE_update[i, ] <- c(e, d)
-      }
-    }
+      for(ei in e){
+        if (self$mesh$E[ei, 1] == v1) { #edge starts in the vertex before
+          d <- (PtE[i, 2] - d1)/(d2 - d1)
+        } else {
+          d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
+        }
+          PtE_update[i, ] <- c(e, d)
+        }
+    } 
     return(PtE_update)
   },
 
