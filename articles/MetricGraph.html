@@ -606,7 +606,7 @@ the simplified form:</p>
 <span><span class="co">## Number of function calls by 'optim' = 26</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  37.66709 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  37.75201 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
 <div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
@@ -822,7 +822,7 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## Number of function calls by 'optim' = 37</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  12.50017 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  12.39636 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
@@ -920,7 +920,7 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## Number of function calls by 'optim' = 501</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.26688 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.24957 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
 <div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -1010,7 +1010,7 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## Number of function calls by 'optim' = 467</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  6.62978 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  6.40143 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
@@ -1104,9 +1104,9 @@ estimated values with the true values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 2.1416625 2.105523</span></span>
-<span><span class="co">## 2     range  0.2 0.2284315 0.220253</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  2.0 2.1416627 2.1055235</span></span>
+<span><span class="co">## 2     range  0.2 0.2284318 0.2202533</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
