@@ -81,7 +81,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-08-27.</h4>
+modified: 2024-08-28.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -241,8 +241,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.382907 0.0858026   0.234405 0.376857   0.569217 0.366014</span></span>
-<span><span class="co">## range   2.135720 0.8957230   0.897988 1.964810   4.362910 1.669570</span></span></code></pre>
+<span><span class="co">## std.dev 0.382906 0.0858023   0.234405 0.376857   0.569215 0.366013</span></span>
+<span><span class="co">## range   2.135760 0.8958550   0.897898 1.964810   4.363320 1.669530</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -260,8 +260,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3829068 0.3660138</span></span>
-<span><span class="co">## 2     range  2.0 2.1357228 1.6695702</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3829062 0.3660133</span></span>
+<span><span class="co">## 2     range  2.0 2.1357601 1.6695334</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -369,7 +369,7 @@ exposure terms</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
 <span><span class="co">## 1   std.dev  0.5 0.4777652 0.4771374</span></span>
-<span><span class="co">## 2     range  2.0 2.3275497 2.3087254</span></span></code></pre>
+<span><span class="co">## 2     range  2.0 2.3275495 2.3087256</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
