@@ -158,7 +158,7 @@ Create a new \code{metric_graph} object.
   remove_deg2 = FALSE,
   merge_close_vertices = NULL,
   factor_merge_close_vertices = 1,
-  remove_circles = TRUE,
+  remove_circles = FALSE,
   verbose = 1,
   add_obs_options = list(return_removed = FALSE, verbose = verbose),
   lines = deprecated()

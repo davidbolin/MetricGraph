@@ -150,7 +150,7 @@ metric_graph <-  R6Class("metric_graph",
                         remove_deg2 = FALSE,
                         merge_close_vertices = NULL,
                         factor_merge_close_vertices = 1,
-                        remove_circles = TRUE,
+                        remove_circles = FALSE,
                         verbose = 1,
                         add_obs_options = list(return_removed = FALSE,
                                                 verbose = verbose),
@@ -849,6 +849,17 @@ metric_graph <-  R6Class("metric_graph",
        if(verbose == 2){
       message(sprintf("time: %.3f s", t[["elapsed"]]))
          }
+    }
+
+    if(!private$perform_merges){
+      if(is.logical(remove_circles)){
+        if(remove_circles){
+          private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        }
+      } else {
+        private$remove_circles(remove_circles, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+        remove_circles <- TRUE
+      }
     }
 
     end_construction_time <- Sys.time()
@@ -5777,6 +5788,9 @@ metric_graph <-  R6Class("metric_graph",
           }
 
           self$edges <- self$edges[-ind]
+          if(!is.null(self$edge_lengths)){
+            self$edge_lengths <- self$edge_lengths[-ind]
+          }
           self$E <- self$E[-ind,]
           self$nE <- self$nE - length(ind)
           if(is.vector(private$edge_weights)){
