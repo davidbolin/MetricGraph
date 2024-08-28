@@ -75,8 +75,8 @@ We begin by loading the `rSPDE` and `MetricGraph` packages:
 As an example, we consider the following metric graph
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
   edge1 <- rbind(c(0,0),c(1,0))
-  edge2 <- rbind(c(0,1),c(0,0))
-  edge3 <- rbind(c(-1,1),c(0,1))
+  edge2 <- rbind(c(0,0),c(0,1))
+  edge3 <- rbind(c(0,1),c(-1,1))
   theta <- seq(from=pi,to=3*pi/2,length.out = 20)
   edge4 <- cbind(sin(theta),1+ cos(theta))
   edges = list(edge1, edge2, edge3, edge4)
@@ -128,7 +128,7 @@ If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to mu
 by the function `fem_basis` in the metric graph object. To illustrate this, let us simulate 
 some observation locations on the graph and construct the matrix:
 ```{r} 
-obs.per.edge <- 4
+obs.per.edge <- 100
 obs.loc <- NULL
 for(i in 1:graph$nE) {
   obs.loc <- rbind(obs.loc,
