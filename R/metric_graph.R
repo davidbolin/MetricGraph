@@ -3784,9 +3784,9 @@ metric_graph <-  R6Class("metric_graph",
      for (i in 1:length(self$edges)) {
        if (is.null(n)) {
          #remove boundary points
-         self$mesh$n_e[i] <- max(ceiling(self$edge_lengths[i] / h) + 1 - 2,1)
+         self$mesh$n_e[i] <- ceiling(self$edge_lengths[i] / h) + 1 - 2
        } else {
-         self$mesh$n_e[i] <- max(n,1)
+         self$mesh$n_e[i] <- n
        }
        if (self$mesh$n_e[i] > 0) {
          d.e <- seq(from = 0, to = 1, length.out = self$mesh$n_e[i] + 2)
