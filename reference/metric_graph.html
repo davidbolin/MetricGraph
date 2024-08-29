@@ -226,7 +226,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  project_data <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  which_projection <span class="op">=</span> <span class="st">"Winkel tripel"</span>,</span>
 <span>  manual_edge_lengths <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  perform_merges <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  perform_merges <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>vertex_vertex <span class="op">=</span> <span class="fl">0.001</span>, vertex_edge <span class="op">=</span> <span class="fl">0.001</span>, edge_edge <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  check_connected <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  remove_deg2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -317,7 +317,7 @@ in Longitude/Latitude and that distances should be computed in meters. If <code>
 
 
 <dt><code>perform_merges</code></dt>
-<dd><p>There are three options, <code>NULL</code>, <code>TRUE</code> or <code>FALSE</code>. The default option is <code>FALSE</code>. If <code>NULL</code>, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional <code>merge_close_vertices</code> below) will be performed. Note that the merge on the additional <code>merge_close_vertices</code> might still be performed, if it is set to <code>TRUE</code>.</p></dd>
+<dd><p>There are three options, <code>NULL</code>, <code>TRUE</code> or <code>FALSE</code>. The default option is <code>NULL</code>. If <code>NULL</code>, it will be set to <code>FALSE</code> unless 'edges', 'V' and 'E' are <code>NULL</code>, in which case it will be set to <code>TRUE</code>. If FALSE, this will take priority over the other arguments, and no merges (except the optional <code>merge_close_vertices</code> below) will be performed. Note that the merge on the additional <code>merge_close_vertices</code> might still be performed, if it is set to <code>TRUE</code>.</p></dd>
 
 
 <dt><code>tolerance</code></dt>
