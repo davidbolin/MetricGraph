@@ -95,7 +95,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
   #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
   #' @param manual_edge_lengths If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the `perform_merges` argument to `FALSE` or use the `set_manual_edge_lengths()` method.
-  #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`. The default option is `FALSE`. If `NULL`, it will be determined automatically. If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
+  #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`. The default option is `NULL`. If `NULL`, it will be set to `FALSE` unless 'edges', 'V' and 'E' are `NULL`, in which case it will be set to `TRUE`. If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
   #' @param tolerance List that provides tolerances during the construction of the graph:
   #' - `vertex_vertex` Vertices that are closer than this number are merged (default = 1e-7).
   #' - `vertex_edge` If a vertex at the end of one edge is closer than this
@@ -142,7 +142,7 @@ metric_graph <-  R6Class("metric_graph",
                         project_data = FALSE,
                         which_projection = "Winkel tripel",
                         manual_edge_lengths = NULL,
-                        perform_merges = FALSE,
+                        perform_merges = NULL,
                         tolerance = list(vertex_vertex = 1e-3,
                                          vertex_edge = 1e-3,
                                          edge_edge = 0),
@@ -161,16 +161,6 @@ metric_graph <-  R6Class("metric_graph",
       add_data_tmp <- FALSE
 
       private$project_data <- project_data
-
-      if(!is.null(manual_edge_lengths)){
-        if(is.null(perform_merges)){
-          perform_merges <- FALSE
-        }
-      } else{
-        if(is.null(perform_merges)){
-          perform_merges <- FALSE
-        }
-      }
 
       if(is.null(merge_close_vertices)){
           merge_close_vertices <- TRUE
@@ -501,6 +491,24 @@ metric_graph <-  R6Class("metric_graph",
         }
     }
 
+    if(is.null(edges) && is.null(V) && is.null(E)) {
+      edges <- logo_lines()
+        if(is.null(perform_merges)){
+          perform_merges <- TRUE
+          remove_circles <- TRUE
+        }      
+    }
+
+    if(!is.null(manual_edge_lengths)){
+        if(is.null(perform_merges)){
+          perform_merges <- FALSE
+        }
+      } else{
+        if(is.null(perform_merges)){
+          perform_merges <- FALSE
+        }
+      }
+
     factor_unit <- process_factor_unit(private$vertex_unit, private$length_unit)
 
     tolerance_default = list(vertex_vertex = 1e-7,
@@ -546,15 +554,13 @@ metric_graph <-  R6Class("metric_graph",
     PtE_tmp_edge_edge <- NULL
     PtE_tmp_edge_vertex <- NULL
 
+
     if(!(perform_merges %in% c(TRUE,FALSE))){
       stop("perform_merges should be either TRUE or FALSE.")
     }
 
     private$perform_merges <- perform_merges
 
-    if(is.null(edges) && is.null(V) && is.null(E)) {
-      edges <- logo_lines()
-    }
     if(!is.null(edges)){
       if(!is.null(V) || !is.null(E)){
         warning("object initialized from edges, then E and V are ignored")
