@@ -891,7 +891,7 @@ metric_graph <-  R6Class("metric_graph",
     # creating/updating reference edges
     private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
 
-    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights)
+    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
     self$setDirectionalWeightFunction()
 
     if (remove_deg2) {
@@ -946,7 +946,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @return No return value. Called for its side effects.
 
   set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
-      directional_weights = NULL){
+      directional_weights = NULL, verbose = 0){
     if(!is.vector(weights) && !is.data.frame(weights) && !is.null(weights)){
       stop("'weights' must be either a vector or a data.frame!")
     }
@@ -1040,6 +1040,11 @@ metric_graph <-  R6Class("metric_graph",
 
     edge_lengths_ <- self$get_edge_lengths()
 
+    if(verbose==2){
+                message("Updating attributes of the edges")
+                bar_update_attr_edges <- msg_progress_bar(length(self$edges))
+    }
+
     self$edges <- lapply(1:self$nE, function(i){
       edge <- self$edges[[i]]
       if(is.vector(private$edge_weights)){
@@ -1054,6 +1059,9 @@ metric_graph <-  R6Class("metric_graph",
       attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
       attr(edge, "directional_weights") <- private$directional_weights
       class(edge) <- "metric_graph_edge"
+        if(verbose == 2){
+          bar_update_attr_edges$increment()
+        }   
       return(edge)
     })
     class(self$edges) <- "metric_graph_edges"
@@ -1942,16 +1950,7 @@ metric_graph <-  R6Class("metric_graph",
     # Finding problematic vertices, that is, vertices with incompatible directions
     # They will not be pruned.
 
-    if(is.null(self$vertices)){
-      start.deg <- end.deg <- rep(0,self$nV)
-      for(i in 1:self$nV) {
-        start.deg[i] <- sum(self$E[,1]==i)
-        end.deg[i] <- sum(self$E[,2]==i)
-      }
-      problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
-    } else{
-      problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
-    }
+    problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
 
     if((verbose > 0) && (sum(problematic) > 0)){
       message(paste(sum(problematic), "vertices were not pruned due to incompatible directions."))
@@ -1960,6 +1959,11 @@ metric_graph <-  R6Class("metric_graph",
     if(check_weights){
       idx_tmp <- which(degrees == 2 & !problematic)
       problematic_weights <- rep(FALSE,self$nV)
+
+      if(verbose==2){
+        message("Checking weight compatibility")
+        bar_check_weights <- msg_progress_bar(length(idx_tmp))
+      }
 
       for(i in idx_tmp) {
         start.deg <- which(self$E[,1]==i)
@@ -1982,6 +1986,9 @@ metric_graph <-  R6Class("metric_graph",
           if(cnd_tmp){
                   problematic_weights[i] <- TRUE
           }
+        }
+        if(verbose==2){
+          bar_check_weights$increment()
         }
       }
       problematic <- (problematic | problematic_weights)
@@ -2032,28 +2039,51 @@ metric_graph <-  R6Class("metric_graph",
       # creating/updating reference edges
       private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
       if(verbose==2){
-                message("Updating attributes of the edges and vertices")
+                message("Updating attributes of the edges")
                 bar_update_attr_edges <- msg_progress_bar(length(self$edges))
       }
-      for(i in 1:length(self$edges)){
-         attr(self$edges[[i]], "id") <- i
-         attr(self$edges[[i]], "longlat") <- private$longlat
-         attr(self$edges[[i]], "crs") <- private$crs$input
-         attr(self$edges[[i]], "length") <- self$edge_lengths[i]
-         class(self$edges[[i]]) <- "metric_graph_edge"
-        if(!is.null(private$length_unit)){
-          units(attr(self$edges[[i]], "length")) <- private$length_unit
-        }
-        if(is.vector(private$edge_weights)){
-          attr(self$edges[[i]], "weight") <- private$edge_weights[i]
-        } else{
-          attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
-        }
-        attr(self$edges[[i]], "kirchhoff_weight") <- private$kirchhoff_weights
+      # for(i in 1:length(self$edges)){
+      #    attr(self$edges[[i]], "id") <- i
+      #    attr(self$edges[[i]], "longlat") <- private$longlat
+      #    attr(self$edges[[i]], "crs") <- private$crs$input
+      #    attr(self$edges[[i]], "length") <- self$edge_lengths[i]
+      #    class(self$edges[[i]]) <- "metric_graph_edge"
+      #   if(!is.null(private$length_unit)){
+      #     units(attr(self$edges[[i]], "length")) <- private$length_unit
+      #   }
+      #   if(is.vector(private$edge_weights)){
+      #     attr(self$edges[[i]], "weight") <- private$edge_weights[i]
+      #   } else{
+      #     attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
+      #   }
+      #   attr(self$edges[[i]], "kirchhoff_weight") <- private$kirchhoff_weights
+      #   if(verbose == 2){
+      #     bar_update_attr_edges$increment()
+      #   }        
+      # }
+
+    edge_lengths_ <- self$get_edge_lengths()
+
+    self$edges <- lapply(1:self$nE, function(i){
+      edge <- self$edges[[i]]
+      if(is.vector(private$edge_weights)){
+        attr(edge,"weight") <- private$edge_weights[i]
+      } else{
+        attr(edge,"weight") <- private$edge_weights[i,]
+      }
+      attr(edge, "longlat") <- private$longlat
+      attr(edge, "crs") <- private$crs$input
+      attr(edge, "length") <- edge_lengths_[i]
+      attr(edge, "id") <- i
+      attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
+      attr(edge, "directional_weights") <- private$directional_weights
+      class(edge) <- "metric_graph_edge"
         if(verbose == 2){
           bar_update_attr_edges$increment()
-        }        
-      }
+        }      
+      return(edge)
+    })
+
    })
    if(verbose == 2){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -2259,7 +2289,7 @@ metric_graph <-  R6Class("metric_graph",
     private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
 
     # Updating the edge attributes
-    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights)
+    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
 
     for(j in 1:length(self$edges)){
         attr(self$edges[[j]], "PtE") <- NULL
