@@ -889,7 +889,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     private$create_update_vertices(verbose=verbose)
     # creating/updating reference edges
-    private$ref_edges <- map_into_reference_edge(self)
+    private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
 
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights)
     self$setDirectionalWeightFunction()
@@ -2022,15 +2022,12 @@ metric_graph <-  R6Class("metric_graph",
     #   close(pb)
     # }
 
-   if(verbose == 2){
-    message("Updating attributes of the edges and vertices")
-   }
-
    t <- system.time({
       private$create_update_vertices(verbose=verbose)
       # creating/updating reference edges
-      private$ref_edges <- map_into_reference_edge(self)
+      private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
       if(verbose>0){
+                message("Updating attributes of the edges and vertices")
                 bar_update_attr_edges <- msg_progress_bar(length(self$edges))
       }
       for(i in 1:length(self$edges)){
@@ -2253,7 +2250,7 @@ metric_graph <-  R6Class("metric_graph",
 
     private$create_update_vertices(verbose=verbose)
     # creating/updating reference edges
-    private$ref_edges <- map_into_reference_edge(self)
+    private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
 
     # Updating the edge attributes
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights)

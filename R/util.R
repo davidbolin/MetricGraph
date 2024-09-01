@@ -1972,8 +1972,12 @@ get_only_first <- function(vec){
 #' @noRd 
 # Create a map from vertices into reference edges
 
-map_into_reference_edge <- function(graph){
+map_into_reference_edge <- function(graph, verbose=0){
   ref_edge <- matrix(nrow=graph$nV,ncol=2)
+  if(verbose>0){
+    message("Creating a map from vertices into reference edges")
+    bar_map_reference <- msg_progress_bar(graph$nV)
+  }
   for(i in 1:graph$nV){
     idx_pos_0 <- which(graph$E[,1] == i)
     if(length(idx_pos_0)>0){
@@ -1982,6 +1986,9 @@ map_into_reference_edge <- function(graph){
     } else{
       ref_edge[i,1] <- min(which(graph$E[,2] == i))
       ref_edge[i,2] <- 1
+    }
+    if(verbose>0){
+      bar_map_reference$increment()
     }
   }
   return(ref_edge)
