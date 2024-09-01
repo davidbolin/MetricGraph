@@ -1087,18 +1087,24 @@ metric_graph <-  R6Class("metric_graph",
   #' @return A vector containing the vertices with incompatible directions.
 
   get_vertices_incomp_dir = function(){
-    start.deg <- end.deg <- rep(0,self$nV)
-    for(i in 1:self$nV) {
-      start.deg[i] <- sum(self$E[,1]==i)
-      end.deg[i] <- sum(self$E[,2]==i)
+    if(is.null(self$vertices)){
+      start.deg <- end.deg <- rep(0,self$nV)
+      for(i in 1:self$nV) {
+        start.deg[i] <- sum(self$E[,1]==i)
+        end.deg[i] <- sum(self$E[,2]==i)
+      }
+
+      degrees <- self$get_degrees()
+
+      # Finding problematic vertices, that is, vertices with incompatible directions
+      # They will not be pruned.
+      problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
+      return(which(problematic))
+    } else{
+      problematic <- sapply(self$vertices, function(vert){attr(vert, "problematic")})
+      return(which(problematic))
     }
 
-    degrees <- self$get_degrees()
-
-    # Finding problematic vertices, that is, vertices with incompatible directions
-    # They will not be pruned.
-    problematic <- (degrees > 1) & (start.deg == 0 | end.deg == 0)
-    return(which(problematic))
   },
 
   #' @description Prints a summary of various informations of the graph
@@ -1278,7 +1284,6 @@ metric_graph <-  R6Class("metric_graph",
       cat(paste0(" Degree ", degrees_u[i],": ",sum(degrees == degrees_u[i]), "; "))
     }
     cat("\n")
-
     cat("\t With incompatible directions: ", length(self$get_vertices_incomp_dir()), "\n\n")
     cat("Edges: \n")
     cat("\t Lengths: \n")
@@ -2015,7 +2020,7 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
    })
-    if(verbose  > 0){
+    if(verbose  == 2){
           message(sprintf("time: %.3f s", t[["elapsed"]]))
     }
     # if(verbose && to.prune > 0){
@@ -2026,7 +2031,7 @@ metric_graph <-  R6Class("metric_graph",
       private$create_update_vertices(verbose=verbose)
       # creating/updating reference edges
       private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
-      if(verbose>0){
+      if(verbose==2){
                 message("Updating attributes of the edges and vertices")
                 bar_update_attr_edges <- msg_progress_bar(length(self$edges))
       }
@@ -2045,7 +2050,7 @@ metric_graph <-  R6Class("metric_graph",
           attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
         }
         attr(self$edges[[i]], "kirchhoff_weight") <- private$kirchhoff_weights
-        if(verbose>0){
+        if(verbose == 2){
           bar_update_attr_edges$increment()
         }        
       }
@@ -2071,7 +2076,7 @@ metric_graph <-  R6Class("metric_graph",
       private$data <- lapply(private$data, function(dat){dat[order_idx]})
       attr(private$data, "group_variable") <- old_group_variable
       })
-      if(verbose > 0){
+      if(verbose == 2){
             message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
    }
@@ -6466,14 +6471,14 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   compute_degrees = function(verbose = 0, add = FALSE){
     degrees_in <- rep(0,self$nV)
     degrees_out <- rep(0,self$nV)
-        if(verbose > 0){
-              message("Computing degrees...")
-          bar_compute_degrees <- msg_progress_bar(self$nV)
-      }
+        if(verbose == 2){
+            message("Computing degrees...")
+            bar_compute_degrees <- msg_progress_bar(self$nV)
+        }
     for(i in 1:self$nV) {
           degrees_out[i] <- sum(self$E[,1]==i)
           degrees_in[i] <- sum(self$E[,2]==i)
-          if(verbose>0){
+          if(verbose == 2){
             bar_compute_degrees$increment()
           }
     }
@@ -6495,7 +6500,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
   create_update_vertices = function(verbose = 0){
     degrees <- private$compute_degrees(verbose=verbose, add=TRUE)
 
-    if(verbose > 0){
+    if(verbose == 2){
               message("Creating/Updating vertices object")
           bar_update_attr_edges <- msg_progress_bar(nrow(self$V))
       }    
@@ -6527,7 +6532,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
           attr(vert, "crs") <- private$crs$input
           attr(vert, "id") <- i
           class(vert) <- "metric_graph_vertex"
-          if(verbose>0){
+          if(verbose == 2){
             bar_update_attr_edges$increment()
           }          
           return(vert)

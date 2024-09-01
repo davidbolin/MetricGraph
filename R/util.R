@@ -1974,7 +1974,7 @@ get_only_first <- function(vec){
 
 map_into_reference_edge <- function(graph, verbose=0){
   ref_edge <- matrix(nrow=graph$nV,ncol=2)
-  if(verbose>0){
+  if(verbose == 2){
     message("Creating a map from vertices into reference edges")
     bar_map_reference <- msg_progress_bar(graph$nV)
   }
@@ -1987,7 +1987,7 @@ map_into_reference_edge <- function(graph, verbose=0){
       ref_edge[i,1] <- min(which(graph$E[,2] == i))
       ref_edge[i,2] <- 1
     }
-    if(verbose>0){
+    if(verbose == 2){
       bar_map_reference$increment()
     }
   }
