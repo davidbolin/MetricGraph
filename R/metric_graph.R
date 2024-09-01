@@ -887,7 +887,7 @@ metric_graph <-  R6Class("metric_graph",
         private$connected = FALSE
       }
     }
-    private$create_update_vertices()
+    private$create_update_vertices(verbose=verbose)
     # creating/updating reference edges
     private$ref_edges <- map_into_reference_edge(self)
 
@@ -934,6 +934,7 @@ metric_graph <-  R6Class("metric_graph",
 
   remove_small_circles = function(tolerance, verbose = 1){
     private$remove_circles(tolerance, verbose=verbose,longlat = private$longlat, unit=private$length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=private$which_longlat, vertex_unit=private$vertex_unit, project_data = private$project_data)
+    private$create_update_vertices(verbose=verbose)
   },
 
 
@@ -1931,7 +1932,7 @@ metric_graph <-  R6Class("metric_graph",
     #'
   prune_vertices = function(check_weights = TRUE, check_circles = TRUE, verbose = FALSE){
     t <- system.time({
-    degrees <- private$compute_degrees()$degrees
+    degrees <- private$degrees$degrees
 
     # Finding problematic vertices, that is, vertices with incompatible directions
     # They will not be pruned.
@@ -1986,9 +1987,7 @@ metric_graph <-  R6Class("metric_graph",
 
     res <- list(degrees = degrees, problematic = problematic)
 
-    if(check_circles){
-      res[["problematic_circles"]] <- rep(FALSE, length(degrees))
-    }
+    res[["problematic_circles"]] <- rep(FALSE, length(degrees))
 
     if(verbose > 0){
       to.prune <- sum(res$degrees==2 & !res$problematic)
@@ -2001,7 +2000,7 @@ metric_graph <-  R6Class("metric_graph",
 
     }
 
-   while(sum(res$degrees==2 & !res$problematic)>0) {
+   while(sum(res$degrees==2 & !res$problematic & !res$problematic_circles)>0) {
      if((verbose == 2) && to.prune > 0){
       #  setTxtProgressBar(pb,k)
       bar_prune$increment()
@@ -2028,7 +2027,7 @@ metric_graph <-  R6Class("metric_graph",
    }
 
    t <- system.time({
-      private$create_update_vertices()
+      private$create_update_vertices(verbose=verbose)
       # creating/updating reference edges
       private$ref_edges <- map_into_reference_edge(self)
       if(verbose>0){
@@ -2095,6 +2094,7 @@ metric_graph <-  R6Class("metric_graph",
    self$CoB <- NULL
 
    private$pruned <- TRUE
+   private$degrees <- NULL
    if(private$prune_warning){
     warning("At least two edges with different weights were merged due to pruning. Only one of the weights has been assigned to the merged edge. Please, review carefully.")
     private$prune_warning <- FALSE
@@ -2251,7 +2251,7 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
 
-    private$create_update_vertices()
+    private$create_update_vertices(verbose=verbose)
     # creating/updating reference edges
     private$ref_edges <- map_into_reference_edge(self)
 
@@ -5785,8 +5785,13 @@ metric_graph <-  R6Class("metric_graph",
   # utility function to remove small circles
   remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data) {
     if(verbose == 2) {
-      message("Small circles found!")
       message("Removing small circles")
+    }
+
+    if(is.null(private$degrees)){
+      degrees <- private$compute_degrees(verbose=verbose)$degrees
+    } else{
+      degrees <- private$degrees$degrees
     }
 
     if(threshold > 0) {
@@ -5796,7 +5801,7 @@ metric_graph <-  R6Class("metric_graph",
         ind <- loop.ind[loop.size < threshold]
         if(length(ind)>0) {
           v.loop <- self$E[ind,1]
-          v.degrees <- private$compute_degrees()$degrees[v.loop]
+          v.degrees <- degrees[v.loop]
 
           ind.rem <- v.loop[v.degrees == 2]
           ind.keep <- v.loop[v.degrees > 2]
@@ -5898,9 +5903,7 @@ metric_graph <-  R6Class("metric_graph",
 
           res.out$degrees <- res$degrees[-ind]
           res.out$problematic <- res$problematic[-ind]
-          if(check_circles){
-                  res.out$problematic_circles <- res.out$problematic_circles[-ind]
-          }
+          res.out$problematic_circles <- res.out$problematic_circles[-ind]
 
           #update vertices
           self$V <- self$V[-ind,]
@@ -6111,6 +6114,8 @@ metric_graph <-  R6Class("metric_graph",
   group_variables = NULL,
 
   project_data = NULL,
+
+  degrees = NULL,
 
   # Warning if edges with different weights have been merged
 
@@ -6461,14 +6466,25 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 
  # Function to compute the degrees of the vertices,
 
-  compute_degrees = function(){
+  compute_degrees = function(verbose = 0, add = FALSE){
     degrees_in <- rep(0,self$nV)
     degrees_out <- rep(0,self$nV)
+        if(verbose > 0){
+              message("Computing degrees...")
+          bar_compute_degrees <- msg_progress_bar(self$nV)
+      }
     for(i in 1:self$nV) {
           degrees_out[i] <- sum(self$E[,1]==i)
           degrees_in[i] <- sum(self$E[,2]==i)
+          if(verbose>0){
+            bar_compute_degrees$increment()
+          }
     }
     degrees <- degrees_in + degrees_out
+    if(add){
+      private$degrees <- list(degrees = degrees, indegrees = degrees_in,
+              outdegrees = degrees_out)
+    }
     return(list(degrees = degrees, indegrees = degrees_in,
               outdegrees = degrees_out))
   },
@@ -6479,8 +6495,30 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
 
   #  Creates/updates the vertices element of the metric graph list
 
-  create_update_vertices = function(){
-    degrees <- private$compute_degrees()
+  create_update_vertices = function(verbose = 0){
+    degrees <- private$compute_degrees(verbose=verbose, add=TRUE)
+
+    if(verbose > 0){
+              message("Creating/Updating vertices object")
+          bar_update_attr_edges <- msg_progress_bar(nrow(self$V))
+      }    
+    # self$vertices <- list()
+    # for(i in 1:nrow(self$V)){
+    #       vert <- self$V[i,]
+    #       attr(vert, "degree") <- degrees$degrees[i]
+    #       attr(vert, "indegree") <- degrees$indegrees[i]
+    #       attr(vert, "outdegree") <- degrees$outdegrees[i]
+    #       attr(vert, "problematic") <- ifelse((degrees$degrees[i]>1) && ((degrees$indegrees[i] == 0) || (degrees$outdegrees[i] == 0)), TRUE, FALSE)
+    #       attr(vert, "longlat") <- private$longlat
+    #       attr(vert, "crs") <- private$crs$input
+    #       attr(vert, "id") <- i
+    #       class(vert) <- "metric_graph_vertex"
+    #       self$vertices[[i]] <- vert
+    #       if(verbose>0){
+    #         bar_update_attr_edges$increment()
+    #       }
+    # }
+
     self$vertices <- lapply(1:nrow(self$V),
         function(i){
           vert <- self$V[i,]
@@ -6492,8 +6530,12 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
           attr(vert, "crs") <- private$crs$input
           attr(vert, "id") <- i
           class(vert) <- "metric_graph_vertex"
+          if(verbose>0){
+            bar_update_attr_edges$increment()
+          }          
           return(vert)
         })
+
     class(self$vertices) <- "metric_graph_vertices"
   },
 
