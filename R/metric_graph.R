@@ -1985,6 +1985,11 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     res <- list(degrees = degrees, problematic = problematic)
+
+    if(check_circles){
+      res[["problematic_circles"]] <- rep(FALSE, length(degrees))
+    }
+
     if(verbose > 0){
       to.prune <- sum(res$degrees==2 & !res$problematic)
       k <- 1
@@ -5825,10 +5830,13 @@ metric_graph <-  R6Class("metric_graph",
 
 
   remove.first.deg2 = function(res, check_circles) {
-    ind <- which(res$degrees==2 & !res$problematic)
+    if(!check_circles){
+      ind <- which(res$degrees==2 & !res$problematic)
+    } else{
+      ind <- which(res$degrees==2 & !res$problematic & !res$problematic_circles)
+    }
     res.out <- res
     if(length(ind)>0) {
-
       ind <- ind[1]
       e1 <- which(self$E[,2]==ind)
       e2 <- which(self$E[,1]==ind)
@@ -5884,6 +5892,9 @@ metric_graph <-  R6Class("metric_graph",
 
           res.out$degrees <- res$degrees[-ind]
           res.out$problematic <- res$problematic[-ind]
+          if(check_circles){
+                  res.out$problematic_circles <- res.out$problematic_circles[-ind]
+          }
 
           #update vertices
           self$V <- self$V[-ind,]
@@ -5935,8 +5946,7 @@ metric_graph <-  R6Class("metric_graph",
       #   attr(self$edges[[e_rem[1]]], "weight") <- private$edge_weights[e_rem[1],]
       # }
       } else{
-          res.out$degrees <- res$degrees[-ind]
-          res.out$problematic <- res$problematic[-ind]
+          res.out$problematic_circles[ind] <- TRUE
           res.out$circles_avoided <- TRUE
       }
     }
