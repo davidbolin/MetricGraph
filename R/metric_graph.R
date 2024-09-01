@@ -2012,7 +2012,7 @@ metric_graph <-  R6Class("metric_graph",
    }
     if(verbose == 2){
       if(!is.null(res$circles_avoided)){
-        message("Some vertices were not pruned due in order to avoid creating circles. Turn 'check_circles' to FALSE to prune these vertices.")
+        message(paste(sum(res$problematic_circles),"vertices were not pruned due in order to avoid creating circles. Turn 'check_circles' to FALSE to prune these vertices."))
       }
     }
    })
@@ -2031,6 +2031,9 @@ metric_graph <-  R6Class("metric_graph",
       private$create_update_vertices()
       # creating/updating reference edges
       private$ref_edges <- map_into_reference_edge(self)
+      if(verbose>0){
+                bar_update_attr_edges <- msg_progress_bar(length(self$edges))
+      }
       for(i in 1:length(self$edges)){
          attr(self$edges[[i]], "id") <- i
          attr(self$edges[[i]], "longlat") <- private$longlat
@@ -2046,6 +2049,9 @@ metric_graph <-  R6Class("metric_graph",
           attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
         }
         attr(self$edges[[i]], "kirchhoff_weight") <- private$kirchhoff_weights
+        if(verbose>0){
+          bar_update_attr_edges$increment()
+        }        
       }
    })
    if(verbose == 2){
@@ -5947,7 +5953,7 @@ metric_graph <-  R6Class("metric_graph",
       # }
       } else{
           res.out$problematic_circles[ind] <- TRUE
-          res.out$circles_avoided <- TRUE
+          res.out$circles_avoided <- TRUE 
       }
     }
     class(self$edges) <- "metric_graph_edges"
