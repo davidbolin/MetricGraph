@@ -826,7 +826,11 @@ A \code{data.frame} object with observation locations. If \code{longlat = TRUE},
 \subsection{Method \code{observation_to_vertex()}}{
 Adds observation locations as vertices in the graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(tolerance = 1e-15, mesh_warning = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(
+  tolerance = 1e-15,
+  mesh_warning = TRUE,
+  verbose = 0
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -837,6 +841,8 @@ they are closer than this number (given in relative edge distance between
 0 and 1). The default is \code{1e-15}.}
 
 \item{\code{mesh_warning}}{Display a warning if the graph structure change and the metric graph has a mesh object.}
+
+\item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
 \item{\code{share_weights}}{Should the same weight be shared among the split edges? If \code{FALSE}, the weights will be removed, and a common weight given by 1 will be given.}
 }

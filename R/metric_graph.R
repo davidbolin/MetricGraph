@@ -2191,8 +2191,9 @@ metric_graph <-  R6Class("metric_graph",
   #' 0 and 1). The default is `1e-15`.
   #' @param share_weights Should the same weight be shared among the split edges? If `FALSE`, the weights will be removed, and a common weight given by 1 will be given.
   #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
+  #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects.
-  observation_to_vertex = function(tolerance = 1e-15, mesh_warning = TRUE) {
+  observation_to_vertex = function(tolerance = 1e-15, mesh_warning = TRUE, verbose = 0) {
     if(tolerance <= 0 || tolerance >=1){
       stop("tolerance should be between 0 and 1.")
     }
