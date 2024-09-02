@@ -1134,6 +1134,16 @@ metric_graph <-  R6Class("metric_graph",
       if(is.null(check_distance_consistency)){
         check_distance_consistency <- FALSE
       }
+    } else{
+      if(is.null(compute_characteristics)){
+        compute_characteristics <- TRUE
+      }
+      if(is.null(check_euclidean)){
+        check_euclidean <- TRUE
+      }
+      if(is.null(check_distance_consistency)){
+        check_distance_consistency <- TRUE
+      }
     }
 
     if(compute_characteristics){

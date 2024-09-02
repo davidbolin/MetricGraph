@@ -1555,15 +1555,15 @@ NULL
 #' @description Function providing a summary of several informations/characteristics of a metric graph object.
 #' @param object an object of class `metric_graph`.
 #' @param messages Should message explaining how to build the results be given for missing quantities?
-#' @param compute_characteristics Should the characteristics of the graph be computed?
-#' @param check_euclidean Check if the graph has Euclidean edges?
-#' @param check_distance_consistency Check the distance consistency assumption?#' 
+#' @param compute_characteristics Should the characteristics of the graph be computed? If `NULL` it will be determined based on the size of the graph.
+#' @param check_euclidean Check if the graph has Euclidean edges? If `NULL` it will be determined based on the size of the graph.
+#' @param check_distance_consistency Check the distance consistency assumption?#' If `NULL` it will be determined based on the size of the graph.
 #' @param ... not used.
 #' @return An object of class \code{summary_graph_lme} containing information
 #' about a *metric_graph* object.
 #' @method summary metric_graph
 #' @export
-summary.metric_graph <- function(object, messages = FALSE, compute_characteristics = TRUE, check_euclidean = TRUE, check_distance_consistency = TRUE, ...){
+summary.metric_graph <- function(object, messages = FALSE, compute_characteristics = NULL, check_euclidean = NULL, check_distance_consistency = NULL, ...){
   object$summary(messages = messages, compute_characteristics = compute_characteristics, check_euclidean = check_euclidean, check_distance_consistency = check_distance_consistency)
 }
 
