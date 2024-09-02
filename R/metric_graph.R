@@ -6533,7 +6533,12 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     degrees <- private$compute_degrees(verbose=verbose, add=TRUE)
 
     if(verbose == 2){
-              message("Creating/Updating vertices object")
+      if(is.null(self$vertices)){
+          message("Creating vertices object")
+      } else{
+          message("Updating vertices object")
+      }
+             
           bar_update_attr_edges <- msg_progress_bar(nrow(self$V))
       }    
     # self$vertices <- list()
