@@ -60,9 +60,9 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  messages <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  compute_characteristics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  check_euclidean <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  check_distance_consistency <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  compute_characteristics <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  check_euclidean <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  check_distance_consistency <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -80,15 +80,15 @@
 
 
 <dt id="arg-compute-characteristics">compute_characteristics<a class="anchor" aria-label="anchor" href="#arg-compute-characteristics"></a></dt>
-<dd><p>Should the characteristics of the graph be computed?</p></dd>
+<dd><p>Should the characteristics of the graph be computed? If <code>NULL</code> it will be determined based on the size of the graph.</p></dd>
 
 
 <dt id="arg-check-euclidean">check_euclidean<a class="anchor" aria-label="anchor" href="#arg-check-euclidean"></a></dt>
-<dd><p>Check if the graph has Euclidean edges?</p></dd>
+<dd><p>Check if the graph has Euclidean edges? If <code>NULL</code> it will be determined based on the size of the graph.</p></dd>
 
 
 <dt id="arg-check-distance-consistency">check_distance_consistency<a class="anchor" aria-label="anchor" href="#arg-check-distance-consistency"></a></dt>
-<dd><p>Check the distance consistency assumption?#'</p></dd>
+<dd><p>Check the distance consistency assumption?#' If <code>NULL</code> it will be determined based on the size of the graph.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
