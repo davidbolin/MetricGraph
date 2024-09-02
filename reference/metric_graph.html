@@ -1002,7 +1002,11 @@ observation locations.</p>
 <h3 id="method-observation-to-vertex-">Method <code>observation_to_vertex()</code><a class="anchor" aria-label="anchor" href="#method-observation-to-vertex-"></a></h3>
 <p>Adds observation locations as vertices in the graph.</p><div class="section">
 <h4 id="usage-25">Usage<a class="anchor" aria-label="anchor" href="#usage-25"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">observation_to_vertex</span><span class="op">(</span>tolerance <span class="op">=</span> <span class="fl">1e-15</span>, mesh_warning <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">observation_to_vertex</span><span class="op">(</span></span>
+<span>  tolerance <span class="op">=</span> <span class="fl">1e-15</span>,</span>
+<span>  mesh_warning <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -1015,6 +1019,10 @@ they are closer than this number (given in relative edge distance between
 
 <dt><code>mesh_warning</code></dt>
 <dd><p>Display a warning if the graph structure change and the metric graph has a mesh object.</p></dd>
+
+
+<dt><code>verbose</code></dt>
+<dd><p>Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.</p></dd>
 
 
 <dt><code>share_weights</code></dt>
@@ -2325,7 +2333,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.21 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.22 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

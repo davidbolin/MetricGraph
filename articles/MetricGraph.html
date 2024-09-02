@@ -81,7 +81,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-26. Last
-modified: 2024-08-29.</h4>
+modified: 2024-09-02.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/MetricGraph.Rmd" class="external-link"><code>vignettes/MetricGraph.Rmd</code></a></small>
       <div class="d-none name"><code>MetricGraph.Rmd</code></div>
@@ -248,12 +248,8 @@ information from the edge weights, one can simply set the argument
 <code>check_weights</code> to <code>FALSE</code> in the
 <code>prune_vertices()</code> method:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span>check_weights<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in graph$prune_vertices(check_weights = FALSE): At least two edges with</span></span>
-<span><span class="co">## different weights were merged due to pruning. Only one of the weights has been</span></span>
-<span><span class="co">## assigned to the merged edge. Please, review carefully.</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">prune_vertices</span><span class="op">(</span>check_weights<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 <p>However, note that a warning was given due to incompatible edge
 weights.</p>
@@ -280,13 +276,13 @@ between 0 and 1). The function <code>coordinates</code> can be used to
 convert between coordinates in Euclidean space and locations on the
 graph. For example the location at normalized distance 0.2 from the
 start of the second edge is:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">0.2</span><span class="op">)</span>, <span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          [,1]     [,2]</span></span>
 <span><span class="co">## [1,] 39.11693 22.31903</span></span></code></pre>
 <p>The function can also be used to find the closest location on the
 graph for a location in Euclidean space:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>XY <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">39.117</span>, <span class="fl">22.319</span><span class="op">)</span>, <span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##      [,1]      [,2]</span></span>
 <span><span class="co">## [1,]    2 0.1967297</span></span></code></pre>
@@ -300,7 +296,7 @@ the returned value should be given in normalized distance or not.</p>
 to it. For further details on data manipulation on metric graphs, see <a href="metric_graph_data.html">Data manipulation on metric graphs</a>. As
 an example, let us sample some locations on edges at random and add data
 to them in the graph:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
 <span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>edge_number <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span>, <span class="va">n.obs</span>, replace<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                   distance_on_edge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span>,</span>
@@ -309,7 +305,7 @@ to them in the graph:</p>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
 <pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-11-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>One should note here that one needs to specify
@@ -325,7 +321,7 @@ use the function <code>coordinates</code> to transform those to
 Longitude Latitude coordinates, which we then use to create a
 <code>SpatialPointsDataFrame</code> object which we add to the
 graph:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obs.loc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span>, <span class="va">n.obs</span>, replace<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">obs.lonlat</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="va">obs.loc</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span></span>
@@ -339,7 +335,7 @@ graph:</p>
 <pre><code><span><span class="co">## This step may take long. If this step is taking too long consider pruning the vertices to possibly obtain some speed up.</span></span></code></pre>
 <pre><code><span><span class="co">## [1] y        .coord_x .coord_y</span></span>
 <span><span class="co">## &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-12-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>If we want to replace the data in the object, we can use
@@ -353,7 +349,7 @@ functions on the graph. The best way to visualize functions on the graph
 is to evaluate them on a fine mesh over the graph and then use
 <code>plot_function</code>. To illustrate this procedure, let us
 construct a mesh on the graph:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">100</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>mesh<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-13-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -361,13 +357,13 @@ construct a mesh on the graph:</p>
 decides the largest spacing between nodes in the mesh. Above we chose
 that as 100m which is a bit coarse. So let us reduce the value of
 <code>h</code> to 10m and rebuild the mesh:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">10</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
 <p>Suppose now that we want to display the function
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mtext mathvariant="normal">Longitude</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mtext mathvariant="normal">Latitude</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(s) = \text{Longitude}(s) - \text{Latitude}(s)</annotation></semantics></math>
 on this graph. We then first evaluate it on the vertices of the mesh and
 then use the function <code>plot_function</code> to display it:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lon</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">V</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">lat</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">V</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="va">lon</span> <span class="op">-</span> <span class="va">lat</span></span>
@@ -424,7 +420,7 @@ on the graph using
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha = 1</annotation></semantics></math>.
 To do so, we again draw some locations at random, then sample the field
 at these locations and plot the result</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">1.3</span></span>
 <span><span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">0.15</span> <span class="co"># range parameter</span></span>
 <span><span class="va">sigma_e</span> <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
@@ -442,11 +438,11 @@ at these locations and plot the result</p>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
 <pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"u"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-16-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>We can also sample the field at the mesh on the graph as follows:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_spde.html">sample_spde</a></span><span class="op">(</span>range <span class="op">=</span> <span class="va">range</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                 graph <span class="op">=</span> <span class="va">graph</span>, type <span class="op">=</span> <span class="st">"mesh"</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
@@ -457,7 +453,7 @@ these sample paths are continuous but not differentiable. To visualize
 the correlation structure of the field, we can compute and plot the
 covariances between some point and all other points in the graph as
 follows:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">C</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_covariance.html">spde_covariance</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">0.1</span><span class="op">)</span>, range <span class="op">=</span> <span class="va">range</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                            graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">C</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
@@ -487,7 +483,7 @@ are independent centered Gaussian variables
 representing measurement noise.</p>
 <p>Let us create such observations, clear the current data in the graph,
 and finally add the data on the graph:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span><span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">0.2</span> <span class="co"># range parameter</span></span>
 <span><span class="va">sigma_e</span> <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
@@ -534,10 +530,10 @@ To this end, we can use the <code><a href="../reference/graph_lme.html">graph_lm
 <p>If we do not specify the model, it will fit a linear regression
 model. So, let us first fit a simple linear regression model to
 illustrate:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>We can get the summary:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_lm</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Linear regression model</span></span>
@@ -547,19 +543,19 @@ illustrate:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std. Error t value Pr(&gt;|t|)    </span></span>
-<span><span class="co">## (Intercept) -1.03352    0.08370  -12.35   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon          0.97866    0.08792   11.13   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat          2.15766    0.08792   24.54   &lt;2e-16 ***</span></span></code></pre>
+<span><span class="co">## (Intercept) -0.90287    0.07812  -11.56   &lt;2e-16 ***</span></span>
+<span><span class="co">## lon          0.80492    0.08020   10.04   &lt;2e-16 ***</span></span>
+<span><span class="co">## lat          2.05459    0.08020   25.62   &lt;2e-16 ***</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## No random effects.</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">## std. dev </span></span>
-<span><span class="co">## 1.871679 </span></span>
+<span><span class="co">## 1.746797 </span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -1021.383</span></span></code></pre>
+<span><span class="co">## Log-Likelihood:  -986.8567</span></span></code></pre>
 <p>Let us now fit the linear mixed-effects model with a Whittle-Mat'ern
 latent model with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>.
@@ -569,10 +565,10 @@ To this end, we can either specify the <code>model</code> argument as
 easier to understand which model is being chosen as a random effect,
 however, it makes it longer, and less convenient, to write. Let us use
 the simplified form:</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="st">'WM1'</span><span class="op">)</span></span></code></pre></div>
 <p>Let us get the summary of the result:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Latent model - Whittle-Matern with alpha = 1</span></span>
@@ -582,41 +578,41 @@ the simplified form:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.0401    0.1517  -6.857 7.04e-12 ***</span></span>
-<span><span class="co">## lon           0.9412    0.1470   6.405 1.50e-10 ***</span></span>
-<span><span class="co">## lat           2.1603    0.1568  13.780  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -0.8666    0.1253  -6.915 4.66e-12 ***</span></span>
+<span><span class="co">## lon           0.8325    0.1219   6.829 8.57e-12 ***</span></span>
+<span><span class="co">## lat           2.0597    0.1261  16.333  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
-<span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau   0.114200  0.004909  23.263</span></span>
-<span><span class="co">## kappa 8.603391  1.246492   6.902</span></span>
+<span><span class="co">##        Estimate Std.error z-value</span></span>
+<span><span class="co">## tau    0.106326  0.005842  18.200</span></span>
+<span><span class="co">## kappa 12.088980  1.779464   6.794</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma  2.11098   0.11516  18.331</span></span>
-<span><span class="co">## range  0.23247   0.03349   6.941</span></span>
+<span><span class="co">## sigma  1.91271   0.09166  20.868</span></span>
+<span><span class="co">## range  0.16544   0.02228   7.426</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.07608   0.03744   2.032</span></span>
+<span><span class="co">## std. dev  0.10066   0.08936   1.126</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -848.8771 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 26</span></span>
+<span><span class="co">## Log-Likelihood:  -837.1085 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 28</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  38.31857 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  43.5179 secs</span></span></code></pre>
 <p>We can obtain additional information by using
 <code><a href="../reference/glance.graph_lme.html">glance()</a></code>:</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model         alpha</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.076<span style="text-decoration: underline;">1</span>  -<span style="color: #BB0000;">849.</span> <span style="text-decoration: underline;">1</span>710. <span style="text-decoration: underline;">1</span>735.    <span style="text-decoration: underline;">1</span>698.         494 WhittleMatern     1</span></span></code></pre>
+<span><span class="co">##    nobs sigma logLik   AIC   BIC deviance df.residual model         alpha</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.101  -<span style="color: #BB0000;">837.</span> <span style="text-decoration: underline;">1</span>686. <span style="text-decoration: underline;">1</span>712.    <span style="text-decoration: underline;">1</span>674.         494 WhittleMatern     1</span></span></code></pre>
 <p>We will now compare with the true values of the random effects:</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma_e_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">measurement_error</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">sigma_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">matern_coeff</span><span class="op">$</span><span class="va">random_effects</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">range_est</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">matern_coeff</span><span class="op">$</span><span class="va">random_effects</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
@@ -625,9 +621,9 @@ the simplified form:</p>
 <span>                      range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">range</span>, <span class="va">range_est</span><span class="op">)</span>,</span>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Truth"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             sigma_e    sigma     range</span></span>
-<span><span class="co">## Truth    0.10000000 2.000000 0.2000000</span></span>
-<span><span class="co">## Estimate 0.07608172 2.110982 0.2324665</span></span></code></pre>
+<pre><code><span><span class="co">##            sigma_e    sigma     range</span></span>
+<span><span class="co">## Truth    0.1000000 2.000000 0.2000000</span></span>
+<span><span class="co">## Estimate 0.1006575 1.912713 0.1654399</span></span></code></pre>
 <p>Given these estimated parameters, we can now do kriging to estimate
 the field at locations in the graph. As an example, we now obtain
 predictions on the regular mesh that we previously constructed. First,
@@ -637,7 +633,7 @@ we obtain the covariates on the mesh locations.</p>
 First, let us compute the posterior mean for the field at the
 observation locations and plot the residuals between the posterior means
 and the field:</p>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">pred_u</span><span class="op">$</span><span class="va">resid_field</span> <span class="op">&lt;-</span> <span class="va">pred_u</span><span class="op">$</span><span class="va">re_mean</span> <span class="op">-</span> <span class="va">u</span></span>
 <span><span class="va">pred_u</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">process_data</span><span class="op">(</span>data <span class="op">=</span> <span class="va">pred_u</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
@@ -647,19 +643,19 @@ and the field:</p>
 function:</p>
 <p>Let us first plot the predictions for the field, then the fitted
 values:</p>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_aug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/augment.graph_lme.html">augment</a></span><span class="op">(</span><span class="va">res</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pred_aug</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">".random"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-27-1.png" width="700"></p>
 <p>Let us now plot the fitted values along with the observed values:</p>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_aug</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">".fitted"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-28-1.png" width="700"></p>
 <p>Let us now obtain predictions of the field on a mesh of equally
 spaced nodes on the graph. First, let us create the mesh and
 <code>data.frame</code>:</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">50</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">lonlat_mesh</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span></span>
 <span><span class="va">scaled_lonlat_mesh</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">lonlat_mesh</span>, </span>
@@ -675,7 +671,7 @@ spaced nodes on the graph. First, let us create the mesh and
 latent field by taking the <code>re_mean</code> element from the
 <code>pred</code> list obtained by calling
 <code>prediction()</code>:</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res</span>, newdata<span class="op">=</span><span class="va">data_mesh_pred</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">u_est</span> <span class="op">&lt;-</span> <span class="va">pred</span><span class="op">$</span><span class="va">re_mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
@@ -683,7 +679,7 @@ latent field by taking the <code>re_mean</code> element from the
 <p>Finally, let us obtain predictions for the observed values on the
 mesh. In this case we use the <code>mean</code> component of the
 <code>pred</code> list:</p>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y_est</span> <span class="op">&lt;-</span> <span class="va">pred</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-31-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -721,7 +717,7 @@ generated above. To work with the covariance function, the only
 cumbersome thing is to compute the metric. The <code>metric_graph</code>
 class has built in support for this, and we can obtain the distances
 between the observation locations as</p>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">compute_resdist</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>However, if the goal is to fit a model using this covariance
 function, there is no need for the user to compute it. It is done
@@ -732,7 +728,7 @@ arguments, as the exponential covariance is the default). Let us fit a
 linear regression model with a random effect given by a Gaussian field
 with an isotropic exponential covariance function (alternatively, one
 can also write <code>model = 'isoExp'</code>):</p>
-<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"isoCov"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in graph_lme(y ~ lon + lat, graph = graph, model = list(type =</span></span>
 <span><span class="co">## "isoCov")): No check for Euclidean edges have been perfomed on this graph. The</span></span>
@@ -746,21 +742,21 @@ the graph has Euclidean edges. This is due to the fact that the
 isotropic covariance models are only known to work for graphs with
 Euclidean edges. Let us check if the graph has Euclidean edges. To this
 end, we need to use the <code>check_euclidean()</code> method:</p>
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">check_euclidean</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we simply call the graph to print its characteristics to check
 the information:</p>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span></span></code></pre></div>
-<pre><code><span><span class="co">## A metric graph with  183  vertices and  270  edges.</span></span>
+<pre><code><span><span class="co">## A metric graph with  230  vertices and  317  edges.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Vertices:</span></span>
-<span><span class="co">##   Degree 1: 36;  Degree 2: 2;  Degree 3: 84;  Degree 4: 57;  Degree 5: 4; </span></span>
+<span><span class="co">##   Degree 1: 36;  Degree 2: 49;  Degree 3: 84;  Degree 4: 57;  Degree 5: 4; </span></span>
 <span><span class="co">##   With incompatible directions:  2 </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Edges: </span></span>
 <span><span class="co">##   Lengths: </span></span>
-<span><span class="co">##       Min: 0.009307252  ; Max: 1.67453  ; Total: 57.2171 </span></span>
+<span><span class="co">##       Min: 0.007120828  ; Max: 1.67453  ; Total: 57.2171 </span></span>
 <span><span class="co">##   Weights: </span></span>
 <span><span class="co">##       Columns: osm_id name bridge highway layer lit maxspeed maxweight oneway surface .weights </span></span>
 <span><span class="co">##   That are circles:  0 </span></span>
@@ -786,14 +782,14 @@ to work for this graph. In any case, we can try to fit it anyway.
 Observe that we will now receive a different warning, since now we know
 for fact that the graph does not have Euclidean edges. In this case, we
 will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="st">"isoexp"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in graph_lme(y ~ lon + lat, graph = graph, model = "isoexp"): This</span></span>
 <span><span class="co">## graph DOES NOT have Euclidean edges. The isotropic covariance models are NOT</span></span>
 <span><span class="co">## guaranteed to work for this graph! See the vignette</span></span>
 <span><span class="co">## https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html</span></span>
 <span><span class="co">## for further details.</span></span></code></pre>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Latent model - Covariance-based model</span></span>
@@ -803,37 +799,37 @@ will set <code>model</code> to <code>isoexp</code> for conveniency.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -0.7559    0.2414  -3.131  0.00174 ** </span></span>
-<span><span class="co">## lon           0.7939    0.1779   4.464 8.06e-06 ***</span></span>
-<span><span class="co">## lat           2.1339    0.2000  10.669  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -0.7318    0.1654  -4.425 9.65e-06 ***</span></span>
+<span><span class="co">## lon           0.8712    0.1303   6.684 2.32e-11 ***</span></span>
+<span><span class="co">## lat           2.0840    0.1436  14.514  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau     1.9929    0.1169  17.041</span></span>
-<span><span class="co">## kappa  10.2489    1.6765   6.113</span></span>
+<span><span class="co">## tau    1.78359   0.08162   21.85</span></span>
+<span><span class="co">## kappa 15.49487   2.06324    7.51</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
-<span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.07373   0.03670   2.009</span></span>
+<span><span class="co">##           Estimate Std.error z-value</span></span>
+<span><span class="co">## std. dev 0.0002255 0.0916665   0.002</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -855.5699 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 37</span></span>
+<span><span class="co">## Log-Likelihood:  -839.5349 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 51</span></span>
 <span><span class="co">## Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  12.86908 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  16.81981 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
-<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_exp</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model  cov_function  </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.073<span style="text-decoration: underline;">7</span>  -<span style="color: #BB0000;">856.</span> <span style="text-decoration: underline;">1</span>723. <span style="text-decoration: underline;">1</span>748.    <span style="text-decoration: underline;">1</span>711.         494 isoCov exp_covariance</span></span></code></pre>
+<span><span class="co">##    nobs    sigma logLik   AIC   BIC deviance df.residual model  cov_function  </span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.000<span style="text-decoration: underline;">226</span>  -<span style="color: #BB0000;">840.</span> <span style="text-decoration: underline;">1</span>691. <span style="text-decoration: underline;">1</span>716.    <span style="text-decoration: underline;">1</span>679.         494 isoCov exp_covariance</span></span></code></pre>
 <p>Let us now compute the posterior mean for the field at the
 observation locations and plot the residuals between the field and the
 posterior means of the field:</p>
-<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_exp</span><span class="op">$</span><span class="va">re_mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-38-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -843,7 +839,7 @@ containing the locations in which one wants to obtain predictions and
 the corresponding covariate values at these locations. In this example
 we will use the <code>data_mesh_pred</code> from the previous example.
 Let us estimate the observed values at the mesh locations:</p>
-<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_exp_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_exp</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">y_est_exp</span> <span class="op">&lt;-</span> <span class="va">pred_exp_y</span><span class="op">$</span><span class="va">mean</span></span>
@@ -883,7 +879,7 @@ internally. We now set the <code>model</code> argument as a list with
 the <code>type</code> being <code>"GraphLaplacian"</code>
 (alternatively, one can also write <code>model = 'GL1'</code>) to obtain
 a graph Laplacian model with <code>alpha=1</code>:</p>
-<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_gl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span>, </span>
 <span>                            optim_method <span class="op">=</span> <span class="st">"Nelder-Mead"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
@@ -896,43 +892,43 @@ a graph Laplacian model with <code>alpha=1</code>:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.0756    0.1623  -6.626 3.45e-11 ***</span></span>
-<span><span class="co">## lon           0.9738    0.1742   5.591 2.26e-08 ***</span></span>
-<span><span class="co">## lat           2.1695    0.1734  12.515  &lt; 2e-16 ***</span></span>
+<span><span class="co">## (Intercept)  -0.9505    0.1337  -7.107 1.18e-12 ***</span></span>
+<span><span class="co">## lon           0.8049    0.1415   5.689 1.28e-08 ***</span></span>
+<span><span class="co">## lat           2.0347    0.1399  14.544  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau   0.112918  0.005124  22.037</span></span>
-<span><span class="co">## kappa 2.116053  0.273700   7.731</span></span>
+<span><span class="co">## tau   0.104708  0.005861  17.864</span></span>
+<span><span class="co">## kappa 2.714528  0.342445   7.927</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   4.3049    0.1988  21.654</span></span>
-<span><span class="co">## range   0.9452    0.1215   7.777</span></span>
+<span><span class="co">## sigma  4.09882   0.16173  25.343</span></span>
+<span><span class="co">## range  0.73678   0.08701   8.468</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev  0.07861   0.03842   2.046</span></span>
+<span><span class="co">## std. dev  0.11770   0.07239   1.626</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -853.8109 </span></span>
+<span><span class="co">## Log-Likelihood:  -843.2703 </span></span>
 <span><span class="co">## Number of function calls by 'optim' = 501</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  3.29134 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  3.38769 secs</span></span></code></pre>
 <p>We can also have a glance at the fitted model:</p>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/glance.graph_lme.html">glance</a></span><span class="op">(</span><span class="va">res_gl</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1 × 9</span></span></span>
-<span><span class="co">##    nobs  sigma logLik   AIC   BIC deviance df.residual model          alpha</span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.078<span style="text-decoration: underline;">6</span>  -<span style="color: #BB0000;">854.</span> <span style="text-decoration: underline;">1</span>720. <span style="text-decoration: underline;">1</span>745.    <span style="text-decoration: underline;">1</span>708.         494 GraphLaplacian     1</span></span></code></pre>
+<span><span class="co">##    nobs sigma logLik   AIC   BIC deviance df.residual model          alpha</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>   500 0.118  -<span style="color: #BB0000;">843.</span> <span style="text-decoration: underline;">1</span>699. <span style="text-decoration: underline;">1</span>724.    <span style="text-decoration: underline;">1</span>687.         494 GraphLaplacian     1</span></span></code></pre>
 <p>We can now obtain prediction at the observed locations by using the
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. Let us compute the posterior mean for the
 field at the observation locations and plot the residuals between the
 field and the posterior means of the field:</p>
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_GL</span><span class="op">$</span><span class="va">re_mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-42-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -945,13 +941,13 @@ observation locations, the <code><a href="https://rdrr.io/r/stats/predict.html" 
 predictions together with a <code>warning</code> that one should refit
 the model to obtain proper predictions. Here, we will see the (incorrect
 way of obtaining) predictions of the observed data:</p>
-<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning in predict.graph_lme(res_gl, newdata = data_mesh_pred, normalized =</span></span>
 <span><span class="co">## TRUE): There are prediction locations outside of the observation locations.</span></span>
 <span><span class="co">## Refit the model with all the locations you want to obtain predictions.</span></span></code></pre>
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y_est_GL</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y</span><span class="op">$</span><span class="va">mean</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y_est_GL</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-43-1.png" width="700" style="display: block; margin: auto;"></p>
@@ -959,13 +955,13 @@ way of obtaining) predictions of the observed data:</p>
 predictions. Let us create a new data set with all the original
 locations and all the locations we want to obtain predictions (with
 <code>y=NA</code> at the locations we want to obtain predictions):</p>
-<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_mesh_temp</span> <span class="op">&lt;-</span> <span class="va">data_mesh_pred</span></span>
 <span><span class="va">data_mesh_temp</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data_mesh_pred</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">new_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://edzer.github.io/sp/reference/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">data_mesh_temp</span>, all <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let us clone the graph and add the new data:</p>
-<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph_pred</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">graph_pred</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">graph_pred</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">new_data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
@@ -973,7 +969,7 @@ locations and all the locations we want to obtain predictions (with
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
 <pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 0.837264952278885</span></span></code></pre>
 <p>Let us now fit the model with all data:</p>
-<div class="sourceCode" id="cb92"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_gl_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_lme.html">graph_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span>, graph <span class="op">=</span> <span class="va">graph_pred</span>, model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"GraphLaplacian"</span><span class="op">)</span>,</span>
 <span>                                optim_method <span class="op">=</span> <span class="st">"Nelder-Mead"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res_gl_pred</span><span class="op">)</span></span></code></pre></div>
@@ -986,42 +982,42 @@ locations and all the locations we want to obtain predictions (with
 <span><span class="co">## </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             Estimate Std.error z-value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## (Intercept)  -1.0393    0.1246  -8.343   &lt;2e-16 ***</span></span>
-<span><span class="co">## lon           1.0647    0.1013  10.508   &lt;2e-16 ***</span></span>
-<span><span class="co">## lat           2.1256    0.1062  20.022   &lt;2e-16 ***</span></span>
+<span><span class="co">## (Intercept) -0.72786   0.09730  -7.481  7.4e-14 ***</span></span>
+<span><span class="co">## lon          0.78724   0.08760   8.987  &lt; 2e-16 ***</span></span>
+<span><span class="co">## lat          1.92381   0.08958  21.476  &lt; 2e-16 ***</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## tau    0.13963   0.02073   6.737</span></span>
-<span><span class="co">## kappa  1.71054   0.43577   3.925</span></span>
+<span><span class="co">## tau   0.085543  0.009036   9.467</span></span>
+<span><span class="co">## kappa 3.803188  0.675352   5.631</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects (Matern parameterization):</span></span>
 <span><span class="co">##       Estimate Std.error z-value</span></span>
-<span><span class="co">## sigma   3.8720    0.2298  16.849</span></span>
-<span><span class="co">## range   1.1692    0.2470   4.734</span></span>
+<span><span class="co">## sigma  4.23865   0.14368  29.500</span></span>
+<span><span class="co">## range  0.52587   0.07946   6.618</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Measurement error:</span></span>
 <span><span class="co">##          Estimate Std.error z-value</span></span>
-<span><span class="co">## std. dev   1.1062    0.1094   10.12</span></span>
+<span><span class="co">## std. dev  0.39780   0.09179   4.334</span></span>
 <span><span class="co">## ---</span></span>
 <span><span class="co">## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Log-Likelihood:  -984.1238 </span></span>
-<span><span class="co">## Number of function calls by 'optim' = 467</span></span>
+<span><span class="co">## Log-Likelihood:  -958.9261 </span></span>
+<span><span class="co">## Number of function calls by 'optim' = 501</span></span>
 <span><span class="co">## Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Time used to:     fit the model =  6.12045 secs</span></span></code></pre>
+<span><span class="co">## Time used to:     fit the model =  6.6206 secs</span></span></code></pre>
 <p>One should compare the estimates with the ones obtained in the model
 without the prediction locations.</p>
 <p>Let us first compute the residual between the latent field and the
 posterior means at the observation locations:</p>
-<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb92"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, newdata <span class="op">=</span> <span class="va">data</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">pred_GL_full</span><span class="op">$</span><span class="va">re_mean</span> <span class="op">-</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">data</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-47-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Let us now obtain predictions at the desired locations (in the
 correct way) of the observed data:</p>
-<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_GL_y_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">res_gl_pred</span>, newdata <span class="op">=</span> <span class="va">data_mesh_pred</span>, </span>
 <span>                    normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">y_est_GL_full</span> <span class="op">&lt;-</span> <span class="va">pred_GL_y_full</span><span class="op">$</span><span class="va">mean</span></span>
@@ -1050,21 +1046,21 @@ load <code>INLA</code> and <code>inlabru</code> packages. We will also
 need to create the <code>inla</code> model object with the
 <code>graph_spde</code> function. By default we have
 <code>alpha=1</code>.</p>
-<div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">INLA</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.inlabru.org" class="external-link">inlabru</a></span><span class="op">)</span></span>
 <span><span class="va">spde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>Recall that the data is already on the graph object (from the
 previous models above). Now, we create <code>inlabru</code>’s component,
 which is a formula-like object:</p>
-<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="fu">Intercept</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">lat</span> <span class="op">+</span> <span class="fu">field</span><span class="op">(</span><span class="va">loc</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span></span></code></pre></div>
 <p>This formula is very simple since we are not assuming mean zero, so
 that we do not need an intercept, and we do not have any other
 covariates or model components. However, the setup is exactly the same
 for more complicated models, with the only exception that we would have
 more terms in the formla. Now, we directly fit the model:</p>
-<div class="sourceCode" id="cb98"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_bru_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://inlabru-org.github.io/inlabru/reference/bru.html" class="external-link">bru</a></span><span class="op">(</span><span class="va">cmp</span>, data <span class="op">=</span> </span>
 <span>              <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span><span class="va">spde_model</span>, loc_name <span class="op">=</span> <span class="st">"loc"</span><span class="op">)</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>The advantage / difference between the estimates we obtain here and
@@ -1076,21 +1072,21 @@ obtain point estimates but entire posterior distributions for the
 parameters. To view the estimates we can use the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
-<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_bru_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_bru_fit</span>, </span>
 <span>                    <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.141660 0.1245040   1.913750 2.135380   2.395570 2.105520</span></span>
-<span><span class="co">## range 0.228431 0.0343015   0.168755 0.225766   0.303213 0.220253</span></span></code></pre>
+<span><span class="co">## sigma 1.938610 0.0976672   1.756190 1.934700   2.141980 1.948660</span></span>
+<span><span class="co">## range 0.165646 0.0223177   0.126484 0.164009   0.213974 0.160574</span></span></code></pre>
 <p>Here we are showing the estimate of the practical correlation range
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mi>κ</mi></mrow><annotation encoding="application/x-tex">2/\kappa</annotation></semantics></math>)
 instead of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math>
 since that is easier to interpret. We now compare the means of the
 estimated values with the true values:</p>
-<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_bru</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -1105,11 +1101,11 @@ estimated values with the true values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_bru</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  2.0 2.1416625 2.1055233</span></span>
-<span><span class="co">## 2     range  0.2 0.2284314 0.2202529</span></span></code></pre>
+<span><span class="co">## 1   std.dev  2.0 1.9386115 1.9486566</span></span>
+<span><span class="co">## 2     range  0.2 0.1656462 0.1605744</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
-<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">posterior_df_bru_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -1134,7 +1130,7 @@ predictions. In this case, we will want the predictions on a mesh.</p>
 <code><a href="../reference/graph_bru_process_data.html">graph_bru_process_data()</a></code> helps us into converting that
 <code>data.frame</code> to an <code>inlabru</code> friendly format for
 dealing with metric graphs:</p>
-<div class="sourceCode" id="cb104"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb102"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_bru_process_data.html">graph_bru_process_data</a></span><span class="op">(</span><span class="va">data_mesh_pred</span>, loc <span class="op">=</span> <span class="st">"loc"</span><span class="op">)</span></span></code></pre></div>
 <p>We can now obtain the predictions by using the <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>
 method. Observe that our <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method for graph models
@@ -1143,28 +1139,28 @@ is a bit different from <code>inlabru</code>’s standard
 created with the <code><a href="../reference/graph_spde.html">graph_spde()</a></code> function, the second is
 <code>inlabru</code>’s component, and the remaining is as done with the
 standard <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method in <code>inlabru</code>.</p>
-<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">field_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">spde_model</span>, </span>
 <span>                                <span class="va">cmp</span>,</span>
 <span>                                <span class="va">spde_bru_fit</span>, </span>
 <span>                                newdata <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>                                formula <span class="op">=</span> <span class="op">~</span> <span class="va">field</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot the predictions of the latent field:</p>
-<div class="sourceCode" id="cb106"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb104"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_field_prd</span> <span class="op">&lt;-</span> <span class="va">field_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">mean_field_prd</span>, improve_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                      vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MetricGraph_files/figure-html/unnamed-chunk-57-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, let us plot predictions of the observed data at the mesh
 locations:</p>
-<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">obs_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">spde_model</span>, </span>
 <span>                                <span class="va">cmp</span>,</span>
 <span>                                <span class="va">spde_bru_fit</span>, </span>
 <span>                                newdata <span class="op">=</span> <span class="va">data_list</span>,</span>
 <span>                                formula <span class="op">=</span> <span class="op">~</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">lat</span> <span class="op">+</span> <span class="va">lon</span> <span class="op">+</span> <span class="va">field</span><span class="op">)</span></span></code></pre></div>
 <p>Let us plot the predictions:</p>
-<div class="sourceCode" id="cb108"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb106"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mean_obs_prd</span> <span class="op">&lt;-</span> <span class="va">obs_pred</span><span class="op">$</span><span class="va">pred</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">mean_obs_prd</span>, improve_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                    vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
