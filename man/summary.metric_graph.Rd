@@ -7,9 +7,9 @@
 \method{summary}{metric_graph}(
   object,
   messages = FALSE,
-  compute_characteristics = TRUE,
-  check_euclidean = TRUE,
-  check_distance_consistency = TRUE,
+  compute_characteristics = NULL,
+  check_euclidean = NULL,
+  check_distance_consistency = NULL,
   ...
 )
 }
@@ -18,11 +18,11 @@
 
 \item{messages}{Should message explaining how to build the results be given for missing quantities?}
 
-\item{compute_characteristics}{Should the characteristics of the graph be computed?}
+\item{compute_characteristics}{Should the characteristics of the graph be computed? If \code{NULL} it will be determined based on the size of the graph.}
 
-\item{check_euclidean}{Check if the graph has Euclidean edges?}
+\item{check_euclidean}{Check if the graph has Euclidean edges? If \code{NULL} it will be determined based on the size of the graph.}
 
-\item{check_distance_consistency}{Check the distance consistency assumption?#'}
+\item{check_distance_consistency}{Check the distance consistency assumption?#' If \code{NULL} it will be determined based on the size of the graph.}
 
 \item{...}{not used.}
 }
