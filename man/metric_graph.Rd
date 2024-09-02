@@ -352,9 +352,9 @@ Prints a summary of various informations of the graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$summary(
   messages = FALSE,
-  compute_characteristics = TRUE,
-  check_euclidean = TRUE,
-  check_distance_consistency = TRUE
+  compute_characteristics = NULL,
+  check_euclidean = NULL,
+  check_distance_consistency = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -363,11 +363,11 @@ Prints a summary of various informations of the graph
 \describe{
 \item{\code{messages}}{Should message explaining how to build the results be given for missing quantities?}
 
-\item{\code{compute_characteristics}}{Should the characteristics of the graph be computed?}
+\item{\code{compute_characteristics}}{Should the characteristics of the graph be computed? If \code{NULL} it will be determined based on the size of the graph.}
 
-\item{\code{check_euclidean}}{Check if the graph has Euclidean edges?}
+\item{\code{check_euclidean}}{Check if the graph has Euclidean edges? If \code{NULL} it will be determined based on the size of the graph.}
 
-\item{\code{check_distance_consistency}}{Check the distance consistency assumption?}
+\item{\code{check_distance_consistency}}{Check the distance consistency assumption? If \code{NULL} it will be determined based on the size of the graph.}
 }
 \if{html}{\out{</div>}}
 }
