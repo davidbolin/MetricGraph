@@ -1853,9 +1853,14 @@ metric_graph <-  R6Class("metric_graph",
   #' @return No return value, called for its side effects.
   compute_PtE_edges = function(){
     edges_PtE <- lapply(self$edges, function(edge){self$coordinates(XY = edge)})
-     for(j in 1:length(self$edges)){
-        attr(self$edges[[j]], "PtE") <- edges_PtE[[j]]
-    }
+    self$edges <- lapply(1:length(self$edges), function(j){
+      edge <- self$edges[[j]]
+      attr(edge, "PtE") <- edges_PtE[[j]]
+      return(edge)
+    })
+    #  for(j in 1:length(self$edges)){
+    #     attr(self$edges[[j]], "PtE") <- edges_PtE[[j]]
+    # }
     return(invisible(NULL))
   },
 
@@ -2023,7 +2028,7 @@ metric_graph <-  R6Class("metric_graph",
    }
     if(verbose == 2){
       if(!is.null(res$circles_avoided)){
-        message(paste(sum(res$problematic_circles),"vertices were not pruned due in order to avoid creating circles. Turn 'check_circles' to FALSE to prune these vertices."))
+        message(paste(sum(res$problematic_circles),"vertices were not pruned in order to avoid creating circles. Turn 'check_circles' to FALSE to prune these vertices."))
       }
     }
    })
@@ -2110,11 +2115,6 @@ metric_graph <-  R6Class("metric_graph",
             message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
    }
-
-   for(j in 1:length(self$edges)){
-        attr(self$edges[[j]], "PtE") <- NULL
-    }
-
 
    if(!is.null(self$mesh)){
     max_h <- max(self$mesh$h_e)
@@ -2291,9 +2291,10 @@ metric_graph <-  R6Class("metric_graph",
     # Updating the edge attributes
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
 
-    for(j in 1:length(self$edges)){
-        attr(self$edges[[j]], "PtE") <- NULL
-    }
+    self$edges <- lapply(self$edges, function(edge){
+       attr(edge, "PtE") <- NULL
+       return(edge)
+    })
 
   },
 
