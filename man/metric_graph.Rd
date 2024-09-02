@@ -288,7 +288,8 @@ Sets the edge weights
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$set_edge_weights(
   weights = NULL,
   kirchhoff_weights = NULL,
-  directional_weights = NULL
+  directional_weights = NULL,
+  verbose = 0
 )}\if{html}{\out{</div>}}
 }
 
