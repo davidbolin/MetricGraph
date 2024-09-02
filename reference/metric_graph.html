@@ -415,7 +415,8 @@ viewed as a vertex.</p>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">set_edge_weights</span><span class="op">(</span></span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  kirchhoff_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  directional_weights <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  directional_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -483,9 +484,9 @@ each row gives a vector of weights to its corresponding edge.</p></dd>
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span></span>
 <span>  messages <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  compute_characteristics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  check_euclidean <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  check_distance_consistency <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  compute_characteristics <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  check_euclidean <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  check_distance_consistency <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -496,15 +497,15 @@ each row gives a vector of weights to its corresponding edge.</p></dd>
 
 
 <dt><code>compute_characteristics</code></dt>
-<dd><p>Should the characteristics of the graph be computed?</p></dd>
+<dd><p>Should the characteristics of the graph be computed? If <code>NULL</code> it will be determined based on the size of the graph.</p></dd>
 
 
 <dt><code>check_euclidean</code></dt>
-<dd><p>Check if the graph has Euclidean edges?</p></dd>
+<dd><p>Check if the graph has Euclidean edges? If <code>NULL</code> it will be determined based on the size of the graph.</p></dd>
 
 
 <dt><code>check_distance_consistency</code></dt>
-<dd><p>Check the distance consistency assumption?</p></dd>
+<dd><p>Check the distance consistency assumption? If <code>NULL</code> it will be determined based on the size of the graph.</p></dd>
 
 
 </dl><p></p></div>
@@ -2333,7 +2334,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.22 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.20 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
