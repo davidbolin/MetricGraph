@@ -788,11 +788,6 @@ metric_graph <-  R6Class("metric_graph",
         warning("There is at least one edge of infinite length. Please, consider redefining the graph.")
       }
 
-      # Checking if there is some edge with zero length
-      if(any(self$edge_lengths == 0)){
-        warning("There is at least one edge of length zero. Please, consider redefining the graph.")
-      }
-
         # end of if do merges
     } else{
 
@@ -917,6 +912,10 @@ metric_graph <-  R6Class("metric_graph",
       do.call(self$add_observations, add_obs_options)
     }
 
+    # Checking if there is some edge with zero length
+    if(any(self$edge_lengths == 0)){
+        warning("There is at least one edge of length zero. Please, consider redefining the graph.")
+    }
 
     # Cloning the initial graph
 
