@@ -936,12 +936,65 @@ metric_graph <-  R6Class("metric_graph",
     private$create_update_vertices(verbose=verbose)
   },
 
+  #' @description Exports the MetricGraph object as an `sf`, `sp` or `SSN2` object.
+  #' @param which_format The format for the exported object. The options are `sf` (default) and `sp`.
+  #' @return Here is an improved version of your description:
+#' For `which_format == "sf"`, the function returns a list with two elements: `edges` and `data`. The `edges` element contains an `sf` object of `LINESTRING` geometries, where the associated data frame includes edge weights. The `data` element holds the metric graph information (if available), represented by an `sf` object of `POINT` geometries. 
+#' 
+#' For `which_format == "sp"`, the function also returns a list with two elements: `edges` and `data`. The `edges` element is a `SpatialLinesDataFrame` where the data frame includes edge weights. The `data` element is a `SpatialPointsDataFrame` that contains the metric graph information (if available).
+
+  export = function(which_format = "sf"){
+    if(which_format == "sf"){
+      edges_geometries <- lapply(self$edges, sf::st_linestring) 
+      
+      if(is.vector(private$edge_weights)){
+        ew_tmp <- data.frame(.weights = private$edge_weights)
+      } else{
+        ew_tmp <- as.data.frame(private$edge_weights)
+      }
+
+      edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+
+      if(!is.null(private$data)){
+        data_tmp <- as.data.frame(private$data)
+        data_geometries <- lapply(1:nrow(data_tmp), function(i) sf::st_point(as.numeric(data_tmp[i, c('.coord_x', '.coord_y')])))
+        data_sf <- sf::st_sf(data_tmp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+        class(data_sf) <- c("metric_graph_data", class(data_sf))
+      } else{
+        data_sf <- NULL
+      }
+      exported_metric_graph <- list(edges = edges_sf, data = data_sf)
+    } else if(which_format == "sp"){
+      edges_list <- lapply(1:length(self$edges), function(i) {
+        sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
+      })
+      sp_edges <- sp::SpatialLines(
+          lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
+          proj4string = if (!is.null(private$crs)) private$proj4string else NULL
+      )
+      if(is.vector(private$edge_weights)){
+        ew_tmp <- data.frame(.weights = private$edge_weights)
+      } else{
+        ew_tmp <- as.data.frame(private$edge_weights)
+      }
+      ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
+      edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
+      data_sp <- as.data.frame(private$data)
+      sp::coordinates(data_sp) <- ~ .coord_x + .coord_y
+      exported_metric_graph <- list(edges = edges_sldf, data = data_sp)
+    } else{
+      stop(paste(which_format,"is not currently not a valid format to be exported."))
+    }
+    return(exported_metric_graph)
+  },
+
 
   #' @description Sets the edge weights
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
   #' each row gives a vector of weights to its corresponding edge.
   #' @param kirchhoff_weights If non-null, the name (or number) of the column of `weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `weights` is a single number and those are the Kirchhoff weights.
   #' @param directional_weights If non-null, the name (or number) of the column of `weights` that contain the directional weights.
+  #' @param verbose There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects.
 
   set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,

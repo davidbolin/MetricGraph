@@ -73,6 +73,7 @@ graph. The weights are given by the edge lengths.}
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-remove_small_circles}{\code{metric_graph$remove_small_circles()}}
+\item \href{#method-metric_graph-export}{\code{metric_graph$export()}}
 \item \href{#method-metric_graph-set_edge_weights}{\code{metric_graph$set_edge_weights()}}
 \item \href{#method-metric_graph-get_edge_weights}{\code{metric_graph$get_edge_weights()}}
 \item \href{#method-metric_graph-get_vertices_incomp_dir}{\code{metric_graph$get_vertices_incomp_dir()}}
@@ -280,6 +281,29 @@ No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-export"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-export}{}}}
+\subsection{Method \code{export()}}{
+Exports the MetricGraph object as an \code{sf}, \code{sp} or \code{SSN2} object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$export(which_format = "sf")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{which_format}}{The format for the exported object. The options are \code{sf} (default) and \code{sp}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Here is an improved version of your description:
+For \code{which_format == "sf"}, the function returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element contains an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights. The \code{data} element holds the metric graph information (if available), represented by an \code{sf} object of \code{POINT} geometries.
+
+For \code{which_format == "sp"}, the function also returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element is a \code{SpatialLinesDataFrame} where the data frame includes edge weights. The \code{data} element is a \code{SpatialPointsDataFrame} that contains the metric graph information (if available).
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-set_edge_weights"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-set_edge_weights}{}}}
 \subsection{Method \code{set_edge_weights()}}{
@@ -302,6 +326,8 @@ each row gives a vector of weights to its corresponding edge.}
 \item{\code{kirchhoff_weights}}{If non-null, the name (or number) of the column of \code{weights} that contain the Kirchhoff weights. Must be equal to 1 (or \code{TRUE}) in case \code{weights} is a single number and those are the Kirchhoff weights.}
 
 \item{\code{directional_weights}}{If non-null, the name (or number) of the column of \code{weights} that contain the directional weights.}
+
+\item{\code{verbose}}{There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 }
 \if{html}{\out{</div>}}
 }
