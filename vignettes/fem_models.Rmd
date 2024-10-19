@@ -804,8 +804,8 @@ For this example we will consider the `pems` data contained in the `MetricGraph`
 California. The variable `y` contains the traffic speeds.
 
 ```{r, message=FALSE}
- pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
- pems_graph$add_observations(data = pems$data, normalized=TRUE)
+ pems_graph <- metric_graph$new(edges = pems$edges)
+ pems_graph$add_observations(data = pems$data)
  pems_graph$prune_vertices()
  pems_graph$build_mesh(h=0.1)
 ```
@@ -836,7 +836,7 @@ We will now build the non-stationary matrices to be used:
 Let us also obtain the same covariate for the observations:
 
 ```{r}
-cov_obs <- pems$data[["distance_on_edge"]]
+cov_obs <- pems$data[[".distance_on_edge"]]
 cov_obs <- 2 * ifelse(cov_obs > 0.5, 
                       1 - cov_obs,
                       cov_obs)
