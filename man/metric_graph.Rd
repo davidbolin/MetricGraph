@@ -74,6 +74,8 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-remove_small_circles}{\code{metric_graph$remove_small_circles()}}
 \item \href{#method-metric_graph-export}{\code{metric_graph$export()}}
+\item \href{#method-metric_graph-leaflet}{\code{metric_graph$leaflet()}}
+\item \href{#method-metric_graph-mapview}{\code{metric_graph$mapview()}}
 \item \href{#method-metric_graph-set_edge_weights}{\code{metric_graph$set_edge_weights()}}
 \item \href{#method-metric_graph-get_edge_weights}{\code{metric_graph$get_edge_weights()}}
 \item \href{#method-metric_graph-get_vertices_incomp_dir}{\code{metric_graph$get_vertices_incomp_dir()}}
@@ -140,7 +142,7 @@ Create a new \code{metric_graph} object.
   E = NULL,
   vertex_unit = NULL,
   length_unit = NULL,
-  edge_weights = 1,
+  edge_weights = NULL,
   kirchhoff_weights = NULL,
   directional_weights = NULL,
   longlat = NULL,
@@ -198,7 +200,7 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 
 \item{\code{include_obs}}{If the object is of class \code{SSN}, should the observations be added? If \code{NULL} and the edges are of class \code{SSN}, the data will be automatically added. If \code{FALSE}, the data will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the observations to be added as observations.}
 
-\item{\code{include_edge_weights}}{If the object is of class \code{SSN}, \code{osmdata_sp}, \code{osmdata_sf}, \code{SpatialLinesDataFrame}, \code{MULTILINESTRING}, \code{LINESTRING}, \code{sfc_LINESTRING}, \code{sfc_MULTILINESTRING}, should the edge data (if any) be added as edge weights? If \code{NULL}, the edge data will be added as edge weights, if \code{FALSE} they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights}
+\item{\code{include_edge_weights}}{If the object is of class \code{SSN}, \code{osmdata_sp}, \code{osmdata_sf}, \code{SpatialLinesDataFrame}, \code{MULTILINESTRING}, \code{LINESTRING}, \code{sfc_LINESTRING}, \code{sfc_MULTILINESTRING}, should the edge data (if any) be added as edge weights? If \code{NULL}, the edge data will be added as edge weights, if \code{FALSE} they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights.}
 
 \item{\code{project}}{If \code{longlat} is \code{TRUE} should a projection be used to compute the distances to be used for the tolerances (see \code{tolerance} below)? The default is \code{FALSE}. When \code{TRUE}, the construction of the graph is faster.}
 
@@ -301,6 +303,57 @@ Here is an improved version of your description:
 For \code{which_format == "sf"}, the function returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element contains an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights. The \code{data} element holds the metric graph information (if available), represented by an \code{sf} object of \code{POINT} geometries.
 
 For \code{which_format == "sp"}, the function also returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element is a \code{SpatialLinesDataFrame} where the data frame includes edge weights. The \code{data} element is a \code{SpatialPointsDataFrame} that contains the metric graph information (if available).
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-leaflet"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-leaflet}{}}}
+\subsection{Method \code{leaflet()}}{
+Return the metric graph as a \code{leaflet::leaflet()} object to be built upon.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$leaflet(
+  width = NULL,
+  height = NULL,
+  padding = 0,
+  options = leafletOptions(),
+  elementId = NULL,
+  sizingPolicy = leafletSizingPolicy(padding = padding)
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{width}}{the width of the map}
+
+\item{\code{height}}{the height of the map}
+
+\item{\code{padding}}{the padding of the map}
+
+\item{\code{options}}{the map options}
+
+\item{\code{elementId}}{Use an explicit element ID for the widget (rather than an automatically generated one).}
+
+\item{\code{sizingPolicy}}{htmlwidgets sizing policy object. Defaults to \code{leafletSizingPolicy()}.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-mapview"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-mapview}{}}}
+\subsection{Method \code{mapview()}}{
+Returns a \code{mapview::mapview()} object of the metric graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mapview(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Additional arguments to be passed to \code{mapview::mapview()}. The \code{x} argument of mapview, containing the metric graph is already passed internally.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -1319,7 +1372,7 @@ Return the internal data with the option to filter by groups.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_data(
   group = NULL,
-  tibble = TRUE,
+  format = c("tibble", "sf", "sp", "list"),
   drop_na = FALSE,
   drop_all_na = TRUE
 )}\if{html}{\out{</div>}}
@@ -1330,11 +1383,11 @@ Return the internal data with the option to filter by groups.
 \describe{
 \item{\code{group}}{A vector contaning which groups should be returned? The default is \code{NULL}, which gives the result for the all groups.}
 
-\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
-
 \item{\code{drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
 }
 \if{html}{\out{</div>}}
 }
