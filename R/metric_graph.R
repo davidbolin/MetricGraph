@@ -996,16 +996,42 @@ metric_graph <-  R6Class("metric_graph",
     return(exported_metric_graph)
   },
 
-  #' @description Leaflet...
+  #' @description Return the metric graph as a `leaflet::leaflet()` object to be built upon.
+  #' @param width	the width of the map
+  #' @param height the height of the map
+  #' @param padding	the padding of the map
+  #' @param options	the map options
+  #' @param elementId	Use an explicit element ID for the widget (rather than an automatically generated one).
+  #' @param sizingPolicy	htmlwidgets sizing policy object. Defaults to `leafletSizingPolicy()`.
   
-  leaflet = function(){
+  leaflet = function(width = NULL, height = NULL, padding = 0, options = leafletOptions(), elementId = NULL,
+  sizingPolicy = leafletSizingPolicy(padding = padding)){
+    edges_geometries <- lapply(self$edges, sf::st_linestring) 
+    
+    if(is.vector(private$edge_weights)){
+      ew_tmp <- data.frame(.weights = private$edge_weights)
+    } else{
+      ew_tmp <- as.data.frame(private$edge_weights)
+    }
 
+    edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)    
+    return(leaflet::leaflet(data = edges_sf, width = width, height = height, padding = padding, options = options, elementId = elementId, sizingPolicy = sizingPolicy))
   },
 
-  #' @description mapview
+  #' @description Returns a `mapview::mapview()` object of the metric graph
+  #' @param ... Additional arguments to be passed to `mapview::mapview()`. The `x` argument of mapview, containing the metric graph is already passed internally.
   
-  mapview = function(){
+  mapview = function(...){
+    edges_geometries <- lapply(self$edges, sf::st_linestring) 
+    
+    if(is.vector(private$edge_weights)){
+      ew_tmp <- data.frame(.weights = private$edge_weights)
+    } else{
+      ew_tmp <- as.data.frame(private$edge_weights)
+    }
 
+    edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)    
+    return(mapview::mapview(x = edges_sf, ...))
   },
 
 
@@ -3742,14 +3768,17 @@ metric_graph <-  R6Class("metric_graph",
       data_temp <- as.data.frame(data_temp)
       data_geometries <- lapply(1:nrow(data_temp), function(i) sf::st_point(as.numeric(data_temp[i, c('.coord_x', '.coord_y')])))
       data_temp <- sf::st_sf(data_temp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)      
-    } else if(format == "sp"){
-      data_temp <- as.data.frame(data_temp)
-      sp::coordinates(data_temp) <- ~ .coord_x + .coord_y
-    }
+    } 
 
     if(!inherits(data_temp, "metric_graph_data")){
       class(data_temp) <- c("metric_graph_data", class(data_temp))
     }
+
+    if(format == "sp"){
+      data_temp <- as.data.frame(data_temp)
+      sp::coordinates(data_temp) <- ~ .coord_x + .coord_y
+    }
+
     return(data_temp)
   },
  #' @description Define the columns to be used for creating the directional vertex
