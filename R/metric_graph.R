@@ -3686,10 +3686,20 @@ metric_graph <-  R6Class("metric_graph",
  #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
 
-  get_data = function(group = NULL, tibble = TRUE, drop_na = FALSE, drop_all_na = TRUE){
+  get_data = function(group = NULL, format = c("tibble", "sf", "sp", "list"), drop_na = FALSE, drop_all_na = TRUE){
     if(is.null(private$data)){
       stop("The graph does not contain data.")
     }
+
+    format <- format[[1]]
+
+    format <- tolower(format)
+
+    if(!(format %in% c("tibble", "sf", "sp", "list"))){
+      stop("The possible formats are 'tibble', 'sf', 'sp' and 'list'.")
+    }
+
+
     if(!is.null(group)){
       total_groups <- self$get_groups()
       if(!(all(group %in% total_groups))){
@@ -3704,7 +3714,9 @@ metric_graph <-  R6Class("metric_graph",
     } else{
       data_temp <- private$data
     }
-    if(tibble){
+
+
+    if(format == "tibble"){
       data_temp <- tidyr::as_tibble(data_temp)
     }
 
@@ -3724,6 +3736,15 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         data_temp <- tidyr::drop_na(data_temp)
       }
+    }
+
+    if(format == "sf"){
+      data_temp <- as.data.frame(data_temp)
+      data_geometries <- lapply(1:nrow(data_temp), function(i) sf::st_point(as.numeric(data_temp[i, c('.coord_x', '.coord_y')])))
+      data_temp <- sf::st_sf(data_temp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)      
+    } else if(format == "sp"){
+      data_temp <- as.data.frame(data_temp)
+      sp::coordinates(data_temp) <- ~ .coord_x + .coord_y
     }
 
     if(!inherits(data_temp, "metric_graph_data")){
