@@ -87,7 +87,7 @@ metric_graph <-  R6Class("metric_graph",
   #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'` and `length_unit = 'm'`.
   #' @param include_obs If the object is of class `SSN`, should the observations be added? If `NULL` and the edges are of class `SSN`, the data will be automatically added. If `FALSE`, the data will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the observations to be added as observations.
   #' @param add_obs_options List containing additional options to be passed to the `add_observations()` method when adding observations from `SSN` data?
-  #' @param include_edge_weights If the object is of class `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame`, `MULTILINESTRING`, `LINESTRING`, `sfc_LINESTRING`, `sfc_MULTILINESTRING`, should the edge data (if any) be added as edge weights? If `NULL`, the edge data will be added as edge weights, if `FALSE` they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights
+  #' @param include_edge_weights If the object is of class `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame`, `MULTILINESTRING`, `LINESTRING`, `sfc_LINESTRING`, `sfc_MULTILINESTRING`, should the edge data (if any) be added as edge weights? If `NULL`, the edge data will be added as edge weights, if `FALSE` they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights.
   #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default choice, if the `edges` object does not have CRS nor proj4string, is `sf::st_crs(4326)`.
   #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default choice, if the `edges` object does not have CRS nor proj4string, is `sp::CRS("+proj=longlat +datum=WGS84")`.
   #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
@@ -129,7 +129,7 @@ metric_graph <-  R6Class("metric_graph",
                         E = NULL,
                         vertex_unit = NULL,
                         length_unit = NULL,
-                        edge_weights = 1,
+                        edge_weights = NULL,
                         kirchhoff_weights = NULL,
                         directional_weights = NULL,
                         longlat = NULL,
@@ -328,7 +328,12 @@ metric_graph <-  R6Class("metric_graph",
         if(is.vector(edge_weights)){
           private$kirchhoff_weights <- 1
         } else{
-          private$kirchhoff_weights <- ".weights"
+          if(".weights" %in% colnames(edge_weights)){
+            private$kirchhoff_weights <- ".weights"
+          } else{
+            edge_weights[, ".weights"] <- 1
+            private$kirchhoff_weights <- ".weights"
+          }
         }        
        }
 
@@ -361,7 +366,12 @@ metric_graph <-  R6Class("metric_graph",
         if(is.vector(edge_weights)){
           private$directional_weights <- 1
         } else{
-          private$directional_weights <- ".weights"
+          if(".weights" %in% colnames(edge_weights)){
+            private$directional_weights <- ".weights"
+          } else{
+            edge_weights[, ".weights"] <- 1
+            private$directional_weights <- ".weights"
+          }
         }
        }
 
@@ -839,7 +849,6 @@ metric_graph <-  R6Class("metric_graph",
 
     }
 
-
     if(!private$perform_merges && is.null(manual_edge_lengths)){
         if(verbose == 2){
           message("Computing edge lengths")
@@ -868,7 +877,6 @@ metric_graph <-  R6Class("metric_graph",
 
     if(verbose > 0){
       message(sprintf('Total construction time: %.2f %s', construction_time, units(construction_time)))
-
     }
 
     # Checking if graph is connected
@@ -887,6 +895,7 @@ metric_graph <-  R6Class("metric_graph",
     private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
 
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
+   
     self$setDirectionalWeightFunction()
 
     if (remove_deg2) {
@@ -923,7 +932,6 @@ metric_graph <-  R6Class("metric_graph",
 
     # Cloning again to add the initial graph to the initial graph
     private$initial_graph <- self$clone()
-
   },
 
   #' @description Sets the edge weights
@@ -988,6 +996,18 @@ metric_graph <-  R6Class("metric_graph",
     return(exported_metric_graph)
   },
 
+  #' @description Leaflet...
+  
+  leaflet = function(){
+
+  },
+
+  #' @description mapview
+  
+  mapview = function(){
+
+  },
+
 
   #' @description Sets the edge weights
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
@@ -1018,7 +1038,9 @@ metric_graph <-  R6Class("metric_graph",
             stop("The number of rows of weights must be equal to the number of edges!")
           }
           private$edge_weights <- weights
-          private$edge_weights[[".weights"]] <- rep(1, nrow(private$edge_weights))
+          if(!(".weights" %in% colnames(private$edge_weights))){
+            private$edge_weights[, ".weights"] <- 1
+          }
         }
     } else{
       weights <- private$edge_weights
@@ -1102,7 +1124,7 @@ metric_graph <-  R6Class("metric_graph",
       if(is.vector(private$edge_weights)){
         attr(edge,"weight") <- private$edge_weights[i]
       } else{
-        attr(edge,"weight") <- private$edge_weights[i,]
+        attr(edge,"weight") <- private$edge_weights[i,,drop=FALSE]
       }
       attr(edge, "longlat") <- private$longlat
       attr(edge, "crs") <- private$crs$input
@@ -2149,7 +2171,7 @@ metric_graph <-  R6Class("metric_graph",
       if(is.vector(private$edge_weights)){
         attr(edge,"weight") <- private$edge_weights[i]
       } else{
-        attr(edge,"weight") <- private$edge_weights[i,]
+        attr(edge,"weight") <- private$edge_weights[i, ,drop=FALSE]
       }
       attr(edge, "longlat") <- private$longlat
       attr(edge, "crs") <- private$crs$input
@@ -5399,7 +5421,7 @@ metric_graph <-  R6Class("metric_graph",
     if(is.vector(private$edge_weights)){
         private$edge_weights <- private$edge_weights[lines_keep_id]
     } else{
-        private$edge_weights <- private$edge_weights[lines_keep_id,]
+        private$edge_weights <- private$edge_weights[lines_keep_id,,drop=FALSE]
     }
 
     self$V <- vertex[, 2:3, drop = FALSE]
@@ -5933,7 +5955,7 @@ metric_graph <-  R6Class("metric_graph",
           if(is.vector(private$edge_weights)){
             private$edge_weights <- private$edge_weights[-ind]
           } else{
-            private$edge_weights <- private$edge_weights[-ind,]
+            private$edge_weights <- private$edge_weights[-ind,,drop=FALSE]
           }
 
         }
@@ -6044,10 +6066,10 @@ metric_graph <-  R6Class("metric_graph",
             }
             private$edge_weights <- private$edge_weights[-e_rem[2]]
           } else{
-            if(any(private$edge_weights[e_rem[2],] != private$edge_weights[e_rem[1],])){
+            if(any(private$edge_weights[e_rem[2],,drop=FALSE] != private$edge_weights[e_rem[1],,drop=FALSE])){
                 private$prune_warning <- TRUE
             }
-            private$edge_weights <- private$edge_weights[-e_rem[2],]
+            private$edge_weights <- private$edge_weights[-e_rem[2],,drop=FALSE]
           }
           }
 
@@ -6300,7 +6322,7 @@ metric_graph <-  R6Class("metric_graph",
         if(is.vector(private$edge_weights)){
           private$edge_weights <- c(private$edge_weights, private$edge_weights[Ei])
         } else{
-          private$edge_weights <- rbind(private$edge_weights, private$edge_weights[Ei,])
+          private$edge_weights <- rbind(private$edge_weights, private$edge_weights[Ei,,drop=FALSE])
         }
 
         # attr(self$edges[[Ei]], "length") <- t * l_e
@@ -6868,7 +6890,7 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     if(!is.vector(weights) && !is.data.frame(weights)){
       stop("'weights' must be either a vector or a data.frame!")
     }
-
+    
     if(is.vector(weights)){
       if ( (length(weights) != 1) && (length(weights) != self$nE)){
         stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
@@ -6883,7 +6905,6 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
         stop("The number of rows of weights must be equal to the number of edges!")
       }
       private$edge_weights <- weights
-      private$edge_weights[[".weights"]] <- rep(1, nrow(private$edge_weights))
     }
 
   }

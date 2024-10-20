@@ -1462,7 +1462,21 @@ predict.inla_metric_graph_spde <- function(object,
 
   if(group_variables == ".none"){
     group_variables <- NULL
+  } else if(group_variables == ".group"){
+    if(!(".group" %in% names(new_data))){
+      if(length(unique(original_data[[".group"]])) == 1){
+        new_data[[".group"]] <- rep(unique(original_data[[".group"]]), length(new_data[[".edge_number"]]))
+      }
+    }
+  } 
+
+  if(!is.null(group_variables)){
+    if(!(group_variables %in% names(new_data))){
+      warning("The replicate variable was not found in newdata. Predictions were only given for the first replicate.")
+      new_data[[".group"]] <- rep(original_data[[group_variable]][1], length(new_data[[".edge_number"]]))
+    }
   }
+
 
   graph_tmp$add_observations(data = new_data,
                   edge_number = ".edge_number",
