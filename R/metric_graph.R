@@ -4695,6 +4695,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                            scale_color_weights = scale_color_weights,
                            scale_color_degree = scale_color_degree,
                            add_new_scale_weights = add_new_scale_weights,
+                           arrow_size = arrow_size,
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degree" && !private$transform){
