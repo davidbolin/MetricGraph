@@ -450,6 +450,13 @@ We can see now that `graph5` automatically has the correct CRS:
 graph5
 ```
 
+This also allows us to plot the graph interactively with the underlying world map, if the data has a coordinate reference system, by setting `type = "mapview"` in the
+`plot()` method:
+
+```{r, warning=FALSE}
+graph5$plot(vertex_size = 0, type = "mapview")
+```
+
 We can also check the edge lengths:
 
 ```{r}
@@ -525,7 +532,7 @@ graphs$lengths
 ```
 To plot all of them, we can use the `plot` command of the class:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
-graphs$plot(vertex_size = 0)
+graphs$plot(vertex_size = 0, type = "mapview")
 ```
 
 One reason for having multiple components here might be that we set the tolerance for merging nodes too low. In fact, 
@@ -539,7 +546,7 @@ a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
 graphs <- graph_components$new(data_sp,
                                tolerance = list(vertex_vertex = 0.1))
-graphs$plot(vertex_size = 0)
+graphs$plot(vertex_size = 0, type = "mapview")
 ```
 
 With this choice, let us check the number of connected components:
@@ -600,6 +607,13 @@ Let us take a look at the graph:
 
 ```{r}
 river_graph$plot()
+```
+
+Let us also look at the interactive plot with the underlying map:
+
+
+```{r, warning=FALSE}
+river_graph$plot(vertex_size = 0, type = "mapview")
 ```
 
 Similarly to `osmdata` objects, when using `SSN` objects, the edge observations are also added as edge weights:

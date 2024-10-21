@@ -1286,6 +1286,7 @@ metric_graph <-  R6Class("metric_graph",
     } else{
       return(self$get_edges(format = format))
     }
+    class(tmp) <- c("metric_graph_weights", class(tmp))
     return(tmp)
   },
 
@@ -4630,7 +4631,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                   p = NULL,
                   degree = FALSE,
                   direction = FALSE,
-                  arrow_size = unit(0.25, "inches"),
+                  arrow_size = ggplot2::unit(0.25, "inches"),
                   edge_weight = NULL,
                   edge_width_weight = NULL,
                   scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
@@ -4734,45 +4735,74 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
 requireNamespace("mapview")
 edge_width <- 3 * edge_width
 edges_sf <- self$get_edges(format = "sf")
-vertices_sf <- self$get_vertices(format = "sf")
-if(is.null(newdata)){
+if(is.null(newdata) && !is.null(data)){
   data_sf <- self$get_data(format = "sf")
   idx_grp <- (data_sf[[".group"]] == group)
   data_sf <- data_sf[idx_grp, , drop=FALSE]
-} else{
+  class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
+} else if (!is.null(data)){
   data_sf <- as.data.frame(newdata)
   data_geometries <- lapply(1:nrow(data_sf), function(i) sf::st_point(as.numeric(data_sf[i, c('.coord_x', '.coord_y')])))
   data_sf <- sf::st_sf(data_sf, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)     
   idx_grp <- (data_sf[[".group"]] == group)
-  data_sf <- data_sf[idx_grp, , drop=FALSE]           
+  data_sf <- data_sf[idx_grp, , drop=FALSE]   
+  class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")        
 }
-class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
 
-mapview_output <- NULL
+mapview_output <- p
 
-if (!is.null(edge_weight)) {
-  if (!(edge_weight %in% colnames(edges_sf))) {
-    stop(paste(edge_weight, "is not a valid column in edges_sf"))
+if(is.null(p)){
+  if (!is.null(edge_weight)) {
+    if (!(edge_weight %in% colnames(edges_sf))) {
+      stop(paste(edge_weight, "is not a valid column in edges_sf"))
+    }
+    mapview_output <- mapview::mapview(
+      x = edges_sf,
+      zcol = edge_weight,  
+      color = scale_color_weights_mapview,  
+      lwd = edge_width,  
+      layer.name = "Edges",  
+      col.regions = scale_color_weights_mapview,  
+      ...
+    )
+  } else {
+    mapview_output <- mapview::mapview(
+      x = edges_sf,
+      lwd = edge_width,  
+      color = edge_color, 
+      layer.name = "Edges",
+      ...
+    )
   }
-  mapview_output <- mapview::mapview(
-    x = edges_sf,
-    zcol = edge_weight,  
-    color = scale_color_weights_mapview,  
-    lwd = edge_width,  
-    layer.name = "Edges",  
-    col.regions = scale_color_weights_mapview,  
-    ...
-  )
-} else {
-  mapview_output <- mapview::mapview(
-    x = edges_sf,
-    lwd = edge_width,  
-    color = edge_color, 
-    layer.name = "Edges",
-    ...
-  )
+} else{
+    if (!is.null(edge_weight)) {
+    if (!(edge_weight %in% colnames(edges_sf))) {
+      stop(paste(edge_weight, "is not a valid column in edges_sf"))
+    }
+    mapview_output <- mapview_output + mapview::mapview(
+      x = edges_sf,
+      zcol = edge_weight,  
+      color = scale_color_weights_mapview,  
+      lwd = edge_width,  
+      layer.name = "Edges",  
+      col.regions = scale_color_weights_mapview,  
+      ...
+    )
+  } else {
+    mapview_output <- mapview_output + mapview::mapview(
+      x = edges_sf,
+      lwd = edge_width,  
+      color = edge_color, 
+      layer.name = "Edges",
+      ...
+    )
+  }
 }
+
+
+
 if (degree) {
+  vertices_sf <- self$get_vertices(format = "sf")
   vertices_sf$degree <- as.factor(vertices_sf$degree)
   if(is.null(scale_color_degree_mapview)){
     scale_color_degree_mapview <- RColorBrewer::brewer.pal(n = length(levels(vertices_sf$degree)), "Set1")
@@ -4788,6 +4818,7 @@ if (degree) {
     ...
   )
 } else if (direction) {
+  vertices_sf <- self$get_vertices(format = "sf")
   problematic_vertices <- vertices_sf[vertices_sf$problematic == TRUE, ]
   non_problematic_vertices <- vertices_sf[vertices_sf$problematic == FALSE, ]
 
@@ -4809,6 +4840,7 @@ if (degree) {
     ...
   )
 } else if(vertex_size > 0){
+  vertices_sf <- self$get_vertices(format = "sf")
   mapview_output <- mapview_output + mapview::mapview(
     x = vertices_sf,
     cex = vertex_size,
@@ -6766,6 +6798,7 @@ format_data = function(data_res, format) {
         
         # Create sf object from coordinates
         data_res_sf <- sf::st_as_sf(data_res, coords = c(".coord_x", ".coord_y"), crs = sf::NA_crs_)
+        class(data_res_sf) <- c("metric_graph_data", class(data_res_sf))
         return(data_res_sf)
 
     } else if (format == "sp") {
@@ -6784,8 +6817,9 @@ format_data = function(data_res, format) {
         return(sp_data)
 
     } else {
-        # Default format is tibble
-        return(tidyr::as_tibble(data_res))
+        data_res <- tidyr::as_tibble(data_res)
+        class(data_res) <- c("metric_graph_data", class(data_res))
+        return(data_res)
     }
 },
 
@@ -6807,6 +6841,7 @@ format_data = function(data_res, format) {
     ew_tmp[[".edge_lengths"]] <- self$edge_lengths
 
     edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_)
+    class(edges_sf) <- c("metric_graph_weights", class(edges_sf))
     return(edges_sf)
 
   } else if (format == "sp") {
@@ -6829,7 +6864,9 @@ format_data = function(data_res, format) {
     return(edges_sldf)
 
   } else {
-    return(tidyr::as_tibble(edge_weights_res))
+    edge_weights_res <- tidyr::as_tibble(edge_weights_res)
+    class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
+    return(edge_weights_res)
   }
 },
 
@@ -7311,6 +7348,8 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     #         bar_update_attr_edges$increment()
     #       }
     # }
+
+    colnames(self$V) <- c("X","Y")
 
     self$vertices <- lapply(1:nrow(self$V),
         function(i){

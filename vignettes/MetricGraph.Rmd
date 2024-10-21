@@ -183,6 +183,12 @@ graph <- metric_graph$new(data)
 graph$plot(vertex_size = 0.5)
 ```
 
+Let us also build an interactive plot with the underlying map:
+
+```{r, warning=FALSE}
+graph$plot(vertex_size = 0.5, type = "mapview")
+```
+
 Observe that when we create this graph from `osmdata`, it also includes the edge data as edge weights:
 ```{r}
 graph$get_edge_weights()
@@ -194,6 +200,12 @@ Now, note that when creating the graph there was a warning saying that the graph
 graphs <- graph_components$new(edges = data)
 graph <- graphs$get_largest()
 graph$plot(vertex_size = 0)
+```
+
+Here is the interactive plot:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE, warning=FALSE}
+graph$plot(vertex_size = 0, type = "mapview")
 ```
 
 The `graph` object now contains all important features of the graph, such as the vertex matrix `graph$V`, the number of vertices `graph$nV`, the edge matrix `graph$E`, the number of edges  `graph$nE`, and the vector of all edge lengths `graph$get_edge_lengths()` given in the unit km. Thus, we can obtain the range of the edge lengths in the unit m as:
@@ -342,6 +354,12 @@ graph$add_observations(data = data.frame(edge_number = obs.loc[, 1],
                                          u = u),
                        normalized = TRUE)
 graph$plot(data = "u", vertex_size = 0)
+```
+
+We can also plot the interactive version:
+
+```{r, warning=FALSE}
+graph$plot(data = "u", vertex_size = 0, type = "mapview")
 ```
 
 We can also sample the field at the mesh on the graph as follows:

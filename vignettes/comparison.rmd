@@ -149,8 +149,8 @@ For this example we will consider the `pems` data contained in the `MetricGraph`
 
 Let us take a look at the observations:
 
-```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-pems_graph$plot(data = "y", vertex_size = 0)
+```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7, warning=FALSE}
+pems_graph$plot(data = "y", vertex_size = 0, type = "mapview")
 ```
 
 ## The models
