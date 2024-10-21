@@ -4630,29 +4630,33 @@ if (!is.null(data)) {
   )
 }
 
-if (mesh) {
-  if (is.null(self$mesh)) {
-    stop("The metric graph does not contain a mesh.")
-  }
-  
-  mesh_df <- as.data.frame(self$mesh$V)
-  colnames(mesh_df) <- c("X", "Y")
-  mesh_sf <- sf::st_as_sf(mesh_df, coords = c("X", "Y"))
+if(vertex_size > 0){
+  if (mesh) {
+    if (is.null(self$mesh)) {
+      stop("The metric graph does not contain a mesh.")
+    }
 
-  if (!is.null(private$crs)) {
-    sf::st_crs(mesh_sf) <- private$crs
-  } else {
-    sf::st_crs(mesh_sf) <- sf::NA_crs_
-  }
+    mesh_df <- as.data.frame(self$mesh$V)
+    colnames(mesh_df) <- c("X", "Y")
+    mesh_sf <- sf::st_as_sf(mesh_df, coords = c("X", "Y"))
 
-  mapview_output <- mapview_output + mapview::mapview(
-    x = mesh_sf,
-    cex = vertex_size * 0.5,
-    col.regions = "gray",
-    color = "black",
-    layer.name = "Mesh",
-    ...
-  )
+    if (!is.null(private$crs)) {
+      sf::st_crs(mesh_sf) <- private$crs
+    } else {
+      sf::st_crs(mesh_sf) <- sf::NA_crs_
+    }
+
+    mapview_output <- mapview_output + mapview::mapview(
+      x = mesh_sf,
+      cex = vertex_size * 0.5,
+      col.regions = "gray",
+      color = "black",
+      layer.name = "Mesh",
+      ...
+    )
+  }
+} else{
+  warning("The mesh was not shown since vertex_size is zero.")
 }
 
 if (!is.null(X)) {

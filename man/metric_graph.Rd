@@ -1776,10 +1776,10 @@ is a character, then the group will be chosen by its name.}
 
 \item{\code{arrow_size}}{The size of the arrows if direction is TRUE.}
 
-\item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.
+\item{\code{edge_weight}}{Which column from edge weights to determine the colors of the edges? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.
 \code{edge_weight} is only available for 2d plots. For 3d plots with edge weights, please use the \code{plot_function()} method.}
 
-\item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}.}
+\item{\code{edge_width_weight}}{Which column from edge weights to determine the edges widths? If \code{NULL} edge width will be determined from \code{edge_width}. Currently it is not supported for \code{type = "mapview"}.}
 
 \item{\code{scale_color_main}}{Color scale for the data to be plotted.}
 
