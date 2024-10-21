@@ -1030,55 +1030,64 @@ metric_graph <-  R6Class("metric_graph",
     return(vertices_df)
   }, 
 
-  #' @description Exports the MetricGraph object as an `sf`, `sp` or `SSN2` object.
+  #' @description Exports the MetricGraph object as an `sf` or `sp` object.
   #' @param format The format for the exported object. The options are `sf` (default) and `sp`.
-  #' @return 
-#' For `format == "sf"`, the function returns a list with two elements: `edges` and `data`. The `edges` element contains an `sf` object of `LINESTRING` geometries, where the associated data frame includes edge weights. The `data` element holds the metric graph information (if available), represented by an `sf` object of `POINT` geometries. 
-#' 
-#' For `format == "sp"`, the function also returns a list with two elements: `edges` and `data`. The `edges` element is a `SpatialLinesDataFrame` where the data frame includes edge weights. The `data` element is a `SpatialPointsDataFrame` that contains the metric graph information (if available).
+  #' @return Returns a list with three elements: `edges`, `vertices`, and `data`.
+  #' 
+  #' For `format == "sf"`, `edges` is an `sf` object of `LINESTRING` geometries with edge weights, and `vertices` and `data` are `sf` objects with `POINT` geometries.
+  #' 
+  #' For `format == "sp"`, `edges` is a `SpatialLinesDataFrame` with edge weights, and `vertices` and `data` are `SpatialPointsDataFrame`.
 
   export = function(format = "sf"){
-    if(format == "sf"){
-      edges_geometries <- lapply(self$edges, sf::st_linestring) 
-      
-      if(is.vector(private$edge_weights)){
-        ew_tmp <- data.frame(.weights = private$edge_weights)
-      } else{
-        ew_tmp <- as.data.frame(private$edge_weights)
-      }
-
-      edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
-
-      if(!is.null(private$data)){
-        data_tmp <- as.data.frame(private$data)
-        data_geometries <- lapply(1:nrow(data_tmp), function(i) sf::st_point(as.numeric(data_tmp[i, c('.coord_x', '.coord_y')])))
-        data_sf <- sf::st_sf(data_tmp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
-        class(data_sf) <- c("metric_graph_data", class(data_sf))
-      } else{
-        data_sf <- NULL
-      }
-      exported_metric_graph <- list(edges = edges_sf, data = data_sf)
-    } else if(format == "sp"){
-      edges_list <- lapply(1:length(self$edges), function(i) {
-        sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
-      })
-      sp_edges <- sp::SpatialLines(
-          lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
-          proj4string = if (!is.null(private$crs)) private$proj4string else NULL
-      )
-      if(is.vector(private$edge_weights)){
-        ew_tmp <- data.frame(.weights = private$edge_weights)
-      } else{
-        ew_tmp <- as.data.frame(private$edge_weights)
-      }
-      ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
-      edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
-      data_sp <- as.data.frame(private$data)
-      sp::coordinates(data_sp) <- ~ .coord_x + .coord_y
-      exported_metric_graph <- list(edges = edges_sldf, data = data_sp)
+    edges <- self$get_edges(format = format)
+    vertices <- self$get_vertices(format = format)
+    if(!is.null(private$data)){
+      data = self$get_data(format = format, drop_all_na=FALSE, drop_na = FALSE, group = NULL)
     } else{
-      stop(paste(format,"is not currently not a valid format to be exported."))
+      data = NULL
     }
+    exported_metric_graph = list(edges = edges, vertices = vertices, data = data)
+    # if(format == "sf"){
+    #   edges_geometries <- lapply(self$edges, sf::st_linestring) 
+      
+    #   if(is.vector(private$edge_weights)){
+    #     ew_tmp <- data.frame(.weights = private$edge_weights)
+    #   } else{
+    #     ew_tmp <- as.data.frame(private$edge_weights)
+    #   }
+
+    #   edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+
+    #   if(!is.null(private$data)){
+    #     data_tmp <- as.data.frame(private$data)
+    #     data_geometries <- lapply(1:nrow(data_tmp), function(i) sf::st_point(as.numeric(data_tmp[i, c('.coord_x', '.coord_y')])))
+    #     data_sf <- sf::st_sf(data_tmp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+    #     class(data_sf) <- c("metric_graph_data", class(data_sf))
+    #   } else{
+    #     data_sf <- NULL
+    #   }
+    #   exported_metric_graph <- list(edges = edges_sf, data = data_sf)
+    # } else if(format == "sp"){
+    #   edges_list <- lapply(1:length(self$edges), function(i) {
+    #     sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
+    #   })
+    #   sp_edges <- sp::SpatialLines(
+    #       lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
+    #       proj4string = if (!is.null(private$crs)) private$proj4string else NULL
+    #   )
+    #   if(is.vector(private$edge_weights)){
+    #     ew_tmp <- data.frame(.weights = private$edge_weights)
+    #   } else{
+    #     ew_tmp <- as.data.frame(private$edge_weights)
+    #   }
+    #   ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
+    #   edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
+    #   data_sp <- as.data.frame(private$data)
+    #   sp::coordinates(data_sp) <- ~ .coord_x + .coord_y
+    #   exported_metric_graph <- list(edges = edges_sldf, data = data_sp)
+    # } else{
+    #   stop(paste(format,"is not currently not a valid format to be exported."))
+    # }
     return(exported_metric_graph)
   },
 
