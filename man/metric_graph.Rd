@@ -107,6 +107,11 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-clear_observations}{\code{metric_graph$clear_observations()}}
 \item \href{#method-metric_graph-process_data}{\code{metric_graph$process_data()}}
 \item \href{#method-metric_graph-add_observations}{\code{metric_graph$add_observations()}}
+\item \href{#method-metric_graph-mutate_weights}{\code{metric_graph$mutate_weights()}}
+\item \href{#method-metric_graph-select_weights}{\code{metric_graph$select_weights()}}
+\item \href{#method-metric_graph-filter_weights}{\code{metric_graph$filter_weights()}}
+\item \href{#method-metric_graph-summarise_weights}{\code{metric_graph$summarise_weights()}}
+\item \href{#method-metric_graph-drop_na_weights}{\code{metric_graph$drop_na_weights()}}
 \item \href{#method-metric_graph-mutate}{\code{metric_graph$mutate()}}
 \item \href{#method-metric_graph-drop_na}{\code{metric_graph$drop_na()}}
 \item \href{#method-metric_graph-select}{\code{metric_graph$select()}}
@@ -1275,12 +1280,17 @@ stored in the \code{data} element of the \code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-mutate"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-mutate}{}}}
-\subsection{Method \code{mutate()}}{
-Use \code{dplyr::mutate} function on the internal metric graph data object.
+\if{html}{\out{<a id="method-metric_graph-mutate_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-mutate_weights}{}}}
+\subsection{Method \code{mutate_weights()}}{
+Use \code{dplyr::mutate} function on the internal edge weights object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate(..., .drop_na = FALSE, .drop_all_na = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate_weights(
+  ...,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -1291,15 +1301,186 @@ Use \code{dplyr::mutate} function on the internal metric graph data object.
 \item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-A wrapper to use \code{dplyr::mutate()} within the internal metric graph data object.
+A wrapper to use \code{dplyr::mutate()} on the internal edge weights object and return the result in the requested format.
 }
 
 \subsection{Returns}{
-A \code{tidyr::tibble} object containing the resulting data list after the mutate.
+A \code{tidyr::tibble}, \code{sf} or \code{sp} object containing the resulting data list after the mutate.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-select_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-select_weights}{}}}
+\subsection{Method \code{select_weights()}}{
+Use \code{dplyr::select} function on the internal edge weights object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select_weights(
+  ...,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::select()}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::select()} on the internal edge weights object and return the result in the requested format.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble}, \code{sf} or \code{sp} object containing the resulting data list after the select.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-filter_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-filter_weights}{}}}
+\subsection{Method \code{filter_weights()}}{
+Use \code{dplyr::filter} function on the internal edge weights object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter_weights(
+  ...,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::filter()}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::filter()} on the internal edge weights object and return the result in the requested format.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble}, \code{sf} or \code{sp} object containing the resulting data list after the filter.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-summarise_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-summarise_weights}{}}}
+\subsection{Method \code{summarise_weights()}}{
+Use \code{dplyr::summarise} function on the internal edge weights object grouped by the edge numbers.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$summarise_weights(
+  ...,
+  .groups = NULL,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::summarise()}.}
+
+\item{\code{.groups}}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::summarise()} on the internal edge weights object and return the result in the requested format.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble}, \code{sf} or \code{sp} object containing the resulting data list after the summarise.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-drop_na_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-drop_na_weights}{}}}
+\subsection{Method \code{drop_na_weights()}}{
+Use \code{tidyr::drop_na()} function on the internal edge weights object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$drop_na_weights(format = "tibble", ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
+
+\item{\code{...}}{Arguments to be passed to \code{tidyr::drop_na()}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{tidyr::drop_na()} within the internal edge weights object.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble}, \code{sf}, or \code{sp} object containing the resulting data list after the drop_na.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-mutate"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-mutate}{}}}
+\subsection{Method \code{mutate()}}{
+Use \code{dplyr::mutate} function on the internal metric graph data object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$mutate(
+  ...,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments to be passed to \code{dplyr::mutate()}.}
+
+\item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
+
+\item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+A wrapper to use \code{dplyr::mutate()} within the internal metric graph data object and return the result in the requested format.
+}
+
+\subsection{Returns}{
+A \code{tidyr::tibble}, \code{sf}, or \code{sp} object containing the resulting data list after the mutate.
 }
 }
 \if{html}{\out{<hr>}}
@@ -1308,13 +1489,15 @@ A \code{tidyr::tibble} object containing the resulting data list after the mutat
 \subsection{Method \code{drop_na()}}{
 Use \code{tidyr::drop_na()} function on the internal metric graph data object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$drop_na(...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$drop_na(..., format = "tibble")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{...}}{Arguments to be passed to \code{tidyr::drop_na()}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 }
 \if{html}{\out{</div>}}
 }
@@ -1332,7 +1515,12 @@ A \code{tidyr::tibble} object containing the resulting data list after the drop_
 \subsection{Method \code{select()}}{
 Use \code{dplyr::select} function on the internal metric graph data object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select(..., .drop_na = FALSE, .drop_all_na = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$select(
+  ...,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -1343,6 +1531,8 @@ Use \code{dplyr::select} function on the internal metric graph data object.
 \item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 }
 \if{html}{\out{</div>}}
 }
@@ -1360,7 +1550,12 @@ A \code{tidyr::tibble} object containing the resulting data list after the selec
 \subsection{Method \code{filter()}}{
 Use \code{dplyr::filter} function on the internal metric graph data object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter(..., .drop_na = FALSE, .drop_all_na = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$filter(
+  ...,
+  .drop_na = FALSE,
+  .drop_all_na = TRUE,
+  format = "tibble"
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -1371,6 +1566,8 @@ Use \code{dplyr::filter} function on the internal metric graph data object.
 \item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 }
 \if{html}{\out{</div>}}
 }
@@ -1393,7 +1590,8 @@ Use \code{dplyr::summarise} function on the internal metric graph data object gr
   .include_graph_groups = FALSE,
   .groups = NULL,
   .drop_na = FALSE,
-  .drop_all_na = TRUE
+  .drop_all_na = TRUE,
+  format = "tibble"
 )}\if{html}{\out{</div>}}
 }
 
@@ -1409,6 +1607,8 @@ Use \code{dplyr::summarise} function on the internal metric graph data object gr
 \item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{.drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 }
 \if{html}{\out{</div>}}
 }

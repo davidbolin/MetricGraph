@@ -4860,10 +4860,10 @@ if(vertex_size > 0){
       layer.name = "Mesh",
       ...
     )
+  } else{
+    warning("The mesh was not shown since vertex_size is zero.")
   }
-} else{
-  warning("The mesh was not shown since vertex_size is zero.")
-}
+} 
 
 if (!is.null(X)) {
   if (is.null(X_loc)) {
