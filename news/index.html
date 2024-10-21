@@ -67,6 +67,9 @@
 <li>Added wrappers for <code>leaflet</code> and <code>mapview</code> as methods.</li>
 <li>Added <code>get_edges()</code> and <code>get_vertices()</code> methods were created, that return the edges and vertices, respectively, in either ‘sf’, ‘sp’ or the internal formats.</li>
 <li>Added an option <code>format</code> to the <code>get_data()</code> method that allows one to also return the data in <code>sf</code> or <code>sp</code> formats.</li>
+<li>The <code>plot</code> method now has an argument <code>type</code>, that now also allows one to set <code>type</code> to <code>mapview</code>, thus it can return <code>ggplot2</code>, <code>plotly</code> and <code>mapview</code> objects.</li>
+<li>Adding methods to do data manipulation on weights, <code>mutate_weight</code>, <code>select_weights</code>, <code>filter_weights</code>, <code>summarise_weights</code> and <code>drop_na_weights</code>. They have a <code>format</code> argument that allows one to also return <code>sf</code> or <code>sp</code> objects.</li>
+<li>Updated the methods, <code>mutate</code>, <code>filter</code>, <code>select</code>, <code>drop_na</code> and <code>summarise</code> to have a format argument to also return <code>sf</code> or <code>sp</code> objects.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.0" id="metricgraph-130">MetricGraph 1.3.0<a class="anchor" aria-label="anchor" href="#metricgraph-130"></a></h2><p class="text-muted">CRAN release: 2024-02-27</p>
