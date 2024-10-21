@@ -263,6 +263,79 @@ To plot the data for a particular group, we simply select the group variable we 
 graph$plot(data = "y", group = "3:c")
 ```
 
+# Identifying data that is away from the metric graph
+
+Whenever we use the `add_observations()` method, it returns the data that was removed (if there was any). We can use this information to visualize what is going on and decide what to do with this data. There are two types of removed data, the ones that were removed due to being projected to the same place, or the ones that were removed due to being farther than the tolerance.
+
+To make things simple, let us work with the previous dataset:
+
+```{r}
+data_df <- as.data.frame(graph$get_data(group = "1:a"))
+data_df <- data_df[,c("y", ".coord_x", ".coord_y")]
+```
+
+Let us now include observations that are not contained in the graph.
+
+```{r}
+data_df_tmp <- data.frame(y = rnorm(20), .coord_x = 0.5, .coord_y = runif(20))
+data_df <- rbind(data_df,data_df_tmp)
+```
+
+We start by looking at the graph, and the observations that we created outside the metric graph:
+
+```{r}
+graph$plot() + geom_point(data_df_tmp, mapping = aes(x=.coord_x, y=.coord_y), color="red")
+```
+
+Let us now add these observations to the graph, but we will store the returned object:
+
+```{r}
+rem_obs <- graph$add_observations(data = data_df, clear_obs = TRUE,
+                                  data_coords = "spatial",
+                                  coord_x = ".coord_x",
+                                  coord_y = ".coord_y")
+```
+
+Let us look at the element `rem_obs`:
+
+```{r}
+rem_obs
+```
+
+We can see that there were only data that were removed due to being projected at the same location.
+
+Let us now plot the data, and add the points that were removed in red:
+
+```{r}
+graph$plot(data = "y") + geom_point(rem_obs$removed, mapping = aes(x=.coord_x, y=.coord_y), color="red")
+```
+
+We can observe that we ended up adding more than one would want due to the tolerance for adding observations in this case. Let us reduce the tolerance, and repeat the procedure:
+
+```{r}
+rem_obs <- graph$add_observations(data = data_df, clear_obs = TRUE,
+                                  data_coords = "spatial",
+                                  coord_x = ".coord_x",
+                                  coord_y = ".coord_y",
+                                  tolerance = 0.1)
+```
+
+Let us now look at `rem_obs`:
+
+```{r}
+rem_obs
+```
+
+We can see that there were both data removed due to being projected to the same place, as well as due to being too far away. Let us plot the ones due to being projected to the same place in red, and the ones that are far away in blue:
+
+Let us now plot the data, and add the points that were removed in red:
+
+```{r}
+graph$plot(data = "y") + geom_point(rem_obs$removed, mapping = aes(x=.coord_x, y=.coord_y), color="red") + 
+    geom_point(rem_obs$far_data, mapping = aes(x=.coord_x, y=.coord_y), color="blue")
+```
+
+Therefore, the practitioner can use this information, to decide the best strategy to handle such observations.
 
 # Manipulating data from metric graphs in the tidyverse style
 

@@ -3195,7 +3195,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
   #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
   #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
-  #' @param return_removed Should the removed data (if it exists) when using 'closest' `duplicated_strategy` be returned?
+  #' @param return_removed Should the removed data (if it exists) due to being projected to the same place when using 'closest' `duplicated_strategy` be returned?
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
@@ -3242,6 +3242,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     removed_data <- NULL
+    far_data <- NULL
     strc_data <- FALSE
 
     if(inherits(data, "sf")){
@@ -3460,20 +3461,20 @@ metric_graph <-  R6Class("metric_graph",
 
                     if(sum(dup_points)>0){
                         if(!suppress_warnings){
-                          warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
+                          warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
                         }
-                    }
-
-                    data <- lapply(data, function(dat){dat[!far_points]})
-                    if(!is.null(closest_points)){
-                      removed_data <-  lapply(data, function(dat){dat[closest_points]})
-                      data <- lapply(data, function(dat){dat[!closest_points]})
                     }
                     if(any(far_points)){
                         if(!suppress_warnings){
                           warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
                         }
-                    }
+                        far_data <- lapply(data, function(dat){dat[far_points]})
+                    }                    
+                    data <- lapply(data, function(dat){dat[!far_points]})
+                    if(!is.null(closest_points)){
+                      removed_data <-  lapply(data, function(dat){dat[closest_points]})
+                      data <- lapply(data, function(dat){dat[!closest_points]})
+                    }                    
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY
                     }
@@ -3524,12 +3525,13 @@ metric_graph <-  R6Class("metric_graph",
                       norm_XY <- c(norm_XY, norm_XY_grp)
                     }
                     PtE <- PtE_new
-                    data <- lapply(data, function(dat){dat[!far_points]})
                     if(any(far_points)){
                       if(!suppress_warnings){
                             warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
                       }
+                      far_data <- lapply(data, function(dat){dat[far_points]})
                     }
+                    data <- lapply(data, function(dat){dat[!far_points]})
                     # PtE <- PtE[!far_points,,drop=FALSE]
                     if(include_distance_to_graph){
                       data[[".distance_to_graph"]] <- norm_XY
@@ -3620,9 +3622,14 @@ metric_graph <-  R6Class("metric_graph",
           }
 
     if(return_removed){
+      ret_list <- list()
       if(!is.null(removed_data)){
-        return(as.data.frame(removed_data))
+        ret_list[["removed"]] <- as.data.frame(removed_data)
       }
+      if(!is.null(far_data)){
+        ret_list[["far_data"]] <- as.data.frame(far_data)
+      }
+      return(ret_list)
     }
   },
 
