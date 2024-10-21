@@ -5628,8 +5628,6 @@ return(mapview_output)
       }
     } else if(type == "mapview"){
     requireNamespace("mapview")
-    edge_width <- 2.5 * edge_width
-    data_initial <<- data
     data <- na.omit(data[, c("x", "y", "z", "i")])
     data_split <- split(data, data$i)
     
@@ -5661,8 +5659,27 @@ return(mapview_output)
       crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_
     )
 
+    edges_sf <- self$get_edges(format = "sf")
+
     if(is.null(p)){
       mapview_output <- mapview::mapview(
+        x = edges_sf,
+        lwd = edge_width,  
+        color = edge_color, 
+        layer.name = "Edges",
+        ...
+      )
+    } else{
+      mapview_output <- mapview::mapview(
+        x = edges_sf,
+        lwd = 1.75 * edge_width,  
+        color = edge_color, 
+        layer.name = "Edges",
+        ...
+      )
+    }
+    edge_width <- 2.5 * edge_width
+    mapview_output <- mapview_output + mapview::mapview(
         x = data_sf,
         zcol = "z",
         color = scale_color_mapview, 
@@ -5671,16 +5688,6 @@ return(mapview_output)
         col.regions = scale_color_mapview, 
         layer.name = mapview_caption
       )
-    } else{
-      mapview_output <- p + mapview::mapview(
-        x = data_sf,
-        zcol = "z",
-        color = scale_color_mapview, 
-        lwd = edge_width, 
-        cex = vertex_size, 
-        layer.name = mapview_caption
-      )
-    }
 
 
     return(mapview_output)
