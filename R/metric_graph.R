@@ -965,7 +965,7 @@ metric_graph <-  R6Class("metric_graph",
           ew_tmp <- as.data.frame(private$edge_weights)
         }
 
-        ew_temp[[".edge_lengths"]] <- self$edge_lengths
+        ew_tmp[[".edge_lengths"]] <- self$edge_lengths
 
         edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
         return(edges_sf)
@@ -983,7 +983,7 @@ metric_graph <-  R6Class("metric_graph",
         ew_tmp <- as.data.frame(private$edge_weights)
       }
       ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
-      ew_temp[[".edge_lengths"]] <- self$edge_lengths
+      ew_tmp[[".edge_lengths"]] <- self$edge_lengths
       edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
       return(edges_sldf)
       } else{
@@ -1020,7 +1020,6 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(private$crs)){
         sf::st_crs(vertices_df) <- private$crs
       }
-    return(sf_vertices)
     } else if(format == "sp"){
       sp::coordinates(vertices_df) <- ~ X + Y
       if(!is.null(private$proj4string)){
@@ -1101,15 +1100,7 @@ metric_graph <-  R6Class("metric_graph",
   
   leaflet = function(width = NULL, height = NULL, padding = 0, options = leafletOptions(), elementId = NULL,
   sizingPolicy = leafletSizingPolicy(padding = padding)){
-    edges_geometries <- lapply(self$edges, sf::st_linestring) 
-    
-    if(is.vector(private$edge_weights)){
-      ew_tmp <- data.frame(.weights = private$edge_weights)
-    } else{
-      ew_tmp <- as.data.frame(private$edge_weights)
-    }
-
-    edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)    
+    edges_sf <- self$get_edges(format = "sf")
     return(leaflet::leaflet(data = edges_sf, width = width, height = height, padding = padding, options = options, elementId = elementId, sizingPolicy = sizingPolicy))
   },
 
@@ -1117,15 +1108,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param ... Additional arguments to be passed to `mapview::mapview()`. The `x` argument of mapview, containing the metric graph is already passed internally.
   
   mapview = function(...){
-    edges_geometries <- lapply(self$edges, sf::st_linestring) 
-    
-    if(is.vector(private$edge_weights)){
-      ew_tmp <- data.frame(.weights = private$edge_weights)
-    } else{
-      ew_tmp <- as.data.frame(private$edge_weights)
-    }
-
-    edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)    
+    edges_sf <- self$get_edges(format = "sf")
     return(mapview::mapview(x = edges_sf, ...))
   },
 
@@ -1265,25 +1248,44 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Gets the edge weights
   #' @param data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
-  #' @param tibble Should the edge weights be returned as tibble?
+ #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
+ #' @param tibble `r lifecycle::badge("deprecated")` Use `format` instead.
   #' @return A vector or `data.frame` containing the edge weights.
 
-  get_edge_weights = function(data.frame = FALSE, tibble = TRUE){
+  get_edge_weights = function(data.frame = FALSE, format = c("tibble", "sf", "sp", "list"), tibble = deprecated()){
+
+  if (lifecycle::is_present(tibble)) {
+      lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)", "get_edge_weights(format)",
+        details = c("The argument `tibble` was deprecated in favor of the argument `format`.")
+      )
+    if(tibble){
+      format <- "tibble"
+    }
+  }   
+
+    format <- format[[1]]
+
+    format <- tolower(format)
+
+    if(!(format %in% c("tibble", "sf", "sp", "list"))){
+      stop("The possible formats are 'tibble', 'sf', 'sp' and 'list'.")
+    }  
+    
     tmp <- private$edge_weights
     row.names(tmp) <- NULL
     if(!is.data.frame(tmp) && data.frame){
       tmp <- data.frame(.weights = tmp)
     }
-    if(tibble){
+    if(format == "tibble"){
       if(!is.data.frame(tmp)){
         tmp <- data.frame(.weights = tmp)
       }
       tmp <- dplyr::as_tibble(tmp)
+    } else{
+      return(self$get_edges(format = format))
     }
     return(tmp)
   },
-
-
 
   #' @description Gets vertices with incompatible directions
   #' @return A vector containing the vertices with incompatible directions.
@@ -2712,7 +2714,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE.
-  #' @param tibble Should the data be returned as a `tidyr::tibble`?
+  #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
   #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
   #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
   #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
@@ -2724,6 +2726,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param verbose If `TRUE`, report steps and times.
   #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
+  #' @param tibble  `r lifecycle::badge("deprecated")` Use `format` instead.
   #' @return No return value. Called for its side effects. The observations are
   #' stored in the `data` element of the `metric_graph` object.
 
@@ -2736,15 +2739,32 @@ metric_graph <-  R6Class("metric_graph",
                               group = NULL,
                               group_sep = ".",
                               normalized = FALSE,
-                              tibble = TRUE,
+                              format = c("tibble", "sf", "sp", "list"),
                               duplicated_strategy = "closest",
                               include_distance_to_graph = TRUE,
                               only_return_removed = FALSE,
                               tolerance = max(self$edge_lengths)/2,
                               verbose = FALSE,
                               suppress_warnings = FALSE,
-                              Spoints = lifecycle::deprecated()) {
+                              Spoints = lifecycle::deprecated(),
+                              tibble = lifecycle::deprecated()) {
 
+  if (lifecycle::is_present(tibble)) {
+      lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)", "get_edge_weights(format)",
+        details = c("The argument `tibble` was deprecated in favor of the argument `format`.")
+      )
+    if(tibble){
+      format <- "tibble"
+    }
+  }       
+
+    format <- format[[1]]
+
+    format <- tolower(format)
+
+    if(!(format %in% c("tibble", "sf", "sp", "list"))){
+      stop("The possible formats are 'tibble', 'sf', 'sp' and 'list'.")
+    }
 
         data_coords <- data_coords[[1]]
         if(!is.null(group)){
@@ -3106,9 +3126,16 @@ metric_graph <-  R6Class("metric_graph",
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
     data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
     data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
-    if(tibble){
+    if(format == "tibble"){
       data <- tidyr::as_tibble(data)
     }
+
+    if(format == "sf"){
+      data <- as.data.frame(data)
+      data_geometries <- lapply(1:nrow(data), function(i) sf::st_point(as.numeric(data[i, c('.coord_x', '.coord_y')])))
+      data <- sf::st_sf(data, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)      
+    } 
+
     class(data) <- c("metric_graph_data", class(data))
         if(!is.null(group)){
       attr(data, "group_variables") <- group
@@ -3116,6 +3143,12 @@ metric_graph <-  R6Class("metric_graph",
       attr(data, "group_variables") <- ".none"
     }
     })
+
+    if(format == "sp"){
+      data <- as.data.frame(data)
+      sp::coordinates(data) <- ~ .coord_x + .coord_y
+    }
+
           if(verbose == 2) {
       message(sprintf("time: %.3f s", t[["elapsed"]]))
           }
@@ -3805,11 +3838,21 @@ metric_graph <-  R6Class("metric_graph",
  #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
  #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+ #' @param tibble `r lifecycle::badge("deprecated")` Use `format` instead.
 
   get_data = function(group = NULL, format = c("tibble", "sf", "sp", "list"), drop_na = FALSE, drop_all_na = TRUE){
     if(is.null(private$data)){
       stop("The graph does not contain data.")
     }
+
+  if (lifecycle::is_present(tibble)) {
+      lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)", "get_edge_weights(format)",
+        details = c("The argument `tibble` was deprecated in favor of the argument `format`.")
+      )
+    if(tibble){
+      format <- "tibble"
+    }
+  }       
 
     format <- format[[1]]
 

@@ -1345,12 +1345,12 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, sd_post_re =
   }
 
   if(is.null(newdata)){
-    newdata = x$graph$get_data(group = x$graph$get_groups()[1], tibble=TRUE)
+    newdata = x$graph$get_data(group = x$graph$get_groups()[1], format="tibble")
   } else{
     newdata <- x$graph$process_data(data = newdata,
     edge_number = edge_number, distance_on_edge = distance_on_edge,
     coord_x = coord_x, coord_y = coord_y, data_coords = data_coords, group = NULL,
-    tibble=TRUE, normalized = normalized)
+    format="tibble", normalized = normalized)
   }
 
  if(pred_int || se_fit){

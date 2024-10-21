@@ -332,7 +332,7 @@ For \code{which_format == "sp"}, the function returns a \code{SpatialPointsDataF
 \if{html}{\out{<a id="method-metric_graph-export"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-export}{}}}
 \subsection{Method \code{export()}}{
-Exports the MetricGraph object as an \code{sf}, \code{sp} or \code{SSN2} object.
+Exports the MetricGraph object as an \code{sf} or \code{sp} object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$export(format = "sf")}\if{html}{\out{</div>}}
 }
@@ -345,9 +345,11 @@ Exports the MetricGraph object as an \code{sf}, \code{sp} or \code{SSN2} object.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-For \code{format == "sf"}, the function returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element contains an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights. The \code{data} element holds the metric graph information (if available), represented by an \code{sf} object of \code{POINT} geometries.
+Returns a list with three elements: \code{edges}, \code{vertices}, and \code{data}.
 
-For \code{format == "sp"}, the function also returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element is a \code{SpatialLinesDataFrame} where the data frame includes edge weights. The \code{data} element is a \code{SpatialPointsDataFrame} that contains the metric graph information (if available).
+For \code{format == "sf"}, \code{edges} is an \code{sf} object of \code{LINESTRING} geometries with edge weights, and \code{vertices} and \code{data} are \code{sf} objects with \code{POINT} geometries.
+
+For \code{format == "sp"}, \code{edges} is a \code{SpatialLinesDataFrame} with edge weights, and \code{vertices} and \code{data} are \code{SpatialPointsDataFrame}.
 }
 }
 \if{html}{\out{<hr>}}
@@ -439,7 +441,11 @@ No return value. Called for its side effects.
 \subsection{Method \code{get_edge_weights()}}{
 Gets the edge weights
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights(data.frame = FALSE, tibble = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edge_weights(
+  data.frame = FALSE,
+  format = c("tibble", "sf", "sp", "list"),
+  tibble = deprecated()
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -447,7 +453,9 @@ Gets the edge weights
 \describe{
 \item{\code{data.frame}}{If the edge weights are given as vectors, should the result be returned as a data.frame?}
 
-\item{\code{tibble}}{Should the edge weights be returned as tibble?}
+\item{\code{format}}{Which format should the data be returned? The options are \code{tibble} for \code{tidyr::tibble}, \code{sf} for \code{POINT}, \code{sp} for \code{SpatialPointsDataFrame} and \code{list} for the internal list format.}
+
+\item{\code{tibble}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{format} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1085,14 +1093,15 @@ Process data to the metric graph data format.
   group = NULL,
   group_sep = ".",
   normalized = FALSE,
-  tibble = TRUE,
+  format = c("tibble", "sf", "sp", "list"),
   duplicated_strategy = "closest",
   include_distance_to_graph = TRUE,
   only_return_removed = FALSE,
   tolerance = max(self$edge_lengths)/2,
   verbose = FALSE,
   suppress_warnings = FALSE,
-  Spoints = lifecycle::deprecated()
+  Spoints = lifecycle::deprecated(),
+  tibble = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
@@ -1137,7 +1146,7 @@ which the group variables are stored. It will be stored as a single column \code
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE.}
 
-\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+\item{\code{format}}{Which format should the data be returned? The options are \code{tibble} for \code{tidyr::tibble}, \code{sf} for \code{POINT}, \code{sp} for \code{SpatialPointsDataFrame} and \code{list} for the internal list format.}
 
 \item{\code{duplicated_strategy}}{Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
 The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.}
@@ -1156,6 +1165,8 @@ This helps detecting mistakes on the input locations when adding new data.}
 \item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
 
 \item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
+
+\item{\code{tibble}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{format} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1433,6 +1444,8 @@ Return the internal data with the option to filter by groups.
 \item{\code{drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
+
+\item{\code{tibble}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{format} instead.}
 }
 \if{html}{\out{</div>}}
 }
