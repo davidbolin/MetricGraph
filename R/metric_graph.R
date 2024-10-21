@@ -1019,6 +1019,8 @@ metric_graph <-  R6Class("metric_graph",
       vertices_df <- sf::st_as_sf(vertices_df, coords = c("X", "Y"))
       if(!is.null(private$crs)){
         sf::st_crs(vertices_df) <- private$crs
+      } else{
+        sf::st_crs(vertices_df) <- sf::NA_crs_
       }
     } else if(format == "sp"){
       sp::coordinates(vertices_df) <- ~ X + Y
@@ -4385,7 +4387,8 @@ metric_graph <-  R6Class("metric_graph",
   #' (edge, normalized distance on edge).
   #' @param p Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to
   #' @param degree Show the degrees of the vertices?
-  #' @param direction Show the direction of the edges?
+  #' @param direction Show the direction of the edges? For `type == "mapview"` the arrows are not shown, only the color of the vertices indicating whether they are problematic or not.
+  #' @param arrow_size The size of the arrows if direction is TRUE.
   #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
   #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`.
@@ -4393,6 +4396,9 @@ metric_graph <-  R6Class("metric_graph",
     #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
     #' @param scale_color_degree Color scale for the degrees.
     #' @param add_new_scale_weights Should a new color scale for the edge weights be created?
+    #' @param scale_color_mapview Color scale to be applied for data when `type = "mapview"`.
+    #' @param scale_color_weights_mapview Color scale to be applied for edge weights when `type = "mapview"`.
+    #' @param scale_color_degree_mapview Color scale to be applied for degrees when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_degrees, "Set1")` will be used where `n_degrees` is the number of different degrees.
     #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
@@ -4419,12 +4425,16 @@ metric_graph <-  R6Class("metric_graph",
                   p = NULL,
                   degree = FALSE,
                   direction = FALSE,
+                  arrow_size = unit(0.25, "inches"),
                   edge_weight = NULL,
                   edge_width_weight = NULL,
                   scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
                   scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
                   scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
                   add_new_scale_weights = TRUE,
+                  scale_color_mapview = viridis::viridis(100, option = "D"),
+                  scale_color_weights_mapview = viridis::viridis(100, option = "C"),
+                  scale_color_degree_mapview = NULL,
                   plotly = deprecated(),
                   ...) {
 
@@ -4514,8 +4524,163 @@ metric_graph <-  R6Class("metric_graph",
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
         }
       }
-    } 
-    if(interactive && !plotly){
+    } else if(type == "mapview"){
+requireNamespace("mapview")
+edge_width <- 3 * edge_width
+edges_sf <- self$get_edges(format = "sf")
+vertices_sf <- self$get_vertices(format = "sf")
+if(is.null(newdata)){
+  data_sf <- self$get_data(format = "sf")
+  idx_grp <- (data_sf[[".group"]] == group)
+  data_sf <- data_sf[idx_grp, , drop=FALSE]
+} else{
+  data_sf <- as.data.frame(newdata)
+  data_geometries <- lapply(1:nrow(data_sf), function(i) sf::st_point(as.numeric(data_sf[i, c('.coord_x', '.coord_y')])))
+  data_sf <- sf::st_sf(data_sf, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)     
+  idx_grp <- (data_sf[[".group"]] == group)
+  data_sf <- data_sf[idx_grp, , drop=FALSE]           
+}
+class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
+
+mapview_output <- NULL
+
+if (!is.null(edge_weight)) {
+  mapview_output <- mapview::mapview(
+    x = edges_sf,
+    zcol = edge_weight,
+    color = scale_color_weights_mapview,
+    lwd = if (!is.null(edge_width_weight)) edges_sf[[edge_width_weight]] else edge_width,
+    layer.name = "Edges",
+    col.regions = scale_color_weights_mapview,
+    ...
+  )
+} else {
+  mapview_output <- mapview::mapview(
+    x = edges_sf,
+    lwd = edge_width,
+    color = edge_color,
+    layer.name = "Edges",
+    ...
+  )
+}
+
+if (degree) {
+  vertices_sf$degree <- as.factor(vertices_sf$degree)
+  if(is.null(scale_color_degree_mapview)){
+    scale_color_degree_mapview <- RColorBrewer::brewer.pal(n = length(levels(vertices_sf$degree)), "Set1")
+  }
+
+  mapview_output <- mapview_output + mapview::mapview(
+    x = vertices_sf,
+    zcol = "degree",
+    cex = vertex_size,
+    col.regions = scale_color_degree_mapview,
+    color = scale_color_degree_mapview,
+    layer.name = "Vertices (Degree)",
+    ...
+  )
+} else if (direction) {
+  problematic_vertices <- vertices_sf[vertices_sf$problematic == TRUE, ]
+  non_problematic_vertices <- vertices_sf[vertices_sf$problematic == FALSE, ]
+
+  mapview_output <- mapview_output + mapview::mapview(
+    x = problematic_vertices,
+    cex = vertex_size,
+    col.regions = "red",
+    color = "red",
+    layer.name = "Problematic Vertices",
+    ...
+  )
+
+  mapview_output <- mapview_output + mapview::mapview(
+    x = non_problematic_vertices,
+    cex = vertex_size,
+    col.regions = "green",
+    color = "green",
+    layer.name = "Non-problematic Vertices",
+    ...
+  )
+} else if(vertex_size > 0){
+  mapview_output <- mapview_output + mapview::mapview(
+    x = vertices_sf,
+    cex = vertex_size,
+    col.regions = vertex_color,
+    color = vertex_color,
+    layer.name = "Vertices",
+    ...
+  )
+}
+
+if (!is.null(data)) {
+  if (!(data %in% names(data_sf))) {
+    stop(paste(data, "is not an existing column name in the dataset."))
+  }
+  data_size <- 2 * data_size
+
+  mapview_output <- mapview_output + mapview::mapview(
+    x = data_sf,
+    zcol = data,
+    cex = data_size,
+    col.regions = scale_color_mapview,
+    color = scale_color_mapview,
+    layer.name = data,
+    ...
+  )
+}
+
+if (mesh) {
+  if (is.null(self$mesh)) {
+    stop("The metric graph does not contain a mesh.")
+  }
+  
+  mesh_df <- as.data.frame(self$mesh$V)
+  colnames(mesh_df) <- c("X", "Y")
+  mesh_sf <- sf::st_as_sf(mesh_df, coords = c("X", "Y"))
+
+  if (!is.null(private$crs)) {
+    sf::st_crs(mesh_sf) <- private$crs
+  } else {
+    sf::st_crs(mesh_sf) <- sf::NA_crs_
+  }
+
+  mapview_output <- mapview_output + mapview::mapview(
+    x = mesh_sf,
+    cex = vertex_size * 0.5,
+    col.regions = "gray",
+    color = "black",
+    layer.name = "Mesh",
+    ...
+  )
+}
+
+if (!is.null(X)) {
+  if (is.null(X_loc)) {
+    stop("X supplied but not X_loc")
+  }
+  if (length(X) != nrow(X_loc)) {
+    stop("The number of observations does not match the number of locations!")
+  }
+  
+  points_xy <- self$coordinates(PtE = X_loc)
+  x_loc_sf <- sf::st_as_sf(data.frame(x = points_xy[, 1], y = points_xy[, 2], val = as.vector(X)),
+                           coords = c("x", "y"))
+
+  mapview_output <- mapview_output + mapview::mapview(
+    x = x_loc_sf,
+    zcol = "val",
+    cex = data_size,
+    col.regions = scale_color_mapview,
+    layer.name = "X Points",
+    ...
+  )
+}
+
+return(mapview_output)
+
+
+
+    }
+    if(interactive && (type == "ggplot")){
       print(plotly::ggplotly(p))
       return(invisible(p))
     }
@@ -5712,6 +5877,7 @@ metric_graph <-  R6Class("metric_graph",
                      scale_color_weights = ggplot2::scale_color_viridis_c(option = "A"),
                      scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
                      add_new_scale_weights = TRUE,
+                     arrow_size,
                      ...){
     xyl <- c()
 
@@ -5779,7 +5945,7 @@ metric_graph <-  R6Class("metric_graph",
                                            y = c(mid.l[, 2], mid.u[,2]),
                                            edge = c(1:self$nE,1:self$nE)),
                           mapping = aes(x = x, y = y, group = edge),
-                         arrow = ggplot2::arrow(),
+                         arrow = ggplot2::arrow(length=arrow_size),
                           linewidth = marker_size/2, ...)
     }
 

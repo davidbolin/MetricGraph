@@ -1430,7 +1430,8 @@ Return the internal data with the option to filter by groups.
   group = NULL,
   format = c("tibble", "sf", "sp", "list"),
   drop_na = FALSE,
-  drop_all_na = TRUE
+  drop_all_na = TRUE,
+  tibble = deprecated()
 )}\if{html}{\out{</div>}}
 }
 
@@ -1715,12 +1716,16 @@ Plots the metric graph.
   p = NULL,
   degree = FALSE,
   direction = FALSE,
+  arrow_size = unit(0.25, "inches"),
   edge_weight = NULL,
   edge_width_weight = NULL,
   scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
   scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
   scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
   add_new_scale_weights = TRUE,
+  scale_color_mapview = viridis::viridis(100, option = "D"),
+  scale_color_weights_mapview = viridis::viridis(100, option = "C"),
+  scale_color_degree_mapview = NULL,
   plotly = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
@@ -1767,7 +1772,9 @@ is a character, then the group will be chosen by its name.}
 
 \item{\code{degree}}{Show the degrees of the vertices?}
 
-\item{\code{direction}}{Show the direction of the edges?}
+\item{\code{direction}}{Show the direction of the edges? For \code{type == "mapview"} the arrows are not shown, only the color of the vertices indicating whether they are problematic or not.}
+
+\item{\code{arrow_size}}{The size of the arrows if direction is TRUE.}
 
 \item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.
 \code{edge_weight} is only available for 2d plots. For 3d plots with edge weights, please use the \code{plot_function()} method.}
@@ -1781,6 +1788,12 @@ is a character, then the group will be chosen by its name.}
 \item{\code{scale_color_degree}}{Color scale for the degrees.}
 
 \item{\code{add_new_scale_weights}}{Should a new color scale for the edge weights be created?}
+
+\item{\code{scale_color_mapview}}{Color scale to be applied for data when \code{type = "mapview"}.}
+
+\item{\code{scale_color_weights_mapview}}{Color scale to be applied for edge weights when \code{type = "mapview"}.}
+
+\item{\code{scale_color_degree_mapview}}{Color scale to be applied for degrees when \code{type = "mapview"}. If \code{NULL} \code{RColorBrewer::brewer.pal(n = n_degrees, "Set1")} will be used where \code{n_degrees} is the number of different degrees.}
 
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
 
