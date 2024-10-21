@@ -284,6 +284,7 @@ data_df <- rbind(data_df,data_df_tmp)
 We start by looking at the graph, and the observations that we created outside the metric graph:
 
 ```{r}
+library(ggplot2)
 graph$plot() + geom_point(data_df_tmp, mapping = aes(x=.coord_x, y=.coord_y), color="red")
 ```
 
