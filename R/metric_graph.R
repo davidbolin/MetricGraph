@@ -3840,7 +3840,7 @@ metric_graph <-  R6Class("metric_graph",
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
  #' @param tibble `r lifecycle::badge("deprecated")` Use `format` instead.
 
-  get_data = function(group = NULL, format = c("tibble", "sf", "sp", "list"), drop_na = FALSE, drop_all_na = TRUE){
+  get_data = function(group = NULL, format = c("tibble", "sf", "sp", "list"), drop_na = FALSE, drop_all_na = TRUE, tibble = deprecated()){
     if(is.null(private$data)){
       stop("The graph does not contain data.")
     }
