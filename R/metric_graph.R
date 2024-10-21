@@ -4389,7 +4389,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param degree Show the degrees of the vertices?
   #' @param direction Show the direction of the edges? For `type == "mapview"` the arrows are not shown, only the color of the vertices indicating whether they are problematic or not.
   #' @param arrow_size The size of the arrows if direction is TRUE.
-  #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
+  #' @param edge_weight Which column from edge weights to determine the colors of the edges? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
   #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`.
     #' @param scale_color_main Color scale for the data to be plotted.
@@ -4544,26 +4544,38 @@ class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
 
 mapview_output <- NULL
 
+  if (!is.null(edge_width_weight)) {
+    if (!(edge_width_weight %in% colnames(edges_sf))) {
+      stop(paste(edge_width_weight, "is not a valid column in edges_sf"))
+    }
+    ew_tmp <- edges_sf[[edge_width_weight]]
+  } else{
+    ew_tmp <- edge_width
+  }
+
 if (!is.null(edge_weight)) {
+  if (!(edge_weight %in% colnames(edges_sf))) {
+    stop(paste(edge_weight, "is not a valid column in edges_sf"))
+  }
+
   mapview_output <- mapview::mapview(
     x = edges_sf,
-    zcol = edge_weight,
-    color = scale_color_weights_mapview,
-    lwd = if (!is.null(edge_width_weight)) edges_sf[[edge_width_weight]] else edge_width,
-    layer.name = "Edges",
-    col.regions = scale_color_weights_mapview,
+    zcol = edge_weight,  
+    color = scale_color_weights_mapview,  
+    lwd = ew_tmp,  
+    layer.name = "Edges",  
+    col.regions = scale_color_weights_mapview,  
     ...
   )
 } else {
   mapview_output <- mapview::mapview(
     x = edges_sf,
-    lwd = edge_width,
-    color = edge_color,
+    lwd = ew_tmp,  
+    color = edge_color, 
     layer.name = "Edges",
     ...
   )
 }
-
 if (degree) {
   vertices_sf$degree <- as.factor(vertices_sf$degree)
   if(is.null(scale_color_degree_mapview)){

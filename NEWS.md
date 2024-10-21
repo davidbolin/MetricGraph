@@ -14,6 +14,7 @@
 * Added wrappers for `leaflet` and `mapview` as methods.
 * Added `get_edges()` and `get_vertices()` methods were created, that return the edges and vertices, respectively, in either 'sf', 'sp' or the internal formats.
 * Added an option `format` to the `get_data()` method that allows one to also return the data in `sf` or `sp` formats.
+* The `plot` method now has an argument `type`, that now also allows one to set `type` to `mapview`, thus it can return `ggplot2`, `plotly` and `mapview` objects.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.
