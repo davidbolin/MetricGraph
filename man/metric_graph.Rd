@@ -1404,7 +1404,7 @@ Use \code{dplyr::summarise} function on the internal edge weights object grouped
 \describe{
 \item{\code{...}}{Arguments to be passed to \code{dplyr::summarise()}.}
 
-\item{\code{.groups}}{A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is \code{NULL}.}
+\item{\code{.groups}}{A vector of strings containing the names of the columns to be grouped, when computing the summaries. The default is \code{NULL}.}
 
 \item{\code{.drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
@@ -1428,15 +1428,15 @@ A \code{tidyr::tibble}, \code{sf} or \code{sp} object containing the resulting d
 \subsection{Method \code{drop_na_weights()}}{
 Use \code{tidyr::drop_na()} function on the internal edge weights object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$drop_na_weights(format = "tibble", ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$drop_na_weights(..., format = "tibble")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
-
 \item{\code{...}}{Arguments to be passed to \code{tidyr::drop_na()}.}
+
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 }
 \if{html}{\out{</div>}}
 }
@@ -1922,6 +1922,8 @@ Plots the metric graph.
   scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
   scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
   scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
+  scale_color_weights_discrete = ggplot2::scale_color_viridis_d(option = "C"),
+  scale_color_main_discrete = ggplot2::scale_color_viridis_d(option = "C"),
   add_new_scale_weights = TRUE,
   scale_color_mapview = viridis::viridis(100, option = "D"),
   scale_color_weights_mapview = viridis::viridis(100, option = "C"),
@@ -1986,6 +1988,10 @@ is a character, then the group will be chosen by its name.}
 \item{\code{scale_color_weights}}{Color scale for the edge weights. Will only be used if \code{add_new_scale_weights} is TRUE.}
 
 \item{\code{scale_color_degree}}{Color scale for the degrees.}
+
+\item{\code{scale_color_weights_discrete}}{Color scale for discrete edge weights. Will only be used if \code{add_new_scale_weights} is TRUE.}
+
+\item{\code{scale_color_main_discrete}}{Color scale for the data to be plotted, for discrete data.}
 
 \item{\code{add_new_scale_weights}}{Should a new color scale for the edge weights be created?}
 
