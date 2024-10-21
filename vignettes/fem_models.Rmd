@@ -868,14 +868,16 @@ Let us plot the range parameter along the mesh, so we can see how it is varying:
 
 ```{r}
 est_range <- exp(B.range[,-1]%*%fit$coeff$random_effects[2:5])
-pems_graph$plot_function(X = est_range, vertex_size = 0)
+pems_graph$plot_function(X = est_range, vertex_size = 0, 
+                    type = "mapview", mapview_caption = "Range")
 ```
 
 Similarly, we have for sigma:
 
 ```{r}
 est_sigma <- exp(B.sigma[,-1]%*%fit$coeff$random_effects[2:5])
-pems_graph$plot_function(X = est_sigma, vertex_size = 0)
+pems_graph$plot_function(X = est_sigma, vertex_size = 0, 
+                    type = "mapview", mapview_caption = "Sigma")
 ```
 
 Our goal now is to plot the estimated marginal standard deviation of this model. To this end, we start by creating the non-stationary Matérn operator using the `rSPDE` package:
@@ -899,7 +901,8 @@ est_std_dev <- sqrt(Matrix::diag(est_cov_matrix))
 We can now plot:
 
 ```{r}
-pems_graph$plot_function(X = est_std_dev, vertex_size = 0)
+pems_graph$plot_function(X = est_std_dev, vertex_size = 0, 
+          type = "mapview", mapview_caption = "Std. dev")
 ```
 
 ### Fitting the inlabru rSPDE model

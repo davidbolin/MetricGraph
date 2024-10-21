@@ -4733,7 +4733,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
       }
     } else if(type == "mapview"){
 requireNamespace("mapview")
-edge_width <- 3 * edge_width
+edge_width <- 2.5 * edge_width
 edges_sf <- self$get_edges(format = "sf")
 if(is.null(newdata) && !is.null(data)){
   data_sf <- self$get_data(format = "sf")
@@ -4954,8 +4954,7 @@ return(mapview_output)
   #' is a character, then the group will be chosen by its name.
   #' @param X A vector with values for the function
   #' evaluated at the mesh in the graph
-  #' @param plotly If `TRUE`, then the plot is shown in 3D. This option requires
-  #' the package 'plotly'.
+  #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
   #' @param improve_plot Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?
   #' @param continuous Should continuity be assumed when the plot uses `newdata`?
   #' @param vertex_size Size of the vertices.
@@ -4966,16 +4965,19 @@ return(mapview_output)
   #' @param line_width For 3D plot, line width of the function curve.
   #' @param line_color Color of the function curve.
   #' @param scale_color Color scale to be used for data and weights.
+  #' @param scale_color_mapview Color scale to be applied for data when `type = "mapview"`.
   #' @param support_width For 3D plot, width of support lines.
   #' @param support_color For 3D plot, color of support lines.
+  #' @param mapview_caption Caption for the function if `type = "mapview"`.
   #' @param p Previous plot to which the new plot should be added.
+  #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
   #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
   #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
   plot_function = function(data = NULL,
                            newdata = NULL,
                            group = 1,
                            X = NULL,
-                           plotly = FALSE,
+                           type = c("ggplot", "plotly", "mapview"),
                            improve_plot = FALSE,
                            continuous = TRUE,
                            edge_weight = NULL,
@@ -4986,12 +4988,31 @@ return(mapview_output)
                            line_width = NULL,
                            line_color = 'rgb(0,0,200)',
                            scale_color = ggplot2::scale_color_viridis_c(option = "D"),
+                           scale_color_mapview = viridis::viridis(100, option = "D"),
                            support_width = 0.5,
                            support_color = "gray",
+                           mapview_caption = "Function",
                            p = NULL,
+                           plotly = deprecated(),
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
+    }
+
+
+     if (lifecycle::is_present(plotly)) {
+      lifecycle::deprecate_warn("1.3.0.9000", "plot(plotly)", "plot(type)",
+        details = c("The argument `plotly` was deprecated in favor of the argument `type`.")
+      )
+    if(plotly){
+      type <- "plotly"
+    }
+  }                 
+
+    type <- type[[1]]
+
+    if(!(type %in% c("ggplot", "plotly", "mapview"))){
+      stop("type must be one of the following: 'ggplot', 'plotly' or 'mapview'.")
     }
 
     mesh <- FALSE
@@ -5008,18 +5029,6 @@ return(mapview_output)
                                         suppress_warnings = TRUE)
       data <- edge_weight
     }
-
-    # if(!is.null(edge_width_weight)){
-    #   edge_width_weight <- edge_width_weight[[1]]
-    #   e_w_weights <- private$get_edge_weights_internal(data.frame = TRUE)
-    #   e_w_weights <- e_weights[,edge_width_weight, drop = FALSE]
-    #   e_w_weights[,1] <- e_w_weights[,1] * edge_width / max(e_w_weights[,1])
-    #   e_w_weights[,1] <- e_w_weights[,1]
-    #   colnames(e_w_weights) <- "widths"
-    #   e_w_weights["i"] <- 1:self$nE
-    # } else{
-    #   e_w_weigths <- data.frame(i = 1:self$nE, widths = rep(line_width, self$nE))
-    # }
 
     if(is.null(data) && is.null(X) && is.null(edge_weight)){
       stop("You should provide either 'data', 'X' or 'edge_weight'.")
@@ -5557,9 +5566,11 @@ return(mapview_output)
 
     }
 
+
+
     data <- data.frame(x = x.loc, y = y.loc, i = i.loc, z = z.loc)
 
-    if(plotly){
+    if(type == "plotly"){
       requireNamespace("plotly")
       if(is.null(p)){
         p <- self$plot(plotly = TRUE,
@@ -5594,7 +5605,7 @@ return(mapview_output)
         }
       }
 
-    } else {
+    } else if (type == "ggplot"){
       if(is.null(p)) {
           p <- ggplot(data = data) +
           geom_path( mapping = aes(x = x, y = y,
@@ -5615,6 +5626,64 @@ return(mapview_output)
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
         }
       }
+    } else if(type == "mapview"){
+    requireNamespace("mapview")
+    edge_width <- 2.5 * edge_width
+    data_initial <<- data
+    data <- na.omit(data[, c("x", "y", "z", "i")])
+    data_split <- split(data, data$i)
+    
+    linestrings <- do.call(c, lapply(data_split, function(group_data) {
+      if (nrow(group_data) < 2) {
+          return(NULL)  
+      }
+      lapply(1:(nrow(group_data) - 1), function(j) {
+        sf::st_linestring(as.matrix(group_data[j:(j + 1), c("x", "y")]))
+      })
+    }))
+    
+    data_segment <- do.call(rbind, lapply(data_split, function(group_data) {
+      data.frame(
+        z = group_data$z[-nrow(group_data)], 
+        i = group_data$i[-nrow(group_data)]  
+      )
+    }))
+    
+    data_sf <- sf::st_as_sf(
+      data_segment,
+      geometry = sf::st_sfc(linestrings),
+      crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_
+    )
+
+    data_sf <- sf::st_as_sf(
+      data_segment, 
+      geometry = sf::st_sfc(linestrings),
+      crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_
+    )
+
+    if(is.null(p)){
+      mapview_output <- mapview::mapview(
+        x = data_sf,
+        zcol = "z",
+        color = scale_color_mapview, 
+        lwd = edge_width, 
+        cex = vertex_size, 
+        col.regions = scale_color_mapview, 
+        layer.name = mapview_caption
+      )
+    } else{
+      mapview_output <- p + mapview::mapview(
+        x = data_sf,
+        zcol = "z",
+        color = scale_color_mapview, 
+        lwd = edge_width, 
+        cex = vertex_size, 
+        layer.name = mapview_caption
+      )
+    }
+
+
+    return(mapview_output)
     }
     return(p)
   },

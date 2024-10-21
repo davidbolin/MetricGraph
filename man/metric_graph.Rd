@@ -1916,7 +1916,7 @@ Plots the metric graph.
   p = NULL,
   degree = FALSE,
   direction = FALSE,
-  arrow_size = unit(0.25, "inches"),
+  arrow_size = ggplot2::unit(0.25, "inches"),
   edge_weight = NULL,
   edge_width_weight = NULL,
   scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
@@ -2042,7 +2042,7 @@ Plots continuous function on the graph.
   newdata = NULL,
   group = 1,
   X = NULL,
-  plotly = FALSE,
+  type = c("ggplot", "plotly", "mapview"),
   improve_plot = FALSE,
   continuous = TRUE,
   edge_weight = NULL,
@@ -2053,9 +2053,12 @@ Plots continuous function on the graph.
   line_width = NULL,
   line_color = "rgb(0,0,200)",
   scale_color = ggplot2::scale_color_viridis_c(option = "D"),
+  scale_color_mapview = viridis::viridis(100, option = "D"),
   support_width = 0.5,
   support_color = "gray",
+  mapview_caption = "Function",
   p = NULL,
+  plotly = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -2075,8 +2078,7 @@ is a character, then the group will be chosen by its name.}
 \item{\code{X}}{A vector with values for the function
 evaluated at the mesh in the graph}
 
-\item{\code{plotly}}{If \code{TRUE}, then the plot is shown in 3D. This option requires
-the package 'plotly'.}
+\item{\code{type}}{The type of plot to be returned. The options are \code{ggplot} (the default), that uses \code{ggplot2}; \code{plotly} that uses \code{plot_ly} for 3D plots, which requires the \code{plotly} package, and \code{mapview} that uses the \code{mapview} function, to build interactive plots, which requires the \code{mapview} package.}
 
 \item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
 
@@ -2098,11 +2100,17 @@ the package 'plotly'.}
 
 \item{\code{scale_color}}{Color scale to be used for data and weights.}
 
+\item{\code{scale_color_mapview}}{Color scale to be applied for data when \code{type = "mapview"}.}
+
 \item{\code{support_width}}{For 3D plot, width of support lines.}
 
 \item{\code{support_color}}{For 3D plot, color of support lines.}
 
+\item{\code{mapview_caption}}{Caption for the function if \code{type = "mapview"}.}
+
 \item{\code{p}}{Previous plot to which the new plot should be added.}
+
+\item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
 
 \item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }

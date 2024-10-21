@@ -374,54 +374,90 @@ pred_alpha1_bc <- augment(fit_alpha1_bc, newdata = df_pred,
 Let plot the predictions with the corresponding observed values. First for the model without boundary correction. As the predictions were obtained on the mesh nodes, we can supply the fitted values into the `X` argument of the `plot_function()` method:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-library(ggplot2)
-
-p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted",
-                improve_plot=TRUE, vertex_size = 0,
-                edge_width = 0.5) 
+p <- pems_graph$plot_function(
+  newdata = pred_alpha1, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha1"
+)
 ```
 
 We can now add the original observations obtain the plot in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+                    edge_width = 0, p = p, type = "mapview")  
+
+pred_plot <- plot@map
+
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1   
+)
 ```
 
 Now in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+                    edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2   
+)
 ```
                       
 
 Similarly, for `alpha=1` with boundary correction in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
-              improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha1_bc, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha1 bc"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+                    edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1   
+)                                       
 ```
 
 and in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
-              improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha1_bc, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha1 bc"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+                    edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2   
+)                    
 ```
 
 Now, for the Whittle-Matérn models with `alpha=2`:
@@ -434,25 +470,49 @@ pred_alpha2 <- augment(fit_alpha2, newdata = df_pred,
 Let us now build the plot for region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+                    edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1   
+)              
 ```
 
 and region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+            edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 Now with boundary correction:
@@ -465,25 +525,47 @@ pred_alpha2_bc <- augment(fit_alpha2_bc, newdata = df_pred,
 the plot in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2_bc, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2 bc"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1
+)
 ```
 
 and in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2_bc, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2 bc"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 
@@ -497,25 +579,47 @@ pred_GL1 <- augment(fit_GL1, newdata = df_pred,
 the plot in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_GL1, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred GL1"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1
+)
 ```
 
 and in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_GL1, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred GL1"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 and for `alpha=2`:
@@ -528,25 +632,47 @@ pred_GL2 <- augment(fit_GL2, newdata = df_pred,
 the plot in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_GL2, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred GL2"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1
+)
 ```
 
 and in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_GL2, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred GL2"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 Finally, for models with isotropic exponential covariance:
@@ -559,25 +685,47 @@ pred_isoexp <- augment(fit_isoexp, newdata = df_pred,
 and the corresponding plot in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_isoexp, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred isoexp"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1
+)
 ```
 
 and in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_isoexp, 
+  data = ".fitted",
+  improve_plot = TRUE, 
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred isoexp"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot <- pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 ## A quick diagnostic analysis
