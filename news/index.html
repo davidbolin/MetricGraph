@@ -63,6 +63,10 @@
 <li>
 <code>prune_vertices</code> now has an option to avoid creating circles when pruning.</li>
 <li>Several updates and quality of life improvements for building very large graphs faster.</li>
+<li>Added the <code>export()</code> method, that allows one to export a MetricGraph object as an <code>sf</code>, <code>sp</code> or <code>SSN2</code> object.</li>
+<li>Added wrappers for <code>leaflet</code> and <code>mapview</code> as methods.</li>
+<li>Added <code>get_edges()</code> and <code>get_vertices()</code> methods were created, that return the edges and vertices, respectively, in either ‘sf’, ‘sp’ or the internal formats.</li>
+<li>Added an option <code>format</code> to the <code>get_data()</code> method that allows one to also return the data in <code>sf</code> or <code>sp</code> formats.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.0" id="metricgraph-130">MetricGraph 1.3.0<a class="anchor" aria-label="anchor" href="#metricgraph-130"></a></h2><p class="text-muted">CRAN release: 2024-02-27</p>
