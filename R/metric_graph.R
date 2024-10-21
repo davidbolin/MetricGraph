@@ -967,7 +967,7 @@ metric_graph <-  R6Class("metric_graph",
 
         ew_tmp[[".edge_lengths"]] <- self$edge_lengths
 
-        edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+        edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else sf::NA_crs_)
         return(edges_sf)
       } else if(format == "sp"){
              edges_list <- lapply(1:length(self$edges), function(i) {
@@ -975,7 +975,7 @@ metric_graph <-  R6Class("metric_graph",
       })
       sp_edges <- sp::SpatialLines(
           lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
-          proj4string = if (!is.null(private$crs)) private$proj4string else NULL
+          proj4string = if (!is.null(private$crs)) private$proj4string else sp::CRS(NA_character_)
       )
       if(is.vector(private$edge_weights)){
         ew_tmp <- data.frame(.weights = private$edge_weights)
@@ -4435,7 +4435,8 @@ metric_graph <-  R6Class("metric_graph",
     if(plotly){
       type <- "plotly"
     }
-  }                    
+  }                 
+
     if(!is.null(data) && is.null(private$data) && is.null(newdata)) {
       stop("The graph does not contain data.")
     }
