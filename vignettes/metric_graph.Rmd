@@ -469,6 +469,26 @@ Another advantage of adding the `osmdata` object, is that the metric graph autom
 graph5$get_edge_weights()
 ```
 
+We can also let the color of the edges be determined by some edge weight. For example, let us take `maxspeed`:
+
+```{r}
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", type="mapview")
+```
+
+Similarly, we can also set the edge width based on an edge weight (for this case, we can only use `type = "ggplot"`, which is the default). In this example we will choose the column `lanes` to determine the edge widths. If the number of lanes is not available, the edge will be removed (we will replace the `NA`s by zero).
+
+```{r}
+graph5$set_edge_weights(weights = graph5$mutate_weights(lanes = ifelse(is.na(lanes),0,lanes), lanes = as.numeric(lanes)))
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lanes")
+```
+
+However, observe that the edge widths are always relative, with the largest being set to `edge_width`. So, let us set `edge_width` to 4 to make it easier to perceive the differences:
+
+```{r}
+graph5$set_edge_weights(weights = graph5$mutate_weights(lanes = ifelse(is.na(lanes),0,lanes), lanes = as.numeric(lanes)))
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lanes", edge_width = 4)
+```
+
 If one does not want to have the edge weights added, one must set `include_edge_weights` to `FALSE`:
 
 ```{r, message=FALSE}

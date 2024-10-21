@@ -4600,6 +4600,8 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. Currently it is not supported for `type = "mapview"`.
     #' @param scale_color_main Color scale for the data to be plotted.
     #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
+    #' @param scale_color_main_discrete Color scale for the data to be plotted, for discrete data.
+    #' @param scale_color_weights_discrete Color scale for discrete edge weights. Will only be used if `add_new_scale_weights` is TRUE.
     #' @param scale_color_degree Color scale for the degrees.
     #' @param add_new_scale_weights Should a new color scale for the edge weights be created?
     #' @param scale_color_mapview Color scale to be applied for data when `type = "mapview"`.
@@ -4637,6 +4639,8 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                   scale_color_main = ggplot2::scale_color_viridis_c(option = "D"),
                   scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
                   scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
+                  scale_color_weights_discrete = ggplot2::scale_color_viridis_d(option = "C"),
+                  scale_color_main_discrete = ggplot2::scale_color_viridis_d(option = "C"),
                   add_new_scale_weights = TRUE,
                   scale_color_mapview = viridis::viridis(100, option = "D"),
                   scale_color_weights_mapview = viridis::viridis(100, option = "C"),
@@ -4697,6 +4701,8 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                            scale_color_degree = scale_color_degree,
                            add_new_scale_weights = add_new_scale_weights,
                            arrow_size = arrow_size,
+                           scale_color_main_discrete = scale_color_main_discrete,
+                           scale_color_weights_discrete = scale_color_weights_discrete,                           
                            ...)
       if(!is.null(private$vertex_unit)){
         if(private$vertex_unit == "degree" && !private$transform){
@@ -6198,6 +6204,8 @@ return(mapview_output)
                      scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
                      add_new_scale_weights = TRUE,
                      arrow_size,
+                     scale_color_main_discrete,
+                     scale_color_weights_discrete,
                      ...){
     xyl <- c()
 
@@ -6230,10 +6238,15 @@ return(mapview_output)
 
     if(is.null(p)){
       if(!is.null(edge_weight)){
+        if(is.factor(df_plot[["weights"]]) || is.character(df_plot[["weights"]])){
+          scale_weights <- scale_color_weights_discrete
+        } else{
+          scale_weights <- scale_color_weights
+        }
         p <- ggplot() + geom_path(data = df_plot,
                                   mapping = aes(x = x, y = y, group = grp,
                                   colour = weights, linewidth = widths),
-                                  ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + labs(colour = edge_weight)
+                                  ...) + ggplot2::scale_linewidth_identity() + scale_weights + labs(colour = edge_weight)
           if(add_new_scale_weights){
             p <- p + new_scale_color()
           }
@@ -6246,9 +6259,14 @@ return(mapview_output)
       }
     } else {
       if(!is.null(edge_weight)){
+        if(is.factor(df_plot[["weights"]]) || is.character(df_plot[["weights"]])){
+          scale_weights <- scale_color_weights_discrete
+        } else{
+          scale_weights <- scale_color_weights
+        }        
         p <- p + geom_path(data = df_plot,
                            mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
-                           ...) + ggplot2::scale_linewidth_identity() + scale_color_weights + labs(colour = edge_weight)
+                           ...) + ggplot2::scale_linewidth_identity() + scale_weights + labs(colour = edge_weight)
           if(add_new_scale_weights){
             p <- p + new_scale_color()
           }
@@ -6325,11 +6343,17 @@ return(mapview_output)
       x <- data_group[[".coord_x"]]
       y <- data_group[[".coord_y"]]
 
+      if(is.factor(as.vector(y_plot[!is.na(as.vector(y_plot))])) || is.character(as.vector(y_plot[!is.na(as.vector(y_plot))]))){
+        scale_main <- scale_color_main_discrete
+      } else{
+        scale_main <- scale_color_main
+      }
+
       p <- p + geom_point(data = data.frame(x = x[!is.na(as.vector(y_plot))],
                                             y = y[!is.na(as.vector(y_plot))],
                                             val = as.vector(y_plot[!is.na(as.vector(y_plot))])),
                           mapping = aes(x, y, color = val),
-                          size = data_size, ...) + labs(color = data) + scale_color_main #+
+                          size = data_size, ...) + labs(color = data) + scale_main #+
         # scale_colour_gradientn(colours = viridis(100), guide_legend(title = ""))
 
     }
@@ -6352,10 +6376,15 @@ return(mapview_output)
       points_xy <- self$coordinates(PtE = X_loc)
       x <- points_xy[,1]
       y <- points_xy[,2]
+      if(is.factor(as.vector(X)) || is.character(as.vector(X))){
+        scale_main <- scale_color_main_discrete
+      } else{
+        scale_main <- scale_color_main
+      }
       p <- p + geom_point(data = data.frame(x = x, y = y,
                                             val = as.vector(X)),
                           mapping = aes(x, y, color = val),
-                          size = data_size) + labs(colour = "") + scale_color_main #+
+                          size = data_size) + labs(colour = "") + scale_main #+
         # scale_color_viridis()
     }
     p <- p + coord_fixed()
