@@ -453,7 +453,7 @@ graph5
 This also allows us to plot the graph interactively with the underlying world map, if the data has a coordinate reference system, by setting `type = "mapview"` in the
 `plot()` method:
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 graph5$plot(vertex_size = 0, type = "mapview")
 ```
 

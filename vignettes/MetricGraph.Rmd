@@ -185,7 +185,7 @@ graph$plot(vertex_size = 0.5)
 
 Let us also build an interactive plot with the underlying map:
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 graph$plot(vertex_size = 0.5, type = "mapview")
 ```
 
