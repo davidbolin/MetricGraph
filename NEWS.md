@@ -12,6 +12,8 @@
 * Several updates and quality of life improvements for building very large graphs faster.
 * Added the `export()` method, that allows one to export a MetricGraph object as an `sf`, `sp` or `SSN2` object.
 * Added wrappers for `leaflet` and `mapview` as methods.
+* Added `get_edges()` and `get_vertices()` methods were created, that return the edges and vertices, respectively, in either 'sf', 'sp' or the internal formats.
+* Added an option `format` to the `get_data()` method that allows one to also return the data in `sf` or `sp` formats.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.

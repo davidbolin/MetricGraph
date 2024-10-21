@@ -944,15 +944,101 @@ metric_graph <-  R6Class("metric_graph",
     private$create_update_vertices(verbose=verbose)
   },
 
-  #' @description Exports the MetricGraph object as an `sf`, `sp` or `SSN2` object.
-  #' @param which_format The format for the exported object. The options are `sf` (default) and `sp`.
-  #' @return Here is an improved version of your description:
-#' For `which_format == "sf"`, the function returns a list with two elements: `edges` and `data`. The `edges` element contains an `sf` object of `LINESTRING` geometries, where the associated data frame includes edge weights. The `data` element holds the metric graph information (if available), represented by an `sf` object of `POINT` geometries. 
+  #' @description Exports the edges of the MetricGraph object as an `sf` or `sp`.
+  #' @param format The format for the exported object. The options are `sf` (default), `sp` and `list`.
+  #' @return 
+#' For `format == "sf"`, the function returns an `sf` object of `LINESTRING` geometries, where the associated data frame includes edge weights. 
 #' 
-#' For `which_format == "sp"`, the function also returns a list with two elements: `edges` and `data`. The `edges` element is a `SpatialLinesDataFrame` where the data frame includes edge weights. The `data` element is a `SpatialPointsDataFrame` that contains the metric graph information (if available).
+#' For `format == "sp"`, the function returns a `SpatialLinesDataFrame` where the data frame includes edge weights. 
 
-  export = function(which_format = "sf"){
-    if(which_format == "sf"){
+  get_edges = function(format = c("sf", "sp", "list")){
+    format <- format[[1]]
+    if(!(format%in%c("sf", "sp", "list"))){
+      stop("'format' must be one of the following: 'sf', 'sp' or 'list'.")
+    }
+      if(format == "sf"){
+        edges_geometries <- lapply(self$edges, sf::st_linestring) 
+      
+        if(is.vector(private$edge_weights)){
+          ew_tmp <- data.frame(.weights = private$edge_weights)
+        } else{
+          ew_tmp <- as.data.frame(private$edge_weights)
+        }
+
+        ew_temp[[".edge_lengths"]] <- self$edge_lengths
+
+        edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+        return(edges_sf)
+      } else if(format == "sp"){
+             edges_list <- lapply(1:length(self$edges), function(i) {
+        sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
+      })
+      sp_edges <- sp::SpatialLines(
+          lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
+          proj4string = if (!is.null(private$crs)) private$proj4string else NULL
+      )
+      if(is.vector(private$edge_weights)){
+        ew_tmp <- data.frame(.weights = private$edge_weights)
+      } else{
+        ew_tmp <- as.data.frame(private$edge_weights)
+      }
+      ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
+      ew_temp[[".edge_lengths"]] <- self$edge_lengths
+      edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
+      return(edges_sldf)
+      } else{
+        return(self$edges)
+      }
+  },
+
+  #' @description Exports the vertices of the MetricGraph object as an `sf`, `sp` or as a matrix.
+  #' @param format The format for the exported object. The options are `sf` (default), `sp` and `matrix`.
+  #' @return 
+#' For `which_format == "sf"`, the function returns an `sf` object of `POINT` geometries. 
+#' 
+#' For `which_format == "sp"`, the function returns a `SpatialPointsDataFrame` object.
+
+  get_vertices = function(format = c("sf", "sp", "list")){
+    format <- format[[1]]
+    if(!(format%in%c("sf", "sp", "list"))){
+      stop("'format' must be one of the following: 'sf', 'sp' or 'list'.")
+    }
+      vertices_df <- do.call(rbind, lapply(self$vertices, function(v) {
+        data.frame(
+          X = v["X"],
+          Y = v["Y"],
+          degree = attr(v, "degree"),
+          indegree = attr(v, "indegree"),
+          outdegree = attr(v, "outdegree"),
+          problematic = attr(v, "problematic"),
+          id = attr(v, "id"),
+          longlat = attr(v, "longlat"),
+          stringsAsFactors = FALSE
+          )}))    
+    if(format == "sf"){
+      vertices_df <- sf::st_as_sf(vertices_df, coords = c("X", "Y"))
+      if(!is.null(private$crs)){
+        sf::st_crs(vertices_df) <- private$crs
+      }
+    return(sf_vertices)
+    } else if(format == "sp"){
+      sp::coordinates(vertices_df) <- ~ X + Y
+      if(!is.null(private$proj4string)){
+        sp::proj4string(vertices_df) <- private$proj4string
+      }
+    } 
+    return(vertices_df)
+  }, 
+
+  #' @description Exports the MetricGraph object as an `sf`, `sp` or `SSN2` object.
+  #' @param format The format for the exported object. The options are `sf` (default) and `sp`.
+  #' @return 
+#' For `format == "sf"`, the function returns a list with two elements: `edges` and `data`. The `edges` element contains an `sf` object of `LINESTRING` geometries, where the associated data frame includes edge weights. The `data` element holds the metric graph information (if available), represented by an `sf` object of `POINT` geometries. 
+#' 
+#' For `format == "sp"`, the function also returns a list with two elements: `edges` and `data`. The `edges` element is a `SpatialLinesDataFrame` where the data frame includes edge weights. The `data` element is a `SpatialPointsDataFrame` that contains the metric graph information (if available).
+
+  export = function(format = "sf"){
+    if(format == "sf"){
       edges_geometries <- lapply(self$edges, sf::st_linestring) 
       
       if(is.vector(private$edge_weights)){
@@ -972,7 +1058,7 @@ metric_graph <-  R6Class("metric_graph",
         data_sf <- NULL
       }
       exported_metric_graph <- list(edges = edges_sf, data = data_sf)
-    } else if(which_format == "sp"){
+    } else if(format == "sp"){
       edges_list <- lapply(1:length(self$edges), function(i) {
         sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
       })
@@ -991,7 +1077,7 @@ metric_graph <-  R6Class("metric_graph",
       sp::coordinates(data_sp) <- ~ .coord_x + .coord_y
       exported_metric_graph <- list(edges = edges_sldf, data = data_sp)
     } else{
-      stop(paste(which_format,"is not currently not a valid format to be exported."))
+      stop(paste(format,"is not currently not a valid format to be exported."))
     }
     return(exported_metric_graph)
   },
@@ -1033,7 +1119,6 @@ metric_graph <-  R6Class("metric_graph",
     edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)    
     return(mapview::mapview(x = edges_sf, ...))
   },
-
 
   #' @description Sets the edge weights
   #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
@@ -3708,7 +3793,7 @@ metric_graph <-  R6Class("metric_graph",
 
  #' @description Return the internal data with the option to filter by groups.
  #' @param group A vector contaning which groups should be returned? The default is `NULL`, which gives the result for the all groups.
- #' @param tibble Should the data be returned as a `tidyr::tibble`?
+ #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
  #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
 
@@ -4233,8 +4318,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param group If there are groups, which group to plot? If `group` is a
   #' number and `newdata` is `NULL`, it will be the index of the group as stored internally and if `newdata` is provided, it will be the index of the group stored in `newdata`. If `group`
   #' is a character, then the group will be chosen by its name.
-  #' @param plotly Use plot_ly for 3D plot (default `FALSE`). This option
-  #' requires the 'plotly' package.
+  #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
   #' @param interactive Only works for 2d plots. If `TRUE`, an interactive plot will be displayed. Unfortunately, `interactive` is not compatible with `edge_weight` if `add_new_scale_weights` is TRUE.
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
@@ -4257,6 +4341,7 @@ metric_graph <-  R6Class("metric_graph",
     #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
     #' @param scale_color_degree Color scale for the degrees.
     #' @param add_new_scale_weights Should a new color scale for the edge weights be created?
+    #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
 ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
 ##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
@@ -4267,7 +4352,7 @@ metric_graph <-  R6Class("metric_graph",
   plot = function(data = NULL,
                   newdata = NULL,
                   group = 1,
-                  plotly = FALSE,
+                  type = c("ggplot", "plotly", "mapview"),
                   interactive = FALSE,
                   vertex_size = 3,
                   vertex_color = 'black',
@@ -4288,12 +4373,17 @@ metric_graph <-  R6Class("metric_graph",
                   scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
                   scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
                   add_new_scale_weights = TRUE,
-                  # mutate = NULL,
-                  # filter = NULL,
-                  # summarise = NULL,
-                  # summarise_group_by = NULL,
-                  # summarise_by_graph_group = FALSE,
+                  plotly = deprecated(),
                   ...) {
+
+ if (lifecycle::is_present(plotly)) {
+      lifecycle::deprecate_warn("1.3.0.9000", "plot(plotly)", "plot(type)",
+        details = c("The argument `plotly` was deprecated in favor of the argument `type`.")
+      )
+    if(plotly){
+      type <- "plotly"
+    }
+  }                    
     if(!is.null(data) && is.null(private$data) && is.null(newdata)) {
       stop("The graph does not contain data.")
     }
@@ -4310,7 +4400,13 @@ metric_graph <-  R6Class("metric_graph",
       }
     }
 
-    if(!plotly) {
+    type <- type[[1]]
+
+    if(!(type %in% c("ggplot", "plotly", "mapview"))){
+      stop("type must be one of the following: 'ggplot', 'plotly' or 'mapview'.")
+    }
+
+    if(type == "ggplot") {
       p <- private$plot_2d(line_width = edge_width,
                            marker_size = vertex_size,
                            vertex_color = vertex_color,
@@ -4339,7 +4435,7 @@ metric_graph <-  R6Class("metric_graph",
           p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
         }
       }
-    } else {
+    } else if(type == "plotly") {
       requireNamespace("plotly")
       p <- private$plot_3d(line_width = edge_width,
                            marker_size = vertex_size,
@@ -4365,7 +4461,7 @@ metric_graph <-  R6Class("metric_graph",
           p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
         }
       }
-    }
+    } 
     if(interactive && !plotly){
       print(plotly::ggplotly(p))
       return(invisible(p))

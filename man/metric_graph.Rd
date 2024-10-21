@@ -73,6 +73,8 @@ graph. The weights are given by the edge lengths.}
 \itemize{
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-remove_small_circles}{\code{metric_graph$remove_small_circles()}}
+\item \href{#method-metric_graph-get_edges}{\code{metric_graph$get_edges()}}
+\item \href{#method-metric_graph-get_vertices}{\code{metric_graph$get_vertices()}}
 \item \href{#method-metric_graph-export}{\code{metric_graph$export()}}
 \item \href{#method-metric_graph-leaflet}{\code{metric_graph$leaflet()}}
 \item \href{#method-metric_graph-mapview}{\code{metric_graph$mapview()}}
@@ -283,26 +285,69 @@ No return value. Called for its side effects.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-metric_graph-export"></a>}}
-\if{latex}{\out{\hypertarget{method-metric_graph-export}{}}}
-\subsection{Method \code{export()}}{
-Exports the MetricGraph object as an \code{sf}, \code{sp} or \code{SSN2} object.
+\if{html}{\out{<a id="method-metric_graph-get_edges"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_edges}{}}}
+\subsection{Method \code{get_edges()}}{
+Exports the edges of the MetricGraph object as an \code{sf} or \code{sp}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$export(which_format = "sf")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_edges(format = c("sf", "sp", "list"))}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{which_format}}{The format for the exported object. The options are \code{sf} (default) and \code{sp}.}
+\item{\code{format}}{The format for the exported object. The options are \code{sf} (default), \code{sp} and \code{list}.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Here is an improved version of your description:
-For \code{which_format == "sf"}, the function returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element contains an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights. The \code{data} element holds the metric graph information (if available), represented by an \code{sf} object of \code{POINT} geometries.
+For \code{format == "sf"}, the function returns an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights.
 
-For \code{which_format == "sp"}, the function also returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element is a \code{SpatialLinesDataFrame} where the data frame includes edge weights. The \code{data} element is a \code{SpatialPointsDataFrame} that contains the metric graph information (if available).
+For \code{format == "sp"}, the function returns a \code{SpatialLinesDataFrame} where the data frame includes edge weights.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_vertices"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_vertices}{}}}
+\subsection{Method \code{get_vertices()}}{
+Exports the vertices of the MetricGraph object as an \code{sf}, \code{sp} or as a matrix.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_vertices(format = c("sf", "sp", "list"))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{format}}{The format for the exported object. The options are \code{sf} (default), \code{sp} and \code{matrix}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+For \code{which_format == "sf"}, the function returns an \code{sf} object of \code{POINT} geometries.
+
+For \code{which_format == "sp"}, the function returns a \code{SpatialPointsDataFrame} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-export"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-export}{}}}
+\subsection{Method \code{export()}}{
+Exports the MetricGraph object as an \code{sf}, \code{sp} or \code{SSN2} object.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$export(format = "sf")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{format}}{The format for the exported object. The options are \code{sf} (default) and \code{sp}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+For \code{format == "sf"}, the function returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element contains an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights. The \code{data} element holds the metric graph information (if available), represented by an \code{sf} object of \code{POINT} geometries.
+
+For \code{format == "sp"}, the function also returns a list with two elements: \code{edges} and \code{data}. The \code{edges} element is a \code{SpatialLinesDataFrame} where the data frame includes edge weights. The \code{data} element is a \code{SpatialPointsDataFrame} that contains the metric graph information (if available).
 }
 }
 \if{html}{\out{<hr>}}
@@ -1383,11 +1428,11 @@ Return the internal data with the option to filter by groups.
 \describe{
 \item{\code{group}}{A vector contaning which groups should be returned? The default is \code{NULL}, which gives the result for the all groups.}
 
+\item{\code{format}}{Which format should the data be returned? The options are \code{tibble} for \code{tidyr::tibble}, \code{sf} for \code{POINT}, \code{sp} for \code{SpatialPointsDataFrame} and \code{list} for the internal list format.}
+
 \item{\code{drop_na}}{Should the rows with at least one NA for one of the columns be removed? DEFAULT is \code{FALSE}.}
 
 \item{\code{drop_all_na}}{Should the rows with all variables being NA be removed? DEFAULT is \code{TRUE}.}
-
-\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
 }
 \if{html}{\out{</div>}}
 }
@@ -1642,7 +1687,7 @@ Plots the metric graph.
   data = NULL,
   newdata = NULL,
   group = 1,
-  plotly = FALSE,
+  type = c("ggplot", "plotly", "mapview"),
   interactive = FALSE,
   vertex_size = 3,
   vertex_color = "black",
@@ -1663,6 +1708,7 @@ Plots the metric graph.
   scale_color_weights = ggplot2::scale_color_viridis_c(option = "C"),
   scale_color_degree = ggplot2::scale_color_viridis_d(option = "D"),
   add_new_scale_weights = TRUE,
+  plotly = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -1679,8 +1725,7 @@ plotted.}
 number and \code{newdata} is \code{NULL}, it will be the index of the group as stored internally and if \code{newdata} is provided, it will be the index of the group stored in \code{newdata}. If \code{group}
 is a character, then the group will be chosen by its name.}
 
-\item{\code{plotly}}{Use plot_ly for 3D plot (default \code{FALSE}). This option
-requires the 'plotly' package.}
+\item{\code{type}}{The type of plot to be returned. The options are \code{ggplot} (the default), that uses \code{ggplot2}; \code{plotly} that uses \code{plot_ly} for 3D plots, which requires the \code{plotly} package, and \code{mapview} that uses the \code{mapview} function, to build interactive plots, which requires the \code{mapview} package.}
 
 \item{\code{interactive}}{Only works for 2d plots. If \code{TRUE}, an interactive plot will be displayed. Unfortunately, \code{interactive} is not compatible with \code{edge_weight} if \code{add_new_scale_weights} is TRUE.}
 
@@ -1723,6 +1768,8 @@ requires the 'plotly' package.}
 \item{\code{scale_color_degree}}{Color scale for the degrees.}
 
 \item{\code{add_new_scale_weights}}{Should a new color scale for the edge weights be created?}
+
+\item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
 
 \item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
