@@ -1473,7 +1473,7 @@ predict.inla_metric_graph_spde <- function(object,
   if(!is.null(group_variables)){
     if(!(group_variables %in% names(new_data))){
       warning("The replicate variable was not found in newdata. Predictions were only given for the first replicate.")
-      new_data[[".group"]] <- rep(original_data[[group_variable]][1], length(new_data[[".edge_number"]]))
+      new_data[[".group"]] <- rep(original_data[[group_variables]][1], length(new_data[[".edge_number"]]))
     }
   }
 

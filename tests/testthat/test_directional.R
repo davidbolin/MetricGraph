@@ -37,7 +37,7 @@ test_that("posterior mean discontinous check", {
             r_1(0.5,1,1)/r_1(0.,1,1),
             r_1(0.5,1,1)/r_1(0.,1,1))
   expect_equal(as.vector(Eu), Eu_t, tolerance = 1e-10)
-  graph$setDirectionalWeightFunction( f_in = function(x){sqrt(x/sum(x))})
+  expect_warning(graph$setDirectionalWeightFunction( f_in = function(x){sqrt(x/sum(x))}))
   Eu <- MetricGraph:::posterior_mean_alpha1_directional(theta, graph, c(1),
                                                         matrix(c(3,0.5),nrow=1,ncol=2))
   Eu_t <- c(sqrt(0.5)*r_1(0.5,1,1)/r_1(0.,1,1),
@@ -58,3 +58,4 @@ test_that("posterior mean discontinous check", {
             sqrt(0.5)*r_1(.5,1,1)/r_1(0.,1,1))
   expect_equal(as.vector(Eu), Eu_t, tolerance = 1e-10)
 })
+
