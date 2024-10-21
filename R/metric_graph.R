@@ -4391,7 +4391,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param arrow_size The size of the arrows if direction is TRUE.
   #' @param edge_weight Which column from edge weights to determine the colors of the edges? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
   #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
-    #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`.
+    #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. Currently it is not supported for `type = "mapview"`.
     #' @param scale_color_main Color scale for the data to be plotted.
     #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
     #' @param scale_color_degree Color scale for the degrees.
@@ -4544,25 +4544,15 @@ class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
 
 mapview_output <- NULL
 
-  if (!is.null(edge_width_weight)) {
-    if (!(edge_width_weight %in% colnames(edges_sf))) {
-      stop(paste(edge_width_weight, "is not a valid column in edges_sf"))
-    }
-    ew_tmp <- edges_sf[[edge_width_weight]]
-  } else{
-    ew_tmp <- edge_width
-  }
-
 if (!is.null(edge_weight)) {
   if (!(edge_weight %in% colnames(edges_sf))) {
     stop(paste(edge_weight, "is not a valid column in edges_sf"))
   }
-
   mapview_output <- mapview::mapview(
     x = edges_sf,
     zcol = edge_weight,  
     color = scale_color_weights_mapview,  
-    lwd = ew_tmp,  
+    lwd = edge_width,  
     layer.name = "Edges",  
     col.regions = scale_color_weights_mapview,  
     ...
@@ -4570,7 +4560,7 @@ if (!is.null(edge_weight)) {
 } else {
   mapview_output <- mapview::mapview(
     x = edges_sf,
-    lwd = ew_tmp,  
+    lwd = edge_width,  
     color = edge_color, 
     layer.name = "Edges",
     ...
