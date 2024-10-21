@@ -85,6 +85,13 @@ We can now visualize the river and the data
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$plot(data = "Summer_mn", vertex_size = 0.5)
 ```
+
+We can also visualize with an interactive plot by setting the `type` to `mapview`:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE}
+graph$plot(data = "Summer_mn", vertex_size = 0.5, type = "mapview")
+```
+
 # Non directional models
 We start with fitting the non directional models. First for `alpha=1`:
 ```{r, message=FALSE}
