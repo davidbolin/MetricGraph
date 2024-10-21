@@ -3625,54 +3625,257 @@ metric_graph <-  R6Class("metric_graph",
     }
   },
 
-
-  #' @description Use `dplyr::mutate` function on the internal metric graph data object.
-  #' @param ... Arguments to be passed to `dplyr::mutate()`.
-   #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
- #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-  #' @details A wrapper to use `dplyr::mutate()` within the internal metric graph data object.
-  #' @return A `tidyr::tibble` object containing the resulting data list after the mutate.
-  mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE) {
-    if(!inherits(private$data, "tbl_df")){
-      data_res <- tidyr::as_tibble(private$data)
-    } else{
-      data_res <- private$data
+#' @description Use `dplyr::mutate` function on the internal edge weights object.
+#' @param ... Arguments to be passed to `dplyr::mutate()`.
+#' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+#' @details A wrapper to use `dplyr::mutate()` on the internal edge weights object and return the result in the requested format.
+#' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the mutate.
+mutate_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+    if (!inherits(private$edge_weights, "tbl_df")) {
+        edge_weights_res <- tidyr::as_tibble(private$edge_weights)
+    } else {
+        edge_weights_res <- private$edge_weights
     }
 
-    if(.drop_all_na){
-      is_tbl <- inherits(data_res, "tbl_df")
-        idx_temp <- idx_not_all_NA(data_res)
-        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
-        if(is_tbl){
-          data_res <- tidyr::as_tibble(data_res)
+    if (.drop_all_na) {
+        is_tbl <- inherits(edge_weights_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(edge_weights_res)
+        edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        if (is_tbl) {
+            edge_weights_res <- tidyr::as_tibble(edge_weights_res)
         }
     }
 
-    if(.drop_na){
-      if(!inherits(data_res, "tbl_df")){
-        idx_temp <- idx_not_any_NA(data_res)
-        data_res <- lapply(data_res, function(dat){dat[idx_temp]})
-      } else{
-        data_res <- tidyr::drop_na(data_res)
-      }
+    if (.drop_na) {
+        if (!inherits(edge_weights_res, "tbl_df")) {
+            idx_temp <- idx_not_any_NA(edge_weights_res)
+            edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        } else {
+            edge_weights_res <- tidyr::drop_na(edge_weights_res)
+        }
     }
 
+    edge_weights_res <- dplyr::mutate(.data = edge_weights_res, ...)
 
+    if (!inherits(edge_weights_res, "metric_graph_weights")) {
+        class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
+    }
+
+    return(private$format_weights(edge_weights_res, format))
+},
+
+
+#' @description Use `dplyr::select` function on the internal edge weights object.
+#' @param ... Arguments to be passed to `dplyr::select()`.
+#' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+#' @details A wrapper to use `dplyr::select()` on the internal edge weights object and return the result in the requested format.
+#' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the select.
+select_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+    if (!inherits(private$edge_weights, "tbl_df")) {
+        edge_weights_res <- tidyr::as_tibble(private$edge_weights)
+    } else {
+        edge_weights_res <- private$edge_weights
+    }
+
+    edge_weights_res <- dplyr::select(.data = edge_weights_res, ...)
+
+    if (.drop_all_na) {
+        is_tbl <- inherits(edge_weights_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(edge_weights_res)
+        edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        if (is_tbl) {
+            edge_weights_res <- tidyr::as_tibble(edge_weights_res)
+        }
+    }
+
+    if (.drop_na) {
+        if (!inherits(edge_weights_res, "tbl_df")) {
+            idx_temp <- idx_not_any_NA(edge_weights_res)
+            edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        } else {
+            edge_weights_res <- tidyr::drop_na(edge_weights_res)
+        }
+    }
+
+    if (!inherits(edge_weights_res, "metric_graph_weights")) {
+        class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
+    }
+
+    return(private$format_weights(edge_weights_res, format))
+},
+
+
+#' @description Use `dplyr::filter` function on the internal edge weights object.
+#' @param ... Arguments to be passed to `dplyr::filter()`.
+#' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+#' @details A wrapper to use `dplyr::filter()` on the internal edge weights object and return the result in the requested format.
+#' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the filter.
+filter_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+    if (!inherits(private$edge_weights, "tbl_df")) {
+        edge_weights_res <- tidyr::as_tibble(private$edge_weights)
+    } else {
+        edge_weights_res <- private$edge_weights
+    }
+
+    if (.drop_all_na) {
+        is_tbl <- inherits(edge_weights_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(edge_weights_res)
+        edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        if (is_tbl) {
+            edge_weights_res <- tidyr::as_tibble(edge_weights_res)
+        }
+    }
+
+    if (.drop_na) {
+        if (!inherits(edge_weights_res, "tbl_df")) {
+            idx_temp <- idx_not_any_NA(edge_weights_res)
+            edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        } else {
+            edge_weights_res <- tidyr::drop_na(edge_weights_res)
+        }
+    }
+
+    edge_weights_res <- dplyr::filter(.data = edge_weights_res, ...)
+    edge_weights_res <- dplyr::arrange(.data = edge_weights_res, `.edge_number`)
+
+    if (!inherits(edge_weights_res, "metric_graph_weights")) {
+        class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
+    }
+
+    return(private$format_weights(edge_weights_res, format))
+},
+
+
+#' @description Use `dplyr::summarise` function on the internal edge weights object grouped by the edge numbers.
+#' @param ... Arguments to be passed to `dplyr::summarise()`.
+#' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
+#' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+#' @details A wrapper to use `dplyr::summarise()` on the internal edge weights object and return the result in the requested format.
+#' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the summarise.
+summarise_weights = function(..., .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+    if (!inherits(private$edge_weights, "tbl_df")) {
+        edge_weights_res <- tidyr::as_tibble(private$edge_weights)
+    } else {
+        edge_weights_res <- private$edge_weights
+    }
+
+    if (.drop_all_na) {
+        is_tbl <- inherits(edge_weights_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(edge_weights_res)
+        edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        if (is_tbl) {
+            edge_weights_res <- tidyr::as_tibble(edge_weights_res)
+        }
+    }
+
+    if (.drop_na) {
+        if (!inherits(edge_weights_res, "tbl_df")) {
+            idx_temp <- idx_not_any_NA(edge_weights_res)
+            edge_weights_res <- lapply(edge_weights_res, function(dat) { dat[idx_temp] })
+        } else {
+            edge_weights_res <- tidyr::drop_na(edge_weights_res)
+        }
+    }
+
+    group_vars <- c(".edge_number")
+    group_vars <- c(.groups, group_vars)
+    edge_weights_res <- dplyr::group_by_at(.tbl = edge_weights_res, .vars = group_vars)
+    edge_weights_res <- dplyr::summarise(.data = edge_weights_res, ...)
+    edge_weights_res <- dplyr::ungroup(edge_weights_res)
+
+    edge_weights_res <- dplyr::arrange(.data = edge_weights_res, `.edge_number`)
+
+    if (!inherits(edge_weights_res, "metric_graph_weights")) {
+        class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
+    }
+
+    return(private$format_weights(edge_weights_res, format))
+},
+
+#' @description Use `tidyr::drop_na()` function on the internal edge weights object.
+#' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+#' @param ... Arguments to be passed to `tidyr::drop_na()`.
+#' @details A wrapper to use `tidyr::drop_na()` within the internal edge weights object.
+#' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting data list after the drop_na.
+drop_na_weights = function(format = "tibble", ...) {
+    # Handle drop_na for private$edge_weights
+    if (!inherits(private$edge_weights, "tbl_df")) {
+        edge_weights_res <- tidyr::as_tibble(private$edge_weights)
+    } else {
+        edge_weights_res <- private$edge_weights
+    }
+
+    # Drop NA values using tidyr::drop_na
+    edge_weights_res <- tidyr::drop_na(data = edge_weights_res, ...)
+
+    # Ensure the result has the proper class for edge weights
+    if (!inherits(edge_weights_res, "metric_graph_weights")) {
+        class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
+    }
+
+    # Return the result in the requested format
+    return(private$format_weights(edge_weights_res, format))
+},
+
+
+ #' @description Use `dplyr::mutate` function on the internal metric graph data object.
+#' @param ... Arguments to be passed to `dplyr::mutate()`.
+#' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+#' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+#' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+#' @details A wrapper to use `dplyr::mutate()` within the internal metric graph data object and return the result in the requested format.
+#' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting data list after the mutate.
+mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+    if (!inherits(private$data, "tbl_df")) {
+        data_res <- tidyr::as_tibble(private$data)
+    } else {
+        data_res <- private$data
+    }
+
+    if (.drop_all_na) {
+        is_tbl <- inherits(data_res, "tbl_df")
+        idx_temp <- idx_not_all_NA(data_res)
+        data_res <- lapply(data_res, function(dat) { dat[idx_temp] })
+        if (is_tbl) {
+            data_res <- tidyr::as_tibble(data_res)
+        }
+    }
+
+    if (.drop_na) {
+        if (!inherits(data_res, "tbl_df")) {
+            idx_temp <- idx_not_any_NA(data_res)
+            data_res <- lapply(data_res, function(dat) { dat[idx_temp] })
+        } else {
+            data_res <- tidyr::drop_na(data_res)
+        }
+    }
+
+    # Perform the mutation using dplyr::mutate
     data_res <- dplyr::mutate(.data = data_res, ...)
 
-    if(!inherits(data_res, "metric_graph_data")){
-      class(data_res) <- c("metric_graph_data", class(data_res))
+    # Assign class if necessary
+    if (!inherits(data_res, "metric_graph_data")) {
+        class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    return(data_res)
-  },
-
+    # Return the result in the requested format
+    return(private$format_data(data_res, format))
+},
 
   #' @description Use `tidyr::drop_na()` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `tidyr::drop_na()`.
+  #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
   #' @details A wrapper to use `dplyr::drop_na()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the drop_na.
-  drop_na = function(...) {
+  drop_na = function(..., format = "tibble") {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -3685,18 +3888,19 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    return(data_res)
+    return(private$format_data(data_res, format))
   },
 
 
 
   #' @description Use `dplyr::select` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::select()`.
- #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
- #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
+  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble". 
   #' @details A wrapper to use `dplyr::select()` within the internal metric graph data object. Observe that it is a bit different from directly using `dplyr::select()` since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
   #' @return A `tidyr::tibble` object containing the resulting data list after the selection.
-  select = function(..., .drop_na = FALSE, .drop_all_na = TRUE) {
+  select = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -3731,17 +3935,17 @@ metric_graph <-  R6Class("metric_graph",
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
-
-    return(data_res)
+    return(private$format_data(data_res, format))
   },
 
     #' @description Use `dplyr::filter` function on the internal metric graph data object.
   #' @param ... Arguments to be passed to `dplyr::filter()`.
    #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+  #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble". 
   #' @details A wrapper to use `dplyr::filter()` within the internal metric graph data object.
   #' @return A `tidyr::tibble` object containing the resulting data list after the filter.
-  filter = function(..., .drop_na = FALSE, .drop_all_na = TRUE) {
+  filter = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -3774,7 +3978,7 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    return(data_res)
+    return(private$format_data(data_res, format))
   },
 
 
@@ -3784,9 +3988,10 @@ metric_graph <-  R6Class("metric_graph",
   #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
    #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
  #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+   #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble". 
   #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `.group`, will be added, with the same value 1 for all rows.
   #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
-  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE) {
+  summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
     if(!inherits(private$data, "tbl_df")){
       data_res <- tidyr::as_tibble(private$data)
     } else{
@@ -3831,7 +4036,7 @@ metric_graph <-  R6Class("metric_graph",
       class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    return(data_res)
+    return(private$format_data(data_res, format))
 
   },
 
@@ -6546,6 +6751,86 @@ return(mapview_output)
     return(tmp)
   },
 
+format_data = function(data_res, format) {
+
+    if(!(format%in%c("tibble", "sf", "sp"))){
+      stop("The possible formats are 'tibble', 'sf', 'sp'.")
+    }
+
+    if (format == "sf") {
+        # Ensure the coordinates exist in the data
+        if (!all(c(".coord_x", ".coord_y") %in% colnames(data_res))) {
+            stop("Cannot convert to sf: .coord_x and .coord_y columns are missing.")
+        }
+        
+        # Create sf object from coordinates
+        data_res_sf <- sf::st_as_sf(data_res, coords = c(".coord_x", ".coord_y"), crs = sf::NA_crs_)
+        return(data_res_sf)
+
+    } else if (format == "sp") {
+        # Ensure the coordinates exist in the data
+        if (!all(c(".coord_x", ".coord_y") %in% colnames(data_res))) {
+            stop("Cannot convert to sp: .coord_x and .coord_y columns are missing.")
+        }
+
+        # Create SpatialPointsDataFrame from coordinates
+        coords <- cbind(data_res$.coord_x, data_res$.coord_y)
+        sp_data <- sp::SpatialPointsDataFrame(
+            coords = coords,
+            data = data_res,
+            proj4string = sp::CRS(NA_character_)
+        )
+        return(sp_data)
+
+    } else {
+        # Default format is tibble
+        return(tidyr::as_tibble(data_res))
+    }
+},
+
+
+  format_weights = function(edge_weights_res, format) {
+
+    if(!(format%in%c("tibble", "sf", "sp"))){
+      stop("The possible formats are 'tibble', 'sf', 'sp'.")
+    }
+
+  if (format == "sf") {
+    edges_geometries <- lapply(self$edges, sf::st_linestring)
+
+    if (is.vector(private$edge_weights)) {
+      ew_tmp <- data.frame(.weights = private$edge_weights)
+    } else {
+      ew_tmp <- as.data.frame(private$edge_weights)
+    }
+    ew_tmp[[".edge_lengths"]] <- self$edge_lengths
+
+    edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_)
+    return(edges_sf)
+
+  } else if (format == "sp") {
+    edges_list <- lapply(1:length(self$edges), function(i) {
+      sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
+    })
+    sp_edges <- sp::SpatialLines(
+      lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
+      proj4string = if (!is.null(private$crs)) private$proj4string else sp::CRS(NA_character_)
+    )
+    
+    if (is.vector(private$edge_weights)) {
+      ew_tmp <- data.frame(.weights = private$edge_weights)
+    } else {
+      ew_tmp <- as.data.frame(private$edge_weights)
+    }
+    ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
+    ew_tmp[[".edge_lengths"]] <- self$edge_lengths
+    edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
+    return(edges_sldf)
+
+  } else {
+    return(tidyr::as_tibble(edge_weights_res))
+  }
+},
 
   #' data List containing data on the metric graph.
 
