@@ -3743,7 +3743,6 @@ filter_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "
     }
 
     edge_weights_res <- dplyr::filter(.data = edge_weights_res, ...)
-    edge_weights_res <- dplyr::arrange(.data = edge_weights_res, `.edge_number`)
 
     if (!inherits(edge_weights_res, "metric_graph_weights")) {
         class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
@@ -3755,7 +3754,7 @@ filter_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "
 
 #' @description Use `dplyr::summarise` function on the internal edge weights object grouped by the edge numbers.
 #' @param ... Arguments to be passed to `dplyr::summarise()`.
-#' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
+#' @param .groups A vector of strings containing the names of the columns to be grouped, when computing the summaries. The default is `NULL`.
 #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
 #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
 #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
@@ -3786,13 +3785,9 @@ summarise_weights = function(..., .groups = NULL, .drop_na = FALSE, .drop_all_na
         }
     }
 
-    group_vars <- c(".edge_number")
-    group_vars <- c(.groups, group_vars)
-    edge_weights_res <- dplyr::group_by_at(.tbl = edge_weights_res, .vars = group_vars)
+    edge_weights_res <- dplyr::group_by_at(.tbl = edge_weights_res, .vars = .groups)
     edge_weights_res <- dplyr::summarise(.data = edge_weights_res, ...)
     edge_weights_res <- dplyr::ungroup(edge_weights_res)
-
-    edge_weights_res <- dplyr::arrange(.data = edge_weights_res, `.edge_number`)
 
     if (!inherits(edge_weights_res, "metric_graph_weights")) {
         class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
@@ -3806,23 +3801,19 @@ summarise_weights = function(..., .groups = NULL, .drop_na = FALSE, .drop_all_na
 #' @param ... Arguments to be passed to `tidyr::drop_na()`.
 #' @details A wrapper to use `tidyr::drop_na()` within the internal edge weights object.
 #' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting data list after the drop_na.
-drop_na_weights = function(format = "tibble", ...) {
-    # Handle drop_na for private$edge_weights
+drop_na_weights = function(...,format = "tibble") {
     if (!inherits(private$edge_weights, "tbl_df")) {
         edge_weights_res <- tidyr::as_tibble(private$edge_weights)
     } else {
         edge_weights_res <- private$edge_weights
     }
 
-    # Drop NA values using tidyr::drop_na
     edge_weights_res <- tidyr::drop_na(data = edge_weights_res, ...)
 
-    # Ensure the result has the proper class for edge weights
     if (!inherits(edge_weights_res, "metric_graph_weights")) {
         class(edge_weights_res) <- c("metric_graph_weights", class(edge_weights_res))
     }
 
-    # Return the result in the requested format
     return(private$format_weights(edge_weights_res, format))
 },
 
@@ -3859,15 +3850,12 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
         }
     }
 
-    # Perform the mutation using dplyr::mutate
     data_res <- dplyr::mutate(.data = data_res, ...)
 
-    # Assign class if necessary
     if (!inherits(data_res, "metric_graph_data")) {
         class(data_res) <- c("metric_graph_data", class(data_res))
     }
 
-    # Return the result in the requested format
     return(private$format_data(data_res, format))
 },
 

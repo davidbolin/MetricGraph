@@ -174,7 +174,7 @@ call <- add_osm_feature(call, key = "highway",value=c("motorway",
                                                       "primary","secondary",
                                                       "tertiary",
                                                       "residential"))
-data <- osmdata_sp(call)
+data <- osmdata_sf(call)
 ```
 
 We can now create the metric graph as follows. 
@@ -271,18 +271,18 @@ data <- data.frame(edge_number = sample(1:graph$nE, n.obs, replace=TRUE),
                    distance_on_edge = runif(n.obs),
                    y = rnorm(n.obs))
 graph$add_observations(data = data, normalized = TRUE)
-graph$plot(data = "y", vertex_size = 0)
+graph$plot(data = "y", vertex_size = 0, type = "mapview")
 ```
 
 One should note here that one needs to specify `normalized = TRUE` in the function to specify that the locations are in normalized distance on the edges. If this command is not set, the distances are interpreted as not being normalized. The `add_observations()` function accepts multiple types of inputs. One scenario that can be common in applications is to have the data as `SpatialPoints` objects, and one can then add the observations as a `SpatialPointsDataFrame`. To illustrate this, let us again sample some locations at random on the graph, then use the function `coordinates` to transform those to Longitude Latitude coordinates, which we then use to create a `SpatialPointsDataFrame` object which we add to the graph:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 obs.loc <- cbind(sample(1:graph$nE, n.obs, replace=TRUE), runif(n.obs))
 obs.lonlat <- graph$coordinates(PtE = obs.loc, normalized = TRUE)
 obs <- rnorm(n.obs)
 points <- SpatialPointsDataFrame(coords = obs.lonlat,
                                  data = data.frame(y = obs))
 graph$add_observations(points)
-graph$plot(data = "y", vertex_size = 0)
+graph$plot(data = "y", vertex_size = 0, type = "mapview")
 ```
 
 If we want to replace the data in the object, we can use `clear_observations()`
@@ -296,7 +296,7 @@ them on a fine mesh over the graph and then use `plot_function`. To illustrate
 this procedure, let us construct a mesh on the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$build_mesh(h = 100/1000)
-graph$plot(mesh=TRUE)
+graph$plot(mesh=TRUE, type = "mapview")
 ```
 
 In the command `build_mesh`, the argument `h` decides the largest spacing between nodes in the mesh. Above we chose that as 100m which is a bit coarse. So let us reduce the value of `h` to 10m and rebuild the mesh:
@@ -305,11 +305,12 @@ In the command `build_mesh`, the argument `h` decides the largest spacing betwee
 ```
 
 Suppose now that we want to display the function $f(s) = \text{Longitude}(s) - \text{Latitude}(s)$ on this graph. We then first evaluate it on the vertices of the mesh and then use the  function `plot_function` to display it:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 lon <- graph$mesh$V[, 1]
 lat <- graph$mesh$V[, 2]
 f <- lon - lat
-graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5,
+                type = "mapview", improve_plot = TRUE)
 ```
 
 Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
@@ -338,7 +339,7 @@ smoothness parameter, see [Whittle--Matérn fields with general smoothness](fem_
 
 As an example, let us simulate the field $u$ on the graph using $\alpha = 1$. 
 To do so, we again draw some locations at random, then sample the field at these locations and plot the result
-```{r, fig.align = "center",echo=TRUE}
+```{r, fig.align = "center",echo=TRUE,  warning=FALSE}
 sigma <- 1.3
 range <- 0.15 # range parameter
 sigma_e <- 0.1
@@ -353,7 +354,7 @@ graph$add_observations(data = data.frame(edge_number = obs.loc[, 1],
                                          distance_on_edge = obs.loc[, 2],
                                          u = u),
                        normalized = TRUE)
-graph$plot(data = "u", vertex_size = 0)
+graph$plot(data = "u", vertex_size = 0, type = "mapview")
 ```
 
 We can also plot the interactive version:
@@ -363,19 +364,21 @@ graph$plot(data = "u", vertex_size = 0, type = "mapview")
 ```
 
 We can also sample the field at the mesh on the graph as follows:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, type = "mesh")
-graph$plot_function(X = u, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot=TRUE)
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
 To visualize the correlation structure of the field, we can compute and plot
 the covariances between some point and all other points in the graph as follows:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 C <- spde_covariance(c(200, 0.1), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
-graph$plot_function(X = C, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = C, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot=TRUE)
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$ in the code above.
@@ -393,7 +396,7 @@ where $s_i\in \Gamma$ are observation locations, lon and lat are the longitude a
 $\varepsilon_i$ are independent centered Gaussian variables $N(0,\sigma_e^2)$ representing measurement noise. 
 
 Let us create such observations, clear the current data in the graph, and finally add the data on the graph:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 sigma <- 2
 range <- 0.2 # range parameter
 sigma_e <- 0.1
@@ -427,7 +430,7 @@ data <- data.frame(edge_number = obs.loc[, 1],
                    y = y)
 
 graph$clear_observations()
-graph$plot(X = y, X_loc = obs.loc, vertex_size = 0)
+graph$plot(X = y, X_loc = obs.loc, vertex_size = 0, type = "mapview")
 graph$add_observations(data = data, normalized = TRUE)
 ```
 
@@ -482,27 +485,30 @@ on the mesh locations.
 
 Now, we can compute the predictions for $y$. First, let us compute the posterior mean for the field at the observation locations and plot the residuals between the posterior means and the field:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_u <- predict(res, newdata = data, normalized = TRUE)
 pred_u$resid_field <- pred_u$re_mean - u
 pred_u <- graph$process_data(data = pred_u, normalized=TRUE)
-pred_u %>% graph$plot(data = "resid_field", vertex_size = 0)
+pred_u %>% graph$plot(data = "resid_field", vertex_size = 0,
+            type = "mapview")
 ```
 
 We can also obtain predictions by using the `augment()` function:
 
 Let us first plot the predictions for the field, then the fitted values:
 
-```{r}
+```{r,  warning=FALSE}
 pred_aug <- augment(res, newdata = data, normalized = TRUE)
 
-pred_aug %>% graph$plot(data = ".random", vertex_size = 0)
+pred_aug %>% graph$plot(data = ".random", vertex_size = 0,
+            type = "mapview")
 ```
 
 Let us now plot the fitted values along with the observed values:
 
-```{r}
-pred_aug %>% graph$plot(data = ".fitted", vertex_size = 0)
+```{r,  warning=FALSE}
+pred_aug %>% graph$plot(data = ".fitted", vertex_size = 0,
+            type = "mapview")
 ```
 
 Let us now obtain predictions of the field on a mesh of equally spaced nodes on the graph. First, let us create the mesh and `data.frame`:
@@ -522,17 +528,19 @@ data_mesh_pred <- data_mesh_pred[!duplicated(graph$mesh$V),]
 
 Now, let us obtain the predictions. We can obtain estimates for the latent field by taking the `re_mean` element from the `pred` list obtained by calling `prediction()`:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 pred <- predict(res, newdata=data_mesh_pred, normalized=TRUE)
 u_est <- pred$re_mean
-graph$plot_function(X = u_est, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = u_est, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot = TRUE)
 ```
 
 Finally, let us obtain predictions for the observed values on the mesh. In this case we use the `mean` component of the `pred` list:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 y_est <- pred$mean
-graph$plot_function(X = y_est, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot = TRUE)
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -598,19 +606,21 @@ glance(res_exp)
 Let us now compute the posterior mean for the field at the observation 
 locations and plot the residuals between the field and the posterior means of the field:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_exp <- predict(res_exp, newdata = data, normalized = TRUE)
-graph$plot(X = pred_exp$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
+graph$plot(X = pred_exp$re_mean - u, X_loc = data[,1:2], vertex_size = 0,
+        type = "mapview")
 ```
 
 To perform kriging prediction to other locations, one can use the `predict()` method along with a `data.frame` containing the locations in which one wants to obtain predictions and the corresponding covariate values at these locations. In this example we will use the `data_mesh_pred` from the previous example.
 Let us estimate the observed values at the mesh locations:
 
-```{r, fig.align = "center",echo=TRUE}
+```{r, fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_exp_y <- predict(res_exp, newdata = data_mesh_pred, 
                     normalized=TRUE)
 y_est_exp <- pred_exp_y$mean
-graph$plot_function(X = y_est_exp, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_exp, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot = TRUE)
 ```
 
 ## Models based on the Graph Laplacian
@@ -649,17 +659,19 @@ glance(res_gl)
 
 We can now obtain prediction at the observed locations by using the `predict()` method. Let us compute the posterior mean for the field at the observation locations and plot the residuals between the field and the posterior means of the field:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_GL <- predict(res_gl, newdata = data, normalized = TRUE)
-graph$plot(X = pred_GL$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
+graph$plot(X = pred_GL$re_mean - u, X_loc = data[,1:2], vertex_size = 0,
+            type = "mapview")
 ```
 
 Now, if we do predictions outside of the observation locations on a graph Laplacian model, we need to modify the graph. This modifies the model in its entirety. Thus, we need to refit the model with all the observation locations we want to do predictions. However, if we use the `predict()` method with observations outside of the observation locations, the `predict()` will return predictions together with a `warning` that one should refit the model to obtain proper predictions. Here, we will see the (incorrect way of obtaining) predictions of the observed data:
-```{r, fig.align = "center",echo=TRUE}
+```{r, fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_GL_y <- predict(res_gl, newdata = data_mesh_pred, 
                     normalized=TRUE)
 y_est_GL <- pred_GL_y$mean
-graph$plot_function(X = y_est_GL, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_GL, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot = TRUE)
 ```
 
 Let us now refit the model with all the locations we want to obtain predictions. Let us create a new 
@@ -692,17 +704,19 @@ One should compare the estimates with the ones obtained in the model without the
 
 Let us first compute the residual between the latent field and the posterior means at the observation locations:
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_GL_full <- predict(res_gl_pred, newdata = data, normalized = TRUE)
-graph$plot(X = pred_GL_full$re_mean - u, X_loc = data[,1:2], vertex_size = 0)
+graph$plot(X = pred_GL_full$re_mean - u, X_loc = data[,1:2], vertex_size = 0,
+            type = "mapview")
 ```
 
 Let us now obtain predictions at the desired locations (in the correct way) of the observed data: 
-```{r, fig.align = "center",echo=TRUE}
+```{r, fig.align = "center",echo=TRUE,  warning=FALSE}
 pred_GL_y_full <- predict(res_gl_pred, newdata = data_mesh_pred, 
                     normalized=TRUE)
 y_est_GL_full <- pred_GL_y_full$mean
-graph$plot_function(X = y_est_GL_full, vertex_size = 0, edge_width = 0.5)
+graph$plot_function(X = y_est_GL_full, vertex_size = 0, edge_width = 0.5,
+            type = "mapview", improve_plot = TRUE)
 ```
 
 
@@ -813,7 +827,8 @@ Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_field_prd <- field_pred$pred[,1]
 graph$plot_function(X = mean_field_prd, improve_plot = TRUE,
-                      vertex_size = 0, edge_width = 0.5)
+                      vertex_size = 0, edge_width = 0.5,
+                      type = "mapview")
 ```
 
 Finally, let us plot predictions of the observed data at the mesh locations:
@@ -831,7 +846,8 @@ Let us plot the predictions:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_obs_prd <- obs_pred$pred[,1]
 graph$plot_function(X = mean_obs_prd, improve_plot = TRUE,
-                    vertex_size = 0, edge_width = 0.5)
+                    vertex_size = 0, edge_width = 0.5,
+                    type = "mapview")
 ```
 
 # References {-}

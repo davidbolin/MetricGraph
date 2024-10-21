@@ -509,7 +509,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
 
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
   lng2 = coordx_upr2, lat2 = coordy_upr2
 )
@@ -539,7 +539,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
   lng2 = coordx_upr1, lat2 = coordy_upr1
 )
@@ -562,7 +562,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
   lng2 = coordx_upr2, lat2 = coordy_upr2
 )
@@ -593,7 +593,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
   lng2 = coordx_upr1, lat2 = coordy_upr1
 )
@@ -616,7 +616,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
   lng2 = coordx_upr2, lat2 = coordy_upr2
 )
@@ -646,7 +646,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
   lng2 = coordx_upr1, lat2 = coordy_upr1
 )
@@ -669,7 +669,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
   lng2 = coordx_upr2, lat2 = coordy_upr2
 )
@@ -699,7 +699,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
   lng2 = coordx_upr1, lat2 = coordy_upr1
 )
@@ -722,7 +722,7 @@ plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2,
   edge_width = 0, p = p, type = "mapview")
 pred_plot <- plot@map
 
-pred_plot <- pred_plot %>% leaflet::fitBounds(
+pred_plot %>% leaflet::fitBounds(
   lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
   lng2 = coordx_upr2, lat2 = coordy_upr2
 )

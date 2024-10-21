@@ -536,3 +536,111 @@ We can check that it was properly added:
 ```{r}
 graph$get_data()
 ```
+
+# Edge Weights Manipulation in Metric Graphs
+
+We will demonstrate edge weights manipulation using various tidyverse-style verbs, including `select`, `mutate`, `filter`, `summarise`, and `drop_na`. We will also introduce some `NA` values for illustration.
+
+## Adding Edge Weights to the Metric Graph
+
+We begin by creating a dataset of edge weights and adding it to the metric graph:
+
+```{r}
+set.seed(123)
+
+# Generate edge weight data
+edge_weights_df <- data.frame(
+  weight = runif(graph$nE),
+  weight2 = rnorm(graph$nE),
+  weight3 = runif(graph$nE) * 100
+)
+
+# Introduce some NA values
+edge_weights_df$weight[1] <- NA
+edge_weights_df$weight2[2] <- NA
+edge_weights_df$weight3[3] <- NA
+
+# Set edge weights in the metric graph
+graph$set_edge_weights(weights = edge_weights_df)
+
+# Display the edge weights
+graph$get_edge_weights()
+```
+
+## Selecting Specific Edge Weight Columns
+
+The `select_weights()` method allows us to choose specific columns from the edge weight dataset. Let's select `weight` and `weight2`, while preserving all rows, even if they contain `NA`:
+
+```{r}
+graph$select_weights(weight, weight2, .drop_all_na = FALSE)
+```
+
+## Filtering Edge Weights
+
+We can filter rows based on conditions. For example, let's filter rows where `weight > 0.5` and remove rows containing `NA` values:
+
+```{r}
+graph$filter_weights(weight > 0.5, .drop_na = TRUE)
+```
+
+We can also filter edge weights using standard tidyverse functions:
+
+```{r}
+filtered_weights <- graph$get_edge_weights() %>% filter(weight > 0.5)
+```
+
+## Creating New Columns Using `mutate_weights()`
+
+We will now create a new column `weight_log`, which is the logarithm of `weight + 1`:
+
+```{r}
+graph$mutate_weights(weight_log = log(weight + 1))
+```
+
+We can plot the result after applying the mutation. To this end, we first set the new edges as the result from `mutate_weights`, then we plot:
+
+```{r}
+graph$set_edge_weights(weights = graph$mutate_weights(weight_log = log(weight + 1)))
+graph$plot(edge_weight = "weight_log")
+```
+
+## Summarising Edge Weights
+
+We can summarise edge weights by calculating the mean of `weight` and `weight2` for all edges:
+
+```{r}
+graph$summarise_weights(mean_weight = mean(weight, na.rm = TRUE), 
+                        mean_weight2 = mean(weight2, na.rm = TRUE))
+```
+
+If we want to group by edge numbers or other columns, we can use the `.groups` argument:
+
+```{r}
+graph$summarise_weights(mean_weight = mean(weight, na.rm = TRUE), 
+                        mean_weight2 = mean(weight2, na.rm = TRUE), 
+                        .groups = ".weights")
+```
+
+## Removing Rows with NA Values
+
+To remove rows that contain `NA` values for the `weight` and `weight2` columns, we use the `drop_na_weights()` method:
+
+```{r}
+graph$drop_na_weights(weight, weight2)
+```
+
+We can also directly apply `drop_na()` to the result of `get_edge_weights()`:
+
+```{r}
+graph$get_edge_weights() %>% drop_na(weight, weight2)
+```
+
+## Combining Multiple Verbs
+
+Finally, let us combine multiple verbs to manipulate the edge weights. We will mutate the weights, filter for certain conditions, and summarise them:
+
+```{r}
+graph$mutate_weights(new_weight = weight * 10) %>% 
+       filter(weight > 0.2) %>% 
+       summarise(mean_new_weight = mean(new_weight, na.rm = TRUE))
+```
