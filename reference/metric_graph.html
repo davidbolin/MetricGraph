@@ -243,6 +243,7 @@ graph. The weights are given by the edge lengths.</p></dd>
 <span>  merge_close_vertices <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  factor_merge_close_vertices <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  remove_circles <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  auto_remove_point_edges <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  add_obs_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>return_removed <span class="op">=</span> <span class="cn">FALSE</span>, verbose <span class="op">=</span> <span class="va">verbose</span><span class="op">)</span>,</span>
 <span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
@@ -363,6 +364,10 @@ initialization. Default is <code>FALSE</code>.</p></dd>
 <dt><code>remove_circles</code></dt>
 <dd><p>All circlular edges with a length smaller than this number
 are removed. If <code>TRUE</code>, the <code>vertex_vertex</code> tolerance will be used. If <code>FALSE</code>, no circles will be removed.</p></dd>
+
+
+<dt><code>auto_remove_point_edges</code></dt>
+<dd><p>Should edges of length zero, that is, edges that are actually points, be automatically removed?</p></dd>
 
 
 <dt><code>verbose</code></dt>
@@ -2298,6 +2303,7 @@ is at the end of the edge.</p>
 <span>  add_new_scale_weights <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  scale_color_mapview <span class="op">=</span> <span class="fu">viridis</span><span class="fu">::</span><span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">viridis</a></span><span class="op">(</span><span class="fl">100</span>, option <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span>,</span>
 <span>  scale_color_weights_mapview <span class="op">=</span> <span class="fu">viridis</span><span class="fu">::</span><span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">viridis</a></span><span class="op">(</span><span class="fl">100</span>, option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
+<span>  scale_color_weights_discrete_mapview <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale_color_degree_mapview <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -2425,6 +2431,10 @@ is a character, then the group will be chosen by its name.</p></dd>
 
 <dt><code>scale_color_weights_mapview</code></dt>
 <dd><p>Color scale to be applied for edge weights when <code>type = "mapview"</code>.</p></dd>
+
+
+<dt><code>scale_color_weights_discrete_mapview</code></dt>
+<dd><p>Color scale to be applied for degrees when <code>type = "mapview"</code>. If <code>NULL</code> <code>RColorBrewer::brewer.pal(n = n_weights, "Set1")</code> will be used where <code>n_weights</code> is the number of different degrees.</p></dd>
 
 
 <dt><code>scale_color_degree_mapview</code></dt>
@@ -2775,7 +2785,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.20 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.21 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
