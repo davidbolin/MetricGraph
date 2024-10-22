@@ -1930,6 +1930,7 @@ Plots the metric graph.
   add_new_scale_weights = TRUE,
   scale_color_mapview = viridis::viridis(100, option = "D"),
   scale_color_weights_mapview = viridis::viridis(100, option = "C"),
+  scale_color_weights_discrete_mapview = NULL,
   scale_color_degree_mapview = NULL,
   plotly = deprecated(),
   ...
@@ -2001,6 +2002,8 @@ is a character, then the group will be chosen by its name.}
 \item{\code{scale_color_mapview}}{Color scale to be applied for data when \code{type = "mapview"}.}
 
 \item{\code{scale_color_weights_mapview}}{Color scale to be applied for edge weights when \code{type = "mapview"}.}
+
+\item{\code{scale_color_weights_discrete_mapview}}{Color scale to be applied for degrees when \code{type = "mapview"}. If \code{NULL} \code{RColorBrewer::brewer.pal(n = n_weights, "Set1")} will be used where \code{n_weights} is the number of different degrees.}
 
 \item{\code{scale_color_degree_mapview}}{Color scale to be applied for degrees when \code{type = "mapview"}. If \code{NULL} \code{RColorBrewer::brewer.pal(n = n_degrees, "Set1")} will be used where \code{n_degrees} is the number of different degrees.}
 

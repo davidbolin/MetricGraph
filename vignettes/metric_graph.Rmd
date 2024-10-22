@@ -404,12 +404,13 @@ should be given in normalized distance or not.
 
 To illustrate the useage of `metric_graph` on some real data, we use the 
 `osmdata` package to download data from OpenStreetMap. In the following code,
-we extract highways in the city of Copenhagen:
+we extract highways for a part of the city of Copenhagen:
 ```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
 library(osmdata)
-call <- opq(getbb("Copenhagen"))
+bbox <- c(12.5900, 55.6000, 12.6850, 55.6450)
+call <- opq(bbox)
 call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
-                                                      "secondary"))
+                                                        "secondary", "tertiary"))
 data_sf <- osmdata_sf(call)
 
 graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
@@ -474,7 +475,8 @@ graph5$get_edge_weights()
 We can also let the color of the edges be determined by some edge weight. For example, let us take `maxspeed`:
 
 ```{r}
-graph5$plot(vertex_size = 0, edge_weight = "maxspeed", type="mapview")
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", 
+        type="mapview")
 ```
 
 Similarly, we can also set the edge width based on an edge weight (for this case, we can only use `type = "ggplot"`, which is the default). In this example we will choose the column `lanes` to determine the edge widths. If the number of lanes is not available, the edge will be removed (we will replace the `NA`s by zero).
@@ -498,10 +500,10 @@ graph5 <- metric_graph$new(data_sf, include_edge_weights=FALSE)
 graph5$get_edge_weights()
 ```
 
-Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `bicycle` and `alt_name`:
+Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `highway` and `lanes`:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data_sf, include_edge_weights=c("bicycle", "alt_name"))
+graph5 <- metric_graph$new(data_sf, include_edge_weights=c("highway", "lanes"))
 graph5$get_edge_weights()
 ```
 

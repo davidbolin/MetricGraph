@@ -728,6 +728,12 @@ pred_plot %>% leaflet::fitBounds(
 )
 ```
 
+```{r, echo=FALSE}
+rm(p)
+rm(plot)
+rm(pred_plot)
+```
+
 ## A quick diagnostic analysis
 
 The cross-validation suggests that the best model with respect to RMSE, MAE, CRPS and log-score is the Whittle-Matérn field with `alpha=2` and boundary corrections.

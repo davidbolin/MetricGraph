@@ -4612,6 +4612,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
     #' @param add_new_scale_weights Should a new color scale for the edge weights be created?
     #' @param scale_color_mapview Color scale to be applied for data when `type = "mapview"`.
     #' @param scale_color_weights_mapview Color scale to be applied for edge weights when `type = "mapview"`.
+    #' @param scale_color_weights_discrete_mapview Color scale to be applied for degrees when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_weights, "Set1")` will be used where `n_weights` is the number of different degrees.
     #' @param scale_color_degree_mapview Color scale to be applied for degrees when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_degrees, "Set1")` will be used where `n_degrees` is the number of different degrees.
     #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
 ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
@@ -4650,6 +4651,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                   add_new_scale_weights = TRUE,
                   scale_color_mapview = viridis::viridis(100, option = "D"),
                   scale_color_weights_mapview = viridis::viridis(100, option = "C"),
+                  scale_color_weights_discrete_mapview = NULL,
                   scale_color_degree_mapview = NULL,
                   plotly = deprecated(),
                   ...) {
@@ -4768,13 +4770,22 @@ if(is.null(p)){
     if (!(edge_weight %in% colnames(edges_sf))) {
       stop(paste(edge_weight, "is not a valid column in edges_sf"))
     }
+
+    if(is.character(edges_sf[[edge_weight]]) || is.factor(edges_sf[[edge_weight]])){
+      if(is.null(scale_color_degree_mapview)){
+        scale_color_weights_discrete_mapview <- RColorBrewer::brewer.pal(n = length(levels(edges_sf[[edge_weight]])), "Set1")
+      }         
+      scale_weights <- scale_color_weights_discrete_mapview
+    } else{
+      scale_weights <- scale_color_weights_mapview
+    }
     mapview_output <- mapview::mapview(
       x = edges_sf,
       zcol = edge_weight,  
-      color = scale_color_weights_mapview,  
+      color = scale_weights,  
       lwd = edge_width,  
       layer.name = "Edges",  
-      col.regions = scale_color_weights_mapview,  
+      col.regions = scale_weights,  
       ...
     )
   } else {
@@ -4791,13 +4802,21 @@ if(is.null(p)){
     if (!(edge_weight %in% colnames(edges_sf))) {
       stop(paste(edge_weight, "is not a valid column in edges_sf"))
     }
+    if(is.character(edges_sf[[edge_weight]]) || is.factor(edges_sf[[edge_weight]])){
+      if(is.null(scale_color_degree_mapview)){
+        scale_color_weights_discrete_mapview <- RColorBrewer::brewer.pal(n = length(levels(edges_sf[[edge_weight]])), "Set1")
+      }      
+      scale_weights <- scale_color_weights_discrete_mapview
+    } else{
+      scale_weights <- scale_color_weights_mapview
+    }    
     mapview_output <- mapview_output + mapview::mapview(
       x = edges_sf,
       zcol = edge_weight,  
-      color = scale_color_weights_mapview,  
+      color = scale_weights,  
       lwd = edge_width,  
       layer.name = "Edges",  
-      col.regions = scale_color_weights_mapview,  
+      col.regions = scale_weights,  
       ...
     )
   } else {
