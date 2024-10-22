@@ -494,14 +494,14 @@ graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lane
 If one does not want to have the edge weights added, one must set `include_edge_weights` to `FALSE`:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data_sp, include_edge_weights=FALSE)
+graph5 <- metric_graph$new(data_sf, include_edge_weights=FALSE)
 graph5$get_edge_weights()
 ```
 
 Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `bicycle` and `alt_name`:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data_sp, include_edge_weights=c("bicycle", "alt_name"))
+graph5 <- metric_graph$new(data_sf, include_edge_weights=c("bicycle", "alt_name"))
 graph5$get_edge_weights()
 ```
 
@@ -541,7 +541,7 @@ the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE, message=FALSE}
-graphs <- graph_components$new(data_sp)
+graphs <- graph_components$new(data_sf)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -566,7 +566,7 @@ min(graph5$get_edge_lengths(unit='m'))
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
-graphs <- graph_components$new(data_sp,
+graphs <- graph_components$new(data_sf,
                                tolerance = list(vertex_vertex = 0.1))
 graphs$plot(vertex_size = 0, type = "mapview")
 ```
