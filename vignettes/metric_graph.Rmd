@@ -410,9 +410,10 @@ library(osmdata)
 call <- opq(getbb("Copenhagen"))
 call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
                                                       "secondary"))
-data_sp <- osmdata_sp(call)
+data_sf <- osmdata_sf(call)
 
-graph5 <- metric_graph$new(SpatialLines(data_sp$osm_lines@lines))
+graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
+  function(dat){sf::st_coordinates(dat)[,1:2]}))
 graph5$plot(vertex_size = 0)
 ```
 
@@ -428,7 +429,8 @@ graph, and it also makes it difficult to interpret results (unless one has a
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(SpatialLines(data_sp$osm_lines@lines), longlat = TRUE)
+graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
+  function(dat){sf::st_coordinates(dat)[,1:2]}), longlat = TRUE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
 Latitude and that distances should be calculated in km. So if we now look at the
@@ -437,11 +439,11 @@ edge lengths, they are given in km:
 range(graph5$get_edge_lengths())
 ```
 
-Alternatively, and more conveniently, whenever the `SpatialLines` object has a valid `proj4string`, it will automatically use this `proj4string` to set the
-correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `proj4string` when we created the `SpatialLines` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osmdata_sp` object:
+Alternatively, and more conveniently, whenever the `sf` object has a valid `crs`, it will automatically use this `crs` to set the
+correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `crs` when we created the `linestring` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osmdata_sf` object:
 
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(data_sp)
+graph5 <- metric_graph$new(data_sf)
 ```
 
 We can see now that `graph5` automatically has the correct CRS:
@@ -453,8 +455,8 @@ graph5
 This also allows us to plot the graph interactively with the underlying world map, if the data has a coordinate reference system, by setting `type = "mapview"` in the
 `plot()` method:
 
-```{r, warning=FALSE, message=FALSE}
-graph5$plot(vertex_size = 0, type = "mapview")
+```{r, message=FALSE, warning=FALSE}
+graph5$plot(type = "mapview", vertex_size = 0)
 ```
 
 We can also check the edge lengths:

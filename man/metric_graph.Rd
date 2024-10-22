@@ -169,6 +169,7 @@ Create a new \code{metric_graph} object.
   merge_close_vertices = NULL,
   factor_merge_close_vertices = 1,
   remove_circles = FALSE,
+  auto_remove_point_edges = TRUE,
   verbose = 1,
   add_obs_options = list(return_removed = FALSE, verbose = verbose),
   lines = deprecated()
@@ -245,6 +246,8 @@ initialization. Default is \code{FALSE}.}
 
 \item{\code{remove_circles}}{All circlular edges with a length smaller than this number
 are removed. If \code{TRUE}, the \code{vertex_vertex} tolerance will be used. If \code{FALSE}, no circles will be removed.}
+
+\item{\code{auto_remove_point_edges}}{Should edges of length zero, that is, edges that are actually points, be automatically removed?}
 
 \item{\code{verbose}}{Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 

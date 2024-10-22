@@ -115,6 +115,7 @@ metric_graph <-  R6Class("metric_graph",
   #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance `vertex_vertex` when merging close vertices at the additional step?
   #' @param remove_circles All circlular edges with a length smaller than this number
   #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
+  #' @param auto_remove_point_edges Should edges of length zero, that is, edges that are actually points, be automatically removed? 
   #' @param verbose Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
   #' @details A graph object can be initialized in two ways. The first method
@@ -151,6 +152,7 @@ metric_graph <-  R6Class("metric_graph",
                         merge_close_vertices = NULL,
                         factor_merge_close_vertices = 1,
                         remove_circles = FALSE,
+                        auto_remove_point_edges = TRUE,                        
                         verbose = 1,
                         add_obs_options = list(return_removed = FALSE,
                                                 verbose = verbose),
@@ -742,6 +744,10 @@ metric_graph <-  R6Class("metric_graph",
         private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
       }
 
+      if(auto_remove_point_edges){
+          private$remove_circles(1e-15, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+      }
+
       if(is.logical(remove_circles)){
         if(remove_circles){
           private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
@@ -860,6 +866,11 @@ metric_graph <-  R6Class("metric_graph",
       message(sprintf("time: %.3f s", t[["elapsed"]]))
          }
     }
+
+
+      if(auto_remove_point_edges){
+          private$remove_circles(1e-15, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+      }
 
     if(!private$perform_merges){
       if(is.logical(remove_circles)){
