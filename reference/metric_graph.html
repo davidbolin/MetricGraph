@@ -1538,7 +1538,7 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 
 
 <dt><code>return_removed</code></dt>
-<dd><p>Should the removed data (if it exists) when using 'closest' <code>duplicated_strategy</code> be returned?</p></dd>
+<dd><p>Should the removed data (if it exists) due to being projected to the same place when using 'closest' <code>duplicated_strategy</code> be returned?</p></dd>
 
 
 <dt><code>verbose</code></dt>
@@ -1707,7 +1707,7 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 
 
 <dt><code>.groups</code></dt>
-<dd><p>A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is <code>NULL</code>.</p></dd>
+<dd><p>A vector of strings containing the names of the columns to be grouped, when computing the summaries. The default is <code>NULL</code>.</p></dd>
 
 
 <dt><code>.drop_na</code></dt>
@@ -1738,17 +1738,17 @@ stored in the <code>data</code> element of the <code>metric_graph</code> object.
 <h3 id="method-drop-na-weights-">Method <code>drop_na_weights()</code><a class="anchor" aria-label="anchor" href="#method-drop-na-weights-"></a></h3>
 <p>Use <code><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">tidyr::drop_na()</a></code> function on the internal edge weights object.</p><div class="section">
 <h4 id="usage-40">Usage<a class="anchor" aria-label="anchor" href="#usage-40"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">drop_na_weights</span><span class="op">(</span>format <span class="op">=</span> <span class="st">"tibble"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">drop_na_weights</span><span class="op">(</span><span class="va">...</span>, format <span class="op">=</span> <span class="st">"tibble"</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-31">Arguments<a class="anchor" aria-label="anchor" href="#arguments-31"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>format</code></dt>
-<dd><p>The format of the output: "tibble", "sf", or "sp". Default is "tibble".</p></dd>
-
-
-<dt><code>...</code></dt>
+<p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments to be passed to <code><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">tidyr::drop_na()</a></code>.</p></dd>
+
+
+<dt><code>format</code></dt>
+<dd><p>The format of the output: "tibble", "sf", or "sp". Default is "tibble".</p></dd>
 
 
 </dl><p></p></div>
@@ -2293,6 +2293,8 @@ is at the end of the edge.</p>
 <span>  scale_color_main <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span>,</span>
 <span>  scale_color_weights <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
 <span>  scale_color_degree <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_d</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span>,</span>
+<span>  scale_color_weights_discrete <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_d</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
+<span>  scale_color_main_discrete <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_d</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
 <span>  add_new_scale_weights <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  scale_color_mapview <span class="op">=</span> <span class="fu">viridis</span><span class="fu">::</span><span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">viridis</a></span><span class="op">(</span><span class="fl">100</span>, option <span class="op">=</span> <span class="st">"D"</span><span class="op">)</span>,</span>
 <span>  scale_color_weights_mapview <span class="op">=</span> <span class="fu">viridis</span><span class="fu">::</span><span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">viridis</a></span><span class="op">(</span><span class="fl">100</span>, option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>,</span>
@@ -2403,6 +2405,14 @@ is a character, then the group will be chosen by its name.</p></dd>
 
 <dt><code>scale_color_degree</code></dt>
 <dd><p>Color scale for the degrees.</p></dd>
+
+
+<dt><code>scale_color_weights_discrete</code></dt>
+<dd><p>Color scale for discrete edge weights. Will only be used if <code>add_new_scale_weights</code> is TRUE.</p></dd>
+
+
+<dt><code>scale_color_main_discrete</code></dt>
+<dd><p>Color scale for the data to be plotted, for discrete data.</p></dd>
 
 
 <dt><code>add_new_scale_weights</code></dt>
@@ -2765,7 +2775,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.21 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.20 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
