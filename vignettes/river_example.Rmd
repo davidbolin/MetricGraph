@@ -81,6 +81,12 @@ and
 graph$get_edge_weights()
 ```
 
+Let us now turn the `netID` column of the data into a factor and store it in the graph:
+
+```{r}
+graph$add_observations(graph$mutate(netID = netID), clear_obs=TRUE)
+```
+
 We can now visualize the river and the data 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$plot(data = "Summer_mn", vertex_size = 0.5)
@@ -96,12 +102,12 @@ graph$plot(data = "Summer_mn", vertex_size = 0.5, type = "mapview")
 We start with fitting the non directional models. First for `alpha=1`:
 ```{r, message=FALSE}
 #fitting model with different smoothness
-model.wm1 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+model.wm1 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + netID, 
                           graph = graph, model = 'wm1')
 ```
 and then for `alpha=2`:
 ```{r, message=FALSE}
-model.wm2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+model.wm2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + netID, 
                           graph = graph, model = 'wm2')
 ```
 
@@ -124,7 +130,7 @@ This is the default option in `metricGraph` and is created by:
 
 ```{r, message=FALSE, warning=FALSE}
 res.wm1.dir <- graph_lme(Summer_mn ~ ELEV_DEM + 
-                        SLOPE + as.factor(netID), 
+                        SLOPE + netID, 
                         graph = graph, model = 'wmd1')
 ```
 
@@ -144,7 +150,7 @@ To make this work in the metricgraph package one uses the following line
 ```{r, message=FALSE, warning=FALSE}
 graph$set_edge_weights(directional_weights = 'h2oAreaKm2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-res.wm1.dir2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + as.factor(netID), 
+res.wm1.dir2 <- graph_lme(Summer_mn ~ ELEV_DEM + SLOPE + netID, 
                                     graph = graph, model = 'wmd1')
 ```
 

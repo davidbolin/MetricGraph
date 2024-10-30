@@ -2836,6 +2836,22 @@ metric_graph <-  R6Class("metric_graph",
       strc_data <- TRUE
     }
 
+    # Store factor columns and their levels
+    factor_columns <- lapply(names(data), function(col) {
+      if (is.factor(data[[col]])) {
+        list(column = col, levels = levels(data[[col]]))
+      } else {
+        NULL
+      }
+    })
+    
+    # Filter out non-factor columns
+    factor_columns <- Filter(Negate(is.null), factor_columns)
+    
+    factor_info <- do.call(rbind, lapply(factor_columns, function(x) {
+      data.frame(Column = x$column, Levels = paste(x$levels, collapse = ", "))
+    }))    
+
     if(inherits(data, "metric_graph_data")){
       if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
         warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
@@ -3140,6 +3156,16 @@ metric_graph <-  R6Class("metric_graph",
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
     data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
     data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
+
+    # Assigning back the columns that are factors with their respective levels:
+    for (col_info in factor_columns) {
+      column_name <- col_info$column
+      levels_specified <- col_info$levels
+
+      # Convert to factor with specified levels
+      private$data[[column_name]] <- factor(private$data[[column_name]], levels = levels_specified)
+    }    
+
     if(format == "tibble"){
       data <- tidyr::as_tibble(data)
     }
@@ -3291,6 +3317,22 @@ metric_graph <-  R6Class("metric_graph",
       data[[".coord_y"]] <- coord_tmp[,2]
       strc_data <- TRUE
     }
+
+    # Store factor columns and their levels
+    factor_columns <- lapply(names(data), function(col) {
+      if (is.factor(data[[col]])) {
+        list(column = col, levels = levels(data[[col]]))
+      } else {
+        NULL
+      }
+    })
+    
+    # Filter out non-factor columns
+    factor_columns <- Filter(Negate(is.null), factor_columns)
+    
+    factor_info <- do.call(rbind, lapply(factor_columns, function(x) {
+      data.frame(Column = x$column, Levels = paste(x$levels, collapse = ", "))
+    }))
 
 
     if(length(tolerance)>1){
@@ -3620,6 +3662,16 @@ metric_graph <-  R6Class("metric_graph",
     }
     private$group_col <- group
     # distance_graph_tmp <- private$data[[".distance_to_graph"]]
+
+    # Assigning back the columns that are factors with their respective levels:
+    for (col_info in factor_columns) {
+      column_name <- col_info$column
+      levels_specified <- col_info$levels
+
+      # Convert to factor with specified levels
+      private$data[[column_name]] <- factor(private$data[[column_name]], levels = levels_specified)
+    }
+
     class(private$data) <- c("metric_graph_data", class(private$data))
     if(!is.null(group)){
       attr(private$data, "group_variables") <- group
