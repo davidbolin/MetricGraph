@@ -84,7 +84,7 @@ graph$get_edge_weights()
 Let us now turn the `netID` column of the data into a factor and store it in the graph:
 
 ```{r}
-graph$add_observations(graph$mutate(netID = netID), clear_obs=TRUE)
+graph$add_observations(graph$mutate(netID = as.factor(netID)), clear_obs=TRUE)
 ```
 
 We can now visualize the river and the data 
