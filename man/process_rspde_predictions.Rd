@@ -4,7 +4,7 @@
 \alias{process_rspde_predictions}
 \title{Process predictions of \code{rspde_metric_graph} objects obtained by using \code{inlabru}}
 \usage{
-process_rspde_predictions(pred, PtE = NULL)
+process_rspde_predictions(pred, graph, PtE = NULL)
 }
 \arguments{
 \item{pred}{The predictions of the field obtained by using \code{inlabru}}

@@ -4,18 +4,18 @@
 \alias{plot.graph_bru_proc_pred}
 \title{Plot of processed predicted values with 'inlabru'}
 \usage{
-\method{plot}{graph_bru_proc_pred}(x, y = NULL, graph, vertex_size = 0, ...)
+\method{plot}{graph_bru_proc_pred}(x, y = NULL, vertex_size = 0, ...)
 }
 \arguments{
 \item{x}{A processed predicted object obtained with the \code{process_rspde_predictions} function.}
 
 \item{y}{Not used.}
 
-\item{graph}{The original \code{metric_graph} object in which the predictions were obtained.}
-
 \item{vertex_size}{Size of the vertices.}
 
 \item{...}{Additional parameters to be passed to plot_function.}
+
+\item{graph}{The original \code{metric_graph} object in which the predictions were obtained.}
 }
 \value{
 A 'ggplot2' object.

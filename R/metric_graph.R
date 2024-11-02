@@ -2664,9 +2664,10 @@ metric_graph <-  R6Class("metric_graph",
   #' The default name is `c('.edge_number', '.distance_on_edge')`.
   #' @param normalized If TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default TRUE.
+  #' @param loc_name The name of the location variables. Not needed for `rSPDE` models.
   #'
   #' @return A list or a matrix containing the mesh locations.
-  get_mesh_locations = function(bru = FALSE, loc = c(".edge_number", ".distance_on_edge"), normalized = TRUE) {
+  get_mesh_locations = function(bru = FALSE, loc = c(".edge_number", ".distance_on_edge"), loc_name = NULL, normalized = TRUE) {
     if(is.null(self$mesh)){
       warning("There is no mesh!")
       return(invisible(NULL))
@@ -2686,6 +2687,11 @@ metric_graph <-  R6Class("metric_graph",
       data_list[[loc[1]]] <- tmp_VtE[,1]
       data_list[[loc[2]]] <- tmp_VtE[,2]
       data_list <- as.data.frame(data_list)
+      if(!is.null(loc_name)){
+        ret_list <- list()
+        ret_list[[loc_name]] <- data_list
+        return(ret_list)
+      }
       return(data_list)
     }
   },

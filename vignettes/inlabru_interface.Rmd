@@ -270,7 +270,7 @@ can be obtained by using the `get_mesh_locations()` method.
 We also set `bru=TRUE` and `loc="loc"` to obtain a data list suitable to be used with `inlabru`.
 ```{r}
 data_list <- graph_bru$get_mesh_locations(bru = TRUE,
-                                            loc = "loc")
+                                            loc_name = "loc")
 ```
 
 We can now obtain the predictions by using the `predict()` method. Observe

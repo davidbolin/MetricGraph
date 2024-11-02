@@ -1055,6 +1055,7 @@ Returns a list or a matrix with the mesh locations.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(
   bru = FALSE,
   loc = c(".edge_number", ".distance_on_edge"),
+  loc_name = NULL,
   normalized = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -1066,6 +1067,8 @@ Returns a list or a matrix with the mesh locations.
 
 \item{\code{loc}}{If \code{bru} is set to \code{TRUE}, the column names of the location variables.
 The default name is \code{c('.edge_number', '.distance_on_edge')}.}
+
+\item{\code{loc_name}}{The name of the location variables. Not needed for \code{rSPDE} models.}
 
 \item{\code{normalized}}{If TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default TRUE.}
