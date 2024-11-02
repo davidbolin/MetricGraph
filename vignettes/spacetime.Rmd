@@ -181,7 +181,8 @@ cmp_graph <- y ~ 1 + field(st_data_bru[["index"]],
 Fit the model passing `st_data_bru` to the `data` argument:
 
 ```{r}
-bru_fit_graph <- bru(cmp_graph, data = st_data_bru[["data"]])
+bru_fit_graph <- bru(cmp_graph, data = st_data_bru[["data"]],
+                        options = list(num.threads = "1:1"))
 ```
 
 Compare the estimated parameters with the true values:
@@ -254,7 +255,9 @@ cmp_graph_repl <- y ~ 1 + field(st_data_bru_repl[["index"]],
 Fit the model passing `st_data_bru_repl` to the `data` argument:
 
 ```{r}
-bru_fit_graph_repl <- bru(cmp_graph_repl, data = st_data_bru_repl[["data"]])
+bru_fit_graph_repl <- bru(cmp_graph_repl, 
+                      data = st_data_bru_repl[["data"]],
+                      options = list(num.threads = "1:1"))
 ```
 
 Compare the estimated parameters with the true values:

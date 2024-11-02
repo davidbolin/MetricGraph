@@ -191,7 +191,9 @@ data_stk <- inla.stack.data(stk_dat)
 Finally, we fit the model:
 
 ```{r, message=FALSE, warning=FALSE}
-spde_fit <- inla(f.s, data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)))
+spde_fit <- inla(f.s, data = data_stk, 
+                  control.predictor=list(A=inla.stack.A(stk_dat)),
+                               num.threads = "1:1")
 ```
 
 Let us now obtain the estimates in the original scale
@@ -299,7 +301,8 @@ Now, we use the `inla.stack.data()` function and fit the model:
 ```{r}
 data_stk_prd <- inla.stack.data(stk_dat_prd)
 
-spde_fit_prd <- inla(f_s_prd, data = data_stk_prd)
+spde_fit_prd <- inla(f_s_prd, data = data_stk_prd,
+                               num.threads = "1:1")
 ```
 
 We will now extract the means at the prediction locations:
@@ -390,7 +393,8 @@ Finally, we fit the model:
 
 ```{r, message=FALSE, warning=FALSE}
 spde_fit_alpha2 <- inla(f.s.2, data = data_stk2, 
-          control.predictor=list(A=inla.stack.A(stk_dat2)))
+          control.predictor=list(A=inla.stack.A(stk_dat2)),
+                               num.threads = "1:1")
 ```
 
 Let us now obtain the estimates in the original scale
@@ -558,7 +562,8 @@ data_stk_rep <- inla.stack.data(stk_dat_rep)
 Now, we fit the model:
 ```{r}
 spde_fit_rep <- inla(f_s_rep, data = data_stk_rep, 
-                control.predictor=list(A=inla.stack.A(stk_dat_rep)))
+                control.predictor=list(A=inla.stack.A(stk_dat_rep)),
+                               num.threads = "1:1")
 ```
 
 Let us see the estimated values in the original scale:
@@ -621,7 +626,8 @@ data_stk_rep <- inla.stack.data(stk_dat_rep)
 ```
 Now, we fit the model:
 ```{r}
-spde_fit_rep <- inla(f_s_rep, data = data_stk_rep)
+spde_fit_rep <- inla(f_s_rep, data = data_stk_rep,
+                               num.threads = "1:1")
 ```
 
 Let us see the estimated values in the original scale:

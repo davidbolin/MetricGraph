@@ -191,7 +191,9 @@ we directly fit the model by providing the `data` component of the `data_spde_br
 
 ```{r, warning=FALSE, message=FALSE}
 spde_bru_fit <-
-    bru(cmp, data=data_spde_bru[["data"]])
+    bru(cmp, data=data_spde_bru[["data"]],
+        options = list(num.threads = "1:1")
+        )
 ```
 
 Let us now obtain the estimates in the original scale
@@ -361,7 +363,8 @@ we directly fit the model by providing the `data` component of the `data_spde_br
 
 ```{r, warning=FALSE, message=FALSE}
 spde_bru_fit_alpha2 <-
-    bru(cmp_alpha2, data=data_spde_alpha2[["data"]])
+    bru(cmp_alpha2, data=data_spde_alpha2[["data"]],
+    options = list(num.threads = "1:1"))
 ```
 
 Let us now obtain the estimates in the original scale
@@ -526,7 +529,10 @@ Now, we fit the model:
 ```{r}
 spde_bru_fit_rep <-
     bru(cmp_rep,
-        data=data_spde_bru[["data"]])
+        data=data_spde_bru[["data"]],
+        options=list(
+        num.threads = "1:1")
+    )
 ```
 
 Let us see the estimated values in the original scale:
@@ -579,7 +585,10 @@ to ".all" inside the
 ```{r}
 spde_bru_fit_rep <-
     bru(cmp_rep,
-        data=data_spde_bru_rep[["data"]])
+        data=data_spde_bru_rep[["data"]],
+        options=list(
+        num.threads = "1:1")
+    )
 ```
 
 Let us see the estimated values in the original scale:
@@ -637,7 +646,8 @@ spde_model_bru_pems <- graph_spde(pems_graph)
                           model = spde_model_bru_pems)
       data_spde_bru_pems <- graph_data_spde(spde_model_bru_pems,
                         loc_name = "loc")
-      spde_bru_fit_pems <- bru(cmp, data=data_spde_bru_pems[["data"]])
+      spde_bru_fit_pems <- bru(cmp, data=data_spde_bru_pems[["data"]],
+                        options=list(num.threads = "1:1"))
 ```
 
 Let us see the estimated values in the original scale:

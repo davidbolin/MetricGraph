@@ -378,7 +378,8 @@ Finally, we can fit the model:
 ```{r, warning=FALSE}
   rspde_fit <- inla(f.s, data = inla.stack.data(stk.dat),
     control.inla = list(int.strategy = "eb"),
-    control.predictor = list(A = inla.stack.A(stk.dat), compute = TRUE)
+    control.predictor = list(A = inla.stack.A(stk.dat), compute = TRUE),
+    num.threads = "1:1"
   )
 ```
 
@@ -473,7 +474,8 @@ rspde_fitprd <- inla(f.s,
     return.marginals = FALSE,
     return.marginals.predictor = FALSE
   ),
-  control.inla = list(int.strategy = "eb")
+  control.inla = list(int.strategy = "eb"),
+  num.threads = "1:1"
 )
 ```
 
@@ -547,7 +549,8 @@ rspde_fit_rep <-
     data = inla.stack.data(st.dat.rep),
     family = "gaussian",
     control.predictor =
-      list(A = inla.stack.A(st.dat.rep))
+      list(A = inla.stack.A(st.dat.rep)),
+    num.threads = "1:1"
   )
 ```
 
@@ -622,7 +625,8 @@ Now, we can directly fit the model, by using the `data` element of `data_rspde_b
 ```{r}
   rspde_bru_fit <-
     bru(cmp,
-        data=data_rspde_bru[["data"]]
+        data=data_rspde_bru[["data"]],
+        options = list(num.threads = "1:1")
     )
 ```
 Let us now obtain the estimates of the parameters in the
@@ -717,8 +721,9 @@ Now, we are ready to fit the model:
   rspde_bru_fit_rep <-
     bru(cmp_rep,
         data=data_rspde_rep[["data"]],
-      options=list(
-      family = "gaussian")
+        options=list(
+        family = "gaussian",
+        num.threads = "1:1")
     )
 ```
 
@@ -934,7 +939,8 @@ cmp_nonstat <-
 rspde_fit_nonstat <-
   bru(cmp_nonstat,
     data = data_rspde_bru_ns[["data"]],
-    family = "gaussian"
+    family = "gaussian",
+    options = list(num.threads = "1:1")
   )
 ```
 
