@@ -1714,6 +1714,54 @@ predict.rspde_metric_graph <- function(object,
 }
 
 
+#' @name process_rspde_predictions
+#' @title Process predictions of `rspde_metric_graph` objects obtained by using `inlabru`
+#' @description Auxiliar function to transform the predictions of the field into a plot friendly object.
+#' @param pred The predictions of the field obtained by using `inlabru`
+#' @param PtE Normalized locations of the points on the edge.
+#' @return A list with predictions.
+#' @export
+
+process_rspde_predictions <- function(pred,
+                                        graph,
+                                        PtE = NULL){
+  pred_list <- list()
+  pred_list[["pred"]] <- pred
+  pred_list[["PtE_pred"]] <- PtE
+  pred_list[["graph"]] <- graph
+
+  class(pred_list) <- "graph_bru_proc_pred"
+  return(pred_list)
+}
+
+
+#' @name plot.graph_bru_proc_pred
+#' @title Plot of processed predicted values with 'inlabru'
+#' @description Auxiliary function to obtain plots of the processed predictions of the field
+#' using 'inlabru'.
+#' @param x A processed predicted object obtained with the `process_rspde_predictions` function.
+#' @param y Not used.
+#' @param graph The original `metric_graph` object in which the predictions were obtained.
+#' @param vertex_size Size of the vertices.
+#' @param ... Additional parameters to be passed to plot_function.
+#' @return A 'ggplot2' object.
+#' @export
+
+plot.graph_bru_proc_pred <- function(x, y = NULL, vertex_size = 0, ...){
+  m_prd_bru <- x$pred$mean
+  PtE_prd <- x$PtE_pred
+  graph <- x$graph
+  newdata <- data.frame("edge_number" = PtE_prd[,1],
+                        "distance_on_edge" = PtE_prd[,2],
+                        "pred_y" = m_prd_bru)
+  newdata <- graph$process_data(data = newdata, normalized = TRUE)
+  
+  p <- graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
+  p
+}
+
+
+
 #' @name graph_bru_process_data
 #' @title Prepare data frames or data lists to be used with 'inlabru' in metric
 #' graphs

@@ -166,15 +166,14 @@ st_bru_graph <- rspde.spacetime(mesh_space = graph,
                                 alpha = 1, beta = 1)
 ```
 
-Define the data, in which we use the function `graph_data_rspde()`, provide `loc_name`, set `spacetime` to 
-`TRUE` and provide `time_col` with the column that contains the time. Next, we define the model component for `inlabru`, where we pass the `index` element from the object returned by `graph_data_rspde()`:
+Define the data, in which we use the function `graph_data_rspde()`, set `bru` to `TRUE`. Next, we define the model component for `inlabru`, where we pass a list with two elements, `space` which is given by the spatial locations, for which we pass `cbind(.edge_number, .distance_on_edge)`, and `time` which is given by the time points.
 
 ```{r}
-st_data_bru <- graph_data_rspde(st_bru_graph, loc_name = "loc", 
-                                  time_col = "time",
-                                  spacetime = TRUE)
+st_data_bru <- graph_data_rspde(st_bru_graph, bru = TRUE)
 
-cmp_graph <- y ~ 1 + field(st_data_bru[["index"]], 
+cmp_graph <- y ~ 1 + field(list(
+                    space = cbind(.edge_number, .distance_on_edge), 
+                                time = time), 
                                 model = st_bru_graph)
 ```
 
@@ -237,8 +236,7 @@ st_bru_graph_repl <- rspde.spacetime(mesh_space = graph,
 Let us now create the data object, by using the `graph_data_rspde()` function. In this case, we also need to pass `repl_col`:
 
 ```{r}
-st_data_bru_repl <- graph_data_rspde(st_bru_graph, loc_name = "loc", 
-                                  time_col = "time",
+st_data_bru_repl <- graph_data_rspde(st_bru_graph, 
                                   repl = ".all",
                                   repl_col = "repl",
                                   spacetime = TRUE)
@@ -246,7 +244,8 @@ st_data_bru_repl <- graph_data_rspde(st_bru_graph, loc_name = "loc",
 
 Next, we create `inlabru` component by also passing the replicate argument with the `repl` element of the object returned by `graph_data_rspde()`:
 ```{r}
-cmp_graph_repl <- y ~ 1 + field(st_data_bru_repl[["index"]], 
+cmp_graph_repl <- y ~ 1 + field(list(space = cbind(.edge_number, .distance_on_edge), 
+                                time = time),
                                 model = st_bru_graph_repl,
                                 replicate = st_data_bru_repl[["repl"]]
                                 )

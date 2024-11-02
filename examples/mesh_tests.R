@@ -16,13 +16,13 @@ graph$build_mesh(h = 0.01)
 graph$plot(mesh=TRUE)
 C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
 X <- cbind(graph$mesh$VtE, C)
-graph$plot_function(X, plotly = TRUE, vertex_size = 5)
+graph$plot_function(X, type = "plotly", vertex_size = 5)
 
 C <- covariance_alpha2_mesh(P = c(1,0.1), kappa = 10, sigma = 2, graph = graph)
 graph$plot_function_mesh(C, plotly = FALSE)
 
 u <- sample_spde(kappa = 2/5, sigma = 2, graph = graph, type="mesh", alpha=1)
-graph$plot_function_mesh(u, plotly = TRUE)
+graph$plot_function_mesh(u, type = "plotly")
 graph$plot_function_mesh(u)
 
 u <- sample_spde(kappa = 10, sigma = 2, alpha = 2, graph = graph, type = "mesh")

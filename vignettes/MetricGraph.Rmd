@@ -313,7 +313,7 @@ graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5,
                 type = "mapview", improve_plot = TRUE)
 ```
 
-Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
+Alternatively, we can set `type = "plotly"` in the plot command to get a 3D 
 visualization of the function by using the `plotly` [@plotlypackage] package. 
 When the first argument of `plot_function` is a vector, the function assumes that 
 the values in the vector are the values of the function evaluated at the vertices

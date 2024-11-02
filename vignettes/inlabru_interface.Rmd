@@ -297,7 +297,7 @@ plot(field_pred)
 We can also obtain a 3d plot by setting `plotly` to `TRUE`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
-plot(field_pred, plotly = TRUE)
+plot(field_pred, type = "plotly")
 ```
 
 ## An example with `alpha = 2`
@@ -430,7 +430,7 @@ plot(field_pred_alpha2)
 We can also obtain a 3d plot by setting `plotly` to `TRUE`:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
-plot(field_pred_alpha2, plotly = TRUE)
+plot(field_pred_alpha2, type = "plotly")
 ```
 
 

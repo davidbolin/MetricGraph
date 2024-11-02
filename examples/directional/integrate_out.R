@@ -17,7 +17,7 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                                               graph$mesh$PtE,
                                               type = "PtE",
                                               directional = T)
-graph$plot_function(X = Eu, plotly = TRUE)
+graph$plot_function(X = Eu, type = "plotly")
 graph$buildDirectionalConstraints(alpha = 1)
 Q <- MetricGraph:::Qalpha1_edges(c(tau,kappa),
                                  graph,

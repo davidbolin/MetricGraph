@@ -2660,13 +2660,13 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Returns a list or a matrix with the mesh locations.
   #' @param bru Should an 'inlabru'-friendly list be returned?
-  #' @param loc If `bru` is set to `TRUE`, the name of the location variable.
-  #' The default name is 'loc'.
+  #' @param loc If `bru` is set to `TRUE`, the column names of the location variables.
+  #' The default name is `c('.edge_number', '.distance_on_edge')`.
   #' @param normalized If TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default TRUE.
   #'
   #' @return A list or a matrix containing the mesh locations.
-  get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE) {
+  get_mesh_locations = function(bru = FALSE, loc = c(".edge_number", ".distance_on_edge"), normalized = TRUE) {
     if(is.null(self$mesh)){
       warning("There is no mesh!")
       return(invisible(NULL))
@@ -2678,12 +2678,14 @@ metric_graph <-  R6Class("metric_graph",
       if(is.null(loc)){
         stop("If bru is TRUE, then the loc argument must be provided!")
       }
-      data_list <- list()
       tmp_VtE <- self$mesh$VtE
       if(!normalized){
         tmp_VtE[,2] <- tmp_VtE[,2] * self$edge_lengths[tmp_VtE[, 1]]
       }
-      data_list[[loc]] <- tmp_VtE
+      data_list <- list()
+      data_list[[loc[1]]] <- tmp_VtE[,1]
+      data_list[[loc[2]]] <- tmp_VtE[,2]
+      data_list <- as.data.frame(data_list)
       return(data_list)
     }
   },
@@ -4673,7 +4675,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
 ##  # ' @param summarise_group_by A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
 ##  # ' @param summarise_by_graph_group Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
   #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
-  #' @return A `plot_ly` (if `plotly = TRUE`) or `ggplot` object.
+  #' @return A `plot_ly` (if `type = "plotly"`) or `ggplot` object.
   plot = function(data = NULL,
                   newdata = NULL,
                   group = 1,
@@ -5656,7 +5658,7 @@ return(mapview_output)
     if(type == "plotly"){
       requireNamespace("plotly")
       if(is.null(p)){
-        p <- self$plot(plotly = TRUE,
+        p <- self$plot(type = "plotly",
                        vertex_color = vertex_color,
                        vertex_size = vertex_size,
                        edge_width = edge_width,
@@ -5792,7 +5794,7 @@ return(mapview_output)
   #' @param ... Additional arguments for ggplot or plot_ly.
   #' @return Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
   plot_movie = function(X,
-                        plotly = TRUE,
+                        type = "plotly",
                         vertex_size = 5,
                         vertex_color = "black",
                         edge_width = 1,
