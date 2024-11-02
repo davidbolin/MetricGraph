@@ -319,7 +319,8 @@ We can now define and fit the model as previously
 ```{r}
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 
-data_rspde <- graph_data_rspde(rspde_model, name="field", repl = ".all")
+data_rspde <- graph_data_rspde(rspde_model, name = "field", 
+                                  repl = ".all", repl_col = "rep")
 
 stk <- inla.stack(data = data_rspde[["data"]], 
                   A = data_rspde[["basis"]], 

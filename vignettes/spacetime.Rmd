@@ -238,8 +238,7 @@ Let us now create the data object, by using the `graph_data_rspde()` function. I
 ```{r}
 st_data_bru_repl <- graph_data_rspde(st_bru_graph, 
                                   repl = ".all",
-                                  repl_col = "repl",
-                                  spacetime = TRUE)
+                                  repl_col = "repl")
 ```
 
 Next, we create `inlabru` component by also passing the replicate argument with the `repl` element of the object returned by `graph_data_rspde()`:
