@@ -44,7 +44,9 @@ navbar:
       - text: An example with directional models
         href: articles/directional_model.html        
       - text: An example with a river graph model
-        href: articles/river_example.html           
+        href: articles/river_example.html         
+      - text: Spatio-temporal Models on Compact Metric Graphs
+        href: articles/spacetime.html  
     custom:
         icon: fa-comments-o
         text: Discussions
