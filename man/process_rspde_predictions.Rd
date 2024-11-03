@@ -9,6 +9,8 @@ process_rspde_predictions(pred, graph, PtE = NULL)
 \arguments{
 \item{pred}{The predictions of the field obtained by using \code{inlabru}}
 
+\item{graph}{The original \code{metric_graph} object in which the predictions were obtained.}
+
 \item{PtE}{Normalized locations of the points on the edge.}
 }
 \value{

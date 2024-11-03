@@ -14,8 +14,6 @@
 \item{vertex_size}{Size of the vertices.}
 
 \item{...}{Additional parameters to be passed to plot_function.}
-
-\item{graph}{The original \code{metric_graph} object in which the predictions were obtained.}
 }
 \value{
 A 'ggplot2' object.

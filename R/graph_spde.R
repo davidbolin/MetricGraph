@@ -1718,6 +1718,7 @@ predict.rspde_metric_graph <- function(object,
 #' @title Process predictions of `rspde_metric_graph` objects obtained by using `inlabru`
 #' @description Auxiliar function to transform the predictions of the field into a plot friendly object.
 #' @param pred The predictions of the field obtained by using `inlabru`
+#' @param graph The original `metric_graph` object in which the predictions were obtained.
 #' @param PtE Normalized locations of the points on the edge.
 #' @return A list with predictions.
 #' @export
@@ -1741,7 +1742,6 @@ process_rspde_predictions <- function(pred,
 #' using 'inlabru'.
 #' @param x A processed predicted object obtained with the `process_rspde_predictions` function.
 #' @param y Not used.
-#' @param graph The original `metric_graph` object in which the predictions were obtained.
 #' @param vertex_size Size of the vertices.
 #' @param ... Additional parameters to be passed to plot_function.
 #' @return A 'ggplot2' object.
