@@ -81,5 +81,5 @@ point <- graph$coordinates(PtE = point.PtE)
 c_cov <- op$cov_function_mesh(matrix(point.PtE,1,2))
 
 m1 <- which.min((graph$mesh$V[,1]-point[1])^2 + (graph$mesh$V[,2]-point[2])^2)
-p <- graph$plot_function(Sigma.kl[m1,], plotly = TRUE)
-graph$plot_function(c_cov,p=p, line_color = "red", plotly = TRUE)
+p <- graph$plot_function(Sigma.kl[m1,], type = "plotly")
+graph$plot_function(c_cov,p=p, line_color = "red", type = "plotly")

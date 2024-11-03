@@ -82,6 +82,12 @@ and
 graph$get_edge_weights()
 ```
 
+Let us now turn the `netID` column of the data into a factor and store it in the graph:
+
+```{r}
+graph$add_observations(graph$mutate(netID = as.factor(netID)), clear_obs=TRUE)
+```
+
 We can now visualize the river and the data 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph$plot(data = "Summer_mn", vertex_size = 0.5)
@@ -102,7 +108,7 @@ model.wm1 <- graph_lme(Summer_mn ~ SLOPE + netID,
 ```
 and then for `alpha=2`:
 ```{r, message=FALSE}
-model.wm2 <- graph_lme(Summer_mn ~   SLOPE + as.factor(netID), 
+model.wm2 <- graph_lme(Summer_mn ~   SLOPE + netID, 
                           graph = graph, model = 'wm2')
 ```
 
@@ -145,7 +151,7 @@ To make this work in the metricgraph package one uses the following line
 ```{r, message=FALSE, warning=FALSE}
 graph$set_edge_weights(directional_weights = 'h2oAreaKm2')
 graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
-res.wm1.dir2 <- graph_lme(Summer_mn ~  SLOPE + as.factor(netID), 
+res.wm1.dir2 <- graph_lme(Summer_mn ~  SLOPE + netID, 
                                     graph = graph, model = 'wmd1')
 ```
 

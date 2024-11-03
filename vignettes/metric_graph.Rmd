@@ -56,7 +56,7 @@ to set the sizes and colors of the vertices and edges, and it has a `plotly`
 argument to visualize the graph in 3D. For this to work, the `plotly` library
 must be installed.
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
-graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
+graph$plot(type = "plotly", vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
 ```
 
@@ -73,7 +73,7 @@ p + ggplot2::labs(title = "Metric graph",
 Similarly, the `3d` version of the `plot()` method returns a 
 `plotly` object that can also be modified. For instance:
 ```{r}
-p <- graph$plot(plotly = TRUE)
+p <- graph$plot(type = "plotly")
 p <- plotly::layout(p, title = "Metric graph", 
               scene = list(xaxis=
               list(title = "Long"),yaxis=list(title = "Lat")))
@@ -833,10 +833,10 @@ f <- x^2 - y^2
 graph$plot_function(X = f)
 ```
 
-Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
+Alternatively, we can set `type = "plotly"` in the plot command to get a 3D 
 visualization of the function:
 ```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
-graph$plot_function(X = f, plotly = TRUE)
+graph$plot_function(X = f, type = "plotly")
 ```
 
 When the first argument of `plot_function` is a vector, the function assumes that 
@@ -854,7 +854,7 @@ f <- XY[, 1]^2 - XY[, 2]^2
 data_f <- data.frame(f = f, "edge_number" = PtE[,1], 
             "distance_on_edge" = PtE[,2])
 data_f <- graph$process_data(data = data_f, normalized=TRUE)            
-graph$plot_function(data = "f", newdata = data_f, plotly = TRUE)
+graph$plot_function(data = "f", newdata = data_f, type = "plotly")
 ```
 
 Alternatively, we can add the data to the graph, and directly plot by using the `data` argument.
@@ -946,13 +946,13 @@ The reason it refined a lot on the circular part is that it interpolates the val
 Let us now obtain a 3d plot. First, of the default version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly")
 ```
 
 Now, of the improved version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+graph$plot_function(data = "f", newdata= df_f, type = "plotly",
                     improve_plot = TRUE)
 ```
 
@@ -991,13 +991,13 @@ graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
 Let us now obtain a 3d plot. First, of the default version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly")
 ```
 
 Now, of the improved version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+graph$plot_function(data = "f", newdata= df_f, type = "plotly",
                     improve_plot = TRUE)
 ```
 
@@ -1022,7 +1022,7 @@ graph$plot_function(f, improve_plot = TRUE)
 Now, the 3d plot:
 
 ```{r}
-graph$plot_function(f, plotly=TRUE, improve_plot = TRUE)
+graph$plot_function(f, type = "plotly", improve_plot = TRUE)
 ```
 
 Alternatively, we can similarly plot by setting the `data.frame` and passing the `newdata` argument:
@@ -1045,6 +1045,6 @@ graph$plot_function(data = "f", newdata= df_f,
 Now, the 3d plot:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
+graph$plot_function(data = "f", newdata= df_f, type = "plotly",
                     improve_plot = TRUE, continuous = FALSE)
 ```

@@ -44,7 +44,9 @@ navbar:
       - text: An example with directional models
         href: articles/directional_model.html        
       - text: An example with a river graph model
-        href: articles/river_example.html           
+        href: articles/river_example.html         
+      - text: Spatio-temporal Models on Compact Metric Graphs
+        href: articles/spacetime.html  
     custom:
         icon: fa-comments-o
         text: Discussions
@@ -84,7 +86,9 @@ reference:
     - predict.inla_metric_graph_spde
     - predict.rspde_metric_graph
     - plot.graph_bru_pred
+    - plot.graph_bru_proc_pred
     - graph_bru_process_data
+    - process_rspde_predictions
   - title: Linear mixed-effects models
     contents:
     - graph_lme

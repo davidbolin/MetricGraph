@@ -313,7 +313,7 @@ graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5,
                 type = "mapview", improve_plot = TRUE)
 ```
 
-Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
+Alternatively, we can set `type = "plotly"` in the plot command to get a 3D 
 visualization of the function by using the `plotly` [@plotlypackage] package. 
 When the first argument of `plot_function` is a vector, the function assumes that 
 the values in the vector are the values of the function evaluated at the vertices
@@ -744,7 +744,8 @@ This formula is very simple since we are not assuming mean zero, so that we do n
 
 ```{r}
 spde_bru_fit <- bru(cmp, data = 
-              graph_data_spde(spde_model, loc_name = "loc")[["data"]])
+              graph_data_spde(spde_model, loc_name = "loc")[["data"]],
+                        options=list(num.threads = "1:1"))
 ```
 
 The advantage / difference between the estimates we obtain here and those above is that the `bru` function does full Bayesian inference (assuming priors for the model parameters). We used the default priors when creating the `graph_spde` model (see the help text for that function). The advantage now is that we do not only obtain point estimates but entire posterior distributions for the parameters. To view the estimates we can use the `spde_metric_graph_result()` function, then

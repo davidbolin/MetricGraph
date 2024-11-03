@@ -1,0 +1,273 @@
+
+---
+title: "Spatio-temporal Models on Compact Metric Graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2024-10-23. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Spatio-temporal Models on Compact Metric Graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+references:
+- id: lindgren24
+  title: "A Diffusion-based Spatio-temporal Extension of Gaussian Matérn Fields"
+  author:
+  - family: Lindgren
+    given: Finn
+  - family: Bakka
+    given: Haakon  
+  - family: Bolin
+    given: David
+  - family: Krainski
+    given: Elias
+  - family: Rue
+    given: Håvard
+  container-title: SORT Statistics and Operations Research Transactions
+  volume: 48
+  issue: 1
+  page: 3-66
+  type: article-journal
+  issued:
+    year: 2024
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(rSPDE)
+set.seed(123)
+```
+
+```{r inla_link, include = FALSE}
+inla_link <- function() {
+  sprintf("[%s](%s)", "`R-INLA`", "https://www.r-inla.org")
+}
+```
+
+## Introduction
+
+The `MetricGraph` package, combined with the `rSPDE` package, implements the following spatio-temporal model on compact metric graphs:
+$$
+d u + \gamma(\kappa^2 + \rho \cdot \nabla - \Delta)^{\alpha} u = dW_Q, \quad \text{on } T \times \Gamma
+$$
+where $T$ is a temporal interval, and $\Gamma$ is a compact metric graph. Here, $\kappa > 0$ is a spatial range parameter, $\rho$ is a drift parameter, and $W_Q$ is a $Q$-Wiener process with spatial covariance operator $\sigma^2(\kappa^2 - \Delta)^{-\beta}$, where $\sigma^2$ is a variance parameter. The model has two smoothness parameters, $\alpha$ and $\beta$, which are assumed to be integers. This model generalizes the spatio-temporal models introduced in 
+[@lindgren24](https://www.raco.cat/index.php/SORT/article/view/428665), where the generalization is to allow for drift and to allow for metric graphs as spatial domains. The model is implemented using a finite element discretization of the corresponding precision operator:
+$$
+\sigma^{-2} \left(d + \gamma(\kappa^2 + \rho \cdot \nabla - \Delta)^{\alpha}\right) \left(d + \gamma(\kappa^2 - \rho \cdot \nabla - \Delta)^{\alpha}\right) (\kappa^2 - \rho \cdot \nabla - \Delta)^{\beta}
+$$
+in both space and time, following a similar discretization to [@lindgren24](https://www.raco.cat/index.php/SORT/article/view/428665).
+
+## Implementation Details
+
+The function `spacetime.operators()`, provided by the `rSPDE` package, constructs the spatio-temporal precision matrix for models on metric graphs and enables interaction with the `MetricGraph` package. This function requires inputs that define the spatial structure via a `MetricGraph` object and the temporal domain through a vector of discretized time points. Key parameters like `kappa` and `sigma` control the range and variance of the field, respectively, whereas `alpha` and `beta` govern the smoothness of the field.
+
+This function processes these inputs to create a `spacetime.operators` object containing the discretized precision matrix, covariance structure, and essential methods for model evaluation, simulation, and kriging on metric graphs.
+
+```{r, message=FALSE}
+library(sp)
+library(rSPDE)
+library(MetricGraph)
+
+# Define graph edges
+line1 <- Line(rbind(c(1, 0), c(0, 0)))
+line2 <- Line(rbind(c(0, 0), c(0, 1)))
+line3 <- Line(rbind(c(0, 0), c(0, -1)))
+line4 <- Line(rbind(c(0, 1), c(1, 0)))
+lines <- sp::SpatialLines(list(
+  Lines(list(line1), ID="1"),
+  Lines(list(line2), ID="2"),
+  Lines(list(line3), ID="3"),
+  Lines(list(line4), ID="4")
+))
+
+# Initialize metric graph
+graph <- metric_graph$new(edges = lines)
+graph$plot(direction = TRUE)
+
+# Create finite element mesh and compute matrices
+h <- 0.01
+graph$build_mesh(h = h)
+graph$compute_fem()
+
+# Define model parameters and construct spatio-temporal operator
+t <- seq(from = 0, to = 10, length.out = 31)
+kappa <- 5
+sigma <- 10
+gamma <- 0.1
+rho <- 1
+alpha <- 1
+beta <- 1
+
+op <- spacetime.operators(graph = graph, time = t,
+                          kappa = kappa, sigma = sigma, alpha = alpha,
+                          beta = beta, rho = rho, gamma = gamma)
+op$plot_covariances(t.ind = 15, s.ind = 50, t.shift = c(-1, 0, 1))
+```
+
+### Simulating Observations and Estimating Parameters
+
+We simulate some data from the model:
+
+```{r, message=FALSE}
+x <- simulate(op, nsim = 1) 
+
+n.obs <- 500
+PtE <- cbind(sample(1:graph$nE, size = n.obs, replace = TRUE), runif(n.obs))
+t.obs <- max(t) * runif(n.obs)
+A <- op$make_A(PtE, t.obs)
+sigma.e <- 0.01
+Y <- as.vector(A %*% x + sigma.e * rnorm(n.obs))
+df <- data.frame(y = as.matrix(Y), edge_number = PtE[,1], 
+                    distance_on_edge = PtE[,2], 
+                    time = t.obs)
+graph$add_observations(data = df, normalized=TRUE,
+                          group = "time")
+```
+
+Next, we estimate the model parameters:
+
+```{r}
+res <- rspde_lme(y ~ 1, loc_time = "time",
+                 model = op, 
+                 parallel = TRUE)
+```
+
+After fitting the model, we can view a summary of the results:
+
+```{r}
+summary(res)
+```
+
+Compare the estimated results with the true values:
+
+```{r}
+results <- data.frame(kappa = c(kappa, res$coeff$random_effects[1]), 
+                      sigma = c(sigma, res$coeff$random_effects[2]),
+                      gamma = c(gamma, res$coeff$random_effects[3]), 
+                      rho = c(rho, res$coeff$random_effects[4]),
+                      sigma.e = c(sigma.e, res$coeff$measurement_error),
+                      intercept = c(0, res$coeff$fixed_effects),
+                      row.names = c("True", "Estimate"))
+                      
+print(results)
+```
+
+### `inlabru` Implementation
+
+For completeness, we fit the model using the `inlabru` package. First, we create a temporal mesh:
+
+```{r, message=FALSE}
+library(inlabru)
+mesh_time <- fmesher::fm_mesh_1d(t)
+st_bru_graph <- rspde.spacetime(mesh_space = graph, 
+                                mesh_time = mesh_time, 
+                                alpha = 1, beta = 1)
+```
+
+Define the data, in which we use the function `graph_data_rspde()`, set `bru` to `TRUE`. Next, we define the model component for `inlabru`, where we pass a list with two elements, `space` which is given by the spatial locations, for which we pass `cbind(.edge_number, .distance_on_edge)`, and `time` which is given by the time points.
+
+```{r}
+st_data_bru <- graph_data_rspde(st_bru_graph, bru = TRUE)
+
+cmp_graph <- y ~ 1 + field(list(
+                    space = cbind(.edge_number, .distance_on_edge), 
+                                time = time), 
+                                model = st_bru_graph)
+```
+
+Fit the model passing `st_data_bru` to the `data` argument:
+
+```{r}
+bru_fit_graph <- bru(cmp_graph, data = st_data_bru[["data"]],
+                        options = list(num.threads = "1:1"))
+```
+
+Compare the estimated parameters with the true values:
+
+```{r}
+results <- data.frame(kappa = c(kappa, exp(bru_fit_graph$summary.hyperpar$mean[2])), 
+                      sigma = c(sigma, exp(bru_fit_graph$summary.hyperpar$mean[3])),
+                      gamma = c(gamma, exp(bru_fit_graph$summary.hyperpar$mean[4])), 
+                      rho = c(rho, bru_fit_graph$summary.hyperpar$mean[5]),
+                      sigma.e = c(sigma.e, sqrt(1 / bru_fit_graph$summary.hyperpar$mean[1])),
+                      intercept = c(0, bru_fit_graph$summary.fixed$mean))
+                      
+print(results)
+```
+
+## Fitting model with replicates in `inlabru` Implementation
+
+We will now simulate from the same model, however, this time, with replicates. We will assume we have 10 replicates.
+
+Let us start by simulating the field:
+
+```{r}
+n_rep = 10
+x <- simulate(op, nsim = n_rep) 
+
+n.obs <- 500
+PtE <- cbind(sample(1:graph$nE, size = n.obs, replace = TRUE), runif(n.obs))
+t.obs <- max(t) * runif(n.obs)
+A <- op$make_A(PtE, t.obs)
+sigma.e <- 0.01
+Y <- as.vector(A %*% x + sigma.e * rnorm(n.obs))
+df <- data.frame(y = as.matrix(Y), edge_number = PtE[,1], 
+                    distance_on_edge = PtE[,2], time = t.obs,
+                    repl = rep(1:n_rep, each = n.obs))
+```
+
+Let us now add the observations into the metric graph object. Observe that in this time we have two grouping variables, `time` and `repl`. We need grouping variable whenever we want to allow the storage of different observations at the exact same location.
+
+```{r}
+graph$add_observations(data = df, normalized=TRUE, 
+                clear_obs = TRUE, group = c("time", "repl"))
+```
+
+Let us now create the `rSPDE` model object. Observe that we cannot use the previous one as the data inside the graph is now different.
+
+```{r}
+st_bru_graph_repl <- rspde.spacetime(mesh_space = graph, 
+                                mesh_time = mesh_time, 
+                                alpha = 1, beta = 1)
+```
+
+Let us now create the data object, by using the `graph_data_rspde()` function. In this case, we also need to pass `repl_col`:
+
+```{r}
+st_data_bru_repl <- graph_data_rspde(st_bru_graph, 
+                                  repl = ".all",
+                                  repl_col = "repl")
+```
+
+Next, we create `inlabru` component by also passing the replicate argument with the `repl` element of the object returned by `graph_data_rspde()`:
+```{r}
+cmp_graph_repl <- y ~ 1 + field(list(space = cbind(.edge_number, .distance_on_edge), 
+                                time = time),
+                                model = st_bru_graph_repl,
+                                replicate = st_data_bru_repl[["repl"]]
+                                )
+```
+
+Fit the model passing `st_data_bru_repl` to the `data` argument:
+
+```{r}
+bru_fit_graph_repl <- bru(cmp_graph_repl, 
+                      data = st_data_bru_repl[["data"]],
+                      options = list(num.threads = "1:1"))
+```
+
+Compare the estimated parameters with the true values:
+
+```{r}
+results_repl <- data.frame(kappa = c(kappa, exp(bru_fit_graph_repl$summary.hyperpar$mean[2])), 
+                      sigma = c(sigma, exp(bru_fit_graph_repl$summary.hyperpar$mean[3])),
+                      gamma = c(gamma, exp(bru_fit_graph_repl$summary.hyperpar$mean[4])), 
+                      rho = c(rho, bru_fit_graph_repl$summary.hyperpar$mean[5]),
+                      sigma.e = c(sigma.e, sqrt(1 / bru_fit_graph_repl$summary.hyperpar$mean[1])),
+                      intercept = c(0, bru_fit_graph_repl$summary.fixed$mean))
+                      
+print(results_repl)
+```
+## References

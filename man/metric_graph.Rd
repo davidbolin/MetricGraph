@@ -1052,7 +1052,12 @@ assumed to be normalized to (0,1). Default FALSE.}
 \subsection{Method \code{get_mesh_locations()}}{
 Returns a list or a matrix with the mesh locations.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(bru = FALSE, loc = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_mesh_locations(
+  bru = FALSE,
+  loc = c(".edge_number", ".distance_on_edge"),
+  loc_name = NULL,
+  normalized = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -1060,8 +1065,10 @@ Returns a list or a matrix with the mesh locations.
 \describe{
 \item{\code{bru}}{Should an 'inlabru'-friendly list be returned?}
 
-\item{\code{loc}}{If \code{bru} is set to \code{TRUE}, the name of the location variable.
-The default name is 'loc'.}
+\item{\code{loc}}{If \code{bru} is set to \code{TRUE}, the column names of the location variables.
+The default name is \code{c('.edge_number', '.distance_on_edge')}.}
+
+\item{\code{loc_name}}{The name of the location variables. Not needed for \code{rSPDE} models.}
 
 \item{\code{normalized}}{If TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default TRUE.}
@@ -2014,7 +2021,7 @@ is a character, then the group will be chosen by its name.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A \code{plot_ly} (if \code{plotly = TRUE}) or \code{ggplot} object.
+A \code{plot_ly} (if \code{type = "plotly"}) or \code{ggplot} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -2140,7 +2147,7 @@ Plots a movie of a continuous function evolving on the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$plot_movie(
   X,
-  plotly = TRUE,
+  type = "plotly",
   vertex_size = 5,
   vertex_color = "black",
   edge_width = 1,
@@ -2157,9 +2164,6 @@ Plots a movie of a continuous function evolving on the graph.
 \item{\code{X}}{A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.}
 
-\item{\code{plotly}}{If \code{TRUE}, then plot is shown in 3D. This option requires the
-package 'plotly'.}
-
 \item{\code{vertex_size}}{Size of the vertices.}
 
 \item{\code{vertex_color}}{Color of vertices.}
@@ -2173,6 +2177,9 @@ package 'plotly'.}
 \item{\code{line_color}}{Color of the function curve.}
 
 \item{\code{...}}{Additional arguments for ggplot or plot_ly.}
+
+\item{\code{plotly}}{If \code{TRUE}, then plot is shown in 3D. This option requires the
+package 'plotly'.}
 }
 \if{html}{\out{</div>}}
 }

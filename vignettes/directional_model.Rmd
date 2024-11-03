@@ -199,7 +199,7 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph2$mesh$PtE,
                             type = "PtE",
                             directional = T)
-fig<- graph2$plot_function(X = Eu, plotly = TRUE)
+fig<- graph2$plot_function(X = Eu, type = "plotly")
 fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
 fig
 ```
@@ -213,7 +213,7 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph$mesh$PtE,
                             type = "PtE",
                             directional = T)
-fig <- graph$plot_function(X = Eu, plotly = TRUE)
+fig <- graph$plot_function(X = Eu, type = "plotly")
 fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
 fig
 ```

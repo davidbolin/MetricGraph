@@ -213,7 +213,8 @@ We can now fit the model using `R-INLA`:
 spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e)
+                 E = inla.stack.data(stk)$e,
+                 num.threads = "1:1")
 ```
 
 Let us extract the estimates in the original scale
@@ -318,7 +319,8 @@ We can now define and fit the model as previously
 ```{r}
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 
-data_rspde <- graph_data_rspde(rspde_model, name="field", repl = ".all")
+data_rspde <- graph_data_rspde(rspde_model, name = "field", 
+                                  repl = ".all", repl_col = "rep")
 
 stk <- inla.stack(data = data_rspde[["data"]], 
                   A = data_rspde[["basis"]], 
@@ -327,7 +329,8 @@ stk <- inla.stack(data = data_rspde[["data"]],
 spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e, verbose=TRUE)
+                 E = inla.stack.data(stk)$e, verbose=TRUE,
+                 num.threads = "1:1")
 ```
 Let's look at the summaries
 ```{r}

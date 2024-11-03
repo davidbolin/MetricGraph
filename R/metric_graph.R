@@ -2660,13 +2660,14 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Returns a list or a matrix with the mesh locations.
   #' @param bru Should an 'inlabru'-friendly list be returned?
-  #' @param loc If `bru` is set to `TRUE`, the name of the location variable.
-  #' The default name is 'loc'.
+  #' @param loc If `bru` is set to `TRUE`, the column names of the location variables.
+  #' The default name is `c('.edge_number', '.distance_on_edge')`.
   #' @param normalized If TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default TRUE.
+  #' @param loc_name The name of the location variables. Not needed for `rSPDE` models.
   #'
   #' @return A list or a matrix containing the mesh locations.
-  get_mesh_locations = function(bru = FALSE, loc = NULL, normalized = TRUE) {
+  get_mesh_locations = function(bru = FALSE, loc = c(".edge_number", ".distance_on_edge"), loc_name = NULL, normalized = TRUE) {
     if(is.null(self$mesh)){
       warning("There is no mesh!")
       return(invisible(NULL))
@@ -2678,12 +2679,19 @@ metric_graph <-  R6Class("metric_graph",
       if(is.null(loc)){
         stop("If bru is TRUE, then the loc argument must be provided!")
       }
-      data_list <- list()
       tmp_VtE <- self$mesh$VtE
       if(!normalized){
         tmp_VtE[,2] <- tmp_VtE[,2] * self$edge_lengths[tmp_VtE[, 1]]
       }
-      data_list[[loc]] <- tmp_VtE
+      data_list <- list()
+      data_list[[loc[1]]] <- tmp_VtE[,1]
+      data_list[[loc[2]]] <- tmp_VtE[,2]
+      data_list <- as.data.frame(data_list)
+      if(!is.null(loc_name)){
+        ret_list <- list()
+        ret_list[[loc_name]] <- data_list
+        return(ret_list)
+      }
       return(data_list)
     }
   },
@@ -2835,6 +2843,22 @@ metric_graph <-  R6Class("metric_graph",
       data[[".coord_y"]] <- coord_tmp[,2]
       strc_data <- TRUE
     }
+
+    # Store factor columns and their levels
+    factor_columns <- lapply(names(data), function(col) {
+      if (is.factor(data[[col]])) {
+        list(column = col, levels = levels(data[[col]]))
+      } else {
+        NULL
+      }
+    })
+    
+    # Filter out non-factor columns
+    factor_columns <- Filter(Negate(is.null), factor_columns)
+    
+    factor_info <- do.call(rbind, lapply(factor_columns, function(x) {
+      data.frame(Column = x$column, Levels = paste(x$levels, collapse = ", "))
+    }))    
 
     if(inherits(data, "metric_graph_data")){
       if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
@@ -3140,6 +3164,16 @@ metric_graph <-  R6Class("metric_graph",
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
     data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
     data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
+
+    # Assigning back the columns that are factors with their respective levels:
+    for (col_info in factor_columns) {
+      column_name <- col_info$column
+      levels_specified <- col_info$levels
+
+      # Convert to factor with specified levels
+      private$data[[column_name]] <- factor(private$data[[column_name]], levels = levels_specified)
+    }    
+
     if(format == "tibble"){
       data <- tidyr::as_tibble(data)
     }
@@ -3291,6 +3325,22 @@ metric_graph <-  R6Class("metric_graph",
       data[[".coord_y"]] <- coord_tmp[,2]
       strc_data <- TRUE
     }
+
+    # Store factor columns and their levels
+    factor_columns <- lapply(names(data), function(col) {
+      if (is.factor(data[[col]])) {
+        list(column = col, levels = levels(data[[col]]))
+      } else {
+        NULL
+      }
+    })
+    
+    # Filter out non-factor columns
+    factor_columns <- Filter(Negate(is.null), factor_columns)
+    
+    factor_info <- do.call(rbind, lapply(factor_columns, function(x) {
+      data.frame(Column = x$column, Levels = paste(x$levels, collapse = ", "))
+    }))
 
 
     if(length(tolerance)>1){
@@ -3620,6 +3670,16 @@ metric_graph <-  R6Class("metric_graph",
     }
     private$group_col <- group
     # distance_graph_tmp <- private$data[[".distance_to_graph"]]
+
+    # Assigning back the columns that are factors with their respective levels:
+    for (col_info in factor_columns) {
+      column_name <- col_info$column
+      levels_specified <- col_info$levels
+
+      # Convert to factor with specified levels
+      private$data[[column_name]] <- factor(private$data[[column_name]], levels = levels_specified)
+    }
+
     class(private$data) <- c("metric_graph_data", class(private$data))
     if(!is.null(group)){
       attr(private$data, "group_variables") <- group
@@ -4621,7 +4681,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
 ##  # ' @param summarise_group_by A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
 ##  # ' @param summarise_by_graph_group Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
   #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
-  #' @return A `plot_ly` (if `plotly = TRUE`) or `ggplot` object.
+  #' @return A `plot_ly` (if `type = "plotly"`) or `ggplot` object.
   plot = function(data = NULL,
                   newdata = NULL,
                   group = 1,
@@ -5604,7 +5664,7 @@ return(mapview_output)
     if(type == "plotly"){
       requireNamespace("plotly")
       if(is.null(p)){
-        p <- self$plot(plotly = TRUE,
+        p <- self$plot(type = "plotly",
                        vertex_color = vertex_color,
                        vertex_size = vertex_size,
                        edge_width = edge_width,
@@ -5740,7 +5800,7 @@ return(mapview_output)
   #' @param ... Additional arguments for ggplot or plot_ly.
   #' @return Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
   plot_movie = function(X,
-                        plotly = TRUE,
+                        type = "plotly",
                         vertex_size = 5,
                         vertex_color = "black",
                         edge_width = 1,

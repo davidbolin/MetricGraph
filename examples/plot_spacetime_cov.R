@@ -43,7 +43,7 @@ plot_spacetime_covariances <- function(graph,
   if(!is.null(Qs)){
     v <- rep(0,dim(Qs)[1]); v[s.ind] <- 1
     c.spatial <- solve(Qs,v)
-    p <- graph$plot_function(as.vector(c.spatial), plotly = TRUE, support_width = 1, line_color = "black")
+    p <- graph$plot_function(as.vector(c.spatial), type = "plotly", support_width = 1, line_color = "black")
   }
 
   time.index <- n*(0:(T-1)) + s.ind
@@ -70,9 +70,9 @@ plot_spacetime_covariances <- function(graph,
         col <- cols[i]
       }
       if(i == 1 && is.null(Qs)) {
-        p <- graph$plot_function(as.vector(c), plotly = TRUE, support_width = 0, line_color = col)
+        p <- graph$plot_function(as.vector(c), type = "plotly", support_width = 0, line_color = col)
       } else {
-        p <- graph$plot_function(as.vector(c), plotly = TRUE, p = p, support_width = 0, line_color = col)
+        p <- graph$plot_function(as.vector(c), type = "plotly", p = p, support_width = 0, line_color = col)
       }
 
     }

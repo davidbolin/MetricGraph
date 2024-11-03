@@ -47,7 +47,7 @@ edges = list(edge2, edge3, edge4, edge7)
 graph <- metric_graph$new(edges = edges)
 graph$build_mesh(h=0.1, continuous = FALSE, continuous.outs = TRUE, continuous.deg2 = TRUE)
 graph$plot(mesh = TRUE, direction = TRUE)
-v <- rep(0, dim(graph$mesh$V)[1]); v[4] = 1; graph$plot_function(v, plotly = TRUE)
+v <- rep(0, dim(graph$mesh$V)[1]); v[4] = 1; graph$plot_function(v, type = "plotly")
 
 graph$compute_fem(petrov = TRUE)
 kappa <- 1
@@ -207,15 +207,15 @@ graph$build_mesh(h=0.5, continuous = FALSE, continuous.outs = FALSE, continuous.
 p1 <- graph$plot(mesh = TRUE, direction = TRUE)
 p1
 u <- rep(0,dim(graph$mesh$V)[1]); u[1] = 1
-p2 <- graph$plot_function(u, plotly = TRUE, line_color = "blue", line_width = 2)
+p2 <- graph$plot_function(u, type = "plotly", line_color = "blue", line_width = 2)
 u <- rep(0,dim(graph$mesh$V)[1]); u[8] = 1
-p2 <- graph$plot_function(u, plotly = TRUE, line_color = "red", p = p2, line_width = 2)
+p2 <- graph$plot_function(u, type = "plotly", line_color = "red", p = p2, line_width = 2)
 u <- rep(0,dim(graph$mesh$V)[1]); u[11] = 1
-p2 <- graph$plot_function(u, plotly = TRUE, line_color = "green", p = p2, line_width = 2)
+p2 <- graph$plot_function(u, type = "plotly", line_color = "green", p = p2, line_width = 2)
 
 for(i in setdiff(1:11, c(1,8,11))) {
   u <- rep(0,dim(graph$mesh$V)[1]); u[i] = 1
-  p2 <- graph$plot_function(u, plotly = TRUE, line_color = "gray", p = p2, line_width = 2)
+  p2 <- graph$plot_function(u, type = "plotly", line_color = "gray", p = p2, line_width = 2)
 }
 p2 <- plotly::layout(p2, scene = list(camera = list(eye = list(x = -3, y = 1.25, z = 1.25))))
 p2
@@ -223,10 +223,10 @@ p2
 
 build_mesh(graph,h=0.5, continuous = TRUE)
 u <- rep(0,dim(graph$mesh$V)[1]); u[1] = 1
-p3 <- graph$plot_function(u, plotly = TRUE, line_color = "blue", line_width = 2)
+p3 <- graph$plot_function(u, type = "plotly", line_color = "blue", line_width = 2)
 for(i in 2:9) {
   u <- rep(0,dim(graph$mesh$V)[1]); u[i] = 1
-  p3 <- graph$plot_function(u, plotly = TRUE, line_color = "gray", p = p3, line_width = 2)
+  p3 <- graph$plot_function(u, type = "plotly", line_color = "gray", p = p3, line_width = 2)
 }
 p3 <- plotly::layout(p3, scene = list(camera = list(eye = list(x = -3, y = 1.25, z = 1.25))))
 p3

@@ -24,7 +24,7 @@ sigma <- 2
 
 graph$build_mesh(h = 0.1)
 C <- covariance_alpha1_mesh(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph)
-graph$plot_function_mesh(C, plotly = TRUE)
+graph$plot_function_mesh(C, type = "plotly")
 
 C <- covariance_alpha1(P = c(1,0.1), kappa = kappa, sigma = sigma, graph = graph, n.p = 50)
 gg <- graph$plot_function(C, plotly = FALSE)

@@ -200,7 +200,8 @@ Finally, we fit the model:
 
 ```{r, message=FALSE, warning=FALSE}
 spde_fit <- inla(f.s, family = c("gaussian", "gaussian"), 
-    data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)))
+    data = data_stk, control.predictor=list(A=inla.stack.A(stk_dat)),
+                               num.threads = "1:1")
 ```
 
 Let us now obtain the estimates in the original scale
@@ -290,7 +291,8 @@ cmp <-  ~ -1 + intercept_1(intercept_1) +
 Then, we fit the model:
 
 ```{r}
-spde_bru_fit <-  bru(cmp, lik1, lik2)
+spde_bru_fit <-  bru(cmp, lik1, lik2, 
+                      options = list(num.threads = 1:1))
 ```
 
 Let us now obtain the estimates in the original scale
@@ -489,7 +491,8 @@ Now, we fit the model:
 ```{r}
 spde_fit_rep <- inla(f_s_rep, family = c("gaussian", "gaussian"), 
                 data = data_stk_rep, 
-                control.predictor=list(A=inla.stack.A(stk_dat_rep)))
+                control.predictor=list(A=inla.stack.A(stk_dat_rep)),
+                               num.threads = "1:1")
 ```
 
 Let us see the estimated values in the original scale:
@@ -581,7 +584,8 @@ cmp_repl <-  ~ -1 + intercept_1(intercept_1) +
 Then, we fit the model:
 
 ```{r}
-spde_bru_fit_repl <-  bru(cmp_repl, lik1_repl, lik2_repl)
+spde_bru_fit_repl <-  bru(cmp_repl, lik1_repl, lik2_repl,
+                      options = list(num.threads = 1:1))
 ```
 
 Let us now obtain the estimates in the original scale
