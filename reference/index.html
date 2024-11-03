@@ -31,6 +31,7 @@
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
     <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
     <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
+    <li><a class="dropdown-item" href="../articles/spacetime.html">Spatio-temporal Models on Compact Metric Graphs</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -160,7 +161,7 @@
 
       <dl><dt>
 
-          <code><a href="bru_mapper.inla_metric_graph_spde.html">bru_get_mapper.inla_metric_graph_spde()</a></code> <code><a href="bru_mapper.inla_metric_graph_spde.html">ibm_n.bru_mapper_inla_metric_graph_spde()</a></code> <code><a href="bru_mapper.inla_metric_graph_spde.html">ibm_values.bru_mapper_inla_metric_graph_spde()</a></code> <code><a href="bru_mapper.inla_metric_graph_spde.html">ibm_jacobian.bru_mapper_inla_metric_graph_spde()</a></code>
+          <code><a href="bru_mapper.inla_metric_graph_spde.html">bru_get_mapper(<i>&lt;inla_metric_graph_spde&gt;</i>)</a></code> <code><a href="bru_mapper.inla_metric_graph_spde.html">ibm_n(<i>&lt;bru_mapper_inla_metric_graph_spde&gt;</i>)</a></code> <code><a href="bru_mapper.inla_metric_graph_spde.html">ibm_values(<i>&lt;bru_mapper_inla_metric_graph_spde&gt;</i>)</a></code> <code><a href="bru_mapper.inla_metric_graph_spde.html">ibm_jacobian(<i>&lt;bru_mapper_inla_metric_graph_spde&gt;</i>)</a></code>
 
         </dt>
         <dd>Metric graph 'inlabru' mapper</dd>
@@ -184,10 +185,22 @@
         <dd>Plot of predicted values with 'inlabru'</dd>
       </dl><dl><dt>
 
+          <code><a href="plot.graph_bru_proc_pred.html">plot(<i>&lt;graph_bru_proc_pred&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot of processed predicted values with 'inlabru'</dd>
+      </dl><dl><dt>
+
           <code><a href="graph_bru_process_data.html">graph_bru_process_data()</a></code>
 
         </dt>
         <dd>Prepare data frames or data lists to be used with 'inlabru' in metric graphs</dd>
+      </dl><dl><dt>
+
+          <code><a href="process_rspde_predictions.html">process_rspde_predictions()</a></code>
+
+        </dt>
+        <dd>Process predictions of <code>rspde_metric_graph</code> objects obtained by using <code>inlabru</code></dd>
       </dl></div><div class="section level2">
       <h2 id="linear-mixed-effects-models">Linear mixed-effects models<a class="anchor" aria-label="anchor" href="#linear-mixed-effects-models"></a></h2>
 

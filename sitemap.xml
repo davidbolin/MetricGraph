@@ -14,6 +14,7 @@
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/pointprocess.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/random_fields.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/river_example.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/spacetime.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/authors.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/index.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/news/index.html</loc></url>
@@ -44,10 +45,12 @@
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/pems_repl.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/pipe.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_pred.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_proc_pred.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.graph_lme.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.inla_metric_graph_spde.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.rspde_metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/process_rspde_predictions.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/sample_spde.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/select.metric_graph_data.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate.graph_lme.html</loc></url>

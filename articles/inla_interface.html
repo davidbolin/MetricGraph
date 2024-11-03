@@ -53,6 +53,7 @@
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
     <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
     <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
+    <li><a class="dropdown-item" href="../articles/spacetime.html">Spatio-temporal Models on Compact Metric Graphs</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
@@ -81,7 +82,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-23. Last
-modified: 2024-10-22.</h4>
+modified: 2024-11-03.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/inla_interface.Rmd" class="external-link"><code>vignettes/inla_interface.Rmd</code></a></small>
       <div class="d-none name"><code>inla_interface.Rmd</code></div>
@@ -220,7 +221,9 @@ and should be supplied to the stack by the components of the
 <code class="sourceCode R"><span><span class="va">data_stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span></span></code></pre></div>
 <p>Finally, we fit the model:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s</span>, data <span class="op">=</span> <span class="va">data_stk</span>, control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s</span>, data <span class="op">=</span> <span class="va">data_stk</span>, </span>
+<span>                  control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                               num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now obtain the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
@@ -229,8 +232,8 @@ and should be supplied to the stack by the components of the
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##            mean        sd 0.025quant  0.5quant 0.975quant      mode</span></span>
-<span><span class="co">## sigma 1.6498900 0.1329860  1.4080800 1.6430100   1.931520 1.6349300</span></span>
-<span><span class="co">## range 0.0863836 0.0171033  0.0584216 0.0844029   0.125348 0.0804038</span></span></code></pre>
+<span><span class="co">## sigma 1.6490900 0.1331730  1.4056100 1.6425800   1.931360 1.6442100</span></span>
+<span><span class="co">## range 0.0863486 0.0170218  0.0583981 0.0844249   0.125016 0.0805511</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -248,8 +251,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true       mean       mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.64988775 1.63492524</span></span>
-<span><span class="co">## 2     range 0.15 0.08638361 0.08040381</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 1.64908646 1.64421196</span></span>
+<span><span class="co">## 2     range 0.15 0.08634857 0.08055108</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
@@ -311,7 +314,8 @@ model:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_stk_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat_prd</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">spde_fit_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_prd</span>, data <span class="op">=</span> <span class="va">data_stk_prd</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">spde_fit_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_prd</span>, data <span class="op">=</span> <span class="va">data_stk_prd</span>,</span>
+<span>                               num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>We will now extract the means at the prediction locations:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">idx_prd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">data_spde_prd</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
@@ -386,7 +390,8 @@ name for the random effect, which we will call <code>field</code>:</p>
 <p>Finally, we fit the model:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_fit_alpha2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f.s.2</span>, data <span class="op">=</span> <span class="va">data_stk2</span>, </span>
-<span>          control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>          control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                               num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now obtain the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
@@ -395,9 +400,9 @@ name for the random effect, which we will call <code>field</code>:</p>
 <span>                            <span class="st">"field"</span>, <span class="va">spde_model_alpha2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_alpha2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.17745 0.2415740   1.745020 2.161610   2.692110 2.128750</span></span>
-<span><span class="co">## range 0.15745 0.0168759   0.126931 0.156513   0.193147 0.154691</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
+<span><span class="co">## sigma 2.177640 0.2413510    1.74593 2.162040   2.691870 2.13123</span></span>
+<span><span class="co">## range 0.157503 0.0166513    0.12739 0.156577   0.192728 0.15478</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
@@ -414,9 +419,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_alpha2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 2.1774539 2.1287481</span></span>
-<span><span class="co">## 2     range 0.15 0.1574497 0.1546908</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
+<span><span class="co">## 1   std.dev 2.00 2.1776444 2.131228</span></span>
+<span><span class="co">## 2     range 0.15 0.1575033 0.154780</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
@@ -526,7 +531,8 @@ function.</p>
 <p>Now, we fit the model:</p>
 <div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, data <span class="op">=</span> <span class="va">data_stk_rep</span>, </span>
-<span>                control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>                control.predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                               num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let us see the estimated values in the original scale:</p>
 <div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit_rep</span>, </span>
@@ -534,8 +540,8 @@ function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.607770 0.0829043    1.45239 1.604280   1.776690 1.596850</span></span>
-<span><span class="co">## range 0.223361 0.0254770    0.17767 0.221886   0.277598 0.218889</span></span></code></pre>
+<span><span class="co">## sigma 1.607790 0.0829081   1.452400 1.604310   1.776700 1.596880</span></span>
+<span><span class="co">## range 0.223332 0.0254691   0.177639 0.221865   0.277538 0.218897</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -552,8 +558,8 @@ function.</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.6077726 1.5968463</span></span>
-<span><span class="co">## 2     range  0.2 0.2233606 0.2188886</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.6077883 1.5968793</span></span>
+<span><span class="co">## 2     range  0.2 0.2233315 0.2188974</span></span></code></pre>
 <p>Now, let us consider the case with all replicates. We create a new
 data object by using the <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function with
 the argument <code>repl</code> set to <code>.all</code>:</p>
@@ -580,7 +586,8 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <code class="sourceCode R"><span><span class="va">data_stk_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk_dat_rep</span><span class="op">)</span></span></code></pre></div>
 <p>Now, we fit the model:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, data <span class="op">=</span> <span class="va">data_stk_rep</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">spde_fit_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">f_s_rep</span>, data <span class="op">=</span> <span class="va">data_stk_rep</span>,</span>
+<span>                               num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let us see the estimated values in the original scale:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit_rep</span>, </span>
@@ -588,8 +595,8 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.527080 0.0329974   1.464510 1.526310   1.594060 1.526170</span></span>
-<span><span class="co">## range 0.222929 0.0105994   0.202993 0.222617   0.244577 0.221933</span></span></code></pre>
+<span><span class="co">## sigma 1.526920 0.0328589   1.463890 1.526650   1.592990 1.523250</span></span>
+<span><span class="co">## range 0.222945 0.0105965   0.203004 0.222638   0.244576 0.221968</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -606,8 +613,8 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.5270770 1.5261717</span></span>
-<span><span class="co">## 2     range  0.2 0.2229287 0.2219335</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.5269180 1.5232477</span></span>
+<span><span class="co">## 2     range  0.2 0.2229453 0.2219683</span></span></code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-BSW2022b" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023.

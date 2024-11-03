@@ -53,6 +53,7 @@
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
     <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
     <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
+    <li><a class="dropdown-item" href="../articles/spacetime.html">Spatio-temporal Models on Compact Metric Graphs</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
@@ -81,7 +82,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-10-22.</h4>
+modified: 2024-11-03.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -235,7 +236,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span><span class="op">)</span>, </span>
 <span>                 family <span class="op">=</span> <span class="st">"poisson"</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>,</span>
 <span>                 control.predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>, compute <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span><span class="op">)</span></span></code></pre></div>
+<span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span>,</span>
+<span>                 num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let us extract the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
@@ -244,8 +246,8 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.365505 0.0982022    0.19795 0.358244   0.579449 0.343971</span></span>
-<span><span class="co">## range   2.081110 0.9193010    0.84533 1.894760   4.394430 1.576900</span></span></code></pre>
+<span><span class="co">## std.dev 0.365557 0.0981149   0.198036  0.35836   0.579123 0.344213</span></span>
+<span><span class="co">## range   2.082190 0.9202810   0.845002  1.89570   4.397850 1.578320</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
@@ -263,8 +265,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.3655054 0.3439713</span></span>
-<span><span class="co">## 2     range  2.0 2.0811123 1.5769033</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3655573 0.3442126</span></span>
+<span><span class="co">## 2     range  2.0 2.0821858 1.5783233</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
@@ -340,7 +342,8 @@ exposure terms</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name<span class="op">=</span><span class="st">"field"</span>, repl <span class="op">=</span> <span class="st">".all"</span><span class="op">)</span></span>
+<span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name <span class="op">=</span> <span class="st">"field"</span>, </span>
+<span>                                  repl <span class="op">=</span> <span class="st">".all"</span>, repl_col <span class="op">=</span> <span class="st">"rep"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                  A <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>, </span>
@@ -349,14 +352,15 @@ exposure terms</p>
 <span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
 <span>                 family <span class="op">=</span> <span class="st">"poisson"</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>,</span>
 <span>                 control.predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>, compute <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span>, verbose<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span>, verbose<span class="op">=</span><span class="cn">TRUE</span>,</span>
+<span>                 num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s look at the summaries</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.499984 0.0170322   0.466982 0.499854    0.53388 0.499813</span></span>
-<span><span class="co">## range   2.180410 0.1630560   1.878730 2.173900    2.51880 2.160720</span></span></code></pre>
+<span><span class="co">## std.dev 0.500034 0.0170456   0.467183 0.499826   0.534121 0.499533</span></span>
+<span><span class="co">## range   2.180270 0.1628220   1.878220 2.174100   2.517350 2.162130</span></span></code></pre>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -372,8 +376,8 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4999837 0.4998126</span></span>
-<span><span class="co">## 2     range  2.0 2.1804076 2.1607156</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.5000337 0.4995332</span></span>
+<span><span class="co">## 2     range  2.0 2.1802663 2.1621306</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>

@@ -31,6 +31,7 @@
     <li><a class="dropdown-item" href="../articles/multi_likelihood.html">An example with multiple likelihoods in INLA and inlabru</a></li>
     <li><a class="dropdown-item" href="../articles/directional_model.html">An example with directional models</a></li>
     <li><a class="dropdown-item" href="../articles/river_example.html">An example with a river graph model</a></li>
+    <li><a class="dropdown-item" href="../articles/spacetime.html">Spatio-temporal Models on Compact Metric Graphs</a></li>
   </ul></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/davidbolin/MetricGraph/discussions"><span class="fa fa-comments-o"></span> Discussions</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -1263,7 +1264,12 @@ assumed to be normalized to (0,1). Default FALSE.</p></dd>
 <h3 id="method-get-mesh-locations-">Method <code>get_mesh_locations()</code><a class="anchor" aria-label="anchor" href="#method-get-mesh-locations-"></a></h3>
 <p>Returns a list or a matrix with the mesh locations.</p><div class="section">
 <h4 id="usage-32">Usage<a class="anchor" aria-label="anchor" href="#usage-32"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_mesh_locations</span><span class="op">(</span>bru <span class="op">=</span> <span class="cn">FALSE</span>, loc <span class="op">=</span> <span class="cn">NULL</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">get_mesh_locations</span><span class="op">(</span></span>
+<span>  bru <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  loc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">".edge_number"</span>, <span class="st">".distance_on_edge"</span><span class="op">)</span>,</span>
+<span>  loc_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  normalized <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -1273,8 +1279,12 @@ assumed to be normalized to (0,1). Default FALSE.</p></dd>
 
 
 <dt><code>loc</code></dt>
-<dd><p>If <code>bru</code> is set to <code>TRUE</code>, the name of the location variable.
-The default name is 'loc'.</p></dd>
+<dd><p>If <code>bru</code> is set to <code>TRUE</code>, the column names of the location variables.
+The default name is <code>c('.edge_number', '.distance_on_edge')</code>.</p></dd>
+
+
+<dt><code>loc_name</code></dt>
+<dd><p>The name of the location variables. Not needed for <code>rSPDE</code> models.</p></dd>
 
 
 <dt><code>normalized</code></dt>
@@ -2453,7 +2463,7 @@ is a character, then the group will be chosen by its name.</p></dd>
 </div>
 <div class="section">
 <h4 id="returns-51">Returns<a class="anchor" aria-label="anchor" href="#returns-51"></a></h4>
-<p>A <code>plot_ly</code> (if <code>plotly = TRUE</code>) or <code>ggplot</code> object.</p>
+<p>A <code>plot_ly</code> (if <code>type = "plotly"</code>) or <code>ggplot</code> object.</p>
 </div>
 
 </div><p></p><hr><a id="method-metric_graph-plot_connections"></a><div class="section">
@@ -2617,7 +2627,7 @@ evaluated at the mesh in the graph</p></dd>
 <h4 id="usage-59">Usage<a class="anchor" aria-label="anchor" href="#usage-59"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">metric_graph</span><span class="op">$</span><span class="fu">plot_movie</span><span class="op">(</span></span>
 <span>  <span class="va">X</span>,</span>
-<span>  plotly <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"plotly"</span>,</span>
 <span>  vertex_size <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  vertex_color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  edge_width <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -2633,11 +2643,6 @@ evaluated at the mesh in the graph</p></dd>
 <p></p><div class="arguments"><dl><dt><code>X</code></dt>
 <dd><p>A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.</p></dd>
-
-
-<dt><code>plotly</code></dt>
-<dd><p>If <code>TRUE</code>, then plot is shown in 3D. This option requires the
-package 'plotly'.</p></dd>
 
 
 <dt><code>vertex_size</code></dt>
@@ -2666,6 +2671,11 @@ package 'plotly'.</p></dd>
 
 <dt><code>...</code></dt>
 <dd><p>Additional arguments for ggplot or plot_ly.</p></dd>
+
+
+<dt><code>plotly</code></dt>
+<dd><p>If <code>TRUE</code>, then plot is shown in 3D. This option requires the
+package 'plotly'.</p></dd>
 
 
 </dl><p></p></div>
@@ -2785,7 +2795,7 @@ data List containing data on the metric graph.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.21 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.19 secs</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
