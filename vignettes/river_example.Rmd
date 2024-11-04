@@ -170,6 +170,38 @@ get_edge_cov <- graph$get_edge_weights()
                        distance_on_edge = graph$mesh$PtE[,2],
                        SLOPE = c(get_edge_cov[graph$mesh$PtE[,1],"SLOPE"]),
                        netID = c(get_edge_cov[graph$mesh$PtE[,1],"netID"]))
-pred_alpha1 <- augment(model.wm1 , newdata = df_pred,
+pred_alpha1 <- augment(res.wm1.dir , newdata = df_pred,
                         normalized = TRUE)
+pred_alpha1$Temprature <- pred_alpha1$.fitted
+pred_alpha1 %>% graph$plot(data = "Temprature", vertex_size = 0,
+            type = "mapview")
+```
+Lets examine how things looks using the same residuals:
+```{r, echo=TRUE}
+lm.data <- data.frame(Summer_mn = res.wm1.dir$graph$.__enclos_env__$private$data$Summer_mn,
+                      SLOPE    =res.wm1.dir$graph$.__enclos_env__$private$data$SLOPE,
+                      netID    =as.factor(res.wm1.dir$graph$.__enclos_env__$private$data$netID))
+lm.model <- lm(Summer_mn ~ SLOPE +netID, data = lm.data )
+res.wm1.dir$graph$.__enclos_env__$private$data$residuals = lm.model$residuals
+res.wm1.dir2$graph$.__enclos_env__$private$data$residuals = lm.model$residuals
+
+res.wm1.dir.res <- graph_lme(residuals ~ -1, 
+                        graph = res.wm1.dir$graph, model = 'wmd1')
+res.wm1.dir2.res <- graph_lme(residuals ~ -1, 
+                                    graph = res.wm1.dir2$graph, model = 'wmd1')
+cross.wm1.dir.res <-posterior_crossvalidation(res.wm1.dir.res)
+cross.wm1.dir2.res <-posterior_crossvalidation(res.wm1.dir2.res)
+cross.scores <- rbind(cross.wm1.dir.res$scores,cross.wm1.dir2.res$scores)
+print(cross.scores)
+
+df_pred <- data.frame(edge_number = graph$mesh$PtE[,1],
+                       distance_on_edge = graph$mesh$PtE[,2])
+pred_alpha1.dir1.res <- augment(res.wm1.dir.res , newdata = df_pred,
+                        normalized = TRUE)
+pred_alpha1.dir2.res <- augment(res.wm1.dir2.res , newdata = df_pred,
+                        normalized = TRUE)
+
+pred_alpha1.dir1.res$.dresid <-- pred_alpha1.dir1.res$.fitted -pred_alpha1.dir2.res$.fitted 
+pred_alpha1.dir1.res %>% graph$plot(data = ".dresid", vertex_size = 0,
+            type = "mapview")
 ```
