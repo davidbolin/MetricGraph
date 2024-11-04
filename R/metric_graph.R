@@ -2543,7 +2543,7 @@ metric_graph <-  R6Class("metric_graph",
   #' `coord_x` and `coord_y`.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE.
-  #' @param tibble Should the data be returned as a `tidyr::tibble`?
+  #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble". 
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param return Should the data be returned? If `return_removed` is `TRUE`, only the removed locations will be return (if there is any).
@@ -2552,7 +2552,7 @@ metric_graph <-  R6Class("metric_graph",
                 weight_col = NULL, add = TRUE,
                 data_coords = c("PtE", "spatial"),
                 normalized = FALSE,
-                tibble = TRUE,
+                format = c("tibble", "sf", "sp", "list"),
                 verbose = 1,
                 suppress_warnings = FALSE,
                 return = FALSE){
@@ -2639,7 +2639,7 @@ metric_graph <-  R6Class("metric_graph",
                                       distance_on_edge = ".distance_on_edge",
                                       data_coords = "PtE",
                                       group = ".group",
-                                      tibble = tibble,
+                                      format = format,
                                       normalized = normalized,
                                       verbose = verbose)
               }
@@ -2651,7 +2651,7 @@ metric_graph <-  R6Class("metric_graph",
                                       data_coords = "PtE",
                                       group = ".group",
                                       normalized = normalized,
-                                      tibble = tibble,
+                                      format = format,
                                       verbose = verbose))
               } else{
                 return(invisible(NULL))

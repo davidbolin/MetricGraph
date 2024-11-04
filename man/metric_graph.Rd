@@ -1007,7 +1007,7 @@ Turns edge weights into data on the metric graph
   add = TRUE,
   data_coords = c("PtE", "spatial"),
   normalized = FALSE,
-  tibble = TRUE,
+  format = c("tibble", "sf", "sp", "list"),
   verbose = 1,
   suppress_warnings = FALSE,
   return = FALSE
@@ -1035,7 +1035,7 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE.}
 
-\item{\code{tibble}}{Should the data be returned as a \code{tidyr::tibble}?}
+\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
