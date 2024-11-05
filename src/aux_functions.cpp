@@ -253,3 +253,64 @@ double compute_length(Eigen::MatrixXd coords) {
     return(arclength);
 }
 
+
+// [[Rcpp::export]]
+List generate_mesh(int n_edges, NumericVector edge_lengths, double h, IntegerVector n_e, 
+                   IntegerMatrix E, IntegerVector ind, bool continuous) {
+  std::vector<int> PtE_edge;
+  std::vector<double> PtE_pos;
+  std::vector<double> h_e;
+  std::vector<int> E_start, E_end;
+  int current_max_index = ind.size(); // Start from the existing number of vertices
+
+  for (int i = 0; i < n_edges; ++i) {
+    if (n_e[i] > 0) {
+      // Generate d.e sequence
+      std::vector<double> d_e(n_e[i]);
+      for (int j = 0; j < n_e[i]; ++j) {
+        d_e[j] = (j + 1) / static_cast<double>(n_e[i] + 1);
+        PtE_edge.push_back(i + 1); // R uses 1-based indexing
+        PtE_pos.push_back(d_e[j]);
+      }
+
+      // Compute h_e based on the first d_e value
+      double segment_length = edge_lengths[i] * d_e[0];
+      for (int j = 0; j < n_e[i] + 1; ++j) {
+        h_e.push_back(segment_length);
+      }
+
+      // Create internal vertex indices
+      std::vector<int> V_int(n_e[i]);
+      for (int j = 0; j < n_e[i]; ++j) {
+        V_int[j] = current_max_index + 1 + j;
+      }
+      current_max_index += n_e[i];
+
+      // Construct edges: connect original start, internal vertices, and original end
+      E_start.push_back(E(i, 0)); // Original start vertex
+      E_end.push_back(V_int[0]);  // Connect to first internal vertex
+
+      for (int j = 0; j < n_e[i] - 1; ++j) {
+        E_start.push_back(V_int[j]);
+        E_end.push_back(V_int[j + 1]);
+      }
+
+      E_start.push_back(V_int[n_e[i] - 1]);
+      E_end.push_back(E(i, 1)); // Connect last internal vertex to original end
+    } else {
+      // No internal vertices: keep the original edge
+      E_start.push_back(E(i, 0));
+      E_end.push_back(E(i, 1));
+      h_e.push_back(edge_lengths[i]);
+    }
+  }
+
+  // Return the results as a List
+  return List::create(
+    Named("PtE_edge") = wrap(PtE_edge),
+    Named("PtE_pos") = wrap(PtE_pos),
+    Named("h_e") = wrap(h_e),
+    Named("E_start") = wrap(E_start),
+    Named("E_end") = wrap(E_end)
+  );
+}

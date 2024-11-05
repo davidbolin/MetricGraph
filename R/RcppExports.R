@@ -87,3 +87,7 @@ compute_length <- function(coords) {
     .Call(`_MetricGraph_compute_length`, coords)
 }
 
+generate_mesh <- function(n_edges, edge_lengths, h, n_e, E, ind, continuous) {
+    .Call(`_MetricGraph_generate_mesh`, n_edges, edge_lengths, h, n_e, E, ind, continuous)
+}
+
