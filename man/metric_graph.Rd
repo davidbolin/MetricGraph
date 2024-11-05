@@ -2167,6 +2167,8 @@ Plots a movie of a continuous function evolving on the graph.
 \item{\code{X}}{A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.}
 
+\item{\code{type}}{Type of plot. Either \code{"plotly"} or \code{"ggplot"}.}
+
 \item{\code{vertex_size}}{Size of the vertices.}
 
 \item{\code{vertex_color}}{Color of vertices.}
@@ -2180,9 +2182,6 @@ ith time, evaluated at the mesh locations.}
 \item{\code{line_color}}{Color of the function curve.}
 
 \item{\code{...}}{Additional arguments for ggplot or plot_ly.}
-
-\item{\code{plotly}}{If \code{TRUE}, then plot is shown in 3D. This option requires the
-package 'plotly'.}
 }
 \if{html}{\out{</div>}}
 }

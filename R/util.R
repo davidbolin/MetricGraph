@@ -1972,25 +1972,21 @@ get_only_first <- function(vec){
 #' @noRd 
 # Create a map from vertices into reference edges
 
-map_into_reference_edge <- function(graph, verbose=0){
-  ref_edge <- matrix(nrow=graph$nV,ncol=2)
-  if(verbose == 2){
+map_into_reference_edge <- function(graph, verbose = 0) {
+  if (verbose == 2) {
     message("Creating a map from vertices into reference edges")
-    bar_map_reference <- msg_progress_bar(graph$nV)
   }
-  for(i in 1:graph$nV){
-    idx_pos_0 <- which(graph$E[,1] == i)
-    if(length(idx_pos_0)>0){
-      ref_edge[i,1] <- min(idx_pos_0)
-      ref_edge[i,2] <- 0
-    } else{
-      ref_edge[i,1] <- min(which(graph$E[,2] == i))
-      ref_edge[i,2] <- 1
-    }
-    if(verbose == 2){
-      bar_map_reference$increment()
-    }
-  }
+
+  # Initialize the reference edge matrix
+  ref_edge <- matrix(nrow = graph$nV, ncol = 2)
+
+  idx_pos_0 <- match(seq_len(graph$nV), graph$E[, 1], nomatch = 0)
+  idx_pos_1 <- match(seq_len(graph$nV), graph$E[, 2], nomatch = 0)
+
+  # Determine which vertices map to the first column of graph$E
+  ref_edge[, 1] <- ifelse(idx_pos_0 > 0, idx_pos_0, idx_pos_1)
+  ref_edge[, 2] <- ifelse(idx_pos_0 > 0, 0, 1)
+
   return(ref_edge)
 }
 

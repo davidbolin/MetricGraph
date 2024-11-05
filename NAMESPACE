@@ -68,6 +68,7 @@ if (getRversion() >= "3.6.0") {
 
 import(Matrix)
 importFrom(R6,R6Class)
+importFrom(RANN,nn2)
 importFrom(Rcpp,evalCpp)
 importFrom(broom,augment)
 importFrom(broom,glance)
