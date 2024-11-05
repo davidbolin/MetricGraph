@@ -17,6 +17,7 @@
 * The `plot` method now has an argument `type`, that now also allows one to set `type` to `mapview`, thus it can return `ggplot2`, `plotly` and `mapview` objects.
 * Adding methods to do data manipulation on weights, `mutate_weight`, `select_weights`, `filter_weights`, `summarise_weights` and `drop_na_weights`. They have a `format` argument that allows one to also return `sf` or `sp` objects.
 * Updated the methods, `mutate`, `filter`, `select`, `drop_na` and `summarise` to have a format argument to also return `sf` or `sp` objects.
+* Very significative improvement on the `observation_to_vertex` method.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.

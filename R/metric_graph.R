@@ -2543,7 +2543,8 @@ metric_graph <-  R6Class("metric_graph",
   #' `coord_x` and `coord_y`.
   #' @param normalized if TRUE, then the distances in `distance_on_edge` are
   #' assumed to be normalized to (0,1). Default FALSE.
-  #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble". 
+  #' @param tibble Should the data be returned in a `tibble` format?
+  #' @param format If `return` is `TRUE`, the format of the output: "tibble", "sf", or "sp". Default is "tibble". 
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param return Should the data be returned? If `return_removed` is `TRUE`, only the removed locations will be return (if there is any).
@@ -2552,6 +2553,7 @@ metric_graph <-  R6Class("metric_graph",
                 weight_col = NULL, add = TRUE,
                 data_coords = c("PtE", "spatial"),
                 normalized = FALSE,
+                tibble = FALSE,
                 format = c("tibble", "sf", "sp", "list"),
                 verbose = 1,
                 suppress_warnings = FALSE,
@@ -2639,7 +2641,7 @@ metric_graph <-  R6Class("metric_graph",
                                       distance_on_edge = ".distance_on_edge",
                                       data_coords = "PtE",
                                       group = ".group",
-                                      format = format,
+                                      tibble = tibble,
                                       normalized = normalized,
                                       verbose = verbose)
               }
@@ -7148,16 +7150,14 @@ format_data = function(data_res, format) {
   split_edge = function(Ei, t, tolerance = 0) {
     edge <- self$edges[[Ei]]
 
-     val_line <- interpolate2(edge, pos = t, normalized = TRUE, get_idx = TRUE)
+    val_line <- interpolate2(edge, pos = t, normalized = TRUE, get_idx = TRUE)
+    idx_pos <- val_line[["idx"]]
+    val_line <- val_line[["coords"]]
 
-     idx_pos <- val_line[["idx"]]
-     val_line <- val_line[["coords"]]
+    closest_vertex <- if(t < 0.5) self$E[Ei,1] else self$E[Ei,2]
 
-    closest_vertex <- which.min(sapply(1:nrow(self$V), function(i){
-      (self$V[i,1]-val_line[1])^2 + (self$V[i,2] - val_line[2])^2
-    }))
+    min_dist <- if(t < 0.5) t * self$edge_lengths[Ei] else (1-t) * self$edge_lengths[Ei]
 
-    min_dist <- sqrt(sum((val_line - self$V[closest_vertex,])^2))
     add_V <- FALSE
     if(min_dist <= tolerance){
       newV <- closest_vertex
@@ -7208,30 +7208,6 @@ format_data = function(data_res, format) {
         } else{
           private$edge_weights <- rbind(private$edge_weights, private$edge_weights[Ei,,drop=FALSE])
         }
-
-        # attr(self$edges[[Ei]], "length") <- t * l_e
-        # attr(self$edges[[length(self$edges)]], "length") <- (1 - t) * l_e
-        # if(!is.null(private$length_unit)){
-        #   units(attr(self$edges[[Ei]], "length")) <- private$length_unit
-        #   units(attr(self$edges[[length(self$edges)]], "length")) <- private$length_unit
-        # }
-        # attr(self$edges[[Ei]], "longlat") <- private$longlat
-        # attr(self$edges[[length(self$edges)]], "longlat") <- private$longlat
-        # attr(self$edges[[Ei]], "crs") <- private$crs$input
-        # attr(self$edges[[length(self$edges)]], "crs") <- private$crs$input
-        # if(is.vector(private$edge_weights)){
-        #   attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei]
-        #   attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei]
-        # } else{
-        #   attr(self$edges[[Ei]],"weight") <- private$edge_weights[Ei,]
-        #   attr(self$edges[[length(self$edges)]],"weight") <- private$edge_weights[Ei,]
-        # }
-        # attr(self$edges[[Ei]], "id") <- Ei
-        # attr(self$edges[[length(self$edges)]], "id") <- length(self$edges)
-        # class(self$edges[[Ei]]) <- "metric_graph_edge"
-        # class(self$edges[[length(self$edges)]]) <- "metric_graph_edge"
-
-        # class(self$edges) <- "metric_graph_edges"
 
         if(!is.null(private$data)){
           ind <- which(private$temp_PtE[, 1] %in% Ei)
