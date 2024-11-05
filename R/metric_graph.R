@@ -2457,79 +2457,70 @@ metric_graph <-  R6Class("metric_graph",
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects.
   observation_to_vertex = function(tolerance = 1e-15, mesh_warning = TRUE, verbose = 0) {
-    if(tolerance <= 0 || tolerance >=1){
-      stop("tolerance should be between 0 and 1.")
-    }
-    private$temp_PtE <- self$get_PtE()
-    n_group <- length(unique(private$data[[".group"]]))
-    l <- length(private$temp_PtE[, 1])
-    self$PtV <- rep(NA, l)
-    self$nE <- nrow(self$E)
-    for (i in 1:l) {
-      e <- as.vector(private$temp_PtE[i, 1])
-      t <- as.vector(private$temp_PtE[i, 2])
-      if (abs(t) < tolerance) {
-        private$temp_PtE[i, 2] <- 0
-        self$PtV[i] <- self$E[e, 1]
-      } else if (t > 1 - tolerance) {
-        private$temp_PtE[i, 2] <- 1
-        self$PtV[i] <- self$E[e, 2]
-      } else {
-        PtV_tmp <- private$split_edge(e, t, tolerance)
-        if(!is.null(PtV_tmp)){
-          self$PtV[i] <- PtV_tmp
-        }
-      }
-    }
-    self$PtV <- self$PtV[!is.na(self$PtV)]
+  if (tolerance <= 0 || tolerance >= 1) {
+    stop("tolerance should be between 0 and 1.")
+  }
 
-    private$data[[".edge_number"]] <- rep(private$temp_PtE[,1],
-                                        times = n_group)
-    private$data[[".distance_on_edge"]] <- rep(private$temp_PtE[,2],
-                                             times = n_group)
+  private$temp_PtE <- self$get_PtE()
+  n <- nrow(private$temp_PtE)
+  self$PtV <- rep(NA, n)
 
-    tmp_df <- data.frame(PtE1 = private$data[[".edge_number"]],
-              PtE2 = private$data[[".distance_on_edge"]],
-              group = private$data[[".group"]])
-    index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
-    old_group_variable <- attr(private$data, "group_variable")
-    private$data <- lapply(private$data, function(dat){ dat[index_order]})
-    attr(private$data, "group_variable") <- old_group_variable
+  # Vectorized condition checking and assignment
+  is_start_vertex <- abs(private$temp_PtE[, 2]) < tolerance
+  is_end_vertex <- private$temp_PtE[, 2] > 1 - tolerance
 
-    self$PtV <- self$PtV[index_order[1:length(self$PtV)]]
+  self$PtV[is_start_vertex] <- self$E[private$temp_PtE[is_start_vertex, 1], 1]
+  self$PtV[is_end_vertex] <- self$E[private$temp_PtE[is_end_vertex, 1], 2]
 
-    private$temp_PtE <- NULL
+  # Efficiently process remaining points using lapply
+  remaining_indices <- which(!(is_start_vertex | is_end_vertex))
+  self$PtV[remaining_indices] <- unlist(lapply(remaining_indices, function(i) {
+    e <- private$temp_PtE[i, 1]
+    t <- private$temp_PtE[i, 2]
+    private$split_edge(e, t, tolerance)
+  }))
 
-    if (!is.null(self$geo_dist)) {
-      self$geo_dist <- NULL
-    }
-    if (!is.null(self$res_dist)) {
-      self$res_dist <- NULL
-    }
-    if (!is.null(self$CoB)) {
-      self$buildC(2)
-    }
+  self$PtV <- na.omit(self$PtV)
 
-    if (!is.null(self$mesh)) {
-      self$mesh <- NULL
-      if(mesh_warning){
-        warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
-      }
-    }
+  # Update private data efficiently
+  n_group <- length(unique(private$data[[".group"]]))
+  private$data[[".edge_number"]] <- rep(private$temp_PtE[, 1], times = n_group)
+  private$data[[".distance_on_edge"]] <- rep(private$temp_PtE[, 2], times = n_group)
 
-    private$create_update_vertices(verbose=verbose)
-    # creating/updating reference edges
-    private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
+  # Use order and vectorized assignment to sort data
+  tmp_df <- data.frame(PtE1 = private$data[[".edge_number"]],
+                       PtE2 = private$data[[".distance_on_edge"]],
+                       group = private$data[[".group"]])
 
-    # Updating the edge attributes
-    self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
+  index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
+  old_group_variable <- attr(private$data, "group_variable")
+  private$data <- lapply(private$data, function(dat) dat[index_order])
+  attr(private$data, "group_variable") <- old_group_variable
 
-    self$edges <- lapply(self$edges, function(edge){
-       attr(edge, "PtE") <- NULL
-       return(edge)
-    })
+  self$PtV <- self$PtV[index_order]
 
-  },
+  private$temp_PtE <- NULL
+
+  # Clear and rebuild graph structure if necessary
+  self$geo_dist <- NULL
+  self$res_dist <- NULL
+  if (!is.null(self$CoB)) self$buildC(2)
+
+  if (!is.null(self$mesh)) {
+    self$mesh <- NULL
+    if (mesh_warning) warning("Removing the existing mesh due to the change in the graph structure, please create a new mesh if needed.")
+  }
+
+  private$create_update_vertices(verbose = verbose)
+  private$ref_edges <- map_into_reference_edge(self, verbose = verbose)
+  self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose = verbose)
+
+  # Clear attributes using lapply
+  self$edges <- lapply(self$edges, function(edge) {
+    attr(edge, "PtE") <- NULL
+    edge
+  })
+},
 
   #' @description Turns edge weights into data on the metric graph
   #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
@@ -7149,80 +7140,62 @@ format_data = function(data_res, format) {
   # @param tolerance tolerance for merging overlapping vertices
   split_edge = function(Ei, t, tolerance = 0) {
     edge <- self$edges[[Ei]]
-
     val_line <- interpolate2(edge, pos = t, normalized = TRUE, get_idx = TRUE)
     idx_pos <- val_line[["idx"]]
     val_line <- val_line[["coords"]]
 
-    closest_vertex <- if(t < 0.5) self$E[Ei,1] else self$E[Ei,2]
+    closest_vertex <- ifelse(t < 0.5, self$E[Ei, 1], self$E[Ei, 2])
+    min_dist <- ifelse(t < 0.5, t * self$edge_lengths[Ei], (1 - t) * self$edge_lengths[Ei])
 
-    min_dist <- if(t < 0.5) t * self$edge_lengths[Ei] else (1-t) * self$edge_lengths[Ei]
+    add_V <- min_dist > tolerance
+    newV <- if (add_V) self$nV + 1 else closest_vertex
 
-    add_V <- FALSE
-    if(min_dist <= tolerance){
-      newV <- closest_vertex
-    } else{
-      newV <- self$nV + 1
-      add_V <- TRUE
-    }
+    if ((newV != self$E[Ei, 1]) && (newV != self$E[Ei, 2])) {
+      if (add_V) {
+        self$V <- rbind(self$V, val_line)
+        coords1 <- rbind(edge[1:idx_pos, , drop = FALSE], val_line)
+        coords2 <- rbind(val_line, edge[(idx_pos + 1):nrow(edge), , drop = FALSE])
+      } else {
+        coords1 <- rbind(edge[1:idx_pos, , drop = FALSE], self$V[closest_vertex, , drop = FALSE])
+        coords2 <- rbind(self$V[closest_vertex, , drop = FALSE], edge[(idx_pos + 1):nrow(edge), , drop = FALSE])
+      }
 
-    if((newV != self$E[Ei, 1]) && newV != self$E[Ei,2]){
+      self$nE <- self$nE + 1
+      self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
+      self$E[Ei, 2] <- newV
+      self$nV <- nrow(self$V)
 
-        # Val_line is in the current edge and closest_vertex is elsewhere
-        # So, if we need to add V, we will consider val_line in the edge split,
-        # but if we have already added V, then we consider the closest_vertex in the
-        # edge split.
-        if(add_V){
-          self$V <- rbind(self$V, c(val_line))
-          coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
-                         matrix(val_line,ncol=2))
+      self$edges[[Ei]] <- coords1
+      self$edges[[length(self$edges) + 1]] <- coords2
 
-          coords2 <- rbind(matrix(val_line, ncol=2),
-                         matrix(edge[(idx_pos+1):nrow(edge),],
-                                ncol=2))
-        } else{
-          coords1 <- rbind(matrix(edge[1:idx_pos,],ncol=2),
-                         matrix(self$V[closest_vertex,],ncol=2))
+      # Vectorized updates
+      l_e <- self$edge_lengths[Ei]
+      self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
+      self$edge_lengths[Ei] <- t * l_e
 
-          coords2 <- rbind(matrix(self$V[closest_vertex,], ncol=2),
-                         matrix(edge[(idx_pos+1):nrow(edge),],
-                                ncol=2))
-        }
-        self$nE <- self$nE + 1
-        self$E <- rbind(self$E, c(newV, self$E[Ei, 2]))
-        self$E[Ei, 2] <- newV
-        self$nV <- dim(self$V)[1]
+      if (private$addinfo) {
+        private$initial_edges_added <- rbind(private$initial_edges_added, c(Ei, nrow(self$E)))
+      }
 
-        self$edges[[Ei]] <- coords1
-        length(self$edges) <- length(self$edges)+1
-        self$edges[[length(self$edges)]] <- coords2
-        l_e <- self$edge_lengths[Ei]
-        self$edge_lengths[Ei] <- t * l_e
-        self$edge_lengths <- c(self$edge_lengths, (1 - t) * l_e)
-        if(private$addinfo){
-            private$initial_edges_added <- rbind(private$initial_edges_added,cbind(Ei, nrow(self$E)))
-        }
+      # Use efficient vectorized assignment for edge weights
+      private$edge_weights <- if (is.vector(private$edge_weights)) {
+        c(private$edge_weights, private$edge_weights[Ei])
+      } else {
+        rbind(private$edge_weights, private$edge_weights[Ei, , drop = FALSE])
+      }
 
-        if(is.vector(private$edge_weights)){
-          private$edge_weights <- c(private$edge_weights, private$edge_weights[Ei])
-        } else{
-          private$edge_weights <- rbind(private$edge_weights, private$edge_weights[Ei,,drop=FALSE])
-        }
+      # Efficiently handle data updates
+      if (!is.null(private$data)) {
+        update_indices <- which(private$temp_PtE[, 1] == Ei & private$temp_PtE[, 2] >= t - tolerance)
+        private$temp_PtE[update_indices, 1] <- self$nE
+        private$temp_PtE[update_indices, 2] <- abs(private$temp_PtE[update_indices, 2] - t) / (1 - t)
+      }
 
-        if(!is.null(private$data)){
-          ind <- which(private$temp_PtE[, 1] %in% Ei)
-          for (i in ind) {
-            if (private$temp_PtE[i, 2] >= t - tolerance) {
-              private$temp_PtE[i, 1] <- self$nE
-              private$temp_PtE[i, 2] <- abs(private$temp_PtE[i, 2] - t) / (1 - t)
-            }
-          }
-        }
-        return(newV)
-    } else{
+      return(newV)
+    } else {
       return(NULL)
     }
-  },
+  }, 
 
   compute_laplacian_PtE = function(PtE, normalized = TRUE, verbose = verbose) {
       if(verbose == 2){
