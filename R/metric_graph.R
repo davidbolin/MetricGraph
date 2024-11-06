@@ -2123,17 +2123,19 @@ metric_graph <-  R6Class("metric_graph",
   },
 
   #' @description Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the `plot_function()` method, however it might be costly to compute.
+  #' @param approx Should the computation of the relative positions be approximate? Default is `TRUE`. If `FALSE`, the speed can be considerably slower, especially for large metric graphs.
   #' @return No return value, called for its side effects.
-  compute_PtE_edges = function(){
-    edges_PtE <- lapply(self$edges, function(edge){self$coordinates(XY = edge)})
+  compute_PtE_edges = function(approx = TRUE){
+    if(approx){
+      edges_PtE <- lapply(self$edges, function(edge){private$approx_coordinates(edge = edge)})
+    } else{
+      edges_PtE <- lapply(self$edges, function(edge){private$exact_PtE_coordinates(edge = edge)})
+    }
     self$edges <- lapply(1:length(self$edges), function(j){
       edge <- self$edges[[j]]
-      attr(edge, "PtE") <- edges_PtE[[j]]
+      attr(edge, "PtE") <- cbind(j, edges_PtE[[j]])
       return(edge)
     })
-    #  for(j in 1:length(self$edges)){
-    #     attr(self$edges[[j]], "PtE") <- edges_PtE[[j]]
-    # }
     return(invisible(NULL))
   },
 
@@ -2261,14 +2263,14 @@ metric_graph <-  R6Class("metric_graph",
           # Create temporary copies with NA replaced by a unique placeholder
           edge_weights_copy <- private$edge_weights
           edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
-          
+
           # Compare the edges normally, treating NA == NA as TRUE via the placeholder
           cnd_tmp <- edge_weights_copy[edges_tmp[, 1]] == edge_weights_copy[edges_tmp[, 2]]
         } else {
           # For matrices, replace NA with a unique placeholder in a temporary copy
           edge_weights_copy <- private$edge_weights
           edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
-          
+
           # Perform row-wise comparison, each row must have all columns matching
           cnd_tmp <- rowSums(
             edge_weights_copy[edges_tmp[, 1], , drop = FALSE] == edge_weights_copy[edges_tmp[, 2], , drop = FALSE]
@@ -6987,6 +6989,37 @@ return(mapview_output)
           function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data, transform)})
           return(ll)
   },
+
+  approx_coordinates = function(edge){
+    # Calculate the Euclidean distances between consecutive rows (vertices)
+    dists <- sqrt(rowSums((edge[-1, ,drop=FALSE] - edge[-nrow(edge), ,drop=FALSE])^2))
+
+    # Get cumulative sum to obtain positions along the edge
+    cum_dists <- c(0, cumsum(dists))  # Start from 0 for the first vertex
+
+    # Normalize the cumulative distances to get relative positions between 0 and 1
+    rel_positions <- cum_dists / cum_dists[length(cum_dists)]
+
+    return(rel_positions)
+  },
+
+  exact_PtE_coordinates = function(edge) {
+  # Get distances using compute_aux_distances between consecutive rows
+  lines <- edge[-1, , drop = FALSE]      # All rows except the first
+  points <- edge[-nrow(edge), , drop = FALSE] # All rows except the last
+  
+  # Compute distances between each consecutive point
+  dists <- compute_aux_distances(lines = lines, crs = private$crs, longlat = private$longlat, 
+                                 proj4string = private$proj4string, points = points, 
+                                 fact = private$fact, which_longlat = private$which_longlat, 
+                                 length_unit = private$length_unit, transform = private$transform)
+  
+  # Calculate the relative positions using cumulative sums
+  total_length <- sum(dists)
+  relative_positions <- c(0, cumsum(dists) / total_length)
+  
+  return(relative_positions)
+},
 
  ## @description Get the observation/prediction matrix A
  ## @param group A vector. If `NULL`, the A matrix for the first group will be
