@@ -4606,7 +4606,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
   #' @return No return value. Called for its side effects. The mesh is stored in
   #' the `mesh` element of the `metric_graph` object.
 
-    build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
+build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
                          continuous.outs = FALSE, continuous.deg2 = FALSE) {
     if (is.null(h) && is.null(n)) {
       stop("You should specify either h or n!")
@@ -4644,7 +4644,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
       }
 
       # Call the Rcpp function
-      mesh_data <- generate_mesh(n_edges, edge_lengths, h, mesh$n_e, self$E, mesh$ind, continuous)
+      mesh_data <- generate_mesh(n_edges, edge_lengths, mesh$n_e, self$E, mesh$ind, continuous)
 
       mesh$PtE <- cbind(mesh_data$PtE_edge, mesh_data$PtE_pos)
       mesh$h_e <- mesh_data$h_e
@@ -4664,7 +4664,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
       }
 
       # Call the Rcpp function for the non-continuous case
-      mesh_data <- generate_mesh(n_edges, edge_lengths, h, mesh$n_e, self$E, mesh$ind, continuous = FALSE)
+      mesh_data <- generate_mesh(n_edges, edge_lengths, mesh$n_e, self$E, mesh$ind, continuous = FALSE)
 
       mesh$PtE <- cbind(mesh_data$PtE_edge, mesh_data$PtE_pos)
       mesh$h_e <- mesh_data$h_e

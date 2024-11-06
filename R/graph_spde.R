@@ -259,10 +259,7 @@ graph_spde <- function(graph_object,
         BC = 1
     }
 
-    start_val_tmp <- graph_starting_values(graph_spde,
-                      model = "alpha2", rec_tau = FALSE, data=FALSE)$start_values
-
-    Q_tmp <- Qalpha2(theta = c(start_val_tmp[2],start_val_tmp[3]), graph = graph_spde, BC=BC, stationary_points=index)
+    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=index)
     if(verbose>0){
       message("Checking/Computing constraint matrix...")
     }
@@ -317,6 +314,9 @@ graph_spde <- function(graph_object,
   
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
+      if(verbose>0){
+          message("Computing starting values...")
+      }
       start_values_vector <- graph_starting_values(graph_spde,
                       model = model_start, data=FALSE)$start_values
 

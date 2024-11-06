@@ -255,7 +255,7 @@ double compute_length(Eigen::MatrixXd coords) {
 
 
 // [[Rcpp::export]]
-List generate_mesh(int n_edges, NumericVector edge_lengths, double h, IntegerVector n_e, 
+List generate_mesh(int n_edges, NumericVector edge_lengths, IntegerVector n_e, 
                    IntegerMatrix E, IntegerVector ind, bool continuous) {
   std::vector<int> PtE_edge;
   std::vector<double> PtE_pos;
