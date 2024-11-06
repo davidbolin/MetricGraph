@@ -587,10 +587,23 @@ metric_graph <-  R6Class("metric_graph",
       } else if (inherits(edges,"SpatialLines")) {
         self$edges = lapply(1:length(edges), function(i){edges@lines[[i]]@Lines[[1]]@coords})
       } else if (inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))) {
-        valid_types <- c("LINESTRING", "MULTILINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING")
+        # Ensure 'edges' is an 'sf' object if it is not already
+        if (!inherits(edges, "sf")) {
+          # Convert to 'sfc' (simple feature geometry list column)
+          edges <- sf::st_sfc(edges)
+          edges <- sf::st_sf(geometry = edges)  # Wrap in an 'sf' data frame
+        }
+
+        # Define valid geometry types for filtering
+        valid_types <- c("LINESTRING", "MULTILINESTRING")
+
+        # Filter for valid geometry types in 'edges'
         valid_indices <- sf::st_geometry_type(edges) %in% valid_types
-        valid_edges <- edges[valid_indices, , drop = FALSE]
-        coords_multilinestring <- sf::st_coordinates(valid_edges)
+        valid_edges <- edges[valid_indices, , drop = FALSE]  # Filter only valid geometries
+
+        # Extract coordinates for the valid edges
+        coords_multilinestring <- sf::st_coordinates(sf::st_geometry(valid_edges))
+
         split_coords <- split(coords_multilinestring[, 1:2, drop = FALSE], coords_multilinestring[, "L1"])
         self$edges <- lapply(split_coords, function(coords) matrix(coords, ncol=2, byrow=FALSE))        
       } else if(is.list(edges)){
@@ -861,107 +874,6 @@ metric_graph <-  R6Class("metric_graph",
         }
         private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
       }
-
-      # if (verbose > 0) {
-      #     message("Setting up edges")
-      # }
-
-      # # Use lapply and then simplify with do.call, because vapply assumes fixed-length output
-      # edges_vertices <- lapply(self$edges, function(edge) {
-      #   n_edge <- nrow(edge)
-      #   if (n_edge >= 2) {
-      #     edge_vert <- edge[c(1, n_edge), , drop = FALSE]
-      #     c(edge_vert[1, ], edge_vert[2, ])  # Flatten into a vector of length 4
-      #   } else {
-      #    stop("There were problems when processing the edges. There were edges with only one vertex.")
-      #   }
-      # })
-
-      # # Combine all edge vertices into a matrix
-      # self$V <- do.call(rbind, edges_vertices)
-      # self$V <- unique(round(self$V * 10^15) / 10^15)
-      # self$nV <- nrow(self$V)
-
-      # lvl <- matrix(0, nrow = length(self$edges), ncol = 2)
-
-      # if (verbose == 2) {
-      #   bar_line_vertex <- msg_progress_bar(length(self$edges))
-      # }
-
-      # # Use the Rcpp nearest_neighbor function for efficient nearest-neighbor search
-      # for (i in seq_along(self$edges)) {
-      #   if (verbose == 2) {
-      #     bar_line_vertex$increment()
-      #   }
-
-      #   points <- self$edges[[i]]
-      #   n <- nrow(points)
-      #   line1 <- points[1, ]
-      #   line2 <- points[n, ]
-
-      #   # Create a matrix of the two points (line1 and line2) for the Rcpp function
-      #   points_matrix <- matrix(c(line1, line2), ncol = 2, byrow = TRUE)
-
-      #   # Use the Rcpp function to find the indices of the closest vertices
-      #   nearest_indices <- nearest_neighbor(self$V, points_matrix)
-      #   lvl[i, ] <- nearest_indices
-      # }
-
-      # self$E <- lvl
-
-      # if (merge_close_vertices) {
-      #   if (verbose > 0) {
-      #     message("Merging close vertices")
-      #   }
-      #   private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
-      # }
-
-    #   if(verbose > 0){
-    #     message("Setting up edges")
-    #   }          
-
-    #     edges_vertices <- lapply(self$edges, function(edge){
-    #       n_edge <- nrow(edge)
-    #       edge_vert <- edge[c(1,n_edge),]
-    #       return(edge_vert)
-    #     })
-
-    #   self$V <- do.call(rbind,edges_vertices)
-    #   self$V <- round(self$V * 10^(15))/10^(15)
-    #   self$V <- unique(self$V)
-    #   self$nV <- nrow(self$V)
-
-    # lvl <- matrix(0, nrow = length(self$edges), 2)
-
-    #   if(verbose==2){
-    #       bar_line_vertex <- msg_progress_bar(length(self$edges))
-    #   }
-
-    #   for(i in 1:length(self$edges)){
-    #     if(verbose == 2) {
-    #       bar_line_vertex$increment()
-    #     }
-    #     points <- self$edges[[i]]
-    #     n <- dim(points)[1]
-    #     line1 <- points[1,]
-    #     line2 <- points[n,]
-    #     #index of vertex corresponding to the start of the line
-    #     ind1 <- which.min((self$V[, 1] - line1[1])^2 +
-    #                       (self$V[, 2] - line1[2])^2)
-    #     #index of vertex corresponding to the end of the line
-    #     ind2 <- which.min((self$V[, 1] - line2[1])^2 +
-    #                       (self$V[, 2] - line2[2])^2)
-    #     lvl[i,] <- c(ind1, ind2)                          
-    #   }
-    #   self$E <- lvl[, 1:2, drop = FALSE]
-
-    #   if(merge_close_vertices){
-    #   if(verbose > 0){
-    #     message("Merging close vertices")
-    #   }     
-    #     private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
-    #   }
-
     }
 
     if(!private$perform_merges && is.null(manual_edge_lengths)){
@@ -1016,6 +928,12 @@ metric_graph <-  R6Class("metric_graph",
     # Cloning the initial graph
 
     if(verbose > 0){
+      message("Creating and updating vertices...")
+    }
+
+   private$create_update_vertices(verbose=verbose)
+
+    if(verbose > 0){
       message("Storing the initial graph...")
     }
 
@@ -1024,11 +942,7 @@ metric_graph <-  R6Class("metric_graph",
     # Cloning again to add the initial graph to the initial graph
     private$initial_graph <- self$clone()
     
-    if(verbose > 0){
-      message("Creating and updating vertices...")
-    }
 
-    private$create_update_vertices(verbose=verbose)
 
     self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
    
@@ -1138,8 +1052,8 @@ metric_graph <-  R6Class("metric_graph",
     }
       vertices_df <- do.call(rbind, lapply(self$vertices, function(v) {
         data.frame(
-          X = v["X"],
-          Y = v["Y"],
+          X = v[1],
+          Y = v[2],
           degree = attr(v, "degree"),
           indegree = attr(v, "indegree"),
           outdegree = attr(v, "outdegree"),
