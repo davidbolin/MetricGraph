@@ -82,7 +82,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-10-23. Last
-modified: 2024-11-05.</h4>
+modified: 2024-11-06.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/spacetime.Rmd" class="external-link"><code>vignettes/spacetime.Rmd</code></a></small>
       <div class="d-none name"><code>spacetime.Rmd</code></div>
@@ -230,27 +230,27 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Fixed effects:</span></span>
 <span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)</span></span>
-<span><span class="co">#&gt; (Intercept)  0.04716   0.11280   0.418    0.676</span></span>
+<span><span class="co">#&gt; (Intercept)  0.04719   0.11281   0.418    0.676</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
 <span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; kappa  5.03105   0.29253  17.198</span></span>
-<span><span class="co">#&gt; sigma 10.40281   1.09406   9.508</span></span>
-<span><span class="co">#&gt; gamma  0.10651   0.01223   8.711</span></span>
-<span><span class="co">#&gt; rho    3.12178   0.88114   3.543</span></span>
+<span><span class="co">#&gt; kappa  5.03119   0.29577  17.010</span></span>
+<span><span class="co">#&gt; sigma 10.40353   1.10640   9.403</span></span>
+<span><span class="co">#&gt; gamma  0.10652   0.01215   8.764</span></span>
+<span><span class="co">#&gt; rho    3.12129   1.20896   2.582</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev 0.008261  0.002068   3.994</span></span>
+<span><span class="co">#&gt; std. dev 0.008259  0.002067   3.996</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Log-Likelihood:  -52.57672 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 70</span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 57</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  3.98254 mins </span></span>
-<span><span class="co">#&gt;   set up the parallelization = 8.29917 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  3.70847 mins </span></span>
+<span><span class="co">#&gt;   set up the parallelization = 8.0254 secs</span></span></code></pre></div>
 <p>Compare the estimated results with the true values:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kappa <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">kappa</span>, <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">random_effects</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, </span>
@@ -264,7 +264,7 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            kappa    sigma     gamma      rho     sigma.e  intercept</span></span>
 <span><span class="co">#&gt; True     5.00000 10.00000 0.1000000 1.000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.03105 10.40281 0.1065063 3.121782 0.008261203 0.04716055</span></span></code></pre></div>
+<span><span class="co">#&gt; Estimate 5.03119 10.40353 0.1065156 3.121293 0.008258891 0.04719465</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="inlabru-implementation">
@@ -307,9 +307,9 @@ pass <code>cbind(.edge_number, .distance_on_edge)</code>, and
 <span>                      intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">bru_fit_graph</span><span class="op">$</span><span class="va">summary.fixed</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      kappa    sigma     gamma     rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; 1 5.000000 10.00000 0.1000000 1.00000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; 2 5.075414 10.86419 0.1128968 1.40094 0.007241432 0.04754693</span></span></code></pre></div>
+<span><span class="co">#&gt;     kappa    sigma     gamma      rho     sigma.e  intercept</span></span>
+<span><span class="co">#&gt; 1 5.00000 10.00000 0.1000000 1.000000 0.010000000 0.00000000</span></span>
+<span><span class="co">#&gt; 2 5.03535 10.31925 0.1072631 1.273731 0.007252894 0.04769392</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -380,9 +380,9 @@ returned by <code><a href="https://davidbolin.github.io/rSPDE/reference/graph_da
 <span>                      intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">bru_fit_graph_repl</span><span class="op">$</span><span class="va">summary.fixed</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_repl</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      kappa    sigma     gamma      rho   sigma.e   intercept</span></span>
-<span><span class="co">#&gt; 1 5.000000 10.00000 0.1000000 1.000000 0.0100000 0.000000000</span></span>
-<span><span class="co">#&gt; 2 5.102345 10.17134 0.1010948 1.548051 0.0060475 0.004941174</span></span></code></pre></div>
+<span><span class="co">#&gt;      kappa    sigma     gamma      rho     sigma.e intercept</span></span>
+<span><span class="co">#&gt; 1 5.000000 10.00000 0.1000000 1.000000 0.010000000 0.0000000</span></span>
+<span><span class="co">#&gt; 2 5.064554 10.21661 0.1013851 1.339587 0.005463993 0.0047533</span></span></code></pre></div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

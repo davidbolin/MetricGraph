@@ -2650,6 +2650,10 @@ evaluated at the mesh in the graph</p></dd>
 ith time, evaluated at the mesh locations.</p></dd>
 
 
+<dt><code>type</code></dt>
+<dd><p>Type of plot. Either <code>"plotly"</code> or <code>"ggplot"</code>.</p></dd>
+
+
 <dt><code>vertex_size</code></dt>
 <dd><p>Size of the vertices.</p></dd>
 
@@ -2676,11 +2680,6 @@ ith time, evaluated at the mesh locations.</p></dd>
 
 <dt><code>...</code></dt>
 <dd><p>Additional arguments for ggplot or plot_ly.</p></dd>
-
-
-<dt><code>plotly</code></dt>
-<dd><p>If <code>TRUE</code>, then plot is shown in 3D. This option requires the
-package 'plotly'.</p></dd>
 
 
 </dl><p></p></div>
@@ -2798,9 +2797,13 @@ data List containing data on the metric graph.</p>
 <span class="r-in"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va">metric_graph</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">edges</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Starting graph creation...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> LongLat is set to FALSE</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating edges...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Setting edge weights...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.20 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating and updating vertices...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Storing the initial graph...</span>
 <span class="r-in"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="metric_graph-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
