@@ -31,6 +31,7 @@
 #' it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
+#' @param verbose Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.
 #'
 #' @return An 'INLA' object.
 #' @details
@@ -68,12 +69,17 @@ graph_spde <- function(graph_object,
                        start_tau = NULL,
                        prior_tau = NULL,
                        shared_lib = "detect",
-                       debug = FALSE){
+                       debug = FALSE,
+                       verbose = 0){
 
   graph_spde <- graph_object$clone()
 
+  if(verbose>0){
+    message("Turning observations into vertices...")
+  }
+
   if(!is.null(graph_spde$.__enclos_env__$private$data)){
-    graph_spde$observation_to_vertex(mesh_warning=FALSE)
+    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
   }
 
   parameterization <- parameterization[[1]]
@@ -87,6 +93,10 @@ graph_spde <- function(graph_object,
   V <- graph_spde$V
   EtV <- graph_spde$E
   El <- graph_spde$edge_lengths
+
+  if(verbose>0){
+    message("Constructing the sparsity graph...")
+  }
 
   i_ <- j_ <- rep(0, dim(V)[1]*4)
   nE <- dim(EtV)[1]
@@ -396,6 +406,10 @@ graph_spde <- function(graph_object,
     } else{
       gpgraph_lib <- INLA::inla.external.lib('rSPDE')
     }
+  }
+
+  if(verbose > 0){
+    message("Creating INLA model...")
   }
 
 if(alpha == 1){

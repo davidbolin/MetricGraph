@@ -19,7 +19,8 @@ graph_spde(
   start_tau = NULL,
   prior_tau = NULL,
   shared_lib = "detect",
-  debug = FALSE
+  debug = FALSE,
+  verbose = 0
 )
 }
 \arguments{
@@ -64,6 +65,8 @@ it will use the local installation of the rSPDE package (does not work if your i
 Otherwise, you can directly supply the path of the .so (or .dll) file.}
 
 \item{debug}{Should debug be displayed?}
+
+\item{verbose}{Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.}
 }
 \value{
 An 'INLA' object.
