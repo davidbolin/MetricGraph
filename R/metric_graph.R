@@ -2635,7 +2635,7 @@ metric_graph <-  R6Class("metric_graph",
   }
 
   # Remove NA values from PtV
-  self$PtV <- na.omit(self$PtV)
+  self$PtV <- self$PtV[!is.na(self$PtV)]
 
   # Replicate edge numbers and distances for the number of groups
   n_group <- length(unique(private$data[[".group"]]))
@@ -2655,7 +2655,7 @@ metric_graph <-  R6Class("metric_graph",
   attr(private$data, "group_variable") <- old_group_variable
 
   # Reorder PtV according to index_order
-  self$PtV <- self$PtV[index_order]
+  self$PtV <- self$PtV[index_order[1:length(self$PtV)]]
 
   # Reset temporary data
   private$temp_PtE <- NULL
