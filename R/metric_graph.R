@@ -2258,15 +2258,28 @@ metric_graph <-  R6Class("metric_graph",
 
         # Check weight compatibility in a vectorized way
         if (is.vector(private$edge_weights)) {
-          cnd_tmp <- private$edge_weights[edges_tmp[, 1]] != private$edge_weights[edges_tmp[, 2]]
+          # Create temporary copies with NA replaced by a unique placeholder
+          edge_weights_copy <- private$edge_weights
+          edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
+          
+          # Compare the edges normally, treating NA == NA as TRUE via the placeholder
+          cnd_tmp <- edge_weights_copy[edges_tmp[, 1]] == edge_weights_copy[edges_tmp[, 2]]
         } else {
-          cnd_tmp <- rowSums(private$edge_weights[edges_tmp[, 1], , drop = FALSE] != 
-                             private$edge_weights[edges_tmp[, 2], , drop = FALSE]) > 0
+          # For matrices, replace NA with a unique placeholder in a temporary copy
+          edge_weights_copy <- private$edge_weights
+          edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
+          
+          # Perform row-wise comparison, each row must have all columns matching
+          cnd_tmp <- rowSums(
+            edge_weights_copy[edges_tmp[, 1], , drop = FALSE] == edge_weights_copy[edges_tmp[, 2], , drop = FALSE]
+          ) == ncol(edge_weights_copy)
         }
 
         # Update problematic_weights vector based on the results
         problematic_weights[idx_tmp] <- cnd_tmp
       }
+
+      print(problematic_weights)
 
       # Update problematic vertices
       problematic <- (problematic | problematic_weights)
