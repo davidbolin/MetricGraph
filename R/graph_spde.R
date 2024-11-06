@@ -263,6 +263,9 @@ graph_spde <- function(graph_object,
                       model = "alpha2", rec_tau = FALSE, data=FALSE)$start_values
 
     Q_tmp <- Qalpha2(theta = c(start_val_tmp[2],start_val_tmp[3]), graph = graph_spde, BC=BC, stationary_points=index)
+    if(verbose>0){
+      message("Checking/Computing constraint matrix...")
+    }
     if(is.null(graph_spde$CoB)){
       graph_spde$buildC(2, edge_constraint = BC)
     } else if(graph_spde$CoB$alpha == 1){
