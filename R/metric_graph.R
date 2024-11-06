@@ -7353,14 +7353,14 @@ split_edge = function(Ei, t_values, tolerance = 0) {
   # Initialize coords_list1 and coords_list2 based on t_values and edge details
   coords_list1[[1]] <- edge[1:idx_positions[1], , drop = FALSE]
   coords_list1[[1]] <- rbind(coords_list1[[1]], val_coords[1, , drop = FALSE])
-  
+
   for (i in seq_along(t_values)) {
     val_line_start <- matrix(val_coords[i, , drop = FALSE], nrow = 1)
-    
+
     if (i < length(t_values)) {
       # For intermediate segments
       val_line_end <- matrix(val_coords[i + 1, , drop = FALSE], nrow = 1)
-      
+
       # Only include the segment from the edge if idx_positions are different
       if (idx_positions[i] != idx_positions[i + 1]) {
         coords_list2[[i]] <- rbind(
@@ -7384,7 +7384,7 @@ split_edge = function(Ei, t_values, tolerance = 0) {
       )
     }
   }
-  
+
   # Construct aux_matrix for self$E based on the length of t_values
   if (length(t_values) == 1) {
     # Case when t_values has length 1: only one new vertex is added
@@ -7421,14 +7421,25 @@ split_edge = function(Ei, t_values, tolerance = 0) {
     private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(t_values), private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
   }
 
-  # Check data update
   if (!is.null(private$data)) {
-    update_indices <- which(private$temp_PtE[, 1] == Ei & private$temp_PtE[, 2] >= min(t_values) - tolerance)
-    if (length(update_indices) == length(t_values)) {
-      private$temp_PtE[update_indices, 1] <- seq(self$nE - length(t_values) + 1, self$nE)
-      private$temp_PtE[update_indices, 2] <- abs(private$temp_PtE[update_indices, 2] - t_values) / (1 - t_values)
-    } else {
-      warning("Mismatch in the number of update indices and t_values.")
+    # Pre-calculate the number of edges to update
+    edge_updates <- self$nE - length(t_values) + seq_along(t_values)
+  
+    # Loop through each t_value and update only relevant indices
+    for (i in seq_along(t_values)) {
+      if (i < length(t_values)) {
+        update_indices <- which(private$temp_PtE[, 1] == Ei &
+                                private$temp_PtE[, 2] >= t_values[i] - tolerance &
+                                private$temp_PtE[, 2] < t_values[i + 1] - tolerance)
+      } else {
+        update_indices <- which(private$temp_PtE[, 1] == Ei &
+                                private$temp_PtE[, 2] >= t_values[i] - tolerance)
+      }
+  
+      if (length(update_indices) > 0) {
+        private$temp_PtE[update_indices, 1] <- edge_updates[i]
+        private$temp_PtE[update_indices, 2] <- abs(private$temp_PtE[update_indices, 2] - t_values[i]) / (1 - t_values[i])
+      }
     }
   }
 
