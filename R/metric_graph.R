@@ -3842,6 +3842,7 @@ metric_graph <-  R6Class("metric_graph",
       message("Processing data")
     }
 
+
     t <- system.time({
      if(!is.null(group)){
        group_vector <- data[[".group"]]
@@ -3873,7 +3874,6 @@ metric_graph <-  R6Class("metric_graph",
     private$data[[".coord_x"]] <- NULL
     private$data[[".coord_y"]] <- NULL
 
-
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
     length_data <- unique(unlist(lapply(data, length)))
@@ -3889,7 +3889,9 @@ metric_graph <-  R6Class("metric_graph",
 
     ## convert to Spoints and add
     PtE <- self$get_PtE()
+
     spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
+
     private$data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
     private$data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
     if(tibble){
@@ -5191,8 +5193,6 @@ if (!is.null(X)) {
 
 return(mapview_output)
 
-
-
     }
     if(interactive && (type == "ggplot")){
       print(plotly::ggplotly(p))
@@ -6181,6 +6181,7 @@ return(mapview_output)
       }
 
       Points <- matrix(NA, nrow=nrow(PtE), ncol=ncol(PtE))
+
 
       for (i in 1:dim(PtE)[1]) {
         Points[i,] <- interpolate2(self$edges[[PtE[i, 1]]] ,
@@ -7349,24 +7350,50 @@ split_edge = function(Ei, t_values, tolerance = 0) {
   }
 
   # Create segments from the original edge and the new vertices
+  # Initialize coords_list1 and coords_list2 based on t_values and edge details
   coords_list1[[1]] <- edge[1:idx_positions[1], , drop = FALSE]
+  coords_list1[[1]] <- rbind(coords_list1[[1]], val_coords[1, , drop = FALSE])
+  
   for (i in seq_along(t_values)) {
-    val_line <- matrix(val_coords[i, , drop = FALSE], nrow = 1)
-    coords_list2[[i]] <- rbind(val_line, edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE])
+    val_line_start <- matrix(val_coords[i, , drop = FALSE], nrow = 1)
+    
     if (i < length(t_values)) {
-      coords_list1[[i + 1]] <- val_line
+      # For intermediate segments
+      val_line_end <- matrix(val_coords[i + 1, , drop = FALSE], nrow = 1)
+      
+      # Only include the segment from the edge if idx_positions are different
+      if (idx_positions[i] != idx_positions[i + 1]) {
+        coords_list2[[i]] <- rbind(
+          val_line_start,
+          edge[(idx_positions[i] + 1):idx_positions[i + 1], , drop = FALSE],
+          val_line_end
+        )
+      } else {
+        coords_list2[[i]] <- rbind(
+          val_line_start,
+          val_line_end
+        )
+      }
+    } else {
+      # For the final segment, end with the last row of the edge
+      val_line_end <- edge[nrow(edge), , drop = FALSE]
+      coords_list2[[i]] <- rbind(
+        val_line_start,
+        edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE],
+        val_line_end
+      )
     }
   }
-
-# Construct aux_matrix for self$E based on the length of t_values
-if (length(t_values) == 1) {
-  # Case when t_values has length 1: only one new vertex is added
-  aux_matrix <- matrix(
-    c(self$E[Ei, 1], new_vertices[1],  # Connect original start to the new vertex
-      new_vertices[1], self$E[Ei, 2]), # Connect the new vertex to the original end
-    nrow = 2, byrow = TRUE
-  )
-} else {
+  
+  # Construct aux_matrix for self$E based on the length of t_values
+  if (length(t_values) == 1) {
+    # Case when t_values has length 1: only one new vertex is added
+    aux_matrix <- matrix(
+      c(self$E[Ei, 1], new_vertices[1],  # Connect original start to the new vertex
+        new_vertices[1], self$E[Ei, 2]), # Connect the new vertex to the original end
+      nrow = 2, byrow = TRUE
+    )
+  } else {
   # Case when t_values has length > 1: multiple new vertices are added
   aux_matrix <- rbind(
     c(self$E[Ei, 1], new_vertices[1]),  # Connect original start to first new vertex
