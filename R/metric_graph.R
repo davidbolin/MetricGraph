@@ -7243,10 +7243,10 @@ split_edge = function(Ei, t_values, tolerance, indices = NULL) {
   new_vertices[!add_V] <- closest_vertices[!add_V]
   new_vertices[add_V] <- self$nV + 1:(sum(add_V))
 
-  if (!is.null(private$data) && !is.null(indices)) {
-    # Initialize edge_updates with Ei for FALSE positions in add_V
-    edge_updates <- ifelse(add_V, NA, Ei)
+  # Initialize edge_updates with Ei for FALSE positions in add_V
+  edge_updates <- ifelse(add_V, NA, Ei)
 
+  if (!is.null(private$data) && !is.null(indices)) {
     # Calculate cumulative sum only for TRUE positions and store in edge_updates
     edge_updates[add_V] <- self$nE + cumsum(add_V[add_V])
 
