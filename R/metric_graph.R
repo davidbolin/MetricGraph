@@ -2534,31 +2534,24 @@ metric_graph <-  R6Class("metric_graph",
   #' @param share_weights Should the same weight be shared among the split edges? If `FALSE`, the weights will be removed, and a common weight given by 1 will be given.
   #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @param tolerance `r lifecycle::badge("deprecated")`. Not used anymore
   #' @return No return value. Called for its side effects.
 
-  observation_to_vertex = function(tolerance = 1e-15, mesh_warning = TRUE, verbose = 0) {
-  if (tolerance <= 0 || tolerance >= 1) {
-    stop("tolerance should be between 0 and 1.")
-  }
-
+  observation_to_vertex = function(mesh_warning = TRUE, verbose = 0, tolerance = deprecated()) {
+    if(lifecycle::is_present(tolerance)){
+      lifecycle::deprecate_warn("1.3.0.9000", "observation_to_vertex(tolerance)")
+    }
   # Initialize temp data
+  if(is.null(private$data)){
+    stop("There is no data!")
+  }
   private$temp_PtE <- self$get_PtE()
   n <- nrow(private$temp_PtE)
   self$PtV <- rep(NA, n)
-
-  # Identify start and end vertices based on the tolerance
-  is_start_vertex <- abs(private$temp_PtE[, 2]) < tolerance
-  is_end_vertex <- private$temp_PtE[, 2] > 1 - tolerance
-
-  # Assign known vertices directly
-  self$PtV[is_start_vertex] <- self$E[private$temp_PtE[is_start_vertex, 1], 1]
-  self$PtV[is_end_vertex] <- self$E[private$temp_PtE[is_end_vertex, 1], 2]
-
-  # Get remaining indices that need to be split
-  remaining_indices <- which(!(is_start_vertex | is_end_vertex))
-  
-  # Group the remaining indices by edge
-  edge_groups <- split(remaining_indices, private$temp_PtE[remaining_indices, 1])
+  private$temp_PtE <- cbind(private$temp_PtE, seq_len(n))
+  # Group PtE by edges
+  edge_groups <- split(private$temp_PtE[,c(2,3)], private$temp_PtE[, 1])
+  edge_groups <- lapply(edge_groups, function(coords) matrix(coords, ncol=2, byrow=FALSE))   
 
   # Progress bar setup
   if (verbose == 2) {
@@ -2567,22 +2560,19 @@ metric_graph <-  R6Class("metric_graph",
 
   # Process each group of indices by edge
   for (Ei in names(edge_groups)) {
-    indices <- edge_groups[[Ei]]
-    
-    # Extract and sort t_values, keeping track of original order
-    t_values <- private$temp_PtE[indices, 2]
-    sorted_indices <- order(t_values)
-    t_values <- t_values[sorted_indices]
+
+    t_values <- edge_groups[[Ei]][,1] # positions on edges
+    indices <- edge_groups[[Ei]][,2] # original row number
     
     if (verbose == 2) {
       bar_otv$increment()
     }
 
     # Perform the edge split for all t_values at once
-    new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance)
+    new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = NULL, indices = indices)
     
-    # Reorder new_vertices to match the original order of t_values
-    self$PtV[indices] <- new_vertices[order(sorted_indices)]
+    # Assign new vertices
+    self$PtV[indices] <- new_vertices
   }
 
   # Remove NA values from PtV
@@ -7211,10 +7201,9 @@ format_data = function(data_res, format) {
   # @description function for splitting lines in the graph
   # @param Ei index of line to split
   # @param t  position on line to split (normalized)
-  # @param tolerance tolerance for merging overlapping vertices
 
-  # This function assumes t_values are sorted!
-split_edge = function(Ei, t_values, tolerance = 0) {
+# Observe that by construction of get_PtE, all PtEs are sorted.
+split_edge = function(Ei, t_values, tolerance, indices = NULL) {
   # Check if t_values are sorted
   if (is.unsorted(t_values)) {
     stop("t_values must be sorted in ascending order!")
@@ -7222,74 +7211,73 @@ split_edge = function(Ei, t_values, tolerance = 0) {
 
   edge <- self$edges[[Ei]]
   edge_length <- self$edge_lengths[Ei]
+  PtE_edge <- attr(edge, "PtE")
 
-  # Interpolate all t_values at once
-  val_lines <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
-  idx_positions <- val_lines[["idx"]]
-  val_coords <- val_lines[["coords"]]
+  if(is.null(tolerance)){
+    if(edge_length == 0){
+      tolerance <- 1e-17
+    }
+    tolerance <- 1e-17/edge_length
+  }
 
   # Calculate distances and determine if new vertices need to be added
   min_dists <- ifelse(t_values < 0.5, t_values * edge_length, (1 - t_values) * edge_length)
 
-  add_V <- min_dists > tolerance
+  add_V <- min_dists > tolerance  
 
-  # Initialize lists to store updated data
-  new_vertices <- numeric(length(t_values))
-  coords_list1 <- vector("list", length(t_values) + 1)
-  coords_list2 <- vector("list", length(t_values))
+  n_t_values <- length(t_values)
 
-  # Iterate over t_values to create new vertices and segments
-  for (i in seq_along(t_values)) {
-    t <- t_values[i]
-    idx_pos <- idx_positions[i]
-    val_line <- matrix(val_coords[i, , drop = FALSE], nrow = 1)  # Ensure val_line is a matrix
-    closest_vertex <- ifelse(t < 0.5, self$E[Ei, 1], self$E[Ei, 2])
+  df_1 <- data.frame(pos_edge = c(t_values, PtE_edge[,2]), x = c(rep(NA,n_t_values), edge[,1]), 
+                          y = c(rep(NA,n_t_values), edge[,2]), 
+                          is_t_values = c(rep(TRUE,n_t_values), rep(FALSE,nrow(edge))), 
+                          add_V = c(add_V, rep(FALSE,nrow(edge))))
+  
+  df_1 <- fill_na_values_split_edge(df_1)
 
-    if (add_V[i]) {
-      newV <- self$nV + 1
-      self$V <- rbind(self$V, val_line)
-      self$nV <- self$nV + 1
-    } else {
-      newV <- closest_vertex
-    }
+  self$V <- rbind(self$V, as.matrix(df_1[df_1$add_V,c("x", "y")]))
 
-    new_vertices[i] <- newV
+  closest_vertices <- ifelse(t_values < 0.5, self$E[Ei, 1], self$E[Ei, 2])
+
+  new_vertices <- numeric(n_t_values)
+
+  new_vertices[!add_V] <- closest_vertices[!add_V]
+  new_vertices[add_V] <- self$nV + 1:(sum(add_V))
+
+  if (!is.null(private$data) && !is.null(indices)) {
+    # Initialize edge_updates with Ei for FALSE positions in add_V
+    edge_updates <- ifelse(add_V, NA, Ei)
+
+    # Calculate cumulative sum only for TRUE positions and store in edge_updates
+    edge_updates[add_V] <- self$nE + cumsum(add_V[add_V])
+
+    private$temp_PtE[indices, 1] <- edge_updates
+    private$temp_PtE[indices, 2] <- ifelse(
+              t_values < tolerance, 
+                0, 
+            ifelse(t_values > 1 - tolerance, 1, 
+            abs(private$temp_PtE[indices, 2] - t_values) / (1 - t_values))
+      )
   }
 
   # Create segments from the original edge and the new vertices
-  # Initialize coords_list1 and coords_list2 based on t_values and edge details
-  coords_list1[[1]] <- edge[1:idx_positions[1], , drop = FALSE]
-  coords_list1[[1]] <- rbind(coords_list1[[1]], val_coords[1, , drop = FALSE])
 
-  for (i in seq_along(t_values)) {
-    val_line_start <- matrix(val_coords[i, , drop = FALSE], nrow = 1)
+  # Identify indices where add_V is TRUE
+  split_indices <- which(df_1$add_V)
 
-    if (i < length(t_values)) {
-      # For intermediate segments
-      val_line_end <- matrix(val_coords[i + 1, , drop = FALSE], nrow = 1)
+  # Define start and end points for each segment with overlap
+  start_points <- c(1, split_indices)
+  end_points <- c(split_indices, nrow(df_1))
 
-      # Only include the segment from the edge if idx_positions are different
-      if (idx_positions[i] != idx_positions[i + 1]) {
-        coords_list2[[i]] <- rbind(
-          val_line_start,
-          edge[(idx_positions[i] + 1):idx_positions[i + 1], , drop = FALSE],
-          val_line_end
-        )
-      } else {
-        coords_list2[[i]] <- rbind(
-          val_line_start,
-          val_line_end
-        )
-      }
-    } else {
-      # For the final segment, end with the last row of the edge
-      val_line_end <- edge[nrow(edge), , drop = FALSE]
-      coords_list2[[i]] <- rbind(
-        val_line_start,
-        edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE],
-        val_line_end
-      )
-    }
+  # Initialize an empty list to store the matrices
+  new_edges <- vector("list", length(split_indices) + 1)
+  edge_updates <- c(Ei, edge_updates)
+
+  # Loop over each segment and extract the corresponding matrix
+  for (i in seq_along(new_edges)) {
+    new_edges[[i]] <- as.matrix(df_1[start_points[i]:end_points[i], , drop = FALSE])
+    tmp_PtE <- cbind(edge_updates[i], (new_edges[[i]][,1] - new_edges[[i]][1,1])/(new_edges[[i]][nrow(new_edges[[i]]) ,1] - new_edges[[i]][1,1]))
+    new_edges[[i]] <- new_edges[[i]][,c(2,3), drop=FALSE]
+    attr(new_edges[[i]], "PtE") <- tmp_PtE
   }
 
   # Construct aux_matrix for self$E based on the length of t_values
@@ -7311,10 +7299,11 @@ split_edge = function(Ei, t_values, tolerance = 0) {
 
   # Update self$E and self$edges
   self$E[Ei, ] <- aux_matrix[1, ]
-  self$E <- rbind(self$E, aux_matrix[-1,])
-  self$edges[[Ei]] <- coords_list1[[1]]
-  self$edges <- c(self$edges, coords_list2)
-  self$nE <- self$nE + length(coords_list2)
+  self$E <- rbind(self$E, aux_matrix[-1, , drop=FALSE])
+  self$edges[[Ei]] <- new_edges[[1]]
+  self$edges <- c(self$edges, new_edges[-1])
+  self$nE <- self$nE + length(new_edges) - 1
+  self$nV <- self$nV + sum(add_V)
 
   # Update edge lengths
   segment_lengths <- c(t_values[1], diff(t_values), 1 - t_values[length(t_values)]) * self$edge_lengths[Ei]
@@ -7326,28 +7315,6 @@ split_edge = function(Ei, t_values, tolerance = 0) {
     private$edge_weights <- c(private$edge_weights, rep(private$edge_weights[Ei], length(t_values)))
   } else {
     private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(t_values), private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
-  }
-
-  if (!is.null(private$data)) {
-    # Pre-calculate the number of edges to update
-    edge_updates <- self$nE - length(t_values) + seq_along(t_values)
-  
-    # Loop through each t_value and update only relevant indices
-    for (i in seq_along(t_values)) {
-      if (i < length(t_values)) {
-        update_indices <- which(private$temp_PtE[, 1] == Ei &
-                                private$temp_PtE[, 2] >= t_values[i] - tolerance &
-                                private$temp_PtE[, 2] < t_values[i + 1] - tolerance)
-      } else {
-        update_indices <- which(private$temp_PtE[, 1] == Ei &
-                                private$temp_PtE[, 2] >= t_values[i] - tolerance)
-      }
-  
-      if (length(update_indices) > 0) {
-        private$temp_PtE[update_indices, 1] <- edge_updates[i]
-        private$temp_PtE[update_indices, 2] <- abs(private$temp_PtE[update_indices, 2] - t_values[i]) / (1 - t_values[i])
-      }
-    }
   }
 
   return(new_vertices)

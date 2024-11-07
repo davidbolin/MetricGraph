@@ -36,7 +36,7 @@
 #' @importFrom rSPDE matern.covariance gg_df
 #' @importFrom methods is slot new as
 #' @export gg_df
-#' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq 
+#' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq spline
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete
 #' @importFrom igraph E E<-
 #' @importFrom RANN nn2
@@ -44,8 +44,8 @@
 #' @importFrom R6 R6Class
 #' @importFrom graphics layout
 #' @importFrom lifecycle deprecated
-#' @importFrom dplyr mutate filter select summarise
-#' @importFrom tidyr drop_na
+#' @importFrom dplyr mutate filter select summarise arrange group_by ungroup if_else
+#' @importFrom tidyr drop_na 
 #' @importFrom magrittr %>%
 #' @importFrom zoo na.approx
 #' @importFrom ggnewscale new_scale_color

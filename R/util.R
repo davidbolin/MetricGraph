@@ -2018,3 +2018,21 @@ standardize_df_positions <- function(df, graph, edge_number = "edge_number", dis
 
   return(df)
 }
+
+#' Helper function to be used in the split_edge method
+#' @noRd
+fill_na_values_split_edge <- function(data) {
+  pos_edge <- x <- y <- is_t_values <- NULL
+  
+  # Interpolate NA values
+  data <- data |>
+    dplyr::arrange(pos_edge) |>
+    dplyr::mutate(
+      x = approx(pos_edge, x, pos_edge, method = "linear", rule = 2, ties = mean)$y,
+      y = approx(pos_edge, y, pos_edge, method = "linear", rule = 2, ties = mean)$y
+    )
+  
+  data <- dplyr::filter(data, (!duplicated(pos_edge) | is_t_values) & !is.na(pos_edge))
+
+  return(data)
+}
