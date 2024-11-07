@@ -2134,19 +2134,21 @@ metric_graph <-  R6Class("metric_graph",
     
     if(verbose > 0){
       message("Computing the relative positions of the edges...")
-      bar_edges_pte <- msg_progress_bar(length(self$edges))
+      if(verbose == 2){
+        bar_edges_pte <- msg_progress_bar(length(self$edges))
+      }
     }
     
     if(approx){
       edges_PtE <- lapply(self$edges, function(edge){
-      if(verbose > 0){
+      if(verbose == 2){
         bar_edges_pte$increment()
       }
       private$approx_coordinates(edge = edge)
       })
     } else{
       edges_PtE <- lapply(self$edges, function(edge){
-      if(verbose > 0){
+      if(verbose == 2){
         bar_edges_pte$increment()
       }
       private$exact_PtE_coordinates(edge = edge)
@@ -5108,6 +5110,7 @@ return(mapview_output)
   #' evaluated at the mesh in the graph
   #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
   #' @param continuous Should continuity be assumed when the plot uses `newdata`?
+  #' @param interpolate_plot Should the values to be plotted be interpolated?
   #' @param vertex_size Size of the vertices.
   #' @param vertex_color Color of vertices.
   #' @param edge_width Width for edges.
@@ -5122,7 +5125,7 @@ return(mapview_output)
   #' @param mapview_caption Caption for the function if `type = "mapview"`.
   #' @param p Previous plot to which the new plot should be added.
   #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
-  #' @param improve_plot  `r lifecycle::badge("deprecated")` There is no need to use it anymore.
+  #' @param improve_plot  `r lifecycle::badge("deprecated")` Use `interpolate` instead. There is no need to use it to improve the edges.
   #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
   #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
   plot_function = function(data = NULL,
@@ -5131,6 +5134,7 @@ return(mapview_output)
                            X = NULL,
                            type = c("ggplot", "plotly", "mapview"),
                            continuous = TRUE,
+                           interpolate_plot = TRUE,
                            edge_weight = NULL,
                            vertex_size = 5,
                            vertex_color = "black",
@@ -5250,12 +5254,7 @@ return(mapview_output)
       }
     }
 
-
-    if(is.null(attr(self$edges[[1]], "PtE"))){
-          self$compute_PtE_edges()
-    }
     PtE_edges <- lapply(1:length(self$edges), function(i){attr(self$edges[[i]], "PtE")})
-
 
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
     kk = 1
@@ -5293,30 +5292,33 @@ return(mapview_output)
 
         }
 
-        PtE_tmp <- PtE_edges[[i]]
-        PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
-        PtE_tmp <- PtE_tmp[,2, drop=TRUE]
-        PtE_tmp <- setdiff(PtE_tmp, vals[,1])
-        if(length(PtE_tmp)>0){
-              PtE_tmp <- cbind(PtE_tmp, NA)
-              vals <- rbind(vals,PtE_tmp)
-        }
-        if(nrow(vals)>0){
-          ord_idx <- order(vals[,1])
-          vals <- vals[ord_idx,]
-          if(vals[1,1] > 0){
-            vals <- rbind(c(0,NA), vals)
+        if(interpolate_plot){
+          PtE_tmp <- PtE_edges[[i]]
+          PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
+          PtE_tmp <- PtE_tmp[,2, drop=TRUE]
+          PtE_tmp <- setdiff(PtE_tmp, vals[,1])
+          if(length(PtE_tmp)>0){
+                PtE_tmp <- cbind(PtE_tmp, NA)
+                vals <- rbind(vals,PtE_tmp)
           }
-          if(vals[nrow(vals),1] < 1){
-            vals <- rbind(vals, c(1,NA))
+
+          if(nrow(vals)>0){
+            ord_idx <- order(vals[,1])
+            vals <- vals[ord_idx,]
+            if(vals[1,1] > 0){
+              vals <- rbind(c(0,NA), vals)
+            }
+            if(vals[nrow(vals),1] < 1){
+              vals <- rbind(vals, c(1,NA))
+            }
+            max_val <- max(vals[,2], na.rm=TRUE)
+            min_val <- min(vals[,2], na.rm=TRUE)
+            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+                                                  x = vals[,1],
+                                                      na.rm=FALSE, ties = "mean"),
+                                               max_val), min_val))
+            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
           }
-          max_val <- max(vals[,2], na.rm=TRUE)
-          min_val <- min(vals[,2], na.rm=TRUE)
-          vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-                                                x = vals[,1],
-                                                    na.rm=FALSE, ties = "mean"),
-                                             max_val), min_val))
-          vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
         }
 
 
@@ -5326,6 +5328,122 @@ return(mapview_output)
 
     if(continuous){
       if(nrow(vals)>0){
+
+        if(!interpolate_plot){
+            if (max(vals[, 1]) < 1) {
+              # #check if we can add end value from other edge
+              Ei <- self$E[, 1] == Ve #edges that start in Ve
+              Ei <- which(Ei)
+              if (sum(Ei) > 0) {
+                ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+                if(sum(ind)>0){
+                  ind <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+                } else {
+                ind <- NULL
+                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val]
+              }} else{
+                ind <- NULL
+                ind.val <- integer(0)
+              }
+              if (length(ind) > 0) {
+                # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                vals <- rbind(vals, c(1, min.val))
+                  # if(length(min.val)>0){
+                  #   vals <- rbind(vals, c(1, min.val[[1]]))
+                  # } else{
+                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                  # }
+              }
+              else {
+                Ei <- self$E[, 2] == Ve #edges that end in Ve
+                Ei <- which(Ei)
+                if (sum(Ei)  > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+                  if(sum(ind)>0){
+                    ind <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                    max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+                  } else {
+                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val.max]
+                  if(length(ind.val) == 0){
+                    ind <- ind.val.max
+                  } else if (length(ind.val.max) == 0){
+                    ind <- ind.val
+                  } else{
+                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+                  }
+                } } else{
+                  if(length(ind.val)>0){
+                    ind <- ind.val
+                  } else{
+                    ind <- NULL
+                  }
+                }
+                if (length(ind) > 0){
+                  # vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                  vals <- rbind(vals, c(1, max.val))
+                  # if(length(max.val)>0){
+                  #   vals <- rbind(vals, c(1, max.val[[1]]))
+                  # } else{
+                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                  # }
+                }
+              }
+            }
+
+            if (min(vals[, 1] > 0)) {
+              #check if we can add start value from other edge
+              Ei <- self$E[, 1] == Vs #edges that start in Vs
+              Ei <- which(Ei)
+              if (sum(Ei) > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
+                if(sum(ind)>0){
+                    ind <- ind[1]
+                  } else {
+                ind <- NULL
+                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                min.val <- X[ind.val, 2,drop=TRUE]
+              }} else{
+                ind <- NULL
+                ind.val <- integer(0)
+              }
+              if (length(ind) > 0) {
+                vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
+              } else {
+                Ei <- self$E[, 2] == Vs #edges that end in Vs
+                Ei <- which(Ei)
+                if (sum(Ei) > 0) {
+                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
+                  if(sum(ind)>0){
+                    ind <- ind[1]
+                  } else {
+                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
+                  max.val <- X[ind.val.max, 2,drop=TRUE]
+                  if(length(ind.val) == 0){
+                    ind <- ind.val.max
+                  } else if (length(ind.val.max) == 0){
+                    ind <- ind.val
+                  } else{
+                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
+                  }
+                } } else{
+                  if(length(ind.val)>0){
+                    ind <- ind.val
+                  } else{
+                    ind <- NULL
+                  }
+                }
+                if (length(ind) > 0) {
+                  vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
+                } else if (nrow(vals)>0){
+                  idx_tmp <- which.min(vals[,1])
+                  vals <- rbind(c(0,vals[idx_tmp,2, drop = TRUE]), vals)
+                }
+              }
+            }
+        } else {        
             PtE_tmp <- PtE_edges[[i]]
             if(PtE_tmp[1,1] != i){
               edge_new <- PtE_tmp[1,1]
@@ -5428,7 +5546,9 @@ return(mapview_output)
                 vals <- rbind(c(0,vals[1,2, drop=TRUE]), vals)
               }
             }
+        }
       } else{
+        if(interpolate_plot){
           vals <- NULL
               Ei <- self$E[, 1] == Ve #edges that start in Ve
               Ei <- which(Ei)
@@ -5538,8 +5658,9 @@ return(mapview_output)
               if(ncol(vals)<2){
                 vals <- NULL
               }
+        }
       }
-      } else {
+      } else if(interpolate_plot){
 
           PtE_tmp <- PtE_edges[[i]]
           PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
