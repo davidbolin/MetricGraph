@@ -82,7 +82,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-07-06. Last
-modified: 2024-11-06.</h4>
+modified: 2024-11-07.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/multi_likelihood.Rmd" class="external-link"><code>vignettes/multi_likelihood.Rmd</code></a></small>
       <div class="d-none name"><code>multi_likelihood.Rmd</code></div>
@@ -254,8 +254,8 @@ likelihood. To such an end, we simply supply the data in
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.937380 0.1796700   1.614920 1.926080   2.316460 1.892250</span></span>
-<span><span class="co">## range 0.134429 0.0270368   0.090611 0.131151   0.196419 0.124465</span></span></code></pre>
+<span><span class="co">## sigma 1.937670 0.1793100  1.6158500 1.926400    2.31607 1.883610</span></span>
+<span><span class="co">## range 0.134538 0.0270055  0.0908911 0.131216    0.19656 0.124366</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
@@ -273,8 +273,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.9373793 1.8922540</span></span>
-<span><span class="co">## 2     range 0.15 0.1344295 0.1244646</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 1.9376718 1.8836119</span></span>
+<span><span class="co">## 2     range 0.15 0.1345381 0.1243657</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -286,8 +286,8 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meas_err_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1  sigma1.e  0.2 0.2231264 0.2379471</span></span>
-<span><span class="co">## 2  sigma2.e  0.5 0.4964229 0.4988746</span></span></code></pre>
+<span><span class="co">## 1  sigma1.e  0.2 0.2231635 0.2383902</span></span>
+<span><span class="co">## 2  sigma2.e  0.5 0.4962879 0.4986028</span></span></code></pre>
 <p>Finally, let us look at the estimates of the intercepts:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">intercept_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -298,8 +298,8 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">intercept_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1     beta1    2  2.083172  2.083395</span></span>
-<span><span class="co">## 2     beta2   -2 -1.919987 -1.919766</span></span></code></pre>
+<span><span class="co">## 1     beta1    2  2.083171  2.083393</span></span>
+<span><span class="co">## 2     beta2   -2 -1.919988 -1.919767</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="fitting-models-with-multiple-likelihoods-in-inlabru">Fitting models with multiple likelihoods in
@@ -343,8 +343,8 @@ and the second entry to supply the data for the second likelihood.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.937780 0.1752470  1.6210700 1.926810   2.312040 1.889420</span></span>
-<span><span class="co">## range 0.134486 0.0271187  0.0905167 0.131207   0.196646 0.124529</span></span></code></pre>
+<span><span class="co">## sigma 1.937800 0.1751570  1.6212500 1.926600   2.311410 1.886520</span></span>
+<span><span class="co">## range 0.134533 0.0271165  0.0906595 0.131218   0.196769 0.124427</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
@@ -362,8 +362,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_bru_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.9377826 1.8894205</span></span>
-<span><span class="co">## 2     range 0.15 0.1344864 0.1245288</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 1.9377993 1.8865247</span></span>
+<span><span class="co">## 2     range 0.15 0.1345334 0.1244271</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
@@ -375,8 +375,8 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meas_err_bru_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1  sigma1.e  0.2 0.2231628 0.2379404</span></span>
-<span><span class="co">## 2  sigma2.e  0.5 0.4964088 0.4986594</span></span></code></pre>
+<span><span class="co">## 1  sigma1.e  0.2 0.2231801 0.2381810</span></span>
+<span><span class="co">## 2  sigma2.e  0.5 0.4963394 0.4985047</span></span></code></pre>
 <p>Finally, let us look at the estimates of the intercepts:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">intercept_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -387,8 +387,8 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">intercept_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1     beta1    2  2.083167  2.083389</span></span>
-<span><span class="co">## 2     beta2   -2 -1.919993 -1.919771</span></span></code></pre>
+<span><span class="co">## 1     beta1    2  2.083166  2.083389</span></span>
+<span><span class="co">## 2     beta2   -2 -1.919993 -1.919772</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="a-toy-dataset-with-multiple-likelihoods-and-replicates">A toy dataset with multiple likelihoods and replicates<a class="anchor" aria-label="anchor" href="#a-toy-dataset-with-multiple-likelihoods-and-replicates"></a>
@@ -522,9 +522,9 @@ function.</p>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.490410 0.0716213   1.358630 1.487900   1.639440 1.489050</span></span>
-<span><span class="co">## range 0.197447 0.0205829   0.160743 0.196134   0.241464 0.193257</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
+<span><span class="co">## sigma 1.490460 0.0716059   1.358640 1.487940   1.639430 1.48909</span></span>
+<span><span class="co">## range 0.197445 0.0205807   0.160751 0.196136   0.241462 0.19323</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -540,9 +540,9 @@ function.</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.4904114 1.489052</span></span>
-<span><span class="co">## 2     range  0.2 0.1974465 0.193257</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  1.5 1.4904639 1.4890895</span></span>
+<span><span class="co">## 2     range  0.2 0.1974455 0.1932296</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
 <div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
@@ -554,8 +554,8 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meas_err_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1  sigma1.e  0.2 0.1935115 0.1946556</span></span>
-<span><span class="co">## 2  sigma2.e  0.5 0.4886445 0.4890299</span></span></code></pre>
+<span><span class="co">## 1  sigma1.e  0.2 0.1935108 0.1946557</span></span>
+<span><span class="co">## 2  sigma2.e  0.5 0.4886444 0.4890310</span></span></code></pre>
 <p>Finally, let us look at the estimates of the intercepts:</p>
 <div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">intercept_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -608,9 +608,9 @@ obtained above:</p>
 <code class="sourceCode R"><span><span class="va">spde_bru_result_repl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_bru_fit_repl</span>, <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_bru_result_repl</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.489850 0.0723451   1.354020 1.487280   1.639990 1.482270</span></span>
-<span><span class="co">## range 0.197306 0.0205108   0.160648 0.196031   0.241099 0.193285</span></span></code></pre>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
+<span><span class="co">## sigma 1.489850 0.0723555   1.353990 1.487320   1.639840 1.48227</span></span>
+<span><span class="co">## range 0.197319 0.0205285   0.160625 0.196044   0.241146 0.19332</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
@@ -628,8 +628,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_bru_repl_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.4898523 1.4822718</span></span>
-<span><span class="co">## 2     range  0.2 0.1973065 0.1932848</span></span></code></pre>
+<span><span class="co">## 1   std.dev  1.5 1.4898544 1.4822745</span></span>
+<span><span class="co">## 2     range  0.2 0.1973186 0.1933197</span></span></code></pre>
 <p>Let us now look at the estimates of the measurement errors and
 compare with the true ones:</p>
 <div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
@@ -640,9 +640,9 @@ compare with the true ones:</p>
 <span>    mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">spde_bru_fit_repl</span><span class="op">$</span><span class="va">summary.hyperpar</span><span class="op">$</span><span class="va">mode</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meas_err_bru_repl_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1  sigma1.e  0.2 0.1935518 0.194887</span></span>
-<span><span class="co">## 2  sigma2.e  0.5 0.4885810 0.489038</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1  sigma1.e  0.2 0.1935530 0.1948844</span></span>
+<span><span class="co">## 2  sigma2.e  0.5 0.4885811 0.4890575</span></span></code></pre>
 <p>Finally, let us look at the estimbates of the intercepts:</p>
 <div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">intercept_repl_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -653,8 +653,8 @@ compare with the true ones:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">intercept_repl_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1     beta1    2  1.846547  1.846468</span></span>
-<span><span class="co">## 2     beta2   -2 -2.156742 -2.156821</span></span></code></pre>
+<span><span class="co">## 1     beta1    2  1.846548  1.846468</span></span>
+<span><span class="co">## 2     beta2   -2 -2.156741 -2.156821</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

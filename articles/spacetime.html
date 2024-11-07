@@ -82,7 +82,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-10-23. Last
-modified: 2024-11-06.</h4>
+modified: 2024-11-07.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/spacetime.Rmd" class="external-link"><code>vignettes/spacetime.Rmd</code></a></small>
       <div class="d-none name"><code>spacetime.Rmd</code></div>
@@ -249,8 +249,8 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 57</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  3.70847 mins </span></span>
-<span><span class="co">#&gt;   set up the parallelization = 8.0254 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  3.70625 mins </span></span>
+<span><span class="co">#&gt;   set up the parallelization = 7.75734 secs</span></span></code></pre></div>
 <p>Compare the estimated results with the true values:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kappa <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">kappa</span>, <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">random_effects</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, </span>
@@ -307,9 +307,9 @@ pass <code>cbind(.edge_number, .distance_on_edge)</code>, and
 <span>                      intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">bru_fit_graph</span><span class="op">$</span><span class="va">summary.fixed</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     kappa    sigma     gamma      rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; 1 5.00000 10.00000 0.1000000 1.000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; 2 5.03535 10.31925 0.1072631 1.273731 0.007252894 0.04769392</span></span></code></pre></div>
+<span><span class="co">#&gt;      kappa    sigma     gamma      rho     sigma.e  intercept</span></span>
+<span><span class="co">#&gt; 1 5.000000 10.00000 0.1000000 1.000000 0.010000000 0.00000000</span></span>
+<span><span class="co">#&gt; 2 5.018854 10.46871 0.1082263 2.448573 0.004763116 0.04745727</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -380,9 +380,9 @@ returned by <code><a href="https://davidbolin.github.io/rSPDE/reference/graph_da
 <span>                      intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">bru_fit_graph_repl</span><span class="op">$</span><span class="va">summary.fixed</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_repl</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      kappa    sigma     gamma      rho     sigma.e intercept</span></span>
-<span><span class="co">#&gt; 1 5.000000 10.00000 0.1000000 1.000000 0.010000000 0.0000000</span></span>
-<span><span class="co">#&gt; 2 5.064554 10.21661 0.1013851 1.339587 0.005463993 0.0047533</span></span></code></pre></div>
+<span><span class="co">#&gt;      kappa    sigma     gamma      rho     sigma.e   intercept</span></span>
+<span><span class="co">#&gt; 1 5.000000 10.00000 0.1000000 1.000000 0.010000000 0.000000000</span></span>
+<span><span class="co">#&gt; 2 5.070502 10.18213 0.1011163 1.174104 0.005772299 0.004643657</span></span></code></pre></div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
