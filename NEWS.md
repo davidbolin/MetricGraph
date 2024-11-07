@@ -19,6 +19,7 @@
 * Updated the methods, `mutate`, `filter`, `select`, `drop_na` and `summarise` to have a format argument to also return `sf` or `sp` objects.
 * Massive improvement on the `observation_to_vertex` method.
 * Massive improvement on the metric graph creation speed.
+* Deprecated `improve_plot` option, as now all plots from `plot_function()` method are improved.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.

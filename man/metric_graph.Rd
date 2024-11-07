@@ -163,6 +163,7 @@ Create a new \code{metric_graph} object.
   which_projection = "Winkel tripel",
   manual_edge_lengths = NULL,
   perform_merges = NULL,
+  approx_edge_PtE = TRUE,
   tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
@@ -219,6 +220,8 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 \item{\code{manual_edge_lengths}}{If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the \code{perform_merges} argument to \code{FALSE} or use the \code{set_manual_edge_lengths()} method.}
 
 \item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. The default option is \code{NULL}. If \code{NULL}, it will be set to \code{FALSE} unless 'edges', 'V' and 'E' are \code{NULL}, in which case it will be set to \code{TRUE}. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
+
+\item{\code{approx_edge_PtE}}{Should the relative positions on the edges be approximated? The default is \code{TRUE}. If \code{FALSE}, the speed can be considerably slower, especially for large metric graphs.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
@@ -770,9 +773,18 @@ A vector containing the degrees of the vertices.
 \subsection{Method \code{compute_PtE_edges()}}{
 Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the \code{plot_function()} method, however it might be costly to compute.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_PtE_edges()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_PtE_edges(approx = TRUE, verbose = 0)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{approx}}{Should the computation of the relative positions be approximate? Default is \code{TRUE}. If \code{FALSE}, the speed can be considerably slower, especially for large metric graphs.}
+
+\item{\code{verbose}}{Level of verbosity, 0, 1 or 2. The default is 0.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 No return value, called for its side effects.
 }
@@ -2065,7 +2077,6 @@ Plots continuous function on the graph.
   group = 1,
   X = NULL,
   type = c("ggplot", "plotly", "mapview"),
-  improve_plot = FALSE,
   continuous = TRUE,
   edge_weight = NULL,
   vertex_size = 5,
@@ -2081,6 +2092,7 @@ Plots continuous function on the graph.
   mapview_caption = "Function",
   p = NULL,
   plotly = deprecated(),
+  improve_plot = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -2101,8 +2113,6 @@ is a character, then the group will be chosen by its name.}
 evaluated at the mesh in the graph}
 
 \item{\code{type}}{The type of plot to be returned. The options are \code{ggplot} (the default), that uses \code{ggplot2}; \code{plotly} that uses \code{plot_ly} for 3D plots, which requires the \code{plotly} package, and \code{mapview} that uses the \code{mapview} function, to build interactive plots, which requires the \code{mapview} package.}
-
-\item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
 
 \item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
 
@@ -2133,6 +2143,8 @@ evaluated at the mesh in the graph}
 \item{\code{p}}{Previous plot to which the new plot should be added.}
 
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
+
+\item{\code{improve_plot}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} There is no need to use it anymore.}
 
 \item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }

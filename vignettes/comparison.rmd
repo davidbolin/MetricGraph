@@ -370,7 +370,6 @@ Let us now build the plot for region 1:
 p <- pems_graph$plot_function(
   newdata = pred_alpha2, 
   data = ".fitted",
-  improve_plot = TRUE, 
   vertex_size = 0,
   edge_width = 0.5, 
   type = "mapview", 
@@ -394,7 +393,6 @@ and region 2:
 p <- pems_graph$plot_function(
   newdata = pred_alpha2, 
   data = ".fitted",
-  improve_plot = TRUE, 
   vertex_size = 0,
   edge_width = 0.5, 
   type = "mapview", 
@@ -425,7 +423,6 @@ the plot in region 1:
 p <- pems_graph$plot_function(
   newdata = pred_alpha2_bc, 
   data = ".fitted",
-  improve_plot = TRUE, 
   vertex_size = 0,
   edge_width = 0.5, 
   type = "mapview", 
@@ -448,7 +445,6 @@ and in region 2:
 p <- pems_graph$plot_function(
   newdata = pred_alpha2_bc, 
   data = ".fitted",
-  improve_plot = TRUE, 
   vertex_size = 0,
   edge_width = 0.5, 
   type = "mapview", 
