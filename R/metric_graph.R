@@ -2678,25 +2678,65 @@ time_update_structure2 <<- 0
 time_edge_weight_update <<- 0
 time_temp_PtE_update <<- 0
 
-  # Process each group of indices by edge
-  for (Ei in names(edge_groups)) {
-    indices <- edge_groups[[Ei]]
+  # # Process each group of indices by edge
+  # for (Ei in names(edge_groups)) {
+  #   indices <- edge_groups[[Ei]]
     
-    # Extract and sort t_values, keeping track of original order
-    t_values <- private$temp_PtE[indices, 2]
-    t_values <- t_values
+  #   # Extract and sort t_values, keeping track of original order
+  #   t_values <- private$temp_PtE[indices, 2]
+  #   t_values <- t_values
     
-    if (verbose == 2) {
-      bar_otv$increment()
-    }
+  #   if (verbose == 2) {
+  #     bar_otv$increment()
+  #   }
 
-    # Perform the edge split for all t_values at once
-    new_vertices <- private$split_edge2(as.numeric(Ei), t_values, tolerance)
+  #   # Perform the edge split for all t_values at once
+  #   new_vertices <- private$split_edge2(as.numeric(Ei), t_values, tolerance)
     
-    # Reorder new_vertices to match the original order of t_values
-    self$PtV[indices] <- new_vertices
+  #   # Reorder new_vertices to match the original order of t_values
+  #   self$PtV[indices] <- new_vertices
+  # }
+  # Initialize global timing variables
+time_extract_indices <<- 0
+time_extract_t_values <<- 0
+time_split_edge2_part2 <<- 0
+time_reorder_new_vertices <<- 0
+time_bar_increment <<- 0
+
+# Loop over each edge in `edge_groups`
+for (Ei in names(edge_groups)) {
+  
+  # Timing extraction of indices
+  start_time <- Sys.time()
+  indices <- edge_groups[[Ei]]
+  time_extract_indices <<- time_extract_indices + as.numeric(Sys.time() - start_time)
+  
+  # Timing extraction and sorting of `t_values`
+  start_time <- Sys.time()
+  t_values <- private$temp_PtE[indices, 2]
+  time_extract_t_values <<- time_extract_t_values + as.numeric(Sys.time() - start_time)
+  
+  # Timing the progress bar increment (if verbose mode is enabled)
+  if (verbose == 2) {
+    start_time <- Sys.time()
+    bar_otv$increment()
+    time_bar_increment <<- time_bar_increment + as.numeric(Sys.time() - start_time)
   }
+  
+  # Timing `private$split_edge2`
+  start_time <- Sys.time()
+  new_vertices <- private$split_edge2(as.numeric(Ei), t_values, tolerance)
+  time_split_edge2_part2 <<- time_split_edge2_part2 + as.numeric(Sys.time() - start_time)
+  
+  # Timing reordering of `new_vertices`
+  start_time <- Sys.time()
+  self$PtV[indices] <- new_vertices
+  time_reorder_new_vertices <<- time_reorder_new_vertices + as.numeric(Sys.time() - start_time)
+}
 
+
+
+  time_remaining_part <<- Sys.time()
   # Remove NA values from PtV
   self$PtV <- self$PtV[!is.na(self$PtV)]
 
@@ -2744,12 +2784,7 @@ time_temp_PtE_update <<- 0
     directional_weights = private$directional_weights,
     verbose = verbose
   )
-
-  # Remove attributes from edges
-  self$edges <- lapply(self$edges, function(edge) {
-    attr(edge, "PtE") <- NULL
-    edge
-  })
+  time_remaining_part <<- Sys.time() - time_remaining_part
 },
   
 
@@ -2777,10 +2812,22 @@ time_temp_PtE_update <<- 0
   n <- nrow(private$temp_PtE)
   self$PtV <- rep(NA, n)
   private$temp_PtE <- cbind(private$temp_PtE, seq_len(n))
-  # Group PtE by edges
-  edge_groups <- split(private$temp_PtE[,c(2,3)], private$temp_PtE[, 1])
-  edge_groups <- lapply(edge_groups, function(coords) matrix(coords, ncol=2, byrow=FALSE))   
 
+  # Identify start and end vertices based on the tolerance
+  is_start_vertex <- abs(private$temp_PtE[, 2]) < 1e-17
+  is_end_vertex <- private$temp_PtE[, 2] > 1 - 1e-17
+
+  # Assign known vertices directly
+  self$PtV[is_start_vertex] <- self$E[private$temp_PtE[is_start_vertex, 1], 1]
+  self$PtV[is_end_vertex] <- self$E[private$temp_PtE[is_end_vertex, 1], 2]
+
+  # Get remaining indices that need to be split
+  remaining_indices <- which(!(is_start_vertex | is_end_vertex))
+
+  # Group PtE by edges
+  edge_groups <- split(private$temp_PtE[remaining_indices,c(2,3)], private$temp_PtE[remaining_indices, 1])
+  edge_groups <- lapply(edge_groups, function(coords) matrix(coords, ncol=2, byrow=FALSE))   
+  
   time_do_first_split <<- Sys.time() - time_do_first_split
 
   # Progress bar setup
@@ -2797,24 +2844,58 @@ time_temp_PtE_update <<- 0
   time_segments_creation <<- 0
   time_aux_matrix_creation <<- 0
   time_update_structure <<- 0
+  time_edge_weight_update <<- 0
 
-  # Process each group of indices by edge
-  for (Ei in names(edge_groups)) {
+  # # Process each group of indices by edge
+  # for (Ei in names(edge_groups)) {
 
-    t_values <- edge_groups[[Ei]][,1] # positions on edges
-    indices <- edge_groups[[Ei]][,2] # original row number
+  #   t_values <- edge_groups[[Ei]][,1] # positions on edges
+  #   indices <- edge_groups[[Ei]][,2] # original row number
     
-    if (verbose == 2) {
-      bar_otv$increment()
-    }
+  #   if (verbose == 2) {
+  #     bar_otv$increment()
+  #   }
 
-    # Perform the edge split for all t_values at once
-    new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = NULL, indices = indices)
+  #   # Perform the edge split for all t_values at once
+  #   new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = 1e-17, indices = indices)
     
-    # Assign new vertices
-    self$PtV[indices] <- new_vertices
+  #   # Assign new vertices
+  #   self$PtV[indices] <- new_vertices
+  # }
+  # Initialize global timing variables
+time_t_values_extraction <<- 0
+time_split_edge_part2 <<- 0
+time_assign_new_vertices <<- 0
+time_bar_increment <<- 0
+
+# Loop over each edge in `edge_groups`
+for (Ei in names(edge_groups)) {
+  
+  # Timing extraction of `t_values` and `indices`
+  start_time <- Sys.time()
+  t_values <- edge_groups[[Ei]][, 1]  # positions on edges
+  indices <- edge_groups[[Ei]][, 2]   # original row number
+  time_t_values_extraction <<- time_t_values_extraction + as.numeric(Sys.time() - start_time)
+  
+  # Timing the progress bar increment (if verbose mode is enabled)
+  if (verbose == 2) {
+    start_time <- Sys.time()
+    bar_otv$increment()
+    time_bar_increment <<- time_bar_increment + as.numeric(Sys.time() - start_time)
   }
+  
+  # Timing `private$split_edge`
+  start_time <- Sys.time()
+  new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = 1e-17, indices = indices)
+  time_split_edge_part2 <<- time_split_edge_part2 + as.numeric(Sys.time() - start_time)
+  
+  # Timing assignment of `new_vertices`
+  start_time <- Sys.time()
+  self$PtV[indices] <- new_vertices
+  time_assign_new_vertices <<- time_assign_new_vertices + as.numeric(Sys.time() - start_time)
+}
 
+  time_remaining_part <<- Sys.time()
   # Remove NA values from PtV
   self$PtV <- self$PtV[!is.na(self$PtV)]
 
@@ -2855,7 +2936,6 @@ time_temp_PtE_update <<- 0
 
 
   # Update vertices and reference edges
-  time_remaining_part <<- Sys.time()
   private$ref_edges <- map_into_reference_edge(self, verbose = verbose)
   private$create_update_vertices(verbose = verbose)
   self$set_edge_weights(
@@ -7446,16 +7526,16 @@ split_edge2 = function(Ei, t_values, tolerance = 0) {
   start_time <- Sys.time()
   edge <- self$edges[[Ei]]
   edge_length <- self$edge_lengths[Ei]
+
+  min_dists <- ifelse(t_values < 0.5, t_values * edge_length, (1 - t_values) * edge_length)
+  add_V <- min_dists > tolerance
+  time_distance_calc2 <<- time_distance_calc2 + as.numeric(Sys.time() - start_time)
+
+  start_time <- Sys.time()
   val_lines <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
   idx_positions <- val_lines[["idx"]]
   val_coords <- val_lines[["coords"]]
   time_interpolate <<- time_interpolate + as.numeric(Sys.time() - start_time)
-
-  # Start timer for distance calculation
-  start_time <- Sys.time()
-  min_dists <- ifelse(t_values < 0.5, t_values * edge_length, (1 - t_values) * edge_length)
-  add_V <- min_dists > tolerance
-  time_distance_calc2 <<- time_distance_calc2 + as.numeric(Sys.time() - start_time)
 
   # Start timer for vertex creation
   start_time <- Sys.time()
@@ -7586,9 +7666,7 @@ split_edge = function(Ei, t_values, tolerance, indices = NULL) {
   edge <- self$edges[[Ei]]
   edge_length <- self$edge_lengths[Ei]
   PtE_edge <- attr(edge, "PtE")
-  if(is.null(tolerance)){
-      tolerance <- 1e-17
-  }
+
   min_dists <- ifelse(t_values < 0.5, t_values * edge_length, (1 - t_values) * edge_length)
   add_V <- min_dists > tolerance  
   time_distance_calc <<- time_distance_calc + as.numeric(Sys.time() - start_time)
@@ -7755,10 +7833,10 @@ time_segments_creation <<- time_segments_creation + as.numeric(Sys.time() - star
   # Update self$E, self$edges, and related attributes
   start_time <- Sys.time()
   self$E[Ei, ] <- aux_matrix[1, ]
-  self$E <- rbind(self$E, aux_matrix[-1, , drop = FALSE])
+  self$E <- rbind(self$E, aux_matrix[-1,])
   self$edges[[Ei]] <- coords_list1[[1]]
   self$edges <- c(self$edges, coords_list2)
-  self$nE <- self$nE + length(coords_list2)
+  self$nE <- self$nE + length(t_values)
   time_update_structure <<- time_update_structure + as.numeric(Sys.time() - start_time)
 
   start_time <- Sys.time()
@@ -7766,10 +7844,11 @@ time_segments_creation <<- time_segments_creation + as.numeric(Sys.time() - star
   self$edge_lengths <- c(self$edge_lengths, segment_lengths[-1])
   self$edge_lengths[Ei] <- segment_lengths[1]
     if (is.vector(private$edge_weights)) {
-    private$edge_weights <- c(private$edge_weights, rep(private$edge_weights[Ei], length(coords_list2)))
+    private$edge_weights <- c(private$edge_weights, rep(private$edge_weights[Ei], length(t_values)))
   } else {
-    private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(coords_list2), private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
+    private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(t_values), private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
   }
+  time_edge_weight_update <<- time_edge_weight_update + as.numeric(Sys.time() - start_time)
 
   return(new_vertices)
 },
