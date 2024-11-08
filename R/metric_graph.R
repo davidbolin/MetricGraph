@@ -1275,7 +1275,7 @@ metric_graph <-  R6Class("metric_graph",
   edge_lengths <- self$get_edge_lengths()
   edges_PtE <- lapply(self$edges, function(edge) attr(edge, "PtE"))
   nE <- self$nE
-  
+
   # Use `lapply` with indexing for varying attributes
   self$edges <- lapply(seq_along(self$edges), function(i) {
     edge <- self$edges[[i]]
@@ -1291,12 +1291,12 @@ metric_graph <-  R6Class("metric_graph",
     attr(edge, "crs") <- private$crs$input
     attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
     attr(edge, "directional_weights") <- private$directional_weights
-    
+
     # Set the class for each edge
     class(edge) <- "metric_graph_edge"
     edge
   })
-  
+
   # Set the class of `self$edges` to `metric_graph_edges`
   class(self$edges) <- "metric_graph_edges"
   },
@@ -2549,8 +2549,8 @@ metric_graph <-  R6Class("metric_graph",
     private$temp_PtE <- cbind(private$temp_PtE, seq_len(n))
 
     # Identify start and end vertices based on the tolerance
-    is_start_vertex <- abs(private$temp_PtE[, 2]) < 1e-17
-    is_end_vertex <- private$temp_PtE[, 2] > 1 - 1e-17
+    is_start_vertex <- abs(private$temp_PtE[, 2]) < 1e-15
+    is_end_vertex <- private$temp_PtE[, 2] > 1 - 1e-15
 
     # Assign known vertices directly
     self$PtV[is_start_vertex] <- self$E[private$temp_PtE[is_start_vertex, 1], 1]
@@ -2581,7 +2581,7 @@ metric_graph <-  R6Class("metric_graph",
         }
         
         # Perform `private$split_edge`
-        new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = 1e-17, indices = indices)
+        new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = 1e-15, indices = indices)
         
         # Assign new vertices
         self$PtV[indices] <- new_vertices
