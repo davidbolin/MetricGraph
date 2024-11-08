@@ -7441,12 +7441,6 @@ format_data = function(data_res, format) {
   # @param t  position on line to split (normalized)
 
 split_edge2 = function(Ei, t_values, tolerance = 0) {
-  # Start timer for checking if t_values are sorted
-  start_time <- Sys.time()
-  if (is.unsorted(t_values)) {
-    stop("t_values must be sorted in ascending order!")
-  }
-  time_check_sorted2 <<- time_check_sorted2 + as.numeric(Sys.time() - start_time)
 
   # Start timer for interpolation
   start_time <- Sys.time()
@@ -7471,7 +7465,6 @@ split_edge2 = function(Ei, t_values, tolerance = 0) {
   
   for (i in seq_along(t_values)) {
     t <- t_values[i]
-    idx_pos <- idx_positions[i]
     val_line <- matrix(val_coords[i, , drop = FALSE], nrow = 1)
     closest_vertex <- ifelse(t < 0.5, self$E[Ei, 1], self$E[Ei, 2])
 
@@ -7587,24 +7580,14 @@ split_edge2 = function(Ei, t_values, tolerance = 0) {
 
 # Observe that by construction of get_PtE, all PtEs are sorted.
 split_edge = function(Ei, t_values, tolerance, indices = NULL) {
-  
-  # Start timer for checking if t_values are sorted
-  start_time <- Sys.time()
-  if (is.unsorted(t_values)) {
-    stop("t_values must be sorted in ascending order!")
-  }
-  time_check_sorted <<- time_check_sorted + as.numeric(Sys.time() - start_time)
-  
+    
   # Calculate distances and determine if new vertices need to be added
   start_time <- Sys.time()
   edge <- self$edges[[Ei]]
   edge_length <- self$edge_lengths[Ei]
   PtE_edge <- attr(edge, "PtE")
   if(is.null(tolerance)){
-    if(edge_length == 0){
       tolerance <- 1e-17
-    }
-    tolerance <- 1e-17/edge_length
   }
   min_dists <- ifelse(t_values < 0.5, t_values * edge_length, (1 - t_values) * edge_length)
   add_V <- min_dists > tolerance  
@@ -7616,13 +7599,36 @@ split_edge = function(Ei, t_values, tolerance, indices = NULL) {
   time_fill_na <<- time_fill_na + as.numeric(Sys.time() - start_time)
   
   # Update self$V
-  start_time <- Sys.time()
-  self$V <- rbind(self$V, as.matrix(val_lines[add_V, , drop=FALSE]))
-  closest_vertices <- ifelse(t_values < 0.5, self$E[Ei, 1], self$E[Ei, 2])
-  new_vertices <- numeric(length(t_values))
-  new_vertices[!add_V] <- closest_vertices[!add_V]
-  new_vertices[add_V] <- self$nV + 1:(sum(add_V))
-  time_v_update <<- time_v_update + as.numeric(Sys.time() - start_time)
+  # start_time <- Sys.time()
+  # self$V <- rbind(self$V, as.matrix(val_lines[add_V, , drop=FALSE]))
+  # closest_vertices <- ifelse(t_values < 0.5, self$E[Ei, 1], self$E[Ei, 2])
+  # new_vertices <- numeric(length(t_values))
+  # new_vertices[!add_V] <- closest_vertices[!add_V]
+  # new_vertices[add_V] <- self$nV + 1:(sum(add_V))
+  # time_v_update <<- time_v_update + as.numeric(Sys.time() - start_time)
+
+  # Initialize new_vertices
+new_vertices <- numeric(length(t_values))
+
+# Loop through each value in t_values, updating self$V conditionally
+for (i in seq_along(t_values)) {
+  t <- t_values[i]
+  
+  if (add_V[i]) {
+    # Add new vertex to self$V when add_V[i] is TRUE
+    val_line <- matrix(val_lines[i, , drop = FALSE], nrow = 1)
+    newV <- self$nV + 1
+    self$V <- rbind(self$V, val_line)
+    self$nV <- self$nV + 1
+  } else {
+    # Use the closest_vertex when add_V[i] is FALSE
+    closest_vertex <- ifelse(t < 0.5, self$E[Ei, 1], self$E[Ei, 2])
+    newV <- closest_vertex
+  }
+  
+  # Assign the newly created or closest vertex to new_vertices
+  new_vertices[i] <- newV
+}
 
   # Edge updates
   start_time <- Sys.time()
@@ -7641,17 +7647,6 @@ split_edge = function(Ei, t_values, tolerance, indices = NULL) {
 
   # Segment creation
   start_time <- Sys.time()
-  # split_indices <- which(df_1$add_V)
-  # start_points <- c(1, split_indices)
-  # end_points <- c(split_indices, nrow(df_1))
-  # new_edges <- vector("list", length(split_indices) + 1)
-  # edge_updates <- c(Ei, edge_updates)
-  # for (i in seq_along(new_edges)) {
-  #   new_edges[[i]] <- as.matrix(df_1[start_points[i]:end_points[i], , drop = FALSE])
-  #   tmp_PtE <- cbind(edge_updates[i], (new_edges[[i]][,1] - new_edges[[i]][1,1]) / (new_edges[[i]][nrow(new_edges[[i]]), 1] - new_edges[[i]][1,1]))
-  #   new_edges[[i]] <- new_edges[[i]][, c(2, 3), drop=FALSE]
-  #   attr(new_edges[[i]], "PtE") <- tmp_PtE
-  # }
   # Identify start and end points for segments
 df_1 <- c(t_values, PtE_edge[,2])
 df_1 <- cbind(df_1, rbind(val_lines, edge))
