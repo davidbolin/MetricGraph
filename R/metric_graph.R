@@ -1368,37 +1368,33 @@ metric_graph <-  R6Class("metric_graph",
     private$directional_weights <- if (is.vector(weights)) 1 else ".weights"
   }
 
-  # Get edge lengths and preallocate for efficiency
-  edge_lengths <- self$get_edge_lengths()
-  edges_PtE <- sapply(self$edges, function(edge) attr(edge,"PtE"))
-  nE <- self$nE
-  edge_attrs <- list(
-    weight = private$edge_weights,
-    longlat = rep(private$longlat, nE),
-    crs = rep(private$crs$input, nE),
-    length = edge_lengths,
-    id = seq_len(nE),
-    kirchhoff_weight = rep(private$kirchhoff_weights, nE),
-    directional_weight = rep(private$directional_weights, nE),
-    PtE = edges_PtE
-  )
+    edge_lengths_ <- self$get_edge_lengths()
 
-  # Set all attributes in a vectorized way
-  self$edges <- mapply(function(edge, weight, longlat, crs, length, id, kirchhoff, directional, edges_PtE) {
-    attr(edge, "weight") <- weight
-    attr(edge, "longlat") <- longlat
-    attr(edge, "crs") <- crs
-    attr(edge, "length") <- length
-    attr(edge, "id") <- id
-    attr(edge, "kirchhoff_weight") <- kirchhoff
-    attr(edge, "directional_weights") <- directional
-    attr(edge, "PtE") <- edges_PtE
-    class(edge) <- "metric_graph_edge"
-    edge
-  }, self$edges, edge_attrs$weight, edge_attrs$longlat, edge_attrs$crs, edge_attrs$length, edge_attrs$id, 
-  edge_attrs$kirchhoff_weight, edge_attrs$directional_weight, edge_attrs$PtE, SIMPLIFY = FALSE)
+    if(verbose==2){
+                message("Updating attributes of the edges")
+                bar_update_attr_edges <- msg_progress_bar(length(self$edges))
+    }
 
-  class(self$edges) <- "metric_graph_edges"
+    self$edges <- lapply(1:self$nE, function(i){
+      edge <- self$edges[[i]]
+      if(is.vector(private$edge_weights)){
+        attr(edge,"weight") <- private$edge_weights[i]
+      } else{
+        attr(edge,"weight") <- private$edge_weights[i,,drop=FALSE]
+      }
+      attr(edge, "longlat") <- private$longlat
+      attr(edge, "crs") <- private$crs$input
+      attr(edge, "length") <- edge_lengths_[i]
+      attr(edge, "id") <- i
+      attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
+      attr(edge, "directional_weights") <- private$directional_weights
+      class(edge) <- "metric_graph_edge"
+        if(verbose == 2){
+          bar_update_attr_edges$increment()
+        }   
+      return(edge)
+    })
+    class(self$edges) <- "metric_graph_edges"
 },
 
 
@@ -7768,9 +7764,10 @@ for (i in seq_along(t_values)) {
  start_time <- Sys.time()
   coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
   coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
+  tmp_vec <- c(PtE_edge[1:idx_positions[1],2], t_values[1])
 
-  pos_edge_diff <- coords_list1[, 1] - coords_list1[1, 1]
-  norm_factor <- coords_list1[nrow(coords_list1), 1] - coords_list1[1, 1]
+  pos_edge_diff <- tmp_vec - tmp_vec[1]
+  norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
   tmp_PtE <- cbind(edge_updates[1], pos_edge_diff / norm_factor)
   
   # Add tmp_PtE as an attribute
@@ -7789,22 +7786,24 @@ for (i in seq_along(t_values)) {
           edge[(idx_positions[i] + 1):idx_positions[i + 1], , drop = FALSE],
           val_line_end
         )
+        tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):idx_positions[i + 1],2], t_values[i+1])
       } else {
         coords_list2[[i]] <- rbind(
           val_line_start,
           val_line_end
         )
+        tmp_vec <- c(t_values[i], t_values[i+1])
       }
     } else {
-      val_line_end <- edge[nrow(edge), , drop = FALSE]
       coords_list2[[i]] <- rbind(
         val_line_start,
-        edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE],
-        val_line_end
+        edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE]
       )
+      tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):nrow(edge),2])
     }
-      pos_edge_diff <- coords_list2[[i]][, 1] - coords_list2[[i]][1, 1]
-      norm_factor <- coords_list2[[i]][nrow(coords_list2[[i]]), 1] - coords_list2[[i]][1, 1]
+
+      pos_edge_diff <- tmp_vec - tmp_vec[1]
+      norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
       tmp_PtE <- cbind(edge_updates[i], pos_edge_diff / norm_factor)
 
       # Add tmp_PtE as an attribute
@@ -7834,7 +7833,7 @@ time_segments_creation <<- time_segments_creation + as.numeric(Sys.time() - star
   start_time <- Sys.time()
   self$E[Ei, ] <- aux_matrix[1, ]
   self$E <- rbind(self$E, aux_matrix[-1,])
-  self$edges[[Ei]] <- coords_list1[[1]]
+  self$edges[[Ei]] <- coords_list1
   self$edges <- c(self$edges, coords_list2)
   self$nE <- self$nE + length(t_values)
   time_update_structure <<- time_update_structure + as.numeric(Sys.time() - start_time)
