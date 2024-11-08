@@ -7595,7 +7595,9 @@ split_edge = function(Ei, t_values, tolerance, indices = NULL) {
 
   # Data frame creation and filling NA values
   start_time <- Sys.time()
-  val_lines <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = FALSE)
+  val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+  idx_positions <- val_results[["idx"]]
+  val_lines <- val_results[["coords"]]
   time_fill_na <<- time_fill_na + as.numeric(Sys.time() - start_time)
   
   # Update self$V
@@ -7608,12 +7610,11 @@ split_edge = function(Ei, t_values, tolerance, indices = NULL) {
   # time_v_update <<- time_v_update + as.numeric(Sys.time() - start_time)
 
   # Initialize new_vertices
+  start_time <- Sys.time()
 new_vertices <- numeric(length(t_values))
 
 # Loop through each value in t_values, updating self$V conditionally
-for (i in seq_along(t_values)) {
-  t <- t_values[i]
-  
+for (i in seq_along(t_values)) { 
   if (add_V[i]) {
     # Add new vertex to self$V when add_V[i] is TRUE
     val_line <- matrix(val_lines[i, , drop = FALSE], nrow = 1)
@@ -7622,13 +7623,14 @@ for (i in seq_along(t_values)) {
     self$nV <- self$nV + 1
   } else {
     # Use the closest_vertex when add_V[i] is FALSE
-    closest_vertex <- ifelse(t < 0.5, self$E[Ei, 1], self$E[Ei, 2])
+    closest_vertex <- ifelse(t_values[i] < 0.5, self$E[Ei, 1], self$E[Ei, 2])
     newV <- closest_vertex
   }
   
   # Assign the newly created or closest vertex to new_vertices
   new_vertices[i] <- newV
 }
+  time_v_update <<- time_v_update + as.numeric(Sys.time() - start_time)
 
   # Edge updates
   start_time <- Sys.time()
@@ -7647,43 +7649,92 @@ for (i in seq_along(t_values)) {
 
   # Segment creation
   start_time <- Sys.time()
-  # Identify start and end points for segments
-df_1 <- c(t_values, PtE_edge[,2])
-df_1 <- cbind(df_1, rbind(val_lines, edge))
-df_1 <- unique(df_1)
-df_1 <- cbind(df_1, c(add_V, rep(FALSE, nrow(df_1)-length(add_V))))
+#   # Identify start and end points for segments
+# df_1 <- c(t_values, PtE_edge[,2])
+# df_1 <- cbind(df_1, rbind(val_lines, edge))
+# df_1 <- unique(df_1)
+# df_1 <- cbind(df_1, c(add_V, rep(FALSE, nrow(df_1)-length(add_V))))
 
-order <- order(df_1[,1])
-df_1 <- df_1[order,]
+# order <- order(df_1[,1])
+# df_1 <- df_1[order,]
 
-split_indices <- which(as.logical(df_1[,4]))
-start_points <- c(1, split_indices)
-end_points <- c(split_indices, nrow(df_1))
+# split_indices <- which(as.logical(df_1[,4]))
+# start_points <- c(1, split_indices)
+# end_points <- c(split_indices, nrow(df_1))
 
-# Pre-allocate list for new_edges and calculate size once
-num_segments <- length(split_indices) + 1
-new_edges <- vector("list", num_segments)
+#   start_time <- Sys.time()
 
-# Combine Ei with edge_updates once
-edge_updates <- c(Ei, edge_updates)
+# # Pre-allocate list for new_edges and calculate size once
+# num_segments <- length(split_indices) + 1
+# new_edges <- vector("list", num_segments)
 
-# Loop over each segment
-for (i in seq_len(num_segments)) {
-  segment <- df_1[start_points[i]:end_points[i], c(1,2,3) , drop = FALSE]
+# # Combine Ei with edge_updates once
+# edge_updates <- c(Ei, edge_updates)
+
+# # Loop over each segment
+# for (i in seq_len(num_segments)) {
+#   segment <- df_1[start_points[i]:end_points[i], c(1,2,3) , drop = FALSE]
   
-  # Convert segment to matrix format and extract only x and y columns for the final result
-  new_edges[[i]] <- segment[,c(2,3), drop=FALSE]
+#   # Convert segment to matrix format and extract only x and y columns for the final result
+#   new_edges[[i]] <- segment[,c(2,3), drop=FALSE]
   
-  # Calculate tmp_PtE only once per segment
-  pos_edge_diff <- segment[, 1] - segment[1, 1]
-  norm_factor <- segment[nrow(segment), 1] - segment[1, 1]
-  tmp_PtE <- cbind(edge_updates[i], pos_edge_diff / norm_factor)
+#   # Calculate tmp_PtE only once per segment
+#   pos_edge_diff <- segment[, 1] - segment[1, 1]
+#   norm_factor <- segment[nrow(segment), 1] - segment[1, 1]
+#   tmp_PtE <- cbind(edge_updates[i], pos_edge_diff / norm_factor)
+  
+#   # Add tmp_PtE as an attribute
+#   attr(new_edges[[i]], "PtE") <- tmp_PtE
+# }
+
+ start_time <- Sys.time()
+  coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
+  coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
+
+  pos_edge_diff <- coords_list1[, 1] - coords_list1[1, 1]
+  norm_factor <- coords_list1[nrow(coords_list1), 1] - coords_list1[1, 1]
+  tmp_PtE <- cbind(edge_updates[1], pos_edge_diff / norm_factor)
   
   # Add tmp_PtE as an attribute
-  attr(new_edges[[i]], "PtE") <- tmp_PtE
-}
+  attr(coords_list1, "PtE") <- tmp_PtE
 
-  time_segments_creation <<- time_segments_creation + as.numeric(Sys.time() - start_time)
+  coords_list2 <- vector("list", length(t_values))
+
+  for (i in seq_along(t_values)) {
+    val_line_start <- matrix(val_lines[i, , drop = FALSE], nrow = 1)
+
+    if (i < length(t_values)) {
+      val_line_end <- matrix(val_lines[i + 1, , drop = FALSE], nrow = 1)
+      if (idx_positions[i] != idx_positions[i + 1]) {
+        coords_list2[[i]] <- rbind(
+          val_line_start,
+          edge[(idx_positions[i] + 1):idx_positions[i + 1], , drop = FALSE],
+          val_line_end
+        )
+      } else {
+        coords_list2[[i]] <- rbind(
+          val_line_start,
+          val_line_end
+        )
+      }
+    } else {
+      val_line_end <- edge[nrow(edge), , drop = FALSE]
+      coords_list2[[i]] <- rbind(
+        val_line_start,
+        edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE],
+        val_line_end
+      )
+    }
+      pos_edge_diff <- coords_list2[[i]][, 1] - coords_list2[[i]][1, 1]
+      norm_factor <- coords_list2[[i]][nrow(coords_list2[[i]]), 1] - coords_list2[[i]][1, 1]
+      tmp_PtE <- cbind(edge_updates[i], pos_edge_diff / norm_factor)
+
+      # Add tmp_PtE as an attribute
+      attr(coords_list2[[i]], "PtE") <- tmp_PtE
+  }
+time_segments_creation <<- time_segments_creation + as.numeric(Sys.time() - start_time)
+
+
 
   # Construct aux_matrix for self$E
   start_time <- Sys.time()
@@ -7705,19 +7756,20 @@ for (i in seq_len(num_segments)) {
   start_time <- Sys.time()
   self$E[Ei, ] <- aux_matrix[1, ]
   self$E <- rbind(self$E, aux_matrix[-1, , drop = FALSE])
-  self$edges[[Ei]] <- new_edges[[1]]
-  self$edges <- c(self$edges, new_edges[-1])
-  self$nE <- self$nE + length(new_edges) - 1
-  self$nV <- self$nV + sum(add_V)
+  self$edges[[Ei]] <- coords_list1[[1]]
+  self$edges <- c(self$edges, coords_list2)
+  self$nE <- self$nE + length(coords_list2)
+  time_update_structure <<- time_update_structure + as.numeric(Sys.time() - start_time)
+
+  start_time <- Sys.time()
   segment_lengths <- c(t_values[1], diff(t_values), 1 - t_values[length(t_values)]) * self$edge_lengths[Ei]
   self$edge_lengths <- c(self$edge_lengths, segment_lengths[-1])
   self$edge_lengths[Ei] <- segment_lengths[1]
-  if (is.vector(private$edge_weights)) {
-    private$edge_weights <- c(private$edge_weights, rep(private$edge_weights[Ei], length(new_edges)-1))
+    if (is.vector(private$edge_weights)) {
+    private$edge_weights <- c(private$edge_weights, rep(private$edge_weights[Ei], length(coords_list2)))
   } else {
-    private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(new_edges)-1, private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
+    private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(coords_list2), private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
   }
-  time_update_structure <<- time_update_structure + as.numeric(Sys.time() - start_time)
 
   return(new_vertices)
 },
