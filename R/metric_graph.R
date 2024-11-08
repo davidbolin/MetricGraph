@@ -1173,135 +1173,6 @@ metric_graph <-  R6Class("metric_graph",
   #' @param verbose There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @return No return value. Called for its side effects.
 
-  # set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
-  #     directional_weights = NULL, verbose = 0){
-  #   if(!is.vector(weights) && !is.data.frame(weights) && !is.null(weights)){
-  #     stop("'weights' must be either a vector or a data.frame!")
-  #   }
-
-  #   if(verbose == 2){
-  #     message("Setting edge weights...")
-  #   }
-
-  #   if(!is.null(weights)){
-  #       if(is.vector(weights)){
-  #         if ( (length(weights) != 1) && (length(weights) != self$nE)){
-  #           stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
-  #         }
-  #         if(length(weights)==1){
-  #           private$edge_weights <- rep(weights, self$nE)
-  #         } else{
-  #           private$edge_weights <- weights
-  #         }
-  #       } else{
-  #         if(nrow(weights) != self$nE){
-  #           stop("The number of rows of weights must be equal to the number of edges!")
-  #         }
-  #         private$edge_weights <- weights
-  #         if(!(".weights" %in% colnames(private$edge_weights))){
-  #           private$edge_weights[, ".weights"] <- 1
-  #         }
-  #       }
-  #   } else{
-  #     weights <- private$edge_weights
-  #   }
-
-  #   if(!is.null(kirchhoff_weights)){
-  #       if(length(kirchhoff_weights)>1){
-  #         warning("Only the first entry of 'kirchhoff_weights' was used.")
-  #         kirchhoff_weights <- kirchhoff_weights[[1]]
-  #       }
-  #       if(!is.numeric(kirchhoff_weights)){
-  #         if(!is.character(kirchhoff_weights)){
-  #           stop("'kirchhoff_weights' must be either a number of a string.")
-  #         }
-  #         if(!(kirchhoff_weights%in%colnames(weights))){
-  #           stop(paste(kirchhoff_weights, "is not a column of 'weights'!"))
-  #         }
-  #       } else{
-  #         if(!is.data.frame(weights)){
-  #           if(kirchhoff_weights != 1){
-  #             stop("Since 'weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
-  #           }
-  #         } else{
-  #           if(kirchhoff_weights %%1 != 0){
-  #             stop("'kirchhoff_weights' must be an integer.")
-  #           }
-  #           if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(weights))){
-  #             stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
-  #           }
-  #         }
-  #       }
-  #       private$kirchhoff_weights <- kirchhoff_weights
-  #      } else{
-  #       if(is.vector(weights)){
-  #         private$kirchhoff_weights <- 1
-  #       } else{
-  #         private$kirchhoff_weights <- ".weights"
-  #       }        
-  #      }
-
-  #     if(!is.null(directional_weights)){
-  #       if(!is.numeric(directional_weights)){
-  #         if(!is.character(directional_weights)){
-  #           stop("'directional_weights' must be either a numerical vector of a string vector.")
-  #         }
-  #         if(!(directional_weights%in%colnames(weights))){
-  #           stop(paste(directional_weights, "is not a column of 'weights'!"))
-  #         }
-  #       } else{
-  #         if(!is.data.frame(weights)){
-  #           if(directional_weights != 1){
-  #             stop("Since 'weights' is not a data.frame, 'directional_weights' must be either NULL or 1.")
-  #           }
-  #         } else{
-  #           if(directional_weights %%1 != 0){
-  #             stop("'directional_weights' must be an integer.")
-  #           }
-  #           if((directional_weights < 1) || (directional_weights > ncol(weights))){
-  #             stop("'directional_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
-  #           }
-  #         }
-  #       }
-  #       private$directional_weights <- directional_weights
-  #      } else{
-  #       if(is.vector(weights)){
-  #         private$directional_weights <- 1
-  #       } else{
-  #         private$directional_weights <- ".weights"
-  #       }
-  #      }
-
-  #   edge_lengths_ <- self$get_edge_lengths()
-
-  #   if(verbose==2){
-  #               message("Updating attributes of the edges")
-  #               bar_update_attr_edges <- msg_progress_bar(length(self$edges))
-  #   }
-
-  #   self$edges <- lapply(1:self$nE, function(i){
-  #     edge <- self$edges[[i]]
-  #     if(is.vector(private$edge_weights)){
-  #       attr(edge,"weight") <- private$edge_weights[i]
-  #     } else{
-  #       attr(edge,"weight") <- private$edge_weights[i,,drop=FALSE]
-  #     }
-  #     attr(edge, "longlat") <- private$longlat
-  #     attr(edge, "crs") <- private$crs$input
-  #     attr(edge, "length") <- edge_lengths_[i]
-  #     attr(edge, "id") <- i
-  #     attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
-  #     attr(edge, "directional_weights") <- private$directional_weights
-  #     class(edge) <- "metric_graph_edge"
-  #       if(verbose == 2){
-  #         bar_update_attr_edges$increment()
-  #       }   
-  #     return(edge)
-  #   })
-  #   class(self$edges) <- "metric_graph_edges"
-
-  # },
-
   set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
                             directional_weights = NULL, verbose = 0) {
   # Validate input types early
@@ -1368,33 +1239,34 @@ metric_graph <-  R6Class("metric_graph",
     private$directional_weights <- if (is.vector(weights)) 1 else ".weights"
   }
 
-    edge_lengths_ <- self$get_edge_lengths()
+# Get edge lengths and preallocate attributes
+edge_lengths <- self$get_edge_lengths()
+edges_PtE <- lapply(self$edges, function(edge) attr(edge, "PtE"))
+nE <- self$nE
 
-    if(verbose==2){
-                message("Updating attributes of the edges")
-                bar_update_attr_edges <- msg_progress_bar(length(self$edges))
-    }
+# Use `lapply` with indexing for varying attributes
+self$edges <- lapply(seq_along(self$edges), function(i) {
+  edge <- self$edges[[i]]
+  if(is.data.frame(private$edge_weights)){
+    attr(edge, "weight") <- private$edge_weights[i, , drop=FALSE]
+  } else{
+    attr(edge, "weight") <- private$edge_weights[i]
+  }
+  attr(edge, "length") <- edge_lengths[i]
+  attr(edge, "id") <- i
+  attr(edge, "PtE") <- edges_PtE[[i]]
+  attr(edge, "longlat") <- private$longlat
+  attr(edge, "crs") <- private$crs$input
+  attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
+  attr(edge, "directional_weights") <- private$directional_weights
+  
+  # Set the class for each edge
+  class(edge) <- "metric_graph_edge"
+  edge
+})
 
-    self$edges <- lapply(1:self$nE, function(i){
-      edge <- self$edges[[i]]
-      if(is.vector(private$edge_weights)){
-        attr(edge,"weight") <- private$edge_weights[i]
-      } else{
-        attr(edge,"weight") <- private$edge_weights[i,,drop=FALSE]
-      }
-      attr(edge, "longlat") <- private$longlat
-      attr(edge, "crs") <- private$crs$input
-      attr(edge, "length") <- edge_lengths_[i]
-      attr(edge, "id") <- i
-      attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
-      attr(edge, "directional_weights") <- private$directional_weights
-      class(edge) <- "metric_graph_edge"
-        if(verbose == 2){
-          bar_update_attr_edges$increment()
-        }   
-      return(edge)
-    })
-    class(self$edges) <- "metric_graph_edges"
+# Set the class of `self$edges` to `metric_graph_edges`
+class(self$edges) <- "metric_graph_edges"
 },
 
 
