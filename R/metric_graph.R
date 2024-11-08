@@ -7221,6 +7221,7 @@ format_data = function(data_res, format) {
                abs(private$temp_PtE[indices, 2] - t_values) / (1 - t_values))
       )
     }
+    edge_updates <- c(Ei, edge_updates)
 
     coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
     coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
@@ -7264,7 +7265,7 @@ format_data = function(data_res, format) {
 
       pos_edge_diff <- tmp_vec - tmp_vec[1]
       norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-      tmp_PtE <- cbind(edge_updates[i], pos_edge_diff / norm_factor)
+      tmp_PtE <- cbind(edge_updates[i+1], pos_edge_diff / norm_factor)
 
       # Add tmp_PtE as an attribute
       attr(coords_list2[[i]], "PtE") <- tmp_PtE
