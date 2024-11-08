@@ -980,22 +980,20 @@ A \code{data.frame} object with observation locations. If \code{longlat = TRUE},
 Adds observation locations as vertices in the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(
-  tolerance = 1e-15,
   mesh_warning = TRUE,
-  verbose = 0
+  verbose = 0,
+  tolerance = deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{tolerance}}{Observations locations are merged to a single vertex if
-they are closer than this number (given in relative edge distance between
-0 and 1). The default is \code{1e-15}.}
-
 \item{\code{mesh_warning}}{Display a warning if the graph structure change and the metric graph has a mesh object.}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{tolerance}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Not used anymore}
 
 \item{\code{share_weights}}{Should the same weight be shared among the split edges? If \code{FALSE}, the weights will be removed, and a common weight given by 1 will be given.}
 }
@@ -2078,6 +2076,7 @@ Plots continuous function on the graph.
   X = NULL,
   type = c("ggplot", "plotly", "mapview"),
   continuous = TRUE,
+  interpolate_plot = TRUE,
   edge_weight = NULL,
   vertex_size = 5,
   vertex_color = "black",
@@ -2116,6 +2115,8 @@ evaluated at the mesh in the graph}
 
 \item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
 
+\item{\code{interpolate_plot}}{Should the values to be plotted be interpolated?}
+
 \item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.}
 
 \item{\code{vertex_size}}{Size of the vertices.}
@@ -2144,7 +2145,7 @@ evaluated at the mesh in the graph}
 
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
 
-\item{\code{improve_plot}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} There is no need to use it anymore.}
+\item{\code{improve_plot}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{interpolate} instead. There is no need to use it to improve the edges.}
 
 \item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }
