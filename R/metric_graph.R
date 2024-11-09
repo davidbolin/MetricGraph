@@ -641,6 +641,12 @@ metric_graph <-  R6Class("metric_graph",
 
     private$set_first_weights(weights = edge_weights)
 
+
+    if(verbose > 0){
+      message("Computing bounding box...")
+    }
+    private$compute_bounding_box()
+
     if(!is.null(manual_edge_lengths)){
       self$set_manual_edge_lengths(edge_lengths = manual_edge_lengths, unit = length_unit)
     }
@@ -666,7 +672,7 @@ metric_graph <-  R6Class("metric_graph",
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
     
-
+      self$compute_PtE_edges(approx = approx_edge_PtE, verbose=verbose)
 
       if(length(self$edges) > 1){
 
@@ -938,6 +944,8 @@ metric_graph <-  R6Class("metric_graph",
     if(verbose > 0){
       message("Storing the initial graph...")
     }
+    
+    self$compute_PtE_edges(approx = approx_edge_PtE, verbose=verbose)
 
     private$initial_graph <- self$clone()
 
@@ -978,9 +986,6 @@ metric_graph <-  R6Class("metric_graph",
     if(any(self$edge_lengths == 0)){
         warning("There is at least one edge of length zero. Please, consider redefining the graph.")
     }
-
-    self$compute_PtE_edges(approx = approx_edge_PtE, verbose=verbose)
-    private$compute_bounding_box()
 
   },
 
