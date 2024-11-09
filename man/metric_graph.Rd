@@ -74,6 +74,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-remove_small_circles}{\code{metric_graph$remove_small_circles()}}
 \item \href{#method-metric_graph-get_edges}{\code{metric_graph$get_edges()}}
+\item \href{#method-metric_graph-get_bounding_box}{\code{metric_graph$get_bounding_box()}}
 \item \href{#method-metric_graph-get_vertices}{\code{metric_graph$get_vertices()}}
 \item \href{#method-metric_graph-export}{\code{metric_graph$export()}}
 \item \href{#method-metric_graph-leaflet}{\code{metric_graph$leaflet()}}
@@ -315,6 +316,26 @@ Exports the edges of the MetricGraph object as an \code{sf} or \code{sp}.
 For \code{format == "sf"}, the function returns an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights.
 
 For \code{format == "sp"}, the function returns a \code{SpatialLinesDataFrame} where the data frame includes edge weights.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_bounding_box"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_bounding_box}{}}}
+\subsection{Method \code{get_bounding_box()}}{
+Bounding box of the metric graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_bounding_box(format = "sf")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{format}}{If the metric graph has a coordinate reference system, the format for the exported object. The options are \code{sf} (default), \code{sp} and \code{matrix}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A bounding box of the metric graph
 }
 }
 \if{html}{\out{<hr>}}

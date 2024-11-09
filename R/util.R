@@ -347,12 +347,43 @@ graph_starting_values <- function(graph,
   }
 
   if(is.null(model_options$start_range)){
-    if(is.null(graph$geo_dist)){
-          graph$compute_geodist(obs=FALSE)
+    bounding_box <- graph$get_bounding_box(format = "sf")
+
+    # Check if the bounding box object inherits from "bbox" (sf format)
+  if (inherits(bounding_box, "bbox")) {
+      # Extract coordinates from the bounding box
+      min_x <- bounding_box["xmin"]
+      max_x <- bounding_box["xmax"]
+      min_y <- bounding_box["ymin"]
+      max_y <- bounding_box["ymax"]
+
+      # Create points in sf format with the appropriate CRS
+      point_min_x <- sf::st_point(c(min_x, min_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+      point_max_x <- sf::st_point(c(max_x, min_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+      point_min_y <- sf::st_point(c(min_x, min_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+      point_max_y <- sf::st_point(c(min_x, max_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+
+      # Calculate the width and height
+      width <- sf::st_distance(point_min_x, point_max_x)
+      height <- sf::st_distance(point_min_y, point_max_y)
+
+      # Find the maximum dimension
+      max_dimension <- max(as.numeric(width), as.numeric(height))
+    } else {
+      # If not sf format, assume it’s a standard list and compute Euclidean distances
+      min_x <- bounding_box$min_x
+      max_x <- bounding_box$max_x
+      min_y <- bounding_box$min_y
+      max_y <- bounding_box$max_y
+
+      width <- max_x - min_x
+      height <- max_y - min_y
+      max_dimension <- max(width, height)
     }
-    finite_geodist <- is.finite(graph$geo_dist[[".vertices"]])
-    finite_geodist <- graph$geo_dist[[".vertices"]][finite_geodist]
-    prior.range.nominal <- max(finite_geodist) * 0.2
+
+    # Output the maximum dimension
+    max_dimension
+    prior.range.nominal <- max_dimension * 0.2
   } else{
     prior.range.nominal <- model_options$start_range
   }

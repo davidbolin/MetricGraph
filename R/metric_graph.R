@@ -980,6 +980,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     self$compute_PtE_edges(approx = approx_edge_PtE, verbose=verbose)
+    private$compute_bounding_box()
 
   },
 
@@ -1038,6 +1039,41 @@ metric_graph <-  R6Class("metric_graph",
       } else{
         return(self$edges)
       }
+  },
+
+  #' @description Bounding box of the metric graph
+  #' @param format If the metric graph has a coordinate reference system, the format for the exported object. The options are `sf` (default), `sp` and `matrix`.
+  #' @return A bounding box of the metric graph
+
+  get_bounding_box = function(format = "sf"){
+    bounding_box <- private$bounding_box
+      if (private$longlat) {
+      if (format == "sf") {
+        bounding_box <- sf::st_bbox(
+          c(xmin = bounding_box$min_x, 
+            ymin = bounding_box$min_y,
+            xmax = bounding_box$max_x, 
+            ymax = bounding_box$max_y),
+          crs = private$crs 
+        )
+      } else {
+        sp_bbox_matrix <- matrix(
+          c(bounding_box$min_x, bounding_box$max_x, 
+            bounding_box$min_y, bounding_box$max_y), 
+          ncol = 2, 
+          dimnames = list(c("x", "y"), c("min", "max"))
+        )
+
+        bounding_box <- sp::SpatialPolygons(
+          list(sp::Polygons(list(sp::Polygon(cbind(
+            c(sp_bbox_matrix[1, "min"], sp_bbox_matrix[1, "max"], sp_bbox_matrix[1, "max"], sp_bbox_matrix[1, "min"], sp_bbox_matrix[1, "min"]),
+            c(sp_bbox_matrix[2, "min"], sp_bbox_matrix[2, "min"], sp_bbox_matrix[2, "max"], sp_bbox_matrix[2, "max"], sp_bbox_matrix[2, "min"])
+          ))), ID = "1")), 
+          proj4string = private$proj4string  
+        )
+      }
+    }
+    return(bounding_box)
   },
 
   #' @description Exports the vertices of the MetricGraph object as an `sf`, `sp` or as a matrix.
@@ -7878,6 +7914,22 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     self$mesh$Gpet = G
     self$mesh$n.bc = length(starts)
     self$mesh$h0 = which(unlist(lapply(bc,length))>1)
+  },
+
+  # Bounding box
+
+  bounding_box = NULL,
+
+  compute_bounding_box = function(){
+    all_coords <- do.call(rbind, self$edges) 
+
+    # Calculate the bounding box
+    min_x <- min(all_coords[, 1])
+    max_x <- max(all_coords[, 1])
+    min_y <- min(all_coords[, 2])
+    max_y <- max(all_coords[, 2])
+
+    private$bounding_box <- list(min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y)
   },
 
   # Temp PtE
