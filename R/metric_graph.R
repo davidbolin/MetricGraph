@@ -2590,6 +2590,20 @@ metric_graph <-  R6Class("metric_graph",
     # Remove NA values from PtV
     self$PtV <- self$PtV[!is.na(self$PtV)]
 
+    # Update temp_PtE for the known vertices
+
+    # Find the positions in `self$E[,1]` where they match `self$PtV[is_start]` and `self$PtV[is_end]`
+    start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
+    end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
+
+    # Use vectorized assignment for `private$temp_PtE` values
+    private$temp_PtE[is_start_vertex, 1] <- start_positions
+    private$temp_PtE[is_end_vertex, 1] <- end_positions
+
+    # Assign 1 for `is_start_vertex` rows in the second column and 0 for `is_end_vertex` rows
+    private$temp_PtE[is_start_vertex, 2] <- 0
+    private$temp_PtE[is_end_vertex, 2] <- 1
+
     # Replicate edge numbers and distances for the number of groups
     n_group <- length(unique(private$data[[".group"]]))
     private$data[[".edge_number"]] <- rep(private$temp_PtE[, 1], times = n_group)
