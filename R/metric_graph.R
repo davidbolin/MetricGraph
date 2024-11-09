@@ -1829,7 +1829,6 @@ metric_graph <-  R6Class("metric_graph",
         df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
-
         df_temp2 <- standardize_df_positions(df_temp2, self)
 
         df_temp$included <- TRUE
@@ -1851,6 +1850,7 @@ metric_graph <-  R6Class("metric_graph",
                                      normalized = normalized,
                                      verbose=0,
                   suppress_warnings = TRUE)
+
       })
 
       if(verbose == 2){
@@ -2581,7 +2581,7 @@ metric_graph <-  R6Class("metric_graph",
         }
         
         # Perform `private$split_edge`
-        new_vertices <- private$split_edge(as.numeric(Ei), t_values, tolerance = 1e-15, indices = indices)
+        new_vertices <- private$split_edge(as.numeric(Ei), t_values,  indices = indices)
         
         # Assign new vertices
         self$PtV[indices] <- new_vertices
@@ -2627,6 +2627,7 @@ metric_graph <-  R6Class("metric_graph",
 
     # Update vertices and reference edges
     private$ref_edges <- map_into_reference_edge(self, verbose = verbose)
+    private$data <- standardize_df_positions(private$data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
     private$create_update_vertices(verbose = verbose)
     self$set_edge_weights(
         weights = private$edge_weights,
@@ -4583,7 +4584,7 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    fem_temp <- MetricGraph:::assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = petrov)
+    fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = petrov)
     self$mesh$C <- fem_temp$C
     self$mesh$G <- fem_temp$G
     self$mesh$B <- fem_temp$B
@@ -7205,15 +7206,12 @@ format_data = function(data_res, format) {
   },
 
   # Observe that by construction of get_PtE, all PtEs are sorted.
-  split_edge = function(Ei, t_values, tolerance, indices = NULL) {
+  split_edge = function(Ei, t_values, indices = NULL) {
 
     # Calculate distances and determine if new vertices need to be added
     edge <- self$edges[[Ei]]
     edge_length <- self$edge_lengths[Ei]
     PtE_edge <- attr(edge, "PtE")
-
-    min_dists <- ifelse(t_values < 0.5, t_values * edge_length, (1 - t_values) * edge_length)
-    add_V <- min_dists > tolerance  
 
     # Data frame creation and filling NA values
     val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
@@ -7225,33 +7223,19 @@ format_data = function(data_res, format) {
 
     # Loop through each value in t_values, updating self$V conditionally
     for (i in seq_along(t_values)) { 
-      if (add_V[i]) {
-        # Add new vertex to self$V when add_V[i] is TRUE
         val_line <- matrix(val_lines[i, , drop = FALSE], nrow = 1)
         newV <- self$nV + 1
         self$V <- rbind(self$V, val_line)
         self$nV <- self$nV + 1
-      } else {
-        # Use the closest_vertex when add_V[i] is FALSE
-        closest_vertex <- ifelse(t_values[i] < 0.5, self$E[Ei, 1], self$E[Ei, 2])
-        newV <- closest_vertex
-      }
-
-      # Assign the newly created or closest vertex to new_vertices
-      new_vertices[i] <- newV
+        new_vertices[i] <- newV
     }
 
     # Edge updates
-    edge_updates <- ifelse(add_V, NA, Ei)
+    edge_updates <- self$nE + seq_len(length(t_values))
+    
     if (!is.null(private$data) && !is.null(indices)) {
-      edge_updates[add_V] <- self$nE + cumsum(add_V[add_V])
       private$temp_PtE[indices, 1] <- edge_updates
-      private$temp_PtE[indices, 2] <- ifelse(
-        t_values < tolerance, 
-        0, 
-        ifelse(t_values > 1 - tolerance, 1, 
-               abs(private$temp_PtE[indices, 2] - t_values) / (1 - t_values))
-      )
+      private$temp_PtE[indices, 2] <- (private$temp_PtE[indices, 2] - t_values) / (1 - t_values)
     }
     edge_updates <- c(Ei, edge_updates)
 
@@ -7266,12 +7250,14 @@ format_data = function(data_res, format) {
     # Add tmp_PtE as an attribute
     attr(coords_list1, "PtE") <- tmp_PtE
 
-    coords_list2 <- vector("list", length(t_values))
+    n_t_values <- length(t_values)
+
+    coords_list2 <- vector("list", n_t_values)
 
     for (i in seq_along(t_values)) {
       val_line_start <- matrix(val_lines[i, , drop = FALSE], nrow = 1)
 
-      if (i < length(t_values)) {
+      if (i < n_t_values) {
         val_line_end <- matrix(val_lines[i + 1, , drop = FALSE], nrow = 1)
         if (idx_positions[i] != idx_positions[i + 1]) {
           coords_list2[[i]] <- rbind(
@@ -7556,13 +7542,17 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     }
     dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
     if(length(dists) > 0){
-    private$split_edge(e.u[i], dists[1], tolerance)
+    if(dists[1] > tolerance){
+      private$split_edge(e.u[i], dists[1])
+    }
     }
     if(length(dists)>1) {
       dists_up <- dists
       for(j in 2:length(dists)){
         dists_up[j] <- (dists[j] - dists[j-1])/(1 - dists[j-1])
-        private$split_edge(self$nE, dists_up[j], tolerance)
+        if(dists_up[j] > tolerance){
+          private$split_edge(self$nE, dists_up[j])
+        } 
       }
     }
   }
