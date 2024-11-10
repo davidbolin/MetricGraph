@@ -82,7 +82,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-11-07.</h4>
+modified: 2024-11-10.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -113,23 +113,18 @@ and <code>INLA</code> packages:</p>
 <p>As an example, we consider the default graph in the package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>vertex_vertex <span class="op">=</span> <span class="fl">1e-1</span>, vertex_edge <span class="op">=</span> <span class="fl">1e-3</span>, edge_edge <span class="op">=</span> <span class="fl">1e-3</span><span class="op">)</span>,</span>
-<span>                          remove_deg2 <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##  [1]  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE FALSE  TRUE FALSE  TRUE</span></span>
-<span><span class="co">## [13] FALSE FALSE FALSE  TRUE  TRUE FALSE FALSE FALSE FALSE  TRUE FALSE FALSE</span></span>
-<span><span class="co">## [25] FALSE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE  TRUE  TRUE</span></span>
-<span><span class="co">## [37] FALSE FALSE FALSE FALSE FALSE FALSE</span></span></code></pre>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>                          remove_deg2 <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-2-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>To construct a FEM approximation of a Whittle–Matérn field, we must
 first construct a mesh on the graph.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>mesh<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-3-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>The next step is to build the mass and stiffness matrices for the FEM
 basis.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">compute_fem</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>We are now ready to specify the and sample from a log-Gaussian Cox
 process model with intensity
@@ -143,7 +138,7 @@ is a Gaussian Whittle–Matérn field specified by
 (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
 </annotation></semantics></math> For this we can use the function
 <code>graph_lgcp</code> as follows:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
 <span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span>  <span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
@@ -153,19 +148,19 @@ is a Gaussian Whittle–Matérn field specified by
 <p>The object returned by the function is a list with the simulated
 Gaussian process and the points on the graph. We can plot the simulated
 intensity function as</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span><span class="op">)</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-6-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>To plot the simulated points, we can add them to the graph and then
 plot:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                         edge_number <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_numbers</span>,</span>
 <span>                                         distance_on_edge <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span>,</span>
 <span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## list()</span></span></code></pre>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>vertex_size <span class="op">=</span> <span class="fl">0</span>, data <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-7-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
@@ -190,7 +185,7 @@ and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>a</mi><mo accent="true">̃</mo></mover><annotation encoding="application/x-tex">\widetilde{a}</annotation></semantics></math>
 is a vector with integration weights. These quantities can be obtained
 as</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Atilde</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">fem_basis</span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span></span>
 <span><span class="va">atilde</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">weights</span></span></code></pre></div>
 <p>The weights are used as exposure terms in the Poisson likelihiood in
@@ -198,7 +193,7 @@ R-INLA. Because of this, the easiest way to construct the model is to
 add the integration points as zero observations in the graph, with
 corresponding exposure weights. We also need to add the exposure terms
 (which are zero) for the actual observation locations:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#clear the previous data in the graph</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -210,7 +205,7 @@ corresponding exposure weights. We also need to add the exposure terms
 <span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## list()</span></span></code></pre>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Add integration points</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">atilde</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                         e <span class="op">=</span> <span class="va">atilde</span>,</span>
@@ -223,21 +218,21 @@ corresponding exposure weights. We also need to add the exposure terms
 <code>graph_spde</code> function. For simplicity, we assume that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
 is known and fixed to the true value in the model.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p>Next, we compute the auxiliary data:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name<span class="op">=</span><span class="st">"field"</span><span class="op">)</span></span></code></pre></div>
 <p>We now create the <code>inla.stack</code> object with the
 <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack()</a></code> function. At this stage, it is important that
 the data has been added to the <code>graph</code> since it is supplied
 to the stack by using the <code>graph_spde_data()</code> function.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                  A <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                  effects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">data_rspde</span><span class="op">[[</span><span class="st">"index"</span><span class="op">]</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Intercept <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We can now fit the model using <code>R-INLA</code>:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span><span class="op">)</span>, </span>
 <span>                 family <span class="op">=</span> <span class="st">"poisson"</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>,</span>
 <span>                 control.predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>, compute <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
@@ -246,16 +241,16 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <p>Let us extract the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.414377 0.108891    0.23167 0.404832   0.655872 0.385543</span></span>
-<span><span class="co">## range   3.913140 2.590610    1.12860 3.204770  10.862400 2.266200</span></span></code></pre>
+<span><span class="co">## std.dev 0.387176 0.110141   0.204999 0.376731   0.633494 0.354758</span></span>
+<span><span class="co">## range   4.786090 4.226760   0.984177 3.504780  16.306900 2.106770</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -270,11 +265,11 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4143771 0.3855431</span></span>
-<span><span class="co">## 2     range  2.0 3.9131405 2.2662026</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.3871757 0.3547578</span></span>
+<span><span class="co">## 2     range  2.0 4.7860922 2.1067742</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">posterior_df_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -284,7 +279,7 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-16-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, we can plot the estimated field
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="fu">get_data</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="va">n.field</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">u_posterior</span> <span class="op">&lt;-</span> <span class="va">spde_fit</span><span class="op">$</span><span class="va">summary.linear.predictor</span><span class="op">$</span><span class="va">mean</span><span class="op">[</span><span class="op">(</span><span class="va">n.obs</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="op">(</span><span class="va">n.obs</span><span class="op">+</span><span class="va">n.field</span><span class="op">)</span><span class="op">]</span></span>
@@ -292,7 +287,7 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-17-1.png" width="700" style="display: block; margin: auto;"></p>
 <p>This can be compared with the field that was used to generate the
 data:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pointprocess_files/figure-html/unnamed-chunk-18-1.png" width="700" style="display: block; margin: auto;"></p>
 </div>
@@ -301,7 +296,7 @@ data:</p>
 </h2>
 <p>Let us now test show an example with replicates. Let us first
 simulate replicates of a latent field</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">n.rep</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
 <span>  <span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
 <span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
@@ -311,7 +306,7 @@ simulate replicates of a latent field</p>
 <span>                            graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>We now clear the previous data and add the new data together with the
 exposure terms</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="va">df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                             e <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -344,7 +339,7 @@ exposure terms</p>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## list()</span></span></code></pre>
 <p>We can now define and fit the model as previously</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/graph_data_rspde.html" class="external-link">graph_data_rspde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name <span class="op">=</span> <span class="st">"field"</span>, </span>
@@ -360,13 +355,13 @@ exposure terms</p>
 <span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span>, verbose<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                 num.threads <span class="op">=</span> <span class="st">"1:1"</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s look at the summaries</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.474064 0.0170101   0.441328  0.47384   0.508126 0.473506</span></span>
-<span><span class="co">## range   2.290540 0.1802430   1.956540  2.28367   2.664030 2.270400</span></span></code></pre>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<span><span class="co">## std.dev 0.468445 0.0169775   0.435747 0.468233   0.502428 0.467942</span></span>
+<span><span class="co">## range   2.284450 0.1830350   1.945690 2.277330   2.664090 2.263630</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -380,9 +375,9 @@ exposure terms</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4740636 0.473506</span></span>
-<span><span class="co">## 2     range  2.0 2.2905409 2.270400</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.4684452 0.4679418</span></span>
+<span><span class="co">## 2     range  2.0 2.2844530 2.2636305</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
