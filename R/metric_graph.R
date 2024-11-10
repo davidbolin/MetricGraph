@@ -4469,7 +4469,6 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
-      start_time <- Sys.time()
       i_  =  rep(0, 2 * self$nE)
       j_  =  rep(0, 2 * self$nE)
       x_  =  rep(0, 2 * self$nE)
@@ -4513,13 +4512,9 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                                 j = j_[1:count],
                                 x = x_[1:count],
                                 dims = c(count_constraint, 4*self$nE))
-      time_buildC <<- Sys.time() - start_time
       self$C = C
-      time_copy_C <<- Sys.time() - time_buildC
       self$CoB <- c_basis2(self$C)
-      time_compute_CoB <<- Sys.time() - time_copy_C
       self$CoB$T <- t(self$CoB$T)
-      time_transpode <<- Sys.time() - time_compute_CoB
       self$CoB$alpha <- 2
     }else{
       error("only alpha=2 implemented")
@@ -5541,9 +5536,6 @@ return(mapview_output)
                   }
             }
 
-            if(length(PtE_tmp[,1]==i) > 0){
-              PtE_tmp <- PtE_tmp[PtE_tmp[,1]==i, ,drop=FALSE]
-              PtE_tmp <- PtE_tmp[,2,drop = TRUE]
               PtE_tmp <- setdiff(PtE_tmp, vals[,1])
               if(length(PtE_tmp)>0){
                 PtE_tmp <- cbind(PtE_tmp, NA)
@@ -5551,7 +5543,6 @@ return(mapview_output)
                 colnames(PtE_tmp) <- c(".distance_on_edge", data)
                 vals <- rbind(vals,PtE_tmp)
               }
-            }
 
             ord_idx <- order(vals[,1])
             vals <- vals[ord_idx,]
