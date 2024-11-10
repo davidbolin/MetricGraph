@@ -381,9 +381,7 @@ graph_starting_values <- function(graph,
       max_dimension <- max(width, height)
     }
 
-    # Output the maximum dimension
-    max_dimension
-    prior.range.nominal <- max_dimension * 0.2
+    prior.range.nominal <- max_dimension * 0.3
   } else{
     prior.range.nominal <- model_options$start_range
   }
