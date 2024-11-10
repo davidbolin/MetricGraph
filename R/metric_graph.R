@@ -6920,13 +6920,18 @@ return(mapview_output)
           
              coords <- self$edges[[e_rem[1]]] #line from v1 to v.rem
              tmp <- self$edges[[e_rem[2]]] #line from v.rem to v2
+             PtEedge1 <- attr(coords, "PtE")[,2] * self$edge_lengths[e_rem[1]]
+             PtEedge2 <- attr(tmp, "PtE")[,2] * self$edge_lengths[e_rem[2]]
+
 
             if(which_line_starts == 1){
                coords <- rbind(coords, tmp)
                E_new <- matrix(c(v1,v2),1,2)
+               attr(coords, "PtE") <- rbind(PtEedge1,PtEedge2)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]])
             } else{
                coords <- rbind(tmp,coords)
                E_new <- matrix(c(v2,v1),1,2)
+               attr(coords, "PtE") <- rbind(PtEedge2,PtEedge1)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]])
             }
 
           # Updating the merged graph
