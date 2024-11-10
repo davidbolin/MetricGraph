@@ -6922,25 +6922,19 @@ return(mapview_output)
              tmp <- self$edges[[e_rem[2]]] #line from v.rem to v2
              PtEedge1 <- attr(coords, "PtE")[,2] 
              PtEedge2 <- attr(tmp, "PtE")[,2] 
-             print("PtEedge1") 
-             print(PtEedge1)
-
-             print("PtEedge2")
-             print(PtEedge2)
-
 
             if(which_line_starts == 1){
-               coords <- rbind(coords, tmp)
+               coords <- rbind(coords, tmp[-1,,drop=FALSE])
                E_new <- matrix(c(v1,v2),1,2)
                PtEedge1 <- PtEedge1 * self$edge_lengths[e_rem[1]]
-               PtEedge2 <- self$edge_lengths[e_rem[1]] + PtEedge2 * self$edge_lengths[e_rem[2]]
-               attr(coords, "PtE") <- cbind(e_rem[1],rbind(PtEedge1,PtEedge2)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]))
+               PtEedge2 <- self$edge_lengths[e_rem[1]] + PtEedge2[-1] * self$edge_lengths[e_rem[2]]
+               attr(coords, "PtE") <- cbind(e_rem[1],c(PtEedge1,PtEedge2)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]))
             } else{
-               coords <- rbind(tmp,coords)
+               coords <- rbind(tmp,coords[-1,,drop=FALSE])
                E_new <- matrix(c(v2,v1),1,2)
                PtEedge2 <- PtEedge2 * self$edge_lengths[e_rem[2]]               
-               PtEedge1 <- self$edge_lengths[e_rem[2]] + PtEedge1 * self$edge_lengths[e_rem[1]]
-               attr(coords, "PtE") <- cbind(e_rem[1],rbind(PtEedge2,PtEedge1)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]))
+               PtEedge1 <- self$edge_lengths[e_rem[2]] + PtEedge1[-1] * self$edge_lengths[e_rem[1]]
+               attr(coords, "PtE") <- cbind(e_rem[1],c(PtEedge2,PtEedge1)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]))
             }
 
           # Updating the merged graph
