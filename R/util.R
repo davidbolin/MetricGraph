@@ -368,7 +368,7 @@ graph_starting_values <- function(graph,
       height <- sf::st_distance(point_min_y, point_max_y)
 
       # Find the maximum dimension
-      max_dimension <- max(as.numeric(width), as.numeric(height))
+      max_dimension <- max(as.numeric(width), as.numeric(height))/1000
     } else {
       # If not sf format, assume it’s a standard list and compute Euclidean distances
       min_x <- bounding_box$min_x
