@@ -1612,7 +1612,6 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
   
   p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
   p
-  p
 }
 
 #' @name predict.rspde_metric_graph

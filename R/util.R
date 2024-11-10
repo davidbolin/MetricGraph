@@ -1765,6 +1765,7 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
   } else{
   cat("Relative positions of the edge:\n")
   PtE <- attr(x, "PtE")
+  PtE <- cbind(attr(x, "id"), PtE)
   PtE_df <- data.frame(a = PtE[,1], b = PtE[,2]) 
   colnames(PtE_df) <- c("Edge number","Distance on edge")
   print(PtE_df[1:min(n,nrow(edge_df)),], row.names=FALSE)

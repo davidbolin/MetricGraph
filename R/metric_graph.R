@@ -2196,7 +2196,7 @@ metric_graph <-  R6Class("metric_graph",
     }
     self$edges <- lapply(1:length(self$edges), function(j){
       edge <- self$edges[[j]]
-      attr(edge, "PtE") <- cbind(j, edges_PtE[[j]])
+      attr(edge, "PtE") <- edges_PtE[[j]]
       return(edge)
     })
     class(self$edges) <- "metric_graph_edges"
@@ -2439,6 +2439,8 @@ metric_graph <-  R6Class("metric_graph",
         }      
       return(edge)
     })
+
+
 
    })
    if(verbose == 2){
@@ -4467,6 +4469,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
+      start_time <- Sys.time()
       i_  =  rep(0, 2 * self$nE)
       j_  =  rep(0, 2 * self$nE)
       x_  =  rep(0, 2 * self$nE)
@@ -4510,10 +4513,13 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
                                 j = j_[1:count],
                                 x = x_[1:count],
                                 dims = c(count_constraint, 4*self$nE))
+      time_buildC <<- Sys.time() - start_time
       self$C = C
-
+      time_copy_C <<- Sys.time() - time_buildC
       self$CoB <- c_basis2(self$C)
+      time_compute_CoB <<- Sys.time() - time_copy_C
       self$CoB$T <- t(self$CoB$T)
+      time_transpode <<- Sys.time() - time_compute_CoB
       self$CoB$alpha <- 2
     }else{
       error("only alpha=2 implemented")
@@ -5306,7 +5312,7 @@ return(mapview_output)
       }
     }
 
-    PtE_edges <- lapply(1:length(self$edges), function(i){attr(self$edges[[i]], "PtE")})
+    PtE_edges <- lapply(self$edges, function(edge){attr(edge, "PtE")})
 
     x.loc <- y.loc <- z.loc <- i.loc <- NULL
     kk = 1
@@ -5346,8 +5352,6 @@ return(mapview_output)
 
         if(interpolate_plot){
           PtE_tmp <- PtE_edges[[i]]
-          PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
-          PtE_tmp <- PtE_tmp[,2, drop=TRUE]
           PtE_tmp <- setdiff(PtE_tmp, vals[,1])
           if(length(PtE_tmp)>0){
                 PtE_tmp <- cbind(PtE_tmp, NA)
@@ -5497,22 +5501,6 @@ return(mapview_output)
             }
         } else {        
             PtE_tmp <- PtE_edges[[i]]
-            if(PtE_tmp[1,1] != i){
-              edge_new <- PtE_tmp[1,1]
-              idx_new <- which(X[,1] == edge_new)
-              new_val <- X[idx_new, 2:3, drop=FALSE]
-              if(nrow(new_val)>0){
-                sum_fact <- ifelse(max(vals[,1]==1),  -1e-6,  min(new_val[,1]))
-                sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  max(new_val[,1]))
-                pos_edge <- which(self$E[edge_new,] == self$E[i,1])
-                if(pos_edge == 2){
-                  new_val[,1] <- new_val[,1] - sub_fact
-                } else {
-                  new_val[,1] <- -new_val[,1] + sum_fact
-                }
-                vals <- rbind(vals, new_val)
-              }
-            } else{
               if(any(self$E[,2] == self$E[i,1])){
                 edge_new <- which(self$E[,2] == self$E[i,1])[1]
                 idx_new <- which(X[,1] == edge_new)
@@ -5532,24 +5520,7 @@ return(mapview_output)
                   vals <- rbind(vals, new_val)
                 }
               }
-            }
 
-            if (PtE_tmp[nrow(PtE_tmp), 1]!=i){
-              edge_new <- PtE_tmp[nrow(PtE_tmp), 1]
-              idx_new <- which(X[,1] == edge_new)
-              new_val <- X[idx_new, 2:3, drop=FALSE]
-              if(nrow(new_val)>0){
-                sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  -max(new_val[,1]) - 1)
-                sum_fact <- ifelse(max(vals[,1]==1),  1+1e-6,  1-min(new_val[,1]))
-                pos_edge <- which(self$E[edge_new,] == self$E[i,2])
-                if(pos_edge == 2){
-                  new_val[,1] <- -new_val[,1] - sub_fact
-                } else {
-                  new_val[,1] <- new_val[,1] + sum_fact
-                }
-                vals <- rbind(vals, new_val)
-              }
-            } else {
                 if (any(self$E[,1] == self$E[i,2])){
                   edge_new <- which(self$E[,1] == self$E[i,2])[1]
                   idx_new <- which(X[,1] == edge_new)
@@ -5568,7 +5539,6 @@ return(mapview_output)
                     new_val[,1] <- -new_val[,1] - sum_fact
                     vals <- rbind(vals, new_val)
                   }
-              }
             }
 
             if(length(PtE_tmp[,1]==i) > 0){
@@ -5715,8 +5685,6 @@ return(mapview_output)
       } else if(interpolate_plot){
 
           PtE_tmp <- PtE_edges[[i]]
-          PtE_tmp <- PtE_tmp[PtE_tmp[,1] == i,, drop=FALSE]
-          PtE_tmp <- PtE_tmp[,2, drop=TRUE]
           PtE_tmp <- setdiff(PtE_tmp, vals[,1])
           if(length(PtE_tmp)>0){
                 PtE_tmp <- cbind(PtE_tmp, NA)
@@ -6920,21 +6888,21 @@ return(mapview_output)
           
              coords <- self$edges[[e_rem[1]]] #line from v1 to v.rem
              tmp <- self$edges[[e_rem[2]]] #line from v.rem to v2
-             PtEedge1 <- attr(coords, "PtE")[,2] 
-             PtEedge2 <- attr(tmp, "PtE")[,2] 
+             PtEedge1 <- attr(coords, "PtE")
+             PtEedge2 <- attr(tmp, "PtE")
 
             if(which_line_starts == 1){
                coords <- rbind(coords, tmp[-1,,drop=FALSE])
                E_new <- matrix(c(v1,v2),1,2)
                PtEedge1 <- PtEedge1 * self$edge_lengths[e_rem[1]]
                PtEedge2 <- self$edge_lengths[e_rem[1]] + PtEedge2[-1] * self$edge_lengths[e_rem[2]]
-               attr(coords, "PtE") <- cbind(e_rem[1],c(PtEedge1,PtEedge2)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]))
+               attr(coords, "PtE") <- c(PtEedge1,PtEedge2)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]])
             } else{
                coords <- rbind(tmp,coords[-1,,drop=FALSE])
                E_new <- matrix(c(v2,v1),1,2)
                PtEedge2 <- PtEedge2 * self$edge_lengths[e_rem[2]]               
                PtEedge1 <- self$edge_lengths[e_rem[2]] + PtEedge1[-1] * self$edge_lengths[e_rem[1]]
-               attr(coords, "PtE") <- cbind(e_rem[1],c(PtEedge2,PtEedge1)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]]))
+               attr(coords, "PtE") <- c(PtEedge2,PtEedge1)/(self$edge_lengths[e_rem[1]] + self$edge_lengths[e_rem[2]])
             }
 
           # Updating the merged graph
@@ -7304,11 +7272,11 @@ format_data = function(data_res, format) {
 
     coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
     coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
-    tmp_vec <- c(PtE_edge[1:idx_positions[1], 2], t_values[1])
+    tmp_vec <- c(PtE_edge[1:idx_positions[1]], t_values[1])
 
     pos_edge_diff <- tmp_vec - tmp_vec[1]
     norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-    tmp_PtE <- cbind(edge_updates[1], pos_edge_diff / norm_factor)
+    tmp_PtE <- pos_edge_diff / norm_factor
 
     # Add tmp_PtE as an attribute
     attr(coords_list1, "PtE") <- tmp_PtE
@@ -7328,7 +7296,7 @@ format_data = function(data_res, format) {
             edge[(idx_positions[i] + 1):idx_positions[i + 1], , drop = FALSE],
             val_line_end
           )
-          tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):idx_positions[i + 1], 2], t_values[i + 1])
+          tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):idx_positions[i + 1]], t_values[i + 1])
         } else {
           coords_list2[[i]] <- rbind(
             val_line_start,
@@ -7341,12 +7309,12 @@ format_data = function(data_res, format) {
           val_line_start,
           edge[(idx_positions[i] + 1):nrow(edge), , drop = FALSE]
         )
-        tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):nrow(edge), 2])
+        tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):nrow(edge)])
       }
 
       pos_edge_diff <- tmp_vec - tmp_vec[1]
       norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-      tmp_PtE <- cbind(edge_updates[i+1], pos_edge_diff / norm_factor)
+      tmp_PtE <- pos_edge_diff / norm_factor
 
       # Add tmp_PtE as an attribute
       attr(coords_list2[[i]], "PtE") <- tmp_PtE
