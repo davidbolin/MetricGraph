@@ -2329,7 +2329,7 @@ metric_graph <-  R6Class("metric_graph",
           edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
 
           # Compare the edges normally, treating NA == NA as TRUE via the placeholder
-          cnd_tmp <- edge_weights_copy[edges_tmp[, 1]] == edge_weights_copy[edges_tmp[, 2]]
+          cnd_tmp <- edge_weights_copy[edges_tmp[, 1]] != edge_weights_copy[edges_tmp[, 2]]
         } else {
           # For matrices, replace NA with a unique placeholder in a temporary copy
           edge_weights_copy <- private$edge_weights
@@ -2337,7 +2337,7 @@ metric_graph <-  R6Class("metric_graph",
 
           # Perform row-wise comparison, each row must have all columns matching
           cnd_tmp <- rowSums(
-            edge_weights_copy[edges_tmp[, 1], , drop = FALSE] == edge_weights_copy[edges_tmp[, 2], , drop = FALSE]
+            edge_weights_copy[edges_tmp[, 1], , drop = FALSE] != edge_weights_copy[edges_tmp[, 2], , drop = FALSE]
           ) == ncol(edge_weights_copy)
         }
 
