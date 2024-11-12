@@ -25,10 +25,6 @@ c_basis2 <- function(A, eps_limit = 1e-10) {
     .Call(`_MetricGraph_c_basis2`, A, eps_limit)
 }
 
-c_basis2_v2 <- function(A, eps_limit = 1e-10) {
-    .Call(`_MetricGraph_c_basis2_v2`, A, eps_limit)
-}
-
 construct_constraint_matrix <- function(E, nV, edge_constraint) {
     .Call(`_MetricGraph_construct_constraint_matrix`, E, nV, edge_constraint)
 }

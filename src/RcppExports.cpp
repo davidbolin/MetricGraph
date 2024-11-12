@@ -23,18 +23,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// c_basis2_v2
-Rcpp::List c_basis2_v2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
-RcppExport SEXP _MetricGraph_c_basis2_v2(SEXP ASEXP, SEXP eps_limitSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
-    Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_basis2_v2(A, eps_limit));
-    return rcpp_result_gen;
-END_RCPP
-}
 // construct_constraint_matrix
 Eigen::SparseMatrix<double> construct_constraint_matrix(const Eigen::MatrixXi& E, int nV, int edge_constraint);
 RcppExport SEXP _MetricGraph_construct_constraint_matrix(SEXP ESEXP, SEXP nVSEXP, SEXP edge_constraintSEXP) {
@@ -118,7 +106,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
-    {"_MetricGraph_c_basis2_v2", (DL_FUNC) &_MetricGraph_c_basis2_v2, 2},
     {"_MetricGraph_construct_constraint_matrix", (DL_FUNC) &_MetricGraph_construct_constraint_matrix, 3},
     {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 4},
     {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},

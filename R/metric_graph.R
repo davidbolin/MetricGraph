@@ -4480,19 +4480,6 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
     }
   },
 
-  buildC_v2 = function(alpha = 2, edge_constraint = FALSE) {
-    if(alpha == 2){
-      temp_E <- apply(self$E,2,as.integer)
-
-      self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
-      self$CoB <- c_basis2_v2(self$C)
-      self$CoB$T <- t(self$CoB$T)
-      self$CoB$alpha <- 2
-    }else{
-      error("only alpha=2 implemented")
-    }
-  },
-
   #' @description Builds mesh object for graph.
   #' @param h Maximum distance between mesh nodes (should be provided if n is
   #' not provided).
