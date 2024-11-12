@@ -303,7 +303,9 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param log_scale Should the initial values be returned in log scale?
 #' @param rec_tau Should a starting value for the reciprocal of tau be given?
 #' @param model_options List object containing the model options.
-#'
+#' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
+#' @param max_dim_start_range Should the maximum between the dimensions of the bounding box of the metric graph be used? If `FALSE`, the minimum will be used.
+
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
 graph_starting_values <- function(graph,
@@ -317,7 +319,9 @@ graph_starting_values <- function(graph,
                                   like_format = FALSE,
                                   log_scale = FALSE,
                                   model_options = list(),
-                                  rec_tau = TRUE){
+                                  rec_tau = TRUE,
+                                  factor_start_range = 0.3,
+                                  max_dim_start_range = TRUE){
 
   check_graph(graph)
 
@@ -368,7 +372,11 @@ graph_starting_values <- function(graph,
       height <- sf::st_distance(point_min_y, point_max_y)
 
       # Find the maximum dimension
-      max_dimension <- max(as.numeric(width), as.numeric(height))/1000
+      if(max_dim_start_range){
+        dimension_size <- max(as.numeric(width), as.numeric(height))/1000
+      } else{
+        dimension_size <- min(as.numeric(width), as.numeric(height))/1000
+      }
     } else {
       # If not sf format, assume it’s a standard list and compute Euclidean distances
       min_x <- bounding_box$min_x
@@ -378,10 +386,14 @@ graph_starting_values <- function(graph,
 
       width <- max_x - min_x
       height <- max_y - min_y
-      max_dimension <- max(width, height)
+      if(max_dim_start_range){
+        dimension_size <- max(width, height)
+      } else{
+        dimension_size <- min(width, height)
+      }
     }
 
-    prior.range.nominal <- max_dimension * 0.3
+    prior.range.nominal <- dimension_size * factor_start_range
   } else{
     prior.range.nominal <- model_options$start_range
   }

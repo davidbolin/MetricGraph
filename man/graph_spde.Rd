@@ -18,6 +18,8 @@ graph_spde(
   prior_sigma = NULL,
   start_tau = NULL,
   prior_tau = NULL,
+  factor_start_range = 0.3,
+  max_dim_start_range = TRUE,
   shared_lib = "detect",
   debug = FALSE,
   verbose = 0
@@ -56,6 +58,10 @@ the log scale. Will not be used if prior.kappa is non-null.}
 
 \item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of tau on the log scale.}
+
+\item{factor_start_range}{Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.}
+
+\item{max_dim_start_range}{Should the maximum between the dimensions of the bounding box of the metric graph be used? If \code{FALSE}, the minimum will be used.}
 
 \item{shared_lib}{Which shared lib to use for the cgeneric implementation?
 If "detect", it will check if the shared lib exists locally, in which case it will

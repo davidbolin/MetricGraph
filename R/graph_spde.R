@@ -24,6 +24,8 @@
 #' @param start_kappa Starting value for kappa.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
+#' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
+#' @param max_dim_start_range Should the maximum between the dimensions of the bounding box of the metric graph be used? If `FALSE`, the minimum will be used.
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
 #' If "detect", it will check if the shared lib exists locally, in which case it will
 #' use it. Otherwise it will use 'INLA's shared library.
@@ -68,6 +70,8 @@ graph_spde <- function(graph_object,
                        prior_sigma = NULL,
                        start_tau = NULL,
                        prior_tau = NULL,
+                       factor_start_range = 0.3,
+                       max_dim_start_range = TRUE,
                        shared_lib = "detect",
                        debug = FALSE,
                        verbose = 0){
@@ -318,7 +322,9 @@ graph_spde <- function(graph_object,
           message("Computing starting values...")
       }
       start_values_vector <- graph_starting_values(graph_spde,
-                      model = model_start, data=FALSE)$start_values
+                      model = model_start, data=FALSE,
+                      factor_start_range = factor_start_range,
+                      max_dim_start_range = max_dim_start_range)$start_values
 
       prior_kappa$meanlog <- log(start_values_vector[3])
       prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
