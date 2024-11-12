@@ -23,6 +23,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// c_basis2_v2
+Rcpp::List c_basis2_v2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+RcppExport SEXP _MetricGraph_c_basis2_v2(SEXP ASEXP, SEXP eps_limitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_basis2_v2(A, eps_limit));
+    return rcpp_result_gen;
+END_RCPP
+}
+// construct_constraint_matrix
+Eigen::SparseMatrix<double> construct_constraint_matrix(const Eigen::MatrixXi& E, int nV, int edge_constraint);
+RcppExport SEXP _MetricGraph_construct_constraint_matrix(SEXP ESEXP, SEXP nVSEXP, SEXP edge_constraintSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type E(ESEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    Rcpp::traits::input_parameter< int >::type edge_constraint(edge_constraintSEXP);
+    rcpp_result_gen = Rcpp::wrap(construct_constraint_matrix(E, nV, edge_constraint));
+    return rcpp_result_gen;
+END_RCPP
+}
 // assemble_fem
 Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool petrov);
 RcppExport SEXP _MetricGraph_assemble_fem(SEXP ESEXP, SEXP h_eSEXP, SEXP nVSEXP, SEXP petrovSEXP) {
@@ -93,6 +118,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
+    {"_MetricGraph_c_basis2_v2", (DL_FUNC) &_MetricGraph_c_basis2_v2, 2},
+    {"_MetricGraph_construct_constraint_matrix", (DL_FUNC) &_MetricGraph_construct_constraint_matrix, 3},
     {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 4},
     {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},
     {"_MetricGraph_interpolate2_aux", (DL_FUNC) &_MetricGraph_interpolate2_aux, 3},

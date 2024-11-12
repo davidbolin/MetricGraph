@@ -122,6 +122,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-setDirectionalWeightFunction}{\code{metric_graph$setDirectionalWeightFunction()}}
 \item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
+\item \href{#method-metric_graph-buildC_v2}{\code{metric_graph$buildC_v2()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
@@ -1776,6 +1777,15 @@ in the same vertex)
 \subsection{Returns}{
 No return value. Called for its side effects.
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-buildC_v2"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-buildC_v2}{}}}
+\subsection{Method \code{buildC_v2()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$buildC_v2(alpha = 2, edge_constraint = FALSE)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-build_mesh"></a>}}

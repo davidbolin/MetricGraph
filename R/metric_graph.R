@@ -4469,51 +4469,23 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
-      i_  =  rep(0, 2 * self$nE)
-      j_  =  rep(0, 2 * self$nE)
-      x_  =  rep(0, 2 * self$nE)
+      temp_E <- apply(self$E,2,as.integer)
 
-      count_constraint <- 0
-      count <- 0
-      for (v in 1:self$nV) {
-        lower_edges  <- which(self$E[, 1] %in% v)
-        upper_edges  <- which(self$E[, 2] %in% v)
-        n_e <- length(lower_edges) + length(upper_edges)
-
-        #derivative constraint
-        if ((edge_constraint & n_e ==1) | n_e > 1) {
-          i_[count + 1:n_e] <- count_constraint + 1
-          j_[count + 1:n_e] <- c(4 * (lower_edges-1) + 2, 4 * (upper_edges-1) + 4)
-          x_[count + 1:n_e] <- c(rep(1,length(lower_edges)),
-                                 rep(-1,length(upper_edges)))
-          count <- count + n_e
-          count_constraint <- count_constraint + 1
-        }
-        if (n_e > 1) {
-          if (length(upper_edges) == 0) {
-            edges <- cbind(lower_edges, 1)
-          } else if(length(lower_edges) == 0){
-            edges <- cbind(upper_edges, 3)
-          }else{
-            edges <- rbind(cbind(lower_edges, 1),
-                           cbind(upper_edges, 3))
-          }
-          for (i in 2:n_e) {
-            i_[count + 1:2] <- count_constraint + 1
-            j_[count + 1:2] <- c(4 * (edges[i-1,1] - 1) + edges[i-1, 2],
-                                 4 * (edges[i,1]   - 1) + edges[i,   2])
-            x_[count + 1:2] <- c(1,-1)
-            count <- count + 2
-            count_constraint <- count_constraint + 1
-          }
-        }
-      }
-      C <- Matrix::sparseMatrix(i = i_[1:count],
-                                j = j_[1:count],
-                                x = x_[1:count],
-                                dims = c(count_constraint, 4*self$nE))
-      self$C = C
+      self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
       self$CoB <- c_basis2(self$C)
+      self$CoB$T <- t(self$CoB$T)
+      self$CoB$alpha <- 2
+    }else{
+      error("only alpha=2 implemented")
+    }
+  },
+
+  buildC_v2 = function(alpha = 2, edge_constraint = FALSE) {
+    if(alpha == 2){
+      temp_E <- apply(self$E,2,as.integer)
+
+      self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
+      self$CoB <- c_basis2_v2(self$C)
       self$CoB$T <- t(self$CoB$T)
       self$CoB$alpha <- 2
     }else{
