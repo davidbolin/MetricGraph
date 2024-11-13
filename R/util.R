@@ -2099,7 +2099,7 @@ get_idx_within_merge_tolerance <- function(PtE, group_vector, aux_length, tolera
               # Get indices of rows for the current edge within the current group
               edge_indices <- group_indices[PtE[group_indices, 1] == edge]
               # Apply the filtering function
-              filter_indices_by_tolerance(edge_indices, PtE[edge_indices, 2])
+              filter_indices_by_tolerance(edge_indices, PtE[edge_indices, 2], tolerance)
           }))
       }))
   } else{

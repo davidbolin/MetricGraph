@@ -3852,8 +3852,12 @@ metric_graph <-  R6Class("metric_graph",
         aux_length <- self$edge_lengths[PtE[,1]] * PtE[,2]
 
         merge_idx <- get_idx_within_merge_tolerance(PtE, group_vector, aux_length, tolerance_merge)
+
+        removed_merge_idx <- setdiff(1:length(ord_idx), merge_idx)
         
-        removed_merge <- lapply(data, function(dat){dat[!merge_idx]})
+        removed_merge <- lapply(data, function(dat){dat[removed_merge_idx]})
+        removed_merge[[".edge_number"]] <- PtE[removed_merge_idx, 1]
+        removed_merge[[".distance_on_edge"]] <- PtE[removed_merge_idx, 2]
 
         data <- lapply(data, function(dat){dat[merge_idx]})
         group_vector <- group_vector[merge_idx]
