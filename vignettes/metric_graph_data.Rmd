@@ -338,6 +338,79 @@ graph$plot(data = "y") + geom_point(rem_obs$removed, mapping = aes(x=.coord_x, y
 
 Therefore, the practitioner can use this information, to decide the best strategy to handle such observations.
 
+# Merging observations when adding them
+
+Let us now consider the situation in which we have observations very close, which can sometimes might lead to instabilities when fitting models. By default nothing is done is this case. To handle such cases, we have the `tolerance_merge` argument, for which observations on a common edge within this tolerance will be merged, for which the default value is `0`. We have three alternative strategies: `remove`, `merge` and `average`. These can be set by using the `merge_strategy` argument.
+
+It is also important to note that, by default, the removed observations due to merge will be returned from the `add_observations()` call.
+
+Let us illustrate with a simple example. First, with the merge strategy set to `merge`. For this strategy, the observations will be merged by filling the `NA` columns of the observations within the tolerance region, by some non-NA value from an observation within the same tolerance region. 
+
+Let us create a simple `data.frame` with some observations that are close to each other:
+```{r}
+df_graph <- data.frame(
+    y = c(NA, 2, 3, 4, 1, 10),
+    edge_number = c(1, 2, 3, 4, 1, 2),
+    distance_on_edge = c(0.5, 0.5, 0.5, 0.5, 0.449, 0.45),
+    z = c(10, NA, 30, 40, NA, 60),
+    w = c("a", "b", "c", "d", "e", NA)
+)
+
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE)
+```
+
+let us look at the data
+
+```{r}
+graph$get_data()
+```
+
+We will merge these observations, with the removal strategy, by setting `tolerance_merge` to `0.1`:
+
+```{r}
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE, 
+                        merge_strategy = "merge", tolerance_merge = 0.1)
+```
+
+We can see from the output that the merged observations were returned. Now, let us look at the data added to the graph with this merge strategy:
+
+```{r}
+graph$get_data()
+```
+
+We can observe that the `NA` values were filled by the ones from the observations within the same tolerance region.
+
+Now, let us see the `remove` strategy. For this strategy, the observations that are within the tolerance from each other will be removed, keeping only one observation per "tolerance region". 
+
+```{r}
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE, 
+                        merge_strategy = "remove", tolerance_merge = 0.1)
+```
+
+We can see the removed observations due to merge, now let us check the added observations:
+
+```{r}
+graph$get_data()
+```
+
+We can see that the observations that were within the tolerance region were removed, and the added observations did not have their `NA` values filled in. So, it was a simple removal of observations within the same tolerance region.
+
+Finally, let us look at the `average` merge strategy. For this strategy, the non-NA values of numerical columns of observations that are within the tolerance from each other will be averaged, keeping only one observation per "tolerance region". But for non-numerical columns, the behavior is identical to the `merge` strategy, that is, if the column has a non-NA value, it will be kept as is, but if it has an NA value, a search for a non-NA value will be performed across the observations within the tolerance region. Let us illustrate this:
+
+```{r}
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE, 
+                        merge_strategy = "average", tolerance_merge = 0.1)
+```
+
+Observe that the removed observations due to merge were returned. Now, let us look at the data inside the graph:
+
+```{r}
+graph$get_data()
+```
+
+We can observe that for columns `z` and `w`, the `NA` values were filled by the ones from the observations within the same tolerance region. However, for column `y`, the non-NA values were averaged.
+
+
 # Manipulating data from metric graphs in the tidyverse style
 
 In this section we will present some data manipulation tools that are implemented in metric graphs and can be safely used. 

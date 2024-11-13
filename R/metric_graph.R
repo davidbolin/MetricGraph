@@ -3410,7 +3410,7 @@ metric_graph <-  R6Class("metric_graph",
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
   #' @param tolerance_merge tolerance (in edge_length units) for merging points that are very close and are on a common edge. By default, this tolerance is zero, meaning no merges will be performed.
-  #' @param merge_strategy The strategies to handle observations that are within the tolerance. The options are `remove`, `merge`, `average`. The default is `remove`, meaning that if two observations are within the tolerance one of them will be removed. The second strategy `merge`, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. Finally, `average` will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.
+  #' @param merge_strategy The strategies to handle observations that are within the tolerance. The options are `remove`, `merge`, `average`. The default is `merge`, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. The second strategy is `remove`, meaning that if two observations are within the tolerance one of them will be removed. Finally, `average` will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.
   #' @param return_removed Should the removed data (if it exists) due to being projected to the same place when using 'closest' `duplicated_strategy`, or due to some merge strategy, be returned?
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param suppress_warnings Suppress warnings related to duplicated observations?
@@ -3433,7 +3433,7 @@ metric_graph <-  R6Class("metric_graph",
                               include_distance_to_graph = TRUE,
                               return_removed = TRUE,
                               tolerance_merge = 0,
-                              merge_strategy = "remove",
+                              merge_strategy = "merge",
                               verbose = 1,
                               suppress_warnings = FALSE,
                               Spoints = lifecycle::deprecated()) {
