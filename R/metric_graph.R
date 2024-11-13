@@ -3864,13 +3864,10 @@ metric_graph <-  R6Class("metric_graph",
         PtE <- PtE[merge_idx,,drop=FALSE]
 
         if(merge_strategy %in% c("average", "merge")){
-          merge_idx_map <- setNames(merge_idx, seq_along(merge_idx))
+          merge_idx_map <- setNames(seq_along(merge_idx), as.character(merge_idx))
           ref_idx_merges <- find_merged_indices_for_unselected(merge_idx, length(ord_idx))
-
           data <- apply_merge_strategy(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy)
         }
-
-
     }
 
     # Process the data (find all the different coordinates

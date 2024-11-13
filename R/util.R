@@ -2181,30 +2181,9 @@ find_merged_indices_for_unselected <- function(selected_rows, total_rows) {
     return(merged_indices)
 }
 
-# function to apply the chosen merge strategy
-#' @noRd
-apply_merge_strategy <- function(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy) {
-    # Loop over each reference index in ref_idx_merges
-    for (i in seq_along(ref_idx_merges)) {
-        ref_idx <- merge_idx_map[ref_idx_merges[i]]  # Map reference index in ref_idx_merges to data index
-        removed_indices <- which(ref_idx_merges == ref_idx_merges[i])  # Get removed observations linked to this ref_idx
-        
-        if (merge_strategy == "merge") {
-            # Apply "merge" strategy to fill in missing values from removed_merge
-            data <- fill_na_merge(data, removed_merge, ref_idx, removed_indices)
-        } else if (merge_strategy == "average") {
-            # Apply "average" strategy to fill in missing values, averaging if numeric
-            data <- fill_na_average(data, removed_merge, ref_idx, removed_indices)
-        }
-    }
-    
-    return(data)
-}
-
 # Helper function to fill missing values using "merge" strategy
 #' @noRd
 fill_na_merge <- function(data, removed_merge, ref_idx, removed_indices) {
-    # Iterate over each column in the data list
     for (col in names(data)) {
         # Check if the current entry has NA for the reference row
         if (is.na(data[[col]][ref_idx])) {
@@ -2218,6 +2197,27 @@ fill_na_merge <- function(data, removed_merge, ref_idx, removed_indices) {
             }
         }
     }
+    return(data)
+}
+
+# Main function to apply the chosen merge strategy
+#' @noRd
+apply_merge_strategy <- function(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy) {
+    for (i in seq_along(ref_idx_merges)) {
+        # Access the mapped index using the character version of ref_idx_merges[i]
+        ref_idx <- as.integer(merge_idx_map[as.character(ref_idx_merges[i])])
+        
+        # Get the removed observations linked to this ref_idx
+        removed_indices <- which(ref_idx_merges == ref_idx_merges[i])
+        
+        # Apply the merge or average strategy based on `merge_strategy`
+        if (merge_strategy == "merge") {
+            data <- fill_na_merge(data, removed_merge, ref_idx, removed_indices)
+        } else if (merge_strategy == "average") {
+            data <- fill_na_average(data, removed_merge, ref_idx, removed_indices)
+        }
+    }
+    
     return(data)
 }
 
