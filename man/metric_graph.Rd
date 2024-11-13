@@ -1246,6 +1246,8 @@ Add observations to the metric graph.
   duplicated_strategy = "closest",
   include_distance_to_graph = TRUE,
   return_removed = TRUE,
+  tolerance_merge = 0,
+  merge_strategy = "remove",
   verbose = 1,
   suppress_warnings = FALSE,
   Spoints = lifecycle::deprecated()
@@ -1308,7 +1310,11 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 
 \item{\code{include_distance_to_graph}}{When \code{data_coord} is 'spatial', should the distance of the observations to the graph be included as a column?}
 
-\item{\code{return_removed}}{Should the removed data (if it exists) due to being projected to the same place when using 'closest' \code{duplicated_strategy} be returned?}
+\item{\code{return_removed}}{Should the removed data (if it exists) due to being projected to the same place when using 'closest' \code{duplicated_strategy}, or due to some merge strategy, be returned?}
+
+\item{\code{tolerance_merge}}{tolerance (in edge_length units) for merging points that are very close and are on a common edge. By default, this tolerance is zero, meaning no merges will be performed.}
+
+\item{\code{merge_strategy}}{The strategies to handle observations that are within the tolerance. The options are \code{remove}, \code{merge}, \code{average}. The default is \code{remove}, meaning that if two observations are within the tolerance one of them will be removed. The second strategy \code{merge}, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. Finally, \code{average} will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 

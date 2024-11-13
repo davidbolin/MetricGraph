@@ -3808,7 +3808,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     # n_group <- length(unique(group_vector))
-    n_group <- length(group_vals)s
+    n_group <- length(group_vals)
     n_group <- ifelse(n_group == 0, 1, n_group)
 
     data[[edge_number]] <- NULL
@@ -3851,10 +3851,22 @@ metric_graph <-  R6Class("metric_graph",
 
         aux_length <- self$edge_lengths[PtE[,1]] * PtE[,2]
 
-        merge_idx <- merge_obs_aux(data, PtE, group_vector, aux_length, tolerance_merge, merge_strategy)
+        merge_idx <- get_idx_within_merge_tolerance(PtE, group_vector, aux_length, tolerance_merge)
         
         removed_merge <- lapply(data, function(dat){dat[!merge_idx]})
+
         data <- lapply(data, function(dat){dat[merge_idx]})
+        group_vector <- group_vector[merge_idx]
+        PtE <- PtE[merge_idx,,drop=FALSE]
+
+        if(merge_strategy %in% c("average", "merge")){
+          merge_idx_map <- setNames(merge_idx, seq_along(merge_idx))
+          ref_idx_merges <- find_merged_indices_for_unselected(merge_idx, length(ord_idx))
+
+          data <- apply_merge_strategy(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy)
+        }
+
+
     }
 
     # Process the data (find all the different coordinates

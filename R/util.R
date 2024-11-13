@@ -2083,52 +2083,163 @@ fill_na_values_split_edge <- function(data) {
 # strategies "remove", "merge", "average"
 #' @noRd 
 
-merge_aux_obs <- function(data, PtE, group_vector, aux_length, tolerance, merge_strategy, dplyr = FALSE){
+get_idx_within_merge_tolerance <- function(PtE, group_vector, aux_length, tolerance, dplyr = FALSE){
   if(is.null(group_vector)){
     group_vector <- rep(1, length(PtE[,1]))
   }
 
-  if(merge_strategy == "remove"){
-    if(!dplyr){
-      # Initialize a logical vector to keep track of selected rows
-      selected_rows <- rep(FALSE, nrow(PtE))
-
-      # Get unique values in group_vector
-      unique_groups <- unique(group_vector)
-
-      # Loop over each unique group in group_vector
-      for (group in unique_groups) {
-          # Get indices of rows for the current primary group
+  if(!dplyr){
+      # Loop over unique groups and edges
+      selected_rows <- unlist(lapply(unique(group_vector), function(group) {
+          # Get indices for the current primary group
           group_indices <- which(group_vector == group)
-
-          # Further group by edge values within the current primary group
+          # Further split by unique edges within this group
           unique_edges <- unique(PtE[group_indices, 1])
-
-          for (edge in unique_edges) {
+          unlist(lapply(unique_edges, function(edge) {
               # Get indices of rows for the current edge within the current group
               edge_indices <- group_indices[PtE[group_indices, 1] == edge]
-
-              # Calculate differences in the second column for this subgroup
-              diffs <- diff(PtE[edge_indices, 2])
-
-              # Identify positions where the difference is greater than tolerance
-              large_diff_indices <- edge_indices[c(TRUE, diffs > tolerance)]
-
-              # Mark these rows as selected
-              selected_rows[large_diff_indices] <- TRUE
-          }
-      }
-    } else{
+              # Apply the filtering function
+              filter_indices_by_tolerance(edge_indices, PtE[edge_indices, 2])
+          }))
+      }))
+  } else{
       PtE_df <- as.data.frame(PtE)
-      PtE_df$group <- group_vector  # Add group_vector as a new column in the data frame
+      PtE_df$group <- group_vector
       colnames(PtE_df) <- c("edge", "position", "group")
+      # Add an index column to keep track of original row numbers
+      PtE_df$orig_index <- 1:nrow(PtE_df)
+      # Group by both `group` and `edge` and apply the filtering function
+      selected_indices <- PtE_df |>
+          dplyr::group_by(group, edge) |>
+          dplyr::group_modify(~ dplyr::tibble(index = filter_group_edge(.x, tolerance))) |>
+          dplyr::pull(index)
+  }
+}
 
-      # Group by `group` and `edge`, calculate differences, and filter based on tolerance
-      selected_indices <- PtE_df %>%
-        dplyr::group_by(group, edge) %>%
-        dplyr::filter(c(TRUE, diff(position) > tolerance)) %>%
-        dplyr::ungroup() %>%
-        dplyr::pull(dplyr::row_number())
+
+# Function to iteratively filter rows within a single group-edge subgroup
+#' @noRd
+filter_indices_by_tolerance <- function(edge_indices, positions, tolerance) {
+    selected <- edge_indices  # Start with all indices in the subgroup
+
+    while (TRUE) {
+        diffs <- diff(positions[selected - min(selected) + 1])  # Calculate diffs on the current selection
+        below_tolerance <- which(diffs < tolerance)
+        
+        if (length(below_tolerance) == 0) {
+            # Stop if no diffs are below tolerance
+            break
+        }
+
+        # Remove the first occurrence where diff < tolerance
+        selected <- selected[-(below_tolerance[1] + 1)]
     }
-  } 
+    
+    return(selected)  # Return the filtered indices for this subgroup
+}
+
+
+# Function to filter rows within each group-edge based on tolerance
+#' @noRd
+filter_group_edge <- function(df, tolerance) {
+    # Start with all indices selected
+    selected <- seq_len(nrow(df))
+    positions <- df$position
+    
+    # Calculate initial differences
+    diffs <- diff(positions)
+    
+    # While there are differences below tolerance
+    while (any(diffs < tolerance)) {
+        # Find the first position where diff is below tolerance
+        first_below <- which(diffs < tolerance)[1]
+        
+        # Remove the second element in the violating pair
+        selected <- selected[-(first_below + 1)]
+        
+        # Recalculate diffs only around the modified region
+        if (first_below > 1) diffs[first_below - 1] <- positions[selected[first_below]] - positions[selected[first_below - 1]]
+        diffs <- diffs[-first_below]
+    }
+    
+    # Return the original indices of the selected rows
+    return(df$orig_index[selected])
+}
+
+# Function to find merged indices for unselected rows only
+#' @noRd
+find_merged_indices_for_unselected <- function(selected_rows, total_rows) {
+    # Identify unselected rows
+    all_rows <- 1:total_rows
+    unselected_rows <- setdiff(all_rows, selected_rows)
+    
+    # For each unselected row, find the nearest preceding selected row
+    merged_indices <- sapply(unselected_rows, function(row) {
+        max(selected_rows[selected_rows <= row])
+    })
+    
+    return(merged_indices)
+}
+
+# function to apply the chosen merge strategy
+#' @noRd
+apply_merge_strategy <- function(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy) {
+    # Loop over each reference index in ref_idx_merges
+    for (i in seq_along(ref_idx_merges)) {
+        ref_idx <- merge_idx_map[ref_idx_merges[i]]  # Map reference index in ref_idx_merges to data index
+        removed_indices <- which(ref_idx_merges == ref_idx_merges[i])  # Get removed observations linked to this ref_idx
+        
+        if (merge_strategy == "merge") {
+            # Apply "merge" strategy to fill in missing values from removed_merge
+            data <- fill_na_merge(data, removed_merge, ref_idx, removed_indices)
+        } else if (merge_strategy == "average") {
+            # Apply "average" strategy to fill in missing values, averaging if numeric
+            data <- fill_na_average(data, removed_merge, ref_idx, removed_indices)
+        }
+    }
+    
+    return(data)
+}
+
+# Helper function to fill missing values using "merge" strategy
+#' @noRd
+fill_na_merge <- function(data, removed_merge, ref_idx, removed_indices) {
+    # Iterate over each column in the data list
+    for (col in names(data)) {
+        # Check if the current entry has NA for the reference row
+        if (is.na(data[[col]][ref_idx])) {
+            # Find the first non-NA value in the removed observations for this column
+            for (removed_idx in removed_indices) {
+                if (!is.na(removed_merge[[col]][removed_idx])) {
+                    # Fill the NA in data with the non-NA value from removed_merge
+                    data[[col]][ref_idx] <- removed_merge[[col]][removed_idx]
+                    break  # Stop after filling the first non-NA value
+                }
+            }
+        }
+    }
+    return(data)
+}
+
+# Helper function to fill values using "average" strategy
+#' @noRd
+fill_na_average <- function(data, removed_merge, ref_idx, removed_indices) {
+    for (col in names(data)) {
+        # Gather all values for averaging, including the reference index value
+        values_to_average <- c(data[[col]][ref_idx], removed_merge[[col]][removed_indices])
+        
+        # Filter out NA values from values_to_average
+        non_na_values <- values_to_average[!is.na(values_to_average)]
+        
+        if (length(non_na_values) > 0) {
+            if (is.numeric(data[[col]][ref_idx])) {
+                # Use the average of all non-NA values if the column is numeric
+                data[[col]][ref_idx] <- mean(non_na_values)
+            } else {
+                # For non-numeric, just use the first available non-NA value
+                data[[col]][ref_idx] <- non_na_values[1]
+            }
+        }
+    }
+    return(data)
 }
