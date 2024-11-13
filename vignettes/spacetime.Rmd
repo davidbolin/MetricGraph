@@ -160,7 +160,8 @@ For completeness, we fit the model using the `inlabru` package. First, we create
 
 ```{r, message=FALSE}
 library(inlabru)
-mesh_time <- fmesher::fm_mesh_1d(t)
+library(fmesher)
+mesh_time <- fm_mesh_1d(t)
 st_bru_graph <- rspde.spacetime(mesh_space = graph, 
                                 mesh_time = mesh_time, 
                                 alpha = 1, beta = 1)
