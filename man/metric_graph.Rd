@@ -1247,7 +1247,7 @@ Add observations to the metric graph.
   include_distance_to_graph = TRUE,
   return_removed = TRUE,
   tolerance_merge = 0,
-  merge_strategy = "remove",
+  merge_strategy = "merge",
   verbose = 1,
   suppress_warnings = FALSE,
   Spoints = lifecycle::deprecated()
@@ -1314,7 +1314,7 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 
 \item{\code{tolerance_merge}}{tolerance (in edge_length units) for merging points that are very close and are on a common edge. By default, this tolerance is zero, meaning no merges will be performed.}
 
-\item{\code{merge_strategy}}{The strategies to handle observations that are within the tolerance. The options are \code{remove}, \code{merge}, \code{average}. The default is \code{remove}, meaning that if two observations are within the tolerance one of them will be removed. The second strategy \code{merge}, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. Finally, \code{average} will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.}
+\item{\code{merge_strategy}}{The strategies to handle observations that are within the tolerance. The options are \code{remove}, \code{merge}, \code{average}. The default is \code{merge}, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. The second strategy is \code{remove}, meaning that if two observations are within the tolerance one of them will be removed. Finally, \code{average} will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
