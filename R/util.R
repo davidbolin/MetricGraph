@@ -2103,6 +2103,7 @@ get_idx_within_merge_tolerance <- function(PtE, group_vector, aux_length, tolera
           }))
       }))
   } else{
+      group <- index <- edge <- NULL
       PtE_df <- as.data.frame(PtE)
       PtE_df$group <- group_vector
       colnames(PtE_df) <- c("edge", "position", "group")
