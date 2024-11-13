@@ -2077,3 +2077,58 @@ fill_na_values_split_edge <- function(data) {
 
   return(data)
 }
+
+
+# Helper function for merging observations to be used with `add_observations()`
+# strategies "remove", "merge", "average"
+#' @noRd 
+
+merge_aux_obs <- function(data, PtE, group_vector, aux_length, tolerance, merge_strategy, dplyr = FALSE){
+  if(is.null(group_vector)){
+    group_vector <- rep(1, length(PtE[,1]))
+  }
+
+  if(merge_strategy == "remove"){
+    if(!dplyr){
+      # Initialize a logical vector to keep track of selected rows
+      selected_rows <- rep(FALSE, nrow(PtE))
+
+      # Get unique values in group_vector
+      unique_groups <- unique(group_vector)
+
+      # Loop over each unique group in group_vector
+      for (group in unique_groups) {
+          # Get indices of rows for the current primary group
+          group_indices <- which(group_vector == group)
+
+          # Further group by edge values within the current primary group
+          unique_edges <- unique(PtE[group_indices, 1])
+
+          for (edge in unique_edges) {
+              # Get indices of rows for the current edge within the current group
+              edge_indices <- group_indices[PtE[group_indices, 1] == edge]
+
+              # Calculate differences in the second column for this subgroup
+              diffs <- diff(PtE[edge_indices, 2])
+
+              # Identify positions where the difference is greater than tolerance
+              large_diff_indices <- edge_indices[c(TRUE, diffs > tolerance)]
+
+              # Mark these rows as selected
+              selected_rows[large_diff_indices] <- TRUE
+          }
+      }
+    } else{
+      PtE_df <- as.data.frame(PtE)
+      PtE_df$group <- group_vector  # Add group_vector as a new column in the data frame
+      colnames(PtE_df) <- c("edge", "position", "group")
+
+      # Group by `group` and `edge`, calculate differences, and filter based on tolerance
+      selected_indices <- PtE_df %>%
+        dplyr::group_by(group, edge) %>%
+        dplyr::filter(c(TRUE, diff(position) > tolerance)) %>%
+        dplyr::ungroup() %>%
+        dplyr::pull(dplyr::row_number())
+    }
+  } 
+}

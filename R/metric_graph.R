@@ -3405,11 +3405,13 @@ metric_graph <-  R6Class("metric_graph",
   #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
   #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
   #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
-  #' @param return_removed Should the removed data (if it exists) due to being projected to the same place when using 'closest' `duplicated_strategy` be returned?
   #' @param tolerance Parameter to control a warning when adding observations.
   #' If the distance of some location and the closest point on the graph is
   #' greater than the tolerance, the function will display a warning.
   #' This helps detecting mistakes on the input locations when adding new data.
+  #' @param tolerance_merge tolerance (in edge_length units) for merging points that are very close and are on a common edge. By default, this tolerance is zero, meaning no merges will be performed.
+  #' @param merge_strategy The strategies to handle observations that are within the tolerance. The options are `remove`, `merge`, `average`. The default is `remove`, meaning that if two observations are within the tolerance one of them will be removed. The second strategy `merge`, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. Finally, `average` will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.
+  #' @param return_removed Should the removed data (if it exists) due to being projected to the same place when using 'closest' `duplicated_strategy`, or due to some merge strategy, be returned?
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param suppress_warnings Suppress warnings related to duplicated observations?
   #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
@@ -3430,9 +3432,14 @@ metric_graph <-  R6Class("metric_graph",
                               duplicated_strategy = "closest",
                               include_distance_to_graph = TRUE,
                               return_removed = TRUE,
+                              tolerance_merge = 0,
+                              merge_strategy = "remove",
                               verbose = 1,
                               suppress_warnings = FALSE,
                               Spoints = lifecycle::deprecated()) {
+
+    merge_strategy <- match.arg(merge_strategy, c("remove", "merge", "average"))
+    duplicated_strategy <- match.arg(duplicated_strategy, c("closest", "jitter"))
 
     if(clear_obs){
       df_temp <- data
@@ -3801,7 +3808,7 @@ metric_graph <-  R6Class("metric_graph",
     }
 
     # n_group <- length(unique(group_vector))
-    n_group <- length(group_vals)
+    n_group <- length(group_vals)s
     n_group <- ifelse(n_group == 0, 1, n_group)
 
     data[[edge_number]] <- NULL
@@ -3811,6 +3818,44 @@ metric_graph <-  R6Class("metric_graph",
     data[[".group"]] <- NULL
     private$data[[".coord_x"]] <- NULL
     private$data[[".coord_y"]] <- NULL
+
+    ## Filtering data that are very close and are on a common edge
+    if(length(tolerance_merge)>1){
+      warning("tolerance_merge is not of length 1. Only the first element will be used.")
+      tolerance_merge <- tolerance_merge[[1]]
+    }
+    
+    if(is.null(tolerance_merge)){
+      warning("tolerance_merge is NULL, so it was set to 0.")
+      tolerance_merge <- 0
+    }
+
+    if(tolerance_merge < 0){
+      stop("tolerance_merge cannot be negative.")
+    }
+
+    removed_merge <- NULL
+
+    if(tolerance_merge > 0){
+        # data, group_vector and PtE
+        if(!is.null(group_vector)){
+          ord_idx <- order(PtE[,1], PtE[,2], group_vector)
+          group_vector <- group_vector[ord_idx]
+          PtE <- PtE[ord_idx,,drop=FALSE]      
+        } else{
+          ord_idx <- order(PtE[,1], PtE[,2])
+          PtE <- PtE[ord_idx,,drop=FALSE]
+        }
+
+        data <- lapply(data, function(dat){dat[ord_idx]})
+
+        aux_length <- self$edge_lengths[PtE[,1]] * PtE[,2]
+
+        merge_idx <- merge_obs_aux(data, PtE, group_vector, aux_length, tolerance_merge, merge_strategy)
+        
+        removed_merge <- lapply(data, function(dat){dat[!merge_idx]})
+        data <- lapply(data, function(dat){dat[merge_idx]})
+    }
 
     # Process the data (find all the different coordinates
     # across the different replicates, and also merge the new data to the old data)
@@ -3866,6 +3911,9 @@ metric_graph <-  R6Class("metric_graph",
       }
       if(!is.null(far_data)){
         ret_list[["far_data"]] <- as.data.frame(far_data)
+      }
+      if(!is.null(removed_merge)){
+        ret_list[["removed_merge"]] <- as.data.frame(removed_merge)
       }
       return(ret_list)
     }

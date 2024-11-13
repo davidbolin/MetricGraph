@@ -76,6 +76,10 @@ graph_spde <- function(graph_object,
                        debug = FALSE,
                        verbose = 0){
 
+  if(!(alpha%in%c(1,2))){
+    stop("alpha must be either 1 or 2!")
+  }
+
   graph_spde <- graph_object$clone()
 
   if(verbose>0){
