@@ -2244,3 +2244,86 @@ fill_na_average <- function(data, removed_merge, ref_idx, removed_indices) {
     }
     return(data)
 }
+
+
+# Function to build constraint matrix
+#' @noRd
+construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree, weight,
+                                    DirectionalWeightFunction_out, DirectionalWeightFunction_in) {
+  
+  # Precompute out_edges and in_edges for each vertex
+  out_edges_list <- split(seq_len(nrow(E)), E[, 1])
+  in_edges_list <- split(seq_len(nrow(E)), E[, 2])
+
+  # Calculate an upper bound on the number of elements in i_, j_, and x_
+  nC <- sum((V_outdegree > 0 & V_indegree > 0) * V_outdegree * (1 + V_indegree) + 
+            (V_indegree == 0) * (V_outdegree - 1)) * alpha
+
+  # Initialize vectors to store the row indices (i_), column indices (j_), and values (x_) of the sparse matrix
+  i_ <- integer(nC)
+  j_ <- integer(nC)
+  x_ <- numeric(nC)
+
+  count_constraint <- 0
+  count <- 0
+
+  # Process vertices with both outdegree and indegree
+  Vs <- which(V_outdegree > 0 & V_indegree > 0)
+  for (v in Vs) {
+    out_edges <- out_edges_list[[as.character(v)]]
+    in_edges <- in_edges_list[[as.character(v)]]
+    n_in <- length(in_edges)
+
+    # Loop through each out edge and derivative level
+    for (i in seq_along(out_edges)) {
+      out_weight_values <- DirectionalWeightFunction_out(weight[out_edges[i]])
+      in_weight_values <- DirectionalWeightFunction_in(weight[in_edges])
+      
+      for (der in seq_len(alpha)) {
+        # Set row indices and column indices for the current out edge
+        i_[count + 1] <- count_constraint + 1
+        j_[count + 1] <- 2 * alpha * (out_edges[i] - 1) + der
+        x_[count + 1] <- out_weight_values  # Apply out weight
+        
+        # Set row indices, column indices, and values for each in edge
+        i_[count + seq(2, n_in + 1)] <- count_constraint + 1
+        j_[count + seq(2, n_in + 1)] <- 2 * alpha * (in_edges - 1) + alpha + der
+        x_[count + seq(2, n_in + 1)] <- in_weight_values  # Apply in weights
+        
+        count <- count + (n_in + 1)
+        count_constraint <- count_constraint + 1
+      }
+    }
+  }
+
+  # Process vertices with indegree == 0
+  Vs0 <- which(V_indegree == 0)
+  for (v in Vs0) {
+    out_edges <- out_edges_list[[as.character(v)]]
+
+    if (length(out_edges) > 1) {
+      for (i in 2:length(out_edges)) {
+        for (der in seq_len(alpha)) {
+          # Set indices and values for indegree == 0 vertices
+          i_[count + 1:2] <- count_constraint + 1
+          j_[count + 1] <- 2 * alpha * (out_edges[i] - 1) + der
+          j_[count + 2] <- 2 * alpha * (out_edges[i - 1] - 1) + der
+          x_[count + 1:2] <- c(1, -1)
+          
+          count <- count + 2
+          count_constraint <- count_constraint + 1
+        }
+      }
+    }
+  }
+
+  # Construct sparse matrix with the populated i_, j_, and x_
+  C <- Matrix::sparseMatrix(
+    i = i_[1:count],
+    j = j_[1:count],
+    x = x_[1:count],
+    dims = c(count_constraint, 2 * alpha * nE)
+  )
+
+  return(C)
+}

@@ -4457,64 +4457,71 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
  #' in the same vertex)
  #' @return No return value. Called for its side effects.
   buildDirectionalConstraints = function(alpha = 1){
+    if(alpha %% 1 != 0){
+      stop("alpha should be an integer")
+    }
 
     weight <- self$get_edge_weights()
     weight <- as.vector(weight[[private$directional_weights]])
     V_indegree = self$get_degrees("indegree")
     V_outdegree = self$get_degrees("outdegree")
-    index_outdegree <- V_outdegree > 0 & V_indegree >0
-    index_in0      <- V_indegree == 0
-    nC = (sum(V_outdegree[index_outdegree] *(1 + V_indegree[index_outdegree])) + sum(V_outdegree[index_in0]-1)) * alpha
-    i_  =  rep(0, nC)
-    j_  =  rep(0, nC)
-    x_  =  rep(0, nC)
-    Vs <- which(index_outdegree)
-    count_constraint <- 0
-    count <- 0
-    for (v in Vs) {
-      out_edges   <- which(self$E[, 1] %in% v)
-      in_edges    <- which(self$E[, 2] %in% v)
-      #for each out edge
-      n_in <- length(in_edges)
-      for(i in 1:length(out_edges)){
-        for(der in 1:alpha){
-          i_[count + 1:(n_in+1)] <- count_constraint + 1
-          j_[count + 1:(n_in+1)] <- c(2 * alpha * (out_edges[i]-1) + der,
-                                      2 * alpha * (in_edges-1)  + alpha + der)
+    # index_outdegree <- V_outdegree > 0 & V_indegree >0
+    # index_in0      <- V_indegree == 0
+    # nC = (sum(V_outdegree[index_outdegree] *(1 + V_indegree[index_outdegree])) + sum(V_outdegree[index_in0]-1)) * alpha
+    # i_  =  rep(0, nC)
+    # j_  =  rep(0, nC)
+    # x_  =  rep(0, nC)
+    # Vs <- which(index_outdegree)
+    # count_constraint <- 0
+    # count <- 0
+    # for (v in Vs) {
+    #   out_edges   <- which(self$E[, 1] %in% v)
+    #   in_edges    <- which(self$E[, 2] %in% v)
+    #   #for each out edge
+    #   n_in <- length(in_edges)
+    #   for(i in 1:length(out_edges)){
+    #     for(der in 1:alpha){
+    #       i_[count + 1:(n_in+1)] <- count_constraint + 1
+    #       j_[count + 1:(n_in+1)] <- c(2 * alpha * (out_edges[i]-1) + der,
+    #                                   2 * alpha * (in_edges-1)  + alpha + der)
 
 
-          x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges])),
-                                      as.matrix(self$DirectionalWeightFunction_in(weight[in_edges])))
+    #       x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges[i]])),
+    #                                   as.matrix(self$DirectionalWeightFunction_in(weight[in_edges])))
 
-          count <- count + (n_in+1)
-          count_constraint <- count_constraint + 1
-        }
-      }
-    }
-    Vs0 <- which(index_in0)
-    for (v in Vs0) {
-      out_edges   <- which(self$E[, 1] %in% v)
-      #for each out edge
-      if(length(out_edges)>1){
-        for(i in 2:length(out_edges)){
-          for(der in 1:alpha){
-            i_[count + 1:2] <- count_constraint + 1
-            j_[count + 1:2] <- c(2 * alpha * (out_edges[i]-1) + der,
-                                 2 * alpha * (out_edges[i-1]-1)   + der)
+    #       count <- count + (n_in+1)
+    #       count_constraint <- count_constraint + 1
+    #     }
+    #   }
+    # }
+    # Vs0 <- which(index_in0)
+    # for (v in Vs0) {
+    #   out_edges   <- which(self$E[, 1] %in% v)
+    #   #for each out edge
+    #   if(length(out_edges)>1){
+    #     for(i in 2:length(out_edges)){
+    #       for(der in 1:alpha){
+    #         i_[count + 1:2] <- count_constraint + 1
+    #         j_[count + 1:2] <- c(2 * alpha * (out_edges[i]-1) + der,
+    #                              2 * alpha * (out_edges[i-1]-1)   + der)
 
-            x_[count + 1:2] <- c(1,
-                                 -1)
-            count <- count + 2
-            count_constraint <- count_constraint + 1
-          }
-        }
-      }
-    }
-    C <- Matrix::sparseMatrix(i = i_[1:count],
-                              j = j_[1:count],
-                              x = x_[1:count],
-                              dims = c(count_constraint, 2*alpha*self$nE))
-    self$C = C
+    #         x_[count + 1:2] <- c(1,
+    #                              -1)
+    #         count <- count + 2
+    #         count_constraint <- count_constraint + 1
+    #       }
+    #     }
+    #   }
+    # }
+    # C <- Matrix::sparseMatrix(i = i_[1:count],
+    #                           j = j_[1:count],
+    #                           x = x_[1:count],
+    #                           dims = c(count_constraint, 2*alpha*self$nE))
+    # self$C = C
+    temp_E <- apply(self$E,2,as.integer)
+    self$C <-construct_directional_constraint_matrix(temp_E, as.integer(self$nV), as.integer(self$nE), as.integer(alpha),
+    as.integer(V_indegree), as.integer(V_outdegree), weight, self$DirectionalWeightFunction_out, self$DirectionalWeightFunction_in)
+
     self$CoB <- c_basis2(self$C)
     self$CoB$T <- t(self$CoB$T)
     self$CoB$alpha <- 1

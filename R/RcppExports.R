@@ -29,6 +29,10 @@ construct_constraint_matrix <- function(E, nV, edge_constraint) {
     .Call(`_MetricGraph_construct_constraint_matrix`, E, nV, edge_constraint)
 }
 
+construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree) {
+    .Call(`_MetricGraph_construct_directional_constraint_matrix`, E, nV, nE, alpha, V_indegree, V_outdegree)
+}
+
 #' @name proj_vec
 #' @noRd
 NULL

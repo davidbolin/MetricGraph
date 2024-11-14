@@ -22,7 +22,7 @@
 * Deprecated `improve_plot` option, as now all plots from `plot_function()` method are improved.
 * Added `merge_strategy` option for `add_observations()` method, for handling observations that are very close.
 * Update the metric graph data vignette for illustrating how to use the new tools for data manipulation. 
-* Massive improvement for building constraint matrices for `alpha=2`. 
+* Massive improvement for building constraint matrices for `alpha=2`, and for building directional constraints. 
 * Updated starting values to use bounding boxes to be more efficient.
 
 # MetricGraph 1.3.0
