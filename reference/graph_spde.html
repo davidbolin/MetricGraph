@@ -74,6 +74,8 @@ in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.</p>
 <span>  prior_sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  start_tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  factor_start_range <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  max_dim_start_range <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  shared_lib <span class="op">=</span> <span class="st">"detect"</span>,</span>
 <span>  debug <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
@@ -141,6 +143,14 @@ the log scale. Will not be used if prior.kappa is non-null.</p></dd>
 <dt id="arg-prior-tau">prior_tau<a class="anchor" aria-label="anchor" href="#arg-prior-tau"></a></dt>
 <dd><p>a <code>list</code> containing the elements <code>meanlog</code> and
 <code>sdlog</code>, that is, the mean and standard deviation of tau on the log scale.</p></dd>
+
+
+<dt id="arg-factor-start-range">factor_start_range<a class="anchor" aria-label="anchor" href="#arg-factor-start-range"></a></dt>
+<dd><p>Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.</p></dd>
+
+
+<dt id="arg-max-dim-start-range">max_dim_start_range<a class="anchor" aria-label="anchor" href="#arg-max-dim-start-range"></a></dt>
+<dd><p>Should the maximum between the dimensions of the bounding box of the metric graph be used? If <code>FALSE</code>, the minimum will be used.</p></dd>
 
 
 <dt id="arg-shared-lib">shared_lib<a class="anchor" aria-label="anchor" href="#arg-shared-lib"></a></dt>

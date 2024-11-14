@@ -71,7 +71,9 @@ field models on metric graphs.</p>
 <span>  like_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  log_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  model_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  rec_tau <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  rec_tau <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  factor_start_range <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  max_dim_start_range <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -125,6 +127,14 @@ last element? This is the format for the likelihood constructor from the
 
 <dt id="arg-rec-tau">rec_tau<a class="anchor" aria-label="anchor" href="#arg-rec-tau"></a></dt>
 <dd><p>Should a starting value for the reciprocal of tau be given?</p></dd>
+
+
+<dt id="arg-factor-start-range">factor_start_range<a class="anchor" aria-label="anchor" href="#arg-factor-start-range"></a></dt>
+<dd><p>Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.</p></dd>
+
+
+<dt id="arg-max-dim-start-range">max_dim_start_range<a class="anchor" aria-label="anchor" href="#arg-max-dim-start-range"></a></dt>
+<dd><p>Should the maximum between the dimensions of the bounding box of the metric graph be used? If <code>FALSE</code>, the minimum will be used.</p></dd>
 
 </dl></div>
     <div class="section level2">
