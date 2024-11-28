@@ -96,7 +96,7 @@ t <- seq(from = 0, to = 10, length.out = 31)
 kappa <- 5
 sigma <- 10
 gamma <- 0.1
-rho <- 1
+rho <- 0.3
 alpha <- 1
 beta <- 1
 
@@ -188,12 +188,16 @@ bru_fit_graph <- bru(cmp_graph, data = st_data_bru[["data"]],
 Compare the estimated parameters with the true values:
 
 ```{r}
-results <- data.frame(kappa = c(kappa, exp(bru_fit_graph$summary.hyperpar$mean[2])), 
-                      sigma = c(sigma, exp(bru_fit_graph$summary.hyperpar$mean[3])),
-                      gamma = c(gamma, exp(bru_fit_graph$summary.hyperpar$mean[4])), 
-                      rho = c(rho, bru_fit_graph$summary.hyperpar$mean[5]),
-                      sigma.e = c(sigma.e, sqrt(1 / bru_fit_graph$summary.hyperpar$mean[1])),
-                      intercept = c(0, bru_fit_graph$summary.fixed$mean))
+param_st <- transform_parameters_spacetime(bru_fit_graph$summary.hyperpar$mean[2:6], 
+                                            st_bru_graph)
+
+results <- data.frame(kappa = c(kappa,  param_st[[1]]), 
+                      sigma = c(sigma,  param_st[[2]]),
+                      gamma = c(gamma,  param_st[[3]]), 
+                      rho = c(rho, param_st[[4]]),
+                      sigma.e = c(sigma.e, sqrt(1/bru_fit_graph$summary.hyperpar$mean[1])),
+                      intercept = c(0, bru_fit_graph$summary.fixed$mean),
+                      row.names = c("True", "Estimate"))
                       
 print(results)
 ```
@@ -262,12 +266,17 @@ bru_fit_graph_repl <- bru(cmp_graph_repl,
 Compare the estimated parameters with the true values:
 
 ```{r}
-results_repl <- data.frame(kappa = c(kappa, exp(bru_fit_graph_repl$summary.hyperpar$mean[2])), 
-                      sigma = c(sigma, exp(bru_fit_graph_repl$summary.hyperpar$mean[3])),
-                      gamma = c(gamma, exp(bru_fit_graph_repl$summary.hyperpar$mean[4])), 
-                      rho = c(rho, bru_fit_graph_repl$summary.hyperpar$mean[5]),
-                      sigma.e = c(sigma.e, sqrt(1 / bru_fit_graph_repl$summary.hyperpar$mean[1])),
-                      intercept = c(0, bru_fit_graph_repl$summary.fixed$mean))
+param_st_repl <- transform_parameters_spacetime(
+                              bru_fit_graph_repl$summary.hyperpar$mean[2:6], 
+                              st_bru_graph_repl)
+
+results_repl <- data.frame(kappa = c(kappa,  param_st_repl[[1]]), 
+                      sigma = c(sigma,  param_st_repl[[2]]),
+                      gamma = c(gamma,  param_st_repl[[3]]), 
+                      rho = c(rho, param_st_repl[[4]]),
+                      sigma.e = c(sigma.e, sqrt(1/bru_fit_graph_repl$summary.hyperpar$mean[1])),
+                      intercept = c(0, bru_fit_graph_repl$summary.fixed$mean),
+                      row.names = c("True", "Estimate"))
                       
 print(results_repl)
 ```
