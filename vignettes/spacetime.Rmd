@@ -287,12 +287,51 @@ print(results_repl)
 The `bounded_rho` parameter in `rspde.spacetime()` ensures that \(
 ho\) stays within a range that guarantees numerical stability and well-posedness. However, in some cases, better fits can be achieved by setting `bounded_rho = FALSE`. Below, we show how to modify the model to handle this case.
 
-### Model Setup
+### Using `rspde_lme()`
 
-Here we set `bounded_rho = FALSE` when creating the spatio-temporal operator:
+Here we set `bounded_rho = FALSE` when creating the spatio-temporal operator and fit the model using `rspde_lme()`:
 
 ```{r}
 # Create the spatio-temporal operator with bounded_rho = FALSE
+op_unbounded <- spacetime.operators(
+  graph = graph,
+  time = t,
+  kappa = kappa,
+  sigma = sigma,
+  alpha = alpha,
+  beta = beta,
+  rho = rho,
+  gamma = gamma,
+  bounded_rho = FALSE
+)
+
+# Fit the model using rspde_lme
+res <- rspde_lme(y ~ 1, loc_time = "time", model = op_unbounded, parallel = TRUE)
+```
+
+#### Comparing Results
+
+```{r}
+# Compare results for rspde_lme
+results <- data.frame(
+  kappa = c(kappa, res$coeff$random_effects[1]),
+  sigma = c(sigma, res$coeff$random_effects[2]),
+  gamma = c(gamma, res$coeff$random_effects[3]),
+  rho = c(rho, res$coeff$random_effects[4]),
+  sigma.e = c(sigma.e, res$coeff$measurement_error),
+  intercept = c(0, res$coeff$fixed_effects),
+  row.names = c("True", "Estimate")
+)
+
+print(results)
+```
+
+### Using `inlabru`
+
+Here we set `bounded_rho = FALSE` when creating the spatio-temporal operator and prepare data for `inlabru`:
+
+```{r}
+# Create the spatio-temporal operator for inlabru
 st_bru_graph_unbounded <- rspde.spacetime(
   mesh_space = graph,
   mesh_time = mesh_time,
@@ -317,13 +356,13 @@ cmp_graph_unbounded <- y ~ 1 + field(
 )
 ```
 
-### Fitting the Model
+#### Fitting the Model with `inlabru`
 
 ```{r}
 bru_fit_graph_unbounded <- bru(cmp_graph_unbounded, data = st_data_bru_unbounded[["data"]])
 ```
 
-### Comparing Results
+#### Comparing Results
 
 ```{r}
 # Transform parameters and compare results
