@@ -154,28 +154,73 @@ results <- data.frame(kappa = c(kappa, res$coeff$random_effects[1]),
 print(results)
 ```
 
-### `inlabru` Implementation
+## `INLA` and `inlabru` Implementation
 
-For completeness, we fit the model using the `inlabru` package. First, we create a temporal mesh:
+For completeness, we fit the model using `INLA` and `inlabru` packages. First, we create a temporal mesh:
 
 ```{r, message=FALSE}
 library(inlabru)
 library(fmesher)
 mesh_time <- fm_mesh_1d(t)
-st_bru_graph <- rspde.spacetime(mesh_space = graph, 
+st_graph <- rspde.spacetime(mesh_space = graph, 
                                 mesh_time = mesh_time, 
                                 alpha = 1, beta = 1)
 ```
 
-Define the data, in which we use the function `graph_data_rspde()`, set `bru` to `TRUE`. Next, we define the model component for `inlabru`, where we pass a list with two elements, `space` which is given by the spatial locations, for which we pass `cbind(.edge_number, .distance_on_edge)`, and `time` which is given by the time points.
+We now define the data object, by using the `graph_data_rspde()` function, with `bru` set to `FALSE`.
 
 ```{r}
-st_data_bru <- graph_data_rspde(st_bru_graph, bru = TRUE)
+st_data_inla <- graph_data_rspde(st_graph, name = "field", time = "time", bru = FALSE)
+```
+
+Now we create the `inla.stack` object. To such an end, observe that `st_data` contains the dataset as the `data` component, the index as the `index` component and the so-called `A` matrix as the `basis` component. We will now create the stack using these components:
+```{r}
+  stk.dat <- inla.stack(
+    data = st_data_inla[["data"]], 
+    A = st_data_inla[["basis"]],
+    effects =
+      c(st_data_inla[["index"]],
+        list(Intercept = 1))
+    )
+```
+
+Finally, we create the formula object and fit the model:
+
+```{r}
+  f_st <- y ~ -1 + Intercept + f(field, model = st_graph)
+
+  rspde_fit <- inla(f_st, data = inla.stack.data(stk.dat),
+    control.inla = list(int.strategy = "eb"),
+    control.predictor = list(A = inla.stack.A(stk.dat), compute = TRUE),
+    num.threads = "1:1"
+  )
+```
+
+Let us compare the fitted values with the true values:
+```{r}
+param_st <- transform_parameters_spacetime(rspde_fit$summary.hyperpar$mean[2:6], 
+                                            st_graph)
+
+results <- data.frame(kappa = c(kappa,  param_st[[1]]), 
+                      sigma = c(sigma,  param_st[[2]]),
+                      gamma = c(gamma,  param_st[[3]]), 
+                      rho = c(rho, param_st[[4]]),
+                      sigma.e = c(sigma.e, sqrt(1/rspde_fit$summary.hyperpar$mean[1])),
+                      intercept = c(0, rspde_fit$summary.fixed$mean),
+                      row.names = c("True", "Estimate"))
+                      
+print(results)
+```
+
+Now, we will proceed with the `inlabru` implementation. Define the data, in which we use the function `graph_data_rspde()`, set `bru` to `TRUE`. Next, we define the model component for `inlabru`, where we pass a list with two elements, `space` which is given by the spatial locations, for which we pass `cbind(.edge_number, .distance_on_edge)`, and `time` which is given by the time points.
+
+```{r}
+st_data_bru <- graph_data_rspde(st_graph, bru = TRUE)
 
 cmp_graph <- y ~ 1 + field(list(
                     space = cbind(.edge_number, .distance_on_edge), 
                                 time = time), 
-                                model = st_bru_graph)
+                                model = st_graph)
 ```
 
 Fit the model passing `st_data_bru` to the `data` argument:
@@ -188,7 +233,7 @@ Compare the estimated parameters with the true values:
 
 ```{r}
 param_st <- transform_parameters_spacetime(bru_fit_graph$summary.hyperpar$mean[2:6], 
-                                            st_bru_graph)
+                                            st_graph)
 
 results <- data.frame(kappa = c(kappa,  param_st[[1]]), 
                       sigma = c(sigma,  param_st[[2]]),
@@ -201,7 +246,7 @@ results <- data.frame(kappa = c(kappa,  param_st[[1]]),
 print(results)
 ```
 
-## Fitting model with replicates in `inlabru` Implementation
+## Fitting model with replicates in `INLA` and `inlabru` Implementation
 
 We will now simulate from the same model, however, this time, with replicates. We will assume we have 10 replicates.
 
@@ -234,15 +279,69 @@ graph_rep$add_observations(data = df, normalized=TRUE,
 Let us now create the `rSPDE` model object. Observe that we cannot use the previous one as the data inside the graph is now different.
 
 ```{r}
-st_bru_graph_repl <- rspde.spacetime(mesh_space = graph_rep, 
+st_graph_repl <- rspde.spacetime(mesh_space = graph_rep, 
                                 mesh_time = mesh_time, 
                                 alpha = 1, beta = 1)
 ```
 
-Let us now create the data object, by using the `graph_data_rspde()` function. In this case, we also need to pass `repl_col`:
+We will start with `INLA`'s implementation. To this end, let us create the data object.
 
 ```{r}
-st_data_bru_repl <- graph_data_rspde(st_bru_graph_repl, 
+st_data_inla_repl <- graph_data_rspde(st_graph_repl, 
+                                  repl = ".all",
+                                  repl_col = "repl",
+                                  time = "time",
+                                  bru = FALSE)
+```
+
+Let us now create the corresponding `inla.stack` object:
+```{r}
+st_dat_rep <- inla.stack(
+  data = st_data_inla_repl[["data"]],
+  A = st_data_inla_repl[["basis"]],
+  effects = st_data_inla_repl[["index"]]
+)
+```
+
+Now, we can create the formula object and fit the model:
+
+```{r}
+f_st_rep <-
+  y ~ -1 + f(field,
+    model = st_graph_repl,
+    replicate = field.repl
+  )
+
+rspde_fit_rep <-
+  inla(f_st_rep,
+    data = inla.stack.data(st_dat_rep),
+    control.predictor =
+      list(A = inla.stack.A(st_dat_rep)),
+    num.threads = "1:1"
+  )
+```
+
+
+Let us compare the fitted values with the true values:
+```{r}
+param_st <- transform_parameters_spacetime(rspde_fit_rep$summary.hyperpar$mean[2:6], 
+                                            st_graph)
+
+results <- data.frame(kappa = c(kappa,  param_st[[1]]), 
+                      sigma = c(sigma,  param_st[[2]]),
+                      gamma = c(gamma,  param_st[[3]]), 
+                      rho = c(rho, param_st[[4]]),
+                      sigma.e = c(sigma.e, sqrt(1/rspde_fit_rep$summary.hyperpar$mean[1])),
+                      intercept = c(0, rspde_fit_rep$summary.fixed$mean),
+                      row.names = c("True", "Estimate"))
+                      
+print(results)
+```
+
+We will now proceed to `inlabru`'s implementation. Let us now create the data object, by using the `graph_data_rspde()` function. In this case, we also need to pass `repl_col`:
+
+```{r}
+st_data_bru_repl <- graph_data_rspde(st_graph_repl, 
                                   repl = ".all",
                                   repl_col = "repl")
 ```
@@ -251,7 +350,7 @@ Next, we create `inlabru` component by also passing the replicate argument with 
 ```{r}
 cmp_graph_repl <- y ~ 1 + field(list(space = cbind(.edge_number, .distance_on_edge), 
                                 time = time),
-                                model = st_bru_graph_repl,
+                                model = st_graph_repl,
                                 replicate = st_data_bru_repl[["repl"]]
                                 )
 ```
@@ -268,7 +367,7 @@ Compare the estimated parameters with the true values:
 ```{r}
 param_st_repl <- transform_parameters_spacetime(
                               bru_fit_graph_repl$summary.hyperpar$mean[2:6], 
-                              st_bru_graph_repl)
+                              st_graph_repl)
 
 results_repl <- data.frame(kappa = c(kappa,  param_st_repl[[1]]), 
                       sigma = c(sigma,  param_st_repl[[2]]),
@@ -332,7 +431,7 @@ Here we set `bounded_rho = FALSE` when creating the spatio-temporal operator and
 
 ```{r}
 # Create the spatio-temporal operator for inlabru
-st_bru_graph_unbounded <- rspde.spacetime(
+st_graph_unbounded <- rspde.spacetime(
   mesh_space = graph,
   mesh_time = mesh_time,
   alpha = 1,
@@ -342,7 +441,7 @@ st_bru_graph_unbounded <- rspde.spacetime(
 
 # Prepare data for inlabru
 st_data_bru_unbounded <- graph_data_rspde(
-  st_bru_graph_unbounded,
+  st_graph_unbounded,
   bru = TRUE
 )
 
@@ -352,7 +451,7 @@ cmp_graph_unbounded <- y ~ 1 + field(
     space = cbind(.edge_number, .distance_on_edge),
     time = time
   ),
-  model = st_bru_graph_unbounded
+  model = st_graph_unbounded
 )
 ```
 
@@ -368,7 +467,7 @@ bru_fit_graph_unbounded <- bru(cmp_graph_unbounded, data = st_data_bru_unbounded
 # Transform parameters and compare results
 param_st_unbounded <- transform_parameters_spacetime(
   bru_fit_graph_unbounded$summary.hyperpar$mean[2:6],
-  st_bru_graph_unbounded
+  st_graph_unbounded
 )
 
 results_unbounded <- data.frame(
