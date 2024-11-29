@@ -159,6 +159,7 @@ print(results)
 For completeness, we fit the model using `INLA` and `inlabru` packages. First, we create a temporal mesh:
 
 ```{r, message=FALSE}
+library(INLA)
 library(inlabru)
 library(fmesher)
 mesh_time <- fm_mesh_1d(t)
@@ -299,7 +300,8 @@ Let us now create the corresponding `inla.stack` object:
 st_dat_rep <- inla.stack(
   data = st_data_inla_repl[["data"]],
   A = st_data_inla_repl[["basis"]],
-  effects = st_data_inla_repl[["index"]]
+  effects = c(st_data_inla_repl[["index"]],
+          list(Intercept = 1))
 )
 ```
 
@@ -307,7 +309,7 @@ Now, we can create the formula object and fit the model:
 
 ```{r}
 f_st_rep <-
-  y ~ -1 + f(field,
+  y ~ -1 + Intercept + f(field,
     model = st_graph_repl,
     replicate = field.repl
   )
@@ -316,26 +318,25 @@ rspde_fit_rep <-
   inla(f_st_rep,
     data = inla.stack.data(st_dat_rep),
     control.predictor =
-      list(A = inla.stack.A(st_dat_rep)),
-    num.threads = "1:1"
+      list(A = inla.stack.A(st_dat_rep))
   )
 ```
 
 
 Let us compare the fitted values with the true values:
 ```{r}
-param_st <- transform_parameters_spacetime(rspde_fit_rep$summary.hyperpar$mean[2:6], 
+param_st_rep <- transform_parameters_spacetime(rspde_fit_rep$summary.hyperpar$mean[2:6], 
                                             st_graph)
 
-results <- data.frame(kappa = c(kappa,  param_st[[1]]), 
-                      sigma = c(sigma,  param_st[[2]]),
-                      gamma = c(gamma,  param_st[[3]]), 
-                      rho = c(rho, param_st[[4]]),
+results_inla_repl <- data.frame(kappa = c(kappa,  param_st_rep[[1]]), 
+                      sigma = c(sigma,  param_st_rep[[2]]),
+                      gamma = c(gamma,  param_st_rep[[3]]), 
+                      rho = c(rho, param_st_rep[[4]]),
                       sigma.e = c(sigma.e, sqrt(1/rspde_fit_rep$summary.hyperpar$mean[1])),
                       intercept = c(0, rspde_fit_rep$summary.fixed$mean),
                       row.names = c("True", "Estimate"))
                       
-print(results)
+print(results_inla_repl)
 ```
 
 We will now proceed to `inlabru`'s implementation. Let us now create the data object, by using the `graph_data_rspde()` function. In this case, we also need to pass `repl_col`:
@@ -343,7 +344,8 @@ We will now proceed to `inlabru`'s implementation. Let us now create the data ob
 ```{r}
 st_data_bru_repl <- graph_data_rspde(st_graph_repl, 
                                   repl = ".all",
-                                  repl_col = "repl")
+                                  repl_col = "repl",
+                                  bru = TRUE)
 ```
 
 Next, we create `inlabru` component by also passing the replicate argument with the `repl` element of the object returned by `graph_data_rspde()`:
