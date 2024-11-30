@@ -55,9 +55,9 @@ $$
 where $T$ is a temporal interval, and $\Gamma$ is a compact metric graph. Here, $\kappa > 0$ is a spatial range parameter, $\rho$ is a drift parameter, and $W_Q$ is a $Q$-Wiener process with spatial covariance operator $\sigma^2(\kappa^2 - \Delta)^{-\beta}$, where $\sigma^2$ is a variance parameter. The model has two smoothness parameters, $\alpha$ and $\beta$, which are assumed to be integers. This model generalizes the spatio-temporal models introduced in 
 [@lindgren24](https://www.raco.cat/index.php/SORT/article/view/428665), where the generalization is to allow for drift and to allow for metric graphs as spatial domains. The model is implemented using a finite element discretization of the corresponding precision operator:
 $$
-\sigma^{-2} \left(d + \gamma(\kappa^2 + \rho \cdot \nabla - \Delta)^{\alpha}\right) \left(d + \gamma(\kappa^2 - \rho \cdot \nabla - \Delta)^{\alpha}\right) (\kappa^2 - \rho \cdot \nabla - \Delta)^{\beta}
+\sigma^{-2}(d + \gamma(\kappa^2 + \kappa^{d/2}\rho\cdot \nabla - \Delta)^{\alpha})(\kappa^2 - \Delta)^{\beta} ((d + \gamma(\kappa^2 - \kappa^{d/2}\rho\cdot \nabla - \Delta)^{\alpha}))
 $$
-in both space and time, following a similar discretization to [@lindgren24](https://www.raco.cat/index.php/SORT/article/view/428665).
+in both space and time, following a similar discretization to [@lindgren24](https://www.raco.cat/index.php/SORT/article/view/428665). This parameterization of the drift term, using $\rho \kappa^{d/2}$ in place of the standard $\rho$, is chosen to simplify the enforcement of theoretical bounds on the range of $\rho$, ensuring that the equation remains well-posed and also providing numerical stability for finite-dimensional approximations.
 
 ## Implementation Details
 
