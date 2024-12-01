@@ -7,21 +7,7 @@ vignette: >
   %\VignetteIndexEntry{On isotropic covariances on metric graphs with non-Euclidean edges}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-  - id: Anderes2020
-  title: "Isotropic covariance functions on graphs and their edges"
-  author:
-  - family: Anderes
-    given: Ethan
-  - family: Møller
-    given: Jesper
-  - family: Rasmussen
-    given: Jakob G
-  container-title: Annals of Statistics
-  type: article
-  issue: 48
-  pages: 2478-2503
-  issued:
-    year: 2020
+bibliography: references.bib
 ---
 
 ```{r setup, include = FALSE}

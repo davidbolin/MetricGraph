@@ -7,35 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Whittle--Matérn fields with general smoothness}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: xiong22
-  title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
-  author:
-  - family: Bolin
-    given: David  
-  - family: Simas
-    given: Alexandre B.
-  - family: Xiong
-    given: Zhen
-  container-title: Journal of Computational and Graphical Statistics
-  type: article
-  issued:
-    year: 2023
-- id: graph_fem
-  title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Kovács
-    given: Mihály
-  - family: Kumar
-    given: Vivek
-  - family: Simas
-    given: Alexandre B.
-  container-title: Mathematics of Computation
-  type: article
-  issued:
-    year: 2023
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}

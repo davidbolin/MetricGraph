@@ -8,27 +8,7 @@ vignette: >
   %\VignetteIndexEntry{Spatio-temporal Models on Compact Metric Graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: lindgren24
-  title: "A Diffusion-based Spatio-temporal Extension of Gaussian Matérn Fields"
-  author:
-  - family: Lindgren
-    given: Finn
-  - family: Bakka
-    given: Haakon
-  - family: Bolin
-    given: David
-  - family: Krainski
-    given: Elias
-  - family: Rue
-    given: Håvard
-  container-title: SORT Statistics and Operations Research Transactions
-  volume: 48
-  issue: 1
-  page: 3-66
-  type: article-journal
-  issued:
-    year: 2024
+bibliography: references.bib
 ---
 
 ```{r setup, include = FALSE}
