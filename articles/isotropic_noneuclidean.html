@@ -82,7 +82,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-11. Last
-modified: 2024-11-30.</h4>
+modified: 2024-12-01.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/isotropic_noneuclidean.rmd" class="external-link"><code>vignettes/isotropic_noneuclidean.rmd</code></a></small>
       <div class="d-none name"><code>isotropic_noneuclidean.rmd</code></div>
@@ -107,12 +107,13 @@ vertices, then the resulting model is different from what one would
 expect. Indeed, the model might change when doing predictions (as one
 would need to add further observations as vertices to obtain
 predictions). Furthermore, if one does not add observations as vertices,
-then the actual covariance function might not be valid <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">@Anderes2020</span></a>. Actually, in <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">@Anderes2020</span></a>, such models were not defined,
-as they only define Gaussian models with isotropic covariance functions
-for metric graphs with Euclidean edges. One option, therefore, would be
-to simply not allow one to fit such models at all as they are not
-consistent. However, in the package we chose to only give a warning, and
-let the user decide what to do.</p>
+then the actual covariance function might not be valid <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>.
+Actually, in <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>, such
+models were not defined, as they only define Gaussian models with
+isotropic covariance functions for metric graphs with Euclidean edges.
+One option, therefore, would be to simply not allow one to fit such
+models at all as they are not consistent. However, in the package we
+chose to only give a warning, and let the user decide what to do.</p>
 </div>
 <div class="section level2">
 <h2 id="a-simple-example">A simple example<a class="anchor" aria-label="anchor" href="#a-simple-example"></a>
@@ -330,6 +331,13 @@ do prediction, we need to add the observation locations as vertices,
 thus modifying the graph. This means that there is an inconsistency
 between the model used to fit the data, and the model used to obtain
 prediction.</p>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-Anderes2020" class="csl-entry">
+Anderes, Ethan, Jesper Møller, and Jakob G. Rasmussen. 2020.
+<span>“Isotropic Covariance Functions on Graphs and Their Edges.”</span>
+<em>Annals of Statistics</em> 48: 2478–2503.
+</div>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

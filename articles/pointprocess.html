@@ -82,7 +82,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2024-11-30.</h4>
+modified: 2024-12-01.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -172,7 +172,7 @@ plot:</p>
 processes, the likelihood has a term
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><mi>Γ</mi></msub><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">\int_\Gamma \exp(u(s)) ds</annotation></semantics></math>
 that needs to be handled separately. This is done by using the mid-point
-rule as suggested for SPDE models by <a href="https://academic.oup.com/biomet/article/103/1/49/2389990" class="external-link"><span class="citation">Simpson et al.</span></a> where we approximate
+rule as suggested for SPDE models by <a href="https://academic.oup.com/biomet/article/103/1/49/2389990" class="external-link"><span class="citation">Simpson et al. (2016)</span></a> where we approximate
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><mi>Γ</mi></msub><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>s</mi><mo>≈</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><msub><mover><mi>a</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>s</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \int_\Gamma \exp(u(s)) ds \approx \sum_{i=1}^p \widetilde{a}_i \exp\left(u(\widetilde{s}_i)\right).
 </annotation></semantics></math> Using the fact that
@@ -388,9 +388,9 @@ Gaussian Processes and Space-Time Models on Compact Metric
 Graphs.”</span> <em>In Preparation</em>.
 </div>
 <div id="ref-lgcp" class="csl-entry">
-Simpson, D, J. B. Illian, F. Lindgren, S. H. Sørbye, and H. Rue.
-<span>“Going Off Grid: Computationally Efficient Inference for
-Log-Gaussian Cox Processes.”</span> <em>Biometrika</em>.
+Simpson, Daniel, Janine B. Illian, Finn Lindgren, Siv H. Sørbye, and
+Håvard Rue. 2016. <span>“Going Off Grid: Computationally Efficient
+Inference for Log-Gaussian Cox Processes.”</span> <em>Biometrika</em>.
 </div>
 </div>
 </div>
