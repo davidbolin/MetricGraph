@@ -222,6 +222,8 @@ metric_graph <-  R6Class("metric_graph",
                 vertex_unit <- crs_tmp$units_gdal
                 if(vertex_unit == "metre"){
                   vertex_unit <- "m"
+                } else if(vertex_unit == "kilometre"){
+                  vertex_unit <- "km"
                 }
               }
             }
@@ -253,7 +255,9 @@ metric_graph <-  R6Class("metric_graph",
                 vertex_unit <- crs_tmp$units_gdal
                 if(vertex_unit == "metre"){
                   vertex_unit <- "m"
-                }              
+                } else if(vertex_unit == "kilometre"){
+                  vertex_unit <- "km"
+                }
               }
             }
             if(is.null(length_unit)){
