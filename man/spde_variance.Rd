@@ -4,7 +4,17 @@
 \alias{spde_variance}
 \title{Variancefor Whittle-Matérn fields}
 \usage{
-spde_variance(kappa, tau, range, sigma, alpha, graph, BC = 1, directional = F)
+spde_variance(
+  kappa,
+  tau,
+  range,
+  sigma,
+  alpha,
+  graph,
+  BC = 1,
+  include_vertices = FALSE,
+  directional = F
+)
 }
 \arguments{
 \item{kappa}{Parameter kappa from the SPDE.}
@@ -20,6 +30,8 @@ spde_variance(kappa, tau, range, sigma, alpha, graph, BC = 1, directional = F)
 \item{graph}{A \code{metric_graph} object.}
 
 \item{BC}{boundary conditions}
+
+\item{include_vertices}{Should the variance at the vertices locations be included in the returned vector?}
 
 \item{directional}{bool is the model a directional or not. directional only works for alpha=1}
 }

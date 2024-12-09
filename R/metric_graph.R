@@ -4622,6 +4622,7 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
       if (!is.null(mesh$PtE) && nrow(mesh$PtE) > 0) {
         mesh$V <- rbind(mesh$V, self$coordinates(PtE = mesh$PtE))
       }
+      self$mesh <- mesh
     } else {
       mesh$ind <- 0
 
@@ -4642,13 +4643,11 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
       if(!is.null(mesh$PtE) && nrow(mesh$PtE) > 0) {
         mesh$V <- self$coordinates(PtE = mesh$PtE)
       }
-
+      self$mesh <- mesh
       if (continuous.outs) private$mesh_merge_outs()
       private$move_V_first()
       if (continuous.deg2) private$mesh_merge_deg2()
     }
-
-    self$mesh <- mesh
   }, 
 
   #' @description Build mass and stiffness matrices for given mesh object.
@@ -7801,21 +7800,22 @@ add_vertices = function(PtE, tolerance = 1e-10, verbose) {
     nv <- dim(self$mesh$V)[1]
     for(i in 1:self$nV) {
       ind <- which(self$mesh$V[,1] == self$V[i,1] & self$mesh$V[,2] == self$V[i,2])[1]
-
-      if(ind > i && i < nv) {
-        if (i == 1) {
-          reo <- c(ind, setdiff(i:nv,ind))
-        } else {
-          reo <- c(1:(i-1), ind, setdiff(i:nv,ind))
+      if(!is.na(ind) && length(ind)>0) {
+        if(ind > i && i < nv) {
+          if (i == 1) {
+            reo <- c(ind, setdiff(i:nv,ind))
+          } else {
+            reo <- c(1:(i-1), ind, setdiff(i:nv,ind))
+          }
+          self$mesh$V <- self$mesh$V[reo,]
+          self$mesh$PtE <- self$mesh$PtE[reo,]
+          self$mesh$VtE <- self$mesh$VtE[reo,]
+          Etmp <- self$mesh$E
+          ind1 <- Etmp == ind
+          ind2 <- Etmp >= i & Etmp < ind
+          self$mesh$E[ind1] = i
+          self$mesh$E[ind2] = self$mesh$E[ind2] + 1
         }
-        self$mesh$V <- self$mesh$V[reo,]
-        self$mesh$PtE <- self$mesh$PtE[reo,]
-        self$mesh$VtE <- self$mesh$VtE[reo,]
-        Etmp <- self$mesh$E
-        ind1 <- Etmp == ind
-        ind2 <- Etmp >= i & Etmp < ind
-        self$mesh$E[ind1] = i
-        self$mesh$E[ind2] = self$mesh$E[ind2] + 1
       }
     }
   },
