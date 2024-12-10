@@ -303,8 +303,8 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param log_scale Should the initial values be returned in log scale?
 #' @param rec_tau Should a starting value for the reciprocal of tau be given?
 #' @param model_options List object containing the model options.
-#' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
-#' @param max_dim_start_range Should the maximum between the dimensions of the bounding box of the metric graph be used? If `FALSE`, the minimum will be used.
+#' @param factor_start_range Factor to multiply the max/min/diagonal dimension of the bounding box to obtain a starting value for range. Default is 0.5.
+#' @param type_start_range_bbox Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.
 
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
@@ -320,10 +320,16 @@ graph_starting_values <- function(graph,
                                   log_scale = FALSE,
                                   model_options = list(),
                                   rec_tau = TRUE,
-                                  factor_start_range = 0.3,
-                                  max_dim_start_range = TRUE){
+                                  factor_start_range = 0.5,
+                                  type_start_range_bbox = "diag"){
 
   check_graph(graph)
+
+  type_start_range_bbox <- match.arg(type_start_range_bbox, 
+                                   choices = c("diag", "max", "min"))
+
+  
+
 
   model <- model[[1]]
   if((!model%in%c("alpha1", "alpha2", "isoExp", "GL1", "GL2"))){
@@ -371,12 +377,14 @@ graph_starting_values <- function(graph,
       width <- sf::st_distance(point_min_x, point_max_x)
       height <- sf::st_distance(point_min_y, point_max_y)
 
-      # Find the maximum dimension
-      if(max_dim_start_range){
+      if(type_start_range_bbox == "diag") {
+        dimension_size <- sqrt(as.numeric(width)^2 + as.numeric(height)^2)/1000
+      } else if(type_start_range_bbox == "max") {
         dimension_size <- max(as.numeric(width), as.numeric(height))/1000
-      } else{
+      } else { # min case
         dimension_size <- min(as.numeric(width), as.numeric(height))/1000
       }
+
     } else {
       # If not sf format, assume it’s a standard list and compute Euclidean distances
       min_x <- bounding_box$min_x
@@ -386,11 +394,12 @@ graph_starting_values <- function(graph,
 
       width <- max_x - min_x
       height <- max_y - min_y
-      if(max_dim_start_range){
-        dimension_size <- max(width, height)
-      } else{
-        dimension_size <- min(width, height)
-      }
+
+      dimension_size <- switch(type_start_range_bbox,
+                              "diag" = sqrt(width^2 + height^2),
+                              "max" = max(width, height),
+                              "min" = min(width, height))
+
     }
 
     prior.range.nominal <- dimension_size * factor_start_range
@@ -465,7 +474,8 @@ graph_starting_values <- function(graph,
     if(is.null(start_sigma)){
       if(data){
         #variance is sigma^2/(4 * kappa^3)
-        start_sigma <- sqrt(4*start_kappa^3) * data_std
+        # multiplying by 2 to help stabilize.
+        start_sigma <- 2 * sqrt(4*start_kappa^3) * data_std
       } else{
         start_sigma <- 1
       }

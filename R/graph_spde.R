@@ -25,7 +25,7 @@
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
 #' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
-#' @param max_dim_start_range Should the maximum between the dimensions of the bounding box of the metric graph be used? If `FALSE`, the minimum will be used.
+#' @param type_start_range_bbox Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
 #' If "detect", it will check if the shared lib exists locally, in which case it will
 #' use it. Otherwise it will use 'INLA's shared library.
@@ -71,7 +71,7 @@ graph_spde <- function(graph_object,
                        start_tau = NULL,
                        prior_tau = NULL,
                        factor_start_range = 0.3,
-                       max_dim_start_range = TRUE,
+                       type_start_range_bbox = "diag",
                        shared_lib = "detect",
                        debug = FALSE,
                        verbose = 0){
@@ -328,7 +328,7 @@ graph_spde <- function(graph_object,
       start_values_vector <- graph_starting_values(graph_spde,
                       model = model_start, data=FALSE,
                       factor_start_range = factor_start_range,
-                      max_dim_start_range = max_dim_start_range)$start_values
+                      type_start_range_bbox = type_start_range_bbox)$start_values
 
       prior_kappa$meanlog <- log(start_values_vector[3])
       prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
@@ -1393,6 +1393,7 @@ bru_graph_rep <- function(repl, graph_spde, repl_col){
 #' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
+#' @param tolerance_merge Tolerance for merging prediction points into original points to increase stability.
 #' @param... Additional arguments passed on to `inla.posterior.sample()`.
 #' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with predictions.
@@ -1417,6 +1418,7 @@ predict.inla_metric_graph_spde <- function(object,
                                            include = NULL,
                                            exclude = NULL,
                                            drop = FALSE,
+                                           tolerance_merge = 1e-5,
                                            ...,
                                            data = deprecated()){
   if (lifecycle::is_present(data)) {
@@ -1513,7 +1515,8 @@ predict.inla_metric_graph_spde <- function(object,
                   normalized = normalized,
                   group = group_variables,
                   verbose=0,
-                  suppress_warnings = TRUE)
+                  suppress_warnings = TRUE,
+                  tolerance_merge = tolerance_merge)
 
   dummy1 <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]]
 

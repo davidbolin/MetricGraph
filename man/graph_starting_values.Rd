@@ -16,8 +16,8 @@ graph_starting_values(
   log_scale = FALSE,
   model_options = list(),
   rec_tau = TRUE,
-  factor_start_range = 0.3,
-  max_dim_start_range = TRUE
+  factor_start_range = 0.5,
+  type_start_range_bbox = "diag"
 )
 }
 \arguments{
@@ -47,9 +47,9 @@ last element? This is the format for the likelihood constructor from the
 
 \item{rec_tau}{Should a starting value for the reciprocal of tau be given?}
 
-\item{factor_start_range}{Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.}
+\item{factor_start_range}{Factor to multiply the max/min/diagonal dimension of the bounding box to obtain a starting value for range. Default is 0.5.}
 
-\item{max_dim_start_range}{Should the maximum between the dimensions of the bounding box of the metric graph be used? If \code{FALSE}, the minimum will be used.}
+\item{type_start_range_bbox}{Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.}
 }
 \value{
 A vector, \code{c(start_sigma_e, start_sigma, start_kappa)}

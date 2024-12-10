@@ -24,6 +24,7 @@
   include = NULL,
   exclude = NULL,
   drop = FALSE,
+  tolerance_merge = 1e-05,
   ...,
   data = deprecated()
 )
@@ -94,6 +95,8 @@ the inclusion list)}
 \item{drop}{logical; If keep=FALSE, data is a SpatialDataFrame, and the
 prediciton summary has the same number of rows as data, then the output is a
 SpatialDataFrame object. Default FALSE.}
+
+\item{tolerance_merge}{Tolerance for merging prediction points into original points to increase stability.}
 
 \item{...}{Additional arguments passed on to \code{inla.posterior.sample()}.}
 

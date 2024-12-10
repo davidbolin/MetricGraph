@@ -5323,8 +5323,10 @@ return(mapview_output)
         }
       }
 
-      n.v <- dim(self$V)[1]
-      XV <- X[1:n.v]
+      if(attr(self$mesh, "continuous")){
+        n.v <- dim(self$V)[1]
+        XV <- X[1:n.v]
+      } 
     } else{
       if(is.null(newdata)){
         X <- self$get_data(group = group)
@@ -5348,8 +5350,12 @@ return(mapview_output)
         ind <- self$mesh$PtE[, 1] == i
 
         if (sum(ind)==0) {
-          vals <- rbind(c(0, XV[Vs]),
+          if(attr(self$mesh,"continuous")){
+            vals <- rbind(c(0, XV[Vs]),
                         c(1, XV[Ve]))
+          } else{
+            vals <- NULL
+          }
 
         } else {
           if(attr(self$mesh,"continuous")) {
@@ -5357,19 +5363,7 @@ return(mapview_output)
                           cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
                           c(1, XV[Ve]))
           } else {
-            if(min(self$mesh$PtE[ind,2])==0 && max(self$mesh$PtE[ind,2])==1) {
               vals <- cbind(self$mesh$PtE[ind, 2], X[which(ind)])
-            } else if (min(self$mesh$PtE[ind,2])==0) {
-                vals <- rbind(cbind(self$mesh$PtE[ind, 2], X[which(ind)]),
-                              c(1, XV[Ve]))
-            } else if (max(self$mesh$PtE[ind,2])==1){
-              vals <- rbind(c(0, XV[Vs]),
-                            cbind(self$mesh$PtE[ind, 2], X[which(ind)]))
-            } else {
-              vals <- rbind(c(0, XV[Vs]),
-                            cbind(self$mesh$PtE[ind, 2], X[which(ind)]),
-                            c(1, XV[Ve]))
-            }
           }
 
 
