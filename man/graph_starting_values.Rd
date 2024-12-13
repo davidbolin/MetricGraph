@@ -16,7 +16,7 @@ graph_starting_values(
   log_scale = FALSE,
   model_options = list(),
   rec_tau = TRUE,
-  factor_start_range = 0.5,
+  factor_start_range = 0.3,
   type_start_range_bbox = "diag"
 )
 }

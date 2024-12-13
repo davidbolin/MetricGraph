@@ -139,28 +139,11 @@ For the source codes, reporting issues, etc., please go the the [`MetricGraph` G
 
 # Vignettes
 
-We have the following vignettes for the `MetricGraph` package:
+For an introduction to the `MetricGraph` package, see the vignette:  
+[MetricGraph: Random Fields on Metric Graphs](https://davidbolin.github.io/MetricGraph/articles/MetricGraph.html).
 
-* [MetricGraph: Random Fields on Metric Graphs](https://davidbolin.github.io/MetricGraph/articles/MetricGraph.html)
-
-* [Working with metric graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graph.html)
-
-* [Gaussian random fields on metric graphs](https://davidbolin.github.io/MetricGraph/articles/random_fields.html)
-
-* [Data manipulation on metric graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graph_data.html)
-
-* [Whittle--Matérn fields with general smoothness](https://davidbolin.github.io/MetricGraph/articles/fem_models.html)
-
-* [inlabru interface of Whittle--Matérn fields](https://davidbolin.github.io/MetricGraph/articles/inlabru_interface.html)
-
-* [INLA interface for Whittle--Matérn fields on metric graphs](https://davidbolin.github.io/MetricGraph/articles/inla_interface.html)
-
-* [Log-Gaussian Cox processes on metric graphs](https://davidbolin.github.io/MetricGraph/articles/pointprocess.html)
-
-* [Comparison of different models using real data](https://davidbolin.github.io/MetricGraph/articles/comparison.html)
-
-* [On isotropic covariances on metric graphs with non-Euclidean edges](https://davidbolin.github.io/MetricGraph/articles/isotropic_noneuclidean.html)
-
+All other vignettes covering different examples and applications of the package are available at:  
+[https://davidbolin.github.io/MetricGraph/articles/](https://davidbolin.github.io/MetricGraph/articles/).
 
 # Function Manuals
 
