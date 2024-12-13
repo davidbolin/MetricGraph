@@ -10,9 +10,9 @@ graph_lme(
   model = list(type = "linearModel"),
   which_repl = NULL,
   optim_method = "L-BFGS-B",
-  possible_methods = c("Nelder-Mead", "L-BFGS-B"),
+  possible_methods = "L-BFGS-B",
   model_options = list(),
-  BC = 0,
+  BC = 1,
   previous_fit = NULL,
   fix_coeff = FALSE,
   parallel = FALSE,
@@ -46,7 +46,7 @@ one can choose between a finite element approximation of the precision matrix
 by adding \code{fem = TRUE} to the list, or to use the exact precision matrix
 (by setting \code{fem = FALSE}). If \code{fem} is \code{FALSE}, there is also the parameter
 \code{alpha}, to determine the order of the SPDE, which is either 1 or 2. If \code{fem}
-is \code{TRUE} and \code{alpha} is not specified, then the default value of \code{alpha=1}
+is \code{FALSE} and \code{alpha} is not specified, then the default value of \code{alpha=1}
 will be used. If \code{fem} is \code{TRUE} and one does not specify \code{alpha}, it will be
 estimated from the data. However, if one wants to have \code{alpha} fixed to some
 value, the user can specify either \code{alpha} or \code{nu} in the list. See the
@@ -75,7 +75,7 @@ the model. If \code{NULL} all replicates will be considered.}
 
 \item{optim_method}{The method to be used with \code{optim} function.}
 
-\item{possible_methods}{Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'Nelder-Mead' and 'L-BFGS-B' are considered.}
+\item{possible_methods}{Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'L-BFGS-B' is considered.}
 
 \item{model_options}{A list containing additional options to be used in the model. Currently, it is possible to fix parameters during the estimation or change the starting values of the parameters. The general structure of the elements of the list is \code{fix_parname} and \code{start_parname}, where \code{parname} stands for the name of the parameter. If \code{fix_parname} is not \code{NULL}, then the model with be fitted with the \code{parname} being fixed at the value that was passed. If \code{start_parname} is not \code{NULL}, the model will be fitted using the value passed as starting value for \code{parname}. the For 'WM' models, the possible elements of the list are: \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_nu}, \code{start_nu}, \code{fix_sigma}, \code{start_sigma}, \code{fix_range}, \code{start_range}. Alternatively, one can use \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_nu}, \code{start_nu}, \code{fix_tau}, \code{start_tau}, \code{fix_kappa}, \code{start_kappa}. For 'WM1', 'WM2', 'isoExp', 'GL1' and 'GL2' models, the possible elements of the list are \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_sigma}, \code{start_sigma}, \code{fix_range}, \code{start_range}. Alternatively, one can use \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_tau}, \code{start_tau}, \code{fix_kappa}, \code{start_kappa}. For 'isoCov' models, the possible values are \code{fix_sigma_e}, \code{start_sigma_e}, \code{fix_par_vec}, \code{start_par_vec}. Observe that contrary to the other models, for 'isoCov' models, both \code{fix_par_vec} and \code{start_par_vec} should be given as vectors of the size of the dimension of the vector for the input of the covariance function passed to the 'isoCov' model. Furthermore, for 'isoCov' models, \code{fix_par_vec} is a logical vector, indicating which parameters to be fixed, and the values will be kept fixed to the values given to \code{start_par_vec}, one can also use \code{fix_sigma_e} and \code{start_sigma_e} for controlling the std. deviation of the measurement error.}
 

@@ -25,6 +25,14 @@ c_basis2 <- function(A, eps_limit = 1e-10) {
     .Call(`_MetricGraph_c_basis2`, A, eps_limit)
 }
 
+construct_constraint_matrix <- function(E, nV, edge_constraint) {
+    .Call(`_MetricGraph_construct_constraint_matrix`, E, nV, edge_constraint)
+}
+
+construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree) {
+    .Call(`_MetricGraph_construct_directional_constraint_matrix`, E, nV, nE, alpha, V_indegree, V_outdegree)
+}
+
 #' @name proj_vec
 #' @noRd
 NULL
@@ -85,5 +93,9 @@ interpolate2_aux <- function(lines, pos, normalized = 0L) {
 #'
 compute_length <- function(coords) {
     .Call(`_MetricGraph_compute_length`, coords)
+}
+
+generate_mesh <- function(n_edges, edge_lengths, n_e, E, ind, continuous) {
+    .Call(`_MetricGraph_generate_mesh`, n_edges, edge_lengths, n_e, E, ind, continuous)
 }
 

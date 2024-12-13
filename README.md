@@ -1,8 +1,8 @@
 # MetricGraph <a href="https://davidbolin.github.io/MetricGraph/"><img src="/man/figures/logo.png" align="right" height="138" /></a>
 
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version-last-release/MetricGraph)](https://cran.r-project.org/package=MetricGraph)
+[![CRAN_Downloads](https://cranlogs.r-pkg.org/badges/grand-total/MetricGraph)](https://cranlogs.r-pkg.org/badges/grand-total/MetricGraph)
 [![R-CMD-check](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check.yml)
-[![R-CMD-check-windows](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml/badge.svg)](https://github.com/davidbolin/MetricGraph/actions/workflows/R-CMD-check-windows.yml)
 
 ## Overview 
 
@@ -32,7 +32,7 @@ remotes::install_github("davidbolin/metricgraph", ref = "devel")
 # References #
 D. Bolin, A. Simas, J. Wallin (2024) [Gaussian Whittle-Matérn fields on metric graphs][ref1]. Bernoulli, 30, 1611-1639.
 
-D. Bolin, M. Kovács, V. Kumar, A. Simas (2023) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. Mathematics of Computation. In press.
+D. Bolin, M. Kovács, V. Kumar, A. Simas (2024) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. Mathematics of Computation, 93, 2439-2472.
 
 D. Bolin, A. Simas, J. Wallin (2023) [Markov properties of Gaussian random fields on compact metric graphs][ref3]. ArXiv:2304.03190
 

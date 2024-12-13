@@ -38,9 +38,10 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 #' a list(i,j,x, nv)
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 ....
+#' @param stationary_points The indices of the endpoints (inward degree zero) to have stationary boundary conditions.
 #' @return Precision matrix or list
 #' @noRd
-Qalpha1_edges <- function(theta, graph, w, BC = 0, build = TRUE) {
+Qalpha1_edges <- function(theta, graph, w, BC = 0, stationary_points = "all", build = TRUE) {
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -75,10 +76,32 @@ Qalpha1_edges <- function(theta, graph, w, BC = 0, build = TRUE) {
       x_[count + 4] <- c_2
       count <- count + 4
   }
+
+  if(is.character(stationary_points)){
+    stationary_points <- stationary_points[[1]]
+    if(!(stationary_points %in% c("all", "none"))){
+      stop("If stationary_points is a string, it must be either 'all' or 'none', otherwise it must be a numeric vector.")
+    }
+    stat_indices <- which(graph$get_degrees("indegree")==0)
+  } else{
+    stat_indices <- stationary_points
+    if(!is.numeric(stat_indices)){
+      stop("stationary_points must be either numeric or a string.")
+    }
+  }
+  if(stationary_points == "none"){
+    BC <- 0
+  } else{
+    BC <- 1
+  }
   if(BC> 0){
     empty.in <- which(graph$get_degrees("indegree")==0)
+    if(any(!(stat_indices%in%empty.in))){
+      stop("stationary_points should only contain vertices with inward degree zero!")
+    }
 
-    for (v in empty.in) {
+
+    for (v in stat_indices) {
       edge <- which(graph$E[,1]==v)[1] #only put stationary of one of indices
       ind <- 2 * ( edge - 1) + 1
       i_ <- c(i_, ind)
@@ -179,6 +202,28 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 }
 
 
+#' @noRd
+Q00 <- function(l,kappa,tau) {
+  kl <- kappa*l
+
+  Q <- matrix(0,4,4)
+
+  c1 <-  2*kappa*kl
+
+  Q[1,1] <- Q[3,3] <- c1*kappa + kappa^2 * sinh(2*kl)
+  Q[1,2] <- Q[2,1] <- c1*kl
+  Q[3,4] <- Q[4,3] <- -c1*kl
+  Q[1,3] <- Q[3,1] <- -(2*kappa^2*sinh (kl) + c1*kappa*cosh (kl))
+  Q[1,4] <- Q[4,1] <- c1 * sinh (kl)
+  Q[2,3] <- Q[3,2] <- -c1* sinh (kl)
+  Q[2,2] <- Q[4,4] <- sinh(2*kl) - 2*kl
+  Q[2,4] <- Q[4,2] <- -2*(sinh (kl)-kl*cosh (kl))
+
+  C <- 2*kappa*tau^2/(-2*kl^2 + cosh(2*kl)-1)
+
+  return(C*Q)
+
+}
 #' The precision matrix for all vertices in the alpha=2 case
 #' @param theta - tau, kappa
 #' @param graph metric_graph object
@@ -193,7 +238,7 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 #' lower and upper edge end points
 #' @return Precision matrix or list
 #' @noRd
-Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
+Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_points = NULL) {
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -201,30 +246,34 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
   i_ <- j_ <- x_ <- rep(0, graph$nE * 16)
   count <- 0
 
-  R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
-                   -r_2(0, kappa = kappa, tau = tau, deriv = 1),
-                   -r_2(0, kappa = kappa, tau = tau, deriv = 1),
-                   -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
-  R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
-                  cbind(matrix(0, 2, 2), R_00))
-  R00i <- solve(R_00)
-  Ajd <- -1 * rbind(cbind(w * R00i, matrix(0, 2, 2)),
-                      cbind(matrix(0, 2, 2), (1-w)*R00i))
+  #R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+  #                 -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+  #                 -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+  #                 -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
+  #R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
+  #                cbind(matrix(0, 2, 2), R_00))
+  #R00i <- solve(R_00)
+  #Ajd <- -1 * rbind(cbind(w * R00i, matrix(0, 2, 2)),
+  #                    cbind(matrix(0, 2, 2), (1-w)*R00i))
   for (i in 1:graph$nE) {
 
     l_e <- graph$edge_lengths[i]
     #lots of redundant caculations
-    d_ <- c(0, l_e)
-    D <- outer(d_, d_, "-")
-    r_0l <-   r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
-    r_11 <- - r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
+    # d_ <- c(0, l_e)
+    # D <- outer(d_, d_, "-")
+    #r_0l <-   r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
+    #r_11 <- - r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
     # order by node not derivative
-    R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, tau = tau, deriv = 1),
-                     r_2(l_e, kappa = kappa, tau = tau, deriv = 1), r_11), 2, 2)
+    #R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, tau = tau, deriv = 1),
+    #                 r_2(l_e, kappa = kappa, tau = tau, deriv = 1), r_11), 2, 2)
 
-    R_node[1:2, 3:4] <- R_01
-    R_node[3:4, 1:2] <- t(R_01)
-    Q_adj <- solve(R_node) + Ajd
+    #R_node[1:2, 3:4] <- R_01
+    #R_node[3:4, 1:2] <- t(R_01)
+
+    #Q_adj <- solve(R_node) + Ajd
+    Q_adj <- Q00(l_e,kappa,tau)
+
+
 
     if (graph$E[i, 1] == graph$E[i, 2]) {
       warning("Circular edges are not implemented")
@@ -290,14 +339,6 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
       j_[count + 14] <- 4 * (i - 1) + 2
       x_[count + 14] <- Q_adj[2, 3]
 
-      #lower edge  u', upper edge  u,
-      i_[count + 13] <- 4 * (i - 1) + 2
-      j_[count + 13] <- 4 * (i - 1) + 3
-      x_[count + 13] <- Q_adj[2, 3]
-      i_[count + 14] <- 4 * (i - 1) + 3
-      j_[count + 14] <- 4 * (i - 1) + 2
-      x_[count + 14] <- Q_adj[2, 3]
-
       #lower edge  u', upper edge  u',
       i_[count + 15] <- 4 * (i - 1) + 2
       j_[count + 15] <- 4 * (i - 1) + 4
@@ -310,34 +351,64 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE) {
 
   }
 
-  if(BC> 0){
-    #Vertices with of degree 1
-    i.table <- table(c(graph$E))
-    index <- as.integer(names(which(i.table == 1)))
-    #for this vertices locate position
+  if(is.null(stationary_points)){
+    R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+                     -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                     -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                     -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
+      if(BC> 0){
+        #Vertices with of degree 1
+        i.table <- table(c(graph$E))
+        index <- as.integer(names(which(i.table == 1)))
+        #for this vertices locate position
 
 
-    if(BC==1 || BC==2){
-      lower.edges <- which(graph$E[, 1] %in% index)
-      for (le in lower.edges) {
-        ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
+        if(BC==1 || BC==2){
+          lower.edges <- which(graph$E[, 1] %in% index)
+          for (le in lower.edges) {
+            ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
 
-        i_ <- c(i_, ind)
-        j_ <- c(j_, ind)
-        x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
-        count <- count + 2
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
+        }
+        if(BC==1 || BC==3){
+          upper.edges <- which(graph$E[, 2] %in% index)
+          for (ue in upper.edges) {
+            ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
+        }
       }
-    }
-    if(BC==1 || BC==3){
-      upper.edges <- which(graph$E[, 2] %in% index)
-      for (ue in upper.edges) {
-        ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
-        i_ <- c(i_, ind)
-        j_ <- c(j_, ind)
-        x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
-        count <- count + 2
-      }
-    }
+  } else{
+    R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+                      -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                      -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                      -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
+    index <- stationary_points
+    lower.edges <- which(graph$E[, 1] %in% index)
+          for (le in lower.edges) {
+            ind <- c(4 * (le - 1) + 1, 4 * (le - 1) + 2)
+
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, w*c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
+
+          upper.edges <- which(graph$E[, 2] %in% index)
+          for (ue in upper.edges) {
+            ind <- c(4 * (ue - 1) + 3, 4 * (ue - 1) + 4)
+            i_ <- c(i_, ind)
+            j_ <- c(j_, ind)
+            x_ <- c(x_, (1-w) * c(1 / R_00[1, 1], 1 / R_00[2, 2]))
+            count <- count + 2
+          }
   }
   if (build) {
     Q <- Matrix::sparseMatrix(i    = i_[1:count],

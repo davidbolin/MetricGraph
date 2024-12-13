@@ -13,7 +13,7 @@ bibentry( bibtype = "Manual",
                            email = "jonas.wallin81@gmail.com",
                            role = "aut")),
           year = "2023",
-          note = "R package version 1.3.0",
+          note = "R package version 1.4.0",
           url = "https://CRAN.R-project.org/package=MetricGraph",
 )
 
@@ -50,10 +50,12 @@ bibentry(bibtype = "Article",
                     person(given = "Alexandre B.",
                            family = "Simas",
                            email = "alexandre.simas@kaust.edu.sa")),
-         year = "2023",
+         year = "2024",
          journal = "Mathematics of Computation",
-         doi = "10.1090/mcom/3929",
-         note="(in press)"
+         volume       = "93",
+         number       = "349",
+         pages        = "2439--2472",         
+         doi = "10.1090/mcom/3929"
 )
 
 

@@ -15,7 +15,9 @@ graph_starting_values(
   like_format = FALSE,
   log_scale = FALSE,
   model_options = list(),
-  rec_tau = TRUE
+  rec_tau = TRUE,
+  factor_start_range = 0.3,
+  type_start_range_bbox = "diag"
 )
 }
 \arguments{
@@ -44,6 +46,10 @@ last element? This is the format for the likelihood constructor from the
 \item{model_options}{List object containing the model options.}
 
 \item{rec_tau}{Should a starting value for the reciprocal of tau be given?}
+
+\item{factor_start_range}{Factor to multiply the max/min/diagonal dimension of the bounding box to obtain a starting value for range. Default is 0.5.}
+
+\item{type_start_range_bbox}{Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.}
 }
 \value{
 A vector, \code{c(start_sigma_e, start_sigma, start_kappa)}

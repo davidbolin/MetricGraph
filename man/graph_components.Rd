@@ -83,14 +83,14 @@ the components are sorted by the number of vertices.}
 
 \item{\code{lines}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{edges} instead.}
 
-\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degrees' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
+\item{\code{vertex_unit}}{The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is \code{NULL}, which means no unit. However, if you set \code{length_unit}, you need to set \code{vertex_unit}.}
 
 \item{\code{length_unit}}{The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is \code{vertex_unit}. Observe that if \code{vertex_unit} is \code{NULL}, \code{length_unit} can only be \code{NULL}.
-If \code{vertex_unit} is 'degrees', then the default value for \code{length_unit} is 'km'.}
+If \code{vertex_unit} is 'degree', then the default value for \code{length_unit} is 'km'.}
 
 \item{\code{longlat}}{If TRUE, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
-\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degrees'} and \code{length_unit = 'm'}.}
+\code{vertex_unit} and \code{length_unit}, and is equivalent to \code{vertex_unit = 'degree'} and \code{length_unit = 'm'}.}
 
 \item{\code{tolerance}}{Vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If \code{longlat = TRUE}, the

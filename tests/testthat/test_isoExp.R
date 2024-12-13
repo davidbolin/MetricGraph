@@ -6,7 +6,7 @@ test_that("Test resistance metric", {
   line2 <- Line(rbind(c(1,0),c(2,0)))
   Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                                 Lines(list(line2),ID="2")))
-  graph <- metric_graph$new(lines = Lines)
+  graph <- metric_graph$new(edges = Lines)
 
 
   PtE <- cbind(c(1,1,
@@ -47,7 +47,7 @@ test_that("Test resistance metric", {
 
   PtE.order <- PtE[reo, ]
   y.order <- y[reo]
-  graph <- metric_graph$new(lines = Lines)
+  graph <- metric_graph$new(edges = Lines)
   df_temp <- data.frame(y = y.order, edge_number = PtE.order[,1], distance_on_edge = PtE.order[,2])
   graph$add_observations(data=df_temp, normalized = TRUE)
   graph$compute_resdist(full = TRUE)

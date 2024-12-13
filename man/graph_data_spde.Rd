@@ -8,8 +8,12 @@ graph_data_spde(
   graph_spde,
   name = "field",
   repl = NULL,
+  repl_col = NULL,
   group = NULL,
   group_col = NULL,
+  likelihood_col = NULL,
+  resp_col = NULL,
+  covariates = NULL,
   only_pred = FALSE,
   loc_name = NULL,
   tibble = FALSE,
@@ -28,11 +32,20 @@ graph_data_spde(
 can set \code{repl} to \code{NULL}. If one wants all replicates,
 then one sets to \code{repl} to \code{.all}.}
 
+\item{repl_col}{Column containing the replicates. If the replicate is the internal group variable, set the replicates
+to ".group". If not replicates, set to \code{NULL}.}
+
 \item{group}{Which groups? If there is no groups, one
 can set \code{group} to \code{NULL}. If one wants all groups,
 then one sets to \code{group} to \code{.all}.}
 
 \item{group_col}{Which "column" of the data contains the group variable?}
+
+\item{likelihood_col}{If only a single likelihood, this variable should be \code{NULL}. In case of multiple likelihoods, which column contains the variable indicating the number of the likelihood to be considered?}
+
+\item{resp_col}{If only a single likelihood, this variable should be \code{NULL}. In case of multiple likelihoods, column containing the response variable.}
+
+\item{covariates}{Vector containing the column names of the covariates. If no covariates, then it should be \code{NULL}.}
 
 \item{only_pred}{Should only return the \code{data.frame} to the prediction data?}
 
