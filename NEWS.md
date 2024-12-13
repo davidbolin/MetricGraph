@@ -1,3 +1,5 @@
+# MetricGraph (development version)
+
 # MetricGraph 1.4.0
 * Added an INLA implementation for `alpha=2`.
 * Added a vignette for handling multiple likelihoods in `R-INLA` and `inlabru`, and updated the `graph_spde_data()` function for such cases.
