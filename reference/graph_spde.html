@@ -9,7 +9,7 @@ in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@ in 'INLA' or 'inlabru' to fit Whittle-Matérn fields on metric graphs.</p>
 <span>  start_tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prior_tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  factor_start_range <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>  max_dim_start_range <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  type_start_range_bbox <span class="op">=</span> <span class="st">"diag"</span>,</span>
 <span>  shared_lib <span class="op">=</span> <span class="st">"detect"</span>,</span>
 <span>  debug <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="fl">0</span></span>
@@ -149,8 +149,8 @@ the log scale. Will not be used if prior.kappa is non-null.</p></dd>
 <dd><p>Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.</p></dd>
 
 
-<dt id="arg-max-dim-start-range">max_dim_start_range<a class="anchor" aria-label="anchor" href="#arg-max-dim-start-range"></a></dt>
-<dd><p>Should the maximum between the dimensions of the bounding box of the metric graph be used? If <code>FALSE</code>, the minimum will be used.</p></dd>
+<dt id="arg-type-start-range-bbox">type_start_range_bbox<a class="anchor" aria-label="anchor" href="#arg-type-start-range-bbox"></a></dt>
+<dd><p>Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.</p></dd>
 
 
 <dt id="arg-shared-lib">shared_lib<a class="anchor" aria-label="anchor" href="#arg-shared-lib"></a></dt>
