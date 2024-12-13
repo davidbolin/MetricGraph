@@ -1,0 +1,179 @@
+---
+title: "An example with a river graph model"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: 2024-08-08. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{An example with a river graph model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1)
+library(MetricGraph)
+```
+
+# Introduction
+
+In this vignette we explore how to build a directional graph model on a river network. The data is imported from the package `SSN2`.
+
+
+# Setting up the data
+Here we take the data as is described in the [Vignette  of `SSN2` ](https://cran.r-project.org/web/packages/SSN2/vignettes/introduction.html). We will use the `geometry` object from the `SSN` object to build the `metricGraph` object. We also load the observations and the relevant covariates. We assume that in the `geometry` object the lines are so that they go downwards along the river.
+```{r, message=FALSE}
+library(MetricGraph)
+library(SSN2)
+
+copy_lsn_to_temp()
+path <- file.path(tempdir(), "MiddleFork04.ssn")
+
+mf04p <- ssn_import(
+  path = path,
+  predpts = c("pred1km", "CapeHorn"),
+  overwrite = TRUE
+)
+```
+
+To create the graph, we simply pass the `SSN` object as edges. This will automatically extract the correct coordinate reference system (CRS). We have found that, typically, `SSN` objects do not require merges.
+
+```{r, message=FALSE}
+graph <- metric_graph$new(mf04p)
+```
+
+Observe that this already added, by default, the observations and edge weights contained in the `SSN` object:
+
+```{r}
+dat <- graph$get_data()
+graph$se
+```
+and
+```{r}
+graph$get_edge_weights()
+```
+
+Let us now turn the `netID` column of the data into a factor and store it in the graph:
+
+```{r}
+graph$add_observations(graph$mutate(netID = as.factor(netID)), clear_obs=TRUE)
+```
+
+We can now visualize the river and the data 
+```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+graph$plot(data = "Summer_mn", vertex_size = 0.5)
+```
+
+We can also visualize with an interactive plot by setting the `type` to `mapview`:
+
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, warning=FALSE, message=FALSE}
+graph$plot(data = "Summer_mn", vertex_size = 0.5, type = "mapview")
+```
+
+# Non directional models
+We start with fitting the non directional models. First for `alpha=1`:
+```{r, message=FALSE}
+#fitting model with different smoothness
+model.wm1 <- graph_lme(Summer_mn ~ SLOPE + netID, 
+                          graph = graph, model = 'wm1')
+```
+and then for `alpha=2`:
+```{r, message=FALSE}
+model.wm2 <- graph_lme(Summer_mn ~   SLOPE + netID, 
+                          graph = graph, model = 'wm2')
+```
+
+We also create the cross validation results to see how the models perform. Here we see that setting $\alpha=2$, i.e. one time differential, has a much worse performance compared to $\alpha=1$, i.e. continuous but non-differential.
+
+```{r, echo=TRUE}
+cross.wm1 <-posterior_crossvalidation(model.wm1)
+cross.wm2 <-posterior_crossvalidation(model.wm2)
+
+cross.scores <- rbind(cross.wm1$scores,cross.wm2$scores)
+print(cross.scores)
+```
+# Directional models
+We now start with fitting various directional model. 
+We start with having the "boundary condition" that at an edge the sum of the downward vertices should equal the upward vertices. That is if we have three edges $e_1,e_2,e_3$ connected so that $e_1,e_2$ merge into $e_3$ we have at the vertex connecting them
+$$
+u_{e_3}(v) = u_{e_1}(v) + u_{e_2}(v).
+$$
+This is the default option in `metricGraph` and is created by:
+
+```{r, message=FALSE, warning=FALSE}
+res.wm1.dir <- graph_lme(Summer_mn ~   
+                        SLOPE + netID, 
+                        graph = graph, model = 'wmd1')
+```
+
+Here one can see a big improvement by adding using the directional model over the non directional.
+```{r, echo=TRUE}
+cross.wm1.dir <-posterior_crossvalidation(res.wm1.dir)
+cross.scores <- rbind(cross.scores,cross.wm1.dir$scores)
+print(cross.scores)
+```
+
+We could use other constraints. For instance in .. the authors used constraint not so the sum is equal but rather the variance of the in is constant which is obtained by
+$$
+u_{e_3}(v) = \sqrt{w_1}u_{e_1}(v) + \sqrt{w_2}u_{e_2}(v).
+$$
+here the weights are set by the edge weight `h2oAreaKm2`.
+To make this work in the metricgraph package one uses the following line
+```{r, message=FALSE, warning=FALSE}
+graph$set_edge_weights(directional_weights = 'h2oAreaKm2')
+graph$setDirectionalWeightFunction(f_in = function(x){sqrt(x/sum(x))})
+res.wm1.dir2 <- graph_lme(Summer_mn ~  SLOPE + netID, 
+                                    graph = graph, model = 'wmd1')
+```
+
+Here we see a slight dip in performance but still much better than the symmetric version.
+```{r, echo=TRUE}
+cross.wm1.dir2 <-posterior_crossvalidation(res.wm1.dir2)
+cross.scores <- rbind(cross.scores,cross.wm1.dir2$scores)
+print(cross.scores)
+```
+
+We also want to generate predicitons over the river network this we do as follows:
+```{r, echo=TRUE}
+graph$build_mesh(h = 0.1)
+get_edge_cov <- graph$get_edge_weights()
+ df_pred <- data.frame(edge_number = graph$mesh$PtE[,1],
+                       distance_on_edge = graph$mesh$PtE[,2],
+                       SLOPE = c(get_edge_cov[graph$mesh$PtE[,1],"SLOPE"]),
+                       netID = c(get_edge_cov[graph$mesh$PtE[,1],"netID"]))
+pred_alpha1 <- augment(res.wm1.dir , newdata = df_pred,
+                        normalized = TRUE)
+pred_alpha1$Temprature <- pred_alpha1$.fitted
+pred_alpha1 %>% graph$plot(data = "Temprature", vertex_size = 0,
+            type = "mapview")
+```
+Lets examine how things looks using the same residuals:
+```{r, echo=TRUE}
+lm.data <- data.frame(Summer_mn = res.wm1.dir$graph$.__enclos_env__$private$data$Summer_mn,
+                      SLOPE    =res.wm1.dir$graph$.__enclos_env__$private$data$SLOPE,
+                      netID    =as.factor(res.wm1.dir$graph$.__enclos_env__$private$data$netID))
+lm.model <- lm(Summer_mn ~ SLOPE +netID, data = lm.data )
+res.wm1.dir$graph$.__enclos_env__$private$data$residuals = lm.model$residuals
+res.wm1.dir2$graph$.__enclos_env__$private$data$residuals = lm.model$residuals
+
+res.wm1.dir.res <- graph_lme(residuals ~ -1, 
+                        graph = res.wm1.dir$graph, model = 'wmd1')
+res.wm1.dir2.res <- graph_lme(residuals ~ -1, 
+                                    graph = res.wm1.dir2$graph, model = 'wmd1')
+cross.wm1.dir.res <-posterior_crossvalidation(res.wm1.dir.res)
+cross.wm1.dir2.res <-posterior_crossvalidation(res.wm1.dir2.res)
+cross.scores <- rbind(cross.wm1.dir.res$scores,cross.wm1.dir2.res$scores)
+print(cross.scores)
+
+df_pred <- data.frame(edge_number = graph$mesh$PtE[,1],
+                       distance_on_edge = graph$mesh$PtE[,2])
+pred_alpha1.dir1.res <- augment(res.wm1.dir.res , newdata = df_pred,
+                        normalized = TRUE)
+pred_alpha1.dir2.res <- augment(res.wm1.dir2.res , newdata = df_pred,
+                        normalized = TRUE)
+
+pred_alpha1.dir1.res$.dresid <-- pred_alpha1.dir1.res$.fitted -pred_alpha1.dir2.res$.fitted 
+pred_alpha1.dir1.res %>% graph$plot(data = ".dresid", vertex_size = 0,
+            type = "mapview")
+```

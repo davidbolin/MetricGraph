@@ -6,7 +6,7 @@ test_that("Check agreement covariance function agrees", {
   c <- 1/(4*kappa^3)
   x <- seq(0,1,length.out=10)
   expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa),
-               rSPDE::matern.covariance(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+               rSPDE::matern.covariance(x, kappa, 3/2, sigma)*c, tol=1e-9)
 })
 
 
@@ -27,7 +27,7 @@ test_that("Check agreement derivative covariance function agrees", {
   x <- seq(-1,1,length.out=20)
   expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa,
                              deriv = 2),
-               matern_derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
+               MetricGraph:::matern_derivative(x, kappa, 3/2, sigma,2)[,1]*c, tol=1e-9)
 })
 
 test_that("Check agreement covariance matrix", {
@@ -39,8 +39,8 @@ test_that("Check agreement covariance matrix", {
   x_ <- c(0,l_e)
   D <- outer(x_, x_, "-")
   r <- rSPDE::matern.covariance(D, kappa = kappa, nu = 3/2, sigma = sigma)
-  r1 <- -matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
-  r2 <- -matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
+  r1 <- -MetricGraph:::matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 1)
+  r2 <- -MetricGraph:::matern_derivative(D, kappa = kappa, sigma = sigma, nu = 3/2, deriv = 2)
   Sigma.0 <- rbind(cbind(r, r1), cbind(t(r1), r2))*c
   r_00 <- MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa)
   r_01 <- - MetricGraph:::r_2(D, tau = 1/sigma, kappa = kappa, deriv = 1)
@@ -240,7 +240,7 @@ test_that("test posterior mean",{
   graph$add_observations(data = df_temp, normalized = FALSE)
 
   #test posterior at observation locations
-  res <- graph_lme(y ~ -1, graph=graph, model="WM2", parallel = FALSE)
+  res <- graph_lme(y ~ -1, graph=graph, model="WM2", parallel = FALSE, optim_method = "Nelder-Mead")
   pm <- predict(res, newdata = df_temp)$mean
 
   kappa_est <- res$coeff$random_effects[2]

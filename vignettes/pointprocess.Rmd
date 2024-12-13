@@ -7,67 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Log-Gaussian Cox processes on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: lgcp
-  title: "Going off grid: computationally efficient inference for log-Gaussian Cox processes"
-  author:
-  - family: Simpson
-    given: D
-  - family: Illian
-    given: J. B.
-  - family: Lindgren
-    given: F.
-  - family: Sørbye
-    given: S. H.
-  - family: Rue
-    given: H.
-  container-title: Biometrika
-  type: article
-  issued:
-  year: 2016
-- id: xiong22
-  title: "Covariance-based rational approximations of fractional SPDEs for computationally efficient Bayesian inference"
-  author:
-  - family: Xiong
-    given: Zhen
-  - family: Simas
-    given: Alexandre B.
-  - family: Bolin
-    given: David
-  container-title: Bernoulli
-  type: article
-  issue: 30
-  pages: 1611-1639
-  issued:
-    year: 2024
-- id: graph_fem
-  title: "Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Kovács
-    given: Mihály
-  - family: Kumar
-    given: Vivek
-  - family: Simas
-    given: Alexandre B.
-  container-title: Mathematics of Computation
-  type: article
-  issued:
-  year: 2023
-- id: BSW2023PPST
-  title: "Log-Cox Gaussian processes and space-time models on compact metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: In preparation
-  type: preprint
-  issued:
-    year: 2023
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -120,7 +60,7 @@ $$
 For this we can use the function `graph_lgcp` as follows:
 ```{r}
   sigma <- 0.5
-  range <- 1.5
+  range <- 2
   alpha <- 2
   lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma,
                             range = range, alpha = alpha,
@@ -213,7 +153,8 @@ We can now fit the model using `R-INLA`:
 spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e)
+                 E = inla.stack.data(stk)$e,
+                 num.threads = "1:1")
 ```
 
 Let us extract the estimates in the original scale
@@ -259,7 +200,7 @@ help of the `gg_df()` function:
 
 Finally, we can plot the estimated field $u$:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-n.obs <- length(graph$data$y)
+n.obs <- length(graph$get_data()$y)
 n.field <- dim(graph$mesh$VtE)[1]
 u_posterior <- spde_fit$summary.linear.predictor$mean[(n.obs+1):(n.obs+n.field)]
 graph$plot_function(X = u_posterior, vertex_size = 0)
@@ -275,7 +216,7 @@ Let us now test show an example with replicates. Let us first simulate replicate
 ```{r}
   n.rep <- 30
   sigma <- 0.5
-  range <- 1.5
+  range <- 2
   alpha <- 2
   lgcp_sample <- graph_lgcp(n = n.rep, intercept = 1, sigma = sigma,
                             range = range, alpha = alpha,
@@ -318,7 +259,8 @@ We can now define and fit the model as previously
 ```{r}
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 
-data_rspde <- graph_data_rspde(rspde_model, name="field", repl = ".all")
+data_rspde <- graph_data_rspde(rspde_model, name = "field", 
+                                  repl = ".all", repl_col = "rep")
 
 stk <- inla.stack(data = data_rspde[["data"]], 
                   A = data_rspde[["basis"]], 
@@ -327,7 +269,8 @@ stk <- inla.stack(data = data_rspde[["data"]],
 spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e, verbose=TRUE)
+                 E = inla.stack.data(stk)$e, verbose=TRUE,
+                 num.threads = "1:1")
 ```
 Let's look at the summaries
 ```{r}

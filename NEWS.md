@@ -1,3 +1,30 @@
+# MetricGraph 1.4.0
+* Added an INLA implementation for `alpha=2`.
+* Added a vignette for handling multiple likelihoods in `R-INLA` and `inlabru`, and updated the `graph_spde_data()` function for such cases.
+* Added an INLA implementation for directional models.
+* Added support for directional edge weights.
+* Added support for creating metric graphs from `SSN`, `osmdata_sp` and `osmdata_sf` objects. In such cases, if available, edge weights and data will be automatically added to the graph.
+* Now if one creates the metric graph from `SpatialLinesDataFrame`, `LINESTRING`, `MULTILINESTRING`, etc., if the object contain edge data, they will be automatically added as edge weights.
+* Added an option to not perform merges (which is now the default), that makes the graph creation faster and using less memory.
+* Added vignettes with a river example and with an example of directional models.
+* Updated the vignettes to account for the additions.
+* `prune_vertices` now has an option to avoid creating circles when pruning.
+* Several updates and quality of life improvements for building very large graphs faster.
+* Added the `export()` method, that allows one to export a MetricGraph object as an `sf`, `sp` or `SSN2` object.
+* Added wrappers for `leaflet` and `mapview` as methods.
+* Added `get_edges()` and `get_vertices()` methods were created, that return the edges and vertices, respectively, in either 'sf', 'sp' or the internal formats.
+* Added an option `format` to the `get_data()` method that allows one to also return the data in `sf` or `sp` formats.
+* The `plot` method now has an argument `type`, that now also allows one to set `type` to `mapview`, thus it can return `ggplot2`, `plotly` and `mapview` objects.
+* Adding methods to do data manipulation on weights, `mutate_weight`, `select_weights`, `filter_weights`, `summarise_weights` and `drop_na_weights`. They have a `format` argument that allows one to also return `sf` or `sp` objects.
+* Updated the methods, `mutate`, `filter`, `select`, `drop_na` and `summarise` to have a format argument to also return `sf` or `sp` objects.
+* Massive improvement on the `observation_to_vertex` method.
+* Massive improvement on the metric graph creation speed.
+* Deprecated `improve_plot` option, as now all plots from `plot_function()` method are improved.
+* Added `merge_strategy` option for `add_observations()` method, for handling observations that are very close.
+* Update the metric graph data vignette for illustrating how to use the new tools for data manipulation. 
+* Massive improvement for building constraint matrices for `alpha=2`, and for building directional constraints. 
+* Updated starting values to use bounding boxes to be more efficient.
+
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.
 * A `simulate` method was added for `graph_lme` objects.

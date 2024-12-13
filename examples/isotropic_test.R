@@ -130,8 +130,8 @@ t <- graph$mesh$V[,1]
 k <- 0
 ek <- sin(k*pi*t/len) - k*pi*cos(k*pi*t/len)/(len*kappa)
 ek <- exp(-kappa*t)
-p <- graph$plot_function(ef[,dim(graph$mesh$V)[1]-k],plotly = TRUE)
-graph$plot_function(ek/sqrt(sum(ek^2)),p=p,plotly = TRUE,line_color = "red")
+p <- graph$plot_function(ef[,dim(graph$mesh$V)[1]-k],type = "plotly")
+graph$plot_function(ek/sqrt(sum(ek^2)),p=p,type = "plotly",line_color = "red")
 
 
 

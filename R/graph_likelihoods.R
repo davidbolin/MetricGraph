@@ -77,10 +77,17 @@
 #' @param repl replicates
 #' @param X_cov matrix of covariates
 #' @noRd
-likelihood_alpha1_directional <- function(theta, graph, data_name = NULL, manual_y = NULL,
-                                          X_cov = NULL, repl = NULL, parameterization="matern") {
+likelihood_alpha1_directional <- function(theta,
+                                          graph,
+                                          data_name = NULL,
+                                          manual_y = NULL,
+                                          X_cov = NULL,
+                                          repl = NULL,
+                                          parameterization="matern") {
   #build Q
   if(is.null(graph$C)){
+    graph$buildDirectionalConstraints(alpha = 1)
+  } else if(graph$CoB$alpha == 2){
     graph$buildDirectionalConstraints(alpha = 1)
   }
 
@@ -249,6 +256,8 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
                              X_cov = NULL, repl, BC, parameterization) {
   if(is.null(graph$C)){
     graph$buildC(2)
+  } else if(graph$CoB$alpha == 1){
+     graph$buildC(2)
   }
 
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]

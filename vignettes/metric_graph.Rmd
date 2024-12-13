@@ -56,7 +56,7 @@ to set the sizes and colors of the vertices and edges, and it has a `plotly`
 argument to visualize the graph in 3D. For this to work, the `plotly` library
 must be installed.
 ```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE}
-graph$plot(plotly = TRUE, vertex_size = 5, vertex_color = "blue",
+graph$plot(type = "plotly", vertex_size = 5, vertex_color = "blue",
            edge_color = "red", edge_width = 2)
 ```
 
@@ -73,7 +73,7 @@ p + ggplot2::labs(title = "Metric graph",
 Similarly, the `3d` version of the `plot()` method returns a 
 `plotly` object that can also be modified. For instance:
 ```{r}
-p <- graph$plot(plotly = TRUE)
+p <- graph$plot(type = "plotly")
 p <- plotly::layout(p, title = "Metric graph", 
               scene = list(xaxis=
               list(title = "Long"),yaxis=list(title = "Lat")))
@@ -140,7 +140,7 @@ graph$plot()
 ```
 
 ## Tolerances for merging vertices and edges
-The constructor of the graph has one argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
+The constructor of the graph has one argument, `perform_merges` and an additional argument `tolerance` which is used for connecting edges that are close in Euclidean space. Specifically, the `tolerance` argument is given as a list with three elements:
 
 * `vertex_vertex` vertices that are closer than this number are merged (the default value is `1e-7`)
 * `vertex_edge` if a vertex at the end of one edge is closer than this number to another edge, this vertex is connected to that edge (the default value is `1e-7`)
@@ -149,27 +149,30 @@ vertex is added at that point and the two edges are connected (the default value
 
 These options are often needed when constructing graphs based on real data, for example from OpenStreetMap as we will see later. 
 To illustrate these options, suppose that we want to construct a graph from the 
-following three edges:
+following three edges. We will set `perform_merges` to `TRUE`, to show how they are merged with the default choice of tolerances.
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
 edge1 <- rbind(c(0,0),c(1,0))
 edge2 <- rbind(c(0,0.03),c(0,0.75))
 edge3 <- rbind(c(-1,1),c(0.5,0.03))
 edge4 <- rbind(c(0,0.75), c(0,1))
-edges =  list(edge1, edge2, edge3, edge4)
-graph3 <- metric_graph$new(edges = edges)
+edge5 <- rbind(c(-1,0), c(-1, 0.9995))
+edges =  list(edge1, edge2, edge3, edge4, edge5)
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE)
 graph3$plot(degree = TRUE)
 print(graph3$nV)
 ```
 
 We added the option `degree=TRUE` to the plot here to visualize the degrees of each vertex. As expected, one sees that all vertices have degree 1, and none of the three edges are connected. If these are streets in a street network, one might suspect that the two vertices at $(0,0)$ and $(0,0.03)$ really should be the same vertex so that the two edges are connected. This can be adjusted by increasing the `vertex_vertex` tolerance:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05))
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                             tolerance = list(vertex_vertex = 0.05))
 graph3$plot(degree = TRUE)
 ```
 
 One might also want to add the vertex at $(0.5, 0.03)$ as a vertex on the first edge, so that the two edges there are connected. This can be done by adjusting the `vertex_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.05,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                       tolerance = list(vertex_vertex = 0.05,
                                                            vertex_edge = 0.1))
 graph3$plot(degree = TRUE)
 ```
@@ -178,7 +181,8 @@ We can see that the vertex at $(0.5,0)$ was indeed connected with the edge from 
 
 Finally, to add a vertex at the intersection between `edge2` and `edge3` we can adjust the `edge_edge` tolerance: 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                        tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001))
 graph3$plot(degree = TRUE)
@@ -188,7 +192,8 @@ Now, the structure of the metric graph does not change if we add or remove verti
 Because of this,one might want to remove vertices of degree 2 since this can reduce computational costs.
 This can be done by setting the `remove_deg2` argument while creating the graph:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graph3 <- metric_graph$new(edges = edges, tolerance = list(vertex_vertex = 0.2,
+graph3 <- metric_graph$new(edges = edges, perform_merges = TRUE,
+                                        tolerance = list(vertex_vertex = 0.2,
                                                            vertex_edge = 0.1,
                                                            edge_edge = 0.001),
                            remove_deg2 = TRUE)
@@ -200,6 +205,73 @@ Observe that one vertex of degree 2 was not removed. This is due to the fact tha
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE}
 graph3$plot(direction = TRUE)
 ```
+
+We can also avoid performing these merges by setting using the default constructor (which is equivalent to set the `perform_merges` argument to `FALSE`):
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph4 <- metric_graph$new(edges = edges)
+graph4$plot(degree = TRUE)
+```
+
+Observe that the two vertices around the point $(-1,1)$ were merged. This is because there is an additional step to merge close vertices that is performed even 
+with `perform_merges` set to `FALSE`. To also skip this merge, we can also set `merge_close_vertices` to `FALSE`:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph4 <- metric_graph$new(edges = edges, merge_close_vertices=FALSE)
+graph4$plot(degree = TRUE)
+```
+
+We can see now that the two vertices around the point $(-1,1)$ were not merged.
+
+## Edge lengths
+
+Whenever we create a metric graph, the edge lengths will be automatically computed by obtaining the lengths of the edges. However, sometimes one might want to provide manual edge lengths.
+
+Let us consider the following example:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+library(sp)
+line1 <- Line(rbind(c(0,0),c(1,0)))
+line2 <- Line(rbind(c(0,0),c(0,1)))
+line3 <- Line(rbind(c(0,1),c(-1,1)))
+theta <- seq(from=pi,to=3*pi/2,length.out = 25)
+line4 <- Line(cbind(sin(theta),1+ cos(theta)))
+Lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
+                              Lines(list(line2),ID="2"),
+                              Lines(list(line3),ID="3"),
+                              Lines(list(line4),ID="4")))
+
+graph <- metric_graph$new(edges = Lines)                 
+graph$plot()
+```
+
+We can obtain the edge lenghts by using the `get_edge_lengths()` method:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph$get_edge_lengths()
+```
+
+Observer that we know that the actual length of edge 4 is $\pi/2$, which is not quite right (observe that edge 4 is an approximation of a quarter of a circle by a polygon with 25 points):
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+pi/2 - graph$get_edge_lengths()[4]
+```
+
+We can provide the actual edge lengths, by using the `set_manual_edge_lengths()` method:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph$set_manual_edge_lengths(c(1,1,1,pi/2))
+graph$get_edge_lengths()
+```
+
+We can also manually provide the edge lengths when creating the metric graph:
+
+```{r, message=FALSE, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+graph <- metric_graph$new(edges = Lines, manual_edge_lengths = c(1,1,1,pi/2))
+graph$get_edge_lengths() 
+```
+
+However, it is important to note that if one passes the manual_edge_lengths when creating the graph, it will automatically set `perform_merges` to `FALSE`, as there is no consistent way to obtain the edge lengths after the merges from the manual edge lengths. Nevertheless, `merge_close_vertices` can be set to `TRUE`.
 
 ## Characteristics of the graph
 
@@ -332,16 +404,17 @@ should be given in normalized distance or not.
 
 To illustrate the useage of `metric_graph` on some real data, we use the 
 `osmdata` package to download data from OpenStreetMap. In the following code,
-we extract highways in the city of Copenhagen:
+we extract highways for a part of the city of Copenhagen:
 ```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
 library(osmdata)
-set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
-call <- opq(bbox = c(12.4,55.5,12.65,55.9))
+bbox <- c(12.5900, 55.6000, 12.6850, 55.6450)
+call <- opq(bbox)
 call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
-                                                      "secondary"))
-data <- osmdata_sp(call)
+                                                        "secondary", "tertiary"))
+data_sf <- osmdata_sf(call)
 
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines))
+graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
+  function(dat){sf::st_coordinates(dat)[,1:2]}))
 graph5$plot(vertex_size = 0)
 ```
 
@@ -357,7 +430,8 @@ graph, and it also makes it difficult to interpret results (unless one has a
 good intuition about distances in degrees). To avoid such problems, it is 
 better to set the `longlat` argument when constructing the graph:
 ```{r, message=FALSE}
-graph5 <- metric_graph$new(SpatialLines(data$osm_lines@lines), longlat = TRUE)
+graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
+  function(dat){sf::st_coordinates(dat)[,1:2]}), longlat = TRUE)
 ```
 This tells the constructor that the coordinates are given in Longitude and 
 Latitude and that distances should be calculated in km. So if we now look at the
@@ -365,14 +439,111 @@ edge lengths, they are given in km:
 ```{r}
 range(graph5$get_edge_lengths())
 ```
+
+Alternatively, and more conveniently, whenever the `sf` object has a valid `crs`, it will automatically use this `crs` to set the
+correct coordinate reference system (CRS) in the metric graph. Above, we ended up removing the `crs` when we created the `linestring` object from the resulting `osm_lines`. Let us, instead, build the graph directly using the `osmdata_sf` object:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sf)
+```
+
+We can see now that `graph5` automatically has the correct CRS:
+
+```{r}
+graph5
+```
+
+This also allows us to plot the graph interactively with the underlying world map, if the data has a coordinate reference system, by setting `type = "mapview"` in the
+`plot()` method:
+
+```{r, message=FALSE, warning=FALSE}
+graph5$plot(type = "mapview", vertex_size = 0)
+```
+
+We can also check the edge lengths:
+
+```{r}
+range(graph5$get_edge_lengths())
+```
+
+Another advantage of adding the `osmdata` object, is that the metric graph automatically adds the edge observations as `edge_weights`:
+
+```{r}
+graph5$get_edge_weights()
+```
+
+We can also let the color of the edges be determined by some edge weight. For example, let us take `maxspeed`:
+
+```{r}
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", 
+        type="mapview")
+```
+
+Similarly, we can also set the edge width based on an edge weight (for this case, we can only use `type = "ggplot"`, which is the default). In this example we will choose the column `lanes` to determine the edge widths. If the number of lanes is not available, the edge will be removed (we will replace the `NA`s by zero).
+
+```{r}
+graph5$set_edge_weights(weights = graph5$mutate_weights(lanes = ifelse(is.na(lanes),0,lanes), lanes = as.numeric(lanes)))
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lanes")
+```
+
+However, observe that the edge widths are always relative, with the largest being set to `edge_width`. So, let us set `edge_width` to 4 to make it easier to perceive the differences:
+
+```{r}
+graph5$set_edge_weights(weights = graph5$mutate_weights(lanes = ifelse(is.na(lanes),0,lanes), lanes = as.numeric(lanes)))
+graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lanes", edge_width = 4)
+```
+
+If one does not want to have the edge weights added, one must set `include_edge_weights` to `FALSE`:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sf, include_edge_weights=FALSE)
+graph5$get_edge_weights()
+```
+
+Similarly, if one wants just to add some columns of the `osmdata` object as edge weights, one can pass a vector with the column names as the `include_edge_weights` argument. For example, let us only get the columns `highway` and `lanes`:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sf, include_edge_weights=c("highway", "lanes"))
+graph5$get_edge_weights()
+```
+
+The same idea also works is one has an `sf` object instead. Let us obtain the `sf` version from the `osmdata` object:
+
+```{r}
+data_sf <- osmdata_sf(call)
+```
+
+We can now directly create the metric graph object:
+
+```{r, message=FALSE}
+graph5 <- metric_graph$new(data_sf)
+```
+
+Let us check that `graph5` still has the correct CRS:
+
+```{r}
+graph5
+```
+and the correct edge lengths:
+```{r}
+range(graph5$get_edge_lengths())
+```
+
+Also, that it has the edge weights:
+
+```{r}
+graph5$get_edge_weights()
+```
+
+The argument `include_edge_weights` can also be used in same manner for `osmdata_sf` objects.
+
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
 the different connected components separately. If this is not a concern, one can
 set the argument `check_connected = FALSE` while creating the graph. In this case
 the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
 ```{r message=FALSE, warning=FALSE, message=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), 
-                                                    longlat = TRUE)
+graphs <- graph_components$new(data_sf)
 ```
 The `graph_components` class contains a list of `metric_graph` objects, one for
 each connected component. In this case, we have 
@@ -385,7 +556,7 @@ graphs$lengths
 ```
 To plot all of them, we can use the `plot` command of the class:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
-graphs$plot(vertex_size = 0)
+graphs$plot(vertex_size = 0, type = "mapview")
 ```
 
 One reason for having multiple components here might be that we set the tolerance for merging nodes too low. In fact, 
@@ -397,9 +568,9 @@ min(graph5$get_edge_lengths(unit='m'))
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
-graphs <- graph_components$new(SpatialLines(data$osm_lines@lines), longlat = TRUE,
+graphs <- graph_components$new(data_sf,
                                tolerance = list(vertex_vertex = 0.1))
-graphs$plot(vertex_size = 0)
+graphs$plot(vertex_size = 0, type = "mapview")
 ```
 
 With this choice, let us check the number of connected components:
@@ -425,6 +596,12 @@ and
 graph5$edges
 ```
 
+Also observe that it has the corresponding edge weights:
+
+```{r}
+graph5$get_edge_weights()
+```
+
 It is also relevant to obtain a summary of this graph:
 
 ```{r}
@@ -432,6 +609,73 @@ summary(graph5)
 ```
 
 We have that this graph does not have Euclidean edges. Also observe that we have the units for the vertices and lengths, and also the coordinate reference system being used by this object.
+
+Alternatively, one can also add create metric graphs from `SSN` objects. All one needs to do is to directly pass the `SSN` object as `edges`. This will also ensure that the correct `CRS` is used. For example:
+
+```{r, message=FALSE}
+library(SSN2)
+
+copy_lsn_to_temp()
+path <- file.path(tempdir(), "MiddleFork04.ssn")
+
+mf04p <- ssn_import(
+  path = path,
+  predpts = c("pred1km", "CapeHorn"),
+  overwrite = TRUE
+)
+
+river_graph <- metric_graph$new(mf04p)
+```
+
+Let us take a look at the graph:
+
+```{r}
+river_graph$plot()
+```
+
+Let us also look at the interactive plot with the underlying map:
+
+
+```{r, warning=FALSE}
+river_graph$plot(vertex_size = 0, type = "mapview")
+```
+
+Similarly to `osmdata` objects, when using `SSN` objects, the edge observations are also added as edge weights:
+
+```{r}
+river_graph$get_edge_weights()
+```
+
+The argument `include_edge_weights` can also be used in same manner for `SSN` objects.
+
+However, for `SSN` objects, observations are also automatically added in the metric graph creation:
+
+```{r}
+river_graph$get_data()
+```
+
+With respect to addition of data in `SSN` objects, we have the option `include_obs` that acts in the same manner as the `include_edge_weights` argument. For example, one can choose to not include the data by setting `include_obs` to `FALSE`:
+
+```{r, message=FALSE}
+river_graph <- metric_graph$new(mf04p, include_obs = FALSE)
+```
+
+Let us confirm that no data was added:
+```{r, error=TRUE}
+river_graph$get_data()
+```
+
+Finally, one can select which columns to add, by passing the names (or numbers) of the columns as the `include_edge_weights` argument.
+
+```{r, message=FALSE}
+river_graph <- metric_graph$new(mf04p, include_obs = c("SLOPE", "Summer_mn"))
+```
+
+and the data:
+
+```{r}
+river_graph$get_data()
+```
 
 # Adding data to the graph 
 
@@ -518,6 +762,46 @@ Finally, let us obtain a summary of the graph containing data:
 summary(graph)
 ```
 
+
+When dealing with `SSN` objects, one can also directly add the `SSN` object as data:
+
+```{r, message=FALSE}
+river_graph$clear_observations()
+river_graph$add_observations(data = mf04p)
+```
+
+We can see that the data has been added correctly:
+
+```{r}
+river_graph$get_data()
+```
+
+We can also plot the data:
+
+```{r}
+river_graph$plot(data = "Summer_mn", vertex_size = 0.25)
+```
+
+Let us clear the observations from the river graph:
+
+```{r}
+river_graph$clear_observations()
+```
+
+One can also directly add `sf` objects into the metric graph. For example, the object `mf04p$obs` is an `sf` object.
+
+We can also add the obsevations as:
+
+```{r, message=FALSE}
+river_graph$add_observations(data = mf04p$obs)
+```
+
+We can see that the observations have been added accordingly:
+
+```{r}
+river_graph$get_data()
+```
+
 # Working with functions on metric graphs
 
 When working with data on metric graphs, one often wants to display functions
@@ -549,10 +833,10 @@ f <- x^2 - y^2
 graph$plot_function(X = f)
 ```
 
-Alternatively, we can set `plotly = TRUE` in the plot command to get a 3D 
+Alternatively, we can set `type = "plotly"` in the plot command to get a 3D 
 visualization of the function:
 ```{r, fig.show='hold',fig.align = "center",fig.height=7,echo=TRUE}
-graph$plot_function(X = f, plotly = TRUE)
+graph$plot_function(X = f, type = "plotly")
 ```
 
 When the first argument of `plot_function` is a vector, the function assumes that 
@@ -570,7 +854,7 @@ f <- XY[, 1]^2 - XY[, 2]^2
 data_f <- data.frame(f = f, "edge_number" = PtE[,1], 
             "distance_on_edge" = PtE[,2])
 data_f <- graph$process_data(data = data_f, normalized=TRUE)            
-graph$plot_function(data = "f", newdata = data_f, plotly = TRUE)
+graph$plot_function(data = "f", newdata = data_f, type = "plotly")
 ```
 
 Alternatively, we can add the data to the graph, and directly plot by using the `data` argument.
@@ -581,9 +865,9 @@ graph$add_observations(data = data_f, clear_obs = TRUE, normalized = TRUE)
 graph$plot_function(data = "f")
 ```
 
-## Improving the plot obtained by `plot_function`
+## Further details on `plot_function`
 
-If we compute the relative positions of the edge coordinates, we can improve the quality of the plot obtained by using `plot_function`. Observe that depending on the size of the graph, this might be costly, since we will need to do this conversion.
+By default, the values along the edges are interpolated try to provide a better plot. This behavior can be disabled by setting `interpolate_plot` to `FALSE`.
 
 We begin by recreating the first graph we used in this vignette:
 
@@ -598,13 +882,7 @@ edges = list(edge1, edge2, edge3, edge4)
 graph <- metric_graph$new(edges = edges)
 ```
 
-Now, let us compute the relative positions of the coordinates of the edge by using the `compute_PtE_edges()` method:
-
-```{r}
-graph$compute_PtE_edges()
-```
-
-Let us create a coarse mesh, so the improvement can be easily seen.
+Let us create a coarse mesh, so the interpolation can be easily seen.
 
 ```{r}
 graph$build_mesh(h=0.8)
@@ -618,16 +896,16 @@ XY <- graph$mesh$V
 f <- XY[, 1]^2 - XY[, 2]^2
 ```
 
-We can directly plot from the mesh values. Let us start with the default, non-improved, plot:
+We can directly plot from the mesh values. Let us start with the default, the interpolated plot:
 
 ```{r}
 graph$plot_function(f)
 ```
 
-We can, then, plot the improved version by setting `improve_plot` to `TRUE`:
+We can, now, turn off the interpolation by setting `interpolate_plot` to `FALSE`:
 
 ```{r}
-graph$plot_function(f, improve_plot = TRUE)
+graph$plot_function(f, interpolate_plot = FALSE)
 ```
 
 Alternatively, we can supply the data through the `newdata` argument. To such an end, we will need to supply the `data.frame`. So let us build it:
@@ -651,30 +929,28 @@ We will now plot this function. First, let us do the default plot from `plot_fun
 graph$plot_function(data = "f", newdata= df_f)
 ```
 
-Let us now, create the same plot with `improve_plot=TRUE`:
+Let us now, create the same plot with `interpolate_plot=FALSE`:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+graph$plot_function(data = "f", newdata= df_f, interpolate_plot=FALSE)
 ```
-
-The reason it refined a lot on the circular part is that it interpolates the values of the function at the edge coordinates, and the circular part has the most coordinates. All the other edges only have two coordinates, the start and end. 
 
 Let us now obtain a 3d plot. First, of the default version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly")
 ```
 
-Now, of the improved version:
+Now, of the non-interpolated version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
-                    improve_plot = TRUE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly",
+                    interpolate_plot = FALSE)
 ```
 
 ### Note about continuity
 
-However, it is important to observe that `plot_function` assumes continuity of the function by default. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. In such a case, `improve_plot` does not affect the action on the discontinuity points.
+However, it is important to observe that `plot_function` assumes continuity of the function by default. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. 
 
 For example, let us consider the function that takes the edge number (normalized). Let us also refine the mesh a bit, so it is easier to observe what is happening.
 
@@ -698,23 +974,23 @@ We will now plot this function with the default plot from `plot_function`:
 graph$plot_function(data = "f", newdata= df_f)
 ```
 
-Let us now, create the same plot with `improve_plot=TRUE`:
+Let us now, create the same plot with `interpolate_plot=FALSE`:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+graph$plot_function(data = "f", newdata= df_f, interpolate_plot=FALSE)
 ```
 
 Let us now obtain a 3d plot. First, of the default version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly")
 ```
 
-Now, of the improved version:
+Now, of the non-interpolated version:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
-                    improve_plot = TRUE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly",
+                    interpolate_plot = FALSE)
 ```
 
 Observe that for both versions we have the same behavior around the vertices (which are the discontinuity points). 
@@ -729,16 +1005,16 @@ f <- graph$mesh$PtE[,1]/4
 graph$plot_function(f)
 ```
 
-Similarly to the case for continuous meshes, we have the `improve_plot` option:
+Similarly to the case for continuous meshes, we have the `interpolate_plot` option:
 
 ```{r}
-graph$plot_function(f, improve_plot = TRUE)
+graph$plot_function(f, interpolate_plot = FALSE)
 ```
 
 Now, the 3d plot:
 
 ```{r}
-graph$plot_function(f, plotly=TRUE, improve_plot = TRUE)
+graph$plot_function(f, type = "plotly", interpolate_plot = FALSE)
 ```
 
 Alternatively, we can similarly plot by setting the `data.frame` and passing the `newdata` argument:
@@ -755,12 +1031,12 @@ Let us now build the plots. In this case, we need to set the `continuous` argume
 
 ```{r}
 graph$plot_function(data = "f", newdata= df_f, 
-                      improve_plot = TRUE,  continuous = FALSE)
+                      continuous = FALSE)
 ```
 
 Now, the 3d plot:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, plotly=TRUE,
-                    improve_plot = TRUE, continuous = FALSE)
+graph$plot_function(data = "f", newdata= df_f, type = "plotly",
+                    continuous = FALSE)
 ```

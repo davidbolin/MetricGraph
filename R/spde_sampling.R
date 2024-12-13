@@ -14,6 +14,7 @@
 #' @param range Practical correlation range parameter.
 #' @param sigma_e Standard deviation of the measurement noise.
 #' @param alpha Smoothness parameter.
+#' @param directional should we use directional model currently only for alpha=1
 #' @param graph A `metric_graph` object.
 #' @param PtE Matrix with locations (edge, normalized distance on edge) where
 #' the samples should be generated.
@@ -28,7 +29,9 @@
 #' boundary conditions and BC = 1 gives stationary boundary conditions.
 #' @return Matrix or vector with the samples.
 #' @export
-sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
+sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
+                        directional = FALSE,
+                        graph,
                         PtE = NULL,
                         type = "manual", posterior = FALSE,
                         nsim = 1,
@@ -75,7 +78,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
   }
   if((nsim == 1) || (method == "Q")){
   if (!posterior) {
-    if (alpha == 1) {
+    if (alpha == 1 && directional == F) {
         if(method == "conditional"){
               Q <- spde_precision(kappa = kappa, tau = tau,
                                   alpha = 1, graph = graph, BC=BC)
@@ -114,7 +117,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
                 if(type == "manual"){
                   u[order_PtE] <- u
                 }
-    } else if(method == "Q"){
+    }else if(method == "Q"){
         if(type == "manual"){
           graph_tmp <- graph$get_initial_graph()
           order_PtE <- order(PtE[,1], PtE[,2])
@@ -160,12 +163,68 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1, graph,
       stop("Method should be either 'conditional' or 'Q'!")
     }
 
-    } else if (alpha == 2) {
+    }else if(alpha == 1 && directional == T) {
+
+      Q <- Qalpha1_edges(c( tau,kappa),
+                         graph,
+                         w = 0,
+                         BC=1, build=T)
+      if(is.null(graph$C) || graph$CoB$alpha != 1){
+        graph$buildDirectionalConstraints(alpha = 1)
+      }
+      n_const <- length(graph$CoB$S)
+      ind.const <- c(1:n_const)
+      Tc <- graph$CoB$T[-ind.const,]
+      Q <- Tc %*% Q %*% t(Tc)
+      R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
+      V0 <- as.vector(solve(R,
+                      solve(R,rnorm(dim(R)[1]),system = 'Lt'),
+                      system = 'Pt'))
+      u_e <- t(graph$CoB$T) %*% c(rep(0, dim(graph$CoB$U)[1]), V0)
+      VtE <- graph$VtEfirst()
+      if(type == "mesh") {
+        initial_graph <- graph$get_initial_graph()
+        u_s <- u_e
+        u <- u_s[which(!duplicated(c(t(initial_graph$E))))]
+        inds_PtE <- unique(graph$mesh$PtE[,1])
+      } else if (type == "obs") {
+        u <- NULL
+        inds_PtE <- unique(graph$PtE[,1])
+      } else {
+        order_PtE <- order(PtE[,1], PtE[,2])
+        ordered_PtE <- PtE[order_PtE,]
+        u <- NULL
+        inds_PtE <- unique(ordered_PtE[,1])
+      }
+
+      for (i in inds_PtE) {
+        if(type == "mesh") {
+          t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
+        } else if (type == "obs") {
+          t <- graph$PtE[graph$PtE[,1] == i, 2]
+        } else {
+          t <- ordered_PtE[ordered_PtE[,1] == i, 2]
+        }
+        samp <- sample_alpha1_line(kappa = kappa, tau = tau,
+                                   sigma_e = sigma_e,
+                                   u_e = u_e[2*(i-1) +1:2],
+                                   t = t,
+                                   l_e = graph$edge_lengths[i])
+        u <- c(u, samp[,2])
+      }
+      if(type == "manual"){
+        u[order_PtE] <- u
+      }
+
+    }else if (alpha == 2) {
 
       Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 2, graph = graph, BC = BC)
-      if(is.null(graph$C))
+      if(is.null(graph$C)){
         graph$buildC(2)
+      } else if(graph$CoB$alpha == 1){
+        graph$buildC(2)
+      }
 
       Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
       Qtilde <- Qmod[-c(1:dim(graph$CoB$U)[1]),-c(1:dim(graph$CoB$U)[1])]

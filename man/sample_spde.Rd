@@ -11,6 +11,7 @@ sample_spde(
   sigma,
   sigma_e = 0,
   alpha = 1,
+  directional = FALSE,
   graph,
   PtE = NULL,
   type = "manual",
@@ -32,6 +33,8 @@ sample_spde(
 \item{sigma_e}{Standard deviation of the measurement noise.}
 
 \item{alpha}{Smoothness parameter.}
+
+\item{directional}{should we use directional model currently only for alpha=1}
 
 \item{graph}{A \code{metric_graph} object.}
 

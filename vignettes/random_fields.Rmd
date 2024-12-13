@@ -7,70 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Gaussian random fields on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: BSW2022a
-  title: "Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: Bernoulli
-  type: article
-  issue: 30
-  pages: 1611-1639
-  issued:
-    year: 2024
-- id: BSW2022b
-  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: arXiv:2304.10372
-  type: preprint
-  issued:
-    year: 2023
-- id: Anderes2020
-  title: "Isotropic covariance functions on graphs and their edges"
-  author:
-  - family: Anderes
-    given: Ethan
-  - family: Møller
-    given: Jesper
-  - family: Rasmussen
-    given: Jakob G
-  container-title: Annals of Statistics
-  type: article
-  issue: 48
-  pages: 2478-2503
-  issued:
-    year: 2020
-- id: Borovitskiy2021
-  title: "Matérn Gaussian processes on graphs"
-  author:
-  - family: Borovitskiy
-    given: Viacheslav
-  - family: Azangulov
-    given: Iskander
-  - family: Terenin
-    given: Alexander 
-  - family: Mostowsky
-    given: Peter
-  - family: Deisenroth
-    given: Marc
-  - family: Durrande
-    given: Nicolas
-  container-title: International Conference on Artificial Intelligence and Statistics
-  type: article
-  pages: 2593-2601
-  issued: 
-    year: 2021
+bibliography: references.bib
 ---
 
 	
@@ -160,7 +97,7 @@ graph$build_mesh(h = 0.01)
 
 u <- sample_spde(range = range, sigma = sigma, alpha = alpha,
                  graph = graph, type = "mesh")
-graph$plot_function(X = u, plotly = TRUE)
+graph$plot_function(X = u, type = "plotly")
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -169,7 +106,7 @@ the covariances between some point and all other points in the graph as follows:
 ```{r}
 C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
-graph$plot_function(X = C, plotly = TRUE)
+graph$plot_function(X = C, type = "plotly")
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$.
@@ -177,14 +114,14 @@ The corresponding covariance function then looks as follows:
 ```{r}
 C <- spde_covariance(c(2, 0.2), range = range, sigma = sigma, alpha = 2,
                             graph = graph)
-graph$plot_function(X = C, plotly = TRUE)
+graph$plot_function(X = C, type = "plotly")
 ```
 
 Let us simulate a process with $\alpha=2$ as well:
 ```{r}
 u <- sample_spde(range = range, sigma = sigma, alpha = 2,
                  graph = graph, type = "mesh")
-graph$plot_function(X = u, plotly = TRUE)
+graph$plot_function(X = u, type = "plotly")
 ```
 
 ## Inference
@@ -269,7 +206,7 @@ on the regular mesh that we previously constructed.
 u_est <- predict(res, data.frame(edge_number = graph$mesh$VtE[,1],
                         distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
 
-graph$plot_function(X = u_est$mean, plotly = TRUE)
+graph$plot_function(X = u_est$mean, type = "plotly")
 ```
 
 We can, alternatively, use the `augment()` function:
@@ -277,8 +214,8 @@ We can, alternatively, use the `augment()` function:
 ```{r}
 pred_aug <- augment(res, data.frame(edge_number = graph$mesh$VtE[,1],
                         distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
-p <- graph$plot_function(X = pred_aug[[".fitted"]], plotly = TRUE)
-graph$plot(data = "y", p=p, plotly=TRUE)
+p <- graph$plot_function(X = pred_aug[[".fitted"]], type = "plotly")
+graph$plot(data = "y", p=p, type = "plotly")
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -313,7 +250,7 @@ We can now construct the covariance matrix for the process:
 sigma <- 1
 kappa <- 5
 Sigma <- sigma^2*exp(-kappa*graph$mesh$res_dist)
-graph$plot_function(X = Sigma[20,], plotly = TRUE)
+graph$plot_function(X = Sigma[20,], type = "plotly")
 ```
 
 One can note that this covariance function looks quite similar to that of the 
@@ -322,8 +259,8 @@ Whittle--Matérn covariance to compare:
 ```{r}
 P <- c(1, graph$mesh$V[20,1])
 C.wm <- spde_covariance(P,range=2/kappa, sigma=sigma, graph=graph, alpha = 1)
-p <- graph$plot_function(X = Sigma[20,], plotly = TRUE)
-graph$plot_function(X = C.wm, plotly = TRUE, p = p, line_color = 'rgb(100,0,0)',
+p <- graph$plot_function(X = Sigma[20,], type = "plotly")
+graph$plot_function(X = C.wm, type = "plotly", p = p, line_color = 'rgb(100,0,0)',
                     support_width = 0)
 ```
 
@@ -414,8 +351,8 @@ We can, alternatively, use the `augment()` function:
 ```{r}
 pred_aug_exp <- augment(res_exp, data.frame(edge_number = graph$mesh$VtE[,1],
                         distance_on_edge = graph$mesh$VtE[,2]), normalized = TRUE)
-p <- graph$plot_function(X = pred_aug_exp[[".fitted"]], plotly = TRUE)
-graph$plot(data = "y", p=p, plotly=TRUE)
+p <- graph$plot_function(X = pred_aug_exp[[".fitted"]], type = "plotly")
+graph$plot(data = "y", p=p, type = "plotly")
 ```
 
 
@@ -447,9 +384,9 @@ for(i in 1:graph$nE){
   PtE <- rbind(PtE, cbind(rep(i, n.obs.per.edge), sort(runif(n.obs.per.edge))))
 }
 ## Removing problematic locations (locations very close) to improve numerical stability
-prob_points <- which(abs(diff(PtE[,2])) < 1e-3)
-prob_points <- c(prob_points, which(PtE[,2] < 1e-3))
-prob_points <- c(prob_points, which(PtE[,2] > 1 - 1e-3))
+prob_points <- which(abs(diff(PtE[,2])) < 5e-3)
+prob_points <- c(prob_points, which(PtE[,2] < 5e-3))
+prob_points <- c(prob_points, which(PtE[,2] > 1 - 5e-3))
 
 PtE <- PtE[!(1:nrow(PtE)%in%prob_points),]
 df_temp <- data.frame(y = 0, edge_number = PtE[,1],
@@ -479,15 +416,14 @@ y <- u + sigma_e*rnorm(length(u))
 df_GL <- data.frame(y = as.vector(y), edge_number = PtE[,1],
                         distance_on_edge = PtE[,2])
 
-graph$clear_observations()
-graph$add_observations(data = df_GL, normalized=TRUE)
+graph$add_observations(data = df_GL, normalized=TRUE, clear_obs = TRUE)
 graph$plot(data = "y")
 ```
 
 We can then fit the model to data similarly to how we fit the previous models, with the help
 of the function `graph_lme()`:
 ```{r}
-res_GL <- graph_lme(y ~ -1, graph = graph, model = list(type = "graphLaplacian"))
+res_GL <- graph_lme(y ~ -1, graph = graph, model = "GL1" )
 
 sigma_e_est <- res_GL$coeff$measurement_error
 tau_est <- res_GL$coeff$random_effects[1]

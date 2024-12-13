@@ -12,7 +12,7 @@ template:
 navbar:
   bg: primary
   structure:
-    left:  [intro, reference, articles, news]
+    left:  [intro, reference, articles, custom, news]
     right: [search, github, twitter]
   components:
     reference:
@@ -27,18 +27,31 @@ navbar:
         href: articles/random_fields.html
       - text: Data manipulation on metric graphs
         href: articles/metric_graph_data.html
-      - text: inlabru interface of Whittle--Matérn fields
+      - text: inlabru interface of Whittle--Matern fields
         href: articles/inlabru_interface.html
-      - text: INLA interface of Whittle--Matérn fields
+      - text: INLA interface of Whittle--Matern fields
         href: articles/inla_interface.html
-      - text: Whittle--Matérn fields with general smoothness
+      - text: Whittle--Matern fields with general smoothness
         href: articles/fem_models.html
       - text: Log-Gaussian Cox processes on metric graphs
         href: articles/pointprocess.html
       - text: Comparison of different models using real data
         href: articles/comparison.html        
       - text: On isotropic covariances on metric graphs with non-Euclidean edges
-        href: articles/isotropic_noneuclidean.html                
+        href: articles/isotropic_noneuclidean.html     
+      - text: An example with multiple likelihoods in INLA and inlabru       
+        href: articles/multi_likelihood.html
+      - text: An example with directional models
+        href: articles/directional_model.html        
+      - text: An example with a river graph model
+        href: articles/river_example.html         
+      - text: Spatio-temporal Models on Compact Metric Graphs
+        href: articles/spacetime.html  
+    custom:
+        icon: fa-comments-o
+        text: Discussions
+        href: https://github.com/davidbolin/MetricGraph/discussions
+
     twitter:
       icon: fa-twitter
       href: https://twitter.com/jdavidbolin
@@ -73,7 +86,9 @@ reference:
     - predict.inla_metric_graph_spde
     - predict.rspde_metric_graph
     - plot.graph_bru_pred
+    - plot.graph_bru_proc_pred
     - graph_bru_process_data
+    - process_rspde_predictions
   - title: Linear mixed-effects models
     contents:
     - graph_lme
@@ -112,6 +127,8 @@ reference:
     contents:
     - exp_covariance
     - spde_covariance
+    - spde_variance
   - title: Datasets
     contents:
     - pems
+    - pems_repl

@@ -12,6 +12,10 @@
   formula = NULL,
   data_coords = c("PtE", "euclidean"),
   normalized = TRUE,
+  repl = NULL,
+  repl_col = NULL,
+  group = NULL,
+  group_col = NULL,
   n.samples = 100,
   seed = 0L,
   probs = c(0.025, 0.5, 0.975),
@@ -20,6 +24,7 @@
   include = NULL,
   exclude = NULL,
   drop = FALSE,
+  tolerance_merge = 1e-05,
   ...,
   data = deprecated()
 )
@@ -50,6 +55,19 @@ coordinates.}
 assumed to be normalized to (0,1). Default TRUE. Will not be
 used if \code{data_coords} is \code{euclidean}.}
 
+\item{repl}{Which replicates? If there is no replicates, one
+can set \code{repl} to \code{NULL}. If one wants all replicates,
+then one sets to \code{repl} to \code{.all}.}
+
+\item{repl_col}{Column containing the replicates. If the replicate is the internal group variable, set the replicates
+to ".group". If not replicates, set to \code{NULL}.}
+
+\item{group}{Which groups? If there is no groups, one
+can set \code{group} to \code{NULL}. If one wants all groups,
+then one sets to \code{group} to \code{.all}.}
+
+\item{group_col}{Which "column" of the data contains the group variable?}
+
 \item{n.samples}{Integer setting the number of samples to draw in order to
 calculate the posterior statistics. The default is rather low but provides a
 quick approximate result.}
@@ -77,6 +95,8 @@ the inclusion list)}
 \item{drop}{logical; If keep=FALSE, data is a SpatialDataFrame, and the
 prediciton summary has the same number of rows as data, then the output is a
 SpatialDataFrame object. Default FALSE.}
+
+\item{tolerance_merge}{Tolerance for merging prediction points into original points to increase stability.}
 
 \item{...}{Additional arguments passed on to \code{inla.posterior.sample()}.}
 

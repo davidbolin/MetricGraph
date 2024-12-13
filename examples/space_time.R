@@ -14,7 +14,7 @@ lines = sp::SpatialLines(list(Lines(list(line1),ID="1"),
                               Lines(list(line3),ID="3"),
                               Lines(list(line4),ID="4")))
 
-graph <- metric_graph$new(lines = lines)
+graph <- metric_graph$new(edges = lines)
 graph$plot(direction = TRUE)
 h = 0.01
 graph$build_mesh(h = h)
@@ -32,24 +32,24 @@ beta <- 0
 
 #show spacetime covariances
 Q <- make_Q_spacetime(graph,t,kappa,rho,gamma, alpha, beta, sigma)
-ct.dir <- MetricGraph:::plot_spacetime_covariances(graph,Q = Q,
+ct.dir <- plot_spacetime_covariances(graph,Q = Q,
                                                    t.ind = c(nt/2),
                                                    s.ind = 235,
                                                    t = t)
 
 
 #Simulate field
-nt = 30
-T = 0.2
-kappa <- 0.1
-rho <- -100
-gamma <- 0.05
+nt = 40
+T = 3
+kappa <- 0.2
+rho <- 0#-100
+gamma <- 0.9
 sigma <- 0.001
 alpha <- 1
 beta <- 0
 t <- seq(from=0, to = T, length.out = nt)
 u0 <- rep(0,dim(graph$mesh$C)[1])
-u0[50] <- 1
+u0[50] <- 10
 U <- MetricGraph:::simulate_spacetime(graph, t, kappa, rho, gamma, alpha, beta, sigma, u0)
 fig <- graph$plot_movie(U)
 fig
@@ -62,7 +62,7 @@ if(save.plot){
 
 ## TESTS
 if(alpha==1){
-  Qs <- 2*gamma*make.L(beta+alpha,kappa,graph$mesh$C,graph$mesh$G)/sigma^2
+  Qs <- 2*gamma*MetricGraph:::make.L(beta+alpha,kappa,graph$mesh$C,graph$mesh$G)/sigma^2
 }else if (alpha == 2) {
   C <- graph$mesh$C
   G <- graph$mesh$G

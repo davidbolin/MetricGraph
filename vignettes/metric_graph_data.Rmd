@@ -263,6 +263,153 @@ To plot the data for a particular group, we simply select the group variable we 
 graph$plot(data = "y", group = "3:c")
 ```
 
+# Identifying data that is away from the metric graph
+
+Whenever we use the `add_observations()` method, it returns the data that was removed (if there was any). We can use this information to visualize what is going on and decide what to do with this data. There are two types of removed data, the ones that were removed due to being projected to the same place, or the ones that were removed due to being farther than the tolerance.
+
+To make things simple, let us work with the previous dataset:
+
+```{r}
+data_df <- as.data.frame(graph$get_data(group = "1:a"))
+data_df <- data_df[,c("y", ".coord_x", ".coord_y")]
+```
+
+Let us now include observations that are not contained in the graph.
+
+```{r}
+data_df_tmp <- data.frame(y = rnorm(20), .coord_x = 0.5, .coord_y = runif(20))
+data_df <- rbind(data_df,data_df_tmp)
+```
+
+We start by looking at the graph, and the observations that we created outside the metric graph:
+
+```{r}
+library(ggplot2)
+graph$plot() + geom_point(data_df_tmp, mapping = aes(x=.coord_x, y=.coord_y), color="red")
+```
+
+Let us now add these observations to the graph, but we will store the returned object:
+
+```{r}
+rem_obs <- graph$add_observations(data = data_df, clear_obs = TRUE,
+                                  data_coords = "spatial",
+                                  coord_x = ".coord_x",
+                                  coord_y = ".coord_y")
+```
+
+Let us look at the element `rem_obs`:
+
+```{r}
+rem_obs
+```
+
+We can see that there were only data that were removed due to being projected at the same location.
+
+Let us now plot the data, and add the points that were removed in red:
+
+```{r}
+graph$plot(data = "y") + geom_point(rem_obs$removed, mapping = aes(x=.coord_x, y=.coord_y), color="red")
+```
+
+We can observe that we ended up adding more than one would want due to the tolerance for adding observations in this case. Let us reduce the tolerance, and repeat the procedure:
+
+```{r}
+rem_obs <- graph$add_observations(data = data_df, clear_obs = TRUE,
+                                  data_coords = "spatial",
+                                  coord_x = ".coord_x",
+                                  coord_y = ".coord_y",
+                                  tolerance = 0.1)
+```
+
+Let us now look at `rem_obs`:
+
+```{r}
+rem_obs
+```
+
+We can see that there were both data removed due to being projected to the same place, as well as due to being too far away. Let us plot the ones due to being projected to the same place in red, and the ones that are far away in blue:
+
+Let us now plot the data, and add the points that were removed in red:
+
+```{r}
+graph$plot(data = "y") + geom_point(rem_obs$removed, mapping = aes(x=.coord_x, y=.coord_y), color="red") + 
+    geom_point(rem_obs$far_data, mapping = aes(x=.coord_x, y=.coord_y), color="blue")
+```
+
+Therefore, the practitioner can use this information, to decide the best strategy to handle such observations.
+
+# Merging observations when adding them
+
+Let us now consider the situation in which we have observations very close, which can sometimes might lead to instabilities when fitting models. By default nothing is done is this case. To handle such cases, we have the `tolerance_merge` argument, for which observations on a common edge within this tolerance will be merged, for which the default value is `0`. We have three alternative strategies: `remove`, `merge` and `average`. These can be set by using the `merge_strategy` argument.
+
+It is also important to note that, by default, the removed observations due to merge will be returned from the `add_observations()` call.
+
+Let us illustrate with a simple example. First, with the merge strategy set to `merge`. For this strategy, the observations will be merged by filling the `NA` columns of the observations within the tolerance region, by some non-NA value from an observation within the same tolerance region. 
+
+Let us create a simple `data.frame` with some observations that are close to each other:
+```{r}
+df_graph <- data.frame(
+    y = c(NA, 2, 3, 4, 1, 10),
+    edge_number = c(1, 2, 3, 4, 1, 2),
+    distance_on_edge = c(0.5, 0.5, 0.5, 0.5, 0.449, 0.45),
+    z = c(10, NA, 30, 40, NA, 60),
+    w = c("a", "b", "c", "d", "e", NA)
+)
+
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE)
+```
+
+let us look at the data
+
+```{r}
+graph$get_data()
+```
+
+We will merge these observations, with the removal strategy, by setting `tolerance_merge` to `0.1`:
+
+```{r}
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE, 
+                        merge_strategy = "merge", tolerance_merge = 0.1)
+```
+
+We can see from the output that the merged observations were returned. Now, let us look at the data added to the graph with this merge strategy:
+
+```{r}
+graph$get_data()
+```
+
+We can observe that the `NA` values were filled by the ones from the observations within the same tolerance region.
+
+Now, let us see the `remove` strategy. For this strategy, the observations that are within the tolerance from each other will be removed, keeping only one observation per "tolerance region". 
+
+```{r}
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE, 
+                        merge_strategy = "remove", tolerance_merge = 0.1)
+```
+
+We can see the removed observations due to merge, now let us check the added observations:
+
+```{r}
+graph$get_data()
+```
+
+We can see that the observations that were within the tolerance region were removed, and the added observations did not have their `NA` values filled in. So, it was a simple removal of observations within the same tolerance region.
+
+Finally, let us look at the `average` merge strategy. For this strategy, the non-NA values of numerical columns of observations that are within the tolerance from each other will be averaged, keeping only one observation per "tolerance region". But for non-numerical columns, the behavior is identical to the `merge` strategy, that is, if the column has a non-NA value, it will be kept as is, but if it has an NA value, a search for a non-NA value will be performed across the observations within the tolerance region. Let us illustrate this:
+
+```{r}
+graph$add_observations(data = df_graph, normalized = TRUE, clear_obs = TRUE, 
+                        merge_strategy = "average", tolerance_merge = 0.1)
+```
+
+Observe that the removed observations due to merge were returned. Now, let us look at the data inside the graph:
+
+```{r}
+graph$get_data()
+```
+
+We can observe that for columns `z` and `w`, the `NA` values were filled by the ones from the observations within the same tolerance region. However, for column `y`, the non-NA values were averaged.
+
 
 # Manipulating data from metric graphs in the tidyverse style
 
@@ -535,4 +682,112 @@ We can check that it was properly added:
 
 ```{r}
 graph$get_data()
+```
+
+# Edge Weights Manipulation in Metric Graphs
+
+We will demonstrate edge weights manipulation using various tidyverse-style verbs, including `select`, `mutate`, `filter`, `summarise`, and `drop_na`. We will also introduce some `NA` values for illustration.
+
+## Adding Edge Weights to the Metric Graph
+
+We begin by creating a dataset of edge weights and adding it to the metric graph:
+
+```{r}
+set.seed(123)
+
+# Generate edge weight data
+edge_weights_df <- data.frame(
+  weight = runif(graph$nE),
+  weight2 = rnorm(graph$nE),
+  weight3 = runif(graph$nE) * 100
+)
+
+# Introduce some NA values
+edge_weights_df$weight[1] <- NA
+edge_weights_df$weight2[2] <- NA
+edge_weights_df$weight3[3] <- NA
+
+# Set edge weights in the metric graph
+graph$set_edge_weights(weights = edge_weights_df)
+
+# Display the edge weights
+graph$get_edge_weights()
+```
+
+## Selecting Specific Edge Weight Columns
+
+The `select_weights()` method allows us to choose specific columns from the edge weight dataset. Let's select `weight` and `weight2`, while preserving all rows, even if they contain `NA`:
+
+```{r}
+graph$select_weights(weight, weight2, .drop_all_na = FALSE)
+```
+
+## Filtering Edge Weights
+
+We can filter rows based on conditions. For example, let's filter rows where `weight > 0.5` and remove rows containing `NA` values:
+
+```{r}
+graph$filter_weights(weight > 0.5, .drop_na = TRUE)
+```
+
+We can also filter edge weights using standard tidyverse functions:
+
+```{r}
+filtered_weights <- graph$get_edge_weights() %>% filter(weight > 0.5)
+```
+
+## Creating New Columns Using `mutate_weights()`
+
+We will now create a new column `weight_log`, which is the logarithm of `weight + 1`:
+
+```{r}
+graph$mutate_weights(weight_log = log(weight + 1))
+```
+
+We can plot the result after applying the mutation. To this end, we first set the new edges as the result from `mutate_weights`, then we plot:
+
+```{r}
+graph$set_edge_weights(weights = graph$mutate_weights(weight_log = log(weight + 1)))
+graph$plot(edge_weight = "weight_log")
+```
+
+## Summarising Edge Weights
+
+We can summarise edge weights by calculating the mean of `weight` and `weight2` for all edges:
+
+```{r}
+graph$summarise_weights(mean_weight = mean(weight, na.rm = TRUE), 
+                        mean_weight2 = mean(weight2, na.rm = TRUE))
+```
+
+If we want to group by edge numbers or other columns, we can use the `.groups` argument:
+
+```{r}
+graph$summarise_weights(mean_weight = mean(weight, na.rm = TRUE), 
+                        mean_weight2 = mean(weight2, na.rm = TRUE), 
+                        .groups = ".weights")
+```
+
+## Removing Rows with NA Values
+
+To remove rows that contain `NA` values for the `weight` and `weight2` columns, we use the `drop_na_weights()` method:
+
+```{r}
+graph$drop_na_weights(weight, weight2)
+```
+
+We can also directly apply `drop_na()` to the result of `get_edge_weights()`:
+
+```{r}
+graph$get_edge_weights() %>% drop_na(weight, weight2)
+```
+
+## Combining Multiple Verbs
+
+Finally, let us combine multiple verbs to manipulate the edge weights. We will mutate the weights, filter for certain conditions, and summarise them:
+
+```{r}
+graph$mutate_weights(new_weight = weight * 10) %>% 
+       filter(weight > 0.2) %>% 
+       summarise(mean_new_weight = mean(new_weight, na.rm = TRUE))
 ```

@@ -195,3 +195,198 @@ Rcpp::List  c_basis2(Eigen::MappedSparseMatrix<double> A,
   output["cluster.n"] =  n_subcluster;
   return(output);
 }
+
+
+
+// [[Rcpp::export]]
+Eigen::SparseMatrix<double> construct_constraint_matrix(const Eigen::MatrixXi& E, int nV, int edge_constraint) {
+    int nE = E.rows();  // Number of edges inferred from the rows of E
+
+    // Reserve memory based on expected constraints
+    std::vector<int> i_;
+    std::vector<int> j_;
+    std::vector<double> x_;
+    i_.reserve(2 * nE);
+    j_.reserve(2 * nE);
+    x_.reserve(2 * nE);
+
+    int count_constraint = 0;
+    int count = 0;
+
+    // Precompute lower and upper edge indices with memory consideration
+    std::vector<std::vector<int>> lower_edges(nV + 1), upper_edges(nV + 1);
+    for (int e = 0; e < nE; ++e) {
+        lower_edges[E(e, 0)].push_back(e);
+        upper_edges[E(e, 1)].push_back(e);
+    }
+
+    // Loop over each vertex
+    for (int v = 1; v <= nV; ++v) {
+        const std::vector<int>& le = lower_edges[v];
+        const std::vector<int>& ue = upper_edges[v];
+        int n_e = le.size() + ue.size();
+
+        // Derivative constraint
+        if ((edge_constraint && n_e == 1) || n_e > 1) {
+            for (int k = 0; k < n_e; ++k) {
+                i_.push_back(count_constraint);  // Use zero-based indexing
+                if (k < le.size()) {
+                    j_.push_back(4 * (le[k]) + 1);  // Corrected to zero-based
+                    x_.push_back(1.0);
+                } else {
+                    j_.push_back(4 * (ue[k - le.size()]) + 3);  // Corrected to zero-based
+                    x_.push_back(-1.0);
+                }
+                count++;
+            }
+            count_constraint++;
+        }
+
+        // Internal constraints for nodes with more than one edge
+        if (n_e > 1) {
+            std::vector<std::pair<int, int>> edges;
+            for (int e : le) edges.emplace_back(e, 1);  // Adjusted to zero-based
+            for (int e : ue) edges.emplace_back(e, 3);  // Adjusted to zero-based
+
+            for (int i = 1; i < n_e; ++i) {
+                i_.push_back(count_constraint);  // Zero-based indexing
+                j_.push_back(4 * (edges[i - 1].first) + edges[i - 1].second - 1);  // Adjusted to zero-based
+                x_.push_back(1.0);
+
+                i_.push_back(count_constraint);  // Zero-based indexing
+                j_.push_back(4 * (edges[i].first) + edges[i].second - 1);  // Adjusted to zero-based
+                x_.push_back(-1.0);
+
+                count_constraint++;
+                count += 2;
+            }
+        }
+    }
+
+    // Populate triplet list and construct the sparse matrix
+    std::vector<Eigen::Triplet<double>> tripletList;
+    tripletList.reserve(count);
+    for (int k = 0; k < count; ++k) {
+        tripletList.emplace_back(i_[k], j_[k], x_[k]);
+    }
+
+    // Create the sparse matrix `C` with dimensions based on the constraints and edges
+    Eigen::SparseMatrix<double> C(count_constraint, 4 * nE);
+    C.setFromTriplets(tripletList.begin(), tripletList.end());
+    C.makeCompressed();  // Ensure it is in compressed column storage
+
+    return C;
+}
+
+
+// Gets the correct sparsity however cannot fill correct x because we cannot pass the directional weight functions to C.
+
+// [[Rcpp::export]]
+Eigen::SparseMatrix<double> construct_directional_constraint_matrix(
+    const Eigen::MatrixXi& E, int nV, int nE, int alpha,
+    const std::vector<int>& V_indegree,
+    const std::vector<int>& V_outdegree) {
+
+    // Determine index conditions
+    std::vector<bool> index_outdegree(nV, false);
+    std::vector<bool> index_in0(nV, false);
+    for (int v = 0; v < nV; ++v) {
+        index_outdegree[v] = V_outdegree[v] > 0 && V_indegree[v] > 0;
+        index_in0[v] = V_indegree[v] == 0;
+    }
+
+    // Calculate nC based on conditions
+    int nC = 0;
+    for (int v = 0; v < nV; ++v) {
+        if (index_outdegree[v]) {
+            nC += V_outdegree[v] * (1 + V_indegree[v]);
+        } else if (index_in0[v]) {
+            nC += V_outdegree[v] - 1;
+        }
+    }
+    nC *= alpha;
+
+    // Reserve memory based on expected constraints
+    std::vector<int> i_;
+    std::vector<int> j_;
+    std::vector<double> x_;
+    i_.reserve(nC);
+    j_.reserve(nC);
+    x_.reserve(nC);
+
+    int count_constraint = 0;
+    int count = 0;
+
+    // Process vertices with outdegree and indegree
+    for (int v = 0; v < nV; ++v) {
+        if (index_outdegree[v]) {
+            std::vector<int> out_edges;
+            std::vector<int> in_edges;
+
+            // Find out_edges and in_edges for vertex v
+            for (int e = 0; e < nE; ++e) {
+                if (E(e, 0) == v + 1) out_edges.push_back(e);
+                if (E(e, 1) == v + 1) in_edges.push_back(e);
+            }
+
+            int n_in = in_edges.size();
+            for (int i = 0; i < out_edges.size(); ++i) {
+                for (int der = 1; der <= alpha; ++der) {
+                    i_.insert(i_.end(), n_in + 1, count_constraint);
+                    j_.push_back(2 * alpha * (out_edges[i]) + der - 1);
+
+                    // Add indices for each in_edge, and set all x_ values to 1
+                    for (int j = 0; j < n_in; ++j) {
+                        j_.push_back(2 * alpha * (in_edges[j]) + alpha + der - 1);
+                    }
+
+                    // Set x_ values to 1
+                    x_.insert(x_.end(), n_in + 1, 1.0);
+
+                    count += (n_in + 1);
+                    count_constraint++;
+                }
+            }
+        }
+    }
+
+    // Process vertices with indegree == 0
+    for (int v = 0; v < nV; ++v) {
+        if (index_in0[v]) {
+            std::vector<int> out_edges;
+            for (int e = 0; e < nE; ++e) {
+                if (E(e, 0) == v + 1) out_edges.push_back(e);
+            }
+
+            if (out_edges.size() > 1) {
+                for (int i = 1; i < out_edges.size(); ++i) {
+                    for (int der = 1; der <= alpha; ++der) {
+                        i_.push_back(count_constraint);
+                        j_.push_back(2 * alpha * (out_edges[i]) + der - 1);
+                        x_.push_back(1.0);
+
+                        i_.push_back(count_constraint);
+                        j_.push_back(2 * alpha * (out_edges[i - 1]) + der - 1);
+                        x_.push_back(-1.0);
+
+                        count += 2;
+                        count_constraint++;
+                    }
+                }
+            }
+        }
+    }
+
+    // Populate triplet list and construct the sparse matrix
+    std::vector<Eigen::Triplet<double>> tripletList;
+    tripletList.reserve(count);
+    for (int k = 0; k < count; ++k) {
+        tripletList.emplace_back(i_[k], j_[k], x_[k]);
+    }
+
+    Eigen::SparseMatrix<double> C(count_constraint, 2 * alpha * nE);
+    C.setFromTriplets(tripletList.begin(), tripletList.end());
+    C.makeCompressed();
+
+    return C;
+}

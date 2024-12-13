@@ -7,122 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Comparison of different models using real data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: BSW2022a
-  title: "Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: Bernoulli
-  type: article
-  issue: 30
-  pages: 1611-1639
-  issued:
-    year: 2024
-- id: BSW2022b
-  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: arXiv:2304.10372
-  type: preprint
-  issued:
-    year: 2023
-- id: Anderes2020
-  title: "Isotropic covariance functions on graphs and their edges"
-  author:
-  - family: Anderes
-    given: Ethan
-  - family: Møller
-    given: Jesper
-  - family: Rasmussen
-    given: Jakob G
-  container-title: Annals of Statistics
-  type: article
-  issue: 48
-  pages: 2478-2503
-  issued:
-    year: 2020
-- id: Borovitskiy2021
-  title: "Matérn Gaussian processes on graphs"
-  author:
-  - family: Borovitskiy
-    given: Viacheslav
-  - family: Azangulov
-    given: Iskander
-  - family: Terenin
-    given: Alexander 
-  - family: Mostowsky
-    given: Peter
-  - family: Deisenroth
-    given: Marc
-  - family: Durrande
-    given: Nicolas
-  container-title: International Conference on Artificial Intelligence and Statistics
-  type: article
-  pages: 2593-2601
-  issued: 
-    year: 2021
-- id: LindgrenRue2015
-  title: Bayesian Spatial Modelling with R-INLA.
-  author:
-  - family: Lindgren
-    given: Finn
-  - family: Rue
-    given: Haavard
-  container-title: Journal of Statistical Software
-  type: article
-  issue: 63
-  pages: 1-25
-  issued:
-    year: 2015
-- id: inlabru2019
-  title: inlabru an R package for Bayesian spatial modelling from ecological survey data
-  author:
-  - family: Bachl
-    given: Fabian E.
-  - family: Lindgren
-    given: Finn
-  - family: Borchers
-    given: David L.
-  - family: Illian
-    given: Janine B.
-  container-title: Methods in Ecology and Evolution
-  type: article
-  issue: 10
-  pages: 760-766
-  issued:
-    year: 2019
-- id: sppackage
-  title: Applied spatial data analysis with R
-  author:
-  - family: Bivand
-    given: Roger S.
-  - family: Pebesma
-    given: Edzer
-  - family: Gomez-Rubio
-    given: Virgilio
-  publisher: Springer, NY
-  type: book
-  issued:
-    year: 2013
-- id: plotlypackage
-  title: Interactive Web-Based Data Visualization with R, plotly, and shiny
-  author:
-  - family: Sievert
-    given: Carson
-  publisher: Chapman and Hall/CRC
-  type: book
-  issued:
-    year: 2020
+bibliography: references.bib
 ---
 
 ```{r setup, include = FALSE}
@@ -136,22 +21,21 @@ set.seed(1)
 
 ## Introduction
 
-In this vignette our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian random field with an isotropic exponential covariance function [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
+This vignette contains the details of the Application section of [@BSW2022b](https://arxiv.org/abs/2304.10372). Our goal is to compare the predictive power of different models on metric graphs by cross-validation. More precisely, we consider the Whittle--Matérn fields introduced by [@BSW2022a](https://arxiv.org/abs/2205.06163) and [@BSW2022b](https://arxiv.org/abs/2304.10372), a Gaussian random field with an isotropic exponential covariance function [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), and Matérn Gaussian processes based on the graph Laplacian [@Borovitskiy2021](http://proceedings.mlr.press/v130/borovitskiy21a/borovitskiy21a.pdf). 
 
 ## The dataset
 
 For this example we will consider the `pems` data contained in the `MetricGraph` package. The data consists of traffic speed observations on highways in the city of San Jose, California. The variable `y` contains the traffic speeds.
 
 ```{r, message=FALSE}
- pems_graph <- metric_graph$new(edges = pems$edges, longlat=TRUE)
+ pems_graph <- metric_graph$new(edges = pems$edges)
  pems_graph$add_observations(data = pems$data, normalized=TRUE)
- pems_graph$prune_vertices()
 ```
 
 Let us take a look at the observations:
 
-```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-pems_graph$plot(data = "y", vertex_size = 0)
+```{r, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7, warning=FALSE, message=FALSE}
+pems_graph$plot(data = "y", vertex_size = 0, type = "mapview")
 ```
 
 ## The models
@@ -165,10 +49,10 @@ where $\mu$ is a constant that represents the mean of the field, $u(\cdot)$ is a
 independent centered Gaussian variables $N(0,\sigma_e^2)$ representing 
 measurement noise. 
 
-Let us fit the different models, that is, we will assume several different possible latent fields $u(\cdot)$. We start by fitting a Whittle-Matérn field with `alpha = 1`:
+Let us fit the different models, that is, we will assume several different possible latent fields $u(\cdot)$. We start by fitting a Whittle-Matérn field with `alpha = 1` (with `BC=0`, which means we are not perform boundary corrections):
 
 ```{r}
-fit_alpha1 <- graph_lme(y ~ 1, graph=pems_graph, 
+fit_alpha1 <- graph_lme(y ~ 1, graph=pems_graph, BC = 0,
             model = list(type = "WhittleMatern", alpha = 1))
 ```
 
@@ -181,7 +65,7 @@ summary(fit_alpha1)
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
 
 ```{r}
-fit_alpha2 <- graph_lme(y ~ 1, graph=pems_graph, 
+fit_alpha2 <- graph_lme(y ~ 1, graph=pems_graph, BC = 0,
             model = list(type = "WhittleMatern", alpha = 2))
 ```
 
@@ -212,14 +96,16 @@ and
 summary(fit_alpha2_bc)
 ```
 
-Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`:
+Similarly, let us now fit a Matérn Gaussian model based on the graph Laplacian for `alpha=1` and `alpha=2`. For these, we first fit the models without fixed effects, 
+and then use those results as starting values for the complete optimization. The reason for this is that the estimation otherwise is slightly unstable for these models. 
 
-```{r}
+```{r, warning=FALSE}
+fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
+            model = list(type = "graphLaplacian", alpha = 1), optim_method = "Nelder-Mead")
 fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
-            model = list(type = "graphLaplacian", alpha = 1))
-
+            model = list(type = "graphLaplacian", alpha = 1), previous_fit = fit_GL1)
 fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,
-            model = list(type = "graphLaplacian", alpha = 2))
+            model = list(type = "graphLaplacian", alpha = 2), previous_fit = fit_GL1)
 ```
 
 and look at their summaries:
@@ -271,27 +157,46 @@ Therefore, even after adding the observations as vertices, the metric graph is s
 
 Let us check if we can fit an isotropic model with isotropic Matérn covariance function with smoothness parameter `nu=1.5` (which corresponds to `alpha=2` for Whittle-Matérn fields and Matérn Gaussian models based on the graph Laplacian). Recall that by the results in [@Anderes2020](https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full), it is not guaranteed that such a function will be a valid covariance function even on an metric graph with Euclidean edges.
 
-We start by defining the Matérn covariance:
+We start by defining the Matérn covariance corresponding to `alpha=2`:
 
 ```{r}
 cov_mat <- function(h,theta){
-    nu <- 1.5
-    sigma <- theta[1]
-    kappa <- theta[2]
-    (sigma^2/(2^(nu - 1) * gamma(nu))) * ((kappa * abs(h))^nu) * 
-            besselK(kappa * abs(h), nu)
-        }
+  tau <- theta[1]
+  kappa <- theta[2]
+  1/tau * (1 + kappa * abs(h)) * exp(- kappa * abs(h))
+}
 ```
 
 Let us now fit the model:
 
 ```{r, error=TRUE}
 fit_isomat <- graph_lme(y ~ 1, graph = pems_graph, 
-                            model = list(type = "isoCov", cov_function = cov_mat), 
-                                    model_options = list(start_par_vec = c(1,1)))
+                model = list(type = "isoCov", cov_function = cov_mat), 
+                model_options = list(start_par_vec = fit_alpha2$coeff$random_effects))
 ```
 
 Indeed, the model could not be fitted.
+
+Let us now quickly look at the likelihoods of the fitted models. We begin by creating a list with the fitted models:
+
+```{r}
+fitted_models_list <- list("isoExp" = fit_isoexp, 
+                            "GL1" = fit_GL1,
+                            "alpha=1" = fit_alpha1, 
+                            "alpha=1 bc" = fit_alpha1_bc,
+                            "GL2" = fit_GL2,
+                            "alpha=2" = fit_alpha2, 
+                            "alpha=2 bc" = fit_alpha2_bc)
+```
+
+Now, the likelihoods:
+
+```{r}
+table_lik <- sapply(fitted_models_list, logLik)
+
+# Printing the negative likelihoods:
+-table_lik
+```
 
 ## Comparison by cross-validation
 
@@ -300,21 +205,15 @@ leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
 ```{r}
-fitted_models_list <- list("alpha=1" = fit_alpha1, 
-                    "alpha=2" = fit_alpha2, 
-                    "isoExp" = fit_isoexp, 
-                    "GL1" = fit_GL1, "GL2" = fit_GL2,
-                    "alpha=1 bc" = fit_alpha1_bc,
-                    "alpha=2 bc" = fit_alpha2_bc)
-
-posterior_crossvalidation(fitted_models_list, factor = 1000)[["scores"]]
+res <- posterior_crossvalidation(fitted_models_list, tibble=FALSE)
+res$scores
 ```
 
 ## Kriging 
 
-We will now perform kriging with the different fitted models. Observe that for the Matérn Gaussian model based on the graph Laplacian and the Gaussian model with isotropic exponential covariance function, we actually modify the model when doing predictions. See the [On isotropic covariances on metric graphs with non-Euclidean edges](isotropic_noneuclidean.html) vignette for further details. 
+We will now perform kriging with the best models according to the cross-validation results, which are `fit_alpha2` and `fit_alpha2_bc`. 
 
-Therefore, even though we are able to obtain ``predictions'' using the Matérn Gaussian models based on graph Laplacian and the Gaussian models with istropic exponential covariance function, there are some inconsistencies between the model used to fit the data, and the model used to obtain predictions. Such inconsistency is not present in the Whittle-Matérn models on metric graphs.
+It is important to observe that for the Matérn Gaussian model based on the graph Laplacian and the Gaussian model with isotropic exponential covariance function, one would actually need to modify the model when doing predictions. See the [On isotropic covariances on metric graphs with non-Euclidean edges](isotropic_noneuclidean.html) vignette for further details. Therefore, even though we might be able to obtain ``predictions'' using the Matérn Gaussian models based on graph Laplacian and the Gaussian models with istropic exponential covariance function, there are some inconsistencies between the model used to fit the data, and the model used to obtain predictions. Such inconsistency is not present in the Whittle-Matérn models on metric graphs.
 
 Let us begin by building a mesh on the metric graph and create a `data.frame()` with such mesh locations:
 
@@ -343,74 +242,7 @@ coordy_lwr2 <- 37.35
 coordy_upr2 <- 37.38
 ```
 
-We can now obtain the predictions. We will use the `augment()` method to obtain such predictions. We start by obtaining predictions for the Whittle-Matérn models with `alpha=1`:
-
-```{r, message=FALSE, warning=FALSE}
-pred_alpha1 <- augment(fit_alpha1, newdata = df_pred,
-                        normalized = TRUE)
-```
-
-and with boundary correction:
-
-```{r, message=FALSE, warning=FALSE}
-pred_alpha1_bc <- augment(fit_alpha1_bc, newdata = df_pred,
-                        normalized = TRUE)
-```
-
-Let plot the predictions with the corresponding observed values. First for the model without boundary correction. As the predictions were obtained on the mesh nodes, we can supply the fitted values into the `X` argument of the `plot_function()` method:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-library(ggplot2)
-
-p <- pems_graph$plot_function(newdata = pred_alpha1, data = ".fitted",
-                improve_plot=TRUE, vertex_size = 0,
-                edge_width = 0.5) 
-```
-
-We can now add the original observations obtain the plot in region 1:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                
-```
-
-Now in region 2:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)
-```
-                      
-
-Similarly, for `alpha=1` with boundary correction in region 1:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
-              improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
-```
-
-and in region 2:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha1_bc, data = ".fitted",
-              improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
-```
-
-Now, for the Whittle-Matérn models with `alpha=2`:
+We can now obtain the predictions. We will use the `augment()` method to obtain such predictions. We start by obtaining predictions for the Whittle-Matérn models with `alpha=2`:
 
 ```{r, message=FALSE, warning=FALSE}
 pred_alpha2 <- augment(fit_alpha2, newdata = df_pred,
@@ -420,25 +252,47 @@ pred_alpha2 <- augment(fit_alpha2, newdata = df_pred,
 Let us now build the plot for region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2, 
+  data = ".fitted",
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+                    edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1   
+)              
 ```
 
 and region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2, 
+  data = ".fitted",
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+            edge_width = 0, p = p, type = "mapview")
+
+pred_plot <- plot@map
+
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 Now with boundary correction:
@@ -451,119 +305,45 @@ pred_alpha2_bc <- augment(fit_alpha2_bc, newdata = df_pred,
 the plot in region 1:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2_bc, 
+  data = ".fitted",
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2 bc"
+)
+
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
+
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr1, lat1 = coordy_lwr1,  
+  lng2 = coordx_upr1, lat2 = coordy_upr1
+)
 ```
 
 and in region 2:
 
 ```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_alpha2_bc, data = ".fitted",
-                    improve_plot=TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
-```
+p <- pems_graph$plot_function(
+  newdata = pred_alpha2_bc, 
+  data = ".fitted",
+  vertex_size = 0,
+  edge_width = 0.5, 
+  type = "mapview", 
+  mapview_caption = "Pred alpha2 bc"
+)
 
+plot <- pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
+  edge_width = 0, p = p, type = "mapview")
+pred_plot <- plot@map
 
-We now move to the models based on the graph Laplacian:
-
-```{r, message=FALSE, warning=FALSE}
-pred_GL1 <- augment(fit_GL1, newdata = df_pred,
-                        normalized = TRUE)
-```
-
-the plot in region 1:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
-```
-
-and in region 2:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL1, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
-```
-
-and for `alpha=2`:
-
-```{r, message=FALSE, warning=FALSE}
-pred_GL2 <- augment(fit_GL2, newdata = df_pred,
-                        normalized = TRUE)
-```
-
-the plot in region 1:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
-```
-
-and in region 2:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_GL2, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
-```
-
-Finally, for models with isotropic exponential covariance:
-
-```{r, message=FALSE, warning=FALSE}
-pred_isoexp <- augment(fit_isoexp, newdata = df_pred,
-                        normalized = TRUE)
-```
-
-and the corresponding plot in region 1:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr1, coordx_upr1) + 
-                    ylim(coordy_lwr1, coordy_upr1)                       
-```
-
-and in region 2:
-
-```{r, message=FALSE, warning=FALSE, fig.align = "center",echo=TRUE, fig.height=7,fig.width=7}
-p <- pems_graph$plot_function(newdata = pred_isoexp, data = ".fitted", 
-                    improve_plot = TRUE, vertex_size = 0,
-                    edge_width = 0.5) 
-pems_graph$plot(data = "y", vertex_size = 0, data_size = 2, 
-                    edge_width = 0, p = p) + 
-                    xlim(coordx_lwr2, coordx_upr2) + 
-                    ylim(coordy_lwr2, coordy_upr2)                       
+pred_plot %>% leaflet::fitBounds(
+  lng1 = coordx_lwr2, lat1 = coordy_lwr2,  
+  lng2 = coordx_upr2, lat2 = coordy_upr2
+)
 ```
 
 ## A quick diagnostic analysis

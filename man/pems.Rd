@@ -7,14 +7,13 @@
 \format{
 \subsection{\code{pems}}{
 
-A list with three elements:
+A list with two elements:
 \describe{
 \item{edges}{A \code{list} object containing the coordinates of the road segments.}
 \item{data}{Locations of the observations on the road segments as a
-\code{data.frame} with 325 rows and 2 columns. The first column indicates the edge
-number and the second column indicates the distance on edge of the position.}
-\item{Y}{Observations of traffic speed. Consists of a vector with
-325 observations.}
+\code{data.frame} with 325 rows and 3 columns. The first column indicates the edge
+number, the second column indicates the distance on edge of the position,
+and the third column indicates the average speed observed.}
 }
 }
 }
@@ -31,7 +30,7 @@ Data set of traffic speed observations on highways in the city of San Jose,
 California.
 }
 \references{
-Chen, C., K. Petty, A. Skabardonis, P. Varaiya, and Z. Jia (2001). Freeway performance measurement system: mining loop detector data. Transportation Research Record 1748(1), 96–102.
+Chen, C., K. Petty, A. Skabardonis, P. Varaiya, and Z. Jia (2001). Freeway performance measurement system: mining loop detector data. Transportation Research Record 1748(1), 96-102.
 
 OpenStreetMap contributors (2017). Planet dump retrieved from https://planet.osm.org. https://www.openstreetmap.org.
 }

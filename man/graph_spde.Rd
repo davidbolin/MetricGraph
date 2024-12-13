@@ -7,16 +7,22 @@
 graph_spde(
   graph_object,
   alpha = 1,
+  directional = FALSE,
   stationary_endpoints = "all",
   parameterization = c("matern", "spde"),
   start_range = NULL,
   prior_range = NULL,
   start_kappa = NULL,
-  start_sigma = NULL,
   prior_kappa = NULL,
+  start_sigma = NULL,
   prior_sigma = NULL,
+  start_tau = NULL,
+  prior_tau = NULL,
+  factor_start_range = 0.3,
+  type_start_range_bbox = "diag",
   shared_lib = "detect",
-  debug = FALSE
+  debug = FALSE,
+  verbose = 0
 )
 }
 \arguments{
@@ -24,8 +30,10 @@ graph_spde(
 
 \item{alpha}{The order of the SPDE.}
 
+\item{directional}{Should a directional model be used? Currently only implemented for \code{alpha=1}.}
+
 \item{stationary_endpoints}{Which vertices of degree 1 should contain
-stationary boundary conditions?}
+stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.}
 
 \item{parameterization}{Which parameterization to be used? The options are
 'matern' (sigma and range) and 'spde' (sigma and kappa).}
@@ -38,22 +46,33 @@ the log scale. Will not be used if prior.kappa is non-null.}
 
 \item{start_kappa}{Starting value for kappa.}
 
-\item{start_sigma}{Starting value for sigma.}
-
 \item{prior_kappa}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of kappa on the log scale.}
+
+\item{start_sigma}{Starting value for sigma.}
 
 \item{prior_sigma}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.}
 
+\item{start_tau}{Starting value for tau.}
+
+\item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
+\code{sdlog}, that is, the mean and standard deviation of tau on the log scale.}
+
+\item{factor_start_range}{Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.}
+
+\item{type_start_range_bbox}{Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.}
+
 \item{shared_lib}{Which shared lib to use for the cgeneric implementation?
 If "detect", it will check if the shared lib exists locally, in which case it will
 use it. Otherwise it will use 'INLA's shared library.
-If 'INLA', it will use the shared lib from 'INLA's installation. If 'MetricGraph', then
-it will use the local installation (does not work if your installation is from CRAN).
+If 'INLA', it will use the shared lib from 'INLA's installation. If 'rSPDE', then
+it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
 Otherwise, you can directly supply the path of the .so (or .dll) file.}
 
 \item{debug}{Should debug be displayed?}
+
+\item{verbose}{Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.}
 }
 \value{
 An 'INLA' object.

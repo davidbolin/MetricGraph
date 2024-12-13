@@ -25,7 +25,7 @@
 #' by adding `fem = TRUE` to the list, or to use the exact precision matrix
 #' (by setting `fem = FALSE`). If `fem` is `FALSE`, there is also the parameter
 #' `alpha`, to determine the order of the SPDE, which is either 1 or 2. If `fem`
-#' is `TRUE` and `alpha` is not specified, then the default value of `alpha=1`
+#' is `FALSE` and `alpha` is not specified, then the default value of `alpha=1`
 #' will be used. If `fem` is `TRUE` and one does not specify `alpha`, it will be
 #' estimated from the data. However, if one wants to have `alpha` fixed to some
 #' value, the user can specify either `alpha` or `nu` in the list. See the
@@ -54,7 +54,7 @@
 #' @param previous_fit An object of class `graph_lme`. Use the fitted coefficients as starting values.
 #' @param fix_coeff If using a previous fit, should all coefficients be fixed at the starting values?
 #' @param optim_method The method to be used with `optim` function.
-#' @param possible_methods Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'Nelder-Mead' and 'L-BFGS-B' are considered.
+#' @param possible_methods Which methods to try in case the optimization fails or the hessian is not positive definite. The options are 'Nelder-Mead', 'L-BFGS-B', 'BFGS', 'CG' and 'SANN'. By default only 'L-BFGS-B' is considered.
 # @param parameterization_latent The parameterization for `WhittleMatern` and `graphLaplacian` models. The options are 'matern' and 'spde'. The 'matern' parameterizes as 'sigma' and 'range', whereas the 'spde' parameterization is given in terms of 'sigma' and 'kappa'.
 #' @param BC For `WhittleMatern` models, decides which boundary condition to use
 #' (0,1). Here, 0 is Neumann boundary conditions and 1 specifies stationary boundary
@@ -79,9 +79,9 @@ graph_lme <- function(formula, graph,
                 model = list(type = "linearModel"),
                 which_repl = NULL,
                 optim_method = "L-BFGS-B",
-                possible_methods = c("Nelder-Mead", "L-BFGS-B"),
+                possible_methods = "L-BFGS-B",
                 model_options = list(),
-                BC = 0,
+                BC = 1,
                 previous_fit = NULL,
                 fix_coeff = FALSE,
                 parallel = FALSE,
@@ -102,7 +102,7 @@ graph_lme <- function(formula, graph,
     }
     model <- switch(model,
             "lm" = list(type = "linearModel"),
-            "wm1" = list(type = "WhittleMatern", fem = FALSE, alpha = 1, version = 1),
+            "wm1" = list(type = "WhittleMatern", fem = FALSE, alpha = 1, version = 1, directional=0),
             "wm2" = list(type = "WhittleMatern", fem = FALSE, alpha = 2),
             "isoexp" = list(type = "isoCov"),
             "gl1" = list(type = "graphLaplacian", alpha = 1),
@@ -498,6 +498,7 @@ graph_lme <- function(formula, graph,
                     rec_tau = rec_tau)
                 
       start_values <- start_fixed_values$start_values
+      start_values_orig <- start_values
       fixed_values <- start_fixed_values$fixed_values
     }
   } else if(model_type != "linearmodel") {
@@ -508,6 +509,8 @@ graph_lme <- function(formula, graph,
     } else{
       start_values <- c(log(model_options$start_sigma_e),log(model_options$start_par_vec))
     }
+
+    start_values_orig <- start_values
     
     par_names <- names(model_options$start_par_vec)
     if(is.null(model_options$fix_sigma_e)){
@@ -665,8 +668,9 @@ graph_lme <- function(formula, graph,
     # fix_vec <- model_options$fix_par_vec
     # fix_v_val <- model_options$start_par_values
     fix_vec <- fixed_values
-    fix_v_val <- start_values
-    start_values <- start_values[!fix_vec]
+    fix_vec_full <- c(fix_vec, rep(FALSE, ncol(X_cov)))
+    fix_v_val <- start_values_orig
+    start_values <- start_values[!fix_vec_full]
 
     likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
                                                 y_graph = y_graph,
@@ -1341,12 +1345,12 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, sd_post_re =
   }
 
   if(is.null(newdata)){
-    newdata = x$graph$get_data(group = x$graph$get_groups()[1], tibble=TRUE)
+    newdata = x$graph$get_data(group = x$graph$get_groups()[1], format="tibble")
   } else{
     newdata <- x$graph$process_data(data = newdata,
     edge_number = edge_number, distance_on_edge = distance_on_edge,
     coord_x = coord_x, coord_y = coord_y, data_coords = data_coords, group = NULL,
-    tibble=TRUE, normalized = normalized)
+    format="tibble", normalized = normalized)
   }
 
  if(pred_int || se_fit){

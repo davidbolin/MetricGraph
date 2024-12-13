@@ -23,9 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macOS-latest, r: 'release'}        
-          - {os: ubuntu-20.04, r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-20.04, r: 'release'}
+          - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest, r: 'release'}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -42,7 +41,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-          extra-repositories: "https://inla.r-inla-download.org/R/testing"
+          extra-repositories: "https://inla.r-inla-download.org/R/testing https://mugglejinx.github.io/drat/ https://inlabru-org.r-universe.dev/"
 
       - name: Install system dependencies on MacOS (X11, gdal)
         if: runner.os == 'macOS'
@@ -54,7 +53,9 @@ jobs:
       - name: Install system dependencies on Linux (GL)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update -y && sudo apt-get install -y libglu1-mesa-dev
+          sudo apt-get update -y && sudo apt-get install -y libglu1-mesa-dev libeigen3-dev
+          sudo ln -s /usr/bin/gcc /usr/local/bin/gcc
+          sudo ln -s /usr/bin/g++ /usr/local/bin/g++          
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"all"'
@@ -69,7 +70,7 @@ jobs:
       - name: Installing rSPDE and MatrixModels
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rSPDE")
+          remotes::install_github("davidbolin/rspde", ref = "devel-src")
           install.packages("Matrix", type="source", repos = "http://R-Forge.R-project.org")
           install.packages("MatrixModels", type="source", repos = "http://R-Forge.R-project.org")
         shell: Rscript {0}        
