@@ -18,8 +18,11 @@ graph_spde(
   prior_sigma = NULL,
   start_tau = NULL,
   prior_tau = NULL,
+  factor_start_range = 0.3,
+  type_start_range_bbox = "diag",
   shared_lib = "detect",
-  debug = FALSE
+  debug = FALSE,
+  verbose = 0
 )
 }
 \arguments{
@@ -56,6 +59,10 @@ the log scale. Will not be used if prior.kappa is non-null.}
 \item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of tau on the log scale.}
 
+\item{factor_start_range}{Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.}
+
+\item{type_start_range_bbox}{Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.}
+
 \item{shared_lib}{Which shared lib to use for the cgeneric implementation?
 If "detect", it will check if the shared lib exists locally, in which case it will
 use it. Otherwise it will use 'INLA's shared library.
@@ -64,6 +71,8 @@ it will use the local installation of the rSPDE package (does not work if your i
 Otherwise, you can directly supply the path of the .so (or .dll) file.}
 
 \item{debug}{Should debug be displayed?}
+
+\item{verbose}{Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.}
 }
 \value{
 An 'INLA' object.

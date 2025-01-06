@@ -7,35 +7,7 @@ vignette: >
   %\VignetteIndexEntry{An example with multiple likelihoods in INLA and inlabru}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: BSW2022a
-  title: "Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: Bernoulli
-  type: article
-  issue: 30
-  pages: 1611-1639
-  issued:
-    year: 2024
-- id: BSW2022b
-  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: arXiv:2304.10372
-  type: preprint
-  issued:
-    year: 2023
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}

@@ -7,35 +7,7 @@ vignette: >
   %\VignetteIndexEntry{inlabru interface of Whittle--Matérn fields}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: BSW2022a
-  title: "Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: Bernoulli
-  type: article
-  issue: 30
-  pages: 1611-1639
-  issued:
-    year: 2024
-- id: BSW2022b
-  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: arXiv:2304.10372
-  type: preprint
-  issued:
-    year: 2023
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -637,59 +609,72 @@ p <- pems_graph$filter(-121.905< .coord_x, .coord_x < -121.875,
       p + xlim(-121.905,-121.875) + ylim(37.312,37.328)
 ```
 
-We will now create the model, fit, and do predictions, using inlabru:
+We will now create and fit models with both $\alpha=1$ and $\alpha=2$ using `inlabru`:
 
 
 ```{r}
-spde_model_bru_pems <- graph_spde(pems_graph)
-      cmp <- y ~ -1 + Intercept(1) + field(loc,
-                          model = spde_model_bru_pems)
-      data_spde_bru_pems <- graph_data_spde(spde_model_bru_pems,
-                        loc_name = "loc")
-      spde_bru_fit_pems <- bru(cmp, data=data_spde_bru_pems[["data"]],
-                        options=list(num.threads = "1:1"))
+# Model with alpha = 1
+spde_model_bru_pems_1 <- graph_spde(pems_graph, alpha=1)
+cmp_1 <- y ~ -1 + Intercept(1) + field(loc, 
+                                  model = spde_model_bru_pems_1)
+data_spde_bru_pems_1 <- graph_data_spde(spde_model_bru_pems_1, loc_name = "loc")
+spde_bru_fit_pems_1 <- bru(cmp_1, data=data_spde_bru_pems_1[["data"]], 
+                          options=list(num.threads = "1:1"))
+
+# Model with alpha = 2
+spde_model_bru_pems_2 <- graph_spde(pems_graph, alpha=2, start_sigma = 10)
+cmp_2 <- y ~ -1 + Intercept(1) + field(loc, 
+                                    model = spde_model_bru_pems_2)
+data_spde_bru_pems_2 <- graph_data_spde(spde_model_bru_pems_2, loc_name = "loc")
+spde_bru_fit_pems_2 <- bru(cmp_2, data=data_spde_bru_pems_2[["data"]], 
+                          options=list(num.threads = "1:1"))
 ```
 
-Let us see the estimated values in the original scale:
+Let us see the estimated values in the original scale for both models:
 ```{r}
-spde_result_bru_pems <- spde_metric_graph_result(spde_bru_fit_pems, 
-                        "field", spde_model_bru_pems)
+# Results for alpha = 1
+spde_result_bru_pems_1 <- spde_metric_graph_result(spde_bru_fit_pems_1, 
+                        "field", spde_model_bru_pems_1)
+cat("Results for alpha = 1:\n")
+summary(spde_result_bru_pems_1)
 
-summary(spde_result_bru_pems)
+# Results for alpha = 2
+spde_result_bru_pems_2 <- spde_metric_graph_result(spde_bru_fit_pems_2, 
+                        "field", spde_model_bru_pems_2)
+cat("\nResults for alpha = 2:\n")
+summary(spde_result_bru_pems_2)
+
 ```
 
 
 We can now get the mesh locations to do prediction. We start by creating a mesh and extracting the indexes of the mesh such that longitude is between `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`:
 
 ```{r}
-      pems_graph$build_mesh(h=0.1)
+pems_graph$build_mesh(h=0.1)
 
-      # Getting mesh coordinates
-      mesh_coords <- pems_graph$mesh$V
+# Getting mesh coordinates
+mesh_coords <- pems_graph$mesh$V
 
-      # Finding coordinates such that longitude is between 
-      # `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`
+# Finding coordinates such that longitude is between 
+# `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`
+idx_x <- (mesh_coords[,1] > -121.905) & (mesh_coords[,1] < -121.875)
+idx_y <- (mesh_coords[,2] > 37.312) & (mesh_coords[,2] < 37.328)
+idx_xy <- idx_x & idx_y
 
-      idx_x <- (mesh_coords[,1] > -121.905) & (mesh_coords[,1] < -121.875)
-      idx_y <- (mesh_coords[,2] > 37.312) & (mesh_coords[,2] < 37.328)
-      idx_xy <- idx_x & idx_y
+# Create prediction data list
+pred_coords <- list()
+pred_coords[["loc"]] <- pems_graph$mesh$VtE[idx_xy,]
 ```
 
-We can now create the data list in which we want to do prediction:
-
-```{r}
-      pred_coords <- list()
-      pred_coords[["loc"]] <- pems_graph$mesh$VtE[idx_xy,]
-```
-
-Finally, we can do the prediction and plot. Observe that we are setting `improve_plot=TRUE` to improve the quality of the plot, however, it increases to the computational cost, since it will call the `compute_PtE_edges()` method internally.
+Finally, we will do prediction and plot them for the model with `alpha=1`. 
 
 ```{r, message=FALSE, warning=FALSE}
-      field_pred_pems <- predict(spde_model_bru_pems, cmp, 
-                        spde_bru_fit_pems,
+field_pred_pems_1 <- predict(spde_model_bru_pems_1, cmp_1, 
+                        spde_bru_fit_pems_1,
                         newdata = pred_coords,
                         formula = ~ Intercept + field)
-      plot(field_pred_pems, edge_width = 0.5, vertex_size = 0, 
-                    improve_plot=TRUE) +
-            xlim(-121.905,-121.875) + ylim(37.316,37.328)
+
+cat("Predictions for alpha = 1:\n")
+plot(field_pred_pems_1, edge_width = 0.5, vertex_size = 0) +
+      xlim(-121.905,-121.875) + ylim(37.316,37.328)
 ```

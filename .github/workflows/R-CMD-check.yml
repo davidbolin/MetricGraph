@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-20.04, r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-20.04, r: 'release'}
+          - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest, r: 'release'}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -41,7 +41,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-          extra-repositories: "https://inla.r-inla-download.org/R/testing"
+          extra-repositories: "https://inla.r-inla-download.org/R/testing https://mugglejinx.github.io/drat/ https://inlabru-org.r-universe.dev/"
 
       - name: Install system dependencies on MacOS (X11, gdal)
         if: runner.os == 'macOS'

@@ -24,6 +24,8 @@
 #' @param start_kappa Starting value for kappa.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
+#' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
+#' @param type_start_range_bbox Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
 #' If "detect", it will check if the shared lib exists locally, in which case it will
 #' use it. Otherwise it will use 'INLA's shared library.
@@ -31,6 +33,7 @@
 #' it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
+#' @param verbose Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.
 #'
 #' @return An 'INLA' object.
 #' @details
@@ -67,13 +70,24 @@ graph_spde <- function(graph_object,
                        prior_sigma = NULL,
                        start_tau = NULL,
                        prior_tau = NULL,
+                       factor_start_range = 0.3,
+                       type_start_range_bbox = "diag",
                        shared_lib = "detect",
-                       debug = FALSE){
+                       debug = FALSE,
+                       verbose = 0){
+
+  if(!(alpha%in%c(1,2))){
+    stop("alpha must be either 1 or 2!")
+  }
 
   graph_spde <- graph_object$clone()
 
+  if(verbose>0){
+    message("Turning observations into vertices...")
+  }
+
   if(!is.null(graph_spde$.__enclos_env__$private$data)){
-    graph_spde$observation_to_vertex(mesh_warning=FALSE)
+    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
   }
 
   parameterization <- parameterization[[1]]
@@ -87,6 +101,10 @@ graph_spde <- function(graph_object,
   V <- graph_spde$V
   EtV <- graph_spde$E
   El <- graph_spde$edge_lengths
+
+  if(verbose>0){
+    message("Constructing the sparsity graph...")
+  }
 
   i_ <- j_ <- rep(0, dim(V)[1]*4)
   nE <- dim(EtV)[1]
@@ -249,10 +267,10 @@ graph_spde <- function(graph_object,
         BC = 1
     }
 
-    start_val_tmp <- graph_starting_values(graph_spde,
-                      model = "alpha2", rec_tau = FALSE, data=FALSE)$start_values
-
-    Q_tmp <- Qalpha2(theta = c(start_val_tmp[2],start_val_tmp[3]), graph = graph_spde, BC=BC, stationary_points=index)
+    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=index)
+    if(verbose>0){
+      message("Checking/Computing constraint matrix...")
+    }
     if(is.null(graph_spde$CoB)){
       graph_spde$buildC(2, edge_constraint = BC)
     } else if(graph_spde$CoB$alpha == 1){
@@ -304,8 +322,13 @@ graph_spde <- function(graph_object,
   
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
+      if(verbose>0){
+          message("Computing starting values...")
+      }
       start_values_vector <- graph_starting_values(graph_spde,
-                      model = model_start, data=FALSE)$start_values
+                      model = model_start, data=FALSE,
+                      factor_start_range = factor_start_range,
+                      type_start_range_bbox = type_start_range_bbox)$start_values
 
       prior_kappa$meanlog <- log(start_values_vector[3])
       prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
@@ -396,6 +419,10 @@ graph_spde <- function(graph_object,
     } else{
       gpgraph_lib <- INLA::inla.external.lib('rSPDE')
     }
+  }
+
+  if(verbose > 0){
+    message("Creating INLA model...")
   }
 
 if(alpha == 1){
@@ -1181,7 +1208,6 @@ bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   model <- mapper[["model"]]
-  n_groups <- length(unique(model$graph_spde$.__enclos_env__$private$data[[".group"]]))
   return(model$f$n)
 }
 #' @rdname bru_mapper.inla_metric_graph_spde
@@ -1198,14 +1224,14 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
     pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
     idx_tmp <- match(input_list, pte_tmp_list)
     A_tmp <- model$graph_spde$.__enclos_env__$private$A()
-    return(A_tmp[idx_tmp,])
+    return(A_tmp[idx_tmp, , drop=FALSE])
   } else{
     pte_tmp <- model$graph_spde$get_PtE()
     input_list <- lapply(1:nrow(input), function(i){input[i,]})
     pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
     idx_tmp <- match(input_list, pte_tmp_list)
     A_tmp <- model$A
-    return(A_tmp[idx_tmp,])    
+    return(A_tmp[idx_tmp, , drop=FALSE])    
   }
 }
 
@@ -1367,6 +1393,7 @@ bru_graph_rep <- function(repl, graph_spde, repl_col){
 #' @param drop logical; If keep=FALSE, data is a SpatialDataFrame, and the
 #' prediciton summary has the same number of rows as data, then the output is a
 #' SpatialDataFrame object. Default FALSE.
+#' @param tolerance_merge Tolerance for merging prediction points into original points to increase stability.
 #' @param... Additional arguments passed on to `inla.posterior.sample()`.
 #' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with predictions.
@@ -1391,6 +1418,7 @@ predict.inla_metric_graph_spde <- function(object,
                                            include = NULL,
                                            exclude = NULL,
                                            drop = FALSE,
+                                           tolerance_merge = 1e-5,
                                            ...,
                                            data = deprecated()){
   if (lifecycle::is_present(data)) {
@@ -1487,7 +1515,8 @@ predict.inla_metric_graph_spde <- function(object,
                   normalized = normalized,
                   group = group_variables,
                   verbose=0,
-                  suppress_warnings = TRUE)
+                  suppress_warnings = TRUE,
+                  tolerance_merge = tolerance_merge)
 
   dummy1 <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]]
 
@@ -1594,7 +1623,6 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
   newdata <- x$initial_graph$process_data(data = newdata, normalized = TRUE)
   
   p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
-  p
   p
 }
 

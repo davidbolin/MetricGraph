@@ -202,6 +202,28 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
 }
 
 
+#' @noRd
+Q00 <- function(l,kappa,tau) {
+  kl <- kappa*l
+
+  Q <- matrix(0,4,4)
+
+  c1 <-  2*kappa*kl
+
+  Q[1,1] <- Q[3,3] <- c1*kappa + kappa^2 * sinh(2*kl)
+  Q[1,2] <- Q[2,1] <- c1*kl
+  Q[3,4] <- Q[4,3] <- -c1*kl
+  Q[1,3] <- Q[3,1] <- -(2*kappa^2*sinh (kl) + c1*kappa*cosh (kl))
+  Q[1,4] <- Q[4,1] <- c1 * sinh (kl)
+  Q[2,3] <- Q[3,2] <- -c1* sinh (kl)
+  Q[2,2] <- Q[4,4] <- sinh(2*kl) - 2*kl
+  Q[2,4] <- Q[4,2] <- -2*(sinh (kl)-kl*cosh (kl))
+
+  C <- 2*kappa*tau^2/(-2*kl^2 + cosh(2*kl)-1)
+
+  return(C*Q)
+
+}
 #' The precision matrix for all vertices in the alpha=2 case
 #' @param theta - tau, kappa
 #' @param graph metric_graph object
@@ -224,30 +246,34 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
   i_ <- j_ <- x_ <- rep(0, graph$nE * 16)
   count <- 0
 
-  R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
-                   -r_2(0, kappa = kappa, tau = tau, deriv = 1),
-                   -r_2(0, kappa = kappa, tau = tau, deriv = 1),
-                   -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
-  R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
-                  cbind(matrix(0, 2, 2), R_00))
-  R00i <- solve(R_00)
-  Ajd <- -1 * rbind(cbind(w * R00i, matrix(0, 2, 2)),
-                      cbind(matrix(0, 2, 2), (1-w)*R00i))
+  #R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+  #                 -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+  #                 -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+  #                 -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
+  #R_node <- rbind(cbind(R_00, matrix(0, 2, 2)),
+  #                cbind(matrix(0, 2, 2), R_00))
+  #R00i <- solve(R_00)
+  #Ajd <- -1 * rbind(cbind(w * R00i, matrix(0, 2, 2)),
+  #                    cbind(matrix(0, 2, 2), (1-w)*R00i))
   for (i in 1:graph$nE) {
 
     l_e <- graph$edge_lengths[i]
     #lots of redundant caculations
     # d_ <- c(0, l_e)
     # D <- outer(d_, d_, "-")
-    r_0l <-   r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
-    r_11 <- - r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
+    #r_0l <-   r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
+    #r_11 <- - r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
     # order by node not derivative
-    R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, tau = tau, deriv = 1),
-                     r_2(l_e, kappa = kappa, tau = tau, deriv = 1), r_11), 2, 2)
+    #R_01 <- matrix(c(r_0l, r_2(-l_e, kappa = kappa, tau = tau, deriv = 1),
+    #                 r_2(l_e, kappa = kappa, tau = tau, deriv = 1), r_11), 2, 2)
 
-    R_node[1:2, 3:4] <- R_01
-    R_node[3:4, 1:2] <- t(R_01)
-    Q_adj <- solve(R_node) + Ajd
+    #R_node[1:2, 3:4] <- R_01
+    #R_node[3:4, 1:2] <- t(R_01)
+
+    #Q_adj <- solve(R_node) + Ajd
+    Q_adj <- Q00(l_e,kappa,tau)
+
+
 
     if (graph$E[i, 1] == graph$E[i, 2]) {
       warning("Circular edges are not implemented")
@@ -326,6 +352,10 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
   }
 
   if(is.null(stationary_points)){
+    R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+                     -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                     -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                     -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
       if(BC> 0){
         #Vertices with of degree 1
         i.table <- table(c(graph$E))
@@ -356,6 +386,10 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
         }
       }
   } else{
+    R_00 <- matrix(c( r_2(0, kappa = kappa, tau = tau, deriv = 0),
+                      -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                      -r_2(0, kappa = kappa, tau = tau, deriv = 1),
+                      -r_2(0, kappa = kappa, tau = tau, deriv = 2)), 2, 2)
     index <- stationary_points
     lower.edges <- which(graph$E[, 1] %in% index)
           for (le in lower.edges) {

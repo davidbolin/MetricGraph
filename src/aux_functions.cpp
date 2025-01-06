@@ -254,57 +254,63 @@ double compute_length(Eigen::MatrixXd coords) {
 }
 
 
-// // Function created by Zheyuan Li, https://stackoverflow.com/a/51815064
+// [[Rcpp::export]]
+List generate_mesh(int n_edges, NumericVector edge_lengths, IntegerVector n_e, 
+                   IntegerMatrix E, IntegerVector ind, bool continuous) {
+  std::vector<int> PtE_edge;
+  std::vector<double> PtE_pos;
+  std::vector<double> h_e;
+  std::vector<int> E_start, E_end;
+  int current_max_index = ind.size(); // Start from the existing number of vertices
 
-// // [[Rcpp::export]]
-// NumericMatrix dist2mat(NumericVector& x, int bf) {
+  for (int i = 0; i < n_edges; ++i) {
+    if (n_e[i] > 0) {
+      // Generate d.e sequence
+      std::vector<double> d_e(n_e[i]);
+      for (int j = 0; j < n_e[i]; ++j) {
+        d_e[j] = (j + 1) / static_cast<double>(n_e[i] + 1);
+        PtE_edge.push_back(i + 1); // R uses 1-based indexing
+        PtE_pos.push_back(d_e[j]);
+      }
 
-//   /* input validation */
-//   if (!x.inherits("dist")) stop("Input must be a 'dist' object");
-//   int n = x.attr("Size");
-//   if (n > 65536) stop("R cannot create a square matrix larger than 65536 x 65536");
+      // Compute h_e based on the first d_e value
+      double segment_length = edge_lengths[i] * d_e[0];
+      for (int j = 0; j < n_e[i] + 1; ++j) {
+        h_e.push_back(segment_length);
+      }
 
-//   /* initialization */
-//   NumericMatrix A(n, n);
+      // Create internal vertex indices
+      std::vector<int> V_int(n_e[i]);
+      for (int j = 0; j < n_e[i]; ++j) {
+        V_int[j] = current_max_index + 1 + j;
+      }
+      current_max_index += n_e[i];
 
-//   /* use pointers */
-//   size_t j, i, jj, ni, nj; double *ptr_x = &x[0];
-//   double *A_jj, *A_ij, *A_ji, *col, *row, *end;
+      // Construct edges: connect original start, internal vertices, and original end
+      E_start.push_back(E(i, 0)); // Original start vertex
+      E_end.push_back(V_int[0]);  // Connect to first internal vertex
 
-//   /* fill in lower triangular part */
-//   for (j = 0; j < n; j++) {
-//     col = &A(j + 1, j); end = &A(n, j);
-//     while (col < end) *col++ = *ptr_x++;
-//     }
+      for (int j = 0; j < n_e[i] - 1; ++j) {
+        E_start.push_back(V_int[j]);
+        E_end.push_back(V_int[j + 1]);
+      }
 
-//   /* cache blocking factor */
-//   size_t b = (size_t)bf;
+      E_start.push_back(V_int[n_e[i] - 1]);
+      E_end.push_back(E(i, 1)); // Connect last internal vertex to original end
+    } else {
+      // No internal vertices: keep the original edge
+      E_start.push_back(E(i, 0));
+      E_end.push_back(E(i, 1));
+      h_e.push_back(edge_lengths[i]);
+    }
+  }
 
-//   /* copy lower triangular to upper triangular; cache blocking applied */
-//   for (j = 0; j < n; j += b) {
-//     nj = n - j; if (nj > b) nj = b;
-//     /* diagonal block has size nj x nj */
-//     A_jj = &A(j, j);
-//     for (jj = nj - 1; jj > 0; jj--, A_jj += n + 1) {
-//       /* copy a column segment to a row segment */
-//       col = A_jj + 1; row = A_jj + n;
-//       for (end = col + jj; col < end; col++, row += n) *row = *col;
-//       }
-//     /* off-diagonal blocks */
-//     for (i = j + nj; i < n; i += b) {
-//       ni = n - i; if (ni > b) ni = b;
-//       /* off-diagonal block has size ni x nj */
-//       A_ij = &A(i, j); A_ji = &A(j, i);
-//       for (jj = 0; jj < nj; jj++) {
-//         /* copy a column segment to a row segment */
-//         col = A_ij + jj * n; row = A_ji + jj;
-//         for (end = col + ni; col < end; col++, row += n) *row = *col;
-//         }
-//       }
-//     }
-
-//   // /* add row names and column names */
-//   // A.attr("dimnames") = List::create(x.attr("Labels"), x.attr("Labels"));
-
-//   return A;
-//   }
+  // Return the results as a List
+  return List::create(
+    Named("PtE_edge") = wrap(PtE_edge),
+    Named("PtE_pos") = wrap(PtE_pos),
+    Named("h_e") = wrap(h_e),
+    Named("E_start") = wrap(E_start),
+    Named("E_end") = wrap(E_end)
+  );
+}

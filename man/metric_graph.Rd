@@ -74,6 +74,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-new}{\code{metric_graph$new()}}
 \item \href{#method-metric_graph-remove_small_circles}{\code{metric_graph$remove_small_circles()}}
 \item \href{#method-metric_graph-get_edges}{\code{metric_graph$get_edges()}}
+\item \href{#method-metric_graph-get_bounding_box}{\code{metric_graph$get_bounding_box()}}
 \item \href{#method-metric_graph-get_vertices}{\code{metric_graph$get_vertices()}}
 \item \href{#method-metric_graph-export}{\code{metric_graph$export()}}
 \item \href{#method-metric_graph-leaflet}{\code{metric_graph$leaflet()}}
@@ -163,6 +164,7 @@ Create a new \code{metric_graph} object.
   which_projection = "Winkel tripel",
   manual_edge_lengths = NULL,
   perform_merges = NULL,
+  approx_edge_PtE = TRUE,
   tolerance = list(vertex_vertex = 0.001, vertex_edge = 0.001, edge_edge = 0),
   check_connected = TRUE,
   remove_deg2 = FALSE,
@@ -219,6 +221,8 @@ in Longitude/Latitude and that distances should be computed in meters. If \code{
 \item{\code{manual_edge_lengths}}{If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the \code{perform_merges} argument to \code{FALSE} or use the \code{set_manual_edge_lengths()} method.}
 
 \item{\code{perform_merges}}{There are three options, \code{NULL}, \code{TRUE} or \code{FALSE}. The default option is \code{NULL}. If \code{NULL}, it will be set to \code{FALSE} unless 'edges', 'V' and 'E' are \code{NULL}, in which case it will be set to \code{TRUE}. If FALSE, this will take priority over the other arguments, and no merges (except the optional \code{merge_close_vertices} below) will be performed. Note that the merge on the additional \code{merge_close_vertices} might still be performed, if it is set to \code{TRUE}.}
+
+\item{\code{approx_edge_PtE}}{Should the relative positions on the edges be approximated? The default is \code{TRUE}. If \code{FALSE}, the speed can be considerably slower, especially for large metric graphs.}
 
 \item{\code{tolerance}}{List that provides tolerances during the construction of the graph:
 \itemize{
@@ -312,6 +316,26 @@ Exports the edges of the MetricGraph object as an \code{sf} or \code{sp}.
 For \code{format == "sf"}, the function returns an \code{sf} object of \code{LINESTRING} geometries, where the associated data frame includes edge weights.
 
 For \code{format == "sp"}, the function returns a \code{SpatialLinesDataFrame} where the data frame includes edge weights.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_bounding_box"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_bounding_box}{}}}
+\subsection{Method \code{get_bounding_box()}}{
+Bounding box of the metric graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_bounding_box(format = "sf")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{format}}{If the metric graph has a coordinate reference system, the format for the exported object. The options are \code{sf} (default), \code{sp} and \code{matrix}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A bounding box of the metric graph
 }
 }
 \if{html}{\out{<hr>}}
@@ -770,9 +794,18 @@ A vector containing the degrees of the vertices.
 \subsection{Method \code{compute_PtE_edges()}}{
 Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the \code{plot_function()} method, however it might be costly to compute.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_PtE_edges()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_PtE_edges(approx = TRUE, verbose = 0)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{approx}}{Should the computation of the relative positions be approximate? Default is \code{TRUE}. If \code{FALSE}, the speed can be considerably slower, especially for large metric graphs.}
+
+\item{\code{verbose}}{Level of verbosity, 0, 1 or 2. The default is 0.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 No return value, called for its side effects.
 }
@@ -968,22 +1001,20 @@ A \code{data.frame} object with observation locations. If \code{longlat = TRUE},
 Adds observation locations as vertices in the graph.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(
-  tolerance = 1e-15,
   mesh_warning = TRUE,
-  verbose = 0
+  verbose = 0,
+  tolerance = deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{tolerance}}{Observations locations are merged to a single vertex if
-they are closer than this number (given in relative edge distance between
-0 and 1). The default is \code{1e-15}.}
-
 \item{\code{mesh_warning}}{Display a warning if the graph structure change and the metric graph has a mesh object.}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{tolerance}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Not used anymore}
 
 \item{\code{share_weights}}{Should the same weight be shared among the split edges? If \code{FALSE}, the weights will be removed, and a common weight given by 1 will be given.}
 }
@@ -1007,6 +1038,7 @@ Turns edge weights into data on the metric graph
   add = TRUE,
   data_coords = c("PtE", "spatial"),
   normalized = FALSE,
+  tibble = FALSE,
   format = c("tibble", "sf", "sp", "list"),
   verbose = 1,
   suppress_warnings = FALSE,
@@ -1035,7 +1067,9 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \item{\code{normalized}}{if TRUE, then the distances in \code{distance_on_edge} are
 assumed to be normalized to (0,1). Default FALSE.}
 
-\item{\code{format}}{The format of the output: "tibble", "sf", or "sp". Default is "tibble".}
+\item{\code{tibble}}{Should the data be returned in a \code{tibble} format?}
+
+\item{\code{format}}{If \code{return} is \code{TRUE}, the format of the output: "tibble", "sf", or "sp". Default is "tibble".}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
@@ -1212,6 +1246,8 @@ Add observations to the metric graph.
   duplicated_strategy = "closest",
   include_distance_to_graph = TRUE,
   return_removed = TRUE,
+  tolerance_merge = 0,
+  merge_strategy = "merge",
   verbose = 1,
   suppress_warnings = FALSE,
   Spoints = lifecycle::deprecated()
@@ -1274,7 +1310,11 @@ The options are 'closest' and 'jitter'. If 'closest', only the closest observati
 
 \item{\code{include_distance_to_graph}}{When \code{data_coord} is 'spatial', should the distance of the observations to the graph be included as a column?}
 
-\item{\code{return_removed}}{Should the removed data (if it exists) due to being projected to the same place when using 'closest' \code{duplicated_strategy} be returned?}
+\item{\code{return_removed}}{Should the removed data (if it exists) due to being projected to the same place when using 'closest' \code{duplicated_strategy}, or due to some merge strategy, be returned?}
+
+\item{\code{tolerance_merge}}{tolerance (in edge_length units) for merging points that are very close and are on a common edge. By default, this tolerance is zero, meaning no merges will be performed.}
+
+\item{\code{merge_strategy}}{The strategies to handle observations that are within the tolerance. The options are \code{remove}, \code{merge}, \code{average}. The default is \code{merge}, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. The second strategy is \code{remove}, meaning that if two observations are within the tolerance one of them will be removed. Finally, \code{average} will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.}
 
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
@@ -2062,8 +2102,8 @@ Plots continuous function on the graph.
   group = 1,
   X = NULL,
   type = c("ggplot", "plotly", "mapview"),
-  improve_plot = FALSE,
   continuous = TRUE,
+  interpolate_plot = TRUE,
   edge_weight = NULL,
   vertex_size = 5,
   vertex_color = "black",
@@ -2078,6 +2118,7 @@ Plots continuous function on the graph.
   mapview_caption = "Function",
   p = NULL,
   plotly = deprecated(),
+  improve_plot = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -2099,9 +2140,9 @@ evaluated at the mesh in the graph}
 
 \item{\code{type}}{The type of plot to be returned. The options are \code{ggplot} (the default), that uses \code{ggplot2}; \code{plotly} that uses \code{plot_ly} for 3D plots, which requires the \code{plotly} package, and \code{mapview} that uses the \code{mapview} function, to build interactive plots, which requires the \code{mapview} package.}
 
-\item{\code{improve_plot}}{Should the original edge coordinates be added to the data with linearly interpolated values to improve the plot?}
-
 \item{\code{continuous}}{Should continuity be assumed when the plot uses \code{newdata}?}
+
+\item{\code{interpolate_plot}}{Should the values to be plotted be interpolated?}
 
 \item{\code{edge_weight}}{Which column from edge weights to plot? If \code{NULL} edge weights are not plotted. To plot the edge weights when the metric graph \code{edge_weights} is a vector instead of a \code{data.frame}, simply set to 1.}
 
@@ -2130,6 +2171,8 @@ evaluated at the mesh in the graph}
 \item{\code{p}}{Previous plot to which the new plot should be added.}
 
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
+
+\item{\code{improve_plot}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{interpolate} instead. There is no need to use it to improve the edges.}
 
 \item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }
@@ -2164,6 +2207,8 @@ Plots a movie of a continuous function evolving on the graph.
 \item{\code{X}}{A m x T matrix where the ith column represents the function at the
 ith time, evaluated at the mesh locations.}
 
+\item{\code{type}}{Type of plot. Either \code{"plotly"} or \code{"ggplot"}.}
+
 \item{\code{vertex_size}}{Size of the vertices.}
 
 \item{\code{vertex_color}}{Color of vertices.}
@@ -2177,9 +2222,6 @@ ith time, evaluated at the mesh locations.}
 \item{\code{line_color}}{Color of the function curve.}
 
 \item{\code{...}}{Additional arguments for ggplot or plot_ly.}
-
-\item{\code{plotly}}{If \code{TRUE}, then plot is shown in 3D. This option requires the
-package 'plotly'.}
 }
 \if{html}{\out{</div>}}
 }

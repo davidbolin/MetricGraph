@@ -10,6 +10,7 @@
 #' @param alpha Smoothness parameter (1 or 2).
 #' @param graph A `metric_graph` object.
 #' @param BC boundary conditions
+#' @param include_vertices Should the variance at the vertices locations be included in the returned vector?
 #' @param directional bool is the model a directional or not. directional only works for alpha=1
 #' @details Compute the variance \eqn{\rho(s_i,s_i)} where
 #' \eqn{s_i} are all locations in the mesh
@@ -24,6 +25,7 @@ spde_variance <- function( kappa,
                            alpha,
                            graph,
                            BC = 1,
+                           include_vertices = FALSE,
                            directional = F){
 
 
@@ -70,6 +72,7 @@ spde_variance <- function( kappa,
     # covariance of a point to an edge
     #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
 
+    C_P <- NULL
     C <- c()
     inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
     for (i in inds_PtE) {
@@ -98,6 +101,9 @@ spde_variance <- function( kappa,
     stop("alpha 2 not yet implemented.")
   } else {
     stop("alpha should be 1 or 2.")
+  }
+  if(include_vertices){
+    C <- c(sqrt(diag(Sigma)), C)
   }
   return(C)
 }

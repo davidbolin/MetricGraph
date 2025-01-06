@@ -9,122 +9,7 @@ vignette: >
   %\VignetteIndexEntry{MetricGraph: Random Fields on Metric Graphs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-references:
-- id: BSW2022a
-  title: "Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: Bernoulli
-  type: article
-  issue: 30
-  pages: 1611-1639
-  issued:
-    year: 2024
-- id: BSW2022b
-  title: "Statistical properties of Gaussian Whittle--Matérn fields on metric graphs"
-  author:
-  - family: Bolin
-    given: David
-  - family: Simas
-    given: Alexandre B.
-  - family: Wallin
-    given: Jonas
-  container-title: arXiv:2304.10372
-  type: preprint
-  issued:
-    year: 2023
-- id: Anderes2020
-  title: "Isotropic covariance functions on graphs and their edges"
-  author:
-  - family: Anderes
-    given: Ethan
-  - family: Møller
-    given: Jesper
-  - family: Rasmussen
-    given: Jakob G
-  container-title: Annals of Statistics
-  type: article
-  issue: 48
-  pages: 2478-2503
-  issued:
-    year: 2020
-- id: Borovitskiy2021
-  title: "Matérn Gaussian processes on graphs"
-  author:
-  - family: Borovitskiy
-    given: Viacheslav
-  - family: Azangulov
-    given: Iskander
-  - family: Terenin
-    given: Alexander 
-  - family: Mostowsky
-    given: Peter
-  - family: Deisenroth
-    given: Marc
-  - family: Durrande
-    given: Nicolas
-  container-title: International Conference on Artificial Intelligence and Statistics
-  type: article
-  pages: 2593-2601
-  issued: 
-    year: 2021
-- id: LindgrenRue2015
-  title: Bayesian Spatial Modelling with R-INLA.
-  author:
-  - family: Lindgren
-    given: Finn
-  - family: Rue
-    given: Haavard
-  container-title: Journal of Statistical Software
-  type: article
-  issue: 63
-  pages: 1-25
-  issued:
-    year: 2015
-- id: inlabru2019
-  title: inlabru an R package for Bayesian spatial modelling from ecological survey data
-  author:
-  - family: Bachl
-    given: Fabian E.
-  - family: Lindgren
-    given: Finn
-  - family: Borchers
-    given: David L.
-  - family: Illian
-    given: Janine B.
-  container-title: Methods in Ecology and Evolution
-  type: article
-  issue: 10
-  pages: 760-766
-  issued:
-    year: 2019
-- id: sppackage
-  title: Applied spatial data analysis with R
-  author:
-  - family: Bivand
-    given: Roger S.
-  - family: Pebesma
-    given: Edzer
-  - family: Gomez-Rubio
-    given: Virgilio
-  publisher: Springer, NY
-  type: book
-  issued:
-    year: 2013
-- id: plotlypackage
-  title: Interactive Web-Based Data Visualization with R, plotly, and shiny
-  author:
-  - family: Sievert
-    given: Carson
-  publisher: Chapman and Hall/CRC
-  type: book
-  issued:
-    year: 2020
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -310,7 +195,7 @@ lon <- graph$mesh$V[, 1]
 lat <- graph$mesh$V[, 2]
 f <- lon - lat
 graph$plot_function(X = f, vertex_size = 0, edge_width = 0.5,
-                type = "mapview", improve_plot = TRUE)
+                type = "mapview")
 ```
 
 Alternatively, we can set `type = "plotly"` in the plot command to get a 3D 
@@ -368,7 +253,7 @@ We can also sample the field at the mesh on the graph as follows:
 u <- sample_spde(range = range, sigma = sigma, alpha = 1,
                  graph = graph, type = "mesh")
 graph$plot_function(X = u, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot=TRUE)
+            type = "mapview")
 ```
 
 Since $\alpha=1$, these sample paths are continuous but not differentiable. 
@@ -378,7 +263,7 @@ the covariances between some point and all other points in the graph as follows:
 C <- spde_covariance(c(200, 0.1), range = range, sigma = sigma, alpha = 1,
                             graph = graph)
 graph$plot_function(X = C, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot=TRUE)
+            type = "mapview")
 ```
 
 To obtain a field with differentiable sample paths, we can change to $\alpha=2$ in the code above.
@@ -532,7 +417,7 @@ Now, let us obtain the predictions. We can obtain estimates for the latent field
 pred <- predict(res, newdata=data_mesh_pred, normalized=TRUE)
 u_est <- pred$re_mean
 graph$plot_function(X = u_est, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot = TRUE)
+            type = "mapview")
 ```
 
 Finally, let us obtain predictions for the observed values on the mesh. In this case we use the `mean` component of the `pred` list:
@@ -540,7 +425,7 @@ Finally, let us obtain predictions for the observed values on the mesh. In this 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 y_est <- pred$mean
 graph$plot_function(X = y_est, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot = TRUE)
+            type = "mapview")
 ```
 
 The same procedure can be done with $\alpha = 2$. One can also estimate $\alpha$
@@ -620,7 +505,7 @@ pred_exp_y <- predict(res_exp, newdata = data_mesh_pred,
                     normalized=TRUE)
 y_est_exp <- pred_exp_y$mean
 graph$plot_function(X = y_est_exp, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot = TRUE)
+            type = "mapview")
 ```
 
 ## Models based on the Graph Laplacian
@@ -671,7 +556,7 @@ pred_GL_y <- predict(res_gl, newdata = data_mesh_pred,
                     normalized=TRUE)
 y_est_GL <- pred_GL_y$mean
 graph$plot_function(X = y_est_GL, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot = TRUE)
+            type = "mapview")
 ```
 
 Let us now refit the model with all the locations we want to obtain predictions. Let us create a new 
@@ -716,7 +601,7 @@ pred_GL_y_full <- predict(res_gl_pred, newdata = data_mesh_pred,
                     normalized=TRUE)
 y_est_GL_full <- pred_GL_y_full$mean
 graph$plot_function(X = y_est_GL_full, vertex_size = 0, edge_width = 0.5,
-            type = "mapview", improve_plot = TRUE)
+            type = "mapview")
 ```
 
 
@@ -827,7 +712,7 @@ field_pred <- predict(spde_model,
 Let us plot the predictions of the latent field:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_field_prd <- field_pred$pred[,1]
-graph$plot_function(X = mean_field_prd, improve_plot = TRUE,
+graph$plot_function(X = mean_field_prd, 
                       vertex_size = 0, edge_width = 0.5,
                       type = "mapview")
 ```
@@ -846,7 +731,7 @@ Let us plot the predictions:
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE, message=FALSE}
 mean_obs_prd <- obs_pred$pred[,1]
-graph$plot_function(X = mean_obs_prd, improve_plot = TRUE,
+graph$plot_function(X = mean_obs_prd, 
                     vertex_size = 0, edge_width = 0.5,
                     type = "mapview")
 ```

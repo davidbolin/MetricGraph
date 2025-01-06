@@ -865,9 +865,9 @@ graph$add_observations(data = data_f, clear_obs = TRUE, normalized = TRUE)
 graph$plot_function(data = "f")
 ```
 
-## Improving the plot obtained by `plot_function`
+## Further details on `plot_function`
 
-If we compute the relative positions of the edge coordinates, we can improve the quality of the plot obtained by using `plot_function`. Observe that depending on the size of the graph, this might be costly, since we will need to do this conversion.
+By default, the values along the edges are interpolated try to provide a better plot. This behavior can be disabled by setting `interpolate_plot` to `FALSE`.
 
 We begin by recreating the first graph we used in this vignette:
 
@@ -882,13 +882,7 @@ edges = list(edge1, edge2, edge3, edge4)
 graph <- metric_graph$new(edges = edges)
 ```
 
-Now, let us compute the relative positions of the coordinates of the edge by using the `compute_PtE_edges()` method:
-
-```{r}
-graph$compute_PtE_edges()
-```
-
-Let us create a coarse mesh, so the improvement can be easily seen.
+Let us create a coarse mesh, so the interpolation can be easily seen.
 
 ```{r}
 graph$build_mesh(h=0.8)
@@ -902,16 +896,16 @@ XY <- graph$mesh$V
 f <- XY[, 1]^2 - XY[, 2]^2
 ```
 
-We can directly plot from the mesh values. Let us start with the default, non-improved, plot:
+We can directly plot from the mesh values. Let us start with the default, the interpolated plot:
 
 ```{r}
 graph$plot_function(f)
 ```
 
-We can, then, plot the improved version by setting `improve_plot` to `TRUE`:
+We can, now, turn off the interpolation by setting `interpolate_plot` to `FALSE`:
 
 ```{r}
-graph$plot_function(f, improve_plot = TRUE)
+graph$plot_function(f, interpolate_plot = FALSE)
 ```
 
 Alternatively, we can supply the data through the `newdata` argument. To such an end, we will need to supply the `data.frame`. So let us build it:
@@ -935,13 +929,11 @@ We will now plot this function. First, let us do the default plot from `plot_fun
 graph$plot_function(data = "f", newdata= df_f)
 ```
 
-Let us now, create the same plot with `improve_plot=TRUE`:
+Let us now, create the same plot with `interpolate_plot=FALSE`:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+graph$plot_function(data = "f", newdata= df_f, interpolate_plot=FALSE)
 ```
-
-The reason it refined a lot on the circular part is that it interpolates the values of the function at the edge coordinates, and the circular part has the most coordinates. All the other edges only have two coordinates, the start and end. 
 
 Let us now obtain a 3d plot. First, of the default version:
 
@@ -949,16 +941,16 @@ Let us now obtain a 3d plot. First, of the default version:
 graph$plot_function(data = "f", newdata= df_f, type = "plotly")
 ```
 
-Now, of the improved version:
+Now, of the non-interpolated version:
 
 ```{r}
 graph$plot_function(data = "f", newdata= df_f, type = "plotly",
-                    improve_plot = TRUE)
+                    interpolate_plot = FALSE)
 ```
 
 ### Note about continuity
 
-However, it is important to observe that `plot_function` assumes continuity of the function by default. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. In such a case, `improve_plot` does not affect the action on the discontinuity points.
+However, it is important to observe that `plot_function` assumes continuity of the function by default. Let us see an example of a discontinuous function, and observe the effect of `plot_function`. 
 
 For example, let us consider the function that takes the edge number (normalized). Let us also refine the mesh a bit, so it is easier to observe what is happening.
 
@@ -982,10 +974,10 @@ We will now plot this function with the default plot from `plot_function`:
 graph$plot_function(data = "f", newdata= df_f)
 ```
 
-Let us now, create the same plot with `improve_plot=TRUE`:
+Let us now, create the same plot with `interpolate_plot=FALSE`:
 
 ```{r}
-graph$plot_function(data = "f", newdata= df_f, improve_plot=TRUE)
+graph$plot_function(data = "f", newdata= df_f, interpolate_plot=FALSE)
 ```
 
 Let us now obtain a 3d plot. First, of the default version:
@@ -994,11 +986,11 @@ Let us now obtain a 3d plot. First, of the default version:
 graph$plot_function(data = "f", newdata= df_f, type = "plotly")
 ```
 
-Now, of the improved version:
+Now, of the non-interpolated version:
 
 ```{r}
 graph$plot_function(data = "f", newdata= df_f, type = "plotly",
-                    improve_plot = TRUE)
+                    interpolate_plot = FALSE)
 ```
 
 Observe that for both versions we have the same behavior around the vertices (which are the discontinuity points). 
@@ -1013,16 +1005,16 @@ f <- graph$mesh$PtE[,1]/4
 graph$plot_function(f)
 ```
 
-Similarly to the case for continuous meshes, we have the `improve_plot` option:
+Similarly to the case for continuous meshes, we have the `interpolate_plot` option:
 
 ```{r}
-graph$plot_function(f, improve_plot = TRUE)
+graph$plot_function(f, interpolate_plot = FALSE)
 ```
 
 Now, the 3d plot:
 
 ```{r}
-graph$plot_function(f, type = "plotly", improve_plot = TRUE)
+graph$plot_function(f, type = "plotly", interpolate_plot = FALSE)
 ```
 
 Alternatively, we can similarly plot by setting the `data.frame` and passing the `newdata` argument:
@@ -1039,12 +1031,12 @@ Let us now build the plots. In this case, we need to set the `continuous` argume
 
 ```{r}
 graph$plot_function(data = "f", newdata= df_f, 
-                      improve_plot = TRUE,  continuous = FALSE)
+                      continuous = FALSE)
 ```
 
 Now, the 3d plot:
 
 ```{r}
 graph$plot_function(data = "f", newdata= df_f, type = "plotly",
-                    improve_plot = TRUE, continuous = FALSE)
+                    continuous = FALSE)
 ```

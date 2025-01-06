@@ -303,7 +303,9 @@ corrector_inverse_e <- function(kappa, sigma, nu=3/2, L = 1){
 #' @param log_scale Should the initial values be returned in log scale?
 #' @param rec_tau Should a starting value for the reciprocal of tau be given?
 #' @param model_options List object containing the model options.
-#'
+#' @param factor_start_range Factor to multiply the max/min/diagonal dimension of the bounding box to obtain a starting value for range. Default is 0.5.
+#' @param type_start_range_bbox Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.
+
 #' @return A vector, `c(start_sigma_e, start_sigma, start_kappa)`
 #' @export
 graph_starting_values <- function(graph,
@@ -317,9 +319,17 @@ graph_starting_values <- function(graph,
                                   like_format = FALSE,
                                   log_scale = FALSE,
                                   model_options = list(),
-                                  rec_tau = TRUE){
+                                  rec_tau = TRUE,
+                                  factor_start_range = 0.3,
+                                  type_start_range_bbox = "diag"){
 
   check_graph(graph)
+
+  type_start_range_bbox <- match.arg(type_start_range_bbox, 
+                                   choices = c("diag", "max", "min"))
+
+  
+
 
   model <- model[[1]]
   if((!model%in%c("alpha1", "alpha2", "isoExp", "GL1", "GL2"))){
@@ -347,12 +357,52 @@ graph_starting_values <- function(graph,
   }
 
   if(is.null(model_options$start_range)){
-    if(is.null(graph$geo_dist)){
-          graph$compute_geodist(obs=FALSE)
+    bounding_box <- graph$get_bounding_box(format = "sf")
+
+    # Check if the bounding box object inherits from "bbox" (sf format)
+  if (inherits(bounding_box, "bbox")) {
+      # Extract coordinates from the bounding box
+      min_x <- bounding_box["xmin"]
+      max_x <- bounding_box["xmax"]
+      min_y <- bounding_box["ymin"]
+      max_y <- bounding_box["ymax"]
+
+      # Create points in sf format with the appropriate CRS
+      point_min_x <- sf::st_point(c(min_x, min_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+      point_max_x <- sf::st_point(c(max_x, min_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+      point_min_y <- sf::st_point(c(min_x, min_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+      point_max_y <- sf::st_point(c(min_x, max_y)) |> sf::st_sfc(crs = sf::st_crs(bounding_box))
+
+      # Calculate the width and height
+      width <- sf::st_distance(point_min_x, point_max_x)
+      height <- sf::st_distance(point_min_y, point_max_y)
+
+      if(type_start_range_bbox == "diag") {
+        dimension_size <- sqrt(as.numeric(width)^2 + as.numeric(height)^2)/1000
+      } else if(type_start_range_bbox == "max") {
+        dimension_size <- max(as.numeric(width), as.numeric(height))/1000
+      } else { # min case
+        dimension_size <- min(as.numeric(width), as.numeric(height))/1000
+      }
+
+    } else {
+      # If not sf format, assume it’s a standard list and compute Euclidean distances
+      min_x <- bounding_box$min_x
+      max_x <- bounding_box$max_x
+      min_y <- bounding_box$min_y
+      max_y <- bounding_box$max_y
+
+      width <- max_x - min_x
+      height <- max_y - min_y
+
+      dimension_size <- switch(type_start_range_bbox,
+                              "diag" = sqrt(width^2 + height^2),
+                              "max" = max(width, height),
+                              "min" = min(width, height))
+
     }
-    finite_geodist <- is.finite(graph$geo_dist[[".vertices"]])
-    finite_geodist <- graph$geo_dist[[".vertices"]][finite_geodist]
-    prior.range.nominal <- max(finite_geodist) * 0.2
+
+    prior.range.nominal <- dimension_size * factor_start_range
   } else{
     prior.range.nominal <- model_options$start_range
   }
@@ -424,7 +474,8 @@ graph_starting_values <- function(graph,
     if(is.null(start_sigma)){
       if(data){
         #variance is sigma^2/(4 * kappa^3)
-        start_sigma <- sqrt(4*start_kappa^3) * data_std
+        # multiplying by 2 to help stabilize.
+        start_sigma <- 2 * sqrt(4*start_kappa^3) * data_std
       } else{
         start_sigma <- 1
       }
@@ -1736,6 +1787,7 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
   } else{
   cat("Relative positions of the edge:\n")
   PtE <- attr(x, "PtE")
+  PtE <- cbind(attr(x, "id"), PtE)
   PtE_df <- data.frame(a = PtE[,1], b = PtE[,2]) 
   colnames(PtE_df) <- c("Edge number","Distance on edge")
   print(PtE_df[1:min(n,nrow(edge_df)),], row.names=FALSE)
@@ -1972,25 +2024,21 @@ get_only_first <- function(vec){
 #' @noRd 
 # Create a map from vertices into reference edges
 
-map_into_reference_edge <- function(graph, verbose=0){
-  ref_edge <- matrix(nrow=graph$nV,ncol=2)
-  if(verbose == 2){
+map_into_reference_edge <- function(graph, verbose = 0) {
+  if (verbose == 2) {
     message("Creating a map from vertices into reference edges")
-    bar_map_reference <- msg_progress_bar(graph$nV)
   }
-  for(i in 1:graph$nV){
-    idx_pos_0 <- which(graph$E[,1] == i)
-    if(length(idx_pos_0)>0){
-      ref_edge[i,1] <- min(idx_pos_0)
-      ref_edge[i,2] <- 0
-    } else{
-      ref_edge[i,1] <- min(which(graph$E[,2] == i))
-      ref_edge[i,2] <- 1
-    }
-    if(verbose == 2){
-      bar_map_reference$increment()
-    }
-  }
+
+  # Initialize the reference edge matrix
+  ref_edge <- matrix(nrow = graph$nV, ncol = 2)
+
+  idx_pos_0 <- match(seq_len(graph$nV), graph$E[, 1], nomatch = 0)
+  idx_pos_1 <- match(seq_len(graph$nV), graph$E[, 2], nomatch = 0)
+
+  # Determine which vertices map to the first column of graph$E
+  ref_edge[, 1] <- ifelse(idx_pos_0 > 0, idx_pos_0, idx_pos_1)
+  ref_edge[, 2] <- ifelse(idx_pos_0 > 0, 0, 1)
+
   return(ref_edge)
 }
 
@@ -2021,4 +2069,271 @@ standardize_df_positions <- function(df, graph, edge_number = "edge_number", dis
   }
 
   return(df)
+}
+
+#' Helper function to be used in the split_edge method
+#' @noRd
+fill_na_values_split_edge <- function(data) {
+  # Sort by pos_edge to ensure interpolation occurs in order
+  data <- data[order(data$pos_edge), ]
+
+  # Perform linear interpolation for x and y
+  data$x <- approx(data$pos_edge, data$x, data$pos_edge, method = "linear", rule = 2, ties = mean)$y
+  data$y <- approx(data$pos_edge, data$y, data$pos_edge, method = "linear", rule = 2, ties = mean)$y
+
+  # Filter to remove duplicates, keeping rows where is_t_values is TRUE or pos_edge is unique
+  unique_rows <- !duplicated(data$pos_edge) | data$is_t_values
+  data <- data[unique_rows & !is.na(data$pos_edge), ]
+
+  return(data)
+}
+
+
+# Helper function for merging observations to be used with `add_observations()`
+# strategies "remove", "merge", "average"
+#' @noRd 
+
+get_idx_within_merge_tolerance <- function(PtE, group_vector, aux_length, tolerance, dplyr = FALSE){
+  if(is.null(group_vector)){
+    group_vector <- rep(1, length(PtE[,1]))
+  }
+
+  if(!dplyr){
+      # Loop over unique groups and edges
+      selected_rows <- unlist(lapply(unique(group_vector), function(group) {
+          # Get indices for the current primary group
+          group_indices <- which(group_vector == group)
+          # Further split by unique edges within this group
+          unique_edges <- unique(PtE[group_indices, 1])
+          unlist(lapply(unique_edges, function(edge) {
+              # Get indices of rows for the current edge within the current group
+              edge_indices <- group_indices[PtE[group_indices, 1] == edge]
+              # Apply the filtering function
+              filter_indices_by_tolerance(edge_indices, PtE[edge_indices, 2], tolerance)
+          }))
+      }))
+  } else{
+      group <- index <- edge <- NULL
+      PtE_df <- as.data.frame(PtE)
+      PtE_df$group <- group_vector
+      colnames(PtE_df) <- c("edge", "position", "group")
+      # Add an index column to keep track of original row numbers
+      PtE_df$orig_index <- 1:nrow(PtE_df)
+      # Group by both `group` and `edge` and apply the filtering function
+      selected_indices <- PtE_df |>
+          dplyr::group_by(group, edge) |>
+          dplyr::group_modify(~ dplyr::tibble(index = filter_group_edge(.x, tolerance))) |>
+          dplyr::pull(index)
+  }
+}
+
+
+# Function to iteratively filter rows within a single group-edge subgroup
+#' @noRd
+filter_indices_by_tolerance <- function(edge_indices, positions, tolerance) {
+    selected <- edge_indices  # Start with all indices in the subgroup
+
+    while (TRUE) {
+        diffs <- diff(positions[selected - min(selected) + 1])  # Calculate diffs on the current selection
+        below_tolerance <- which(diffs < tolerance)
+        
+        if (length(below_tolerance) == 0) {
+            # Stop if no diffs are below tolerance
+            break
+        }
+
+        # Remove the first occurrence where diff < tolerance
+        selected <- selected[-(below_tolerance[1] + 1)]
+    }
+    
+    return(selected)  # Return the filtered indices for this subgroup
+}
+
+
+# Function to filter rows within each group-edge based on tolerance
+#' @noRd
+filter_group_edge <- function(df, tolerance) {
+    # Start with all indices selected
+    selected <- seq_len(nrow(df))
+    positions <- df$position
+    
+    # Calculate initial differences
+    diffs <- diff(positions)
+    
+    # While there are differences below tolerance
+    while (any(diffs < tolerance)) {
+        # Find the first position where diff is below tolerance
+        first_below <- which(diffs < tolerance)[1]
+        
+        # Remove the second element in the violating pair
+        selected <- selected[-(first_below + 1)]
+        
+        # Recalculate diffs only around the modified region
+        if (first_below > 1) diffs[first_below - 1] <- positions[selected[first_below]] - positions[selected[first_below - 1]]
+        diffs <- diffs[-first_below]
+    }
+    
+    # Return the original indices of the selected rows
+    return(df$orig_index[selected])
+}
+
+# Function to find merged indices for unselected rows only
+#' @noRd
+find_merged_indices_for_unselected <- function(selected_rows, total_rows) {
+    # Identify unselected rows
+    all_rows <- 1:total_rows
+    unselected_rows <- setdiff(all_rows, selected_rows)
+    
+    # For each unselected row, find the nearest preceding selected row
+    merged_indices <- sapply(unselected_rows, function(row) {
+        max(selected_rows[selected_rows <= row])
+    })
+    
+    return(merged_indices)
+}
+
+# Helper function to fill missing values using "merge" strategy
+#' @noRd
+fill_na_merge <- function(data, removed_merge, ref_idx, removed_indices) {
+    for (col in names(data)) {
+        # Check if the current entry has NA for the reference row
+        if (is.na(data[[col]][ref_idx])) {
+            # Find the first non-NA value in the removed observations for this column
+            for (removed_idx in removed_indices) {
+                if (!is.na(removed_merge[[col]][removed_idx])) {
+                    # Fill the NA in data with the non-NA value from removed_merge
+                    data[[col]][ref_idx] <- removed_merge[[col]][removed_idx]
+                    break  # Stop after filling the first non-NA value
+                }
+            }
+        }
+    }
+    return(data)
+}
+
+# Main function to apply the chosen merge strategy
+#' @noRd
+apply_merge_strategy <- function(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy) {
+    for (i in seq_along(ref_idx_merges)) {
+        # Access the mapped index using the character version of ref_idx_merges[i]
+        ref_idx <- as.integer(merge_idx_map[as.character(ref_idx_merges[i])])
+        
+        # Get the removed observations linked to this ref_idx
+        removed_indices <- which(ref_idx_merges == ref_idx_merges[i])
+        
+        # Apply the merge or average strategy based on `merge_strategy`
+        if (merge_strategy == "merge") {
+            data <- fill_na_merge(data, removed_merge, ref_idx, removed_indices)
+        } else if (merge_strategy == "average") {
+            data <- fill_na_average(data, removed_merge, ref_idx, removed_indices)
+        }
+    }
+    
+    return(data)
+}
+
+# Helper function to fill values using "average" strategy
+#' @noRd
+fill_na_average <- function(data, removed_merge, ref_idx, removed_indices) {
+    for (col in names(data)) {
+        # Gather all values for averaging, including the reference index value
+        values_to_average <- c(data[[col]][ref_idx], removed_merge[[col]][removed_indices])
+        
+        # Filter out NA values from values_to_average
+        non_na_values <- values_to_average[!is.na(values_to_average)]
+        
+        if (length(non_na_values) > 0) {
+            if (is.numeric(data[[col]][ref_idx])) {
+                # Use the average of all non-NA values if the column is numeric
+                data[[col]][ref_idx] <- mean(non_na_values)
+            } else {
+                # For non-numeric, just use the first available non-NA value
+                data[[col]][ref_idx] <- non_na_values[1]
+            }
+        }
+    }
+    return(data)
+}
+
+
+# Function to build constraint matrix
+#' @noRd
+construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree, weight,
+                                    DirectionalWeightFunction_out, DirectionalWeightFunction_in) {
+  
+  # Precompute out_edges and in_edges for each vertex
+  out_edges_list <- split(seq_len(nrow(E)), E[, 1])
+  in_edges_list <- split(seq_len(nrow(E)), E[, 2])
+
+  # Calculate an upper bound on the number of elements in i_, j_, and x_
+  nC <- sum((V_outdegree > 0 & V_indegree > 0) * V_outdegree * (1 + V_indegree) + 
+            (V_indegree == 0) * (V_outdegree - 1)) * alpha
+
+  # Initialize vectors to store the row indices (i_), column indices (j_), and values (x_) of the sparse matrix
+  i_ <- integer(nC)
+  j_ <- integer(nC)
+  x_ <- numeric(nC)
+
+  count_constraint <- 0
+  count <- 0
+
+  # Process vertices with both outdegree and indegree
+  Vs <- which(V_outdegree > 0 & V_indegree > 0)
+  for (v in Vs) {
+    out_edges <- out_edges_list[[as.character(v)]]
+    in_edges <- in_edges_list[[as.character(v)]]
+    n_in <- length(in_edges)
+
+    # Loop through each out edge and derivative level
+    for (i in seq_along(out_edges)) {
+      out_weight_values <- DirectionalWeightFunction_out(weight[out_edges[i]])
+      in_weight_values <- DirectionalWeightFunction_in(weight[in_edges])
+      
+      for (der in seq_len(alpha)) {
+        # Set row indices and column indices for the current out edge
+        i_[count + 1] <- count_constraint + 1
+        j_[count + 1] <- 2 * alpha * (out_edges[i] - 1) + der
+        x_[count + 1] <- out_weight_values  # Apply out weight
+        
+        # Set row indices, column indices, and values for each in edge
+        i_[count + seq(2, n_in + 1)] <- count_constraint + 1
+        j_[count + seq(2, n_in + 1)] <- 2 * alpha * (in_edges - 1) + alpha + der
+        x_[count + seq(2, n_in + 1)] <- in_weight_values  # Apply in weights
+        
+        count <- count + (n_in + 1)
+        count_constraint <- count_constraint + 1
+      }
+    }
+  }
+
+  # Process vertices with indegree == 0
+  Vs0 <- which(V_indegree == 0)
+  for (v in Vs0) {
+    out_edges <- out_edges_list[[as.character(v)]]
+
+    if (length(out_edges) > 1) {
+      for (i in 2:length(out_edges)) {
+        for (der in seq_len(alpha)) {
+          # Set indices and values for indegree == 0 vertices
+          i_[count + 1:2] <- count_constraint + 1
+          j_[count + 1] <- 2 * alpha * (out_edges[i] - 1) + der
+          j_[count + 2] <- 2 * alpha * (out_edges[i - 1] - 1) + der
+          x_[count + 1:2] <- c(1, -1)
+          
+          count <- count + 2
+          count_constraint <- count_constraint + 1
+        }
+      }
+    }
+  }
+
+  # Construct sparse matrix with the populated i_, j_, and x_
+  C <- Matrix::sparseMatrix(
+    i = i_[1:count],
+    j = j_[1:count],
+    x = x_[1:count],
+    dims = c(count_constraint, 2 * alpha * nE)
+  )
+
+  return(C)
 }

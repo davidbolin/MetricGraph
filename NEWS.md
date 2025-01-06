@@ -1,4 +1,6 @@
 # MetricGraph (development version)
+
+# MetricGraph 1.4.0
 * Added an INLA implementation for `alpha=2`.
 * Added a vignette for handling multiple likelihoods in `R-INLA` and `inlabru`, and updated the `graph_spde_data()` function for such cases.
 * Added an INLA implementation for directional models.
@@ -17,6 +19,13 @@
 * The `plot` method now has an argument `type`, that now also allows one to set `type` to `mapview`, thus it can return `ggplot2`, `plotly` and `mapview` objects.
 * Adding methods to do data manipulation on weights, `mutate_weight`, `select_weights`, `filter_weights`, `summarise_weights` and `drop_na_weights`. They have a `format` argument that allows one to also return `sf` or `sp` objects.
 * Updated the methods, `mutate`, `filter`, `select`, `drop_na` and `summarise` to have a format argument to also return `sf` or `sp` objects.
+* Massive improvement on the `observation_to_vertex` method.
+* Massive improvement on the metric graph creation speed.
+* Deprecated `improve_plot` option, as now all plots from `plot_function()` method are improved.
+* Added `merge_strategy` option for `add_observations()` method, for handling observations that are very close.
+* Update the metric graph data vignette for illustrating how to use the new tools for data manipulation. 
+* Massive improvement for building constraint matrices for `alpha=2`, and for building directional constraints. 
+* Updated starting values to use bounding boxes to be more efficient.
 
 # MetricGraph 1.3.0
 * Handlers were added in `add_observations()` for situations where observations are projected at the same location, specifically for the `duplicated_strategy` argument.
