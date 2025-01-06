@@ -45,6 +45,7 @@ void set_diff(std::vector<int> & A,
 Rcpp::List  c_basis2(Eigen::MappedSparseMatrix<double> A,
                              double eps_limit = 1e-10) {
 
+
   Eigen::PermutationMatrix<Eigen::Dynamic,Eigen::Dynamic> P(A.cols());
   P.setIdentity();
   std::vector<int> index(0);
@@ -63,7 +64,6 @@ Rcpp::List  c_basis2(Eigen::MappedSparseMatrix<double> A,
   std::vector<int> index_A(A.rows());
   for(int i =0; i < A.rows(); i++)
     index_A[i]  = i;
-
 
   // creating a indexing putting relevant columns first so the first
   // k columns spanns A
