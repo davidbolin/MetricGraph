@@ -2,10 +2,18 @@
 % Please edit documentation in R/psp_to_metricgraph.R
 \name{stlpp.to.graph}
 \alias{stlpp.to.graph}
-\title{function to export a stlpp object, from stlnpp, to metric graph object}
+\title{Convert an \code{stlpp} object to a metric graph object}
 \usage{
-stlpp.to.graph(stlpp.obj)
+stlpp.to.graph(stlpp.obj, group.time = TRUE)
+}
+\arguments{
+\item{stlpp.obj}{An \code{stlpp} object to be converted.}
+
+\item{group.time}{Logical. If \code{TRUE}, observations are grouped by time. Otherwise, a jitter strategy is used for duplicated points.}
+}
+\value{
+A metric graph object with observations added.
 }
 \description{
-function to export a stlpp object, from stlnpp, to metric graph object
+This function converts an \code{stlpp} object (from the \code{stlnpp} package) into a metric graph object.
 }

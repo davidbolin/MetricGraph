@@ -2,12 +2,16 @@
 % Please edit documentation in R/psp_to_metricgraph.R
 \name{linnet.to.graph}
 \alias{linnet.to.graph}
-\title{from
-function to export a linnet object, from spatstat package, to metric graph object}
+\title{Convert a \code{linnet} object to a metric graph object}
 \usage{
 linnet.to.graph(linnet.object)
 }
+\arguments{
+\item{linnet.object}{A \code{linnet} object to be converted.}
+}
+\value{
+A metric graph object with edges defined by the network.
+}
 \description{
-from
-function to export a linnet object, from spatstat package, to metric graph object
+This function converts a \code{linnet} object (from the \code{spatstat} package) into a metric graph object.
 }

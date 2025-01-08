@@ -2,10 +2,16 @@
 % Please edit documentation in R/psp_to_metricgraph.R
 \name{psp.to.graph}
 \alias{psp.to.graph}
-\title{function to export a psp object, from spatstat package, to metric graph object}
+\title{Convert a \code{psp} object to a metric graph object}
 \usage{
 psp.to.graph(psp.object)
 }
+\arguments{
+\item{psp.object}{A \code{psp} object to be converted.}
+}
+\value{
+A metric graph object with edges defined by the segments in the \code{psp} object.
+}
 \description{
-function to export a psp object, from spatstat package, to metric graph object
+This function converts a \code{psp} object (from the \code{spatstat} package) into a metric graph object.
 }
