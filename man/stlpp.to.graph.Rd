@@ -4,15 +4,13 @@
 \alias{stlpp.to.graph}
 \title{Convert an \code{stlpp} object to a metric graph object}
 \usage{
-stlpp.to.graph(stlpp.obj, group.time = TRUE)
+stlpp.to.graph(stlpp.obj, ...)
 }
 \arguments{
 \item{stlpp.obj}{An \code{stlpp} object to be converted.}
-
-\item{group.time}{Logical. If \code{TRUE}, observations are grouped by time. Otherwise, a jitter strategy is used for duplicated points.}
 }
 \value{
-A metric graph object with observations added.
+A metric graph object
 }
 \description{
 This function converts an \code{stlpp} object (from the \code{stlnpp} package) into a metric graph object.

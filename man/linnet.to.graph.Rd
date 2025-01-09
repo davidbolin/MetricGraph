@@ -4,7 +4,7 @@
 \alias{linnet.to.graph}
 \title{Convert a \code{linnet} object to a metric graph object}
 \usage{
-linnet.to.graph(linnet.object)
+linnet.to.graph(linnet.object, crs)
 }
 \arguments{
 \item{linnet.object}{A \code{linnet} object to be converted.}
