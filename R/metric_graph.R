@@ -3637,6 +3637,9 @@ metric_graph <-  R6Class("metric_graph",
                 PtE <- cbind(data[[edge_number]], data[[distance_on_edge]])
                 if(!normalized){
                   PtE[, 2] <- PtE[,2] / self$edge_lengths[PtE[, 1]]
+                  if(any(PtE[,2] > 1)){
+                   stop("There were invalid distances on edges. If your data is normalized, please set the 'normalized' argument to TRUE.") 
+                  }
                 }
               } else if(data_coords == "spatial"){
                 point_coords <- cbind(data[[coord_x]], data[[coord_y]])
@@ -5494,7 +5497,7 @@ return(mapview_output)
           } 
         } else {        
           PtE_tmp <- PtE_edges[[i]]
-          
+
           # Check for edges ending at the starting point of the current edge
           if (any(self$E[, 2] == self$E[i, 1])) {
             edge_new <- which(self$E[, 2] == self$E[i, 1])[1]
@@ -5515,7 +5518,7 @@ return(mapview_output)
               vals <- rbind(vals, new_val)
             }
           }
-          
+
           # Check for edges starting at the ending point of the current edge
           if (any(self$E[, 1] == self$E[i, 2])) {
             edge_new <- which(self$E[, 1] == self$E[i, 2])[1]
@@ -5536,7 +5539,7 @@ return(mapview_output)
               vals <- rbind(vals, new_val)
             }
           }
-          
+
           # Add remaining values from PtE_tmp not in vals
           PtE_tmp <- setdiff(PtE_tmp, vals[, 1])
           if (length(PtE_tmp) > 0) {
@@ -5545,11 +5548,11 @@ return(mapview_output)
             colnames(PtE_tmp) <- c(".distance_on_edge", data)
             vals <- rbind(vals, PtE_tmp)
           }
-          
+
           # Sort values by the first column
           ord_idx <- order(vals[, 1])
           vals <- vals[ord_idx, ]
-          
+
           # Interpolate missing values within bounds
           max_val <- max(vals[, 2], na.rm = TRUE)
           min_val <- min(vals[, 2], na.rm = TRUE)
@@ -5562,10 +5565,10 @@ return(mapview_output)
               min_val
             )
           )
-          
+
           # Filter values to lie within [0, 1]
           vals <- vals[(vals[, 1] >= 0) & (vals[, 1] <= 1), ]
-          
+
           # Add a starting value if vals is non-empty and no value at 0
           if (nrow(vals) > 0 && !any(vals[, 1] == 0)) {
             vals <- rbind(c(0, vals[1, 2, drop = TRUE]), vals)
