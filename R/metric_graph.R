@@ -5406,183 +5406,170 @@ return(mapview_output)
 
         if(!interpolate_plot){
             if (max(vals[, 1]) < 1) {
-              # #check if we can add end value from other edge
-              Ei <- self$E[, 1] == Ve #edges that start in Ve
-              Ei <- which(Ei)
-              if (sum(Ei) > 0) {
-                ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
-                if(sum(ind)>0){
-                  ind <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                  min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
-                } else {
-                ind <- NULL
-                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val]
-              }} else{
-                ind <- NULL
-                ind.val <- integer(0)
-              }
-              if (length(ind) > 0) {
-                # vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-                vals <- rbind(vals, c(1, min.val))
-                  # if(length(min.val)>0){
-                  #   vals <- rbind(vals, c(1, min.val[[1]]))
-                  # } else{
-                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-                  # }
-              }
-              else {
-                Ei <- self$E[, 2] == Ve #edges that end in Ve
-                Ei <- which(Ei)
-                if (sum(Ei)  > 0) {
-                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
-                  if(sum(ind)>0){
-                    ind <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                    max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
-                  } else {
-                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                  max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val.max]
-                  if(length(ind.val) == 0){
-                    ind <- ind.val.max
-                  } else if (length(ind.val.max) == 0){
-                    ind <- ind.val
-                  } else{
-                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
-                  }
-                } } else{
-                  if(length(ind.val)>0){
-                    ind <- ind.val
-                  } else{
-                    ind <- NULL
-                  }
+              # Check if we can add end value from another edge
+              start_Ei <- which(self$E[, 1] == Ve)  # Edges that start at Ve
+              end_Ei <- which(self$E[, 2] == Ve)    # Edges that end at Ve
+
+              min.val <- NA
+              max.val <- NA
+
+              # Process edges starting at Ve
+              if (length(start_Ei) > 0) {
+                valid_X_start <- X[X[, 1] %in% start_Ei, , drop = FALSE]
+                ind_start <- which(valid_X_start[, 2] == 0)
+                if (length(ind_start) > 0) {
+                  ind_min <- which.min(valid_X_start[ind_start, 3])
+                  min.val <- valid_X_start[ind_start, 3][ind_min]
                 }
-                if (length(ind) > 0){
-                  # vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+              }
+
+              # Process edges ending at Ve
+              if (length(end_Ei) > 0) {
+                valid_X_end <- X[X[, 1] %in% end_Ei, , drop = FALSE]
+                ind_end <- which(valid_X_end[, 2] == 1)
+                if (length(ind_end) > 0) {
+                  ind_max <- which.max(valid_X_end[ind_end, 3])
+                  max.val <- valid_X_end[ind_end, 3][ind_max]
+                }
+              }
+
+              # Add the closest value to the current vertex
+              if (!is.na(min.val) && !is.na(max.val)) {
+                if (1 - max.val < min.val) {
                   vals <- rbind(vals, c(1, max.val))
-                  # if(length(max.val)>0){
-                  #   vals <- rbind(vals, c(1, max.val[[1]]))
-                  # } else{
-                  #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-                  # }
+                } else {
+                  vals <- rbind(vals, c(1, min.val))
                 }
+              } else if (!is.na(min.val)) {
+                vals <- rbind(vals, c(1, min.val))
+              } else if (!is.na(max.val)) {
+                vals <- rbind(vals, c(1, max.val))
               }
-            }
+          } 
 
-            if (min(vals[, 1] > 0)) {
-              #check if we can add start value from other edge
-              Ei <- self$E[, 1] == Vs #edges that start in Vs
-              Ei <- which(Ei)
-              if (sum(Ei) > 0) {
-                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
-                if(sum(ind)>0){
-                    ind <- ind[1]
-                  } else {
-                ind <- NULL
-                ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                min.val <- X[ind.val, 2,drop=TRUE]
-              }} else{
-                ind <- NULL
-                ind.val <- integer(0)
-              }
-              if (length(ind) > 0) {
-                vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
-              } else {
-                Ei <- self$E[, 2] == Vs #edges that end in Vs
-                Ei <- which(Ei)
-                if (sum(Ei) > 0) {
-                  ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
-                  if(sum(ind)>0){
-                    ind <- ind[1]
-                  } else {
-                  ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                  max.val <- X[ind.val.max, 2,drop=TRUE]
-                  if(length(ind.val) == 0){
-                    ind <- ind.val.max
-                  } else if (length(ind.val.max) == 0){
-                    ind <- ind.val
-                  } else{
-                    ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
-                  }
-                } } else{
-                  if(length(ind.val)>0){
-                    ind <- ind.val
-                  } else{
-                    ind <- NULL
-                  }
-                }
-                if (length(ind) > 0) {
-                  vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
-                } else if (nrow(vals)>0){
-                  idx_tmp <- which.min(vals[,1])
-                  vals <- rbind(c(0,vals[idx_tmp,2, drop = TRUE]), vals)
+          if   (min(vals[, 1]) > 0) {
+              # Check if we can add start value from another edge
+              start_Ei <- which(self$E[, 1] == Vs)  # Edges that start at Vs
+              end_Ei <- which(self$E[, 2] == Vs)    # Edges that end at Vs
+
+              min.val <- NA
+              max.val <- NA
+
+              # Process edges starting at Vs
+              if (length(start_Ei) > 0) {
+                valid_X_start <- X[X[, 1] %in% start_Ei, , drop = FALSE]
+                ind_start <- which(valid_X_start[, 2] == 0)
+                if (length(ind_start) > 0) {
+                  ind_min <- which.min(valid_X_start[ind_start, 3])
+                  min.val <- valid_X_start[ind_start, 3][ind_min]
                 }
               }
-            }
+
+              # Process edges ending at Vs
+              if (length(end_Ei) > 0) {
+                valid_X_end <- X[X[, 1] %in% end_Ei, , drop = FALSE]
+                ind_end <- which(valid_X_end[, 2] == 1)
+                if (length(ind_end) > 0) {
+                  ind_max <- which.max(valid_X_end[ind_end, 3])
+                  max.val <- valid_X_end[ind_end, 3][ind_max]
+                }
+              }
+
+              # Add the closest value to the current vertex
+              if (!is.na(min.val) && !is.na(max.val)) {
+                if (1 - max.val < min.val) {
+                  vals <- rbind(c(0, max.val), vals)
+                } else {
+                  vals <- rbind(c(0, min.val), vals)
+                }
+              } else if (!is.na(min.val)) {
+                vals <- rbind(c(0, min.val), vals)
+              } else if (!is.na(max.val)) {
+                vals <- rbind(c(0, max.val), vals)
+              } else if (nrow(vals) > 0) {
+                # Add a placeholder value based on the closest existing value in vals
+                idx_tmp <- which.min(vals[, 1])
+                vals <- rbind(c(0, vals[idx_tmp, 2]), vals)
+              }
+          } 
         } else {        
-            PtE_tmp <- PtE_edges[[i]]
-              if(any(self$E[,2] == self$E[i,1])){
-                edge_new <- which(self$E[,2] == self$E[i,1])[1]
-                idx_new <- which(X[,1] == edge_new)
-                new_val <- X[idx_new, 2:3, drop=FALSE]
-                if(nrow(new_val)>0){
-                  sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  max(new_val[,1]))
-                  new_val[,1] <- new_val[,1] - sub_fact
-                  vals <- rbind(vals, new_val)
-                }
-              } else if(any(self$E[-i,1] == self$E[i,1])){
-                edge_new <- which(self$E[-i,1] == self$E[i,1])[1]
-                idx_new <- which(X[,1] == edge_new)
-                new_val <- X[idx_new, 2:3, drop=FALSE]
-                if(nrow(new_val)>0){
-                  sum_fact <- ifelse(max(vals[,1]==1),  -1e-6,  min(new_val[,1]))
-                  new_val[,1] <- -new_val[,1] + sum_fact
-                  vals <- rbind(vals, new_val)
-                }
-              }
-
-                if (any(self$E[,1] == self$E[i,2])){
-                  edge_new <- which(self$E[,1] == self$E[i,2])[1]
-                  idx_new <- which(X[,1] == edge_new)
-                  new_val <- X[idx_new, 2:3, drop=FALSE]
-                  if(nrow(new_val)>0){
-                    sum_fact <- ifelse(max(vals[,1]==1),  1+1e-6,  1-min(new_val[,1]))
-                    new_val[,1] <- new_val[,1] + sum_fact
-                    vals <- rbind(vals, new_val)
-                  }
-              } else if (any(self$E[,2] == self$E[i,2])){
-                  edge_new <- which(self$E[,2] == self$E[i,2])[1]
-                  idx_new <- which(X[,1] == edge_new)
-                  new_val <- X[idx_new, 2:3, drop=FALSE]
-                  if(nrow(new_val)>0){
-                    sub_fact <- ifelse(min(vals[,1]==0), 1+1e-6,  -max(new_val[,1]) - 1)
-                    new_val[,1] <- -new_val[,1] - sum_fact
-                    vals <- rbind(vals, new_val)
-                  }
+          PtE_tmp <- PtE_edges[[i]]
+          
+          # Check for edges ending at the starting point of the current edge
+          if (any(self$E[, 2] == self$E[i, 1])) {
+            edge_new <- which(self$E[, 2] == self$E[i, 1])[1]
+            idx_new <- which(X[, 1] == edge_new)
+            new_val <- X[idx_new, 2:3, drop = FALSE]
+            if (nrow(new_val) > 0) {
+              sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, max(new_val[, 1]))
+              new_val[, 1] <- new_val[, 1] - sub_fact
+              vals <- rbind(vals, new_val)
             }
-
-              PtE_tmp <- setdiff(PtE_tmp, vals[,1])
-              if(length(PtE_tmp)>0){
-                PtE_tmp <- cbind(PtE_tmp, NA)
-                PtE_tmp <- as.data.frame(PtE_tmp)
-                colnames(PtE_tmp) <- c(".distance_on_edge", data)
-                vals <- rbind(vals,PtE_tmp)
-              }
-
-            ord_idx <- order(vals[,1])
-            vals <- vals[ord_idx,]
-            max_val <- max(vals[,2], na.rm=TRUE)
-            min_val <- min(vals[,2], na.rm=TRUE)
-            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-                                                  x = vals[,1],
-                                                      na.rm=FALSE, ties = "mean"),
-                                               max_val), min_val))
-            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
-
-            if(nrow(vals)>0){
-              if(min(vals[,1]>0)){
-                vals <- rbind(c(0,vals[1,2, drop=TRUE]), vals)
-              }
+          } else if (any(self$E[-i, 1] == self$E[i, 1])) {
+            edge_new <- which(self$E[-i, 1] == self$E[i, 1])[1]
+            idx_new <- which(X[, 1] == edge_new)
+            new_val <- X[idx_new, 2:3, drop = FALSE]
+            if (nrow(new_val) > 0) {
+              sum_fact <- ifelse(any(vals[, 1] == 1), -1e-6, min(new_val[, 1]))
+              new_val[, 1] <- -new_val[, 1] + sum_fact
+              vals <- rbind(vals, new_val)
             }
+          }
+          
+          # Check for edges starting at the ending point of the current edge
+          if (any(self$E[, 1] == self$E[i, 2])) {
+            edge_new <- which(self$E[, 1] == self$E[i, 2])[1]
+            idx_new <- which(X[, 1] == edge_new)
+            new_val <- X[idx_new, 2:3, drop = FALSE]
+            if (nrow(new_val) > 0) {
+              sum_fact <- ifelse(any(vals[, 1] == 1), 1 + 1e-6, 1 - min(new_val[, 1]))
+              new_val[, 1] <- new_val[, 1] + sum_fact
+              vals <- rbind(vals, new_val)
+            }
+          } else if (any(self$E[, 2] == self$E[i, 2])) {
+            edge_new <- which(self$E[, 2] == self$E[i, 2])[1]
+            idx_new <- which(X[, 1] == edge_new)
+            new_val <- X[idx_new, 2:3, drop = FALSE]
+            if (nrow(new_val) > 0) {
+              sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, -max(new_val[, 1]) - 1)
+              new_val[, 1] <- -new_val[, 1] - sub_fact
+              vals <- rbind(vals, new_val)
+            }
+          }
+          
+          # Add remaining values from PtE_tmp not in vals
+          PtE_tmp <- setdiff(PtE_tmp, vals[, 1])
+          if (length(PtE_tmp) > 0) {
+            PtE_tmp <- cbind(PtE_tmp, NA)
+            PtE_tmp <- as.data.frame(PtE_tmp)
+            colnames(PtE_tmp) <- c(".distance_on_edge", data)
+            vals <- rbind(vals, PtE_tmp)
+          }
+          
+          # Sort values by the first column
+          ord_idx <- order(vals[, 1])
+          vals <- vals[ord_idx, ]
+          
+          # Interpolate missing values within bounds
+          max_val <- max(vals[, 2], na.rm = TRUE)
+          min_val <- min(vals[, 2], na.rm = TRUE)
+          vals[, 2] <- na.const(
+            pmax(
+              pmin(
+                zoo::na.approx(object = vals[, 2], x = vals[, 1], na.rm = FALSE, ties = "mean"),
+                max_val
+              ),
+              min_val
+            )
+          )
+          
+          # Filter values to lie within [0, 1]
+          vals <- vals[(vals[, 1] >= 0) & (vals[, 1] <= 1), ]
+          
+          # Add a starting value if vals is non-empty and no value at 0
+          if (nrow(vals) > 0 && !any(vals[, 1] == 0)) {
+            vals <- rbind(c(0, vals[1, 2, drop = TRUE]), vals)
+          }            
         }
       } else{
         if(interpolate_plot){
