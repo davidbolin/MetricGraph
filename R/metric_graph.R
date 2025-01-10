@@ -3935,7 +3935,11 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(removed_merge)){
         ret_list[["removed_merge"]] <- as.data.frame(removed_merge)
       }
-      return(ret_list)
+      if(length(ret_list) > 1){
+        return(ret_list)
+      } else {
+        return(invisible(NULL))
+      }
     }
   },
 
