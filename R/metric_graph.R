@@ -3526,6 +3526,13 @@ metric_graph <-  R6Class("metric_graph",
 
     if(verbose>0){
       message("Adding observations...")
+      if(data_coords == "PtE"){
+        if(normalized){
+          message("Assuming the observations are normalized by the length of the edge.")
+        } else{
+          message("Assuming the observations are NOT normalized by the length of the edge.")
+        }
+      }
       if(private$longlat){
         message(paste("The unit for edge lengths is", private$length_unit))
         message(paste0("The current tolerance for removing distant observations is (in ",private$length_unit,"): ", tolerance))
