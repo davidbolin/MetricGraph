@@ -19,13 +19,13 @@ stlpp.to.graph <- function(stlpp.obj,...) {
 #'
 #' @return A metric graph object with edges defined by the network.
 #' @export
-#' 
-linnet.to.graph <- function(linnet.object, crs) {
+#'
+linnet.to.graph <- function(linnet.object, crs, ...) {
   # Extract number of edges and vertices
   n <- length(linnet.object$from)
   vertices <- as.data.frame(linnet.object$vertices)
   lines <- vector("list", n)
-  
+
   # Create LINESTRING geometries for each edge
   for (i in 1:n) {
     coords <- rbind(
@@ -34,13 +34,13 @@ linnet.to.graph <- function(linnet.object, crs) {
     )
     lines[[i]] <- st_linestring(as.matrix(coords))
   }
-  
+
   # Convert to an sf object
   edges_sf <- st_sf(
     geometry = st_sfc(lines, crs = crs)
   )
-  
-  return(metric_graph$new(edges = edges_sf))
+
+  return(metric_graph$new(edges = edges_sf, ...))
 }
 
 #' Convert a `psp` object to a metric graph object
