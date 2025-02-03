@@ -1800,19 +1800,46 @@ print.metric_graph_vertex <- function(x, n = 10, ...) {
 
 #' @noRd 
 
-na.const <- function(x){
-  if(!any(is.na(x))){
+# na.const <- function(x){
+#   if(!any(is.na(x))){
+#     return(x)
+#   }
+#   not_na <- which(!is.na(x))
+#   min_nonna <- min(not_na)
+#   max_nonna <- max(not_na)
+#   if(min_nonna > 1){
+#     x[1:(min_nonna-1)] <- x[min_nonna]
+#   }
+#   if(max_nonna < length(x)){
+#     x[(max_nonna+1):length(x)] <- x[max_nonna]
+#   }
+#   return(x)
+# }
+
+na.const <- function(x) {
+  # If no NA values, return as-is
+  if(!any(is.na(x))) {
     return(x)
   }
+  
+  # Check if all values are NA
+  if(all(is.na(x))) {
+    return(x)  # or return a default value depending on your needs
+  }
+  
   not_na <- which(!is.na(x))
   min_nonna <- min(not_na)
   max_nonna <- max(not_na)
-  if(min_nonna > 1){
+  
+  # Safety check for vector creation
+  if(min_nonna > 1 && (min_nonna - 1) < .Machine$integer.max) {
     x[1:(min_nonna-1)] <- x[min_nonna]
   }
-  if(max_nonna < length(x)){
+  
+  if(max_nonna < length(x)) {
     x[(max_nonna+1):length(x)] <- x[max_nonna]
   }
+  
   return(x)
 }
 

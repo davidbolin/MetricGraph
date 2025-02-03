@@ -3444,6 +3444,7 @@ metric_graph <-  R6Class("metric_graph",
 
     merge_strategy <- match.arg(merge_strategy, c("remove", "merge", "average"))
     duplicated_strategy <- match.arg(duplicated_strategy, c("closest", "jitter"))
+    data_coords <- match.arg(data_coords, c("PtE", "spatial"))
 
     if(clear_obs){
       df_temp <- data
@@ -5391,22 +5392,56 @@ return(mapview_output)
                 vals <- rbind(vals,PtE_tmp)
           }
 
-          if(nrow(vals)>0){
+          # if(nrow(vals)>0){
+          #   ord_idx <- order(vals[,1])
+          #   vals <- vals[ord_idx,]
+          #   if(vals[1,1] > 0){
+          #     vals <- rbind(c(0,NA), vals)
+          #   }
+          #   if(vals[nrow(vals),1] < 1){
+          #     vals <- rbind(vals, c(1,NA))
+          #   }
+          #   max_val <- max(vals[,2], na.rm=TRUE)
+          #   min_val <- min(vals[,2], na.rm=TRUE)
+          #   vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+          #                                         x = vals[,1],
+          #                                             na.rm=FALSE, ties = "mean"),
+          #                                      max_val), min_val))
+          #   vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+          # }
+          if(nrow(vals) > 0) {
+            # Sort by first column
             ord_idx <- order(vals[,1])
             vals <- vals[ord_idx,]
-            if(vals[1,1] > 0){
+
+            # Add boundary points if needed
+            if(vals[1,1] > 0) {
               vals <- rbind(c(0,NA), vals)
             }
-            if(vals[nrow(vals),1] < 1){
+            if(vals[nrow(vals),1] < 1) {
               vals <- rbind(vals, c(1,NA))
             }
-            max_val <- max(vals[,2], na.rm=TRUE)
-            min_val <- min(vals[,2], na.rm=TRUE)
-            vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-                                                  x = vals[,1],
-                                                      na.rm=FALSE, ties = "mean"),
-                                               max_val), min_val))
-            vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+
+            # Only proceed with interpolation if there are any non-NA values
+            if(any(!is.na(vals[,2]))) {
+              max_val <- max(vals[,2], na.rm=TRUE)
+              min_val <- min(vals[,2], na.rm=TRUE)
+
+              # Perform interpolation
+              interpolated <- try(
+                zoo::na.approx(object = vals[,2],
+                               x = vals[,1],
+                               na.rm=FALSE, 
+                               ties = "mean"),
+                silent = TRUE
+              )
+
+              if(!inherits(interpolated, "try-error")) {
+                vals[,2] <- na.const(pmax(pmin(interpolated, max_val), min_val))
+              }
+            }
+            # Keep only values in [0,1] range
+            vals <- vals[(vals[,1] >= 0) & (vals[,1] <= 1),]
           }
         }
 
@@ -5565,17 +5600,47 @@ return(mapview_output)
           vals <- vals[ord_idx, ]
 
           # Interpolate missing values within bounds
-          max_val <- max(vals[, 2], na.rm = TRUE)
-          min_val <- min(vals[, 2], na.rm = TRUE)
-          vals[, 2] <- na.const(
-            pmax(
-              pmin(
-                zoo::na.approx(object = vals[, 2], x = vals[, 1], na.rm = FALSE, ties = "mean"),
-                max_val
+          # max_val <- max(vals[, 2], na.rm = TRUE)
+          # min_val <- min(vals[, 2], na.rm = TRUE)
+          # vals[, 2] <- na.const(
+          #   pmax(
+          #     pmin(
+          #       zoo::na.approx(object = vals[, 2], x = vals[, 1], na.rm = FALSE, ties = "mean"),
+          #       max_val
+          #     ),
+          #     min_val
+          #   )
+          # )
+
+          # Only proceed if there are any non-NA values
+          if(any(!is.na(vals[,2]))) {
+            max_val <- max(vals[,2], na.rm = TRUE)
+            min_val <- min(vals[,2], na.rm = TRUE)
+
+            # Try interpolation with error handling
+            interpolated <- try(
+              zoo::na.approx(
+                object = vals[,2], 
+                x = vals[,1], 
+                na.rm = FALSE, 
+                ties = "mean"
               ),
-              min_val
+              silent = TRUE
             )
-          )
+
+            if(!inherits(interpolated, "try-error")) {
+              vals[,2] <- na.const(
+                pmax(
+                  pmin(
+                    interpolated,
+                    max_val
+                  ),
+                  min_val
+                )
+              )
+            }
+          } # If all values are NA, vals[,2] remains unchanged
+
 
           # Filter values to lie within [0, 1]
           vals <- vals[(vals[, 1] >= 0) & (vals[, 1] <= 1), ]
@@ -5708,22 +5773,57 @@ return(mapview_output)
                 colnames(PtE_tmp) <- c(".distance_on_edge", data)
                 vals <- rbind(vals,PtE_tmp)
           }
-            if(nrow(vals)>0){
+            # if(nrow(vals)>0){
+            #   ord_idx <- order(vals[,1])
+            #   vals <- vals[ord_idx,]
+            #   if(vals[1,1] > 0){
+            #     vals <- rbind(c(0,NA), vals)
+            #   }
+            #   if(vals[nrow(vals),1] < 1){
+            #     vals <- rbind(vals, c(1,NA))
+            #   }
+            #   max_val <- max(vals[,2], na.rm=TRUE)
+            #   min_val <- min(vals[,2], na.rm=TRUE)
+            #   vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
+            #                                         x = vals[,1],
+            #                                             na.rm=FALSE, ties = "mean"),
+            #                                      max_val), min_val))
+            #   vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+            # }
+            
+            if(nrow(vals) > 0) {
+              # Sort by first column
               ord_idx <- order(vals[,1])
               vals <- vals[ord_idx,]
-              if(vals[1,1] > 0){
+
+              # Add boundary points if needed
+              if(vals[1,1] > 0) {
                 vals <- rbind(c(0,NA), vals)
               }
-              if(vals[nrow(vals),1] < 1){
+              if(vals[nrow(vals),1] < 1) {
                 vals <- rbind(vals, c(1,NA))
               }
-              max_val <- max(vals[,2], na.rm=TRUE)
-              min_val <- min(vals[,2], na.rm=TRUE)
-              vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-                                                    x = vals[,1],
-                                                        na.rm=FALSE, ties = "mean"),
-                                                 max_val), min_val))
-              vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
+
+              # Only proceed with interpolation if there are any non-NA values
+              if(any(!is.na(vals[,2]))) {
+                max_val <- max(vals[,2], na.rm=TRUE)
+                min_val <- min(vals[,2], na.rm=TRUE)
+
+                # Perform interpolation
+                interpolated <- try(
+                  zoo::na.approx(object = vals[,2],
+                                 x = vals[,1],
+                                 na.rm=FALSE, 
+                                 ties = "mean"),
+                  silent = TRUE
+                )
+
+                if(!inherits(interpolated, "try-error")) {
+                  vals[,2] <- na.const(pmax(pmin(interpolated, max_val), min_val))
+                }
+              }
+              # Keep only values in [0,1] range
+              vals <- vals[(vals[,1] >= 0) & (vals[,1] <= 1),]
             }
 
       }
