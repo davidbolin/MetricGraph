@@ -82,7 +82,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-10-23. Last
-modified: 2024-12-13.</h4>
+modified: 2025-02-09.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/spacetime.Rmd" class="external-link"><code>vignettes/spacetime.Rmd</code></a></small>
       <div class="d-none name"><code>spacetime.Rmd</code></div>
@@ -215,7 +215,9 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
 <span><span class="va">PtE</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span>, size <span class="op">=</span> <span class="va">n.obs</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">t.obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span></span>
-<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">op</span><span class="op">$</span><span class="fu">make_A</span><span class="op">(</span><span class="va">PtE</span>, <span class="va">t.obs</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># including vertices of degree 1 in the A matrix</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">op</span><span class="op">$</span><span class="fu">make_A</span><span class="op">(</span><span class="va">PtE</span>, <span class="va">t.obs</span>, include_deg1 <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">sigma.e</span> <span class="op">&lt;-</span> <span class="fl">0.01</span></span>
 <span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">A</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">x</span> <span class="op">+</span> <span class="va">sigma.e</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">Y</span><span class="op">)</span>, edge_number <span class="op">=</span> <span class="va">PtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, </span>
@@ -223,7 +225,6 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span>                        time <span class="op">=</span> <span class="va">t.obs</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df</span>, normalized<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                              group <span class="op">=</span> <span class="st">"time"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; list()</span></span>
 <span></span>
 <span><span class="co"># Estimate model parameters using rspde_lme</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde_lme.html" class="external-link">rspde_lme</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span>, loc_time <span class="op">=</span> <span class="st">"time"</span>,</span>
@@ -240,27 +241,27 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Fixed effects:</span></span>
 <span><span class="co">#&gt;             Estimate Std.error z-value Pr(&gt;|z|)</span></span>
-<span><span class="co">#&gt; (Intercept)  0.01066   0.11125   0.096    0.924</span></span>
+<span><span class="co">#&gt; (Intercept) 0.002815  0.014204   0.198    0.843</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Random effects:</span></span>
-<span><span class="co">#&gt;        Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; kappa 5.039e+00 2.933e-01  17.183</span></span>
-<span><span class="co">#&gt; sigma 1.046e+01 1.090e+00   9.601</span></span>
-<span><span class="co">#&gt; gamma 1.082e-01 1.221e-02   8.866</span></span>
-<span><span class="co">#&gt; rho   4.499e-01 5.771e+03   0.000</span></span>
+<span><span class="co">#&gt;       Estimate Std.error z-value</span></span>
+<span><span class="co">#&gt; kappa  5.08218   0.31279  16.248</span></span>
+<span><span class="co">#&gt; sigma 10.61042   1.14148   9.295</span></span>
+<span><span class="co">#&gt; gamma  0.10779   0.01249   8.627</span></span>
+<span><span class="co">#&gt; rho    0.18423   5.51217   0.033</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Measurement error:</span></span>
 <span><span class="co">#&gt;          Estimate Std.error z-value</span></span>
-<span><span class="co">#&gt; std. dev 0.008247  0.002063   3.998</span></span>
+<span><span class="co">#&gt; std. dev 0.011327  0.002191   5.169</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Log-Likelihood:  -52.30835 </span></span>
-<span><span class="co">#&gt; Number of function calls by 'optim' = 88</span></span>
+<span><span class="co">#&gt; Log-Likelihood:  -38.3092 </span></span>
+<span><span class="co">#&gt; Number of function calls by 'optim' = 78</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  5.19143 mins </span></span>
-<span><span class="co">#&gt;   set up the parallelization = 7.80627 secs</span></span>
+<span><span class="co">#&gt; Time used to:     fit the model =  4.47023 mins </span></span>
+<span><span class="co">#&gt;   set up the parallelization = 8.16693 secs</span></span>
 <span></span>
 <span><span class="co"># Compare estimated results with true values</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kappa <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">kappa</span>, <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">random_effects</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, </span>
@@ -272,9 +273,9 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma     gamma       rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.039092 10.46316 0.1082389 0.4499211 0.008247378 0.01065753</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma     gamma       rho    sigma.e   intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.01000000 0.000000000</span></span>
+<span><span class="co">#&gt; Estimate 5.082185 10.61042 0.1077943 0.1842263 0.01132681 0.002815134</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="inlabru-implementation">inlabru Implementation<a class="anchor" aria-label="anchor" href="#inlabru-implementation"></a>
@@ -321,9 +322,9 @@ locations (<code>cbind(.edge_number, .distance_on_edge)</code>), and
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma     gamma       rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.016816 10.48837 0.1091403 0.4087118 0.007230996 0.04866416</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma     gamma       rho    sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.01000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.116025 10.76726 0.1087478 0.2378864 0.01052357 0.01265619</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="fitting-model-with-replicates-in-inlabru">Fitting Model with Replicates in inlabru<a class="anchor" aria-label="anchor" href="#fitting-model-with-replicates-in-inlabru"></a>
@@ -338,7 +339,7 @@ replicates. We will assume we have 10 replicates.</p>
 <span><span class="va">n.obs</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
 <span><span class="va">PtE</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">graph</span><span class="op">$</span><span class="va">nE</span>, size <span class="op">=</span> <span class="va">n.obs</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">t.obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span></span>
-<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">op</span><span class="op">$</span><span class="fu">make_A</span><span class="op">(</span><span class="va">PtE</span>, <span class="va">t.obs</span><span class="op">)</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">op</span><span class="op">$</span><span class="fu">make_A</span><span class="op">(</span><span class="va">PtE</span>, <span class="va">t.obs</span>, include_deg1 <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">sigma.e</span> <span class="op">&lt;-</span> <span class="fl">0.01</span></span>
 <span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">A</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">x</span> <span class="op">+</span> <span class="va">sigma.e</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n.obs</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">Y</span><span class="op">)</span>, edge_number <span class="op">=</span> <span class="va">PtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, </span>
@@ -354,7 +355,7 @@ the storage of different observations at the exact same location.</p>
 <code class="sourceCode R"><span><span class="va">graph_rep</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df</span>, normalized<span class="op">=</span><span class="cn">TRUE</span>, </span>
 <span>                    clear_obs <span class="op">=</span> <span class="cn">TRUE</span>, group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"repl"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Adding observations...</span></span>
-<span><span class="co">#&gt; list()</span></span></code></pre></div>
+<span><span class="co">#&gt; Assuming the observations are normalized by the length of the edge.</span></span></code></pre></div>
 <p>We now create the <code>rSPDE</code> model object:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">st_graph_repl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.spacetime.html" class="external-link">rspde.spacetime</a></span><span class="op">(</span>mesh_space <span class="op">=</span> <span class="va">graph_rep</span>, </span>
@@ -397,9 +398,9 @@ returned by <code><a href="https://davidbolin.github.io/rSPDE/reference/graph_da
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_repl</span><span class="op">)</span></span>
-<span><span class="co">#&gt;            kappa   sigma     gamma      rho    sigma.e   intercept</span></span>
-<span><span class="co">#&gt; True     5.00000 10.0000 0.1000000 0.300000 0.01000000 0.000000000</span></span>
-<span><span class="co">#&gt; Estimate 5.07388 10.1358 0.1001281 0.251469 0.00536314 0.005132888</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa   sigma      gamma       rho     sigma.e   intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.0000 0.10000000 0.3000000 0.010000000  0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.121583 10.0562 0.09565914 0.3032567 0.007679457 -0.02317814</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-setting-bounded_rho-false">Example: Setting <code>bounded_rho = FALSE</code><a class="anchor" aria-label="anchor" href="#example-setting-bounded_rho-false"></a>
@@ -450,9 +451,9 @@ spatio-temporal operator and fit the model using
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma    gamma       rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.100000 0.3000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.037402 10.39134 0.105606 0.7222488 0.008224926 0.04674867</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma     gamma       rho    sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.01000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.082604 10.61149 0.1077946 0.1841468 0.01132611 0.01250486</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="using-inlabru">Using <code>inlabru</code><a class="anchor" aria-label="anchor" href="#using-inlabru"></a>
@@ -511,9 +512,9 @@ spatio-temporal operator and prepare data for <code>inlabru</code>:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_unbounded</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma     gamma       rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.014875 10.38954 0.1055822 0.7382418 0.007724123 0.04753319</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma    gamma       rho    sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.100000 0.3000000 0.01000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.107525 10.76089 0.108855 0.1844875 0.01047114 0.01264945</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -576,9 +577,9 @@ will now create the stack using these components:</p>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma     gamma       rho     sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.010000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.031228 10.42753 0.1085265 0.2793528 0.007030865 0.04768893</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa   sigma     gamma       rho    sigma.e intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.0000 0.1000000 0.3000000 0.01000000 0.0000000</span></span>
+<span><span class="co">#&gt; Estimate 5.008921 10.3791 0.1064988 0.1226474 0.01040961 0.0124093</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="fitting-model-with-replicates-in-inla">Fitting Model with Replicates in INLA<a class="anchor" aria-label="anchor" href="#fitting-model-with-replicates-in-inla"></a>
@@ -629,9 +630,9 @@ object:</p>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_inla_repl</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma     gamma       rho     sigma.e intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.010000000 0.0000000</span></span>
-<span><span class="co">#&gt; Estimate 5.078415 10.27526 0.1025144 0.1882974 0.005983025 0.0050431</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma     gamma       rho    sigma.e   intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.01000000  0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.165039 10.70001 0.1024673 0.2330579 0.01045965 -0.01417108</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2 unnumbered">

@@ -88,7 +88,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-08-08. Last
-modified: 2024-12-13.</h4>
+modified: 2025-02-09.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/river_example.Rmd" class="external-link"><code>vignettes/river_example.Rmd</code></a></small>
       <div class="d-none name"><code>river_example.Rmd</code></div>
@@ -160,9 +160,9 @@ factor and store it in the graph:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="fu">mutate</span><span class="op">(</span>netID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">netID</span><span class="op">)</span><span class="op">)</span>, clear_obs<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
+<pre><code><span><span class="co">## Assuming the observations are NOT normalized by the length of the edge.</span></span></code></pre>
 <pre><code><span><span class="co">## The unit for edge lengths is km</span></span></code></pre>
 <pre><code><span><span class="co">## The current tolerance for removing distant observations is (in km): 3.16483618132507</span></span></code></pre>
-<pre><code><span><span class="co">## list()</span></span></code></pre>
 <p>We can now visualize the river and the data</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data <span class="op">=</span> <span class="st">"Summer_mn"</span>, vertex_size <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
