@@ -95,7 +95,9 @@ x <- simulate(op, nsim = 1)
 n.obs <- 500
 PtE <- cbind(sample(1:graph$nE, size = n.obs, replace = TRUE), runif(n.obs))
 t.obs <- max(t) * runif(n.obs)
-A <- op$make_A(PtE, t.obs)
+
+# including vertices of degree 1 in the A matrix
+A <- op$make_A(PtE, t.obs, include_deg1 = TRUE)
 sigma.e <- 0.01
 Y <- as.vector(A %*% x + sigma.e * rnorm(n.obs))
 df <- data.frame(y = as.matrix(Y), edge_number = PtE[,1], 
@@ -190,7 +192,7 @@ x <- simulate(op, nsim = n_rep)
 n.obs <- 500
 PtE <- cbind(sample(1:graph$nE, size = n.obs, replace = TRUE), runif(n.obs))
 t.obs <- max(t) * runif(n.obs)
-A <- op$make_A(PtE, t.obs)
+A <- op$make_A(PtE, t.obs, include_deg1 = TRUE)
 sigma.e <- 0.01
 Y <- as.vector(A %*% x + sigma.e * rnorm(n.obs))
 df <- data.frame(y = as.matrix(Y), edge_number = PtE[,1], 

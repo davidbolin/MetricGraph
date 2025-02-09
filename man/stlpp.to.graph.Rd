@@ -8,6 +8,8 @@ stlpp.to.graph(stlpp.obj, ...)
 }
 \arguments{
 \item{stlpp.obj}{An \code{stlpp} object to be converted.}
+
+\item{...}{Additional arguments to be passed to the \code{metric_graph} constructor.}
 }
 \value{
 A metric graph object

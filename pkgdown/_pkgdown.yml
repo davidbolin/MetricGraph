@@ -128,6 +128,11 @@ reference:
     - exp_covariance
     - spde_covariance
     - spde_variance
+  - title: Auxiliary constructors
+    contents:
+    - linnet.to.graph
+    - psp.to.graph
+    - stlpp.to.graph
   - title: Datasets
     contents:
     - pems

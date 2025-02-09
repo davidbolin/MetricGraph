@@ -8,6 +8,10 @@ linnet.to.graph(linnet.object, crs, ...)
 }
 \arguments{
 \item{linnet.object}{A \code{linnet} object to be converted.}
+
+\item{crs}{The coordinate reference system of the graph.}
+
+\item{...}{Additional arguments to be passed to the \code{metric_graph} constructor.}
 }
 \value{
 A metric graph object with edges defined by the network.

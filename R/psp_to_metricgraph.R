@@ -4,6 +4,7 @@
 #' This function converts an `stlpp` object (from the `stlnpp` package) into a metric graph object.
 #'
 #' @param stlpp.obj An `stlpp` object to be converted.
+#' @param ... Additional arguments to be passed to the `metric_graph` constructor.
 
 #' @return A metric graph object
 #' @export
@@ -16,6 +17,8 @@ stlpp.to.graph <- function(stlpp.obj,...) {
 #' This function converts a `linnet` object (from the `spatstat` package) into a metric graph object.
 #'
 #' @param linnet.object A `linnet` object to be converted.
+#' @param crs The coordinate reference system of the graph.
+#' @param ... Additional arguments to be passed to the `metric_graph` constructor.
 #'
 #' @return A metric graph object with edges defined by the network.
 #' @export
@@ -32,12 +35,12 @@ linnet.to.graph <- function(linnet.object, crs, ...) {
       vertices[linnet.object$from[i], 1:2],
       vertices[linnet.object$to[i], 1:2]
     )
-    lines[[i]] <- st_linestring(as.matrix(coords))
+    lines[[i]] <- sf::st_linestring(as.matrix(coords))
   }
 
   # Convert to an sf object
-  edges_sf <- st_sf(
-    geometry = st_sfc(lines, crs = crs)
+  edges_sf <- sf::st_sf(
+    geometry = sf::st_sfc(lines, crs = crs)
   )
 
   return(metric_graph$new(edges = edges_sf, ...))
