@@ -34,7 +34,7 @@ D. Bolin, A. Simas, J. Wallin (2024) [Gaussian Whittle-Matérn fields on metric 
 
 D. Bolin, M. Kovács, V. Kumar, A. Simas (2024) [Regularity and numerical approximation of fractional elliptic differential equations on compact metric graphs][ref2]. Mathematics of Computation, 93, 2439-2472.
 
-D. Bolin, A. Simas, J. Wallin (2023) [Markov properties of Gaussian random fields on compact metric graphs][ref3]. ArXiv:2304.03190
+D. Bolin, A. Simas, J. Wallin (2023) [Markov properties of Gaussian random fields on compact metric graphs][ref3]. Bernoulli, in press.
 
 D. Bolin, A. Simas, J. Wallin (2023) [Statistical inference for Gaussian Whittle-Matérn fields on metric graphs][ref4]. ArXiv:2304.10372
 
