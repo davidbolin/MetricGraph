@@ -133,6 +133,9 @@ reference:
     - linnet.to.graph
     - psp.to.graph
     - stlpp.to.graph
+  - title: Misc functions
+    contents:
+    - selected_inv
   - title: Datasets
     contents:
     - pems
