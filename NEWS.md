@@ -1,4 +1,7 @@
 # MetricGraph (development version)
+* Adding selected inverse function, for computing the inverse matrix elements only on nonzero entries of the original sparse matrix.
+* Adjusts on `add_observations()` and `plot_function()` methods.
+* Adding helper functions to use `stlnpp` objects.
 
 # MetricGraph 1.4.0
 * Added an INLA implementation for `alpha=2`.
