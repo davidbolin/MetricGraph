@@ -119,6 +119,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// selected_inv_cpp
+Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
+RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type Q(QSEXP);
+    rcpp_result_gen = Rcpp::wrap(selected_inv_cpp(Q));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
@@ -129,6 +140,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_interpolate2_aux", (DL_FUNC) &_MetricGraph_interpolate2_aux, 3},
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
     {"_MetricGraph_generate_mesh", (DL_FUNC) &_MetricGraph_generate_mesh, 6},
+    {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };
 
