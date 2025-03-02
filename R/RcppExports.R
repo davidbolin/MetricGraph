@@ -99,3 +99,7 @@ generate_mesh <- function(n_edges, edge_lengths, n_e, E, ind, continuous) {
     .Call(`_MetricGraph_generate_mesh`, n_edges, edge_lengths, n_e, E, ind, continuous)
 }
 
+selected_inv_cpp <- function(Q) {
+    .Call(`_MetricGraph_selected_inv_cpp`, Q)
+}
+

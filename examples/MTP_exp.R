@@ -63,6 +63,64 @@ if(0){
     print(round(solve(Qs[[i+1]][1:2,1:2],Qs[[i+1]][c(1:2),c(3:4)]),3))
   }
 }
+if(0){
+  #create a orhonomal basis
+  edge1 <- rbind(c(1,0),c(1,1))
+  edge2 <- rbind(c(1,1),c(0,1))
+  edge3 <- rbind(c(0,1),c(0,-.5))
+  edge4 <- rbind(c(0,-.5),c(1,0))
+  edge5 <- rbind(c(1,1),c(1,2))
+  edge6 <- rbind(c(1,1),c(2,1))
+  edges = list(edge1,edge2,edge3,edge4,edge5,edge6)
+  graph <- metric_graph$new(edges = edges)
+  print(plot(graph))
+  kappa <- 0.5
+  tau   <- 1.2
+  Q <- spde_precision(kappa = kappa, tau = tau,
+                      alpha = 2, graph = graph)
+  #create a basis such that it is true
+  # (1, 1/kappa)
+  # ()
+  # gram schmidt
+
+  graph$buildC(2, FALSE)
+
+  n_const <- length(graph$CoB$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CoB$T[-ind.const, ]
+  Q_mod <- Tc %*% Q %*% t(Tc)
+  Sigma <- t(Tc) %*% solve(Q_mod)%*% (Tc)
+  index <- c(1:4,7:8,11:12,19:20,23:24,6,22)
+  Sigma <- Sigma[index,index]
+  Q0 <- solve(Sigma)
+  Q <- round(Q0,4)
+  index0 <- c(1:2,5:6)
+
+  Qs <- list()
+  Sigmas <- list()
+  Sigmas[[1]] <- Sigma
+  Qs[[1]] <- Q[index0, index0]
+  Qs[[2]] <- solve(Sigma[-3,-3])[c(1,2,4,5),c(1,2,4,5)]
+
+  #(1/Q0[3,3])*Q[index0, index0]%*%(Sigma[index0,3])%*%t(Sigma[index0,3])%*%Q[index0,index0]
+  # A^-1 + A^-1 B (A - BD^-1B)^-1 B
+  # Q + Q
+  Sigmas[[1]] <- Sigma[-3,-3]
+  print('**** diff')
+  print(round(Qs[[1]]-Qs[[2]],4)[c(1,2),c(3,4)])
+  print('**** cond')
+  print(round(solve(Qs[[2]][1:2,1:2],Qs[[2]][c(1:2),c(3:4)]),3))
+  index <- c(3,4,7,8)
+  for(i in 2:length(index)){
+    Qs[[i+1]] <-  solve(Sigma[-index[1:i],-index[1:i]])[1:4,1:4]
+    Sigmas[[i+1]] <- Sigma[-index[1:i],-index[1:i]]
+    print(paste('i = ',i))
+    print('**** diff')
+    print(round(Qs[[i+1]]-Qs[[i]],4)[c(1,2),c(3,4)])
+    print('**** cond')
+    print(round(solve(Qs[[i+1]][1:2,1:2],Qs[[i+1]][c(1:2),c(3:4)]),3))
+  }
+}
 
 if(1){
   edge1 <- rbind(c(1,0),c(1,1))
@@ -76,12 +134,26 @@ if(1){
   Q <- spde_precision(kappa = kappa, tau = tau,
                       alpha = 2, graph = graph)
 
+
   graph$buildC(2, FALSE)
+  l_e <- 1.2
+
   b1 <- c(1, 1/kappa)
-  b1 <- b1/sqrt(t(b1)%*%b1)
-  b2 <- c(1,1)- (t(c(1,1))%*%b1)*b1
-  b2 <- b2/sqrt(t(b2)%*%b2)
+  b2 <- c(-kappa, 1)
   B <- rbind(b1,b2)
+
+
+  r_00 <-   MetricGraph:::r_2(0, kappa = kappa, tau = tau, deriv = 0)
+  r_00d <- - MetricGraph:::r_2(0, kappa = kappa, tau = tau, deriv = 2)
+  R_00 <- matrix(c(r_00, MetricGraph:::r_2(-0, kappa = kappa, tau = tau, deriv = 1),
+                   MetricGraph:::r_2(0, kappa = kappa, tau = tau, deriv = 1), r_00d), 2, 2)
+
+
+  r_0l <-   MetricGraph:::r_2(l_e, kappa = kappa, tau = tau, deriv = 0)
+  r_11 <- - MetricGraph:::r_2(l_e, kappa = kappa, tau = tau, deriv = 2)
+  # order by node not derivative
+  R_01 <- matrix(c(r_0l, MetricGraph:::r_2(-l_e, kappa = kappa, tau = tau, deriv = 1),
+                   MetricGraph:::r_2(l_e, kappa = kappa, tau = tau, deriv = 1), r_11), 2, 2)
 
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
@@ -95,13 +167,12 @@ if(1){
   print(Q[-c(3:4),-c(3:4)])
 }
 if(0){
-  library(MetricGraph)
   edge1 <- rbind(c(1,0),c(0.99,0))
   edge2 <- rbind(c(1+sqrt(0.5),sqrt(0.5)),c(1,0))
   edge3 <- rbind(c(1+sqrt(0.5),-sqrt(0.5)),c(1,0))
   edges = list(edge1,edge2,edge3)
   graph <- metric_graph$new(edges = edges)
-
+  print(plot(graph))
   kappa <- 0.1
   tau   <- 1
   P1 <- c(1, 0.5)

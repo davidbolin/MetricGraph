@@ -728,157 +728,87 @@ exp_covariance <- function(h, theta){
 
 #' Processing data to be used in add_observations
 #' @noRd
-process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings){
-  new_data[[".edge_number"]] <- PtE[,1]
-  new_data[[".distance_on_edge"]] <- PtE[,2]
+process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings) {
+  new_data[[".edge_number"]] <- PtE[, 1]
+  new_data[[".distance_on_edge"]] <- PtE[, 2]
 
+  # Ensure group_vector is initialized correctly
   if (is.null(group_vector)) {
-    if(!is.null(old_data)){
-      group_vector <- rep(old_data[[".group"]][1], length(PtE[,1]))
-    } else{
-      group_vector <- rep(1, length(PtE[,1]))
+    group_vector <- if (!is.null(old_data)) {
+      rep(old_data[[".group"]][1], nrow(PtE))
+    } else {
+      rep(1, nrow(PtE))
     }
   }
 
-  if(is.null(old_data)){
-      group_val <- unique(group_vector)
+  # Get unique group values
+  group_val <- if (is.null(old_data)) {
+    unique(group_vector)
   } else {
-      group_val <- unique(union(old_data[[".group"]], group_vector))
+    unique(c(old_data[[".group"]], group_vector))
   }
 
-  if (is.null(old_data)) {
-    full_colnames <- names(new_data)
-    data_coords_new <- data.frame(PtE1 = PtE[,1], PtE2 = PtE[,2])
-    data_coords <- unique(data_coords_new)
-    data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
+  # Combine and order coordinates
+  data_coords <- unique(rbind(
+    data.frame(PtE1 = PtE[, 1], PtE2 = PtE[, 2]),
+    if (!is.null(old_data)) data.frame(PtE1 = old_data[[".edge_number"]], PtE2 = old_data[[".distance_on_edge"]]) else NULL
+  ))
+  data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
 
-    data_coords_tmp <- data_coords
-    # group_val <- unique(group_vector)
-    n_group <- length(group_val)
-    # data_coords[["group"]] <- group_val[[1]]
-    # if (n_group>1) {
-    #   for (i in 2:n_group) {
-    #     tmp_coords <- data_coords_tmp
-    #     tmp_coords[["group"]] <- group_val[[i]]
-    #     data_coords <- rbind(data_coords, tmp_coords)
-    #   }
-    # }
+  # Expand coordinates for groups
+  n_group <- length(group_val)
+  data_coords <- data.frame(
+    PtE1 = rep(data_coords$PtE1, n_group),
+    PtE2 = rep(data_coords$PtE2, n_group),
+    group = rep(group_val, each = nrow(data_coords))
+  )
+  data_coords[["idx"]] <- seq_len(nrow(data_coords))
 
-    data_coords_1 <- rep(data_coords_tmp[,1], times = n_group)
-    data_coords_2 <-  rep(data_coords_tmp[,2], times = n_group)
-    data_coords_3 <- rep(group_val, each = length(data_coords_tmp[,1]))
+  # Map new and old data to indices
+  idx_new_entries <- merge(
+    data.frame(PtE1 = PtE[, 1], PtE2 = PtE[, 2], group = group_vector),
+    data_coords, by = c("PtE1", "PtE2", "group"), sort = FALSE
+  )[["idx"]]
 
-    data_coords <- data.frame(PtE1 = data_coords_1, PtE2 = data_coords_2, group = data_coords_3)
-    rm(data_coords_1)
-    rm(data_coords_2)
-    rm(data_coords_3)
-
-    data_coords_new[["group"]] <- group_vector
-    data_coords[["idx"]] <- 1:nrow(data_coords)
-    idx_new_entries <- merge(data_coords_new, data_coords, all=FALSE,
-                             sort = FALSE)
-
-    idx_new_entries <- idx_new_entries[["idx"]]
-    list_result <- vector(mode = "list", length(full_colnames))
-    names(list_result) <- full_colnames
-    list_result[1:length(list_result)] <- full_colnames
-    list_result[[".edge_number"]] <- NULL
-    list_result[[".distance_on_edge"]] <- NULL
-    list_result[[".group"]] <- NULL
-    new_data <- lapply(list_result, function(col_name){
-          mode_vector <- typeof(new_data[[col_name]])
-          tmp <- vector(mode=mode_vector, length = nrow(data_coords))
-          is.na(tmp) <- 1:length(tmp)
-          #  for(i in 1:length(idx_new_entries)){
-            for(i in 1:length(new_data[[col_name]])){
-               tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
-            }
-            return(tmp)
-          })
-
-    new_data[[".edge_number"]] <- data_coords[["PtE1"]]
-    new_data[[".distance_on_edge"]] <- data_coords[["PtE2"]]
-    new_data[[".group"]] <- data_coords[["group"]]
-    return(new_data)
+  if (!is.null(old_data)) {
+    idx_old_entries <- merge(
+      data.frame(PtE1 = old_data[[".edge_number"]], PtE2 = old_data[[".distance_on_edge"]], group = old_data[[".group"]]),
+      data_coords, by = c("PtE1", "PtE2", "group"), sort = FALSE
+    )[["idx"]]
   } else {
-    old_colnames <- names(old_data)
-    new_colnames <- names(new_data)
-    full_colnames <- union(old_colnames, new_colnames)
+    idx_old_entries <- integer(0)
+  }
 
-    new_df <- data.frame(PtE1 = PtE[,1], PtE2 = PtE[,2])
+  # Warn about conflicts if necessary
+  if (!suppress_warnings && length(intersect(idx_old_entries, idx_new_entries)) > 0) {
+    warning("Conflicting data detected. New data may overwrite existing data.")
+  }
 
-    old_df <- data.frame(PtE1 = old_data[[".edge_number"]],
-                         PtE2 = old_data[[".distance_on_edge"]])
-
-    data_coords <- unique(rbind(old_df, new_df))
-    data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
-
-    data_coords_tmp <- data_coords
-    # group_val <- unique(group_vector)
-    n_group <- length(group_val)
-    data_coords[["group"]] <- group_val[[1]]
-    if (n_group>1) {
-      for (i in 2:n_group) {
-          tmp_coords <- data_coords_tmp
-          tmp_coords[["group"]] <- group_val[[i]]
-          data_coords <- rbind(data_coords, tmp_coords)
-      }
+  # Combine data, prioritizing non-NA values from new_data
+  list_result <- lapply(union(names(old_data), names(new_data)), function(col_name) {
+    tmp <- rep(NA, nrow(data_coords))
+    
+    # Prioritize new_data values
+    if (!is.null(new_data[[col_name]])) {
+      tmp[idx_new_entries] <- new_data[[col_name]]
     }
-    data_coords <- as.data.frame(data_coords)
-    new_df[["group"]] <- group_vector
-    old_df[["group"]] <- old_data[[".group"]]
-    data_coords[["idx"]] <- 1:nrow(data_coords)
-
-    idx_new_entries <- merge(new_df, data_coords, all = FALSE, sort = FALSE)
-    idx_new_entries <- idx_new_entries[["idx"]]
-    idx_old_entries <- merge(old_df, data_coords, all = FALSE, sort = FALSE)
-    idx_old_entries <- idx_old_entries[["idx"]]
-
-    if(!suppress_warnings){
-      if(length(intersect(idx_old_entries, idx_new_entries)) > 0 && length(intersect(old_colnames,new_colnames))>2){
-        warning("Some of the data were not added because data for the same column already exists at the same location for the same group.")
-      }
+    
+    # Fill missing values with old_data where available
+    if (!is.null(old_data[[col_name]])) {
+      na_idx <- is.na(tmp[idx_old_entries])  # Check missing in new_data
+      tmp[idx_old_entries[na_idx]] <- old_data[[col_name]][na_idx]
     }
-    list_result <- vector(mode = "list", length(full_colnames))
-    names(list_result) <- full_colnames
-    list_result[1:length(list_result)] <- full_colnames
-    list_result[[".edge_number"]] <- NULL
-    list_result[[".distance_on_edge"]] <- NULL
-    list_result[[".group"]] <- NULL
-    list_result <- lapply(list_result, function(col_name){
-        if(!is.null(new_data[[col_name]])){
-          mode_vector <- typeof(new_data[[col_name]])
-        } else{
-          mode_vector <- typeof(old_data[[col_name]])
-        }
-        tmp <- vector(mode=mode_vector, length = nrow(data_coords))
-        is.na(tmp) <- 1:length(tmp)
+    
+    tmp
+  })
 
-        if(length(idx_new_entries)>0){
-          for(i in 1:length(idx_new_entries)){
-            if(!is.null(new_data[[col_name]][[i]])){
-              tmp[[idx_new_entries[i]]] <- new_data[[col_name]][[i]]
-            } else{
-              tmp[[idx_new_entries[i]]] <- rep(NA, length(idx_new_entries[i]))
-            }
-          }
-        }
-        if(length(idx_old_entries)>0){
-          for(i in 1:length(idx_old_entries)){
-            if(!is.null(old_data[[col_name]][[i]])){
-              tmp[[idx_old_entries[i]]] <- old_data[[col_name]][[i]]
-            }
-          }
-        }
-        return(tmp)
-      })
-  list_result[[".edge_number"]] <- data_coords[["PtE1"]]
-  list_result[[".distance_on_edge"]] <- data_coords[["PtE2"]]
-  list_result[[".group"]] <- data_coords[["group"]]
+  names(list_result) <- union(names(old_data), names(new_data))
+  list_result[[".edge_number"]] <- data_coords$PtE1
+  list_result[[".distance_on_edge"]] <- data_coords$PtE2
+  list_result[[".group"]] <- data_coords$group
+
   return(list_result)
-  }
 }
-
 #' find indices of the rows with all NA's in lists
 #' @noRd
 #'
@@ -1870,19 +1800,46 @@ print.metric_graph_vertex <- function(x, n = 10, ...) {
 
 #' @noRd 
 
-na.const <- function(x){
-  if(!any(is.na(x))){
+# na.const <- function(x){
+#   if(!any(is.na(x))){
+#     return(x)
+#   }
+#   not_na <- which(!is.na(x))
+#   min_nonna <- min(not_na)
+#   max_nonna <- max(not_na)
+#   if(min_nonna > 1){
+#     x[1:(min_nonna-1)] <- x[min_nonna]
+#   }
+#   if(max_nonna < length(x)){
+#     x[(max_nonna+1):length(x)] <- x[max_nonna]
+#   }
+#   return(x)
+# }
+
+na.const <- function(x) {
+  # If no NA values, return as-is
+  if(!any(is.na(x))) {
     return(x)
   }
+  
+  # Check if all values are NA
+  if(all(is.na(x))) {
+    return(x)  # or return a default value depending on your needs
+  }
+  
   not_na <- which(!is.na(x))
   min_nonna <- min(not_na)
   max_nonna <- max(not_na)
-  if(min_nonna > 1){
+  
+  # Safety check for vector creation
+  if(min_nonna > 1 && (min_nonna - 1) < .Machine$integer.max) {
     x[1:(min_nonna-1)] <- x[min_nonna]
   }
-  if(max_nonna < length(x)){
+  
+  if(max_nonna < length(x)) {
     x[(max_nonna+1):length(x)] <- x[max_nonna]
   }
+  
   return(x)
 }
 

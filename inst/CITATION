@@ -70,8 +70,9 @@ bibentry(bibtype = "Article",
                     person("Jonas", "Wallin",
                            email = "jonas.wallin81@gmail.com",
                            role = "aut")),
-         year = "2023",
-         journal = "arXiv preprint arXiv:2304.03190",
+         year = "2025",
+         journal = "Bernoulli",
+         note = "In press",
          doi = "10.48550/arXiv.2304.03190"
 )
 
