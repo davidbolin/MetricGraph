@@ -2,7 +2,9 @@
 title: "Solving PDEs on metric graphs"
 author: "David Bolin"
 date: "Created: 2025-03-10. Last modified: `r Sys.Date()`."
-output: rmarkdown::html_vignette
+#output: rmarkdown::html_vignette
+output: 
+  pdf_document: default
 vignette: >
   %\VignetteIndexEntry{Solving PDEs on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
@@ -124,7 +126,7 @@ graph$plot_function(u,vertex_size=0)
 
 # A problem with a random diffusion coefficient
 
-As a final example, let us consider the problem 
+As another example, let us consider the problem 
 $$
 (\kappa^2 - \nabla\cdot(e^u\nabla)) u = f,
 $$
@@ -161,3 +163,29 @@ u <- solve(L,f)
 graph$plot_function(u,vertex_size=0)
 ```
 
+# Solving a fractional-order PDE using rSPDE
+
+Finally, let us consider solving a fractional-order version of the PDE in the previous example:
+$$
+(\kappa^2 - \nabla\cdot(e^u\nabla))^{\beta} u = f,
+$$
+
+To solve this, we can use the `rSPDE` package, to obtain a rational approximation of the fractional power. Specifically, we use the operator-based approach by [@bolin19](https://www.tandfonline.com/doi/full/10.1080/10618600.2019.1665537), which results in an approximation of the original PDE which is of the form 
+$P_l u(s) = P_r f(s)$,
+where $P_l$ and $P_r$ are non-fractional operators defined in terms of polynomials $p_l$ and $p_r$. The order of $p_r$ is given by $m$ and the order of $p_l$ is $m + m_{\beta}$ where $m_{\beta}$ is the integer part of $\beta$ if $\beta>1$ and $m_{\beta} = 1$ otherwise. 
+
+Having already computed the FEM approximation of the operator $L = \kappa^2 - \nabla\cdot(e^u\nabla)$, we can use the function `fractional.operators` to define the rational approximation. For this we just have to provide the operator, mass matrix, $\beta$, the order of the rational approximation, and a scale factor which is a lower bound for the eigenvalues of $L$. In this case, a lower bound is given by $\kappa^2$.
+
+```{r}
+library(rSPDE)
+beta <- 1.5
+op <- fractional.operators(L, beta, C, scale.factor = kappa^2, m = 1)
+```
+
+We can now solve the problem as follows
+```{r}
+u <- Pl.solve(op, Pr.mult(op, f))
+graph$plot_function(u,vertex_size=0)
+```
+
+## References 
