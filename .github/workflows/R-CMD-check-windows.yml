@@ -60,7 +60,7 @@ jobs:
       - name: Installing rSPDE
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rSPDE")
+          remotes::install_github("davidbolin/rSPDE", ref = "devel")
         shell: Rscript {0}        
       - uses: r-lib/actions/check-r-package@v2
         env:

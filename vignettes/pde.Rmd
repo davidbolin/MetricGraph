@@ -2,9 +2,7 @@
 title: "Solving PDEs on metric graphs"
 author: "David Bolin"
 date: "Created: 2025-03-10. Last modified: `r Sys.Date()`."
-#output: rmarkdown::html_vignette
-output: 
-  pdf_document: default
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Solving PDEs on metric graphs}
   %\VignetteEngine{knitr::rmarkdown}
