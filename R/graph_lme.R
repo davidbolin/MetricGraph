@@ -338,6 +338,30 @@ graph_lme <- function(formula, graph,
         nu <- NULL
       }
 
+      # Determine parameterization from model_options
+      parameterization <- "spde" # default
+      if (!is.null(model_options)) {
+        # Check for matern parameterization indicators
+        matern_params <- c("fix_nu", "fix_sigma", "fix_range", 
+                          "start_nu", "start_sigma", "start_range")
+        if (any(names(model_options) %in% matern_params)) {
+          parameterization <- "matern"
+        }
+      }
+
+      # If nu is provided, add it to model_options with appropriate parameterization
+      if (!is.null(nu)) {
+        if (is.null(model_options)) {
+          model_options <- list()
+        }
+        
+        if (parameterization == "matern") {
+          model_options$fix_nu <- nu
+        } else { # spde parameterization
+          model_options$fix_alpha <- nu + 0.5
+        }
+      }
+
       df_data <- graph$.__enclos_env__$private$data
 
       y_term <- stats::terms(formula)[[2]]
@@ -366,7 +390,7 @@ graph_lme <- function(formula, graph,
                             df_data[[".distance_on_edge"]]),
                             model = rspde_object,
                             repl = df_data[[".group"]],
-                            nu = nu, which_repl = which_repl,
+                            which_repl = which_repl,
                             optim_method = optim_method,
                             data = df_data,
                             use_data_from_graph = FALSE,
