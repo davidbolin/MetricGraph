@@ -91,7 +91,7 @@ $\sigma, \nu$. Here, `sigma` denotes the standard deviation of the field and `nu
 The object `op` contains the matrices needed for evaluating the distribution of the stochastic weights in the FEM approximation. 
 
 Let us simulate the field $u$ at the mesh locations and plot the result:
-```{r, message=FALSE} 
+```{r, message=FALSE , warning=FALSE} 
 u <- simulate(op)
 graph$plot_function(X = u, type = "plotly")
 ```
@@ -120,7 +120,7 @@ can use the `precision()` method on object returned by the `matern.operators()` 
 ```
 
 As an illustration of the model, let us compute the covariance function between the process at $s=(2,0.1)$, that is, the point at edge 2 and distance on edge 0.1, and all the other mesh points. To this end, we can use the helper function `cov_function_mesh` that is contained in the `op` object:
-```{r}
+```{r, message=FALSE, warning=FALSE}
   c_cov <- op$cov_function_mesh(matrix(c(2,0.1),1,2))
   graph$plot_function(c_cov, type = "plotly")
 ```
@@ -166,6 +166,17 @@ Let us obtain a summary of the model:
 summary(fit)
 ```
 
+An improved estimate of the Hessian can be obtained by setting `improve_hessian` to `TRUE`, which improves the precision of the standard errors.
+
+```{r, warning=FALSE, message=FALSE}
+fit <- graph_lme(y ~ x1 + x2, graph = graph, model = "WM", improve_hessian = TRUE)
+```
+
+Let us obtain a summary of the model fitted with the improved Hessian:
+```{r}
+summary(fit)
+```
+
 We can also obtain additional information by using the function `glance()`:
 
 ```{r}
@@ -175,9 +186,9 @@ glance(fit)
 Let us compare the values of the parameters of the latent model with the true ones:
 
 ```{r}    
-print(data.frame(sigma = c(sigma, fit$matern_coeff$random_effects[2]), 
-                   range = c(range, fit$matern_coeff$random_effects[3]),
-                   nu = c(nu, fit$matern_coeff$random_effects[1]),
+print(data.frame(sigma = c(sigma, fit$alt_par_coeff$coeff["sigma"]), 
+                   range = c(range, fit$alt_par_coeff$coeff["range"]),
+                   nu = c(nu, fit$alt_par_coeff$coeff["nu"]),
                    row.names = c("Truth", "Estimates")))
 ```
 
@@ -199,18 +210,60 @@ We will perform kriging with the `predict()` method. To this end, we need to pro
 
 The estimate is shown in the following figure
 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE, warning=FALSE}
   graph$plot_function(as.vector(u.krig$mean))  
 ```
 
 We can also use the `augment()` function to easily plot the predictions. Let us a build a 3d plot now
 and add the observed values on top of the predictions:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 p <- augment(fit, newdata = df_pred, normalized = TRUE) %>% 
           graph$plot_function(data = ".fitted", type = "plotly")
 
 graph$plot(data = "y", p = p, type = "plotly")          
+```
+
+## Further details on `graph_lme`
+
+The `graph_lme` function provides flexibility in model fitting by allowing users to fix certain parameters at specific values or set custom starting values for the optimization process. This can be useful when you have prior knowledge about some parameters or when you want to improve convergence by providing better starting points.
+
+### Fixing parameters
+Parameters can be fixed by using the `model_options` argument with elements of the form `fix_parname = value`, where `parname` is the name of the parameter you want to fix. The parameters that can be fixed in the `model_options` list are:
+
+- `fix_sigma_e`: Fix the standard deviation of the noise parameter $\sigma_\varepsilon$
+- `fix_sigma`: Fix the standard deviation parameter σ
+- `fix_range`: Fix the range parameter
+- `fix_alpha`: Fix the fractional power α
+
+### Setting starting values
+
+Similarly, you can set starting values for parameters using elements of the form `start_parname = value` in the `model_options` list. This is particularly useful when the default starting values might be far from the optimal values, which could lead to slow convergence or convergence to a local minimum.
+
+- `start_sigma_e`: Starting value for the standard deviation of the noise parameter $\sigma_\varepsilon$
+- `start_sigma`: Starting value for the standard deviation parameter σ
+- `start_range`: Starting value for the range parameter
+- `start_alpha`: Starting value for the fractional power α
+
+### Example: Fixing and setting starting values
+
+Let us demonstrate how to use these parameters with a graph model example. We will fix the standard deviation σ to 1 and set the starting value for the range parameter to 0.5, on the previous example.
+
+```{r}
+# Fit model with fixed sigma and start_range
+fit_fixed <- graph_lme(y ~ x1 + x2, graph = graph, model = "WM",
+                      model_options = list(
+                        fix_sigma = 1,      # Fix sigma to 1
+                        start_range = 0.5   # Set starting value for range
+                      ))
+
+# Print summary of the model
+summary(fit_fixed)
+
+# Compare log-likelihoods
+cat("Log-likelihood with fixed sigma:", logLik(fit_fixed), "\n")
+cat("Log-likelihood with all parameters estimated:", logLik(fit), "\n")
+
 ```
 
 ## Fitting a model with replicates
@@ -255,20 +308,7 @@ We can now fit the model in the same way as before by using the `rspde_lme()` fu
 fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", parallel = TRUE)
 ```
 
-Observe that we have received a warning saying that the Hessian was not positive-definite, which ended up creating `NaN`s for the standard errors. Indeed, let us see a summary of the fit:
-
-```{r}
-summary(fit_repl)
-```
-
-Let us, then, follow the suggestion from the warning and refit the model setting `improve_hessian` to `TRUE`. This will obtain a more precise estimate of the Hessian, which can possibly fix this issue:
-
-```{r, warning=FALSE, message=FALSE}
-fit_repl <- graph_lme(y ~ -1, graph = graph, model = "WM", 
-                      parallel = TRUE, improve_hessian = TRUE)
-```
-
-We see that we did not receive any warning now, and the Std. errors were computed accordingly:
+Now, let us see a summary of the fit:
 
 ```{r}
 summary(fit_repl)
@@ -283,15 +323,15 @@ glance(fit_repl)
 Let us compare the values of the parameters of the latent model with the true ones:
 
 ```{r}    
-print(data.frame(sigma = c(sigma, fit_repl$matern_coeff$random_effects[2]), 
-                   range = c(range, fit_repl$matern_coeff$random_effects[3]),
-                   nu = c(nu, fit_repl$matern_coeff$random_effects[1]),
+print(data.frame(sigma = c(sigma, fit_repl$alt_par_coeff$coeff["sigma"]), 
+                   range = c(range, fit_repl$alt_par_coeff$coeff["range"]),
+                   nu = c(nu, fit_repl$alt_par_coeff$coeff["nu"]),
                    row.names = c("Truth", "Estimates")))
 ```
 
 Let us do kriging. We will use the same prediction locations as in the previous example. Let us get prediction for replicate 10, then add the original observations on top of them:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 p <- augment(fit_repl, which_repl = 10, newdata = df_pred, normalized = TRUE) %>% 
           graph$plot_function(data = ".fitted", type = "plotly")
 
@@ -459,7 +499,7 @@ m.prd <- rspde_fitprd$summary.fitted.values$mean[id.prd]
 
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method. 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE}
+```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE, warning=FALSE}
   graph$plot_function(m.prd, type = "plotly")  
 ```
 
@@ -862,7 +902,7 @@ summary(fit)
 
 Let us plot the range parameter along the mesh, so we can see how it is varying:
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 est_range <- exp(B.range[,-1]%*%fit$coeff$random_effects[2:5])
 pems_graph$plot_function(X = est_range, vertex_size = 0, 
                     type = "mapview", mapview_caption = "Range")
@@ -870,7 +910,7 @@ pems_graph$plot_function(X = est_range, vertex_size = 0,
 
 Similarly, we have for sigma:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 est_sigma <- exp(B.sigma[,-1]%*%fit$coeff$random_effects[2:5])
 pems_graph$plot_function(X = est_sigma, vertex_size = 0, 
                     type = "mapview", mapview_caption = "Sigma")
@@ -896,9 +936,59 @@ est_std_dev <- sqrt(Matrix::diag(est_cov_matrix))
 
 We can now plot:
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 pems_graph$plot_function(X = est_std_dev, vertex_size = 0, 
           type = "mapview", mapview_caption = "Std. dev")
+```
+
+
+### Fixing parameters in non-stationary models
+
+In non-stationary models, the parameters are labeled as theta1, theta2, etc., corresponding to the coefficients in the B matrices. Similar to the stationary case, we can fix individual parameters or set starting values, but these options must be set in the `model_options` list argument using `fix_theta1`, `fix_theta2`, etc., or `start_theta1`, `start_theta2`, etc.
+
+For example, if we want to fix the first coefficient theta1 to 0 in the previous example:
+
+```{r}
+# Fit model with fixed theta1 parameter
+fit_ns_fixed_theta1 <- graph_lme(y ~ cov_obs, 
+                               graph = pems_graph, 
+                               model = list(type = "WhittleMatern", 
+                                          B.sigma = B.sigma, 
+                                          B.range = B.range, 
+                                          fem = TRUE),
+                               model_options = list(fix_theta1 = 0.5))  # Fix theta1 to 0.5
+
+summary(fit_ns_fixed_theta1)
+```
+
+We can also fix the entire theta vector at once using the `fix_theta` parameter. This is particularly useful when we have strong prior knowledge about all the parameters:
+
+```{r}
+# Fit model with all theta parameters fixed
+fit_ns_fixed_all <- graph_lme(y ~ cov_obs, 
+                            graph = pems_graph, 
+                            model = list(type = "WhittleMatern", 
+                                       B.sigma = B.sigma, 
+                                       B.range = B.range, 
+                                       fem = TRUE),
+                            model_options = list(fix_theta = c(0.5, 0.8, 1.2, 0.3)))  # Fix the entire theta vector
+
+summary(fit_ns_fixed_all)
+```
+
+Similarly, we can provide starting values for the entire theta vector with `start_theta`:
+
+```{r}
+# Fit model with starting values for theta parameters
+fit_ns_start <- graph_lme(y ~ cov_obs, 
+                        graph = pems_graph, 
+                        model = list(type = "WhittleMatern", 
+                                   B.sigma = B.sigma, 
+                                   B.range = B.range, 
+                                   fem = TRUE),
+                        model_options = list(start_theta = c(0.4, 0.7, 1.0, 0.2)))  # Starting values for theta vector
+
+summary(fit_ns_start)
 ```
 
 ### Fitting the inlabru rSPDE model
