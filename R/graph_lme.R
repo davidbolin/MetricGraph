@@ -1090,6 +1090,26 @@ graph_lme <- function(formula, graph,
   coeff_meas <- tmp_coeff[1]
   names(coeff_meas) <- "std. dev"
 
+  # Add " (fixed)" to parameter names that are fixed
+  if (!is.null(fix_vec) && length(fix_vec) > 0) {
+    # Handle measurement error parameter (coeff_meas)
+    if (fix_vec[1]) {
+      names(coeff_meas) <- paste0(names(coeff_meas), " (fixed)")
+    }
+    
+    # Handle random effect parameters (coeff_random)
+    if (length(fix_vec) > 1 && length(coeff_random) > 0) {
+      fixed_random <- fix_vec[2:(1+length(coeff_random))]
+      if (length(fixed_random) == length(coeff_random)) {
+        for (i in 1:length(coeff_random)) {
+          if (fix_vec[i+1]) {
+            names(coeff_random)[i] <- paste0(names(coeff_random)[i], " (fixed)")
+          }
+        }
+      }
+    }
+  }
+
   std_meas <- std_err[1]
 
   coeff_fixed <- NULL
@@ -1178,6 +1198,8 @@ graph_lme <- function(formula, graph,
   object$time_par <- time_par
   object$start_values <- start_values
   object$fixed_values <- fixed_values
+  object$fix_vec <- fix_vec
+  object$fix_v_val <- fix_v_val
   if(!is.null(graph_bkp$res_dist)){
     object$euclidean <- attr(graph_bkp$res_dist[[".complete"]], "euclidean")
   }
