@@ -134,6 +134,9 @@ graph_lme <- function(formula, graph,
             model_type
             )
 
+  fix_vec <- NULL
+  fix_v_val <- NULL
+
   start_previous <- NULL     
   par_vec <- FALSE
 
