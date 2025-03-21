@@ -554,7 +554,7 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
       v <- y_
 
       if(ncol(X_cov) != 0){
-        X_cov_tmp <- X_cov_tmp[!na_obs, ]
+        X_cov_tmp <- X_cov_tmp[!na_obs, , drop=FALSE]
         v <- v - X_cov_tmp %*% theta[4:(3+ncol(X_cov))]
       }
 
