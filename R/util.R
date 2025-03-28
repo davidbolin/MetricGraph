@@ -386,7 +386,7 @@ graph_starting_values <- function(graph,
       }
 
     } else {
-      # If not sf format, assume it’s a standard list and compute Euclidean distances
+      # If not sf format, assume it's a standard list and compute Euclidean distances
       min_x <- bounding_box$min_x
       max_x <- bounding_box$max_x
       min_y <- bounding_box$min_y
@@ -732,6 +732,35 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   new_data[[".edge_number"]] <- PtE[, 1]
   new_data[[".distance_on_edge"]] <- PtE[, 2]
 
+  # Store factor metadata for ALL factors
+  factor_metadata <- list()
+  
+  # Collect factor info from new_data
+  for (col in names(new_data)) {
+    if (is.factor(new_data[[col]])) {
+      # Store the original factor values as character to preserve them exactly
+      factor_metadata[[col]] <- list(
+        values = as.character(new_data[[col]]),
+        levels = levels(new_data[[col]])
+      )
+      # Convert to character for merging to avoid level issues
+      new_data[[col]] <- as.character(new_data[[col]])
+    }
+  }
+  
+  # Collect factor info from old_data too
+  if (!is.null(old_data)) {
+    for (col in names(old_data)) {
+      if (is.factor(old_data[[col]]) && !(col %in% names(factor_metadata))) {
+        factor_metadata[[col]] <- list(
+          levels = levels(old_data[[col]])
+        )
+        # Convert to character for merging
+        old_data[[col]] <- as.character(old_data[[col]])
+      }
+    }
+  }
+
   # Ensure group_vector is initialized correctly
   if (is.null(group_vector)) {
     group_vector <- if (!is.null(old_data)) {
@@ -807,8 +836,31 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   list_result[[".distance_on_edge"]] <- data_coords$PtE2
   list_result[[".group"]] <- data_coords$group
 
+  # Restore ALL factors with their original levels
+  for (col_name in names(factor_metadata)) {
+    if (col_name %in% names(list_result)) {
+      original_levels <- factor_metadata[[col_name]]$levels
+      
+      # Get current values in the result
+      current_values <- unique(as.character(list_result[[col_name]][!is.na(list_result[[col_name]])]))
+      
+      # Check for new values not in original levels
+      new_values <- setdiff(current_values, original_levels)
+      
+      if (length(new_values) > 0 && !suppress_warnings) {
+        warning(sprintf("Column '%s' contains values not in original factor levels: %s. These have been added as new levels.",
+                      col_name, paste(new_values, collapse = ", ")))
+      }
+      
+      # Create factor with all necessary levels, preserving original order
+      all_levels <- c(original_levels, new_values)
+      list_result[[col_name]] <- factor(list_result[[col_name]], levels = all_levels)
+    }
+  }
+
   return(list_result)
 }
+
 #' find indices of the rows with all NA's in lists
 #' @noRd
 #'
