@@ -83,7 +83,7 @@
 Alexandre B. Simas</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2025-03-21.</h4>
+modified: 2025-03-28.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
@@ -360,8 +360,8 @@ exposure terms</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.500034 0.0170456   0.467194 0.499831   0.534115 0.499533</span></span>
-<span><span class="co">## range   2.180270 0.1628220   1.878200 2.174120   2.517350 2.162130</span></span></code></pre>
+<span><span class="co">## std.dev 0.483559 0.0169498    0.45103 0.483307   0.517582 0.482865</span></span>
+<span><span class="co">## range   2.168990 0.1814020    1.83326 2.162270   2.545290 2.149350</span></span></code></pre>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -377,8 +377,8 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.5000337 0.4995332</span></span>
-<span><span class="co">## 2     range  2.0 2.1802663 2.1621306</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4835589 0.4828649</span></span>
+<span><span class="co">## 2     range  2.0 2.1689874 2.1493523</span></span></code></pre>
 <div class="section level3">
 <h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h3>
