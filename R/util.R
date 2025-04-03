@@ -2346,3 +2346,26 @@ construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree
 
   return(C)
 }
+
+#' Compare values with proper NA handling in a vectorized way
+#' 
+#' @param x First value or vector/matrix
+#' @param y Second value or vector/matrix
+#' @param is_matrix Whether the input should be treated as a matrix
+#' @return Logical vector indicating if values are different (FALSE means same)
+#' @noRd
+compare_with_na <- function(x, y, is_matrix = FALSE) {
+  # Create temporary copies with NA replaced by a unique placeholder
+  x_copy <- x
+  y_copy <- y
+  
+  x_copy[is.na(x_copy)] <- ".dummy_na_val"
+  y_copy[is.na(y_copy)] <- ".dummy_na_val"
+  
+  if (!is_matrix) {
+    return(x_copy != y_copy)
+  } else {
+    # For matrices, each row must have all columns matching
+    return(rowSums(x_copy != y_copy) == ncol(x_copy))
+  }
+}

@@ -2329,20 +2329,30 @@ metric_graph <-  R6Class("metric_graph",
         # Check weight compatibility in a vectorized way
         if (is.vector(private$edge_weights)) {
           # Create temporary copies with NA replaced by a unique placeholder
-          edge_weights_copy <- private$edge_weights
-          edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
+          # edge_weights_copy <- private$edge_weights
+          # edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
 
           # Compare the edges normally, treating NA == NA as TRUE via the placeholder
-          cnd_tmp <- edge_weights_copy[edges_tmp[, 1]] != edge_weights_copy[edges_tmp[, 2]]
+          # cnd_tmp <- edge_weights_copy[edges_tmp[, 1]] != edge_weights_copy[edges_tmp[, 2]]          
+          # Compare the edges normally, treating NA == NA as TRUE via the placeholder
+          cnd_tmp <- compare_with_na(
+            private$edge_weights[edges_tmp[, 1]], 
+            private$edge_weights[edges_tmp[, 2]]
+          )
         } else {
           # For matrices, replace NA with a unique placeholder in a temporary copy
-          edge_weights_copy <- private$edge_weights
-          edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
+          # edge_weights_copy <- private$edge_weights
+          # edge_weights_copy[is.na(edge_weights_copy)] <- ".dummy_na_val"
 
           # Perform row-wise comparison, each row must have all columns matching
-          cnd_tmp <- rowSums(
-            edge_weights_copy[edges_tmp[, 1], , drop = FALSE] != edge_weights_copy[edges_tmp[, 2], , drop = FALSE]
-          ) == ncol(edge_weights_copy)
+          # cnd_tmp <- rowSums(
+          #   edge_weights_copy[edges_tmp[, 1], , drop = FALSE] != edge_weights_copy[edges_tmp[, 2], , drop = FALSE]
+          # ) == ncol(edge_weights_copy)
+          cnd_tmp <- compare_with_na(
+            private$edge_weights[edges_tmp[, 1], , drop = FALSE],
+            private$edge_weights[edges_tmp[, 2], , drop = FALSE],
+            is_matrix = TRUE
+          )
         }
 
         # Update problematic_weights vector based on the results
@@ -7001,12 +7011,16 @@ return(mapview_output)
           self$nE <- self$nE - 1
 
           if(is.vector(private$edge_weights)){
-            if(private$edge_weights[e_rem[2]] != private$edge_weights[e_rem[1]]){
+            # if(private$edge_weights[e_rem[2]] != private$edge_weights[e_rem[1]]){
+            if(compare_with_na(private$edge_weights[e_rem[2]], private$edge_weights[e_rem[1]])){
                 private$prune_warning <- TRUE
             }
             private$edge_weights <- private$edge_weights[-e_rem[2]]
           } else{
-            if(any(private$edge_weights[e_rem[2],,drop=FALSE] != private$edge_weights[e_rem[1],,drop=FALSE])){
+            # if(any(private$edge_weights[e_rem[2],,drop=FALSE] != private$edge_weights[e_rem[1],,drop=FALSE])){
+            if(compare_with_na(private$edge_weights[e_rem[2],,drop=FALSE], 
+                              private$edge_weights[e_rem[1],,drop=FALSE],
+                              is_matrix = TRUE)){
                 private$prune_warning <- TRUE
             }
             private$edge_weights <- private$edge_weights[-e_rem[2],,drop=FALSE]
