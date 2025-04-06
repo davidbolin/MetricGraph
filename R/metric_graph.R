@@ -4676,6 +4676,12 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
     }
   }, 
 
+  #' @description Get the version of MetricGraph package used to build the graph
+  #' @return A character string with the version number
+  get_version = function() {
+    return(private$version)
+  },
+
   #' @description Build mass and stiffness matrices for given mesh object.
   #' @details The function builds: The matrix `C` which is the mass matrix with
   #' elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix `G` which is the stiffness
@@ -7297,6 +7303,10 @@ format_data = function(data_res, format) {
   # Initial graph
 
   initial_graph = NULL,
+
+  # Version of MetricGraph package used to build the graph
+  
+  version = as.character(utils::packageVersion("MetricGraph")),
 
   # pruned
 
