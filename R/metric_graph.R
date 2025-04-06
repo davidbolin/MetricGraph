@@ -2987,6 +2987,26 @@ metric_graph <-  R6Class("metric_graph",
     removed_data <- NULL
     strc_data <- FALSE
 
+    if(data_coords == "spatial" && 
+       !inherits(data, "sf") && 
+       !inherits(data, "metric_graph_data") && 
+       !"SpatialPointsDataFrame" %in% is(data) && 
+       !is.null(private$crs)) {
+      
+      if(!is.null(data[[coord_x]]) && !is.null(data[[coord_y]])) {
+        warning("The crs of the data is not set, the data will be assumed to be in the same crs as the graph.")
+        
+        # Create sf object from the data
+        data_df <- as.data.frame(data)
+        data <- sf::st_as_sf(data_df, 
+                               coords = c(coord_x, coord_y), 
+                               crs = private$crs)
+        
+      } else{
+        stop("`coord_x` and `coord_y` must be columns of the data when `data_coords` is 'spatial'.")
+      }
+    }
+
     if(inherits(data, "sf")){
       if(!inherits(data, "data.frame")){
         stop("No data was found in 'data'")
@@ -2998,6 +3018,9 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(private$crs)){
         if(!is.na((sf::st_crs(data)))){
           data <- sf::st_transform(data, crs = private$crs)
+        } else{
+          warning("The crs of the data is not set, the data will be assumed to be in the same crs as the graph.")
+          data <- sf::st_set_crs(data, private$crs)
         }
       }
       coord_tmp <- sf::st_coordinates(data,geometry)
@@ -3014,6 +3037,9 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(private$proj4string)){
         if(!is.na(sp::proj4string(data))){
           data <- sp::spTransform(data,sp::CRS(private$proj4string))
+        } else {
+          warning("The crs of the data is not set, the data will be assumed to be in the same crs as the graph.")
+          sp::proj4string(data) <- private$proj4string
         }
       }
       coord_tmp <- data@coords
@@ -3452,6 +3478,26 @@ metric_graph <-  R6Class("metric_graph",
     far_data <- NULL
     strc_data <- FALSE
 
+    if(data_coords == "spatial" && 
+       !inherits(data, "sf") && 
+       !inherits(data, "metric_graph_data") && 
+       !"SpatialPointsDataFrame" %in% is(data) && 
+       !is.null(private$crs)) {
+      
+      if(!is.null(data[[coord_x]]) && !is.null(data[[coord_y]])) {
+        warning("The crs of the data is not set, the data will be assumed to be in the same crs as the graph.")
+        
+        # Create sf object from the data
+        data_df <- as.data.frame(data)
+        data <- sf::st_as_sf(data_df, 
+                               coords = c(coord_x, coord_y), 
+                               crs = private$crs)
+        
+      } else{
+        stop("`coord_x` and `coord_y` must be columns of the data when `data_coords` is 'spatial'.")
+      }
+    }
+
     if(inherits(data, "sf")){
       if(!inherits(data, "data.frame")){
         stop("No data was found in 'data'")
@@ -3463,6 +3509,9 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(private$crs)){
         if(!is.na((sf::st_crs(data)))){
           data <- sf::st_transform(data, crs = private$crs)
+        } else{
+          warning("The crs of the data is not set, the data will be assumed to be in the same crs as the graph.")
+          data <- sf::st_set_crs(data, private$crs)
         }
       }
       coord_tmp <- sf::st_coordinates(data,geometry)
@@ -3479,6 +3528,9 @@ metric_graph <-  R6Class("metric_graph",
       if(!is.null(private$proj4string)){
         if(!is.na(sp::proj4string(data))){
           data <- sp::spTransform(data,sp::CRS(private$proj4string))
+        } else {
+          warning("The crs of the data is not set, the data will be assumed to be in the same crs as the graph.")
+          sp::proj4string(data) <- private$proj4string
         }
       }
       coord_tmp <- data@coords

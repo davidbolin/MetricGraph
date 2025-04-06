@@ -367,22 +367,37 @@ graph_lme <- function(formula, graph,
 
       df_data <- graph$.__enclos_env__$private$data
 
+      # First extract the response variable
       y_term <- stats::terms(formula)[[2]]
-
+      response_var <- as.character(y_term)
+      
+      # Get all variables from formula, including those inside transformations like log(), etc.
+      all_vars <- all.vars(formula)
+      
+      # Filter df_data to include only formula-relevant columns before processing with stats functions
+      # Add necessary positional variables that need to be preserved
+      positional_vars <- c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y")
+      
+      # Combine all needed variables
+      names_temp <- c(all_vars, positional_vars)
+      
+      # Filter df_data to keep only the needed columns
+      filtered_data <- list()
+      for (name in names_temp) {
+        if (!is.null(df_data[[name]])) {
+          filtered_data[[name]] <- df_data[[name]]
+        }
+      }
+      df_data <- filtered_data
+      
+      # Now process with stats functions using the filtered data
       cov_term <- stats::delete.response(terms(formula))
-
       X_cov <- stats::model.matrix(cov_term, df_data)
-
+      
       cov_names <- NULL
-
       if(!is.null(X_cov)){
         cov_names <- attr(cov_term, "term.labels")
       }
-
-      names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
-
-      df_data <- lapply(names_temp, function(i){df_data[[i]]})
-      names(df_data) <- names_temp
 
       idx_notanyNA <- idx_not_any_NA(df_data)
 
