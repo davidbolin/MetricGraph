@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_inference.R
 \name{posterior_crossvalidation}
 \alias{posterior_crossvalidation}
-\title{Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
+\title{Leave-one-out pseudo-crossvalidation for \code{graph_lme} models assuming observations at
 the vertices of metric graphs}
 \usage{
 posterior_crossvalidation(object, factor = 1, tibble = TRUE)
@@ -21,6 +21,8 @@ negatively oriented proper scoring rules: log-score, CRPS, and scaled
 CRPS.
 }
 \description{
-Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
-the vertices of metric graphs
+This function performs pseudo-crossvalidation by computing leave-one-out predictions
+using the posterior distribution from a fitted model. In pseudo-crossvalidation,
+the model parameters are kept fixed at the values estimated from the full dataset
+(those provided in the object), rather than re-estimating them for each fold.
 }
