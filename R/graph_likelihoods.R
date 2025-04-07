@@ -732,22 +732,23 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       if(attr(R, "rank") < dim(R)[1])
         return(-Inf)
         
-      Sigma_iB <- t(Bt)
-      Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
-                                          base::backsolve(R, t(Bt[, attr(R,"pivot")]),
-                                          transpose = TRUE), upper.tri = TRUE)
+      Sigma_iB <- base::forwardsolve(R, base::backsolve(R, t(Bt)))
       
       BtSinvB <- Bt %*% Sigma_iB
 
       E <- graph$E[e, ]
       if (E[1] == E[2]) {
-        Qpmu[E[1]] <- Qpmu[E[1]] + sum(t(Sigma_iB) %*% y_i)
+        # Pre-compute matrix product
+        y_Sigma_iB <- sum(as.vector(t(Sigma_iB) %*% y_i))
+        Qpmu[E[1]] <- Qpmu[E[1]] + y_Sigma_iB
         i_[count + 1] <- E[1]
         j_[count + 1] <- E[1]
         x_[count + 1] <- sum(BtSinvB)
         count <- count + 1
       } else {
-        Qpmu[E] <- Qpmu[E] + t(Sigma_iB) %*% y_i
+        # Pre-compute matrix product
+        y_prod <- as.vector(t(Sigma_iB) %*% y_i)
+        Qpmu[E] <- Qpmu[E] + y_prod
         
         # More efficient indexing of arrays
         idx <- count + 1:4
