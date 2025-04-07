@@ -728,11 +728,9 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-      R <- base::chol(Sigma_i, pivot = TRUE)
-      if(attr(R, "rank") < dim(R)[1])
-        return(-Inf)
+      R <- base::chol(Sigma_i)
         
-      Sigma_iB <- base::forwardsolve(R, base::backsolve(R, t(Bt)))
+      Sigma_iB <- backsolve(R, forwardsolve(t(R), t(Bt)))
       
       BtSinvB <- Bt %*% Sigma_iB
 
