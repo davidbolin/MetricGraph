@@ -193,14 +193,8 @@ likelihood_alpha1_directional <- function(theta,
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-      R <- base::chol(Sigma_i, pivot = TRUE)
-      if(attr(R, "rank") < dim(R)[1])
-        return(-Inf)
-        
-      Sigma_iB <- t(Bt)
-      Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
-                                          base::backsolve(R, t(Bt[, attr(R,"pivot")]),
-                                          transpose = TRUE), upper.tri = TRUE)
+      R <- base::chol(Sigma_i)
+      Sigma_iB <- backsolve(R, forwardsolve(t(R), t(Bt)))
 
       BtSinvB <- Bt %*% Sigma_iB
 
@@ -307,10 +301,8 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   # Build Q matrix once
   Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                       alpha = 2, graph = graph, BC=BC)
-  TcQ <- Tc %*% Q
   
-  # Efficiently compute Cholesky factorization 
-  R <- Matrix::Cholesky(forceSymmetric(TcQ %*% t(Tc)),
+  R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
                         LDL = FALSE, perm = TRUE)
 
   PtE <- graph$get_PtE()
@@ -395,14 +387,10 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         if(attr(R_i, "rank") < dim(R_i)[1])
           return(-Inf)
 
-        # Store pivot for reuse  
-        pivot <- attr(R_i, "pivot")
-        Bt_pivot <- t(Bt[, pivot])
         Sigma_iB <- t(Bt)
-        
-        # Compute backsolve once
-        backsolve_result <- base::backsolve(R_i, Bt_pivot, transpose = TRUE)
-        Sigma_iB[pivot,] <- base::forwardsolve(R_i, backsolve_result, upper.tri = TRUE)
+        Sigma_iB[attr(R_i,"pivot"),] <- base::forwardsolve(R_i,
+                                            base::backsolve(R_i, t(Bt[, attr(R_i,"pivot")]),
+                                            transpose = TRUE), upper.tri = TRUE)
 
         BtSinvB <- Bt %*% Sigma_iB
 
