@@ -193,10 +193,17 @@ likelihood_alpha1_directional <- function(theta,
       Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-      R <- base::chol(Sigma_i)
-      Sigma_iB <- solve(Sigma_i, t(Bt))
-      BtSinvB <- Bt %*% Sigma_iB
+      R <- base::chol(Sigma_i, pivot = TRUE)
+      if(attr(R, "rank") < dim(R)[1])
+        return(-Inf)
+        
+      Sigma_iB <- t(Bt)
+      Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
+                                          base::backsolve(R, t(Bt[, attr(R,"pivot")]),
+                                          transpose = TRUE), upper.tri = TRUE)
 
+      BtSinvB <- Bt %*% Sigma_iB
+      
       E <- graph$E[e, ]
       if (E[1] == E[2]) {
         Qpmu[2*(e-1)+1] <- Qpmu[2*(e-1)+1] + sum(t(Sigma_iB) %*% y_i)
