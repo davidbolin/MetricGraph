@@ -643,44 +643,43 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   }
   n.o <- sum(ind_repl)
 
-  for(repl_y in 1:length(u_repl)){
+  # Cache some values used in the loop
+  nV <- nrow(graph$V)
+  
+  for(repl_y in seq_along(u_repl)){
     loglik <- loglik + det_R
     count <- 0
-    Qpmu <- rep(0, nrow(graph$V))
+    Qpmu <- numeric(nV)
+    
+    # Pre-compute replicate membership only once
+    curr_repl <- u_repl[repl_y]
+    ind_repl_curr <- (repl_vec == curr_repl)
+    
     for (e in obs.edges) {
-      ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
+      # Use pre-computed replicate indices
       obs.id <- PtE[,1] == e
-      y_i <- y_resp[ind_repl]
-      y_i <- y_i[obs.id]
+      
+      # More efficient indexing
+      y_i <- y_resp[ind_repl_curr][obs.id]
+      
       idx_na <- is.na(y_i)
-      y_i <- y_i[!idx_na]
-
       if(sum(!idx_na) == 0){
         next
       }
-
-      #   if(covariates){ #obsolete
-      #     n_cov <- ncol(graph$covariates[[1]])
-      #     if(length(graph$covariates)==1){
-      #     X_cov <- graph$covariates[[1]]
-      #     } else if(length(graph$covariates) == ncol(graph$.__enclos_env__$private$data[[data_name]])){
-      #       X_cov <- graph$covariates[[repl_y]]
-      #     } else{
-      #       stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-      #     }
-      #   X_cov <- X_cov[obs.id,]
-      #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
-      # }
+      
+      y_i <- y_i[!idx_na]
 
       if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{
-            X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
-            X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
-            X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
-            y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
+            # Use pre-computed indices
+            X_cov_repl <- X_cov[ind_repl_curr, , drop=FALSE]
+            X_cov_repl <- X_cov_repl[obs.id, , drop=FALSE]
+            X_cov_repl <- X_cov_repl[!idx_na, , drop=FALSE]
+            # Direct matrix multiplication
+            y_i <- y_i - as.vector(X_cov_repl %*% theta[4:(3+n_cov)])
           }
       }
 
@@ -689,8 +688,11 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       PtE_temp <- PtE[obs.id, 2]
       PtE_temp <- PtE_temp[!idx_na]
 
-      D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
+      # Compute distance efficiently
+      D_vec <- c(0, l, l*PtE_temp)
+      D_matrix <- as.matrix(dist(D_vec))
 
+      # Pre-compute S matrix
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
 
       #covariance update see Art p.17
@@ -714,22 +716,35 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
       E <- graph$E[e, ]
       if (E[1] == E[2]) {
-        Qpmu[E[1]] <- Qpmu[E[1]] + sum(t(Sigma_iB) %*% y_i)
+        # Pre-compute matrix product
+        y_Sigma_iB <- sum(as.vector(t(Sigma_iB) %*% y_i))
+        Qpmu[E[1]] <- Qpmu[E[1]] + y_Sigma_iB
         i_[count + 1] <- E[1]
         j_[count + 1] <- E[1]
-        x_[count + 1] <- sum(Bt %*% Sigma_iB)
+        x_[count + 1] <- sum(BtSinvB)
+        count <- count + 1
       } else {
-        Qpmu[E] <- Qpmu[E] + t(Sigma_iB) %*% y_i
-        i_[count + (1:4)] <- c(E[1], E[1], E[2], E[2])
-        j_[count + (1:4)] <- c(E[1], E[2], E[1], E[2])
-        x_[count + (1:4)] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
-                               BtSinvB[1, 2], BtSinvB[2, 2])
+        # Pre-compute matrix product
+        y_prod <- as.vector(t(Sigma_iB) %*% y_i)
+        Qpmu[E] <- Qpmu[E] + y_prod
+        
+        # More efficient indexing of arrays
+        idx <- count + 1:4
+        i_[idx] <- c(E[1], E[1], E[2], E[2])
+        j_[idx] <- c(E[1], E[2], E[1], E[2])
+        x_[idx] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
+                           BtSinvB[1, 2], BtSinvB[2, 2])
         count <- count + 4
       }
 
-      loglik <- loglik - 0.5 * t(y_i) %*% solve(Sigma_i, y_i)
-      loglik <- loglik - sum(log(diag(R)))
-
+      # Compute log determinant only once 
+      log_det <- sum(log(diag(R)))
+      
+      # Avoid matrix inversion by using the Cholesky factor directly
+      v_i <- backsolve(R, forwardsolve(t(R), y_i))
+      quad_form <- sum(y_i * v_i)
+      
+      loglik <- loglik - 0.5 * quad_form - log_det
     }
 
     if(is.null(det_R_count)){
