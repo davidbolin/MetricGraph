@@ -525,25 +525,25 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 #' @param repl replicates to be considered
 #' @return A list with precomputed data that can be passed to likelihood_alpha2_precompute
 #' @noRd
-precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL, 
+precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
                               X_cov = NULL, repl = NULL) {
-  
+
   # Ensure we have alpha=2 basis construction
   if(is.null(graph$C)){
     graph$buildC(2)
   } else if(graph$CoB$alpha == 1){
     graph$buildC(2)
   }
-  
+
   # Get replication data
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
-  
+
   if(is.null(repl)){
     u_repl <- unique(repl_vec)
   } else{
     u_repl <- unique(repl)
   }
-  
+
   # Get response data
   if(is.null(manual_y)){
     y <- graph$.__enclos_env__$private$data[[data_name]]
@@ -552,20 +552,20 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
   } else{
     stop("Either data_name or manual_y must be not NULL")
   }
-  
+
   # Get observation points
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
-  
+
   # Precalculate constants
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const, ]
-  
+
   # Cache edge lengths
   edge_lengths <- graph$edge_lengths
   n_edges <- nrow(graph$E)
-  
+
   # Initialize precomputed data structure
   precomputed <- list()
   precomputed$graph <- graph
@@ -576,23 +576,23 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
   precomputed$Tc <- Tc
   precomputed$n_edges <- n_edges
   precomputed$edge_lengths <- edge_lengths
-  
+
   # Precompute data for each replicate
   precomputed$y_data <- list()
   precomputed$x_data <- list()
   precomputed$D_data <- list()
   precomputed$t_data <- list()
-  
+
   for(i in seq_along(u_repl)) {
     curr_repl <- u_repl[i]
     repl_indices <- (repl_vec == curr_repl)
     y_rep <- y[repl_indices]
-    
+
     precomputed$y_data[[i]] <- list()
     precomputed$x_data[[i]] <- list()
     precomputed$D_data[[i]] <- list()
     precomputed$t_data[[i]] <- list()
-    
+
     # Process X_cov if provided
     if(!is.null(X_cov)){
       n_cov <- ncol(X_cov)
@@ -600,12 +600,12 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
         X_cov_rep <- X_cov[repl_indices, , drop=FALSE]
       }
     }
-    
+
     for(j in seq_along(obs.edges)) {
       e <- obs.edges[j]
       obs.id <- PtE[,1] == e
       y_i <- y_rep[obs.id]
-      
+
       # Skip if no observations
       if(length(y_i) == 0) {
         precomputed$y_data[[i]][[j]] <- NULL
@@ -614,28 +614,28 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
         precomputed$t_data[[i]][[j]] <- NULL
         next
       }
-      
+
       # Store y data
       precomputed$y_data[[i]][[j]] <- y_i
-      
+
       # Store X data if present
       if(!is.null(X_cov) && ncol(X_cov) > 0){
         X_cov_e <- X_cov_rep[obs.id, , drop=FALSE]
         precomputed$x_data[[i]][[j]] <- X_cov_e
       }
-      
+
       # Get edge length
       l <- edge_lengths[e]
-      
+
       # Compute and store time points and distance matrix
       t <- c(0, l, l*PtE[obs.id, 2])
       precomputed$t_data[[i]][[j]] <- t
-      
+
       D <- outer(t, t, `-`)
       precomputed$D_data[[i]][[j]] <- D
     }
   }
-  
+
   return(precomputed)
 }
 
@@ -648,7 +648,7 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 #' @return The log-likelihood
 #' @noRd
 likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parameterization = "matern") {
-  
+
   # Extract precomputed data
   graph <- precomputed_data$graph
   u_repl <- precomputed_data$u_repl
@@ -658,7 +658,7 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
   Tc <- precomputed_data$Tc
   n_edges <- precomputed_data$n_edges
   edge_lengths <- precomputed_data$edge_lengths
-  
+
   # Extract parameters
   sigma_e <- exp(theta[1])
   reciprocal_tau <- exp(theta[2])
@@ -667,43 +667,43 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
   } else{
     kappa = exp(theta[3])
   }
-  
+
   # Build Q matrix once
   Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                      alpha = 2, graph = graph, BC=BC)
-  
+
   R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
                        LDL = FALSE, perm = TRUE)
-  
+
   # Get determinant once
   loglik <- 0
   det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
   det_R_count <- NULL
-  
+
   # Process each replicate
   for(i in seq_along(u_repl)) {
     loglik <- loglik + det_R
-    
+
     # Pre-allocate with exact size needed
     Qpmu <- numeric(4 * n_edges)
-    
+
     # Pre-allocate with maximum size needed
     max_entries <- 16 * length(obs.edges)
     i_ <- j_ <- x_ <- numeric(max_entries)
     count <- 0
-    
+
     # Process each edge
     for(j in seq_along(obs.edges)) {
       e <- obs.edges[j]
-      
+
       # Get data for this edge
       y_i <- precomputed_data$y_data[[i]][[j]]
-      
+
       # Skip if no observations
       if(is.null(y_i) || length(y_i) == 0) {
         next
       }
-      
+
       # Handle covariates if present
       if(!is.null(precomputed_data$x_data) && !is.null(precomputed_data$x_data[[i]][[j]])) {
         X_cov_e <- precomputed_data$x_data[[i]][[j]]
@@ -712,15 +712,15 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
           y_i <- y_i - as.vector(X_cov_e %*% theta[4:(3+n_cov)])
         }
       }
-      
+
       # Get precomputed distance data
       t <- precomputed_data$t_data[[i]][[j]]
       D <- precomputed_data$D_data[[i]][[j]]
-      
+
       # Pre-allocate matrix
       n_pts <- length(t)
       S <- matrix(0, n_pts + 2, n_pts + 2)
-      
+
       # Compute all submatrices
       d.index <- c(1,2)
       S[-d.index, -d.index] <- r_2(D, kappa = kappa,
@@ -731,58 +731,58 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
                                  tau = 1/reciprocal_tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
-      
+
       # Covariance updates
       E.ind <- c(1:4)
       Obs.ind <- -E.ind
       Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind, drop = FALSE])
       Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-      
+
       # Cache Cholesky decomposition
       R_i <- base::chol(Sigma_i)
-      
+
       Sigma_iB <- backsolve(R_i, forwardsolve(t(R_i), t(Bt)))
-      
+
       BtSinvB <- Bt %*% Sigma_iB
-      
+
       E <- graph$E[e, ]
       if (E[1] == E[2]) {
         warning("Circle not implemented")
       }
-      
+
       BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
       Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
         (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
-      
+
       # Efficiently set up precision matrix entries
       # lower edge precision u
       idx_offset <- count
-      
+
       # Create indices for all 16 entries at once
       pair_indices <- expand.grid(1:4, 1:4)
       for(idx in 1:16) {
         row_idx <- pair_indices[idx, 1]
         col_idx <- pair_indices[idx, 2]
-        
+
         # Map to actual matrix indices
         i_[idx_offset + idx] <- 4 * (e - 1) + row_idx
         j_[idx_offset + idx] <- 4 * (e - 1) + col_idx
-        
+
         # Map to correct positions in BtSinvB
         x_[idx_offset + idx] <- BtSinvB[row_idx, col_idx]
       }
-      
+
       count <- count + 16
-      
+
       # Compute quadratic form directly with Cholesky
       v_i <- backsolve(R_i, forwardsolve(t(R_i), y_i))
       quad_form <- sum(y_i * v_i)
-      
+
       # Update log likelihood
       loglik <- loglik - 0.5 * quad_form - sum(log(diag(R_i)))
     }
-    
+
     if(is.null(det_R_count)){
       i_ <- i_[1:count]
       j_ <- j_[1:count]
@@ -796,18 +796,18 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
       det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
     }
-    
+
     loglik <- loglik - det_R_count
-    
+
     v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu, system = 'P'),
                                      system='L')))
-    
+
     # Count observations for this replicate
     n_obs <- sum(sapply(precomputed_data$y_data[[i]], function(x) if(is.null(x)) 0 else length(x)))
-    
+
     loglik <- loglik + 0.5 * t(v) %*% v - 0.5 * n_obs * log(2 * pi)
   }
-  
+
   return(as.numeric(loglik))
 }
 
@@ -1095,7 +1095,28 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   return(loglik[1])
 }
 
-
+#' Precompute Components for the Alpha=1 Likelihood Calculation
+#'
+#' This function precomputes various components needed to efficiently compute the log-likelihood
+#' for an alpha=1 model using a metric graph. The function extracts observed response values, the corresponding
+#' covariate matrices (if provided), and constructs distance matrices based on the edge lengths of the graph.
+#'
+#' @param graph A \code{metric_graph} object that contains the graph structure and observation data.
+#' @param data_name Character. The name of the response variable stored in the graph data. This is used
+#'   if \code{manual_y} is not provided.
+#' @param manual_y Numeric vector. An optional manually provided response vector. If provided, the function uses
+#'   this vector instead of the one in the \code{graph} object.
+#' @param X_cov Optional matrix of covariates. If provided, the corresponding subset of covariate data is precomputed for
+#'   each replicate and edge.
+#' @param repl Replicate specification. If \code{NULL}, all replicates present in the graph data are used.
+#'
+#' @return A list with the following components:
+#' \describe{
+#'   \item{y}{A nested list with the observed responses split by replicate and edge.}
+#'   \item{obs.edges}{A vector of unique edge indices that have observations.}
+#'   \item{D_matrix}{A list of distance matrices for each observed edge, computed from the edge lengths and the locations.}
+#'   \item{x}{A nested list with subsets of the covariate matrix corresponding to each replicate and edge (if provided).}
+#' }
 #' @noRd
 
 precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
@@ -1629,27 +1650,27 @@ likelihood_graph_covariance <- function(graph,
 #' @param check_euclidean Whether to check if the graph is Euclidean
 #' @return A list with precomputed data that can be passed to likelihood_graph_covariance_precompute
 #' @noRd
-precompute_graph_covariance <- function(graph, 
+precompute_graph_covariance <- function(graph,
                                         model = "WM1",
                                         y_graph,
                                         X_cov = NULL,
                                         repl = NULL,
                                         check_euclidean = TRUE) {
-  
+
   # Validate model type
   if(!(model %in% c("WM1", "WM2", "GL1", "GL2", "isoCov"))) {
     stop("The available models are: 'WM1', 'WM2', 'GL1', 'GL2' and 'isoCov'!")
   }
-  
+
   # Get replication data
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
-  
+
   if(is.null(repl)) {
     u_repl <- unique(repl_vec)
   } else {
     u_repl <- unique(repl)
   }
-  
+
   # Prepare data structures
   precomputed <- list()
   precomputed$model <- model
@@ -1657,20 +1678,20 @@ precompute_graph_covariance <- function(graph,
   precomputed$y_data <- list()
   precomputed$X_data <- list()
   precomputed$na_indices <- list()
-  
+
   # Pre-compute covariate dimensions
   precomputed$n_cov <- if(!is.null(X_cov)) ncol(X_cov) else 0
-  
+
   # Ensure Laplacian is computed if needed for GL1/GL2 models
   if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
     graph$compute_laplacian()
   }
-  
+
   # For isoCov model, precompute resistance distances
   if(model == "isoCov" && is.null(graph$res_dist)) {
     graph$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
   }
-  
+
   # Precompute PtV and PtE for WM models
   if(model %in% c("WM1", "WM2")) {
     precomputed$PtV <- graph$PtV
@@ -1679,38 +1700,38 @@ precompute_graph_covariance <- function(graph,
       precomputed$n_constraints <- 1:length(graph$CoB$S)
     }
   }
-  
+
   # Precompute data for each replicate
   for(i in seq_along(u_repl)) {
     curr_repl <- u_repl[i]
-    
+
     # Get data for this replicate
     ind_tmp <- (repl_vec %in% curr_repl)
     y_tmp <- y_graph[ind_tmp]
     na_obs <- is.na(y_tmp)
-    
+
     # Store observation mask and non-NA values
     precomputed$na_indices[[i]] <- na_obs
     precomputed$y_data[[i]] <- y_tmp[!na_obs]
-    
+
     # Store covariate data if present
     if(!is.null(X_cov) && precomputed$n_cov > 0) {
       X_cov_repl <- X_cov[ind_tmp, , drop=FALSE]
       precomputed$X_data[[i]] <- X_cov_repl[!na_obs, , drop=FALSE]
     }
   }
-  
+
   # Store graph information needed for calculations
   precomputed$nV <- graph$nV
-  
+
   # Specific model information
   if(model == "GL1" || model == "GL2") {
     precomputed$Laplacian <- graph$Laplacian
   }
-  
+
   # Store graph components needed for all models
   precomputed$graph <- graph
-  
+
   return(precomputed)
 }
 
@@ -1732,13 +1753,13 @@ likelihood_graph_covariance_precompute <- function(theta,
                                                   maximize = FALSE,
                                                   fix_vec = NULL,
                                                   fix_v_val = NULL) {
-  
+
   # Extract model and data
   model <- precomputed_data$model
   u_repl <- precomputed_data$u_repl
   graph <- precomputed_data$graph
   n_cov <- precomputed_data$n_cov
-  
+
   # Apply parameter fixes if needed
   if(!is.null(fix_v_val)){
     fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
@@ -1748,7 +1769,7 @@ likelihood_graph_covariance_precompute <- function(theta,
   } else{
     new_theta <- theta
   }
-  
+
   # Extract parameters based on model type
   if(model == "isoCov"){
     if(log_scale){
@@ -1769,14 +1790,14 @@ likelihood_graph_covariance_precompute <- function(theta,
       kappa <- new_theta[3]
     }
   }
-  
+
   # Extract covariate parameters if needed
   theta_covariates <- if(n_cov > 0) {
     new_theta[(length(new_theta)-n_cov+1):length(new_theta)]
   } else {
     NULL
   }
-  
+
   # Build covariance matrix based on model type
   Sigma <- switch(model,
     WM1 = {
@@ -1789,29 +1810,29 @@ likelihood_graph_covariance_precompute <- function(theta,
     WM2 = {
       PtE <- precomputed_data$PtE
       n.c <- precomputed_data$n_constraints
-      
+
       # Build precision matrix
       Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
                         graph = graph, BC = 1)
-      
+
       # Cache matrix products
       TC <- graph$CoB$T
       TCt <- t(TC)
       Qtilde <- TC %*% Q %*% TCt
       Qtilde <- Qtilde[-n.c,-n.c]
-      
+
       # Use Cholesky for solving when possible
       QChol <- Matrix::Cholesky(Qtilde, LDL = FALSE)
       TC_nc <- TC[-n.c,]
-      
+
       # Compute using intermediate matrices
       Sigma.overdetermined <- TCt[, -n.c] %*% Matrix::solve(QChol, TC_nc, system = "A")
-      
+
       # More efficient indexing
       index.obs <- 4 * (PtE[,1] - 1) +
                    1.0 * (abs(PtE[, 2]) < 1e-14) +
                    3.0 * (abs(PtE[, 2]) > 1e-14)
-      
+
       as.matrix(Sigma.overdetermined[index.obs, index.obs])
     },
     GL1 = {
@@ -1819,7 +1840,7 @@ likelihood_graph_covariance_precompute <- function(theta,
       K <- kappa^2 * Matrix::Diagonal(precomputed_data$nV, 1)
       L <- precomputed_data$Laplacian[[1]]
       Q <- (K + L) / reciprocal_tau^2
-      
+
       # Use sparse solver
       as.matrix(Matrix::solve(Q))[precomputed_data$PtV, precomputed_data$PtV]
     },
@@ -1829,7 +1850,7 @@ likelihood_graph_covariance_precompute <- function(theta,
       L <- precomputed_data$Laplacian[[1]]
       Q <- (K + L)
       Q <- Q %*% Q / reciprocal_tau^2
-      
+
       # Use sparse solver
       as.matrix(Matrix::solve(Q))[precomputed_data$PtV, precomputed_data$PtV]
     },
@@ -1840,56 +1861,56 @@ likelihood_graph_covariance_precompute <- function(theta,
       if(!is.function(cov_function)){
         stop("'cov_function' must be a function!")
       }
-      
+
       # Compute covariance matrix
       as.matrix(cov_function(as.matrix(graph$res_dist[[".complete"]]), theta_cov))
     }
   )
-  
+
   # Add measurement error to diagonal
   diag(Sigma) <- diag(Sigma) + sigma_e^2
-  
+
   # Initialize log-likelihood
   loglik_val <- 0
-  
+
   # Process each replicate using precomputed data
   for(i in seq_along(u_repl)) {
     # Get precomputed data for this replicate
     na_obs <- precomputed_data$na_indices[[i]]
-    
+
     # Skip if all observations are NA
     if(all(na_obs)) next
-    
+
     # Extract valid observations
     y_i <- precomputed_data$y_data[[i]]
-    
+
     # Extract observation data - only use the non-NA rows and columns
     Sigma_non_na <- Sigma[!na_obs, !na_obs]
-    
+
     # Compute Cholesky decomposition once
     R <- base::chol(Sigma_non_na)
-    
+
     # Get data vector with covariate adjustment if needed
     v <- y_i
     if(!is.null(precomputed_data$X_data) && n_cov > 0) {
       X_cov_repl <- precomputed_data$X_data[[i]]
       v <- v - X_cov_repl %*% theta_covariates
     }
-    
+
     # Count observations for log determinant term
     n_obs <- length(v)
-    
+
     # Compute log determinant
     log_det <- sum(log(diag(R)))
-    
+
     # Solve system efficiently using Cholesky factor
     v_i <- backsolve(R, forwardsolve(t(R), v))
     quad_form <- sum(v * v_i)
-    
+
     # Update log-likelihood efficiently
     loglik_val <- loglik_val - log_det - 0.5 * quad_form - 0.5 * n_obs * log(2*pi)
   }
-  
+
   # Return based on maximize flag
   if(maximize) {
     return(as.double(loglik_val))
