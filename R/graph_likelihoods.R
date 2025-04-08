@@ -152,11 +152,22 @@ likelihood_alpha1_directional <- function(theta,
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- rep(0, 2*nrow(graph$E))
+
+    ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
+    y_rep <- y_resp[ind_repl]
+    if(!is.null(X_cov)){
+      n_cov <- ncol(X_cov)
+      if(n_cov == 0){
+        X_cov_rep <- 0
+      } else{
+        X_cov_rep <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
+      }
+    }
+
     for (e in obs.edges) {
-      ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
+
       obs.id <- PtE[,1] == e
-      y_i <- y_resp[ind_repl]
-      y_i <- y_i[obs.id]
+      y_i <- y_rep[obs.id]
       idx_na <- is.na(y_i)
       y_i <- y_i[!idx_na]
 
@@ -169,8 +180,7 @@ likelihood_alpha1_directional <- function(theta,
         if(n_cov == 0){
           X_cov_repl <- 0
         } else{
-          X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
-          X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
+          X_cov_repl <- X_cov_rep[PtE[,1] == e, ,drop = FALSE]
           X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
           y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
         }
@@ -297,11 +307,11 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
   Tc <- graph$CoB$T[-ind.const, ]
-  
+
   # Build Q matrix once
   Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                       alpha = 2, graph = graph, BC=BC)
-  
+
   R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
                         LDL = FALSE, perm = TRUE)
 
@@ -312,32 +322,39 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   loglik <- 0
   det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
   det_R_count <- NULL
-  
+
   # Cache edge lengths
   edge_lengths <- graph$edge_lengths
   n_edges <- nrow(graph$E)
 
   for(repl_y in seq_along(u_repl)) {
       loglik <- loglik + det_R
-      
+
       # Pre-allocate with exact size needed
 
       Qpmu <- numeric(4 * n_edges)
-      
+
       # Get data for this replicate only once
       curr_repl <- u_repl[repl_y]
       repl_indices <- (repl_vec == curr_repl)
       y_rep <- y[repl_indices]
-      
+
+      if(!is.null(X_cov)){
+        n_cov <- ncol(X_cov)
+        if(n_cov > 0){
+          X_cov_rep <- X_cov[repl_indices, , drop=FALSE]
+        }
+      }
+
       # Pre-allocate with maximum size needed (16 entries per edge)
       max_entries <- 16 * length(obs.edges)
       i_ <- j_ <- x_ <- numeric(max_entries)
       count <- 0
-      
+
       for (e in obs.edges) {
         obs.id <- PtE[,1] == e
         y_i <- y_rep[obs.id]
-        
+
         # Skip if no observations
         if(length(y_i) == 0) {
           next
@@ -347,19 +364,18 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov > 0){
-            X_cov_repl <- X_cov[repl_indices, , drop=FALSE]
-            X_cov_repl <- X_cov_repl[obs.id, , drop=FALSE]
+            X_cov_repl <- X_cov_rep[obs.id, , drop=FALSE]
             y_i <- y_i - as.vector(X_cov_repl %*% theta[4:(3+n_cov)])
           }
         }
 
         # Get edge length once
         l <- edge_lengths[e]
-        
+
         # Compute distance matrices efficiently
         t <- c(0, l, l*PtE[obs.id, 2])
         D <- outer(t, t, `-`)
-        
+
         # Pre-allocate matrix
         n_pts <- length(t)
         S <- matrix(0, n_pts + 2, n_pts + 2)
@@ -386,9 +402,9 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         R_i <- base::chol(Sigma_i, pivot = TRUE)
         if(attr(R_i, "rank") < dim(R_i)[1])
           return(-Inf)
-        
+
         Sigma_iB <- t(Bt)
-        
+
         Sigma_iB[attr(R_i,"pivot"),] <- base::forwardsolve(R_i,
                                             base::backsolve(R_i, t(Bt[, attr(R_i,"pivot")]),
                                             transpose = TRUE), upper.tri = TRUE)
@@ -473,15 +489,15 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
           x_[count + 16] <- BtSinvB[2, 4]
 
         count <- count + 16
-        
+
         # Compute quadratic form directly with Cholesky
         v_i <- backsolve(R_i, forwardsolve(t(R_i), y_i))
         quad_form <- sum(y_i * v_i)
-        
+
         # Update log likelihood
         loglik <- loglik - 0.5 * quad_form - sum(log(diag(R_i)))
       }
-      
+
       if(is.null(det_R_count)){
         i_ <- i_[1:count]
         j_ <- j_[1:count]
@@ -495,7 +511,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
         det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
       }
-      
+
       loglik <- loglik - det_R_count
 
       v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu, system = 'P'),
@@ -660,28 +676,36 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
   # Cache some values used in the loop
   nV <- nrow(graph$V)
-  
+
   for(repl_y in seq_along(u_repl)){
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- numeric(nV)
-    
+
     # Pre-compute replicate membership only once
     curr_repl <- u_repl[repl_y]
     ind_repl_curr <- (repl_vec == curr_repl)
-    
+    y_reply <- y_resp[ind_repl_curr]
+    if(!is.null(X_cov)){
+      n_cov <- ncol(X_cov)
+      if(n_cov == 0){
+        X_reply <- 0
+      } else{
+        X_reply <- X_cov[ind_repl_curr, , drop=FALSE]
+      }
+    }
     for (e in obs.edges) {
       # Use pre-computed replicate indices
       obs.id <- PtE[,1] == e
-      
+
       # More efficient indexing
-      y_i <- y_resp[ind_repl_curr][obs.id]
-      
+      y_i <- y_reply[obs.id]
+
       idx_na <- is.na(y_i)
       if(sum(!idx_na) == 0){
         next
       }
-      
+
       y_i <- y_i[!idx_na]
 
       if(!is.null(X_cov)){
@@ -690,8 +714,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
             X_cov_repl <- 0
           } else{
             # Use pre-computed indices
-            X_cov_repl <- X_cov[ind_repl_curr, , drop=FALSE]
-            X_cov_repl <- X_cov_repl[obs.id, , drop=FALSE]
+            X_cov_repl <- X_reply[obs.id, , drop=FALSE]
             X_cov_repl <- X_cov_repl[!idx_na, , drop=FALSE]
             # Direct matrix multiplication
             y_i <- y_i - as.vector(X_cov_repl %*% theta[4:(3+n_cov)])
@@ -719,9 +742,9 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         S[Obs.ind, E.ind, drop = FALSE] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
       R <- base::chol(Sigma_i)
-        
+
       Sigma_iB <- backsolve(R, forwardsolve(t(R), t(Bt)))
-      
+
       BtSinvB <- Bt %*% Sigma_iB
 
       E <- graph$E[e, ]
@@ -737,7 +760,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         # Pre-compute matrix product
         y_prod <- as.vector(t(Sigma_iB) %*% y_i)
         Qpmu[E] <- Qpmu[E] + y_prod
-        
+
         # More efficient indexing of arrays
         idx <- count + 1:4
         i_[idx] <- c(E[1], E[1], E[2], E[2])
@@ -747,13 +770,13 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         count <- count + 4
       }
 
-      # Compute log determinant only once 
+      # Compute log determinant only once
       log_det <- sum(log(diag(R)))
-      
+
       # Avoid matrix inversion by using the Cholesky factor directly
       v_i <- backsolve(R, forwardsolve(t(R), y_i))
       quad_form <- sum(y_i * v_i)
-      
+
       loglik <- loglik - 0.5 * quad_form - log_det
     }
 
@@ -771,6 +794,274 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         R_count <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
 
         det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
+    }
+
+    loglik <- loglik - det_R_count
+
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Qpmu,
+                                                          system = "P"),
+                                   system = "L")))
+
+    loglik <- loglik + 0.5  * t(v) %*% v - 0.5 * n.o * log(2*pi)
+  }
+
+  return(loglik[1])
+}
+
+precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
+                              X_cov = NULL, repl){
+
+  PtE <- graph$get_PtE()
+  obs.edges <- unique(PtE[, 1])
+
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+
+  if(is.null(repl)){
+    repl <- unique(repl_vec)
+  }
+
+  if(is.null(repl)){
+    u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
+
+  if(is.null(manual_y)){
+    y_resp <- graph$.__enclos_env__$private$data[[data_name]]
+  } else if(is.null(data_name)){
+    y_resp <- manual_y
+  } else{
+    stop("Either data_name or manual_y must be not NULL")
+  }
+  n.o <- sum(ind_repl)
+
+  # Cache some values used in the loop
+  nV <- nrow(graph$V)
+
+  precomputeddata <- list(y = list(),obs.edges=obs.edges,
+                          D_matrix = list(),
+                          x = list())
+
+  for(j in 1:length(seq_along(u_repl))){
+    repl_y <- seq_along(u_repl)[j]
+
+    # Pre-compute replicate membership only once
+    curr_repl <- u_repl[repl_y]
+    ind_repl_curr <- (repl_vec == curr_repl)
+    y_reply <- y_resp[ind_repl_curr]
+    if(!is.null(X_cov)){
+      n_cov <- ncol(X_cov)
+      if(n_cov == 0){
+        X_reply <- 0
+      } else{
+        X_reply <- X_cov[ind_repl_curr, , drop=FALSE]
+      }
+    }
+    precomputeddata$y[[j]] <- list()
+    precomputeddata$x[[j]] <- list()
+    for (i in 1:length(obs.edges)) {
+      # Use pre-computed replicate indices
+      e <- obs.edges[i]
+      obs.id <- PtE[,1] == e
+      y_i <- y_reply[obs.id]
+
+      e <- obs.edges[i]
+      obs.id <- PtE[,1] == e
+
+      y_i <- y_reply[obs.id]
+      idx_na <- is.na(y_i)
+      if(sum(!idx_na) == 0){
+        precomputeddata$y[[j]][[i]] <- NULL
+        precomputeddata$x[[j]][[i]] <- NULL
+        precomputeddata$D_matrix[[i]] <- NULL
+        next
+      }
+
+      y_i <- y_i[!idx_na]
+      precomputeddata$y[[j]][[i]] <- y_i
+
+
+      if(!is.null(X_cov)){
+        n_cov <- ncol(X_cov)
+        if(n_cov == 0){
+          precomputeddata$x[[j]][[i]] <- 0
+        } else{
+          X_cov_repl <- X_reply[obs.id, , drop=FALSE]
+          precomputeddata$x[[j]][[i]] <- X_cov_repl[!idx_na, , drop=FALSE]
+        }
+      }
+
+      l <- graph$edge_lengths[e]
+
+      PtE_temp <- PtE[obs.id, 2]
+      PtE_temp <- PtE_temp[!idx_na]
+
+      # Compute distance efficiently
+      D_vec <- c(0, l, l*PtE_temp)
+      D_matrix <- as.matrix(dist(D_vec))
+      precomputeddata$D_matrix[[i]] <- D_matrix
+    }
+  }
+  return(precomputeddata)
+}
+
+#' Log-likelihood calculation for alpha=1 model
+#' @param theta (sigma_e, reciprocal_tau, kappa)
+#' @param graph metric_graph object
+#' @param precomputeddata precomputed data
+#' @param data_name name of the response variable
+#' @param repl replicates
+#' @param X_cov matrix of covariates
+#' @param BC. - which boundary condition to use (0,1)
+#' @noRd
+likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_name = NULL, manual_y = NULL,
+                              X_cov = NULL, repl, BC, parameterization) {
+  sigma_e <- exp(theta[1])
+  #build Q
+
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+
+  if(is.null(repl)){
+    repl <- unique(repl_vec)
+  }
+
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 0.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+
+  reciprocal_tau <- exp(theta[2])
+
+  Q.list <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 1,
+                           graph = graph, build = FALSE,BC=BC)
+
+  Qp <- Matrix::sparseMatrix(i = Q.list$i,
+                             j = Q.list$j,
+                             x = Q.list$x,
+                             dims = Q.list$dims)
+  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
+
+  #build BSIGMAB
+  PtE <- graph$get_PtE()
+  obs.edges <- precomputeddata$obs.edges
+
+  i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
+
+  if(is.null(repl)){
+    u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
+  } else{
+    u_repl <- unique(repl)
+  }
+
+  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
+
+  loglik <- 0
+
+  det_R_count <- NULL
+  n.o <- sum(ind_repl)
+
+  # Cache some values used in the loop
+  nV <- nrow(graph$V)
+
+  for(j in 1:length(seq_along(u_repl))){
+      repl_y <- seq_along(u_repl)[j]
+      loglik <- loglik + det_R
+      count <- 0
+      Qpmu <- numeric(nV)
+    for (i in 1:length(obs.edges)) {
+      # Use pre-computed replicate indices
+      e <- obs.edges[i]
+      #obs.id <- PtE[,1] == e
+
+      # More efficient indexing
+      #y_i <- y_reply[obs.id]
+      y_i <- precomputeddata$y[[j]][[i]]
+      idx_na <- is.na(y_i)
+      if(sum(!idx_na) == 0){
+        next
+      }
+
+      y_i <- y_i[!idx_na]
+
+      if(!is.null(X_cov)){
+        n_cov <- ncol(X_cov)
+        if(n_cov == 0){
+          X_cov_repl <- 0
+        } else{
+          y_i <- y_i - as.vector(precomputeddata$x[[j]][[i]] %*% theta[4:(3+n_cov)])
+        }
+      }
+      D_matrix <- precomputeddata$D_matrix[[i]]
+
+      # Pre-compute S matrix
+      S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
+
+      #covariance update see Art p.17
+      E.ind <- c(1:2)
+      Obs.ind <- -E.ind
+
+      Bt <- solve(S[E.ind, E.ind, drop = FALSE], S[E.ind, Obs.ind, drop = FALSE])
+      Sigma_i <- S[Obs.ind, Obs.ind, drop = FALSE] -
+        S[Obs.ind, E.ind, drop = FALSE] %*% Bt
+      diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+      R <- base::chol(Sigma_i)
+
+      Sigma_iB <- backsolve(R, forwardsolve(t(R), t(Bt)))
+
+      BtSinvB <- Bt %*% Sigma_iB
+
+      E <- graph$E[e, ]
+      if (E[1] == E[2]) {
+        # Pre-compute matrix product
+        y_Sigma_iB <- sum(as.vector(t(Sigma_iB) %*% y_i))
+        Qpmu[E[1]] <- Qpmu[E[1]] + y_Sigma_iB
+        i_[count + 1] <- E[1]
+        j_[count + 1] <- E[1]
+        x_[count + 1] <- sum(BtSinvB)
+        count <- count + 1
+      } else {
+        # Pre-compute matrix product
+        y_prod <- as.vector(t(Sigma_iB) %*% y_i)
+        Qpmu[E] <- Qpmu[E] + y_prod
+
+        # More efficient indexing of arrays
+        idx <- count + 1:4
+        i_[idx] <- c(E[1], E[1], E[2], E[2])
+        j_[idx] <- c(E[1], E[2], E[1], E[2])
+        x_[idx] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
+                     BtSinvB[1, 2], BtSinvB[2, 2])
+        count <- count + 4
+      }
+
+      # Compute log determinant only once
+      log_det <- sum(log(diag(R)))
+
+      # Avoid matrix inversion by using the Cholesky factor directly
+      v_i <- backsolve(R, forwardsolve(t(R), y_i))
+      quad_form <- sum(y_i * v_i)
+
+      loglik <- loglik - 0.5 * quad_form - log_det
+    }
+
+    if(is.null(det_R_count)){
+      i_ <- c(Q.list$i, i_[1:count])
+      j_ <- c(Q.list$j, j_[1:count])
+      x_ <- c(Q.list$x, x_[1:count])
+
+
+      Qp <- Matrix::sparseMatrix(i = i_,
+                                 j = j_,
+                                 x = x_,
+                                 dims = Q.list$dims)
+
+      R_count <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+
+      det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
     }
 
     loglik <- loglik - det_R_count
@@ -848,13 +1139,13 @@ likelihood_graph_covariance <- function(graph,
 
   # Pre-compute replication data
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
-  
+
   if(is.null(repl)){
     u_repl <- unique(repl_vec)
   } else{
     u_repl <- unique(repl)
   }
-  
+
   # Pre-compute covariate dimensions
   n_cov <- if(!is.null(X_cov)) ncol(X_cov) else 0
 
@@ -914,37 +1205,37 @@ likelihood_graph_covariance <- function(graph,
       WM2 = {
         PtE <- graph$get_PtE()
         n.c <- 1:length(graph$CoB$S)
-        
+
         # Build precision matrix
         Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
                           graph = graph, BC = 1)
-        
-        # Cache matrix products 
+
+        # Cache matrix products
         TC <- graph$CoB$T
         TCt <- t(TC)
         Qtilde <- TC %*% Q %*% TCt
         Qtilde <- Qtilde[-n.c,-n.c]
-        
+
         # Use Cholesky for solving when possible
         QChol <- Matrix::Cholesky(Qtilde, LDL = FALSE)
         TC_nc <- TC[-n.c,]
-        
-        # Compute using intermediate matrices 
+
+        # Compute using intermediate matrices
         Sigma.overdetermined <- TCt[-n.c,] %*% Matrix::solve(QChol, TC_nc, system = "A")
-        
+
         # More efficient indexing
-        index.obs <- 4 * (PtE[,1] - 1) + 
+        index.obs <- 4 * (PtE[,1] - 1) +
                      1.0 * (abs(PtE[, 2]) < 1e-14) +
                      3.0 * (abs(PtE[, 2]) > 1e-14)
-        
+
         as.matrix(Sigma.overdetermined[index.obs, index.obs])
       },
       GL1 = {
         # Cache intermediate calculations
-        K <- kappa^2 * Matrix::Diagonal(graph$nV, 1) 
+        K <- kappa^2 * Matrix::Diagonal(graph$nV, 1)
         L <- graph$Laplacian[[1]]
         Q <- (K + L) / reciprocal_tau^2
-        
+
         # Use sparse solver
         as.matrix(Matrix::solve(Q))[graph$PtV, graph$PtV]
       },
@@ -954,7 +1245,7 @@ likelihood_graph_covariance <- function(graph,
         L <- graph$Laplacian[[1]]
         Q <- (K + L)
         Q <- Q %*% Q / reciprocal_tau^2
-        
+
         # Use sparse solver
         as.matrix(Matrix::solve(Q))[graph$PtV, graph$PtV]
       },
@@ -989,16 +1280,16 @@ likelihood_graph_covariance <- function(graph,
       ind_tmp <- (repl_vec %in% curr_repl)
       y_tmp <- y_graph[ind_tmp]
       na_obs <- is.na(y_tmp)
-      
+
       # Skip if all observations are NA
       if(all(na_obs)) next
-      
+
       # Extract observation data
       Sigma_non_na <- Sigma[!na_obs, !na_obs]
-      
+
       # Compute Cholesky decomposition once
       R <- base::chol(Sigma_non_na)
-      
+
       # Get data vector
       v <- y_graph[repl_vec == curr_repl]
 
@@ -1010,17 +1301,17 @@ likelihood_graph_covariance <- function(graph,
 
       # Keep only non-NA observations
       v <- v[!na_obs]
-      
+
       # Count observations for log determinant term
       n_obs <- length(v)
-      
+
       # Compute log determinant
       log_det <- sum(log(diag(R)))
-      
+
       # Solve system efficiently using Cholesky factor
       v_i <- backsolve(R, forwardsolve(t(R), v))
       quad_form <- sum(v * v_i)
-      
+
       # Update log-likelihood efficiently
       loglik_val <- loglik_val - log_det - 0.5 * quad_form - 0.5 * n_obs * log(2*pi)
     }
@@ -1032,7 +1323,7 @@ likelihood_graph_covariance <- function(graph,
       return(-as.double(loglik_val))
     }
   }
-  
+
   return(loglik)
 }
 
