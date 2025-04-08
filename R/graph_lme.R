@@ -607,6 +607,8 @@ graph_lme <- function(formula, graph,
     rm(data_tmp)
   }
 
+  precomp_data <- NULL
+
 
   if(model_type == "whittlematern"){
 
@@ -652,6 +654,12 @@ graph_lme <- function(formula, graph,
                 parameterization = "spde")) # parameterization = parameterization_latent))
           }
         } else {
+          precomp_data <- precompute_alpha1(graph = graph_bkp,
+                                            manual_y = y_graph,
+                                            data_name = NULL,
+                                            X_cov = X_cov,
+                                            repl = which_repl,
+                                            parameterization = "spde")
           likelihood <- function(theta){
             if(!is.null(X_cov)){
                   n_cov <- ncol(X_cov)
@@ -663,7 +671,8 @@ graph_lme <- function(formula, graph,
             new_theta <- fix_v_val_full
             new_theta[!fix_vec_full] <- theta
 
-            return(-likelihood_alpha1(theta = new_theta, graph = graph_bkp,
+            return(-likelihood_alpha1_precompute(theta = new_theta, graph = graph_bkp,
+                                       precomputeddata = precomp_data,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,
                                parameterization = "spde")) # , parameterization = parameterization_latent))
@@ -794,6 +803,7 @@ graph_lme <- function(formula, graph,
         parallel::clusterExport(cl, "model", envir = environment())
         parallel::clusterExport(cl, "fix_vec", envir = environment())        
         parallel::clusterExport(cl, "fix_v_val", envir = environment())      
+        parallel::clusterExport(cl, "precomp_data", envir = environment())
         # parallel::clusterExport(cl, "y_list", envir = environment())
         parallel::clusterExport(cl, "likelihood_graph_covariance",
                        envir = as.environment(asNamespace("MetricGraph")))
