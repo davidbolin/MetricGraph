@@ -732,10 +732,11 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   new_data[[".edge_number"]] <- PtE[, 1]
   new_data[[".distance_on_edge"]] <- PtE[, 2]
 
-  # Store factor metadata for ALL factors
+  # Store factor and datetime metadata
   factor_metadata <- list()
+  datetime_columns <- c()
   
-  # Collect factor info from new_data
+  # Collect factor and datetime info from new_data
   for (col in names(new_data)) {
     if (is.factor(new_data[[col]])) {
       # Store the original factor values as character to preserve them exactly
@@ -745,10 +746,16 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
       )
       # Convert to character for merging to avoid level issues
       new_data[[col]] <- as.character(new_data[[col]])
+    } else if (inherits(new_data[[col]], c("POSIXlt", "POSIXt", "POSIXct"))) {
+      # Track datetime columns and ensure they're in consistent format (POSIXct)
+      datetime_columns <- c(datetime_columns, col)
+      if (inherits(new_data[[col]], "POSIXlt")) {
+        new_data[[col]] <- as.POSIXct(new_data[[col]])
+      }
     }
   }
   
-  # Collect factor info from old_data too
+  # Collect factor and datetime info from old_data too
   if (!is.null(old_data)) {
     for (col in names(old_data)) {
       if (is.factor(old_data[[col]]) && !(col %in% names(factor_metadata))) {
@@ -757,6 +764,12 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
         )
         # Convert to character for merging
         old_data[[col]] <- as.character(old_data[[col]])
+      } else if (inherits(old_data[[col]], c("POSIXlt", "POSIXt", "POSIXct")) && 
+                !(col %in% datetime_columns)) {
+        datetime_columns <- c(datetime_columns, col)
+        if (inherits(old_data[[col]], "POSIXlt")) {
+          old_data[[col]] <- as.POSIXct(old_data[[col]])
+        }
       }
     }
   }
@@ -855,6 +868,16 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
       # Create factor with all necessary levels, preserving original order
       all_levels <- c(original_levels, new_values)
       list_result[[col_name]] <- factor(list_result[[col_name]], levels = all_levels)
+    }
+  }
+  
+  # Restore datetime columns to their proper type
+  for (col_name in datetime_columns) {
+    if (col_name %in% names(list_result)) {
+      # Convert any numeric timestamps back to POSIXct
+      if (is.numeric(list_result[[col_name]])) {
+        list_result[[col_name]] <- as.POSIXct(list_result[[col_name]], origin="1970-01-01")
+      }
     }
   }
 
