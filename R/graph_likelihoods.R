@@ -1265,10 +1265,9 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
       PtE_temp <- PtE[obs.id, 2]
       PtE_temp <- PtE_temp[!idx_na]
 
-      # Compute distance efficiently
-      D_vec <- c(0, l, l*PtE_temp)
-      D_matrix <- as.matrix(dist(D_vec))
-      precomputeddata$D_matrix[[j]][[i]] <- D_matrix
+      # Compute and store time points and distance matrix
+      t <- c(0, l, l*PtE_temp)
+      precomputeddata$D_matrix[[j]][[i]] <- outer(t, t, `-`)
     }
   }
   return(precomputeddata)
