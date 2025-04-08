@@ -315,7 +315,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   
   # Cache edge lengths
   edge_lengths <- graph$edge_lengths
-  n_edges <- length(graph$E)
+  n_edges <- nrow(graph$E)
 
   for(repl_y in seq_along(u_repl)) {
       loglik <- loglik + det_R
@@ -383,14 +383,9 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
         # Cache Cholesky decomposition
-        R_i <- base::chol(Sigma_i, pivot = TRUE)
-        if(attr(R_i, "rank") < dim(R_i)[1])
-          return(-Inf)
+        R_i <- base::chol(Sigma_i)
 
-        Sigma_iB <- t(Bt)
-        Sigma_iB[attr(R_i,"pivot"),] <- base::forwardsolve(R_i,
-                                            base::backsolve(R_i, t(Bt[, attr(R_i,"pivot")]),
-                                            transpose = TRUE), upper.tri = TRUE)
+        Sigma_iB <- backsolve(R_i, forwardsolve(t(R_i), t(Bt)))
 
         BtSinvB <- Bt %*% Sigma_iB
 
