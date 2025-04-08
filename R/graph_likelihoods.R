@@ -134,8 +134,6 @@ likelihood_alpha1_directional <- function(theta,
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
-
   loglik <- 0
 
   det_R_count <- NULL
@@ -146,7 +144,7 @@ likelihood_alpha1_directional <- function(theta,
   } else{
     stop("Either data_name or manual_y must be not NULL")
   }
-  n.o <- sum(ind_repl)
+  n.o <- 0
 
   for(repl_y in 1:length(u_repl)){
     loglik <- loglik + det_R
@@ -175,6 +173,8 @@ likelihood_alpha1_directional <- function(theta,
         next
       }
 
+      n.o <- n.o + length(y_i)
+
       if(!is.null(X_cov)){
         n_cov <- ncol(X_cov)
         if(n_cov == 0){
@@ -191,7 +191,9 @@ likelihood_alpha1_directional <- function(theta,
       PtE_temp <- PtE[obs.id, 2]
       PtE_temp <- PtE_temp[!idx_na]
 
-      D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
+      # Compute distance matrix
+      t <- c(0, l, l*PtE_temp)
+      D_matrix <- outer(t, t, `-`)
 
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
 
@@ -291,8 +293,6 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
-
   if(is.null(manual_y)){
     y <- graph$.__enclos_env__$private$data[[data_name]]
   } else if(is.null(data_name)){
@@ -301,7 +301,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     stop("Either data_name or manual_y must be not NULL")
   }
 
-  n.o <- sum(ind_repl)
+  n.o <- 0
 
   # Precalculate constants
   n_const <- length(graph$CoB$S)
@@ -355,10 +355,15 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         obs.id <- PtE[,1] == e
         y_i <- y_rep[obs.id]
 
+        idx_na <- is.na(y_i)
+        y_i <- y_i[!idx_na]
+
         # Skip if no observations
         if(length(y_i) == 0) {
           next
         }
+
+        n.o <- n.o + length(y_i)
 
         # Handle covariates if present
         if(!is.null(X_cov)){
@@ -605,6 +610,8 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
       e <- obs.edges[j]
       obs.id <- PtE[,1] == e
       y_i <- y_rep[obs.id]
+      idx_na <- is.na(y_i)
+      y_i <- y_i[!idx_na]      
 
       # Skip if no observations
       if(length(y_i) == 0) {
@@ -621,14 +628,17 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
       # Store X data if present
       if(!is.null(X_cov) && ncol(X_cov) > 0){
         X_cov_e <- X_cov_rep[obs.id, , drop=FALSE]
-        precomputed$x_data[[i]][[j]] <- X_cov_e
+        precomputed$x_data[[i]][[j]] <- X_cov_e[!idx_na, , drop=FALSE]
       }
 
       # Get edge length
       l <- edge_lengths[e]
 
+      PtE_temp <- PtE[obs.id, 2]
+      PtE_temp <- PtE_temp[!idx_na]      
+
       # Compute and store time points and distance matrix
-      t <- c(0, l, l*PtE[obs.id, 2])
+      t <- c(0, l, l*PtE_temp)
       precomputed$t_data[[i]][[j]] <- t
 
       D <- outer(t, t, `-`)
@@ -1002,8 +1012,6 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
-
   loglik <- 0
 
   det_R_count <- NULL
@@ -1014,7 +1022,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   } else{
     stop("Either data_name or manual_y must be not NULL")
   }
-  n.o <- sum(ind_repl)
+  n.o <- 0
 
   # Cache some values used in the loop
   nV <- nrow(graph$V)
@@ -1050,6 +1058,8 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
       y_i <- y_i[!idx_na]
 
+      n.o <- n.o + length(y_i)      
+
       if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov == 0){
@@ -1069,8 +1079,9 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       PtE_temp <- PtE_temp[!idx_na]
 
       # Compute distance efficiently
-      D_vec <- c(0, l, l*PtE_temp)
-      D_matrix <- as.matrix(dist(D_vec))
+      # Compute distance matrix
+      t <- c(0, l, l*PtE_temp)
+      D_matrix <- outer(t, t, `-`)
 
       # Pre-compute S matrix
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
@@ -1192,8 +1203,6 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
-
   if(is.null(manual_y)){
     y_resp <- graph$.__enclos_env__$private$data[[data_name]]
   } else if(is.null(data_name)){
@@ -1201,7 +1210,6 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
   } else{
     stop("Either data_name or manual_y must be not NULL")
   }
-  n.o <- sum(ind_repl)
 
   # Cache some values used in the loop
   nV <- nrow(graph$V)
@@ -1210,7 +1218,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
                           D_matrix = list(),
                           x = list())
 
-  for(j in 1:length(seq_along(u_repl))){
+  for(j in seq_along(u_repl)){
     repl_y <- seq_along(u_repl)[j]
 
     # Pre-compute replicate membership only once
@@ -1324,12 +1332,10 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
     u_repl <- unique(repl)
   }
 
-  ind_repl <- (graph$.__enclos_env__$private$data[[".group"]] %in% u_repl)
-
   loglik <- 0
 
   det_R_count <- NULL
-  n.o <- sum(ind_repl)
+  n.o <- 0
 
   # Cache some values used in the loop
   nV <- nrow(graph$V)
@@ -1353,6 +1359,8 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
       }
 
       y_i <- y_i[!idx_na]
+
+      n.o <- n.o + length(y_i)
 
       if(!is.null(X_cov)){
         n_cov <- ncol(X_cov)
@@ -2218,8 +2226,9 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
       l <- graph$edge_lengths[e]
       
       # Compute distance matrix
-      D_matrix <- as.matrix(dist(c(0, l, l*PtE_temp)))
-      precomputed$D_data[[i]][[j]] <- D_matrix
+      t <- c(0, l, l*PtE_temp)
+      D <- outer(t, t, `-`)
+      precomputed$D_data[[i]][[j]] <- D
     }
   }
   
