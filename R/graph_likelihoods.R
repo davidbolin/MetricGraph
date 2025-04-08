@@ -799,9 +799,8 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
     
     loglik <- loglik - det_R_count
     
-    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Qpmu,
-                                                        system = "P"),
-                                  system = "L")))
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu, system = 'P'),
+                                     system='L')))
     
     # Count observations for this replicate
     n_obs <- sum(sapply(precomputed_data$y_data[[i]], function(x) if(is.null(x)) 0 else length(x)))
