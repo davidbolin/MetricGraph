@@ -640,11 +640,12 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- rep(0, nrow(graph$V))
+    ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
+    y_reply <- y_resp[ind_repl]
+    X_reply <- X_cov[ind_repl, , drop=FALSE]
     for (e in obs.edges) {
-      ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
       obs.id <- PtE[,1] == e
-      y_i <- y_resp[ind_repl]
-      y_i <- y_i[obs.id]
+      y_i <- y_reply[obs.id]
       idx_na <- is.na(y_i)
       y_i <- y_i[!idx_na]
 
@@ -652,26 +653,13 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         next
       }
 
-      #   if(covariates){ #obsolete
-      #     n_cov <- ncol(graph$covariates[[1]])
-      #     if(length(graph$covariates)==1){
-      #     X_cov <- graph$covariates[[1]]
-      #     } else if(length(graph$covariates) == ncol(graph$.__enclos_env__$private$data[[data_name]])){
-      #       X_cov <- graph$covariates[[repl_y]]
-      #     } else{
-      #       stop("You should either have a common covariate for all the replicates, or one set of covariates for each replicate!")
-      #     }
-      #   X_cov <- X_cov[obs.id,]
-      #   y_i <- y_i - X_cov %*% theta[4:(3+n_cov)]
-      # }
 
       if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{
-            X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
-            X_cov_repl <- X_cov_repl[PtE[,1] == e, ,drop = FALSE]
+            X_cov_repl <- X_reply[obs.id, ,drop = FALSE]
             X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
             y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
           }
