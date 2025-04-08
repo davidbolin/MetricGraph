@@ -648,7 +648,6 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 #' @return The log-likelihood
 #' @noRd
 likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parameterization = "matern") {
-
   # Extract parameters
   sigma_e <- exp(theta[1])
   reciprocal_tau <- exp(theta[2])
@@ -657,43 +656,48 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
   } else{
     kappa = exp(theta[3])
   }
-
+  
   # Build Q matrix once
   Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
                      alpha = 2, graph = precomputed_data$graph, BC=BC)
-
+  
   R <- Matrix::Cholesky(forceSymmetric(precomputed_data$Tc%*%Q%*%t(precomputed_data$Tc)),
                        LDL = FALSE, perm = TRUE)
-
+  
   # Get determinant once
   loglik <- 0
   det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
   det_R_count <- NULL
-
+  
+  # Creating a large pre-allocated array for all potential entries
+  total_max_entries <- 16 * length(precomputed_data$obs.edges)
+  all_i <- all_j <- all_x <- numeric(total_max_entries)
+  all_count <- 0
+  
+  n_obs_total <- 0
+  
   # Process each replicate
   for(i in seq_along(precomputed_data$u_repl)) {
     loglik <- loglik + det_R
-
+    
     # Pre-allocate with exact size needed
     Qpmu <- numeric(4 * precomputed_data$n_edges)
-
-    # Pre-allocate with maximum size needed
-    max_entries <- 16 * length(precomputed_data$obs.edges)
-    i_ <- j_ <- x_ <- numeric(max_entries)
-    count <- 0
-
+    
     # Process each edge
     for(j in seq_along(precomputed_data$obs.edges)) {
       e <- precomputed_data$obs.edges[j]
-
+      
       # Get data for this edge
       y_i <- precomputed_data$y_data[[i]][[j]]
-
+      
       # Skip if no observations
       if(is.null(y_i) || length(y_i) == 0) {
         next
       }
-
+      
+      # Count observations for log determinant term
+      n_obs_total <- n_obs_total + length(y_i)
+      
       # Handle covariates if present
       if(!is.null(precomputed_data$x_data) && !is.null(precomputed_data$x_data[[i]][[j]])) {
         X_cov_e <- precomputed_data$x_data[[i]][[j]]
@@ -702,15 +706,15 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
           y_i <- y_i - as.vector(X_cov_e %*% theta[4:(3+n_cov)])
         }
       }
-
+      
       # Get precomputed distance data
       t <- precomputed_data$t_data[[i]][[j]]
       D <- precomputed_data$D_data[[i]][[j]]
-
+      
       # Pre-allocate matrix
       n_pts <- length(t)
       S <- matrix(0, n_pts + 2, n_pts + 2)
-
+      
       # Compute all submatrices
       d.index <- c(1,2)
       S[-d.index, -d.index] <- r_2(D, kappa = kappa,
@@ -721,83 +725,143 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
                                  tau = 1/reciprocal_tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
-
+      
       # Covariance updates
       E.ind <- c(1:4)
       Obs.ind <- -E.ind
       Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind, drop = FALSE])
       Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
       diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
-
+      
       # Cache Cholesky decomposition
       R_i <- base::chol(Sigma_i)
-
+      
       Sigma_iB <- backsolve(R_i, forwardsolve(t(R_i), t(Bt)))
-
+      
       BtSinvB <- Bt %*% Sigma_iB
-
+      
       E <- precomputed_data$graph$E[e, ]
       if (E[1] == E[2]) {
         warning("Circle not implemented")
       }
-
+      
       BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
       Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
         (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
-
-      # Efficiently set up precision matrix entries
-      # lower edge precision u
-      idx_offset <- count
-
-      # Create indices for all 16 entries at once
-      pair_indices <- expand.grid(1:4, 1:4)
-      for(idx in 1:16) {
-        row_idx <- pair_indices[idx, 1]
-        col_idx <- pair_indices[idx, 2]
-
-        # Map to actual matrix indices
-        i_[idx_offset + idx] <- 4 * (e - 1) + row_idx
-        j_[idx_offset + idx] <- 4 * (e - 1) + col_idx
-
-        # Map to correct positions in BtSinvB
-        x_[idx_offset + idx] <- BtSinvB[row_idx, col_idx]
-      }
-
-      count <- count + 16
-
+      
+      # Efficiently add precision matrix entries - use direct indexing instead of loop
+      # This is more efficient than using expand.grid in a loop
+      idx <- seq(all_count + 1, all_count + 16)
+      
+      # Lower edge u diagonal
+      all_i[idx[1]] <- 4 * (e - 1) + 1
+      all_j[idx[1]] <- 4 * (e - 1) + 1
+      all_x[idx[1]] <- BtSinvB[1, 1]
+      
+      # Lower edge u' diagonal  
+      all_i[idx[2]] <- 4 * (e - 1) + 2
+      all_j[idx[2]] <- 4 * (e - 1) + 2
+      all_x[idx[2]] <- BtSinvB[2, 2]
+      
+      # Upper edge u diagonal
+      all_i[idx[3]] <- 4 * (e - 1) + 3
+      all_j[idx[3]] <- 4 * (e - 1) + 3
+      all_x[idx[3]] <- BtSinvB[3, 3]
+      
+      # Upper edge u' diagonal
+      all_i[idx[4]] <- 4 * (e - 1) + 4
+      all_j[idx[4]] <- 4 * (e - 1) + 4
+      all_x[idx[4]] <- BtSinvB[4, 4]
+      
+      # Lower edge (u, u')
+      all_i[idx[5]] <- 4 * (e - 1) + 1
+      all_j[idx[5]] <- 4 * (e - 1) + 2
+      all_x[idx[5]] <- BtSinvB[1, 2]
+      
+      all_i[idx[6]] <- 4 * (e - 1) + 2
+      all_j[idx[6]] <- 4 * (e - 1) + 1
+      all_x[idx[6]] <- BtSinvB[1, 2]
+      
+      # Upper edge (u, u')
+      all_i[idx[7]] <- 4 * (e - 1) + 3
+      all_j[idx[7]] <- 4 * (e - 1) + 4
+      all_x[idx[7]] <- BtSinvB[3, 4]
+      
+      all_i[idx[8]] <- 4 * (e - 1) + 4
+      all_j[idx[8]] <- 4 * (e - 1) + 3
+      all_x[idx[8]] <- BtSinvB[3, 4]
+      
+      # Lower u, upper u
+      all_i[idx[9]] <- 4 * (e - 1) + 1
+      all_j[idx[9]] <- 4 * (e - 1) + 3
+      all_x[idx[9]] <- BtSinvB[1, 3]
+      
+      all_i[idx[10]] <- 4 * (e - 1) + 3
+      all_j[idx[10]] <- 4 * (e - 1) + 1
+      all_x[idx[10]] <- BtSinvB[1, 3]
+      
+      # Lower u, upper u'
+      all_i[idx[11]] <- 4 * (e - 1) + 1
+      all_j[idx[11]] <- 4 * (e - 1) + 4
+      all_x[idx[11]] <- BtSinvB[1, 4]
+      
+      all_i[idx[12]] <- 4 * (e - 1) + 4
+      all_j[idx[12]] <- 4 * (e - 1) + 1
+      all_x[idx[12]] <- BtSinvB[1, 4]
+      
+      # Lower u', upper u
+      all_i[idx[13]] <- 4 * (e - 1) + 2
+      all_j[idx[13]] <- 4 * (e - 1) + 3
+      all_x[idx[13]] <- BtSinvB[2, 3]
+      
+      all_i[idx[14]] <- 4 * (e - 1) + 3
+      all_j[idx[14]] <- 4 * (e - 1) + 2
+      all_x[idx[14]] <- BtSinvB[2, 3]
+      
+      # Lower u', upper u'
+      all_i[idx[15]] <- 4 * (e - 1) + 2
+      all_j[idx[15]] <- 4 * (e - 1) + 4
+      all_x[idx[15]] <- BtSinvB[2, 4]
+      
+      all_i[idx[16]] <- 4 * (e - 1) + 4
+      all_j[idx[16]] <- 4 * (e - 1) + 2
+      all_x[idx[16]] <- BtSinvB[2, 4]
+      
+      all_count <- all_count + 16
+      
       # Compute quadratic form directly with Cholesky
       v_i <- backsolve(R_i, forwardsolve(t(R_i), y_i))
       quad_form <- sum(y_i * v_i)
-
+      
       # Update log likelihood
       loglik <- loglik - 0.5 * quad_form - sum(log(diag(R_i)))
     }
-
-    if(is.null(det_R_count)){
-      i_ <- i_[1:count]
-      j_ <- j_[1:count]
-      x_ <- x_[1:count]
-      BtSB <- Matrix::sparseMatrix(i = i_,
-                                  j = j_,
-                                  x = x_,
-                                  dims = dim(Q))
-      Qp <- Q + BtSB
-      Qp <- precomputed_data$Tc %*% Qp %*% t(precomputed_data$Tc)
-      R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
-      det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
-    }
-
-    loglik <- loglik - det_R_count
-
-    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, precomputed_data$Tc%*%Qpmu, system = 'P'),
-                                     system='L')))
-
-    # Count observations for this replicate
-    n_obs <- sum(sapply(precomputed_data$y_data[[i]], function(x) if(is.null(x)) 0 else length(x)))
-
-    loglik <- loglik + 0.5 * t(v) %*% v - 0.5 * n_obs * log(2 * pi)
   }
-
+  
+  # Build sparse matrix just once after collecting all entries
+  if(all_count > 0) {
+    BtSB <- Matrix::sparseMatrix(i = all_i[1:all_count],
+                               j = all_j[1:all_count],
+                               x = all_x[1:all_count],
+                               dims = dim(Q))
+    Qp <- Q + BtSB
+    Qp <- precomputed_data$Tc %*% Qp %*% t(precomputed_data$Tc)
+    R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
+    det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
+    
+    for(i in seq_along(precomputed_data$u_repl)) {
+      loglik <- loglik - det_R_count
+      
+      v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, precomputed_data$Tc%*%Qpmu, system = 'P'),
+                                     system='L')))
+      
+      loglik <- loglik + 0.5 * t(v) %*% v
+    }
+  }
+  
+  # Add constant term
+  loglik <- loglik - 0.5 * n_obs_total * log(2 * pi)
+  
   return(as.numeric(loglik))
 }
 
