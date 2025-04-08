@@ -383,14 +383,14 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
 
         # Cache Cholesky decomposition
-        R <- base::chol(Sigma_i, pivot = TRUE)
-        if(attr(R, "rank") < dim(R)[1])
+        R_i <- base::chol(Sigma_i, pivot = TRUE)
+        if(attr(R_i, "rank") < dim(R_i)[1])
           return(-Inf)
         
         Sigma_iB <- t(Bt)
         
-        Sigma_iB[attr(R,"pivot"),] <- base::forwardsolve(R,
-                                            base::backsolve(R, t(Bt[, attr(R,"pivot")]),
+        Sigma_iB[attr(R_i,"pivot"),] <- base::forwardsolve(R_i,
+                                            base::backsolve(R_i, t(Bt[, attr(R_i,"pivot")]),
                                             transpose = TRUE), upper.tri = TRUE)
 
 
