@@ -386,7 +386,7 @@ graph_starting_values <- function(graph,
       }
 
     } else {
-      # If not sf format, assume it’s a standard list and compute Euclidean distances
+      # If not sf format, assume it's a standard list and compute Euclidean distances
       min_x <- bounding_box$min_x
       max_x <- bounding_box$max_x
       min_y <- bounding_box$min_y
@@ -732,6 +732,48 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   new_data[[".edge_number"]] <- PtE[, 1]
   new_data[[".distance_on_edge"]] <- PtE[, 2]
 
+  # Store factor and datetime metadata
+  factor_metadata <- list()
+  datetime_columns <- c()
+  
+  # Collect factor and datetime info from new_data
+  for (col in names(new_data)) {
+    if (is.factor(new_data[[col]])) {
+      # Store the original factor values as character to preserve them exactly
+      factor_metadata[[col]] <- list(
+        values = as.character(new_data[[col]]),
+        levels = levels(new_data[[col]])
+      )
+      # Convert to character for merging to avoid level issues
+      new_data[[col]] <- as.character(new_data[[col]])
+    } else if (inherits(new_data[[col]], c("POSIXlt", "POSIXt", "POSIXct"))) {
+      # Track datetime columns and ensure they're in consistent format (POSIXct)
+      datetime_columns <- c(datetime_columns, col)
+      if (inherits(new_data[[col]], "POSIXlt")) {
+        new_data[[col]] <- as.POSIXct(new_data[[col]])
+      }
+    }
+  }
+  
+  # Collect factor and datetime info from old_data too
+  if (!is.null(old_data)) {
+    for (col in names(old_data)) {
+      if (is.factor(old_data[[col]]) && !(col %in% names(factor_metadata))) {
+        factor_metadata[[col]] <- list(
+          levels = levels(old_data[[col]])
+        )
+        # Convert to character for merging
+        old_data[[col]] <- as.character(old_data[[col]])
+      } else if (inherits(old_data[[col]], c("POSIXlt", "POSIXt", "POSIXct")) && 
+                !(col %in% datetime_columns)) {
+        datetime_columns <- c(datetime_columns, col)
+        if (inherits(old_data[[col]], "POSIXlt")) {
+          old_data[[col]] <- as.POSIXct(old_data[[col]])
+        }
+      }
+    }
+  }
+
   # Ensure group_vector is initialized correctly
   if (is.null(group_vector)) {
     group_vector <- if (!is.null(old_data)) {
@@ -807,8 +849,41 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   list_result[[".distance_on_edge"]] <- data_coords$PtE2
   list_result[[".group"]] <- data_coords$group
 
+  # Restore ALL factors with their original levels
+  for (col_name in names(factor_metadata)) {
+    if (col_name %in% names(list_result)) {
+      original_levels <- factor_metadata[[col_name]]$levels
+      
+      # Get current values in the result
+      current_values <- unique(as.character(list_result[[col_name]][!is.na(list_result[[col_name]])]))
+      
+      # Check for new values not in original levels
+      new_values <- setdiff(current_values, original_levels)
+      
+      if (length(new_values) > 0 && !suppress_warnings) {
+        warning(sprintf("Column '%s' contains values not in original factor levels: %s. These have been added as new levels.",
+                      col_name, paste(new_values, collapse = ", ")))
+      }
+      
+      # Create factor with all necessary levels, preserving original order
+      all_levels <- c(original_levels, new_values)
+      list_result[[col_name]] <- factor(list_result[[col_name]], levels = all_levels)
+    }
+  }
+  
+  # Restore datetime columns to their proper type
+  for (col_name in datetime_columns) {
+    if (col_name %in% names(list_result)) {
+      # Convert any numeric timestamps back to POSIXct
+      if (is.numeric(list_result[[col_name]])) {
+        list_result[[col_name]] <- as.POSIXct(list_result[[col_name]], origin="1970-01-01")
+      }
+    }
+  }
+
   return(list_result)
 }
+
 #' find indices of the rows with all NA's in lists
 #' @noRd
 #'
@@ -2293,4 +2368,27 @@ construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree
   )
 
   return(C)
+}
+
+#' Compare values with proper NA handling in a vectorized way
+#' 
+#' @param x First value or vector/matrix
+#' @param y Second value or vector/matrix
+#' @param is_matrix Whether the input should be treated as a matrix
+#' @return Logical vector indicating if values are different (FALSE means same)
+#' @noRd
+compare_with_na <- function(x, y, is_matrix = FALSE) {
+  # Create temporary copies with NA replaced by a unique placeholder
+  x_copy <- x
+  y_copy <- y
+  
+  x_copy[is.na(x_copy)] <- ".dummy_na_val"
+  y_copy[is.na(y_copy)] <- ".dummy_na_val"
+  
+  if (!is_matrix) {
+    return(x_copy != y_copy)
+  } else {
+    # For matrices, each row must have all columns matching
+    return(rowSums(x_copy != y_copy) == ncol(x_copy))
+  }
 }

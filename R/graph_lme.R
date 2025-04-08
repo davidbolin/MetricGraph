@@ -367,22 +367,37 @@ graph_lme <- function(formula, graph,
 
       df_data <- graph$.__enclos_env__$private$data
 
+      # First extract the response variable
       y_term <- stats::terms(formula)[[2]]
-
+      response_var <- as.character(y_term)
+      
+      # Get all variables from formula, including those inside transformations like log(), etc.
+      all_vars <- all.vars(formula)
+      
+      # Filter df_data to include only formula-relevant columns before processing with stats functions
+      # Add necessary positional variables that need to be preserved
+      positional_vars <- c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y")
+      
+      # Combine all needed variables
+      names_temp <- c(all_vars, positional_vars)
+      
+      # Filter df_data to keep only the needed columns
+      filtered_data <- list()
+      for (name in names_temp) {
+        if (!is.null(df_data[[name]])) {
+          filtered_data[[name]] <- df_data[[name]]
+        }
+      }
+      df_data <- filtered_data
+      
+      # Now process with stats functions using the filtered data
       cov_term <- stats::delete.response(terms(formula))
-
       X_cov <- stats::model.matrix(cov_term, df_data)
-
+      
       cov_names <- NULL
-
       if(!is.null(X_cov)){
         cov_names <- attr(cov_term, "term.labels")
       }
-
-      names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
-
-      df_data <- lapply(names_temp, function(i){df_data[[i]]})
-      names(df_data) <- names_temp
 
       idx_notanyNA <- idx_not_any_NA(df_data)
 
@@ -408,8 +423,14 @@ graph_lme <- function(formula, graph,
       fit$call <- call_graph_lme
 
       graph_bkp <- graph$clone()
-      graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
-      names(graph_bkp$.__enclos_env__$private$data) <- names_temp
+      # Filter the data to only contain elements from names_temp
+      filtered_data <- list()
+      for (name in names_temp) {
+        if (!is.null(graph_bkp$.__enclos_env__$private$data[[name]])) {
+          filtered_data[[name]] <- graph_bkp$.__enclos_env__$private$data[[name]]
+        }
+      }
+      graph_bkp$.__enclos_env__$private$data <- filtered_data
       fit$graph <- graph_bkp
 
       # if(fit$estimate_nu){
@@ -444,17 +465,46 @@ graph_lme <- function(formula, graph,
     data <- graph$.__enclos_env__$private$data
   }
 
+  # First extract the response variable
   y_term <- stats::terms(formula)[[2]]
+  response_var <- as.character(y_term)
+  
+  # Get all variables from formula, including those inside transformations like log(), etc.
+  all_vars <- all.vars(formula)
+  
+  # Filter df_data to include only formula-relevant columns before processing with stats functions
+  # Add necessary positional variables that need to be preserved
+  positional_vars <- c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y")
+  
+  # Combine all needed variables
+  names_temp <- c(all_vars, positional_vars)
+  
+  # Filter df_data to keep only the needed columns
+  filtered_data <- list()
+  for (name in names_temp) {
+    if (!is.null(data[[name]])) {
+      filtered_data[[name]] <- data[[name]]
+    }
+  }
+  data <- filtered_data
+  
+  filtered_data <- list()
+  for (name in names_temp) {
+    if (!is.null(graph_bkp$.__enclos_env__$private$data[[name]])) {
+      filtered_data[[name]] <- graph_bkp$.__enclos_env__$private$data[[name]]
+    }
+  }
+  graph_bkp$.__enclos_env__$private$data <- filtered_data
 
+  # Now process with stats functions using the filtered data
+  cov_term <- stats::delete.response(terms(formula))
+  X_cov <- stats::model.matrix(cov_term, data)
+  
   y_graph <- eval(y_term, envir = data, enclos = parent.frame())
   y_graph <- as.numeric(y_graph)
-
-  cov_term <- stats::delete.response(terms(formula))
-
-  X_cov <- stats::model.matrix(cov_term, data)
-
+  
   cov_names <- NULL
-
+  
   if(!is.null(X_cov)){
     n_cov <- ncol(X_cov)
     cov_names <- attr(cov_term, "term.labels")
@@ -469,12 +519,6 @@ graph_lme <- function(formula, graph,
     X_cov <- matrix(1, nrow = length(y_graph))
     colnames(X_cov) <- names_temp
   }
-
-
-  names_temp <- c(as.character(y_term), cov_names, c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y"))
-
-  graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
-  names(graph_bkp$.__enclos_env__$private$data) <- names_temp
 
   time_build_likelihood_start <- Sys.time()
 
@@ -1215,8 +1259,6 @@ graph_lme <- function(formula, graph,
   # }
   rm(graph_bkp)
   graph_bkp <- graph$clone()
-  graph_bkp$.__enclos_env__$private$data <- lapply(names_temp, function(i){graph_bkp$.__enclos_env__$private$data[[i]]})
-  names(graph_bkp$.__enclos_env__$private$data) <- names_temp
   object$graph <- graph_bkp
   object$df.residual <- object$nobs -(1 + length(object$coeff$fixed_effects) + length(object$coeff$random_effects))
   object$lik_fun <- likelihood_new
