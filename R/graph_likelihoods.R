@@ -1172,6 +1172,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
     }
     precomputeddata$y[[j]] <- list()
     precomputeddata$x[[j]] <- list()
+    precomputeddata$D_matrix[[j]] <- list()
     for (i in 1:length(obs.edges)) {
       # Use pre-computed replicate indices
       e <- obs.edges[i]
@@ -1186,7 +1187,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
       if(sum(!idx_na) == 0){
         precomputeddata$y[[j]][[i]] <- NULL
         precomputeddata$x[[j]][[i]] <- NULL
-        precomputeddata$D_matrix[[i]] <- NULL
+        precomputeddata$D_matrix[[j]][[i]] <- NULL
         next
       }
 
@@ -1212,7 +1213,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
       # Compute distance efficiently
       D_vec <- c(0, l, l*PtE_temp)
       D_matrix <- as.matrix(dist(D_vec))
-      precomputeddata$D_matrix[[i]] <- D_matrix
+      precomputeddata$D_matrix[[j]][[i]] <- D_matrix
     }
   }
   return(precomputeddata)
@@ -1307,7 +1308,7 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
           y_i <- y_i - as.vector(precomputeddata$x[[j]][[i]] %*% theta[4:(3+n_cov)])
         }
       }
-      D_matrix <- precomputeddata$D_matrix[[i]]
+      D_matrix <- precomputeddata$D_matrix[[j]][[i]]
 
       # Pre-compute S matrix
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
