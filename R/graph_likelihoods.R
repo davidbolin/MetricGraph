@@ -516,6 +516,301 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   return(as.numeric(loglik))
 }
 
+#' Precompute data for the alpha2 model
+#'
+#' @param graph metric_graph object
+#' @param data_name name of the response variable
+#' @param manual_y manual y values (if data_name is NULL)
+#' @param X_cov matrix of covariates
+#' @param repl replicates to be considered
+#' @return A list with precomputed data that can be passed to likelihood_alpha2_precompute
+#' @noRd
+precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL, 
+                              X_cov = NULL, repl = NULL) {
+  
+  # Ensure we have alpha=2 basis construction
+  if(is.null(graph$C)){
+    graph$buildC(2)
+  } else if(graph$CoB$alpha == 1){
+    graph$buildC(2)
+  }
+  
+  # Get replication data
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+  
+  if(is.null(repl)){
+    u_repl <- unique(repl_vec)
+  } else{
+    u_repl <- unique(repl)
+  }
+  
+  # Get response data
+  if(is.null(manual_y)){
+    y <- graph$.__enclos_env__$private$data[[data_name]]
+  } else if(is.null(data_name)){
+    y <- manual_y
+  } else{
+    stop("Either data_name or manual_y must be not NULL")
+  }
+  
+  # Get observation points
+  PtE <- graph$get_PtE()
+  obs.edges <- unique(PtE[, 1])
+  
+  # Precalculate constants
+  n_const <- length(graph$CoB$S)
+  ind.const <- c(1:n_const)
+  Tc <- graph$CoB$T[-ind.const, ]
+  
+  # Cache edge lengths
+  edge_lengths <- graph$edge_lengths
+  n_edges <- nrow(graph$E)
+  
+  # Initialize precomputed data structure
+  precomputed <- list()
+  precomputed$graph <- graph
+  precomputed$u_repl <- u_repl
+  precomputed$obs.edges <- obs.edges
+  precomputed$n_const <- n_const
+  precomputed$ind.const <- ind.const
+  precomputed$Tc <- Tc
+  precomputed$n_edges <- n_edges
+  precomputed$edge_lengths <- edge_lengths
+  
+  # Precompute data for each replicate
+  precomputed$y_data <- list()
+  precomputed$x_data <- list()
+  precomputed$D_data <- list()
+  precomputed$t_data <- list()
+  
+  for(i in seq_along(u_repl)) {
+    curr_repl <- u_repl[i]
+    repl_indices <- (repl_vec == curr_repl)
+    y_rep <- y[repl_indices]
+    
+    precomputed$y_data[[i]] <- list()
+    precomputed$x_data[[i]] <- list()
+    precomputed$D_data[[i]] <- list()
+    precomputed$t_data[[i]] <- list()
+    
+    # Process X_cov if provided
+    if(!is.null(X_cov)){
+      n_cov <- ncol(X_cov)
+      if(n_cov > 0){
+        X_cov_rep <- X_cov[repl_indices, , drop=FALSE]
+      }
+    }
+    
+    for(j in seq_along(obs.edges)) {
+      e <- obs.edges[j]
+      obs.id <- PtE[,1] == e
+      y_i <- y_rep[obs.id]
+      
+      # Skip if no observations
+      if(length(y_i) == 0) {
+        precomputed$y_data[[i]][[j]] <- NULL
+        precomputed$x_data[[i]][[j]] <- NULL
+        precomputed$D_data[[i]][[j]] <- NULL
+        precomputed$t_data[[i]][[j]] <- NULL
+        next
+      }
+      
+      # Store y data
+      precomputed$y_data[[i]][[j]] <- y_i
+      
+      # Store X data if present
+      if(!is.null(X_cov) && ncol(X_cov) > 0){
+        X_cov_e <- X_cov_rep[obs.id, , drop=FALSE]
+        precomputed$x_data[[i]][[j]] <- X_cov_e
+      }
+      
+      # Get edge length
+      l <- edge_lengths[e]
+      
+      # Compute and store time points and distance matrix
+      t <- c(0, l, l*PtE[obs.id, 2])
+      precomputed$t_data[[i]][[j]] <- t
+      
+      D <- outer(t, t, `-`)
+      precomputed$D_data[[i]][[j]] <- D
+    }
+  }
+  
+  return(precomputed)
+}
+
+#' Log-likelihood calculation for alpha=2 model using precomputed data
+#'
+#' @param theta parameters (sigma_e, reciprocal_tau, kappa)
+#' @param precomputed_data precomputed data from precompute_alpha2
+#' @param BC which boundary condition to use (0,1)
+#' @param parameterization parameterization to be used
+#' @return The log-likelihood
+#' @noRd
+likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parameterization = "matern") {
+  
+  # Extract precomputed data
+  graph <- precomputed_data$graph
+  u_repl <- precomputed_data$u_repl
+  obs.edges <- precomputed_data$obs.edges
+  n_const <- precomputed_data$n_const
+  ind.const <- precomputed_data$ind.const
+  Tc <- precomputed_data$Tc
+  n_edges <- precomputed_data$n_edges
+  edge_lengths <- precomputed_data$edge_lengths
+  
+  # Extract parameters
+  sigma_e <- exp(theta[1])
+  reciprocal_tau <- exp(theta[2])
+  if(parameterization == "matern"){
+    kappa = sqrt(8 * 1.5) / exp(theta[3])
+  } else{
+    kappa = exp(theta[3])
+  }
+  
+  # Build Q matrix once
+  Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
+                     alpha = 2, graph = graph, BC=BC)
+  
+  R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
+                       LDL = FALSE, perm = TRUE)
+  
+  # Get determinant once
+  loglik <- 0
+  det_R <- Matrix::determinant(R, sqrt=TRUE)$modulus[1]
+  det_R_count <- NULL
+  
+  # Process each replicate
+  for(i in seq_along(u_repl)) {
+    loglik <- loglik + det_R
+    
+    # Pre-allocate with exact size needed
+    Qpmu <- numeric(4 * n_edges)
+    
+    # Pre-allocate with maximum size needed
+    max_entries <- 16 * length(obs.edges)
+    i_ <- j_ <- x_ <- numeric(max_entries)
+    count <- 0
+    
+    # Process each edge
+    for(j in seq_along(obs.edges)) {
+      e <- obs.edges[j]
+      
+      # Get data for this edge
+      y_i <- precomputed_data$y_data[[i]][[j]]
+      
+      # Skip if no observations
+      if(is.null(y_i) || length(y_i) == 0) {
+        next
+      }
+      
+      # Handle covariates if present
+      if(!is.null(precomputed_data$x_data) && !is.null(precomputed_data$x_data[[i]][[j]])) {
+        X_cov_e <- precomputed_data$x_data[[i]][[j]]
+        n_cov <- ncol(X_cov_e)
+        if(n_cov > 0){
+          y_i <- y_i - as.vector(X_cov_e %*% theta[4:(3+n_cov)])
+        }
+      }
+      
+      # Get precomputed distance data
+      t <- precomputed_data$t_data[[i]][[j]]
+      D <- precomputed_data$D_data[[i]][[j]]
+      
+      # Pre-allocate matrix
+      n_pts <- length(t)
+      S <- matrix(0, n_pts + 2, n_pts + 2)
+      
+      # Compute all submatrices
+      d.index <- c(1,2)
+      S[-d.index, -d.index] <- r_2(D, kappa = kappa,
+                                  tau = 1/reciprocal_tau, deriv = 0)
+      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,edge_lengths[e]))),
+                                 kappa = kappa, tau = 1/reciprocal_tau,
+                                 deriv = 2)
+      S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+                                 tau = 1/reciprocal_tau, deriv = 1)
+      S[-d.index, d.index] <- t(S[d.index, -d.index])
+      
+      # Covariance updates
+      E.ind <- c(1:4)
+      Obs.ind <- -E.ind
+      Bt <- solve(S[E.ind, E.ind], S[E.ind, Obs.ind, drop = FALSE])
+      Sigma_i <- S[Obs.ind,Obs.ind] - S[Obs.ind, E.ind] %*% Bt
+      diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+      
+      # Cache Cholesky decomposition
+      R_i <- base::chol(Sigma_i)
+      
+      Sigma_iB <- backsolve(R_i, forwardsolve(t(R_i), t(Bt)))
+      
+      BtSinvB <- Bt %*% Sigma_iB
+      
+      E <- graph$E[e, ]
+      if (E[1] == E[2]) {
+        warning("Circle not implemented")
+      }
+      
+      BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
+      Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
+        (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
+      
+      # Efficiently set up precision matrix entries
+      # lower edge precision u
+      idx_offset <- count
+      
+      # Create indices for all 16 entries at once
+      pair_indices <- expand.grid(1:4, 1:4)
+      for(idx in 1:16) {
+        row_idx <- pair_indices[idx, 1]
+        col_idx <- pair_indices[idx, 2]
+        
+        # Map to actual matrix indices
+        i_[idx_offset + idx] <- 4 * (e - 1) + row_idx
+        j_[idx_offset + idx] <- 4 * (e - 1) + col_idx
+        
+        # Map to correct positions in BtSinvB
+        x_[idx_offset + idx] <- BtSinvB[row_idx, col_idx]
+      }
+      
+      count <- count + 16
+      
+      # Compute quadratic form directly with Cholesky
+      v_i <- backsolve(R_i, forwardsolve(t(R_i), y_i))
+      quad_form <- sum(y_i * v_i)
+      
+      # Update log likelihood
+      loglik <- loglik - 0.5 * quad_form - sum(log(diag(R_i)))
+    }
+    
+    if(is.null(det_R_count)){
+      i_ <- i_[1:count]
+      j_ <- j_[1:count]
+      x_ <- x_[1:count]
+      BtSB <- Matrix::sparseMatrix(i = i_,
+                                  j = j_,
+                                  x = x_,
+                                  dims = dim(Q))
+      Qp <- Q + BtSB
+      Qp <- Tc %*% Qp %*% t(Tc)
+      R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
+      det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
+    }
+    
+    loglik <- loglik - det_R_count
+    
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Qpmu,
+                                                        system = "P"),
+                                  system = "L")))
+    
+    # Count observations for this replicate
+    n_obs <- sum(sapply(precomputed_data$y_data[[i]], function(x) if(is.null(x)) 0 else length(x)))
+    
+    loglik <- loglik + 0.5 * t(v) %*% v - 0.5 * n_obs * log(2 * pi)
+  }
+  
+  return(as.numeric(loglik))
+}
 
 
 #' Log-likelihood calculation for alpha=1 model
