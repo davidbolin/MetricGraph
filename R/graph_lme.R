@@ -619,6 +619,11 @@ graph_lme <- function(formula, graph,
 
     if(model[["directional"]] == 1){
       if(model[["alpha"]] == 1){
+        precomp_data <- precompute_alpha1_directional(graph = graph_bkp,
+                                                     manual_y = y_graph,
+                                                     data_name = NULL,
+                                                     X_cov = X_cov,
+                                                     repl = which_repl)
         likelihood <- function(theta){
             if(!is.null(X_cov)){
                   n_cov <- ncol(X_cov)
@@ -629,10 +634,10 @@ graph_lme <- function(formula, graph,
           fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
           new_theta <- fix_v_val_full
           new_theta[!fix_vec_full] <- theta
-          return(-likelihood_alpha1_directional(theta = new_theta, graph = graph_bkp,
-                                    data_name = NULL, manual_y = y_graph,
-                                    X_cov = X_cov, repl = which_repl,
-                                    parameterization = "spde")) # , parameterization = parameterization_latent))
+          return(likelihood_alpha1_directional_precompute(theta = new_theta, 
+                                    precomputed_data = precomp_data,
+                                    parameterization = "spde",
+                                    maximize = FALSE))
         }
       }
 
@@ -694,7 +699,7 @@ graph_lme <- function(formula, graph,
             new_theta <- fix_v_val_full
             new_theta[!fix_vec_full] <- theta       
             return(-likelihood_alpha2_precompute(theta = new_theta, precomputed_data = precomp_data, BC = BC,
-                               parameterization = "spde"))
+                    parameterization = "spde"))
           }
       }
     }
@@ -726,7 +731,6 @@ graph_lme <- function(formula, graph,
         model[["cov_function_name"]] <- "exp_covariance"
       }
     }
-
     precomp_data <- precompute_graph_covariance(graph = graph_bkp, model = model_cov,
                                                 y_graph = y_graph,
                                                 X_cov = X_cov,
@@ -741,8 +745,8 @@ graph_lme <- function(formula, graph,
     likelihood <- function(theta){ 
         # Apply parameter fixes if needed
         if(!is.null(fix_v_val)){
-          fix_v_val_full <- c(fix_v_val, rep(NA, precomputed_data$n_cov))
-          fix_vec_full <- c(fix_vec, rep(FALSE, precomputed_data$n_cov))
+          fix_v_val_full <- c(fix_v_val, rep(NA, precomp_data$n_cov))
+          fix_vec_full <- c(fix_vec, rep(FALSE, precomp_data$n_cov))
           new_theta <- fix_v_val_full
           new_theta[!fix_vec_full] <- theta
         } else{
@@ -761,6 +765,12 @@ graph_lme <- function(formula, graph,
       }    
     }
 
+    precomp_data <- precompute_graph_covariance(graph = graph_bkp, model = model_cov,
+                                                y_graph = y_graph,
+                                                X_cov = X_cov,
+                                                repl = which_repl,
+                                                check_euclidean = check_euclidean)
+
     # fix_vec <- model_options$fix_par_vec
     # fix_v_val <- model_options$start_par_values
     fix_vec <- fixed_values
@@ -771,8 +781,8 @@ graph_lme <- function(formula, graph,
     likelihood <- function(theta){ 
         # Apply parameter fixes if needed
         if(!is.null(fix_v_val)){
-          fix_v_val_full <- c(fix_v_val, rep(NA, precomputed_data$n_cov))
-          fix_vec_full <- c(fix_vec, rep(FALSE, precomputed_data$n_cov))
+          fix_v_val_full <- c(fix_v_val, rep(NA, precomp_data$n_cov))
+          fix_vec_full <- c(fix_vec, rep(FALSE, precomp_data$n_cov))
           new_theta <- fix_v_val_full
           new_theta[!fix_vec_full] <- theta
         } else{
@@ -800,7 +810,7 @@ graph_lme <- function(formula, graph,
       likelihood_new <- function(theta){
         l_tmp <- tryCatch(likelihood(theta),
                             error = function(e){return(NULL)})
-          if(is.null(l_tmp)){
+          if(is.null(l_tmp) || is.nan(l_tmp)){
               return(10^100)
           }
           return(l_tmp)
@@ -826,16 +836,8 @@ graph_lme <- function(formula, graph,
         parallel::clusterExport(cl, "fix_v_val", envir = environment())      
         parallel::clusterExport(cl, "precomp_data", envir = environment())
         # parallel::clusterExport(cl, "y_list", envir = environment())
-        parallel::clusterExport(cl, "likelihood_graph_covariance",
-                       envir = as.environment(asNamespace("MetricGraph")))
-        parallel::clusterExport(cl, "likelihood_graph_laplacian",
-                       envir = as.environment(asNamespace("MetricGraph")))
-        parallel::clusterExport(cl, "likelihood_alpha2",
-                       envir = as.environment(asNamespace("MetricGraph")))
-        parallel::clusterExport(cl, "likelihood_alpha1",
-                       envir = as.environment(asNamespace("MetricGraph")))
-        parallel::clusterExport(cl, "likelihood_alpha1_v2",
-                       envir = as.environment(asNamespace("MetricGraph")))
+        parallel::clusterExport(cl, "likelihood", envir = environment())
+        parallel::clusterExport(cl, "likelihood_new", envir = environment())        
 
         end_par <- Sys.time()
         time_par <- end_par - start_par
