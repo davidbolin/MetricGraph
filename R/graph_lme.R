@@ -658,8 +658,7 @@ graph_lme <- function(formula, graph,
                                             manual_y = y_graph,
                                             data_name = NULL,
                                             X_cov = X_cov,
-                                            repl = which_repl,
-                                            parameterization = "spde")
+                                            repl = which_repl)
           likelihood <- function(theta){
             if(!is.null(X_cov)){
                   n_cov <- ncol(X_cov)
@@ -675,10 +674,15 @@ graph_lme <- function(formula, graph,
                                        precomputeddata = precomp_data,
                                       data_name = NULL, manual_y = y_graph,
                                X_cov = X_cov, repl = which_repl, BC = BC,
-                               parameterization = "spde")) # , parameterization = parameterization_latent))
+                               parameterization = "spde")) 
           }
         }
       } else{
+          precomp_data <- precompute_alpha2(graph = graph_bkp,
+                                            manual_y = y_graph,
+                                            data_name = NULL,
+                                            X_cov = X_cov,
+                                            repl = which_repl)
         likelihood <- function(theta){
             if(!is.null(X_cov)){
                   n_cov <- ncol(X_cov)
@@ -689,10 +693,8 @@ graph_lme <- function(formula, graph,
             fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
             new_theta <- fix_v_val_full
             new_theta[!fix_vec_full] <- theta       
-            return(-likelihood_alpha2(theta = new_theta, graph = graph_bkp,
-                                      data_name = NULL, manual_y = y_graph,
-                               X_cov = X_cov, repl = which_repl, BC = BC,
-                               parameterization = "spde")) # , parameterization = parameterization_latent))
+            return(-likelihood_alpha2_precompute(theta = new_theta, precomputed_data = precomp_data, BC = BC,
+                               parameterization = "spde"))
           }
       }
     }
@@ -712,6 +714,7 @@ graph_lme <- function(formula, graph,
                                                fix_vec = fix_vec,
                                                fix_v_val = fix_v_val)
   } else if(model_type == "isocov") {
+
   if (is.character(model[["cov_function"]]) && !par_vec) {
     if(model[["cov_function"]] %in% c("WM1","WM2", "GL1", "GL2")){
       model_cov <- model[["cov_function"]]
@@ -724,18 +727,30 @@ graph_lme <- function(formula, graph,
       }
     }
 
+    precomp_data <- precompute_graph_covariance(graph = graph_bkp, model = model_cov,
+                                                y_graph = y_graph,
+                                                X_cov = X_cov,
+                                                repl = which_repl,
+                                                check_euclidean = check_euclidean)
+
     fix_v <- create_fix_vec_val(fixed_values)
 
     fix_vec <- fix_v$fix_vec
     fix_v_val <- fix_v$fix_v_val
 
-    likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
-                                              y_graph = y_graph,
-                                              cov_function = model[["cov_function"]],
-                                              X_cov = X_cov, repl = which_repl,
-                                              fix_vec = fix_vec,
-                                              fix_v_val = fix_v_val,
-                                               check_euclidean = check_euclidean)
+    likelihood <- function(theta){ 
+        # Apply parameter fixes if needed
+        if(!is.null(fix_v_val)){
+          fix_v_val_full <- c(fix_v_val, rep(NA, precomputed_data$n_cov))
+          fix_vec_full <- c(fix_vec, rep(FALSE, precomputed_data$n_cov))
+          new_theta <- fix_v_val_full
+          new_theta[!fix_vec_full] <- theta
+        } else{
+          new_theta <- theta
+        }
+        return(likelihood_graph_covariance_precompute(theta = new_theta, precomputed_data = precomp_data,
+                         cov_function = model[["cov_function"]], log_scale = TRUE, maximize = FALSE))
+    }
     } else{
     model[["cov_function_name"]] <- "other"
     model_cov <- "isoCov"
@@ -753,13 +768,19 @@ graph_lme <- function(formula, graph,
     fix_v_val <- start_values_orig
     start_values <- start_values[!fix_vec_full]
 
-    likelihood <- likelihood_graph_covariance(graph_bkp, model = model_cov,
-                                                y_graph = y_graph,
-                                                cov_function = model[["cov_function"]],
-                                                X_cov = X_cov, repl = which_repl,
-                                                fix_vec = fix_vec,
-                                                fix_v_val = fix_v_val,
-                                               check_euclidean = check_euclidean)
+    likelihood <- function(theta){ 
+        # Apply parameter fixes if needed
+        if(!is.null(fix_v_val)){
+          fix_v_val_full <- c(fix_v_val, rep(NA, precomputed_data$n_cov))
+          fix_vec_full <- c(fix_vec, rep(FALSE, precomputed_data$n_cov))
+          new_theta <- fix_v_val_full
+          new_theta[!fix_vec_full] <- theta
+        } else{
+          new_theta <- theta
+        }
+        return(likelihood_graph_covariance_precompute(theta = new_theta, precomputed_data = precomp_data,
+                         cov_function = model[["cov_function"]], log_scale = TRUE, maximize = FALSE))
+    }
     }
     }
 
