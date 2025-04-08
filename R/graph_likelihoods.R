@@ -649,16 +649,6 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 #' @noRd
 likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parameterization = "matern") {
 
-  # Extract precomputed data
-  graph <- precomputed_data$graph
-  u_repl <- precomputed_data$u_repl
-  obs.edges <- precomputed_data$obs.edges
-  n_const <- precomputed_data$n_const
-  ind.const <- precomputed_data$ind.const
-  Tc <- precomputed_data$Tc
-  n_edges <- precomputed_data$n_edges
-  edge_lengths <- precomputed_data$edge_lengths
-
   # Extract parameters
   sigma_e <- exp(theta[1])
   reciprocal_tau <- exp(theta[2])
@@ -670,9 +660,9 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
 
   # Build Q matrix once
   Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
-                     alpha = 2, graph = graph, BC=BC)
+                     alpha = 2, graph = precomputed_data$graph, BC=BC)
 
-  R <- Matrix::Cholesky(forceSymmetric(Tc%*%Q%*%t(Tc)),
+  R <- Matrix::Cholesky(forceSymmetric(precomputed_data$Tc%*%Q%*%t(precomputed_data$Tc)),
                        LDL = FALSE, perm = TRUE)
 
   # Get determinant once
@@ -681,20 +671,20 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
   det_R_count <- NULL
 
   # Process each replicate
-  for(i in seq_along(u_repl)) {
+  for(i in seq_along(precomputed_data$u_repl)) {
     loglik <- loglik + det_R
 
     # Pre-allocate with exact size needed
-    Qpmu <- numeric(4 * n_edges)
+    Qpmu <- numeric(4 * precomputed_data$n_edges)
 
     # Pre-allocate with maximum size needed
-    max_entries <- 16 * length(obs.edges)
+    max_entries <- 16 * length(precomputed_data$obs.edges)
     i_ <- j_ <- x_ <- numeric(max_entries)
     count <- 0
 
     # Process each edge
-    for(j in seq_along(obs.edges)) {
-      e <- obs.edges[j]
+    for(j in seq_along(precomputed_data$obs.edges)) {
+      e <- precomputed_data$obs.edges[j]
 
       # Get data for this edge
       y_i <- precomputed_data$y_data[[i]][[j]]
@@ -725,7 +715,7 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       d.index <- c(1,2)
       S[-d.index, -d.index] <- r_2(D, kappa = kappa,
                                   tau = 1/reciprocal_tau, deriv = 0)
-      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,edge_lengths[e]))),
+      S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,precomputed_data$edge_lengths[e]))),
                                  kappa = kappa, tau = 1/reciprocal_tau,
                                  deriv = 2)
       S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
@@ -746,7 +736,7 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
 
       BtSinvB <- Bt %*% Sigma_iB
 
-      E <- graph$E[e, ]
+      E <- precomputed_data$graph$E[e, ]
       if (E[1] == E[2]) {
         warning("Circle not implemented")
       }
@@ -792,14 +782,14 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
                                   x = x_,
                                   dims = dim(Q))
       Qp <- Q + BtSB
-      Qp <- Tc %*% Qp %*% t(Tc)
+      Qp <- precomputed_data$Tc %*% Qp %*% t(precomputed_data$Tc)
       R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
       det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
     }
 
     loglik <- loglik - det_R_count
 
-    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu, system = 'P'),
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, precomputed_data$Tc%*%Qpmu, system = 'P'),
                                      system='L')))
 
     # Count observations for this replicate
@@ -1755,16 +1745,10 @@ likelihood_graph_covariance_precompute <- function(theta,
                                                   fix_vec = NULL,
                                                   fix_v_val = NULL) {
 
-  # Extract model and data
-  model <- precomputed_data$model
-  u_repl <- precomputed_data$u_repl
-  graph <- precomputed_data$graph
-  n_cov <- precomputed_data$n_cov
-
   # Apply parameter fixes if needed
   if(!is.null(fix_v_val)){
-    fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
-    fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+    fix_v_val_full <- c(fix_v_val, rep(NA, precomputed_data$n_cov))
+    fix_vec_full <- c(fix_vec, rep(FALSE, precomputed_data$n_cov))
     new_theta <- fix_v_val_full
     new_theta[!fix_vec_full] <- theta
   } else{
@@ -1772,13 +1756,13 @@ likelihood_graph_covariance_precompute <- function(theta,
   }
 
   # Extract parameters based on model type
-  if(model == "isoCov"){
+  if(precomputed_data$model == "isoCov"){
     if(log_scale){
       sigma_e <- exp(new_theta[1])
-      theta_cov <- exp(new_theta[2:(length(new_theta)-n_cov)])
+      theta_cov <- exp(new_theta[2:(length(new_theta)-precomputed_data$n_cov)])
     } else{
       sigma_e <- new_theta[1]
-      theta_cov <- new_theta[2:(length(new_theta)-n_cov)]
+      theta_cov <- new_theta[2:(length(new_theta)-precomputed_data$n_cov)]
     }
   } else{
     if(log_scale){
@@ -1793,18 +1777,18 @@ likelihood_graph_covariance_precompute <- function(theta,
   }
 
   # Extract covariate parameters if needed
-  theta_covariates <- if(n_cov > 0) {
-    new_theta[(length(new_theta)-n_cov+1):length(new_theta)]
+  theta_covariates <- if(precomputed_data$n_cov > 0) {
+    new_theta[(length(new_theta)-precomputed_data$n_cov+1):length(new_theta)]
   } else {
     NULL
   }
 
   # Build covariance matrix based on model type
-  Sigma <- switch(model,
+  Sigma <- switch(precomputed_data$model,
     WM1 = {
       # More efficient precision matrix construction
       Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
-                        alpha = 1, graph = graph)
+                        alpha = 1, graph = precomputed_data$graph)
       # Use sparse solver when possible
       as.matrix(Matrix::solve(Q))[precomputed_data$PtV, precomputed_data$PtV]
     },
@@ -1814,10 +1798,10 @@ likelihood_graph_covariance_precompute <- function(theta,
 
       # Build precision matrix
       Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
-                        graph = graph, BC = 1)
+                        graph = precomputed_data$graph, BC = 1)
 
       # Cache matrix products
-      TC <- graph$CoB$T
+      TC <- precomputed_data$graph$CoB$T
       TCt <- t(TC)
       Qtilde <- TC %*% Q %*% TCt
       Qtilde <- Qtilde[-n.c,-n.c]
@@ -1864,7 +1848,7 @@ likelihood_graph_covariance_precompute <- function(theta,
       }
 
       # Compute covariance matrix
-      as.matrix(cov_function(as.matrix(graph$res_dist[[".complete"]]), theta_cov))
+      as.matrix(cov_function(as.matrix(precomputed_data$graph$res_dist[[".complete"]]), theta_cov))
     }
   )
 
@@ -1875,7 +1859,7 @@ likelihood_graph_covariance_precompute <- function(theta,
   loglik_val <- 0
 
   # Process each replicate using precomputed data
-  for(i in seq_along(u_repl)) {
+  for(i in seq_along(precomputed_data$u_repl)) {
     # Get precomputed data for this replicate
     na_obs <- precomputed_data$na_indices[[i]]
 
@@ -1893,7 +1877,7 @@ likelihood_graph_covariance_precompute <- function(theta,
 
     # Get data vector with covariate adjustment if needed
     v <- y_i
-    if(!is.null(precomputed_data$X_data) && n_cov > 0) {
+    if(!is.null(precomputed_data$X_data) && precomputed_data$n_cov > 0) {
       X_cov_repl <- precomputed_data$X_data[[i]]
       v <- v - X_cov_repl %*% theta_covariates
     }
