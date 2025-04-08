@@ -1325,6 +1325,284 @@ likelihood_graph_covariance <- function(graph,
   return(loglik)
 }
 
+#' Precompute data for the graph covariance model
+#'
+#' @param graph A `metric_graph` object
+#' @param model Type of model: "WM1", "WM2", "GL1", "GL2", or "isoCov"
+#' @param y_graph Response vector given in the same order as the internal locations from the graph
+#' @param X_cov Matrix with covariates
+#' @param repl Vector with the replicates to be considered
+#' @param check_euclidean Whether to check if the graph is Euclidean
+#' @return A list with precomputed data that can be passed to likelihood_graph_covariance_precompute
+#' @noRd
+precompute_graph_covariance <- function(graph, 
+                                        model = "WM1",
+                                        y_graph,
+                                        X_cov = NULL,
+                                        repl = NULL,
+                                        check_euclidean = TRUE) {
+  
+  # Validate model type
+  if(!(model %in% c("WM1", "WM2", "GL1", "GL2", "isoCov"))) {
+    stop("The available models are: 'WM1', 'WM2', 'GL1', 'GL2' and 'isoCov'!")
+  }
+  
+  # Get replication data
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+  
+  if(is.null(repl)) {
+    u_repl <- unique(repl_vec)
+  } else {
+    u_repl <- unique(repl)
+  }
+  
+  # Prepare data structures
+  precomputed <- list()
+  precomputed$model <- model
+  precomputed$u_repl <- u_repl
+  precomputed$y_data <- list()
+  precomputed$X_data <- list()
+  precomputed$na_indices <- list()
+  
+  # Pre-compute covariate dimensions
+  precomputed$n_cov <- if(!is.null(X_cov)) ncol(X_cov) else 0
+  
+  # Ensure Laplacian is computed if needed for GL1/GL2 models
+  if(is.null(graph$Laplacian) && (model %in% c("GL1", "GL2"))) {
+    graph$compute_laplacian()
+  }
+  
+  # For isoCov model, precompute resistance distances
+  if(model == "isoCov" && is.null(graph$res_dist)) {
+    graph$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
+  }
+  
+  # Precompute PtV and PtE for WM models
+  if(model %in% c("WM1", "WM2")) {
+    precomputed$PtV <- graph$PtV
+    if(model == "WM2") {
+      precomputed$PtE <- graph$get_PtE()
+      precomputed$n_constraints <- 1:length(graph$CoB$S)
+    }
+  }
+  
+  # Precompute data for each replicate
+  for(i in seq_along(u_repl)) {
+    curr_repl <- u_repl[i]
+    
+    # Get data for this replicate
+    ind_tmp <- (repl_vec %in% curr_repl)
+    y_tmp <- y_graph[ind_tmp]
+    na_obs <- is.na(y_tmp)
+    
+    # Store observation mask and non-NA values
+    precomputed$na_indices[[i]] <- na_obs
+    precomputed$y_data[[i]] <- y_tmp[!na_obs]
+    
+    # Store covariate data if present
+    if(!is.null(X_cov) && precomputed$n_cov > 0) {
+      X_cov_repl <- X_cov[ind_tmp, , drop=FALSE]
+      precomputed$X_data[[i]] <- X_cov_repl[!na_obs, , drop=FALSE]
+    }
+  }
+  
+  # Store graph information needed for calculations
+  precomputed$nV <- graph$nV
+  
+  # Specific model information
+  if(model == "GL1" || model == "GL2") {
+    precomputed$Laplacian <- graph$Laplacian
+  }
+  
+  # Store graph components needed for all models
+  precomputed$graph <- graph
+  
+  return(precomputed)
+}
+
+#' Log-likelihood calculation using precomputed data for the graph covariance model
+#'
+#' @param theta Parameter vector
+#' @param precomputed_data Precomputed data from precompute_graph_covariance
+#' @param cov_function Covariance function (required for isoCov model)
+#' @param log_scale Whether parameters are in log scale
+#' @param maximize Whether to return the likelihood (TRUE) or negative likelihood (FALSE)
+#' @param fix_vec Vector indicating which parameters are fixed
+#' @param fix_v_val Values for fixed parameters
+#' @return The log-likelihood
+#' @noRd
+likelihood_graph_covariance_precompute <- function(theta,
+                                                  precomputed_data,
+                                                  cov_function = NULL,
+                                                  log_scale = TRUE,
+                                                  maximize = FALSE,
+                                                  fix_vec = NULL,
+                                                  fix_v_val = NULL) {
+  
+  # Extract model and data
+  model <- precomputed_data$model
+  u_repl <- precomputed_data$u_repl
+  graph <- precomputed_data$graph
+  n_cov <- precomputed_data$n_cov
+  
+  # Apply parameter fixes if needed
+  if(!is.null(fix_v_val)){
+    fix_v_val_full <- c(fix_v_val, rep(NA, n_cov))
+    fix_vec_full <- c(fix_vec, rep(FALSE, n_cov))
+    new_theta <- fix_v_val_full
+    new_theta[!fix_vec_full] <- theta
+  } else{
+    new_theta <- theta
+  }
+  
+  # Extract parameters based on model type
+  if(model == "isoCov"){
+    if(log_scale){
+      sigma_e <- exp(new_theta[1])
+      theta_cov <- exp(new_theta[2:(length(new_theta)-n_cov)])
+    } else{
+      sigma_e <- new_theta[1]
+      theta_cov <- new_theta[2:(length(new_theta)-n_cov)]
+    }
+  } else{
+    if(log_scale){
+      sigma_e <- exp(new_theta[1])
+      reciprocal_tau <- exp(new_theta[2])
+      kappa <- exp(new_theta[3])
+    } else{
+      sigma_e <- new_theta[1]
+      reciprocal_tau <- new_theta[2]
+      kappa <- new_theta[3]
+    }
+  }
+  
+  # Extract covariate parameters if needed
+  theta_covariates <- if(n_cov > 0) {
+    new_theta[(length(new_theta)-n_cov+1):length(new_theta)]
+  } else {
+    NULL
+  }
+  
+  # Build covariance matrix based on model type
+  Sigma <- switch(model,
+    WM1 = {
+      # More efficient precision matrix construction
+      Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
+                        alpha = 1, graph = graph)
+      # Use sparse solver when possible
+      as.matrix(Matrix::solve(Q))[precomputed_data$PtV, precomputed_data$PtV]
+    },
+    WM2 = {
+      PtE <- precomputed_data$PtE
+      n.c <- precomputed_data$n_constraints
+      
+      # Build precision matrix
+      Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
+                        graph = graph, BC = 1)
+      
+      # Cache matrix products
+      TC <- graph$CoB$T
+      TCt <- t(TC)
+      Qtilde <- TC %*% Q %*% TCt
+      Qtilde <- Qtilde[-n.c,-n.c]
+      
+      # Use Cholesky for solving when possible
+      QChol <- Matrix::Cholesky(Qtilde, LDL = FALSE)
+      TC_nc <- TC[-n.c,]
+      
+      # Compute using intermediate matrices
+      Sigma.overdetermined <- TCt[, -n.c] %*% Matrix::solve(QChol, TC_nc, system = "A")
+      
+      # More efficient indexing
+      index.obs <- 4 * (PtE[,1] - 1) +
+                   1.0 * (abs(PtE[, 2]) < 1e-14) +
+                   3.0 * (abs(PtE[, 2]) > 1e-14)
+      
+      as.matrix(Sigma.overdetermined[index.obs, index.obs])
+    },
+    GL1 = {
+      # Cache intermediate calculations
+      K <- kappa^2 * Matrix::Diagonal(precomputed_data$nV, 1)
+      L <- precomputed_data$Laplacian[[1]]
+      Q <- (K + L) / reciprocal_tau^2
+      
+      # Use sparse solver
+      as.matrix(Matrix::solve(Q))[precomputed_data$PtV, precomputed_data$PtV]
+    },
+    GL2 = {
+      # Cache intermediate calculations
+      K <- kappa^2 * Matrix::Diagonal(precomputed_data$nV, 1)
+      L <- precomputed_data$Laplacian[[1]]
+      Q <- (K + L)
+      Q <- Q %*% Q / reciprocal_tau^2
+      
+      # Use sparse solver
+      as.matrix(Matrix::solve(Q))[precomputed_data$PtV, precomputed_data$PtV]
+    },
+    isoCov = {
+      if(is.null(cov_function)){
+        stop("If model is 'isoCov' the covariance function must be supplied!")
+      }
+      if(!is.function(cov_function)){
+        stop("'cov_function' must be a function!")
+      }
+      
+      # Compute covariance matrix
+      as.matrix(cov_function(as.matrix(graph$res_dist[[".complete"]]), theta_cov))
+    }
+  )
+  
+  # Add measurement error to diagonal
+  diag(Sigma) <- diag(Sigma) + sigma_e^2
+  
+  # Initialize log-likelihood
+  loglik_val <- 0
+  
+  # Process each replicate using precomputed data
+  for(i in seq_along(u_repl)) {
+    # Get precomputed data for this replicate
+    na_obs <- precomputed_data$na_indices[[i]]
+    
+    # Skip if all observations are NA
+    if(all(na_obs)) next
+    
+    # Extract valid observations
+    y_i <- precomputed_data$y_data[[i]]
+    
+    # Extract observation data - only use the non-NA rows and columns
+    Sigma_non_na <- Sigma[!na_obs, !na_obs]
+    
+    # Compute Cholesky decomposition once
+    R <- base::chol(Sigma_non_na)
+    
+    # Get data vector with covariate adjustment if needed
+    v <- y_i
+    if(!is.null(precomputed_data$X_data) && n_cov > 0) {
+      X_cov_repl <- precomputed_data$X_data[[i]]
+      v <- v - X_cov_repl %*% theta_covariates
+    }
+    
+    # Count observations for log determinant term
+    n_obs <- length(v)
+    
+    # Compute log determinant
+    log_det <- sum(log(diag(R)))
+    
+    # Solve system efficiently using Cholesky factor
+    v_i <- backsolve(R, forwardsolve(t(R), v))
+    quad_form <- sum(v * v_i)
+    
+    # Update log-likelihood efficiently
+    loglik_val <- loglik_val - log_det - 0.5 * quad_form - 0.5 * n_obs * log(2*pi)
+  }
+  
+  # Return based on maximize flag
+  if(maximize) {
+    return(as.double(loglik_val))
+  } else {
+    return(-as.double(loglik_val))
+  }
+}
 
 #' Function factory for likelihood evaluation for the graph Laplacian model
 #'
