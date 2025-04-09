@@ -272,12 +272,15 @@ posterior_crossvalidation_manual <- function(theta,
 #' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
 #' @param factor Which factor to multiply the scores. The default is 1.
 #' @param tibble Return the scores as a `tidyr::tibble()`
+#' @param parallel Logical indicating whether to run computations in parallel. Default is FALSE.
+#' @param n_cores Number of cores to use for parallel computation. Default is parallel::detectCores() - 1.
+#' @param print Logical indicating whether to print progress of which fold is being processed. Default is FALSE.
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
 #' @export
-posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
+posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE, parallel = FALSE, n_cores = parallel::detectCores() - 1, print = FALSE)
 {
   if(!inherits(object,"graph_lme") && !is.list(object)){
     stop("object should be of class graph_lme or a list of objects of class graph_lme.")
@@ -287,7 +290,7 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
     if(is.null(names(object))){
       warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
     }
-    results_list <- lapply(object, function(obj){posterior_crossvalidation(obj, factor=factor, tibble=FALSE)})
+    results_list <- lapply(object, function(obj){posterior_crossvalidation(obj, factor=factor, tibble=FALSE, parallel=parallel, n_cores=n_cores, print=print)})
     res <- list()
     res[["mu"]] <- lapply(results_list, function(dat){dat[["mu"]]})
     res[["var"]] <- lapply(results_list, function(dat){dat[["var"]]})
@@ -438,75 +441,176 @@ posterior_crossvalidation <- function(object, factor = 1, tibble = TRUE)
   mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, n_obs)
   mae <- rmse <- rep(0, n_obs)
 
+  process_observation <- function(i) {
+    if(print && !parallel) {
+      cat("Processing fold", i, "of", n_obs, "\n")
+    }
+    
+    local_results <- list(
+      mu.p = 0,
+      var.p = 0,
+      logscore = 0,
+      crps = 0,
+      scrps = 0,
+      mae = 0,
+      rmse = 0
+    )
+    
+    idx_repl <- repl_vec == repl[1]
+    y_graph_repl <- y_graph[idx_repl]
 
-  for(i in 1:n_obs){
-        idx_repl <- repl_vec == repl[1]
-        y_graph_repl <- y_graph[idx_repl]
+    y_cv <- y_graph_repl[-i]
+    v_cv <- y_cv
+    if(!is.null(X_cov)){
+      X_cov_repl <- X_cov[idx_repl, , drop = FALSE]
+      v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+      mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
+    } else {
+      mu_fe <- 0
+    }
 
+    if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1" ){
+      local_results$mu.p <- Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
+      Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
+                                                        Sigma.o[-i, i])
+      local_results$var.p <- diag(Sigma.p)
+    } else {
+      A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+      Q.p <- Q + t(A) %*% A / sigma_e^2
+      local_results$mu.p <- solve(Q.p,
+                     as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
+      v <- rep(0,dim(Q.p)[1])
+      v[graph$PtV[i]] <- 1
+      local_results$var.p <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+    }
+    local_results$logscore <- LS(y_graph_repl[i], local_results$mu.p, sqrt(local_results$var.p))
+    local_results$crps <- CRPS(y_graph_repl[i], local_results$mu.p, sqrt(local_results$var.p))
+    local_results$scrps <- SCRPS(y_graph_repl[i], local_results$mu.p, sqrt(local_results$var.p))
+    local_results$mae <- abs(y_graph_repl[i] - local_results$mu.p)
+    local_results$rmse <- (y_graph_repl[i] - local_results$mu.p)^2
+    
+    if(length(repl)>1){
+      for (j in 2:length(repl)) {
+        y_graph_repl <- y_graph[repl_vec == repl[j]]
         y_cv <- y_graph_repl[-i]
         v_cv <- y_cv
         if(!is.null(X_cov)){
-          X_cov_repl <- X_cov[idx_repl, , drop = FALSE]
+          X_cov_repl <- X_cov[idx_repl,, drop = FALSE]
           v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
           mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
         } else {
           mu_fe <- 0
         }
 
-        if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1" ){
-          mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
+        if(model == "isoExp" || model == "WM alpha2"|| model == "WMD alpha1"){
+          local_results$mu.p <- Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
           Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
-                                                              Sigma.o[-i, i])
-          var.p[i] <- diag(Sigma.p)
+                                                          Sigma.o[-i, i])
+          local_results$var.p <- diag(Sigma.p)
         } else {
           A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
           Q.p <- Q + t(A) %*% A / sigma_e^2
-          mu.p[i] <- solve(Q.p,
-                           as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
+          local_results$mu.p <- solve(Q.p,
+                       as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
           v <- rep(0,dim(Q.p)[1])
           v[graph$PtV[i]] <- 1
-          var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+          local_results$var.p <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
         }
-        logscore[i] <- LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-        crps[i] <- CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-        scrps[i] <- SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-        mae[i] <- abs(y_graph_repl[i] - mu.p[i])
-        rmse[i] <- (y_graph_repl[i] - mu.p[i])^2
-      if(length(repl)>1){
-        for (j in 2:length(repl)) {
-          y_graph_repl <- y_graph[repl_vec == repl[j]]
-          y_cv <- y_graph_repl[-i]
-          v_cv <- y_cv
-          if(!is.null(X_cov)){
-            X_cov_repl <- X_cov[idx_repl,, drop = FALSE]
-            v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
-            mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
-          } else {
-            mu_fe <- 0
-          }
+        local_results$logscore <- local_results$logscore + LS(y_graph_repl[i], local_results$mu.p, sqrt(local_results$var.p))
+        local_results$crps <- local_results$crps + CRPS(y_graph_repl[i], local_results$mu.p, sqrt(local_results$var.p))
+        local_results$scrps <- local_results$scrps + SCRPS(y_graph_repl[i], local_results$mu.p, sqrt(local_results$var.p))
+        local_results$mae <- local_results$mae + abs(y_graph_repl[i] - local_results$mu.p)
+        local_results$rmse <- local_results$rmse + (y_graph_repl[i] - local_results$mu.p)^2
+      }
+    }
+    
+    return(local_results)
+  }
 
-          if(model == "isoExp" || model == "WM alpha2"|| model == "WMD alpha1"){
-            mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
-            Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
-                                                                Sigma.o[-i, i])
-            var.p[i] <- diag(Sigma.p)
-          } else {
-            A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
-            Q.p <- Q + t(A) %*% A / sigma_e^2
-            mu.p[i] <- solve(Q.p,
-                             as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
-            v <- rep(0,dim(Q.p)[1])
-            v[graph$PtV[i]] <- 1
-            var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
-          }
-          logscore[i] <- logscore[i] + LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-          crps[i] <- crps[i] + CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-          scrps[i] <- scrps[i] + SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-          mae[i] <- mae[i] + abs(y_graph_repl[i] - mu.p[i])
-          rmse[i] <- rmse[i] + (y_graph_repl[i] - mu.p[i])^2
-        }
+  if (parallel) {
+    if (!requireNamespace("parallel", quietly = TRUE)) {
+      warning("Package 'parallel' is not available. Using sequential processing instead.")
+      parallel <- FALSE
     }
   }
+  
+  if (parallel) {
+    cl <- parallel::makeCluster(n_cores)
+    # Load necessary packages in each worker
+    parallel::clusterEvalQ(cl, {
+      suppressPackageStartupMessages(library(Matrix))
+      
+      # Define helper functions inside each worker
+      LS <- function(y, mu, sigma) {
+        return(dnorm(y, mean = mu, sd = sigma, log = TRUE))
+      }
+      
+      CRPS <- function(y, mu, sigma) {
+        return(-Exy(mu, sigma, y) + 0.5 * Exx(mu, sigma))
+      }
+      
+      SCRPS <- function(y, mu, sigma) {
+        return(-Exy(mu, sigma, y) / Exx(mu, sigma) - 0.5 * log(Exx(mu, sigma)))
+      }
+      
+      Exx <- function(mu, sigma) {
+        return(Efnorm(0, sqrt(2) * sigma))
+      }
+      
+      Exy <- function(mu, sigma, y) {
+        return(Efnorm(mu - y, sigma))
+      }
+      
+      Efnorm <- function(mu, sigma) {
+        return(sigma * sqrt(2 / pi) * exp(-(mu ^ 2) / (2 * sigma ^ 2)) + mu * (1 - 2 * pnorm(-mu / sigma)))
+      }
+      
+      NULL
+    })
+    
+    # Export common variables
+    common_vars <- c("model", "graph", "sigma_e", "y_graph", "X_cov", "beta_cov", 
+                     "repl_vec", "repl", "print")
+    
+    # Export model-specific variables
+    if (model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1") {
+      model_vars <- c("Sigma", "Sigma.o")
+    } else {
+      model_vars <- c("Q")
+    }
+    
+    parallel::clusterExport(cl, varlist = c(common_vars, model_vars), envir = environment())
+    
+    if (print) {
+      cat("Starting parallel processing with", n_cores, "cores\n")
+    }
+    
+    results <- parallel::parLapply(cl, 1:n_obs, process_observation)
+    parallel::stopCluster(cl)
+    
+    # Combine results
+    for (i in 1:n_obs) {
+      mu.p[i] <- results[[i]]$mu.p
+      var.p[i] <- results[[i]]$var.p
+      logscore[i] <- results[[i]]$logscore
+      crps[i] <- results[[i]]$crps
+      scrps[i] <- results[[i]]$scrps
+      mae[i] <- results[[i]]$mae
+      rmse[i] <- results[[i]]$rmse
+    }
+  } else {
+    for (i in 1:n_obs) {
+      result <- process_observation(i)
+      mu.p[i] <- result$mu.p
+      var.p[i] <- result$var.p
+      logscore[i] <- result$logscore
+      crps[i] <- result$crps
+      scrps[i] <- result$scrps
+      mae[i] <- result$mae
+      rmse[i] <- result$rmse
+    }
+  }
+  
   res <- list(mu = mu.p,
               var = var.p)
   res[["scores"]] <- data.frame(logscore = -factor * mean(logscore/length(repl), na.rm = TRUE),

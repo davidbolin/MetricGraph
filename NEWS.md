@@ -1,4 +1,6 @@
 # MetricGraph (development version)
+* Several optimization improvements for the models in `graph_lme`.
+* Added a `parallel` option to `posterior_crossvalidation`.
 
 # MetricGraph 1.4.1
 * Adding selected inverse function, for computing the inverse matrix elements only on nonzero entries of the original sparse matrix.

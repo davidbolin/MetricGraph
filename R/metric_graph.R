@@ -4549,8 +4549,10 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
     #                           dims = c(count_constraint, 2*alpha*self$nE))
     # self$C = C
     temp_E <- apply(self$E,2,as.integer)
-    self$C <-construct_directional_constraint_matrix(temp_E, as.integer(self$nV), as.integer(self$nE), as.integer(alpha),
-    as.integer(V_indegree), as.integer(V_outdegree), weight, self$DirectionalWeightFunction_out, self$DirectionalWeightFunction_in)
+    self$C <-construct_directional_constraint_matrix(E = temp_E, nV = as.integer(self$nV), nE = as.integer(self$nE), alpha = as.integer(alpha),
+    V_indegree = as.integer(V_indegree), V_outdegree = as.integer(V_outdegree), weight = weight, 
+    DirectionalWeightFunction_out = self$DirectionalWeightFunction_out, 
+    DirectionalWeightFunction_in = self$DirectionalWeightFunction_in)
 
     self$CoB <- c_basis2(self$C)
     self$CoB$T <- t(self$CoB$T)

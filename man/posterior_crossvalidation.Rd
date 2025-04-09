@@ -5,7 +5,14 @@
 \title{Leave-one-out pseudo-crossvalidation for \code{graph_lme} models assuming observations at
 the vertices of metric graphs}
 \usage{
-posterior_crossvalidation(object, factor = 1, tibble = TRUE)
+posterior_crossvalidation(
+  object,
+  factor = 1,
+  tibble = TRUE,
+  parallel = FALSE,
+  n_cores = parallel::detectCores() - 1,
+  print = FALSE
+)
 }
 \arguments{
 \item{object}{A fitted model using the \code{graph_lme()} function or a named list of fitted objects using the \code{graph_lme()} function.}
@@ -13,6 +20,12 @@ posterior_crossvalidation(object, factor = 1, tibble = TRUE)
 \item{factor}{Which factor to multiply the scores. The default is 1.}
 
 \item{tibble}{Return the scores as a \code{tidyr::tibble()}}
+
+\item{parallel}{Logical indicating whether to run computations in parallel. Default is FALSE.}
+
+\item{n_cores}{Number of cores to use for parallel computation. Default is parallel::detectCores() - 1.}
+
+\item{print}{Logical indicating whether to print progress of which fold is being processed. Default is FALSE.}
 }
 \value{
 Vector with the posterior expectations and variances as well as
