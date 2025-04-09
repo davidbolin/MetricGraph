@@ -540,6 +540,12 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
     graph$buildC(2)
   }
 
+  if(is.null(X_cov)){
+    n_cov <- 0
+  } else{
+    n_cov <- ncol(X_cov)
+  }
+
   # Get replication data
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
@@ -581,7 +587,8 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
   precomputed$Tc <- Tc
   precomputed$n_edges <- n_edges
   precomputed$edge_lengths <- edge_lengths
-
+  precomputed$n_cov <- n_cov
+  
   # Precompute data for each replicate
   precomputed$y_data <- list()
   precomputed$x_data <- list()
@@ -600,7 +607,6 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 
     # Process X_cov if provided
     if(!is.null(X_cov)){
-      n_cov <- ncol(X_cov)
       if(n_cov > 0){
         X_cov_rep <- X_cov[repl_indices, , drop=FALSE]
       }
@@ -709,7 +715,7 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       n_obs_total <- n_obs_total + length(y_i)
       
       # Handle covariates if present
-      if(!is.null(precomputed_data$x_data) && !is.null(precomputed_data$x_data[[i]][[j]])) {
+      if(precomputed_data$n_cov > 0) {
         X_cov_e <- precomputed_data$x_data[[i]][[j]]
         n_cov <- ncol(X_cov_e)
         if(n_cov > 0){
@@ -2120,6 +2126,12 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   } else if(graph$CoB$alpha == 2){
     graph$buildDirectionalConstraints(alpha = 1)
   }
+
+  if(is.null(X_cov)){
+    n_cov <- 0
+  } else{
+    n_cov <- ncol(X_cov)
+  }
   
   # Get replication data
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
@@ -2148,7 +2160,8 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   precomputed$graph <- graph
   precomputed$u_repl <- u_repl
   precomputed$obs.edges <- obs.edges
-  
+  precomputed$n_cov <- n_cov
+
   # Precalculate constants
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
@@ -2182,7 +2195,6 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
     
     # Process X_cov if provided
     if(!is.null(X_cov)){
-      n_cov <- ncol(X_cov)
       if(n_cov == 0){
         X_reply <- 0
       } else{
@@ -2308,7 +2320,7 @@ likelihood_alpha1_directional_precompute <- function(theta,
       n_obs_total <- n_obs_total + length(y_i)
       
       # Apply covariate adjustment if needed
-      if(!is.null(precomputed_data$x_data) && !is.null(precomputed_data$x_data[[i]][[j]])) {
+      if(precomputed_data$n_cov > 0) {
         X_cov_e <- precomputed_data$x_data[[i]][[j]]
         n_cov <- ncol(X_cov_e)
         if(n_cov > 0){
