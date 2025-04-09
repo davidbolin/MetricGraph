@@ -67,7 +67,14 @@ the model parameters are kept fixed at the values estimated from the full datase
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">posterior_crossvalidation</span><span class="op">(</span><span class="va">object</span>, factor <span class="op">=</span> <span class="fl">1</span>, tibble <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">posterior_crossvalidation</span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  factor <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  tibble <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  print <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -84,6 +91,18 @@ the model parameters are kept fixed at the values estimated from the full datase
 
 <dt id="arg-tibble">tibble<a class="anchor" aria-label="anchor" href="#arg-tibble"></a></dt>
 <dd><p>Return the scores as a <code><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tidyr::tibble()</a></code></p></dd>
+
+
+<dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
+<dd><p>Logical indicating whether to run computations in parallel. Default is FALSE.</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>Number of cores to use for parallel computation. Default is parallel::detectCores() - 1.</p></dd>
+
+
+<dt id="arg-print">print<a class="anchor" aria-label="anchor" href="#arg-print"></a></dt>
+<dd><p>Logical indicating whether to print progress of which fold is being processed. Default is FALSE.</p></dd>
 
 </dl></div>
     <div class="section level2">
