@@ -2367,12 +2367,6 @@ predict.graph_lme <- function(object,
       } else{          
 
         if(!no_nugget){
-          print("PtE_pred")
-          print(PtE_pred)
-          print("PtE_obs")
-          print(PtE_obs)
-          print("y_repl")
-          print(y_repl)
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
@@ -2517,15 +2511,15 @@ predict.graph_lme <- function(object,
               var_tmp <- diag(post_cov)
               # var_tmp <- var_tmp * (var_tmp > 0)
                 if(compute_pred_variances  || pred_samples) {
-                  Q_x_tmp <- A[idx_prd,]%*%solve(Q, t(A[idx_prd,]))
+                  Q_x_tmp <- A[idx_prd, , drop=FALSE]%*%solve(Q, t(A[idx_prd, , drop=FALSE]))
                   pred_cov <- sigma_e^2 - Q_x_tmp + Q_x_tmp %*% solve(Q_x_tmp + Matrix::Diagonal(dim(Q_x_tmp)[1], x=sigma_e^2), t(Q_x_tmp))
                   pred_var_tmp <- diag(pred_cov)
                 }           
             } else{
-                QiAt <- solve(Q, t(A[idx_obs,]))
-                AQiA <- A[idx_obs,] %*% QiAt            
+                QiAt <- solve(Q, t(A[idx_obs, , drop=FALSE]))
+                AQiA <- A[idx_obs, , drop=FALSE] %*% QiAt            
                 M <- Q - QiAt %*% solve(AQiA, t(QiAt))
-                cov_tmp <- A[idx_prd,] %*% M %*% t(A[idx_prd,])
+                cov_tmp <- A[idx_prd, , drop=FALSE] %*% M %*% t(A[idx_prd, , drop=FALSE])
                 var_tmp <- diag(cov_tmp)
               if(compute_pred_variances  || pred_samples) {
                   pred_cov <- cov_tmp
