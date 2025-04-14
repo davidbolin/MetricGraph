@@ -1280,6 +1280,7 @@ graph_lme <- function(formula, graph,
   object$fixed_values <- fixed_values
   object$fix_vec <- fix_vec
   object$fix_v_val <- fix_v_val
+  object$options_model <- model_options
   if(!is.null(graph_bkp$res_dist)){
     object$euclidean <- attr(graph_bkp$res_dist[[".complete"]], "euclidean")
   }
@@ -1806,12 +1807,14 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param return_original_order Should the results be return in the original
 #' (input) order or in the order inside the graph?
 #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
+#' @param precompute_data Precomputed data structures for faster prediction. If TRUE, returns precomputed matrices that can be reused in subsequent predictions. If a list, uses the precomputed data structures for prediction.
+#' @param precompute_type Type of precomputation to perform. Options are "full" (default) for precomputing both graph structure and parameter-dependent matrices, "structure" for precomputing only graph structure (useful for true cross-validation), or "none" for no precomputation.
 #' @param ... Not used.
 #' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with elements `mean`, which contains the means of the
 #' predictions, `fe_mean`, which is the prediction for the fixed effects, `re_mean`, which is the prediction for the random effects, `variance` (if `compute_variance` is `TRUE`), which contains the
 #' posterior variances of the random effects, `samples` (if `posterior_samples` is `TRUE`),
-#' which contains the posterior samples.
+#' which contains the posterior samples. If precompute_data is TRUE, also returns a list of precomputed data structures.
 #' @export
 #' @method predict graph_lme
 
@@ -1832,6 +1835,8 @@ predict.graph_lme <- function(object,
                               return_as_list = FALSE,
                               return_original_order = TRUE,
                               check_euclidean = TRUE,
+                              precompute_data = FALSE,
+                              precompute_type = "full",
                                ...,
                                data = deprecated()) {
 
@@ -1854,7 +1859,7 @@ predict.graph_lme <- function(object,
   data <- newdata
   if(is.null(data)){
     if(!mesh){
-      stop("If 'mesh' is false, you should supply data!")
+      stop("If 'mesh' is false, you should supply newdata!")
     }
   }
 
@@ -1870,6 +1875,12 @@ predict.graph_lme <- function(object,
   }
 
   out <- list()
+  precomputed <- NULL
+  
+  # Check if precomputed data is provided
+  if(is.list(precompute_data) && !is.logical(precompute_data)){
+    precomputed <- precompute_data
+  }
 
   coeff_fixed <- object$coeff$fixed_effects
   coeff_random <- object$coeff$random_effects
@@ -1877,8 +1888,12 @@ predict.graph_lme <- function(object,
 
   BC <- object$BC
 
-  graph_bkp <- object$graph$clone()
-
+  # Clone graph only if we don't have precomputed data
+  if(is.null(precomputed)){
+    graph_bkp <- object$graph$clone()
+  } else {
+    graph_bkp <- precomputed$graph_bkp
+  }
 
   X_cov_initial <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
   if(ncol(X_cov_initial) > 0){
@@ -2017,119 +2032,102 @@ predict.graph_lme <- function(object,
 
   ## construct Q
 
-
-  if(tolower(model_type$type) == "whittlematern"){
-    tau <- object$coeff$random_effects[1]
-    # if(object$parameterization_latent == "spde"){
+  # Use precomputed matrices if available
+  if(!is.null(precomputed)){
+    if(tolower(model_type$type) == "whittlematern"){
+      if(model_type$alpha == 1){
+        if(!is.null(precomputed$Q)) Q <- precomputed$Q
+        if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
+        if(!is.null(precomputed$cond_alpha1)) cond_alpha1 <- precomputed$cond_alpha1
+        if(!is.null(precomputed$cond_alpha2)) cond_alpha2 <- precomputed$cond_alpha2
+        if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
+        if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
+          if(!is.null(precomputed$A)) A <- precomputed$A
+        }
+      } else if(model_type$alpha == 2){
+        if(!is.null(precomputed$Sigma)) Sigma <- precomputed$Sigma
+        if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
+        if(!is.null(precomputed$cond_alpha1)) cond_alpha1 <- precomputed$cond_alpha1
+        if(!is.null(precomputed$cond_alpha2)) cond_alpha2 <- precomputed$cond_alpha2
+        if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
+      }
+    } else if(tolower(model_type$type) == "graphlaplacian"){
+      if(!is.null(precomputed$Q)) Q <- precomputed$Q
+      if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
+      if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
+      if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
+        if(!is.null(precomputed$A)) A <- precomputed$A
+      }
+    } else if(tolower(model_type$type) == "isocov"){
+      if(is.character(model_type$cov_function)){
+        if(!is.null(precomputed$Q)) Q <- precomputed$Q
+        if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
+        if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
+        if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
+          if(!is.null(precomputed$A)) A <- precomputed$A
+        }
+      } else {
+        if(!is.null(precomputed$Sigma)) Sigma <- precomputed$Sigma
+        if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
+        if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
+      }
+    }
+  } else {
+    # Original matrix computation code
+    if(tolower(model_type$type) == "whittlematern"){
+      tau <- object$coeff$random_effects[1]
       kappa <- object$coeff$random_effects[2]
 
       if (compute_variances || posterior_samples || no_nugget || compute_pred_variances){
-              graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+        graph_bkp$observation_to_vertex(mesh_warning=FALSE)
       }
-    # } else{
-    #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
-    # }
-
-      # if(model_type$alpha == 1){
-      #     Q <- spde_precision(kappa = kappa, sigma = sigma,
-      #                       alpha = 1, graph = graph_bkp)
-      # }
-      # else{
-      #   PtE <- graph_bkp$get_PtE()
-      #   n.c <- 1:length(graph_bkp$CoB$S)
-      #   Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
-      #                       graph = graph_bkp, BC = BC)
-      #   Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-      #   Qtilde <- Qtilde[-n.c,-n.c]
-      #   Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-      #     (graph_bkp$CoB$T[-n.c,])
-      #   index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-16) +
-      #     3.0 * (abs(PtE[, 2]) > 1e-16)
-      #   Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
-      #   Q <- solve(Sigma)
-      # }
-
-  } else if(tolower(model_type$type) == "graphlaplacian"){
-    tau <- object$coeff$random_effects[1]
-    #nV before
-    nV_temp <- object$nV_orig
-    graph_bkp$observation_to_vertex(mesh_warning=FALSE)
-    if(graph_bkp$nV > nV_temp){
-      warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
-    }
-    graph_bkp$compute_laplacian(full=TRUE)
-    # if(object$parameterization_latent == "spde"){
+    } else if(tolower(model_type$type) == "graphlaplacian"){
+      tau <- object$coeff$random_effects[1]
+      nV_temp <- object$nV_orig
+      graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+      if(graph_bkp$nV > nV_temp){
+        warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+      }
+      graph_bkp$compute_laplacian(full=TRUE)
       kappa <- object$coeff$random_effects[2]
-    # } else{
-    #   kappa <- sqrt(8 * 0.5) / object$coeff$random_effects[2]
-    # }
 
       if(model_type$alpha == 1){
-        # Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
         Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
       } else{
-        # Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
         Q <- Q %*% Q * tau^2
       }
 
-  } else if(tolower(model_type$type) == "isocov"){
+    } else if(tolower(model_type$type) == "isocov"){
       graph_bkp$observation_to_vertex(mesh_warning=FALSE)
       if(is.character(model_type$cov_function)){
         sigma <- object$coeff$random_effects[1]
         kappa <- object$coeff$random_effects[2]
-        # if(model_type$cov_function == "alpha1"){
-        #   Q <- spde_precision(kappa = kappa, sigma = sigma,
-        #                     alpha = 1, graph = graph_bkp)
-        # } else if(model_type$cov_function == "alpha2"){
-        #   PtE <- graph_bkp$get_PtE()
-        #   n.c <- 1:length(graph_bkp$CoB$S)
-        #   Q <- spde_precision(kappa = kappa, sigma = sigma, alpha = 2,
-        #                       graph = graph_bkp, BC = BC)
-        #   Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-        #   Qtilde <- Qtilde[-n.c,-n.c]
-        #   Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-        #     (graph_bkp$CoB$T[-n.c,])
-        #   index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
-        #     3.0 * (abs(PtE[, 2]) > 1e-14)
-        #   Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
-        #   Q <- solve(Sigma)
-        # } else
         if(model_type$cov_function == "GL1"){
-              #nV before
-              tau <- object$coeff$random_effects[1]
-              nV_temp <- object$nV_orig
-              # graph_bkp$observation_to_vertex(mesh_warning=FALSE)
-              if(graph_bkp$nV > nV_temp){
-                warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
-              }
-              graph_bkp$compute_laplacian(full=TRUE)
-              Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
+          tau <- object$coeff$random_effects[1]
+          nV_temp <- object$nV_orig
+          if(graph_bkp$nV > nV_temp){
+            warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+          }
+          graph_bkp$compute_laplacian(full=TRUE)
+          Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
         } else if(model_type$cov_function == "GL2"){
-              #nV before
-              tau <- object$coeff$random_effects[1]
-              nV_temp <- object$nV_orig
-              # graph_bkp$observation_to_vertex(mesh_warning=FALSE)
-              if(graph_bkp$nV > nV_temp){
-                warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
-              }
-              graph_bkp$compute_laplacian(full=TRUE)
-              Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
-              Q <- Q %*% Q * tau^2
-        # } else if(model_type$cov_function == "exp_covariance"){
-        #           graph_bkp$compute_resdist(full = TRUE)
-        #           Sigma <- as.matrix(exp_covariance(graph_bkp$res_dist[[1]], c(sigma,kappa)))
-        #           Q <- solve(Sigma)
-        # }
+          tau <- object$coeff$random_effects[1]
+          nV_temp <- object$nV_orig
+          if(graph_bkp$nV > nV_temp){
+            warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+          }
+          graph_bkp$compute_laplacian(full=TRUE)
+          Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
+          Q <- Q %*% Q * tau^2
         }
       } else{
         graph_bkp$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
         cov_function <- model_type$cov_function
         Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[".complete"]], coeff_random))
       }
+    }
   }
-
-
 
   ord_var <- graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]]
 
@@ -2158,7 +2156,7 @@ predict.graph_lme <- function(object,
   cond_isocov <- (tolower(model_type$type) == "isocov" && !is.character(model_type$cov_function))
 
   if(!cond_wm && !cond_isocov){
-    A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
+    A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
   }
 
   idx_obs_full <- as.vector(!is.na(Y))
@@ -2177,7 +2175,7 @@ predict.graph_lme <- function(object,
 
   if(cond_wm){
     PtE_full <- graph_bkp$get_PtE()
-    PtE_pred <- PtE_full[idx_prd,]
+    PtE_pred <- PtE_full[idx_prd, , drop=FALSE]
   }
 
   cond_alpha2 <- FALSE
@@ -2203,7 +2201,7 @@ predict.graph_lme <- function(object,
       if(cond_alpha1){
         Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 1, graph = graph_bkp, BC = BC)
-        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
+        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
       } else{
         if(is.null(graph_bkp$CoB)){
           graph_bkp$buildC(2)
@@ -2213,12 +2211,12 @@ predict.graph_lme <- function(object,
         Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
                             graph = graph_bkp, BC = BC)
         Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-        Qtilde <- Qtilde[-n.c,-n.c]
-        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-          (graph_bkp$CoB$T[-n.c,])
+        Qtilde <- Qtilde[-n.c, -n.c, drop=FALSE]
+        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde) %*%
+          (graph_bkp$CoB$T[-n.c, , drop=FALSE])
         index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
           3.0 * (abs(PtE[, 2]) > 1e-14)
-        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs, drop=FALSE])
         # Q <- solve(Sigma)
         # A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
       }
@@ -2242,27 +2240,27 @@ predict.graph_lme <- function(object,
     if(!cond_wm && !cond_isocov){
 
         if(!no_nugget){
-          Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
-          mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
-          mu_krig <- A[idx_prd,] %*% mu_krig
+          Q_xgiveny <- t(A[idx_obs, , drop=FALSE]) %*% A[idx_obs, , drop=FALSE]/sigma_e^2 + Q
+          mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs, , drop=FALSE]) %*% y_repl / sigma_e^2))
+          mu_krig <- A[idx_prd, , drop=FALSE] %*% mu_krig
         } else{
-          QiAt <- solve(Q, t(A[idx_obs,]))
-          AQiA <- A[idx_obs,] %*% QiAt
-          mu_krig <- solve(Q, t(A[idx_obs,]) %*% solve(AQiA, y_repl))
-          mu_krig <- as.vector(A[idx_prd,] %*% mu_krig)
+          QiAt <- solve(Q, t(A[idx_obs, , drop=FALSE]))
+          AQiA <- A[idx_obs, , drop=FALSE] %*% QiAt
+          mu_krig <- solve(Q, t(A[idx_obs, , drop=FALSE]) %*% solve(AQiA, y_repl))
+          mu_krig <- as.vector(A[idx_prd, , drop=FALSE] %*% mu_krig)
         }
 
 
         # mu_krig <- mu_krig[(gap+1):length(mu_krig)]
 
-        mu_fe <- mu[idx_repl, , drop = FALSE]
+        mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
         mu_re <- mu_krig[ord_idx]
 
         mu_krig <- mu_fe + mu_re
     } else if (cond_wm){
 
-      PtE_obs <- PtE_full[idx_obs,]
+      PtE_obs <- PtE_full[idx_obs, , drop=FALSE]
 
       if(cond_alpha2){
         if(is.null(graph_bkp$CoB)){
@@ -2274,13 +2272,13 @@ predict.graph_lme <- function(object,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
                       mu_re <- mu_krig #[ord_idx]
           } else{
-                cov_loc <- Sigma[idx_prd, idx_obs]
-                cov_Obs <- Sigma[idx_obs, idx_obs]    
+                cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
+                cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
                 mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
                 mu_re <- mu_krig
           }
 
-        mu_fe <- mu[idx_repl, , drop = FALSE]
+        mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
 
@@ -2296,10 +2294,10 @@ predict.graph_lme <- function(object,
                         mu_re <- mu_krig[ord_idx]      
                
         } else{
-          QiAt <- solve(Q, t(A[idx_obs,]))
-          AQiA <- A[idx_obs,] %*% QiAt
-          mu_krig <- solve(Q, t(A[idx_obs,]) %*% solve(AQiA, y_repl))
-          mu_krig <- as.vector(A[idx_prd,] %*% mu_krig)
+          QiAt <- solve(Q, t(A[idx_obs, , drop=FALSE]))
+          AQiA <- A[idx_obs, , drop=FALSE] %*% QiAt
+          mu_krig <- solve(Q, t(A[idx_obs, , drop=FALSE]) %*% solve(AQiA, y_repl))
+          mu_krig <- as.vector(A[idx_prd, , drop=FALSE] %*% mu_krig)
           mu_re <- mu_krig
         }
 
@@ -2316,7 +2314,7 @@ predict.graph_lme <- function(object,
 
           mu_re <- mu_krig[ord_idx]      
           mu_re <- mu_krig   
-          mu_fe <- mu[idx_repl, , drop = FALSE]
+          mu_fe <- mu[idx_repl, , drop=FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
           mu_krig <- mu_fe + mu_re
@@ -2339,8 +2337,8 @@ predict.graph_lme <- function(object,
           # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)
           idx_obs_tmp <- idx_obs
           idx_prd_tmp <- idx_prd          
-          cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp]
-          cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp]    
+          cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp, drop=FALSE]
+          cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp, drop=FALSE]    
           diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2      
           mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
         } else{
@@ -2349,8 +2347,8 @@ predict.graph_lme <- function(object,
           # idx_prd_tmp <- c(rep(FALSE,nV), idx_prd)
           idx_obs_tmp <- idx_obs
           idx_prd_tmp <- idx_prd                      
-          cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp]
-          cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp]          
+          cov_loc <- Sigma[idx_prd_tmp, idx_obs_tmp, drop=FALSE]
+          cov_Obs <- Sigma[idx_obs_tmp, idx_obs_tmp, drop=FALSE]          
           mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
         }
 
@@ -2358,7 +2356,7 @@ predict.graph_lme <- function(object,
 
 
         mu_re <- mu_krig
-        mu_fe <- mu[idx_repl, , drop = FALSE]
+        mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
         mu_krig <- mu_fe + mu_re
@@ -2566,6 +2564,63 @@ predict.graph_lme <- function(object,
     }
   }
 
+  # Prepare precomputed data if requested
+  if(is.logical(precompute_data) && precompute_data){
+    # Validate precompute_type parameter
+    precompute_type <- tolower(precompute_type)
+    if(!precompute_type %in% c("full", "structure", "none")) {
+      warning("Invalid precompute_type. Using 'full' instead.")
+      precompute_type <- "full"
+    }
+    
+    if(precompute_type == "none") {
+      # Skip precomputation entirely
+      return(out)
+    }
+    
+    # Always include graph structure
+    precomputed_data <- list(
+      graph_bkp = graph_bkp
+    )
+    
+    # For 'full' precomputation, also include parameter-dependent matrices
+    if(precompute_type == "full") {
+      # Add condition flags
+      precomputed_data$cond_wm <- cond_wm
+      precomputed_data$cond_isocov <- cond_isocov
+      precomputed_data$cond_alpha1 <- cond_alpha1
+      precomputed_data$cond_alpha2 <- cond_alpha2
+      
+      # Add matrices that are parameter-dependent but not data-dependent
+      if(tolower(model_type$type) == "whittlematern"){
+        if(model_type$alpha == 1 && exists("Q")){
+          precomputed_data$Q <- Q
+          if(exists("A")) precomputed_data$A <- A
+        } else if(model_type$alpha == 2 && exists("Sigma")){
+          precomputed_data$Sigma <- Sigma
+        }
+      } else if(tolower(model_type$type) == "graphlaplacian" && exists("Q")){
+        precomputed_data$Q <- Q
+        if(exists("A")) precomputed_data$A <- A
+      } else if(tolower(model_type$type) == "isocov"){
+        if(is.character(model_type$cov_function) && exists("Q")){
+          precomputed_data$Q <- Q
+          if(exists("A")) precomputed_data$A <- A
+        } else if(exists("Sigma")){
+          precomputed_data$Sigma <- Sigma
+        }
+      }
+      
+      # Add model parameters for easy access
+      precomputed_data$model_type <- model_type
+      precomputed_data$sigma_e <- sigma_e
+      if(exists("tau")) precomputed_data$tau <- tau
+      if(exists("kappa")) precomputed_data$kappa <- kappa
+    }
+    
+    out$precomputed_data <- precomputed_data
+  }
+
   return(out)
 }
 
@@ -2667,7 +2722,7 @@ get_covariance_precision <- function(object){
 #'
 #' @param object A `graph_lme` object
 #' @param nsim The number of simulations. 
-#' @param seed an object specifying if and how the random number generator should be initialized (‘seeded’).
+#' @param seed an object specifying if and how the random number generator should be initialized ('seeded').
 #' @param sample_latent If `FALSE`, samples for the response variable will be generated. If `TRUE`, samples for the latent model will be generated. The default is `FALSE`.
 #' @param posterior Should posterior samples be generated? If `FALSE`, samples will be computed based on the estimated prior distribution. The default is `FALSE`.
 #' @param which_repl Which replicates to generate the samples. If `NULL` samples will
@@ -2815,3 +2870,44 @@ simulate.graph_lme <- function(object,
   }
   return(out)
 }
+
+
+
+#' Update graph_lme object by replacing response values with NA
+#'
+#' This function creates a copy of a graph_lme object and replaces specified
+#' response values with NA in the graph's private data.
+#'
+#' @param object A graph_lme object
+#' @param index_to_replace Numeric vector of indices where response values should be replaced with NA
+#'
+#' @return A modified graph_lme object with updated response values
+#' @noRd
+update_graph_lme_with_na <- function(object, index_to_replace) {
+  if (!inherits(object, "graph_lme")) {
+    stop("input object is not of class graph_lme")
+  }
+  
+  # Clone the graph to avoid modifying the original
+  new_graph <- object$graph$clone()
+  
+  # Get the response variable from the object
+  y_term <- as.character(object$response_var)
+  
+  # Check if the response variable exists in the graph's private data
+  if (!y_term %in% names(new_graph$.__enclos_env__$private$data)) {
+    stop(paste("Response variable", y_term, "not found in graph data"))
+  }
+  
+  # Replace the specified indices with NA
+  new_graph$.__enclos_env__$private$data[[y_term]][index_to_replace] <- NA
+  
+  # Create a copy of the original object
+  new_object <- object
+  
+  # Update the graph in the new object
+  new_object$graph <- new_graph
+  
+  return(new_object)
+}
+
