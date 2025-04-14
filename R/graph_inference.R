@@ -444,24 +444,24 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       # For pseudo-CV: precompute parameter-dependent structures (Q, Sigma, etc.)
       # Get a dummy test index to create precomputed structures
       dummy_test_idx <- train_test_indices[[1]]$test[1]
-      dummy_model <- update_graph_lme_with_na(object, dummy_test_idx)
       
       # Create dummy prediction data for a single point
       dummy_data <- object$graph$.__enclos_env__$private$data
       dummy_data <- lapply(dummy_data, function(x){x[dummy_test_idx]})
       
       # Make initial prediction to get precomputed data
-      precomp_pred <- predict(dummy_model, 
+      precomp_pred <- predict(object, 
                             newdata = dummy_data, 
                             edge_number = ".edge_number", 
                             distance_on_edge = ".distance_on_edge", 
                             normalized = TRUE, 
                             compute_variances = need_variances,
-                            precompute_data = TRUE,
-                            precompute_type = "full")
+                            advanced_options = list(precompute_data = TRUE, precompute_type = "full"))
                             
       # Extract precomputed data
       precomputed_data <- precomp_pred$precomputed_data
+
+      precomputed_graph <- precomputed_data$graph_bkp
       
       if(is.null(precomputed_data)) {
         warning("Precomputation for pseudo-CV failed, falling back to standard prediction")
@@ -472,21 +472,19 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       # For true-CV: just precompute the graph structure
       # Create a dummy test index to create precomputed structures
       dummy_test_idx <- train_test_indices[[1]]$test[1]
-      dummy_model <- update_graph_lme_with_na(object, dummy_test_idx)
       
       # Create dummy prediction data for a single point
       dummy_data <- object$graph$.__enclos_env__$private$data
       dummy_data <- lapply(dummy_data, function(x){x[dummy_test_idx]})
       
       # Make initial prediction to get structure-only precomputed data
-      precomp_pred <- predict(dummy_model, 
+      precomp_pred <- predict(object, 
                             newdata = dummy_data, 
                             edge_number = ".edge_number", 
                             distance_on_edge = ".distance_on_edge", 
                             normalized = TRUE, 
                             compute_variances = FALSE,
-                            precompute_data = TRUE,
-                            precompute_type = "structure")
+                            advanced_options = list(precompute_data = TRUE, precompute_type = "structure"))
                             
       # Extract precomputed data
       precomputed_graph_data <- precomp_pred$precomputed_data
@@ -500,6 +498,28 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       # Extract just the graph for use
       precomputed_graph <- precomputed_graph_data$graph_bkp
     }
+  # Reorder train and test indices based on the ordering from precomputed_graph
+  if (!is.null(precomputed_graph) && !is.null(precomputed_graph$.__enclos_env__$private$data[[".dummy_order_var"]])) {
+    # Get the ordering vector
+    order_var <- precomputed_graph$.__enclos_env__$private$data[[".dummy_order_var"]]
+    
+    # Apply the reordering to train_test_indices
+    for (i in 1:length(train_test_indices)) {
+      # Create temporary copies
+      train_orig <- train_test_indices[[i]]$train
+      test_orig <- train_test_indices[[i]]$test
+            
+      # Reorder using the ordering vector
+      # Find the positions in order_var that match the original indices
+      train_test_indices[[i]]$reordered_train <- match(train_orig, order_var)
+      train_test_indices[[i]]$reordered_test <- match(test_orig, order_var)
+
+    }
+    
+    if (print) {
+        cat("Train and test indices reordered according to graph structure.\n")
+      }
+    }
   }
 
   # Function to process a single fold
@@ -510,6 +530,11 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
     
     train_indices <- train_test_indices[[fold_idx]]$train
     test_indices <- train_test_indices[[fold_idx]]$test
+
+    if(use_precomputed){
+      reordered_train_indices <- train_test_indices[[fold_idx]]$reordered_train
+      reordered_test_indices <- train_test_indices[[fold_idx]]$reordered_test
+    } 
     
     local_results <- list(
       test_indices = test_indices,
@@ -529,15 +554,8 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       # Create a copy of the graph with NA values for test indices
       cv_graph <- NULL
       
-      if(!is.null(precomputed_graph)) {
-        # Use the precomputed graph structure
-        cv_graph <- precomputed_graph$clone()
-        cv_graph$.__enclos_env__$private$data[[response_name]][test_indices] <- NA
-      } else {
-        # Standard approach
-        cv_graph <- object$graph$clone()
-        cv_graph$.__enclos_env__$private$data[[response_name]][test_indices] <- NA
-      }
+      cv_graph <- object$graph$clone()
+      cv_graph$.__enclos_env__$private$data[[response_name]][test_indices] <- NA
       
       model_options <- object$options_model
       # Set starting values based on the original model parameters
@@ -572,62 +590,36 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
         parallel = parallel_fitting,
         n_cores = n_cores
       )
-      
-      # For refitted models, we need new prediction precomputed data for this model
-      fold_precomputed_data <- NULL
-      
-      if(use_precomputed) {
-        # Get dummy data for precomputation
-        dummy_data <- cv_model$graph$.__enclos_env__$private$data
-        dummy_idx <- test_indices[1]
-        dummy_data <- lapply(dummy_data, function(x){x[dummy_idx]})
-        
-        # Make initial prediction to get precomputed data for this model
-        precomp_pred <- predict(cv_model, 
-                              newdata = dummy_data, 
-                              edge_number = ".edge_number", 
-                              distance_on_edge = ".distance_on_edge", 
-                              normalized = TRUE, 
-                              compute_variances = need_variances,
-                              precompute_data = TRUE,
-                              precompute_type = "full")
-                              
-        # Update precomputed data for this fold
-        fold_precomputed_data <- precomp_pred$precomputed_data
-      }
+
     } else {
       # Pseudo cross-validation: use the original model parameters
       # Create a copy of the object with NA values for test indices
       cv_model <- update_graph_lme_with_na(object, test_indices)
-      
-      # Use the global precomputed data for pseudo-CV
-      fold_precomputed_data <- precomputed_data
     }
 
-    new_data <- object$graph$.__enclos_env__$private$data
-    new_data <- lapply(new_data, function(x){x[test_indices]})
+    if(!use_precomputed) {
+      new_data <- object$graph$.__enclos_env__$private$data
+      new_data <- lapply(new_data, function(x){x[test_indices]})
+    }
+
 
     # Make predictions for test indices
-    if(!is.null(fold_precomputed_data)) {
+    if(!is.null(precomputed_data)) {
       # Use precomputed data structures
       if(need_variances){
         pred <- predict(cv_model, 
-                      newdata = new_data, 
                       edge_number = ".edge_number", 
                       distance_on_edge = ".distance_on_edge", 
                       normalized = TRUE, 
-                      compute_variances = TRUE,
-                      precompute_data = fold_precomputed_data,
-                      precompute_type = "full")
+                      compute_variances = TRUE, 
+                      advanced_options = list(precompute_data = precomputed_data, precompute_type = "full", test_idx = reordered_test_indices, train_idx = reordered_train_indices))
       } else {
         pred <- predict(cv_model, 
-                      newdata = new_data, 
                       edge_number = ".edge_number", 
                       distance_on_edge = ".distance_on_edge", 
                       normalized = TRUE, 
                       compute_variances = FALSE,
-                      precompute_data = fold_precomputed_data,
-                      precompute_type = "full")
+                      advanced_options = list(precompute_data = precomputed_data, precompute_type = "full", test_idx = reordered_test_indices, train_idx = reordered_train_indices))
       }
     } else {
       # Fallback if precomputation failed

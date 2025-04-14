@@ -1779,7 +1779,6 @@ print.summary_graph_lme <- function(x, ...) {
 }
 
 
-
 #' @name predict.graph_lme
 #' @title Prediction for a mixed effects regression model on a metric graph
 #' @param object The fitted object with the `graph_lme()` function.
@@ -1807,14 +1806,13 @@ print.summary_graph_lme <- function(x, ...) {
 #' @param return_original_order Should the results be return in the original
 #' (input) order or in the order inside the graph?
 #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
-#' @param precompute_data Precomputed data structures for faster prediction. If TRUE, returns precomputed matrices that can be reused in subsequent predictions. If a list, uses the precomputed data structures for prediction.
-#' @param precompute_type Type of precomputation to perform. Options are "full" (default) for precomputing both graph structure and parameter-dependent matrices, "structure" for precomputing only graph structure (useful for true cross-validation), or "none" for no precomputation.
+#' @param advanced_options Advanced options for internal use only. This parameter is intended to be used by the cross-validation function and should not be used otherwise.
 #' @param ... Not used.
 #' @param data `r lifecycle::badge("deprecated")` Use `newdata` instead.
 #' @return A list with elements `mean`, which contains the means of the
 #' predictions, `fe_mean`, which is the prediction for the fixed effects, `re_mean`, which is the prediction for the random effects, `variance` (if `compute_variance` is `TRUE`), which contains the
 #' posterior variances of the random effects, `samples` (if `posterior_samples` is `TRUE`),
-#' which contains the posterior samples. If precompute_data is TRUE, also returns a list of precomputed data structures.
+#' which contains the posterior samples.
 #' @export
 #' @method predict graph_lme
 
@@ -1835,8 +1833,7 @@ predict.graph_lme <- function(object,
                               return_as_list = FALSE,
                               return_original_order = TRUE,
                               check_euclidean = TRUE,
-                              precompute_data = FALSE,
-                              precompute_type = "full",
+                              advanced_options = list(),
                                ...,
                                data = deprecated()) {
 
@@ -1856,10 +1853,63 @@ predict.graph_lme <- function(object,
     data <- NULL
   }
 
+  # Extract advanced options if provided
+  precompute_data <- FALSE
+  precompute_type <- "full"
+  
+  # Structure of advanced_options:
+  # - precompute_data: Logical, whether to precompute data structures for faster predictions
+  # - precompute_type: String, type of precomputation ("full" or "structure")
+  #   - "full": Precomputes all parameter-dependent structures (Q, Sigma, etc.)
+  #   - "structure": Precomputes only graph structure (for true CV)
+  # - train_idx: Vector of indices for training data (for CV)
+  # - test_idx: Vector of indices for test data (for CV)
+  # - return_precomputed: Logical, whether to return precomputed structures
+  
+  # Initialize precomputed data structure
+  precomputed <- NULL
+  
+  # Initialize return_precomputed flag
+  return_precomputed <- FALSE
+  
+  # Initialize train/test indices
+  train_idx <- NULL
+  test_idx <- NULL
+
+  
+  if (length(advanced_options) > 0) {
+    # Extract precomputation options
+    if (!is.null(advanced_options$precompute_data)) {
+      precompute_data <- advanced_options$precompute_data
+    }
+    
+    if (!is.null(advanced_options$precompute_type)) {
+      precompute_type <- advanced_options$precompute_type
+    }
+    
+    # Extract train/test indices if provided
+    if (!is.null(advanced_options$train_idx)) {
+      train_idx <- advanced_options$train_idx
+    }
+    
+    if (!is.null(advanced_options$test_idx)) {
+      test_idx <- advanced_options$test_idx
+    }
+  }
+
   data <- newdata
-  if(is.null(data)){
-    if(!mesh){
-      stop("If 'mesh' is false, you should supply newdata!")
+  if(is.null(data) && !mesh && is.null(test_idx)){
+    stop("If 'mesh' is false, you must supply 'newdata' or 'advanced_options'!")
+  }
+
+  if(((is.logical(precompute_data) && precompute_data) || 
+     (is.list(precompute_data) && length(precompute_data) > 0)) && 
+     !is.null(test_idx)){
+    if(!is.null(newdata)){
+      stop("If 'precompute_data' is TRUE or a non-empty list, then 'newdata' must be NULL!")
+    }
+    if(mesh){
+      stop("If 'precompute_data' is TRUE or a non-empty list, then 'mesh' must be FALSE!")
     }
   }
 
@@ -1891,8 +1941,14 @@ predict.graph_lme <- function(object,
   # Clone graph only if we don't have precomputed data
   if(is.null(precomputed)){
     graph_bkp <- object$graph$clone()
+    graph_bkp$.__enclos_env__$private$data[[".dummy_order_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
   } else {
+    response_var <- object$response_var
     graph_bkp <- precomputed$graph_bkp
+    bkp_data <- graph_bkp$.__enclos_env__$private$data[[response_var]]
+    if(!is.null(test_idx)){
+      graph_bkp$.__enclos_env__$private$data[[response_var]][test_idx] <- NA
+    }
   }
 
   X_cov_initial <- stats::model.matrix(object$covariates, graph_bkp$.__enclos_env__$private$data)
@@ -1902,97 +1958,104 @@ predict.graph_lme <- function(object,
     }
   }
 
-
-  if(sum(duplicated(cbind(data[[edge_number]], data[[distance_on_edge]]))) > 0){
-    warning("There are duplicated locations for prediction, we will try to process the data to extract the unique locations,
-    along with the corresponding covariates.")
-    cov_names <- attr(object$covariates,"term.labels")
-    data <- data[c(edge_number,distance_on_edge,cov_names)]
-    data <- unique(data)
+  if(is.null(precomputed)){
     if(sum(duplicated(cbind(data[[edge_number]], data[[distance_on_edge]]))) > 0){
-      stop("Data processing failed, please provide a data with unique locations.")
+      warning("There are duplicated locations for prediction, we will try to process the data to extract the unique locations,
+      along with the corresponding covariates.")
+      cov_names <- attr(object$covariates,"term.labels")
+      data <- data[c(edge_number,distance_on_edge,cov_names)]
+      data <- unique(data)
+      if(sum(duplicated(cbind(data[[edge_number]], data[[distance_on_edge]]))) > 0){
+        stop("Data processing failed, please provide a data with unique locations.")
+      }
     }
-  }
 
-  if(!mesh){
-    n_prd <- length(data[[edge_number]])
-    data[["__dummy_var"]] <- rep(0, n_prd)
-    # Convert data to normalized
-    if(!normalized){
-      data[[distance_on_edge]] <- data[[distance_on_edge]] / graph_bkp$edge_lengths[data[[edge_number]]]
+    if(!mesh){
+      n_prd <- length(data[[edge_number]])
+      data[["__dummy_var"]] <- rep(0, n_prd)
+      # Convert data to normalized
+      if(!normalized){
+        data[[distance_on_edge]] <- data[[distance_on_edge]] / graph_bkp$edge_lengths[data[[edge_number]]]
+      }
+    } else{
+      if(is.null(graph_bkp$mesh)){
+        graph_bkp$build_mesh(h = mesh_h)
+      }
+      data <- list()
+      n_prd <- nrow(graph_bkp$mesh$VtE)
+      data[["__dummy_var"]] <- rep(0, n_prd)
+      data[[edge_number]] <- graph_bkp$mesh$VtE[,1]
+      data[[distance_on_edge]] <- graph_bkp$mesh$VtE[,2]
+      normalized <- TRUE
     }
-  } else{
-    if(is.null(graph_bkp$mesh)){
-      graph_bkp$build_mesh(h = mesh_h)
-    }
-    data <- list()
-    n_prd <- nrow(graph_bkp$mesh$VtE)
-    data[["__dummy_var"]] <- rep(0, n_prd)
-    data[[edge_number]] <- graph_bkp$mesh$VtE[,1]
-    data[[distance_on_edge]] <- graph_bkp$mesh$VtE[,2]
-    normalized <- TRUE
-  }
-
-
+  
     ord_idx <- order(data[[edge_number]], data[[distance_on_edge]])
+  
+    if(!is.null(data[[as.character(object$response_var)]])){
+      data[[as.character(object$response_var)]] <- NULL
+    }
+  
+    data_graph_temp <- list()
+    idx_group1 <-  graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1]
+    data_graph_temp[[edge_number]] <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][idx_group1]
+    data_graph_temp[[distance_on_edge]] <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][idx_group1]
+    data_graph_temp[[as.character(object$response_var)]] <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]][idx_group1]
+    # data_graph_temp <- as.data.frame(data_graph_temp)
+    # colnames(data_graph_temp)[1:2] <- c(edge_number, distance_on_edge)
+  
+    data_prd_temp <- list()
+    data_prd_temp[[edge_number]] <- data[[edge_number]]
+    data_prd_temp[[distance_on_edge]] <- data[[distance_on_edge]]
+    data_prd_temp[["included"]] <- TRUE
+  
+    temp_merge <- merge(data_prd_temp, data_graph_temp, all = TRUE)
+  
+    temp_merge <- temp_merge[!is.na(temp_merge[["included"]]),]
+  
+    temp_merge[["included"]] <- NULL
+  
+    data <- merge(temp_merge, data)
+  
+    rm(temp_merge)
+    # rm(data_prd_temp)
+    rm(data_graph_temp)
+  
+    old_data <- graph_bkp$.__enclos_env__$private$data
+  
+    data[[".group"]] <- old_data[[".group"]][1]
+  
+    graph_bkp$clear_observations()
+  
+    graph_bkp$add_observations(data = data, edge_number = edge_number,
+                               distance_on_edge = distance_on_edge,
+                               normalized = TRUE, group = ".group", verbose = 0,
+                    suppress_warnings = TRUE)
+  
+    graph_bkp$add_observations(data = old_data, edge_number = ".edge_number",
+                               distance_on_edge = ".distance_on_edge",
+                               group = ".group", normalized = TRUE, verbose = 0,
+                    suppress_warnings = TRUE)
+  
+    graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
 
+    n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
 
-  if(!is.null(data[[as.character(object$response_var)]])){
-    data[[as.character(object$response_var)]] <- NULL
+    if(!is.null(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]])){
+        idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]][1:n])
+    } else {
+        idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["X__dummy_var"]][1:n])
+    }
+
+  } else{
+    idx_prd <- test_idx
+    n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
   }
-
-  data_graph_temp <- list()
-  idx_group1 <-  graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1]
-  data_graph_temp[[edge_number]] <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][idx_group1]
-  data_graph_temp[[distance_on_edge]] <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][idx_group1]
-  data_graph_temp[[as.character(object$response_var)]] <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]][idx_group1]
-  # data_graph_temp <- as.data.frame(data_graph_temp)
-  # colnames(data_graph_temp)[1:2] <- c(edge_number, distance_on_edge)
-
-  data_prd_temp <- list()
-  data_prd_temp[[edge_number]] <- data[[edge_number]]
-  data_prd_temp[[distance_on_edge]] <- data[[distance_on_edge]]
-  data_prd_temp[["included"]] <- TRUE
-
-  temp_merge <- merge(data_prd_temp, data_graph_temp, all = TRUE)
-
-  temp_merge <- temp_merge[!is.na(temp_merge[["included"]]),]
-
-  temp_merge[["included"]] <- NULL
-
-  data <- merge(temp_merge, data)
-
-  rm(temp_merge)
-  # rm(data_prd_temp)
-  rm(data_graph_temp)
-
-  old_data <- graph_bkp$.__enclos_env__$private$data
-
-  data[[".group"]] <- old_data[[".group"]][1]
-
-  graph_bkp$clear_observations()
-
-  graph_bkp$add_observations(data = data, edge_number = edge_number,
-                             distance_on_edge = distance_on_edge,
-                             normalized = TRUE, group = ".group", verbose = 0,
-                  suppress_warnings = TRUE)
-
-  graph_bkp$add_observations(data = old_data, edge_number = ".edge_number",
-                             distance_on_edge = ".distance_on_edge",
-                             group = ".group", normalized = TRUE, verbose = 0,
-                  suppress_warnings = TRUE)
-
-  graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
-
 
   model_type <- object$latent_model
 
   sigma.e <- coeff_meas[[1]]
   sigma_e <- sigma.e
-
   # graph_bkp$observation_to_vertex(mesh_warning=FALSE)
-
-  n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
 
   ##
   repl_vec <- graph_bkp$.__enclos_env__$private$data[[".group"]]
@@ -2018,20 +2081,12 @@ predict.graph_lme <- function(object,
 
   Y <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]] - mu
 
-
-  if(!is.null(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]])){
-      idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]][1:n])
-  } else {
-      idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["X__dummy_var"]][1:n])
-  }
-
-  n_prd <- sum(idx_prd)
+  n_prd <- if(is.logical(idx_prd)) sum(idx_prd) else length(idx_prd)
 
   edge_nb <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][1:n][idx_prd]
   dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n][idx_prd]
 
   ## construct Q
-
   # Use precomputed matrices if available
   if(!is.null(precomputed)){
     if(tolower(model_type$type) == "whittlematern"){
@@ -2041,33 +2096,37 @@ predict.graph_lme <- function(object,
         if(!is.null(precomputed$cond_alpha1)) cond_alpha1 <- precomputed$cond_alpha1
         if(!is.null(precomputed$cond_alpha2)) cond_alpha2 <- precomputed$cond_alpha2
         if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
-        if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
-          if(!is.null(precomputed$A)) A <- precomputed$A
-        }
+        # A cannot be precomputed as it depends on observations
       } else if(model_type$alpha == 2){
-        if(!is.null(precomputed$Sigma)) Sigma <- precomputed$Sigma
+        # Sigma cannot be precomputed as it depends on observations (index.obs)
+        if(!is.null(precomputed$Sigma_overdetermined)) Sigma.overdetermined <- precomputed$Sigma_overdetermined
         if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
         if(!is.null(precomputed$cond_alpha1)) cond_alpha1 <- precomputed$cond_alpha1
         if(!is.null(precomputed$cond_alpha2)) cond_alpha2 <- precomputed$cond_alpha2
         if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
       }
+      # Parameters are not precomputed
+      tau <- object$coeff$random_effects[1]
+      kappa <- object$coeff$random_effects[2]
     } else if(tolower(model_type$type) == "graphlaplacian"){
       if(!is.null(precomputed$Q)) Q <- precomputed$Q
       if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
       if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
-      if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
-        if(!is.null(precomputed$A)) A <- precomputed$A
-      }
+      # Parameters are not precomputed
+      tau <- object$coeff$random_effects[1]
+      kappa <- object$coeff$random_effects[2]
+      # A cannot be precomputed as it depends on observations
     } else if(tolower(model_type$type) == "isocov"){
       if(is.character(model_type$cov_function)){
         if(!is.null(precomputed$Q)) Q <- precomputed$Q
         if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
         if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
-        if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
-          if(!is.null(precomputed$A)) A <- precomputed$A
-        }
+        # Parameters are not precomputed
+        sigma <- object$coeff$random_effects[1]
+        kappa <- object$coeff$random_effects[2]
+        # A cannot be precomputed as it depends on observations
       } else {
-        if(!is.null(precomputed$Sigma)) Sigma <- precomputed$Sigma
+        # Sigma cannot be precomputed as it depends on observations
         if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
         if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
       }
@@ -2078,17 +2137,21 @@ predict.graph_lme <- function(object,
       tau <- object$coeff$random_effects[1]
       kappa <- object$coeff$random_effects[2]
 
-      if (compute_variances || posterior_samples || no_nugget || compute_pred_variances){
+      if ((compute_variances || posterior_samples || no_nugget || compute_pred_variances) && is.null(precomputed$graph_bkp)){
         graph_bkp$observation_to_vertex(mesh_warning=FALSE)
       }
     } else if(tolower(model_type$type) == "graphlaplacian"){
       tau <- object$coeff$random_effects[1]
       nV_temp <- object$nV_orig
-      graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+      if(is.null(precomputed$graph_bkp)){
+        graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+      }
       if(graph_bkp$nV > nV_temp){
         warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
       }
-      graph_bkp$compute_laplacian(full=TRUE)
+      if(is.null(precomputed$graph_bkp)){
+        graph_bkp$compute_laplacian(full=TRUE)
+      }
       kappa <- object$coeff$random_effects[2]
 
       if(model_type$alpha == 1){
@@ -2109,7 +2172,9 @@ predict.graph_lme <- function(object,
           if(graph_bkp$nV > nV_temp){
             warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
           }
-          graph_bkp$compute_laplacian(full=TRUE)
+          if(is.null(precomputed$graph_bkp)){
+            graph_bkp$compute_laplacian(full=TRUE)
+          }
           Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
         } else if(model_type$cov_function == "GL2"){
           tau <- object$coeff$random_effects[1]
@@ -2117,12 +2182,16 @@ predict.graph_lme <- function(object,
           if(graph_bkp$nV > nV_temp){
             warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
           }
-          graph_bkp$compute_laplacian(full=TRUE)
+          if(is.null(precomputed$graph_bkp)){
+            graph_bkp$compute_laplacian(full=TRUE)
+          }
           Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
           Q <- Q %*% Q * tau^2
         }
       } else{
-        graph_bkp$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
+        if(is.null(precomputed$graph_bkp)){
+          graph_bkp$compute_resdist(full = TRUE, check_euclidean = check_euclidean)
+        }
         cov_function <- model_type$cov_function
         Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[".complete"]], coeff_random))
       }
@@ -2163,7 +2232,7 @@ predict.graph_lme <- function(object,
 
   # idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
-  if(return_original_order){
+  if(return_original_order && is.null(precomputed)){
           dist_ed[ord_idx] <- dist_ed
           edge_nb[ord_idx] <- edge_nb
   }
@@ -2194,36 +2263,43 @@ predict.graph_lme <- function(object,
       cond_alpha1 <- TRUE
     }
   }
-
   if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
     if(cond_wm){
-      tau <- object$coeff$random_effects[1]
-      if(cond_alpha1){
-        Q <- spde_precision(kappa = kappa, tau = tau,
-                          alpha = 1, graph = graph_bkp, BC = BC)
-        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
-      } else{
-        if(is.null(graph_bkp$CoB)){
-          graph_bkp$buildC(2)
+      if(is.null(precomputed) || is.null(precomputed$Q) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
+        tau <- object$coeff$random_effects[1]
+        if(cond_alpha1){
+          Q <- spde_precision(kappa = kappa, tau = tau,
+                            alpha = 1, graph = graph_bkp, BC = BC)
+          A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+        } else{
+          if(is.null(graph_bkp$CoB)){
+            graph_bkp$buildC(2)
+          }
+          PtE <- graph_bkp$get_PtE()
+          n.c <- 1:length(graph_bkp$CoB$S)
+          Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
+                              graph = graph_bkp, BC = BC)
+          Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
+          Qtilde <- Qtilde[-n.c, -n.c, drop=FALSE]
+          Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde) %*%
+            (graph_bkp$CoB$T[-n.c, , drop=FALSE])
+          index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+            3.0 * (abs(PtE[, 2]) > 1e-14)
+          Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs, drop=FALSE])
         }
-        PtE <- graph_bkp$get_PtE()
-        n.c <- 1:length(graph_bkp$CoB$S)
-        Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
-                            graph = graph_bkp, BC = BC)
-        Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-        Qtilde <- Qtilde[-n.c, -n.c, drop=FALSE]
-        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde) %*%
-          (graph_bkp$CoB$T[-n.c, , drop=FALSE])
-        index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
-          3.0 * (abs(PtE[, 2]) > 1e-14)
-        Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs, drop=FALSE])
-        # Q <- solve(Sigma)
-        # A <- Matrix::Diagonal(dim(Q)[1]) #[graph_bkp2$PtV, ]
+      } else{
+        if(cond_alpha2 && !is.null(precomputed$Sigma_overdetermined)){
+          Sigma <- precomputed$Sigma_overdetermined[index.obs, index.obs, drop=FALSE]
+        }
+        if(!is.null(precomputed$Q)){
+          Q <- precomputed$Q
+        } else{
+          stop("Error processing precomputed data. Q is not available.")
+        }
+        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
       }
     }
   }
-
-
 
   for(repl_y in u_repl){
     if(return_as_list){
@@ -2255,7 +2331,11 @@ predict.graph_lme <- function(object,
 
         mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
-        mu_re <- mu_krig[ord_idx]
+        if(is.null(precomputed)){
+          mu_re <- mu_krig[ord_idx]
+        } else{
+          mu_re <- mu_krig
+        }
 
         mu_krig <- mu_fe + mu_re
     } else if (cond_wm){
@@ -2287,11 +2367,21 @@ predict.graph_lme <- function(object,
       } else{          
 
         if(!no_nugget){
+          print("PtE_pred")
+          print(PtE_pred)
+          print("PtE_obs")
+          print(PtE_obs)
+          print("y_repl")
+          print(y_repl)
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
 
-                        mu_re <- mu_krig[ord_idx]      
+          if(is.null(precomputed)){
+            mu_re <- mu_krig[ord_idx]      
+          } else{
+            mu_re <- mu_krig
+          }
                
         } else{
           QiAt <- solve(Q, t(A[idx_obs, , drop=FALSE]))
@@ -2311,9 +2401,11 @@ predict.graph_lme <- function(object,
 
           # print(mu_krig)
       
-
-          mu_re <- mu_krig[ord_idx]      
-          mu_re <- mu_krig   
+          if(is.null(precomputed)){
+            mu_re <- mu_krig[ord_idx]      
+          } else{
+            mu_re <- mu_krig   
+          }
           mu_fe <- mu[idx_repl, , drop=FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 
@@ -2369,9 +2461,11 @@ predict.graph_lme <- function(object,
     mean_re_tmp <- as.vector(mu_re)
 
     if(return_original_order){
+      if(is.null(precomputed)){
         mean_tmp[ord_idx] <- mean_tmp
         mean_fe_tmp[ord_idx] <- mean_fe_tmp
         mean_re_tmp[ord_idx] <- mean_re_tmp
+      } 
       # var_tmp[ord_idx] <- var_tmp
     }
 
@@ -2390,7 +2484,7 @@ predict.graph_lme <- function(object,
     if(compute_variances || posterior_samples || compute_pred_variances){
       if(cond_wm){
         if(!cond_alpha2){
-            Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
+            Q_xgiveny <- t(A[idx_obs, , drop=FALSE]) %*% A[idx_obs, , drop=FALSE]/sigma_e^2 + Q
         }
       }
     }
@@ -2419,7 +2513,7 @@ predict.graph_lme <- function(object,
             }
           } else{
             if(!no_nugget){
-              post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
+              post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd, , drop=FALSE]))
               var_tmp <- diag(post_cov)
               # var_tmp <- var_tmp * (var_tmp > 0)
                 if(compute_pred_variances  || pred_samples) {
@@ -2473,11 +2567,13 @@ predict.graph_lme <- function(object,
         # var_tmp[graph_bkp$data[["__dummy_ord_var"]]] <- var_tmp
 
       if(return_original_order){
-        var_tmp[ord_idx] <- var_tmp
-        if(compute_pred_variances  || pred_samples) {
-          pred_var_tmp[ord_idx] <- pred_var_tmp
-        }        
-      }
+        if(is.null(precomputed)){
+          var_tmp[ord_idx] <- var_tmp
+          if(compute_pred_variances  || pred_samples) {
+            pred_var_tmp[ord_idx] <- pred_var_tmp
+          }        
+        }
+      } 
       if(!return_as_list){
         out$variance <- rep(var_tmp, length(u_repl))
         if(compute_pred_variances  || pred_samples) {
@@ -2513,9 +2609,9 @@ predict.graph_lme <- function(object,
             }
         } else{
           if(!no_nugget){
-            post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd,]))
+            post_cov <- A[idx_prd, , drop=FALSE]%*%solve(Q_xgiveny, t(A[idx_prd, , drop=FALSE]))
             } else{
-          post_cov <- A[idx_prd,]  %*% M %*% t(A[idx_prd,])
+          post_cov <- A[idx_prd, , drop=FALSE]  %*% M %*% t(A[idx_prd, , drop=FALSE])
           }
         }
       Z <- rnorm(dim(post_cov)[1] * n_samples)
@@ -2525,7 +2621,9 @@ predict.graph_lme <- function(object,
       X <- X + mean_tmp
 
       if(return_original_order){
-        X[ord_idx,] <- X
+        if(is.null(precomputed)){
+          X[ord_idx,] <- X
+        } 
       }
 
       if(!return_as_list){
@@ -2544,7 +2642,9 @@ predict.graph_lme <- function(object,
       X <- X + mean_tmp
 
       if(return_original_order){
-        X[ord_idx,] <- X
+        if(is.null(precomputed)){
+          X[ord_idx,] <- X
+        } 
       }
 
       if(!return_as_list){
@@ -2595,19 +2695,20 @@ predict.graph_lme <- function(object,
       if(tolower(model_type$type) == "whittlematern"){
         if(model_type$alpha == 1 && exists("Q")){
           precomputed_data$Q <- Q
-          if(exists("A")) precomputed_data$A <- A
-        } else if(model_type$alpha == 2 && exists("Sigma")){
-          precomputed_data$Sigma <- Sigma
+          # A is data-dependent and should not be precomputed
+        } else if(model_type$alpha == 2){
+          # Sigma is data-dependent and should not be precomputed
+          if(exists("Sigma.overdetermined")) precomputed_data$Sigma_overdetermined <- Sigma.overdetermined
         }
       } else if(tolower(model_type$type) == "graphlaplacian" && exists("Q")){
         precomputed_data$Q <- Q
-        if(exists("A")) precomputed_data$A <- A
+        # A is data-dependent and should not be precomputed
       } else if(tolower(model_type$type) == "isocov"){
         if(is.character(model_type$cov_function) && exists("Q")){
           precomputed_data$Q <- Q
-          if(exists("A")) precomputed_data$A <- A
-        } else if(exists("Sigma")){
-          precomputed_data$Sigma <- Sigma
+          # A is data-dependent and should not be precomputed
+        } else {
+          # Sigma is data-dependent and should not be precomputed
         }
       }
       
@@ -2619,6 +2720,10 @@ predict.graph_lme <- function(object,
     }
     
     out$precomputed_data <- precomputed_data
+  }
+
+  if(!is.null(test_idx)){
+    graph_bkp$.__enclos_env__$private$data[[response_var]] <- bkp_data
   }
 
   return(out)
