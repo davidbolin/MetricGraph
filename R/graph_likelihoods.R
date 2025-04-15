@@ -599,11 +599,14 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
     curr_repl <- u_repl[i]
     repl_indices <- (repl_vec == curr_repl)
     y_rep <- y[repl_indices]
-
-    precomputed$y_data[[i]] <- list()
-    precomputed$x_data[[i]] <- list()
-    precomputed$D_data[[i]] <- list()
-    precomputed$t_data[[i]] <- list()
+    
+    # Use character names for replicate indices
+    repl_name <- paste0("repl_", curr_repl)
+    
+    precomputed$y_data[[repl_name]] <- list()
+    precomputed$x_data[[repl_name]] <- list()
+    precomputed$D_data[[repl_name]] <- list()
+    precomputed$t_data[[repl_name]] <- list()
 
     # Process X_cov if provided
     if(!is.null(X_cov)){
@@ -614,6 +617,9 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 
     for(j in seq_along(obs.edges)) {
       e <- obs.edges[j]
+      # Use character names for edge indices
+      edge_name <- paste0("edge_", e)
+      
       obs.id <- PtE[,1] == e
       y_i <- y_rep[obs.id]
       idx_na <- is.na(y_i)
@@ -621,20 +627,20 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 
       # Skip if no observations
       if(length(y_i) == 0) {
-        precomputed$y_data[[i]][[j]] <- NULL
-        precomputed$x_data[[i]][[j]] <- NULL
-        precomputed$D_data[[i]][[j]] <- NULL
-        precomputed$t_data[[i]][[j]] <- NULL
+        precomputed$y_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$x_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$D_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$t_data[[repl_name]][[edge_name]] <- NULL
         next
       }
 
       # Store y data
-      precomputed$y_data[[i]][[j]] <- y_i
+      precomputed$y_data[[repl_name]][[edge_name]] <- y_i
 
       # Store X data if present
       if(!is.null(X_cov) && ncol(X_cov) > 0){
         X_cov_e <- X_cov_rep[obs.id, , drop=FALSE]
-        precomputed$x_data[[i]][[j]] <- X_cov_e[!idx_na, , drop=FALSE]
+        precomputed$x_data[[repl_name]][[edge_name]] <- X_cov_e[!idx_na, , drop=FALSE]
       }
 
       # Get edge length
@@ -645,10 +651,10 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 
       # Compute and store time points and distance matrix
       t <- c(0, l, l*PtE_temp)
-      precomputed$t_data[[i]][[j]] <- t
+      precomputed$t_data[[repl_name]][[edge_name]] <- t
 
       D <- outer(t, t, `-`)
-      precomputed$D_data[[i]][[j]] <- D
+      precomputed$D_data[[repl_name]][[edge_name]] <- D
     }
   }
 
@@ -694,6 +700,9 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
   
   # Process each replicate
   for(i in seq_along(precomputed_data$u_repl)) {
+    curr_repl <- precomputed_data$u_repl[i]
+    repl_name <- paste0("repl_", curr_repl)
+    
     loglik <- loglik + det_R
     
     # Pre-allocate with exact size needed
@@ -702,9 +711,10 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
     # Process each edge
     for(j in seq_along(precomputed_data$obs.edges)) {
       e <- precomputed_data$obs.edges[j]
+      edge_name <- paste0("edge_", e)
       
       # Get data for this edge
-      y_i <- precomputed_data$y_data[[i]][[j]]
+      y_i <- precomputed_data$y_data[[repl_name]][[edge_name]]
       
       # Skip if no observations
       if(is.null(y_i) || length(y_i) == 0) {
@@ -716,7 +726,7 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       
       # Handle covariates if present
       if(precomputed_data$n_cov > 0) {
-        X_cov_e <- precomputed_data$x_data[[i]][[j]]
+        X_cov_e <- precomputed_data$x_data[[repl_name]][[edge_name]]
         n_cov <- ncol(X_cov_e)
         if(n_cov > 0){
           y_i <- y_i - as.vector(X_cov_e %*% theta[4:(3+n_cov)])
@@ -724,8 +734,8 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       }
       
       # Get precomputed distance data
-      t <- precomputed_data$t_data[[i]][[j]]
-      D <- precomputed_data$D_data[[i]][[j]]
+      t <- precomputed_data$t_data[[repl_name]][[edge_name]]
+      D <- precomputed_data$D_data[[repl_name]][[edge_name]]
       
       # Pre-allocate matrix
       n_pts <- length(t)
@@ -867,6 +877,9 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
     det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
     
     for(i in seq_along(precomputed_data$u_repl)) {
+      curr_repl <- precomputed_data$u_repl[i]
+      repl_name <- paste0("repl_", curr_repl)
+      
       loglik <- loglik - det_R_count
       
       v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, precomputed_data$Tc%*%Qpmu, system = 'P'),
@@ -1222,13 +1235,15 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
 
   precomputeddata <- list(y = list(),obs.edges=obs.edges,
                           D_matrix = list(),
-                          x = list())
+                          x = list(),
+                          u_repl = u_repl)
 
   for(j in seq_along(u_repl)){
-    repl_y <- seq_along(u_repl)[j]
+    curr_repl <- u_repl[j]
+    # Use character names for replicate indices
+    repl_name <- paste0("repl_", curr_repl)
 
     # Pre-compute replicate membership only once
-    curr_repl <- u_repl[repl_y]
     ind_repl_curr <- (repl_vec == curr_repl)
     y_reply <- y_resp[ind_repl_curr]
     if(!is.null(X_cov)){
@@ -1239,38 +1254,37 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
         X_reply <- X_cov[ind_repl_curr, , drop=FALSE]
       }
     }
-    precomputeddata$y[[j]] <- list()
-    precomputeddata$x[[j]] <- list()
-    precomputeddata$D_matrix[[j]] <- list()
-    for (i in 1:length(obs.edges)) {
+    precomputeddata$y[[repl_name]] <- list()
+    precomputeddata$x[[repl_name]] <- list()
+    precomputeddata$D_matrix[[repl_name]] <- list()
+    for (i in seq_along(obs.edges)) {
+      e <- obs.edges[i]
+      # Use character names for edge indices
+      edge_name <- paste0("edge_", e)
+      
       # Use pre-computed replicate indices
-      e <- obs.edges[i]
       obs.id <- PtE[,1] == e
       y_i <- y_reply[obs.id]
 
-      e <- obs.edges[i]
-      obs.id <- PtE[,1] == e
-
-      y_i <- y_reply[obs.id]
       idx_na <- is.na(y_i)
       if(sum(!idx_na) == 0){
-        precomputeddata$y[[j]][[i]] <- NULL
-        precomputeddata$x[[j]][[i]] <- NULL
-        precomputeddata$D_matrix[[j]][[i]] <- NULL
+        precomputeddata$y[[repl_name]][[edge_name]] <- NULL
+        precomputeddata$x[[repl_name]][[edge_name]] <- NULL
+        precomputeddata$D_matrix[[repl_name]][[edge_name]] <- NULL
         next
       }
 
       y_i <- y_i[!idx_na]
-      precomputeddata$y[[j]][[i]] <- y_i
+      precomputeddata$y[[repl_name]][[edge_name]] <- y_i
 
 
       if(!is.null(X_cov)){
         n_cov <- ncol(X_cov)
         if(n_cov == 0){
-          precomputeddata$x[[j]][[i]] <- 0
+          precomputeddata$x[[repl_name]][[edge_name]] <- 0
         } else{
           X_cov_repl <- X_reply[obs.id, , drop=FALSE]
-          precomputeddata$x[[j]][[i]] <- X_cov_repl[!idx_na, , drop=FALSE]
+          precomputeddata$x[[repl_name]][[edge_name]] <- X_cov_repl[!idx_na, , drop=FALSE]
         }
       }
 
@@ -1281,7 +1295,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
 
       # Compute and store time points and distance matrix
       t <- c(0, l, l*PtE_temp)
-      precomputeddata$D_matrix[[j]][[i]] <- outer(t, t, `-`)
+      precomputeddata$D_matrix[[repl_name]][[edge_name]] <- outer(t, t, `-`)
     }
   }
   return(precomputeddata)
@@ -1346,25 +1360,26 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
   # Cache some values used in the loop
   nV <- nrow(graph$V)
 
-  for(j in 1:length(seq_along(u_repl))){
-      repl_y <- seq_along(u_repl)[j]
+  for(j in seq_along(u_repl)){
+      curr_repl <- u_repl[j]
+      repl_name <- paste0("repl_", curr_repl)
+      
       loglik <- loglik + det_R
       count <- 0
       Qpmu <- numeric(nV)
-    for (i in 1:length(obs.edges)) {
+      
+    for (i in seq_along(obs.edges)) {
       # Use pre-computed replicate indices
       e <- obs.edges[i]
-      #obs.id <- PtE[,1] == e
-
-      # More efficient indexing
-      #y_i <- y_reply[obs.id]
-      y_i <- precomputeddata$y[[j]][[i]]
-      idx_na <- is.na(y_i)
-      if(sum(!idx_na) == 0){
+      edge_name <- paste0("edge_", e)
+      
+      # Get data for this edge and replicate
+      y_i <- precomputeddata$y[[repl_name]][[edge_name]]
+      
+      # Skip if no observations
+      if(is.null(y_i) || length(y_i) == 0){
         next
       }
-
-      y_i <- y_i[!idx_na]
 
       n.o <- n.o + length(y_i)
 
@@ -1373,10 +1388,10 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
         if(n_cov == 0){
           X_cov_repl <- 0
         } else{
-          y_i <- y_i - as.vector(precomputeddata$x[[j]][[i]] %*% theta[4:(3+n_cov)])
+          y_i <- y_i - as.vector(precomputeddata$x[[repl_name]][[edge_name]] %*% theta[4:(3+n_cov)])
         }
       }
-      D_matrix <- precomputeddata$D_matrix[[j]][[i]]
+      D_matrix <- precomputeddata$D_matrix[[repl_name]][[edge_name]]
 
       # Pre-compute S matrix
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
@@ -1396,6 +1411,7 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
       BtSinvB <- Bt %*% Sigma_iB
 
       E <- graph$E[e, ]
+      
       if (E[1] == E[2]) {
         # Pre-compute matrix product
         y_Sigma_iB <- sum(as.vector(t(Sigma_iB) %*% y_i))
@@ -1773,6 +1789,8 @@ precompute_graph_covariance <- function(graph,
   # Precompute data for each replicate
   for(i in seq_along(u_repl)) {
     curr_repl <- u_repl[i]
+    # Use character names for replicate indices
+    repl_name <- paste0("repl_", curr_repl)
 
     # Get data for this replicate
     ind_tmp <- (repl_vec %in% curr_repl)
@@ -1780,13 +1798,13 @@ precompute_graph_covariance <- function(graph,
     na_obs <- is.na(y_tmp)
 
     # Store observation mask and non-NA values
-    precomputed$na_indices[[i]] <- na_obs
-    precomputed$y_data[[i]] <- y_tmp[!na_obs]
+    precomputed$na_indices[[repl_name]] <- na_obs
+    precomputed$y_data[[repl_name]] <- y_tmp[!na_obs]
 
     # Store covariate data if present
     if(!is.null(X_cov) && precomputed$n_cov > 0) {
       X_cov_repl <- X_cov[ind_tmp, , drop=FALSE]
-      precomputed$X_data[[i]] <- X_cov_repl[!na_obs, , drop=FALSE]
+      precomputed$X_data[[repl_name]] <- X_cov_repl[!na_obs, , drop=FALSE]
     }
   }
 
@@ -1926,14 +1944,17 @@ likelihood_graph_covariance_precompute <- function(theta,
 
   # Process each replicate using precomputed data
   for(i in seq_along(precomputed_data$u_repl)) {
+    curr_repl <- precomputed_data$u_repl[i]
+    repl_name <- paste0("repl_", curr_repl)
+    
     # Get precomputed data for this replicate
-    na_obs <- precomputed_data$na_indices[[i]]
+    na_obs <- precomputed_data$na_indices[[repl_name]]
 
     # Skip if all observations are NA
     if(all(na_obs)) next
 
     # Extract valid observations
-    y_i <- precomputed_data$y_data[[i]]
+    y_i <- precomputed_data$y_data[[repl_name]]
 
     # Extract observation data - only use the non-NA rows and columns
     Sigma_non_na <- Sigma[!na_obs, !na_obs]
@@ -1944,7 +1965,7 @@ likelihood_graph_covariance_precompute <- function(theta,
     # Get data vector with covariate adjustment if needed
     v <- y_i
     if(!is.null(precomputed_data$X_data) && precomputed_data$n_cov > 0) {
-      X_cov_repl <- precomputed_data$X_data[[i]]
+      X_cov_repl <- precomputed_data$X_data[[repl_name]]
       v <- v - X_cov_repl %*% theta_covariates
     }
 
@@ -2184,14 +2205,17 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   
   for(i in seq_along(u_repl)) {
     curr_repl <- u_repl[i]
+    # Use character names for replicate indices
+    repl_name <- paste0("repl_", curr_repl)
+    
     ind_repl <- (repl_vec == curr_repl)
     y_rep <- y_resp[ind_repl]
     
-    precomputed$y_data[[i]] <- list()
-    precomputed$x_data[[i]] <- list()
-    precomputed$D_data[[i]] <- list()
-    precomputed$PtE_data[[i]] <- list()
-    precomputed$no_na_indices[[i]] <- list()
+    precomputed$y_data[[repl_name]] <- list()
+    precomputed$x_data[[repl_name]] <- list()
+    precomputed$D_data[[repl_name]] <- list()
+    precomputed$PtE_data[[repl_name]] <- list()
+    precomputed$no_na_indices[[repl_name]] <- list()
     
     # Process X_cov if provided
     if(!is.null(X_cov)){
@@ -2204,6 +2228,9 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
     
     for(j in seq_along(obs.edges)) {
       e <- obs.edges[j]
+      # Use character names for edge indices
+      edge_name <- paste0("edge_", e)
+      
       obs.id <- PtE[,1] == e
       y_i <- y_rep[obs.id]
       
@@ -2211,28 +2238,28 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
       
       # Skip if all observations are NA
       if(sum(!idx_na) == 0){
-        precomputed$y_data[[i]][[j]] <- NULL
-        precomputed$x_data[[i]][[j]] <- NULL
-        precomputed$D_data[[i]][[j]] <- NULL
-        precomputed$PtE_data[[i]][[j]] <- NULL
-        precomputed$no_na_indices[[i]][[j]] <- NULL
+        precomputed$y_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$x_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$D_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$PtE_data[[repl_name]][[edge_name]] <- NULL
+        precomputed$no_na_indices[[repl_name]][[edge_name]] <- NULL
         next
       }
       
       # Store non-NA observations
-      precomputed$y_data[[i]][[j]] <- y_i[!idx_na]
-      precomputed$no_na_indices[[i]][[j]] <- !idx_na
+      precomputed$y_data[[repl_name]][[edge_name]] <- y_i[!idx_na]
+      precomputed$no_na_indices[[repl_name]][[edge_name]] <- !idx_na
       
       # Store covariate data if present
       if(!is.null(X_cov) && ncol(X_cov) > 0){
         X_cov_e <- X_reply[obs.id, , drop=FALSE]
-        precomputed$x_data[[i]][[j]] <- X_cov_e[!idx_na, , drop=FALSE]
+        precomputed$x_data[[repl_name]][[edge_name]] <- X_cov_e[!idx_na, , drop=FALSE]
       }
       
       # Get observation locations
       PtE_temp <- PtE[obs.id, 2]
       PtE_temp <- PtE_temp[!idx_na]
-      precomputed$PtE_data[[i]][[j]] <- PtE_temp
+      precomputed$PtE_data[[repl_name]][[edge_name]] <- PtE_temp
       
       # Get edge length
       l <- graph$edge_lengths[e]
@@ -2240,7 +2267,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
       # Compute distance matrix
       t <- c(0, l, l*PtE_temp)
       D <- outer(t, t, `-`)
-      precomputed$D_data[[i]][[j]] <- D
+      precomputed$D_data[[repl_name]][[edge_name]] <- D
     }
   }
   
@@ -2300,6 +2327,9 @@ likelihood_alpha1_directional_precompute <- function(theta,
   
   # Process each replicate
   for(i in seq_along(precomputed_data$u_repl)) {
+    curr_repl <- precomputed_data$u_repl[i]
+    repl_name <- paste0("repl_", curr_repl)
+    
     loglik <- loglik + det_R
     
     Qpmu <- numeric(2 * precomputed_data$n_edges)
@@ -2307,29 +2337,30 @@ likelihood_alpha1_directional_precompute <- function(theta,
     # Process each edge
     for(j in seq_along(precomputed_data$obs.edges)) {
       e <- precomputed_data$obs.edges[j]
+      edge_name <- paste0("edge_", e)
       
       # Skip if no observations
-      if(is.null(precomputed_data$y_data[[i]][[j]])) {
+      if(is.null(precomputed_data$y_data[[repl_name]][[edge_name]])) {
         next
       }
       
       # Get data for this edge
-      y_i <- precomputed_data$y_data[[i]][[j]]
+      y_i <- precomputed_data$y_data[[repl_name]][[edge_name]]
       
       # Count observations
       n_obs_total <- n_obs_total + length(y_i)
       
       # Apply covariate adjustment if needed
       if(precomputed_data$n_cov > 0) {
-        X_cov_e <- precomputed_data$x_data[[i]][[j]]
+        X_cov_e <- precomputed_data$x_data[[repl_name]][[edge_name]]
         n_cov <- ncol(X_cov_e)
         if(n_cov > 0){
           y_i <- y_i - X_cov_e %*% theta[4:(3+n_cov)]
         }
       }
       
-      # Get distance matrix
-      D_matrix <- precomputed_data$D_data[[i]][[j]]
+      # Get precomputed distance matrix
+      D <- precomputed_data$D_data[[repl_name]][[edge_name]]
       
       # Compute covariance function
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
@@ -2398,6 +2429,9 @@ likelihood_alpha1_directional_precompute <- function(theta,
     
     # Complete the likelihood calculation for all replicates
     for(i in seq_along(precomputed_data$u_repl)) {
+      curr_repl <- precomputed_data$u_repl[i]
+      repl_name <- paste0("repl_", curr_repl)
+      
       loglik <- loglik - det_R_count
       
       v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu,

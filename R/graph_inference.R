@@ -751,7 +751,9 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
   )
   
   # Create a data frame with only the requested scores
-  res[["scores"]] <- data.frame()
+  # Initialize scores data frame with at least one row to avoid the error
+  # "replacement has 1 row, data has 0"
+  res[["scores"]] <- data.frame(dummy = NA)
   
   if("logscore" %in% scores) {
     res[["scores"]]$logscore <- -factor * mean(logscore, na.rm = TRUE)
@@ -768,6 +770,9 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
   if("rmse" %in% scores) {
     res[["scores"]]$rmse <- factor * sqrt(mean(rmse, na.rm = TRUE))
   }
+  
+  # Remove the dummy column after adding the real scores
+  res[["scores"]]$dummy <- NULL
   
   attr(res[["scores"]], "factor") <- factor
   

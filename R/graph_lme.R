@@ -2113,19 +2113,7 @@ predict.graph_lme <- function(object,
       kappa <- object$coeff$random_effects[2]
       # A cannot be precomputed as it depends on observations
     } else if(tolower(model_type$type) == "isocov"){
-      if(is.character(model_type$cov_function)){
-        if(!is.null(precomputed$Q)) Q <- precomputed$Q
-        if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
-        if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
-        # Parameters are not precomputed
-        sigma <- object$coeff$random_effects[1]
-        kappa <- object$coeff$random_effects[2]
-        # A cannot be precomputed as it depends on observations
-      } else {
-        # Sigma cannot be precomputed as it depends on observations
-        if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
-        if(!is.null(precomputed$cond_isocov)) cond_isocov <- precomputed$cond_isocov
-      }
+      if(!is.null(precomputed$Sigma)) Sigma <- precomputed$Sigma
     }
   } else {
     # Original matrix computation code
@@ -2204,6 +2192,29 @@ predict.graph_lme <- function(object,
   cond_wm <- cond_aux1 || cond_aux2
 
   cond_isocov <- (tolower(model_type$type) == "isocov" && !is.character(model_type$cov_function))
+
+
+  if(tolower(model_type$type) == "graphlaplacian" && !is.null(precomputed) && is.null(precomputed$Q)){
+      tau <- object$coeff$random_effects[1]
+      nV_temp <- object$nV_orig
+      if(is.null(precomputed$graph_bkp)){
+        graph_bkp$observation_to_vertex(mesh_warning=FALSE)
+      }
+      if(graph_bkp$nV > nV_temp){
+        warning("There are prediction locations outside of the observation locations. Refit the model with all the locations you want to obtain predictions.")
+      }
+      if(is.null(precomputed$graph_bkp)){
+        graph_bkp$compute_laplacian(full=TRUE)
+      }
+      kappa <- object$coeff$random_effects[2]
+
+      if(model_type$alpha == 1){
+        Q <- (kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]) * tau^2
+      } else{
+        Q <- kappa^2 * Matrix::Diagonal(graph_bkp$nV, 1) + graph_bkp$Laplacian[[1]]
+        Q <- Q %*% Q * tau^2
+      }
+  }
 
   if(!cond_wm && !cond_isocov){
     A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
@@ -2377,8 +2388,12 @@ predict.graph_lme <- function(object,
     } else {
 
         graph_bkp$compute_resdist(full=TRUE, check_euclidean=TRUE)
-
-        Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[".complete"]], coeff_random))
+        
+        if(is.null(precomputed$Sigma)){
+          Sigma <- as.matrix(cov_function(graph_bkp$res_dist[[".complete"]], coeff_random))
+        } else{
+          Sigma <- precomputed$Sigma
+        }
 
         # A <- Matrix::Diagonal(dim(Sigma)[1])[graph_bkp$PtV, ]
 
@@ -2666,13 +2681,8 @@ predict.graph_lme <- function(object,
       } else if(tolower(model_type$type) == "graphlaplacian" && exists("Q")){
         precomputed_data$Q <- Q
         # A is data-dependent and should not be precomputed
-      } else if(tolower(model_type$type) == "isocov"){
-        if(is.character(model_type$cov_function) && exists("Q")){
-          precomputed_data$Q <- Q
-          # A is data-dependent and should not be precomputed
-        } else {
-          # Sigma is data-dependent and should not be precomputed
-        }
+      } else if(tolower(model_type$type) == "isocov" && exists("Sigma")){
+          precomputed_data$Sigma <- Sigma
       }
       
       # Add model parameters for easy access
