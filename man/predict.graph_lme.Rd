@@ -22,8 +22,7 @@
   return_as_list = FALSE,
   return_original_order = TRUE,
   check_euclidean = TRUE,
-  precompute_data = FALSE,
-  precompute_type = "full",
+  advanced_options = list(),
   ...,
   data = deprecated()
 )
@@ -71,9 +70,7 @@ samples be returned as a list, with each replicate being an element?}
 
 \item{check_euclidean}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
 
-\item{precompute_data}{Precomputed data structures for faster prediction. If TRUE, returns precomputed matrices that can be reused in subsequent predictions. If a list, uses the precomputed data structures for prediction.}
-
-\item{precompute_type}{Type of precomputation to perform. Options are "full" (default) for precomputing both graph structure and parameter-dependent matrices, "structure" for precomputing only graph structure (useful for true cross-validation), or "none" for no precomputation.}
+\item{advanced_options}{Advanced options for internal use only. This parameter is intended to be used by the cross-validation function and should not be used otherwise.}
 
 \item{...}{Not used.}
 
@@ -83,7 +80,7 @@ samples be returned as a list, with each replicate being an element?}
 A list with elements \code{mean}, which contains the means of the
 predictions, \code{fe_mean}, which is the prediction for the fixed effects, \code{re_mean}, which is the prediction for the random effects, \code{variance} (if \code{compute_variance} is \code{TRUE}), which contains the
 posterior variances of the random effects, \code{samples} (if \code{posterior_samples} is \code{TRUE}),
-which contains the posterior samples. If precompute_data is TRUE, also returns a list of precomputed data structures.
+which contains the posterior samples.
 }
 \description{
 Prediction for a mixed effects regression model on a metric graph
