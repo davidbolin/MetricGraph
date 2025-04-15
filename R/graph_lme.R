@@ -1815,7 +1815,6 @@ print.summary_graph_lme <- function(x, ...) {
 #' which contains the posterior samples.
 #' @export
 #' @method predict graph_lme
-
 predict.graph_lme <- function(object,
                               newdata = NULL,
                               mesh = FALSE,
@@ -1837,6 +1836,8 @@ predict.graph_lme <- function(object,
                                ...,
                                data = deprecated()) {
 
+  # Start timing the entire prediction process
+  total_time_start <- Sys.time()
                                 
   repl <- which_repl
   if (lifecycle::is_present(data)) {
@@ -1938,6 +1939,9 @@ predict.graph_lme <- function(object,
 
   BC <- object$BC
 
+  # Time the graph cloning and data preparation
+  data_prep_time_start <- Sys.time()
+  
   # Clone graph only if we don't have precomputed data
   if(is.null(precomputed)){
     graph_bkp <- object$graph$clone()
@@ -2046,10 +2050,13 @@ predict.graph_lme <- function(object,
         idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["X__dummy_var"]][1:n])
     }
 
-  } else{
+  } else {
     idx_prd <- test_idx
     n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
   }
+  
+  data_prep_time_end <- Sys.time()
+  cat("Data preparation time: ", difftime(data_prep_time_end, data_prep_time_start, units="secs"), " seconds\n")
 
   model_type <- object$latent_model
 
@@ -2087,6 +2094,9 @@ predict.graph_lme <- function(object,
   dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n][idx_prd]
 
   ## construct Q
+  # Time the matrix construction
+  matrix_construction_time_start <- Sys.time()
+  
   # Use precomputed matrices if available
   if(!is.null(precomputed)){
     if(tolower(model_type$type) == "whittlematern"){
@@ -2197,6 +2207,9 @@ predict.graph_lme <- function(object,
       }
     }
   }
+  
+  matrix_construction_time_end <- Sys.time()
+  cat("Matrix construction time: ", difftime(matrix_construction_time_end, matrix_construction_time_start, units="secs"), " seconds\n")
 
   ord_var <- graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]]
 
@@ -2263,9 +2276,13 @@ predict.graph_lme <- function(object,
       cond_alpha1 <- TRUE
     }
   }
+  
+  # Time the precision matrix computation
+  precision_matrix_time_start <- Sys.time()
+  
   if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
     if(cond_wm){
-      if(is.null(precomputed) || is.null(precomputed$Q) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
+      if(is.null(precomputed) || (is.null(precomputed$Q) && !cond_alpha2) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
         tau <- object$coeff$random_effects[1]
         if(cond_alpha1){
           Q <- spde_precision(kappa = kappa, tau = tau,
@@ -2289,18 +2306,27 @@ predict.graph_lme <- function(object,
         }
       } else{
         if(cond_alpha2 && !is.null(precomputed$Sigma_overdetermined)){
+          PtE <- graph_bkp$get_PtE()
+          index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
+            3.0 * (abs(PtE[, 2]) > 1e-14)
           Sigma <- precomputed$Sigma_overdetermined[index.obs, index.obs, drop=FALSE]
         }
         if(!is.null(precomputed$Q)){
           Q <- precomputed$Q
-        } else{
+          A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+        } else if (!cond_alpha2){
           stop("Error processing precomputed data. Q is not available.")
         }
-        A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
       }
     }
   }
+  
+  precision_matrix_time_end <- Sys.time()
+  cat("Precision matrix computation time: ", difftime(precision_matrix_time_end, precision_matrix_time_start, units="secs"), " seconds\n")
 
+  # Time the prediction loop
+  prediction_loop_time_start <- Sys.time()
+  
   for(repl_y in u_repl){
     if(return_as_list){
       out$distance_on_edge[[repl_y]] <- dist_ed
@@ -2313,6 +2339,9 @@ predict.graph_lme <- function(object,
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
 
+    # Time the kriging computation
+    kriging_time_start <- Sys.time()
+    
     if(!cond_wm && !cond_isocov){
 
         if(!no_nugget){

@@ -293,8 +293,6 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
                                      parallel_folds = FALSE, parallel_fitting = FALSE, n_cores = parallel::detectCores() - 1, 
                                      print = FALSE, seed = NULL, return_indices = FALSE, use_precomputed = TRUE)
 {
-  # Ensure precomputed data is always used unless explicitly disabled
-  use_precomputed <- TRUE
   
   if(!inherits(object,"graph_lme") && !is.list(object)){
     stop("object should be of class graph_lme or a list of objects of class graph_lme.")
