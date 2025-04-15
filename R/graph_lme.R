@@ -2447,11 +2447,6 @@ predict.graph_lme <- function(object,
     if(compute_variances || posterior_samples || compute_pred_variances){
       if(cond_wm){
         if(!cond_alpha2){
-          print("Before")
-          print(A)
-          print(dim(A[idx_obs, , drop=FALSE]))
-          print(class(A[idx_obs, , drop=FALSE]))
-          print("After")
             Q_xgiveny <- t(A[idx_obs, , drop=FALSE]) %*% A[idx_obs, , drop=FALSE]/sigma_e^2 + Q
         }
       }
