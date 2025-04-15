@@ -2246,7 +2246,6 @@ predict.graph_lme <- function(object,
   if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
     if(cond_wm){
       if(is.null(precomputed) || (is.null(precomputed$Q) && !cond_alpha2) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
-        tau <- object$coeff$random_effects[1]
         if(cond_alpha1){
           Q <- spde_precision(kappa = kappa, tau = tau,
                             alpha = 1, graph = graph_bkp, BC = BC)
@@ -2448,6 +2447,11 @@ predict.graph_lme <- function(object,
     if(compute_variances || posterior_samples || compute_pred_variances){
       if(cond_wm){
         if(!cond_alpha2){
+          print("Before")
+          print(A)
+          print(dim(A[idx_obs, , drop=FALSE]))
+          print(class(A[idx_obs, , drop=FALSE]))
+          print("After")
             Q_xgiveny <- t(A[idx_obs, , drop=FALSE]) %*% A[idx_obs, , drop=FALSE]/sigma_e^2 + Q
         }
       }

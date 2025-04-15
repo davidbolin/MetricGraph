@@ -481,7 +481,7 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
                             edge_number = ".edge_number", 
                             distance_on_edge = ".distance_on_edge", 
                             normalized = TRUE, 
-                            compute_variances = FALSE,
+                            compute_variances = need_variances,
                             advanced_options = list(precompute_data = TRUE, precompute_type = "structure"))
                             
       # Extract precomputed data
@@ -750,13 +750,24 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
     var = var.p
   )
   
-  res[["scores"]] <- data.frame(
-    logscore = -factor * mean(logscore, na.rm = TRUE),
-    crps = -factor * mean(crps, na.rm = TRUE),
-    scrps = -factor * mean(scrps, na.rm = TRUE),
-    mae = factor * mean(mae, na.rm = TRUE),
-    rmse = factor * sqrt(mean(rmse, na.rm = TRUE))
-  )
+  # Create a data frame with only the requested scores
+  res[["scores"]] <- data.frame()
+  
+  if("logscore" %in% scores) {
+    res[["scores"]]$logscore <- -factor * mean(logscore, na.rm = TRUE)
+  }
+  if("crps" %in% scores) {
+    res[["scores"]]$crps <- -factor * mean(crps, na.rm = TRUE)
+  }
+  if("scrps" %in% scores) {
+    res[["scores"]]$scrps <- -factor * mean(scrps, na.rm = TRUE)
+  }
+  if("mae" %in% scores) {
+    res[["scores"]]$mae <- factor * mean(mae, na.rm = TRUE)
+  }
+  if("rmse" %in% scores) {
+    res[["scores"]]$rmse <- factor * sqrt(mean(rmse, na.rm = TRUE))
+  }
   
   attr(res[["scores"]], "factor") <- factor
   
