@@ -2114,6 +2114,7 @@ predict.graph_lme <- function(object,
       # A cannot be precomputed as it depends on observations
     } else if(tolower(model_type$type) == "isocov"){
       if(!is.null(precomputed$Sigma)) Sigma <- precomputed$Sigma
+      cov_function <- model_type$cov_function
     }
   } else {
     # Original matrix computation code

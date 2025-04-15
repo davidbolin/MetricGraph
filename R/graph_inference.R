@@ -557,7 +557,7 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       
       model_options <- object$options_model
       # Set starting values based on the original model parameters
-      if(tolower(object$latent_model$type) %in% c("whittlematern", "graphlaplacian", "isocov")) {
+      if(tolower(object$latent_model$type) %in% c("whittlematern", "graphlaplacian")) {
         # For WhittleMatern or graphLaplacian models
         if(!is.null(object$coeff$random_effects)) {
           model_options$start_kappa <- object$coeff$random_effects[2]
