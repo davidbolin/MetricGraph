@@ -2482,13 +2482,13 @@ predict.graph_lme <- function(object,
         }
       }
     }
-
+    
     if (compute_variances || compute_pred_variances) {
         if(!cond_isocov){
           if(cond_alpha2){
             if(!no_nugget){
-                cov_loc <- Sigma[idx_prd, idx_obs]
-                cov_Obs <- Sigma[idx_obs, idx_obs]    
+                cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
+                cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
                 diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2    
                 post_cov_tmp <- cov_loc %*%  solve(cov_Obs, t(cov_loc))
                 var_tmp <- diag(Sigma[idx_prd, idx_prd] - post_cov_tmp)
@@ -2719,7 +2719,6 @@ predict.graph_lme <- function(object,
   if(!is.null(test_idx)){
     graph_bkp$.__enclos_env__$private$data[[response_var]] <- bkp_data
   }
-
   return(out)
 }
 

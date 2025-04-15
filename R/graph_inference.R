@@ -611,14 +611,14 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
                       edge_number = ".edge_number", 
                       distance_on_edge = ".distance_on_edge", 
                       normalized = TRUE, 
-                      compute_pred_variances = TRUE, 
+                      compute_variances = TRUE, 
                       advanced_options = list(precompute_data = precomputed_data, precompute_type = "full", test_idx = reordered_test_indices, train_idx = reordered_train_indices))
       } else {
         pred <- predict(cv_model, 
                       edge_number = ".edge_number", 
                       distance_on_edge = ".distance_on_edge", 
                       normalized = TRUE, 
-                      compute_pred_variances = FALSE,
+                      compute_variances = FALSE,
                       advanced_options = list(precompute_data = precomputed_data, precompute_type = "full", test_idx = reordered_test_indices, train_idx = reordered_train_indices))
       }
     } else {
@@ -645,7 +645,7 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       idx <- test_indices[i]
       local_results$mu.p[i] <- pred$mean[i]
       if(need_variances) {
-        local_results$var.p[i] <- pred$pred_variance[i]
+        local_results$var.p[i] <- pred$variance[i] + object$coeff$measurement_error^2
       }
       y_test <- object$graph$.__enclos_env__$private$data[[response_name]][idx]
       
