@@ -1939,9 +1939,6 @@ predict.graph_lme <- function(object,
 
   BC <- object$BC
 
-  # Time the graph cloning and data preparation
-  data_prep_time_start <- Sys.time()
-  
   # Clone graph only if we don't have precomputed data
   if(is.null(precomputed)){
     graph_bkp <- object$graph$clone()
@@ -2004,8 +2001,6 @@ predict.graph_lme <- function(object,
     data_graph_temp[[edge_number]] <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][idx_group1]
     data_graph_temp[[distance_on_edge]] <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][idx_group1]
     data_graph_temp[[as.character(object$response_var)]] <- graph_bkp$.__enclos_env__$private$data[[as.character(object$response_var)]][idx_group1]
-    # data_graph_temp <- as.data.frame(data_graph_temp)
-    # colnames(data_graph_temp)[1:2] <- c(edge_number, distance_on_edge)
   
     data_prd_temp <- list()
     data_prd_temp[[edge_number]] <- data[[edge_number]]
@@ -2021,7 +2016,6 @@ predict.graph_lme <- function(object,
     data <- merge(temp_merge, data)
   
     rm(temp_merge)
-    # rm(data_prd_temp)
     rm(data_graph_temp)
   
     old_data <- graph_bkp$.__enclos_env__$private$data
@@ -2054,15 +2048,11 @@ predict.graph_lme <- function(object,
     idx_prd <- test_idx
     n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
   }
-  
-  data_prep_time_end <- Sys.time()
-  cat("Data preparation time: ", difftime(data_prep_time_end, data_prep_time_start, units="secs"), " seconds\n")
 
   model_type <- object$latent_model
 
   sigma.e <- coeff_meas[[1]]
   sigma_e <- sigma.e
-  # graph_bkp$observation_to_vertex(mesh_warning=FALSE)
 
   ##
   repl_vec <- graph_bkp$.__enclos_env__$private$data[[".group"]]
@@ -2093,10 +2083,6 @@ predict.graph_lme <- function(object,
   edge_nb <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][1:n][idx_prd]
   dist_ed <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][1:n][idx_prd]
 
-  ## construct Q
-  # Time the matrix construction
-  matrix_construction_time_start <- Sys.time()
-  
   # Use precomputed matrices if available
   if(!is.null(precomputed)){
     if(tolower(model_type$type) == "whittlematern"){
@@ -2207,26 +2193,8 @@ predict.graph_lme <- function(object,
       }
     }
   }
-  
-  matrix_construction_time_end <- Sys.time()
-  cat("Matrix construction time: ", difftime(matrix_construction_time_end, matrix_construction_time_start, units="secs"), " seconds\n")
 
   ord_var <- graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]]
-
-  # gap <- dim(Q)[1] - n
-
-  ## compute Q_x|y
-  # A <- Matrix::Diagonal(dim(Q)[1])[(gap+1):dim(Q)[1], ]
-  # if(tolower(model_type$type) == "isocov"){
-  #   # A <- Matrix::Diagonal(dim(Q)[1])
-  #   # A[graph_bkp$data[["__dummy_ord_var"]],] <- A
-  #   A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$data[["__dummy_ord_var"]], ]
-  #   A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
-
-  #   print(graph_bkp$PtV)
-  # } else{
-  #   A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
-  # }
 
   cond_aux1 <- (tolower(model_type$type) == "whittlematern")
   cond_aux2 <- (tolower(model_type$type) == "isocov" && is.character(model_type$cov_function))
@@ -2242,8 +2210,6 @@ predict.graph_lme <- function(object,
   }
 
   idx_obs_full <- as.vector(!is.na(Y))
-
-  # idx_obs_full <- !is.na(graph_bkp$data[[as.character(object$response)]])
 
   if(return_original_order && is.null(precomputed)){
           dist_ed[ord_idx] <- dist_ed
@@ -2276,9 +2242,6 @@ predict.graph_lme <- function(object,
       cond_alpha1 <- TRUE
     }
   }
-  
-  # Time the precision matrix computation
-  precision_matrix_time_start <- Sys.time()
   
   if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
     if(cond_wm){
@@ -2321,12 +2284,6 @@ predict.graph_lme <- function(object,
     }
   }
   
-  precision_matrix_time_end <- Sys.time()
-  cat("Precision matrix computation time: ", difftime(precision_matrix_time_end, precision_matrix_time_start, units="secs"), " seconds\n")
-
-  # Time the prediction loop
-  prediction_loop_time_start <- Sys.time()
-  
   for(repl_y in u_repl){
     if(return_as_list){
       out$distance_on_edge[[repl_y]] <- dist_ed
@@ -2338,9 +2295,6 @@ predict.graph_lme <- function(object,
 
     y_repl <- Y[idx_repl]
     y_repl <- y_repl[idx_obs]
-
-    # Time the kriging computation
-    kriging_time_start <- Sys.time()
     
     if(!cond_wm && !cond_isocov){
 
@@ -2354,9 +2308,6 @@ predict.graph_lme <- function(object,
           mu_krig <- solve(Q, t(A[idx_obs, , drop=FALSE]) %*% solve(AQiA, y_repl))
           mu_krig <- as.vector(A[idx_prd, , drop=FALSE] %*% mu_krig)
         }
-
-
-        # mu_krig <- mu_krig[(gap+1):length(mu_krig)]
 
         mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
@@ -2379,7 +2330,7 @@ predict.graph_lme <- function(object,
                       mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget)
-                      mu_re <- mu_krig #[ord_idx]
+                      mu_re <- mu_krig
           } else{
                 cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
                 cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
@@ -2413,16 +2364,6 @@ predict.graph_lme <- function(object,
           mu_krig <- as.vector(A[idx_prd, , drop=FALSE] %*% mu_krig)
           mu_re <- mu_krig
         }
-
-          # Q <- spde_precision(kappa = kappa, tau = tau,
-          #                 alpha = 1, graph = graph_bkp)
-          # A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, ]
-
-          # Q_xgiveny <- t(A[idx_obs,]) %*% A[idx_obs,]/sigma_e^2 + Q
-          # mu_krig <- solve(Q_xgiveny,as.vector(t(A[idx_obs,]) %*% y_repl / sigma_e^2))
-          # mu_krig <- A[idx_prd,] %*% mu_krig
-
-          # print(mu_krig)
       
           if(is.null(precomputed)){
             mu_re <- mu_krig[ord_idx]      

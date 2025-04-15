@@ -485,16 +485,16 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
                             advanced_options = list(precompute_data = TRUE, precompute_type = "structure"))
                             
       # Extract precomputed data
-      precomputed_graph_data <- precomp_pred$precomputed_data
+      precomputed_data <- precomp_pred$precomputed_data
       
-      if(is.null(precomputed_graph_data)) {
+      if(is.null(precomputed_data)) {
         warning("Precomputation for true-CV failed, falling back to standard prediction")
       } else if(print) {
         cat("Precomputation for true-CV successful.\n")
       }
       
       # Extract just the graph for use
-      precomputed_graph <- precomputed_graph_data$graph_bkp
+      precomputed_graph <- precomputed_data$graph_bkp
     }
   # Reorder train and test indices based on the ordering from precomputed_graph
   if (!is.null(precomputed_graph) && !is.null(precomputed_graph$.__enclos_env__$private$data[[".dummy_order_var"]])) {
@@ -627,14 +627,14 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
                       edge_number = ".edge_number", 
                       distance_on_edge = ".distance_on_edge", 
                       normalized = TRUE, 
-                      compute_pred_variances = TRUE)
+                      compute_variances = TRUE)
       } else {
         pred <- predict(cv_model, 
                       newdata = new_data, 
                       edge_number = ".edge_number", 
                       distance_on_edge = ".distance_on_edge", 
                       normalized = TRUE, 
-                      compute_pred_variances = FALSE)
+                      compute_variances = FALSE)
       }
     }
       
