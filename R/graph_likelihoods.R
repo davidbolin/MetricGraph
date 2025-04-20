@@ -113,7 +113,7 @@ likelihood_alpha1_directional <- function(theta,
                            BC=1, build=FALSE)
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  Tc <- graph$CoB$T[-ind.const, , drop = FALSE]
   Q <- Matrix::sparseMatrix(i = Q.list$i,
                             j = Q.list$j,
                             x = Q.list$x,
@@ -2186,7 +2186,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   # Precalculate constants
   n_const <- length(graph$CoB$S)
   ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  Tc <- graph$CoB$T[-ind.const, , drop = FALSE]
   
   precomputed$n_const <- n_const
   precomputed$ind.const <- ind.const
@@ -2264,7 +2264,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
       # Get edge length
       l <- graph$edge_lengths[e]
       
-      # Compute distance matrix
+      # Compute distance matrix exactly as in the original function
       t <- c(0, l, l*PtE_temp)
       D <- outer(t, t, `-`)
       precomputed$D_data[[repl_name]][[edge_name]] <- D
@@ -2317,22 +2317,21 @@ likelihood_alpha1_directional_precompute <- function(theta,
   # Initialize log-likelihood
   loglik <- 0
   
-  # Pre-allocate large arrays
-  total_max_entries <- 4 * length(precomputed_data$obs.edges)
-  all_i <- all_j <- all_x <- numeric(total_max_entries)
-  all_count <- 0
+  # Pre-allocate arrays for sparse matrix construction
+  i_ <- j_ <- x_ <- rep(0, 4 * length(precomputed_data$obs.edges))
   
-  # Count total observations
-  n_obs_total <- 0
+  # Initialize variables for the precision matrix
+  det_R_count <- NULL
+  n.o <- 0  # Total observation counter, accumulates across all replicates
   
-  # Process each replicate
-  for(i in seq_along(precomputed_data$u_repl)) {
-    curr_repl <- precomputed_data$u_repl[i]
+  # Process each replicate for calculating the likelihood
+  for(repl_y in 1:length(precomputed_data$u_repl)){
+    curr_repl <- precomputed_data$u_repl[repl_y]
     repl_name <- paste0("repl_", curr_repl)
     
     loglik <- loglik + det_R
-    
-    Qpmu <- numeric(2 * precomputed_data$n_edges)
+    count <- 0  # Reset count for each replicate
+    Qpmu <- rep(0, 2*precomputed_data$n_edges)  # Use rep() for consistency
     
     # Process each edge
     for(j in seq_along(precomputed_data$obs.edges)) {
@@ -2348,7 +2347,7 @@ likelihood_alpha1_directional_precompute <- function(theta,
       y_i <- precomputed_data$y_data[[repl_name]][[edge_name]]
       
       # Count observations
-      n_obs_total <- n_obs_total + length(y_i)
+      n.o <- n.o + length(y_i)
       
       # Apply covariate adjustment if needed
       if(precomputed_data$n_cov > 0) {
@@ -2360,7 +2359,7 @@ likelihood_alpha1_directional_precompute <- function(theta,
       }
       
       # Get precomputed distance matrix
-      D <- precomputed_data$D_data[[repl_name]][[edge_name]]
+      D_matrix <- precomputed_data$D_data[[repl_name]][[edge_name]]
       
       # Compute covariance function
       S <- r_1(D_matrix, kappa = kappa, tau = 1/reciprocal_tau)
@@ -2380,72 +2379,55 @@ likelihood_alpha1_directional_precompute <- function(theta,
       BtSinvB <- Bt %*% Sigma_iB
       
       E <- graph$E[e, ]
-      curr_idx <- all_count + 1
-      
       if(E[1] == E[2]) {
         # Handle self-loop
         Qpmu[2*(e-1)+1] <- Qpmu[2*(e-1)+1] + sum(t(Sigma_iB) %*% y_i)
-        
-        all_i[curr_idx] <- 2*(e-1)+1
-        all_j[curr_idx] <- 2*(e-1)+1
-        all_x[curr_idx] <- sum(BtSinvB)
-        
-        all_count <- all_count + 1
+        i_[count + 1] <- 2*(e-1)+1
+        j_[count + 1] <- 2*(e-1)+1
+        x_[count + 1] <- sum(Bt %*% Sigma_iB)  # Use Bt %*% Sigma_iB here, not BtSinvB
+        count <- count + 1  # Increment count for self-loops
       } else {
         # Handle regular edge
         Qpmu[2*(e-1) + c(1, 2)] <- Qpmu[2*(e-1) + c(1, 2)] + t(Sigma_iB) %*% y_i
-        
-        all_i[curr_idx:(curr_idx+3)] <- c(2*(e-1)+1, 2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+2)
-        all_j[curr_idx:(curr_idx+3)] <- c(2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+1, 2*(e-1)+2)
-        all_x[curr_idx:(curr_idx+3)] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
-                                         BtSinvB[1, 2], BtSinvB[2, 2])
-        
-        all_count <- all_count + 4
+        i_[count + (1:4)] <- c(2*(e-1)+1, 2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+2)
+        j_[count + (1:4)] <- c(2*(e-1)+1, 2*(e-1)+2, 2*(e-1)+1, 2*(e-1)+2)
+        x_[count + (1:4)] <- c(BtSinvB[1, 1], BtSinvB[1, 2],
+                               BtSinvB[1, 2], BtSinvB[2, 2])
+        count <- count + 4
       }
       
       # Update log likelihood with quadratic term
-      # Use Cholesky factor instead of matrix inversion
-      v_i <- backsolve(R_i, forwardsolve(t(R_i), y_i))
-      quad_form <- sum(y_i * v_i)
-      
-      loglik <- loglik - 0.5 * quad_form - sum(log(diag(R_i)))
+      loglik <- loglik - 0.5 * t(y_i) %*% solve(Sigma_i, y_i)
+      loglik <- loglik - sum(log(diag(R_i)))
     }
+    
+    # Only compute the Cholesky decomposition once - on the first replicate
+    if(is.null(det_R_count)){
+      i_ <- c(Q.list$i, i_[1:count])
+      j_ <- c(Q.list$j, j_[1:count])
+      x_ <- c(Q.list$x, x_[1:count])
+      
+      Qp <- Matrix::sparseMatrix(i = i_,
+                                j = j_,
+                                x = x_,
+                                dims = Q.list$dims)
+      
+      Qp <- Tc %*% Qp %*% t(Tc)
+      R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
+      det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
+    }
+    
+    # Complete the likelihood calculation for this replicate
+    loglik <- loglik - det_R_count
+    
+    v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu,
+                                                        system = "P"),
+                                  system = "L")))
+    
+    loglik <- loglik + 0.5 * t(v) %*% v - 0.5 * n.o * log(2*pi)
   }
   
-  # Build sparse precision matrix once with all entries
-  if(all_count > 0) {
-    # Create new precision matrix with data terms
-    BtSB <- Matrix::sparseMatrix(i = all_i[1:all_count],
-                               j = all_j[1:all_count],
-                               x = all_x[1:all_count],
-                               dims = Q.list$dims)
-    
-    Qp <- Q + BtSB
-    Qp <- Tc %*% Qp %*% t(Tc)
-    
-    # Use Cholesky to compute determinant and solve systems
-    R_count <- Matrix::Cholesky(forceSymmetric(Qp), LDL = FALSE, perm = TRUE)
-    det_R_count <- Matrix::determinant(R_count, sqrt=TRUE)$modulus[1]
-    
-    # Complete the likelihood calculation for all replicates
-    for(i in seq_along(precomputed_data$u_repl)) {
-      curr_repl <- precomputed_data$u_repl[i]
-      repl_name <- paste0("repl_", curr_repl)
-      
-      loglik <- loglik - det_R_count
-      
-      v <- c(as.matrix(Matrix::solve(R_count, Matrix::solve(R_count, Tc%*%Qpmu,
-                                                          system = "P"),
-                                   system = "L")))
-      
-      loglik <- loglik + 0.5 * t(v) %*% v
-    }
-  }
-  
-  # Add the constant term
-  loglik <- loglik - 0.5 * n_obs_total * log(2*pi)
-  
-  result <- as.numeric(loglik)
+  result <- loglik[1]  # Get first element
   
   if(maximize) {
     return(result)

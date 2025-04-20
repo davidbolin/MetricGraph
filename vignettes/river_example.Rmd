@@ -47,7 +47,7 @@ Observe that this already added, by default, the observations and edge weights c
 
 ```{r}
 dat <- graph$get_data()
-graph$se
+dat
 ```
 and
 ```{r}
