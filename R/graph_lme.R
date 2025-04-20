@@ -2051,6 +2051,8 @@ predict.graph_lme <- function(object,
 
   model_type <- object$latent_model
 
+  directional <- model_type$directional
+
   sigma.e <- coeff_meas[[1]]
   sigma_e <- sigma.e
 
@@ -2088,6 +2090,7 @@ predict.graph_lme <- function(object,
     if(tolower(model_type$type) == "whittlematern"){
       if(model_type$alpha == 1){
         if(!is.null(precomputed$Q)) Q <- precomputed$Q
+        if(!is.null(precomputed$Sigma_overdetermined)) Sigma.overdetermined <- precomputed$Sigma_overdetermined        
         if(!is.null(precomputed$cond_wm)) cond_wm <- precomputed$cond_wm
         if(!is.null(precomputed$cond_alpha1)) cond_alpha1 <- precomputed$cond_alpha1
         if(!is.null(precomputed$cond_alpha2)) cond_alpha2 <- precomputed$cond_alpha2
@@ -2257,11 +2260,28 @@ predict.graph_lme <- function(object,
   
   if(compute_variances || posterior_samples || no_nugget || compute_pred_variances){
     if(cond_wm){
-      if(is.null(precomputed) || (is.null(precomputed$Q) && !cond_alpha2) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
+      if(is.null(precomputed) || (is.null(precomputed$Q) && !cond_alpha2) || (cond_alpha1 && !is.null(directional) && directional == 1 && is.null(precomputed$Sigma_overdetermined)) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
         if(cond_alpha1){
-          Q <- spde_precision(kappa = kappa, tau = tau,
-                            alpha = 1, graph = graph_bkp, BC = BC)
-          A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+          if(!is.null(directional) && directional == 0){
+            Q <- spde_precision(kappa = kappa, tau = tau,
+                              alpha = 1, graph = graph_bkp, BC = BC)
+            A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+          } else{
+              if(is.null(graph_bkp[["C"]])){
+                graph_bkp$buildDirectionalConstraints(1)
+              } else if(graph_bkp$CoB$alpha == 2){
+                graph_bkp$buildDirectionalConstraints(1)
+              }            
+              Q_edges <- Qalpha1_edges(c(tau,kappa), graph_bkp, w = 0,BC=BC, build=TRUE)
+              n_const <- length(graph_bkp$CoB$S)
+              ind.const <- c(1:n_const)
+              Tc <- graph_bkp$CoB$T[-ind.const, ]
+              Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
+              Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
+              PtE = graph_bkp$get_PtE()
+              index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-1e-14) + 1
+              Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+          }
         } else{
           if(is.null(graph_bkp$CoB)){
             graph_bkp$buildC(2)
@@ -2285,11 +2305,17 @@ predict.graph_lme <- function(object,
             3.0 * (abs(PtE[, 2]) > 1e-14)
           Sigma <- precomputed$Sigma_overdetermined[index.obs, index.obs, drop=FALSE]
         }
-        if(!is.null(precomputed$Q)){
-          Q <- precomputed$Q
-          A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
-        } else if (!cond_alpha2){
-          stop("Error processing precomputed data. Q is not available.")
+        if(cond_alpha1 && !is.null(directional) && directional == 1){
+            PtE = graph_bkp$get_PtE()
+            index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-1e-14) + 1
+            Sigma <-  as.matrix(precomputed$Sigma_overdetermined[index.obs, index.obs])            
+        } else if(cond_alpha1){
+          if(!is.null(precomputed$Q)){
+            Q <- precomputed$Q
+            A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+          } else if (!cond_alpha2){
+            stop("Error processing precomputed data. Q is not available.")
+          }
         }
       }
     }
@@ -2337,17 +2363,18 @@ predict.graph_lme <- function(object,
         if(is.null(graph_bkp$CoB)){
           graph_bkp$buildC(2)
         }
-          if(!no_nugget){
-                      mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
-                        graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
-                        PtE_pred = PtE_pred, no_nugget = no_nugget)
-                      mu_re <- mu_krig
-          } else{
-                cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
-                cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
-                mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
-                mu_re <- mu_krig
-          }
+        if(!exists("Sigma")){
+          mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
+            graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
+            PtE_pred = PtE_pred, no_nugget = no_nugget)
+        } else{
+          cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
+          cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
+          diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2              
+          mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
+        }
+
+        mu_re <- mu_krig
 
         mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
@@ -2356,26 +2383,16 @@ predict.graph_lme <- function(object,
         mu_krig <- mu_fe + mu_re
 
       } else{          
-
-        if(!no_nugget){
+        if(!exists("Sigma")){
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
-                        PtE_pred = PtE_pred, no_nugget = no_nugget)
-
-          if(is.null(precomputed)){
-            mu_re <- mu_krig[ord_idx]      
-          } else{
-            mu_re <- mu_krig
-          }
-               
+                        PtE_pred = PtE_pred, no_nugget = no_nugget, directional = directional)
         } else{
-          QiAt <- solve(Q, t(A[idx_obs, , drop=FALSE]))
-          AQiA <- A[idx_obs, , drop=FALSE] %*% QiAt
-          mu_krig <- solve(Q, t(A[idx_obs, , drop=FALSE]) %*% solve(AQiA, y_repl))
-          mu_krig <- as.vector(A[idx_prd, , drop=FALSE] %*% mu_krig)
-          mu_re <- mu_krig
+          cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
+          cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
+          diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2              
+          mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
         }
-      
           if(is.null(precomputed)){
             mu_re <- mu_krig[ord_idx]      
           } else{
@@ -2462,7 +2479,7 @@ predict.graph_lme <- function(object,
 
     if(compute_variances || posterior_samples || compute_pred_variances){
       if(cond_wm){
-        if(!cond_alpha2){
+        if((cond_alpha1 && !is.null(directional) && directional == 0) || is.null(directional)){
             Q_xgiveny <- t(A[idx_obs, , drop=FALSE]) %*% A[idx_obs, , drop=FALSE]/sigma_e^2 + Q
         }
       }
@@ -2472,9 +2489,6 @@ predict.graph_lme <- function(object,
         if(!cond_isocov){
           if(cond_alpha2){
             if(!no_nugget){
-                cov_loc <- Sigma[idx_prd, idx_obs, drop=FALSE]
-                cov_Obs <- Sigma[idx_obs, idx_obs, drop=FALSE]    
-                diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2    
                 post_cov_tmp <- cov_loc %*%  solve(cov_Obs, t(cov_loc))
                 var_tmp <- diag(Sigma[idx_prd, idx_prd] - post_cov_tmp)
                 if(compute_pred_variances  || pred_samples) {
@@ -2490,7 +2504,7 @@ predict.graph_lme <- function(object,
                   pred_var_tmp <- diag(pred_cov)
                 }
             }
-          } else{
+          } else if(is.null(directional) || directional == 0){
             if(!no_nugget){
               post_cov <- A[idx_prd,]%*%solve(Q_xgiveny, t(A[idx_prd, , drop=FALSE]))
               var_tmp <- diag(post_cov)
@@ -2511,7 +2525,24 @@ predict.graph_lme <- function(object,
                   pred_var_tmp <- diag(pred_cov)
                 }                
             }
-          }
+          } else if(cond_alpha1 && !is.null(directional) && directional == 1){
+           if(!no_nugget){
+                post_cov_tmp <- cov_loc %*%  solve(cov_Obs, t(cov_loc))
+                var_tmp <- diag(Sigma[idx_prd, idx_prd] - post_cov_tmp)
+                if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- Matrix::Diagonal(dim(cov_loc)[1], x=sigma_e^2) -cov_loc + post_cov_tmp
+                  pred_var_tmp <- diag(pred_cov)
+                }
+            } else{
+              cov_tmp <- Sigma[idx_prd, idx_prd] - Sigma[idx_prd, idx_obs] %*% solve(Sigma[idx_obs, idx_obs],t(Sigma[idx_prd, idx_obs]))
+              var_tmp <- diag(cov_tmp)
+              var_tmp <- ifelse(var_tmp < 0, 0, var_tmp) # possible numerical errors
+              if(compute_pred_variances  || pred_samples) {
+                  pred_cov <- cov_tmp
+                  pred_var_tmp <- diag(pred_cov)
+                }
+            }
+        }
         } else{
           # nV <- graph_bkp$nV - nrow(graph_bkp$get_PtE())          
           # idx_obs_tmp <- c(rep(FALSE,nV), idx_obs)
@@ -2544,7 +2575,6 @@ predict.graph_lme <- function(object,
         }
 
         # var_tmp[graph_bkp$data[["__dummy_ord_var"]]] <- var_tmp
-
       if(return_original_order){
         if(is.null(precomputed)){
           var_tmp[ord_idx] <- var_tmp
@@ -2577,7 +2607,7 @@ predict.graph_lme <- function(object,
           } else{
               post_cov <- Sigma[idx_prd_tmp, idx_prd_tmp] - Sigma[idx_prd_tmp, idx_obs_tmp] %*% solve(Sigma[idx_obs_tmp, idx_obs_tmp],t(Sigma[idx_prd_tmp, idx_obs_tmp]))
           }
-        } else if(cond_alpha2){
+        } else if(cond_alpha2 || (cond_alpha1 && !is.null(directional) && directional == 1)){
               if(!no_nugget){
                 cov_loc <- Sigma[idx_prd, idx_obs]
                 cov_Obs <- Sigma[idx_obs, idx_obs]    
@@ -2672,13 +2702,10 @@ predict.graph_lme <- function(object,
       
       # Add matrices that are parameter-dependent but not data-dependent
       if(tolower(model_type$type) == "whittlematern"){
+        if(exists("Sigma.overdetermined")) precomputed_data$Sigma_overdetermined <- Sigma.overdetermined        
         if(model_type$alpha == 1 && exists("Q")){
           precomputed_data$Q <- Q
-          # A is data-dependent and should not be precomputed
-        } else if(model_type$alpha == 2){
-          # Sigma is data-dependent and should not be precomputed
-          if(exists("Sigma.overdetermined")) precomputed_data$Sigma_overdetermined <- Sigma.overdetermined
-        }
+        } 
       } else if(tolower(model_type$type) == "graphlaplacian" && exists("Q")){
         precomputed_data$Q <- Q
         # A is data-dependent and should not be precomputed
