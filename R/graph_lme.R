@@ -2262,7 +2262,7 @@ predict.graph_lme <- function(object,
     if(cond_wm){
       if(is.null(precomputed) || (is.null(precomputed$Q) && !cond_alpha2) || (cond_alpha1 && !is.null(directional) && directional == 1 && is.null(precomputed$Sigma_overdetermined)) || (cond_alpha2 && is.null(precomputed$Sigma_overdetermined))) {
         if(cond_alpha1){
-          if(!is.null(directional) && directional == 0){
+          if(!is.null(directional) && directional == 0 || is.null(directional)){
             Q <- spde_precision(kappa = kappa, tau = tau,
                               alpha = 1, graph = graph_bkp, BC = BC)
             A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
@@ -2277,7 +2277,7 @@ predict.graph_lme <- function(object,
               ind.const <- c(1:n_const)
               Tc <- graph_bkp$CoB$T[-ind.const, ]
               Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
-              Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
+              Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T, Tc))
               PtE = graph_bkp$get_PtE()
               index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-1e-14) + 1
               Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
@@ -2292,8 +2292,7 @@ predict.graph_lme <- function(object,
                               graph = graph_bkp, BC = BC)
           Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
           Qtilde <- Qtilde[-n.c, -n.c, drop=FALSE]
-          Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde) %*%
-            (graph_bkp$CoB$T[-n.c, , drop=FALSE])
+          Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde, graph_bkp$CoB$T[-n.c, , drop=FALSE])
           index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
             3.0 * (abs(PtE[, 2]) > 1e-14)
           Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs, drop=FALSE])
@@ -2363,7 +2362,7 @@ predict.graph_lme <- function(object,
         if(is.null(graph_bkp$CoB)){
           graph_bkp$buildC(2)
         }
-        if(!exists("Sigma")){
+        if(!compute_variances && !compute_pred_variances){
           mu_krig <- posterior_mean_obs_alpha2(c(sigma.e,tau,kappa),
             graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
             PtE_pred = PtE_pred, no_nugget = no_nugget)
@@ -2383,7 +2382,7 @@ predict.graph_lme <- function(object,
         mu_krig <- mu_fe + mu_re
 
       } else{          
-        if(!exists("Sigma")){
+        if((!compute_variances && !compute_pred_variances) || is.null(directional) || directional == 0){
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
                         PtE_pred = PtE_pred, no_nugget = no_nugget, directional = directional)
