@@ -22,6 +22,7 @@
   return_as_list = FALSE,
   return_original_order = TRUE,
   check_euclidean = TRUE,
+  advanced_options = list(),
   ...,
   data = deprecated()
 )
@@ -68,6 +69,8 @@ samples be returned as a list, with each replicate being an element?}
 (input) order or in the order inside the graph?}
 
 \item{check_euclidean}{Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.}
+
+\item{advanced_options}{Advanced options for internal use only. This parameter is intended to be used by the cross-validation function and should not be used otherwise.}
 
 \item{...}{Not used.}
 

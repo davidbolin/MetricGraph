@@ -205,7 +205,7 @@ leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
 ```{r}
-res <- posterior_crossvalidation(fitted_models_list, tibble=FALSE)
+res <- posterior_crossvalidation(fitted_models_list, tibble=FALSE, mode = "loo")
 res$scores
 ```
 

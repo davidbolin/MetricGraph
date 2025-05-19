@@ -24,6 +24,10 @@ posterior_mean_obs_alpha1 <- function(theta,
   tau <- theta[2]
   kappa <- theta[3]
 
+  if(is.null(directional)){
+    directional <- FALSE
+  }
+
   if(leave.edge.out == FALSE){
     if(!directional){
       V.post <- posterior_mean_alpha1(theta = theta, graph = graph,

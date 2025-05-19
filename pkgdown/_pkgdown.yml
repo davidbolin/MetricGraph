@@ -47,6 +47,8 @@ navbar:
         href: articles/river_example.html         
       - text: Spatio-temporal Models on Compact Metric Graphs
         href: articles/spacetime.html  
+      - text: Solving PDEs on metric graphs
+        href: articles/pde.html
     custom:
         icon: fa-comments-o
         text: Discussions

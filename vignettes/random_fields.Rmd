@@ -519,7 +519,7 @@ fitted_models_list <- list("alpha=1" = fit_alpha1,
                     "isoExp" = fit_isoexp, 
                     "GL1" = fit_GL1, "GL2" = fit_GL2)
 
-posterior_crossvalidation(fitted_models_list, factor=1000)[["scores"]]
+posterior_crossvalidation(fitted_models_list, mode = "loo", factor=1000)[["scores"]]
 ```
 
 # A model with replicates

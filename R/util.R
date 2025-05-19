@@ -386,7 +386,7 @@ graph_starting_values <- function(graph,
       }
 
     } else {
-      # If not sf format, assume it’s a standard list and compute Euclidean distances
+      # If not sf format, assume it's a standard list and compute Euclidean distances
       min_x <- bounding_box$min_x
       max_x <- bounding_box$max_x
       min_y <- bounding_box$min_y
@@ -732,6 +732,48 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   new_data[[".edge_number"]] <- PtE[, 1]
   new_data[[".distance_on_edge"]] <- PtE[, 2]
 
+  # Store factor and datetime metadata
+  factor_metadata <- list()
+  datetime_columns <- c()
+  
+  # Collect factor and datetime info from new_data
+  for (col in names(new_data)) {
+    if (is.factor(new_data[[col]])) {
+      # Store the original factor values as character to preserve them exactly
+      factor_metadata[[col]] <- list(
+        values = as.character(new_data[[col]]),
+        levels = levels(new_data[[col]])
+      )
+      # Convert to character for merging to avoid level issues
+      new_data[[col]] <- as.character(new_data[[col]])
+    } else if (inherits(new_data[[col]], c("POSIXlt", "POSIXt", "POSIXct"))) {
+      # Track datetime columns and ensure they're in consistent format (POSIXct)
+      datetime_columns <- c(datetime_columns, col)
+      if (inherits(new_data[[col]], "POSIXlt")) {
+        new_data[[col]] <- as.POSIXct(new_data[[col]])
+      }
+    }
+  }
+  
+  # Collect factor and datetime info from old_data too
+  if (!is.null(old_data)) {
+    for (col in names(old_data)) {
+      if (is.factor(old_data[[col]]) && !(col %in% names(factor_metadata))) {
+        factor_metadata[[col]] <- list(
+          levels = levels(old_data[[col]])
+        )
+        # Convert to character for merging
+        old_data[[col]] <- as.character(old_data[[col]])
+      } else if (inherits(old_data[[col]], c("POSIXlt", "POSIXt", "POSIXct")) && 
+                !(col %in% datetime_columns)) {
+        datetime_columns <- c(datetime_columns, col)
+        if (inherits(old_data[[col]], "POSIXlt")) {
+          old_data[[col]] <- as.POSIXct(old_data[[col]])
+        }
+      }
+    }
+  }
+
   # Ensure group_vector is initialized correctly
   if (is.null(group_vector)) {
     group_vector <- if (!is.null(old_data)) {
@@ -807,8 +849,41 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   list_result[[".distance_on_edge"]] <- data_coords$PtE2
   list_result[[".group"]] <- data_coords$group
 
+  # Restore ALL factors with their original levels
+  for (col_name in names(factor_metadata)) {
+    if (col_name %in% names(list_result)) {
+      original_levels <- factor_metadata[[col_name]]$levels
+      
+      # Get current values in the result
+      current_values <- unique(as.character(list_result[[col_name]][!is.na(list_result[[col_name]])]))
+      
+      # Check for new values not in original levels
+      new_values <- setdiff(current_values, original_levels)
+      
+      if (length(new_values) > 0 && !suppress_warnings) {
+        warning(sprintf("Column '%s' contains values not in original factor levels: %s. These have been added as new levels.",
+                      col_name, paste(new_values, collapse = ", ")))
+      }
+      
+      # Create factor with all necessary levels, preserving original order
+      all_levels <- c(original_levels, new_values)
+      list_result[[col_name]] <- factor(list_result[[col_name]], levels = all_levels)
+    }
+  }
+  
+  # Restore datetime columns to their proper type
+  for (col_name in datetime_columns) {
+    if (col_name %in% names(list_result)) {
+      # Convert any numeric timestamps back to POSIXct
+      if (is.numeric(list_result[[col_name]])) {
+        list_result[[col_name]] <- as.POSIXct(list_result[[col_name]], origin="1970-01-01")
+      }
+    }
+  }
+
   return(list_result)
 }
+
 #' find indices of the rows with all NA's in lists
 #' @noRd
 #'
@@ -2294,3 +2369,791 @@ construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree
 
   return(C)
 }
+
+#' Compare values with proper NA handling in a vectorized way
+#' 
+#' @param x First value or vector/matrix
+#' @param y Second value or vector/matrix
+#' @param is_matrix Whether the input should be treated as a matrix
+#' @return Logical vector indicating if values are different (FALSE means same)
+#' @noRd
+compare_with_na <- function(x, y, is_matrix = FALSE) {
+  # Create temporary copies with NA replaced by a unique placeholder
+  x_copy <- x
+  y_copy <- y
+  
+  x_copy[is.na(x_copy)] <- ".dummy_na_val"
+  y_copy[is.na(y_copy)] <- ".dummy_na_val"
+  
+  if (!is_matrix) {
+    return(x_copy != y_copy)
+  } else {
+    # For matrices, each row must have all columns matching
+    return(rowSums(x_copy != y_copy) == ncol(x_copy))
+  }
+}
+#' Parse a formula to extract covariates and their associated models
+#'
+#' This function takes a formula object, extracts the right-hand side,
+#' and creates a list of covariates with their associated models.
+#'
+#' @param formula A formula object to parse
+#' @return A list where each element contains information about a covariate and its model
+#' @noRd
+parse_formula_components <- function(formula) {
+  # Check if input is a formula
+  if (!inherits(formula, "formula")) {
+    stop("Input must be a formula object")
+  }
+  
+  # Extract the right-hand side of the formula
+  rhs <- formula[[length(formula)]]
+  
+  # Deparse the right-hand side to get a character representation
+  rhs_char <- deparse(rhs, width.cutoff = 500)
+  
+  # Parse the formula into an expression
+  expr <- parse(text = rhs_char)[[1]]
+  
+  # Initialize the result list
+  result <- list()
+  
+  # Function to process each term in the formula
+  process_term <- function(term) {
+    # Skip intercept term (-1)
+    if (is.numeric(term) && term == -1) {
+      return(NULL)
+    }
+    
+    # Check if the term is an f() function call
+    if (is.call(term) && term[[1]] == as.name("f")) {
+      # Extract the covariate name (first argument of f)
+      if (is.numeric(term[[2]]) || (is.call(term[[2]]) && term[[2]][[1]] == as.name(":"))) {
+        stop("Formula should only contain named variables as indices, not unnamed vectors")
+      }
+      
+      covariate <- deparse(term[[2]])
+      
+      # Default model is "iid" if not specified
+      model <- "iid"
+      model_name <- "iid"
+      is_character <- TRUE
+      
+      # Check for model specification
+      for (i in 3:length(term)) {
+        if (!is.null(names(term)[i]) && names(term)[i] == "model") {
+          # If model is a string, use it directly
+          if (is.character(term[[i]])) {
+            model <- term[[i]]
+            model_name <- model
+            is_character <- TRUE
+          } else if (is.name(term[[i]]) || is.call(term[[i]])) {
+            # If model is a variable name or function call, get its class
+            model_expr <- deparse(term[[i]])
+            model_obj <- eval(parse(text = model_expr), envir = parent.frame())
+            if (!is.null(model_obj)) {
+              model <- class(model_obj)[1]
+              model_name <- model_expr
+              is_character <- FALSE
+            } else {
+              model <- model_expr
+              model_name <- model_expr
+              is_character <- FALSE
+            }
+          }
+        }
+      }
+      
+      return(list(
+        covariate = covariate,
+        model = model,
+        model_name = model_name,
+        character = is_character
+      ))
+    } else {
+      # For terms without f(), they are linear terms
+      if (is.name(term) || is.call(term)) {
+        if (is.numeric(term) || (is.call(term) && term[[1]] == as.name(":"))) {
+          stop("Formula should only contain named variables as indices, not unnamed vectors")
+        }
+        
+        covariate <- deparse(term)
+        
+        # Skip the -1 term
+        if (covariate == "-1") {
+          return(NULL)
+        }
+        
+        return(list(
+          covariate = covariate,
+          model = "linear",
+          model_name = "linear",
+          character = TRUE
+        ))
+      }
+    }
+    
+    return(NULL)
+  }
+  
+  # Recursively process all terms in the formula
+  extract_terms <- function(expr) {
+    if (is.call(expr) && expr[[1]] == as.name("+")) {
+      # If it's an addition, process both sides
+      left_result <- extract_terms(expr[[2]])
+      right_result <- extract_terms(expr[[3]])
+      
+      return(c(left_result, right_result))
+    } else {
+      # Process a single term
+      term_result <- process_term(expr)
+      if (!is.null(term_result)) {
+        return(list(term_result))
+      } else {
+        return(list())
+      }
+    }
+  }
+  
+  # Extract all terms from the formula
+  terms <- extract_terms(expr)
+  
+  return(terms)
+}
+
+#' Linear interpolation of covariates on a metric graph
+#'
+#' This function performs linear interpolation of covariates from observed data points
+#' to integration points on a metric graph using intrinsic operators.
+#'
+#' @param graph A metric_graph object with a mesh
+#' @param data A data frame containing observed data with edge_number and distance_on_edge columns
+#' @param covariates Character vector of covariate names to interpolate
+#' @param integration_points A data frame with edge_number and distance_on_edge columns for interpolation points
+#' @return A data frame with interpolated covariate values at the integration points
+#' @noRd
+
+linear_interpolation_graph <- function(graph, covariates, integration_points, repl = NULL, repl_col = ".group") {
+  
+  # Check if graph has a mesh
+  if (is.null(graph$mesh)) {
+    stop("No mesh provided in the graph object. Please build a mesh first with graph$build_mesh().")
+  }
+  
+  data <- graph$get_data(drop_na = TRUE)
+  data <- as.data.frame(data)
+
+  # Check if finite element matrices have been computed
+  if (is.null(graph$mesh$C)) {
+    graph$compute_fem()
+  }
+  
+  # Check if integration points are provided
+  if (is.null(integration_points)) {
+    stop("Integration points must be provided")
+  }
+  
+  # Check if covariates are provided
+  if (is.null(covariates)) {
+    return(integration_points)
+  }
+  
+  intrinsic_obj <- rSPDE::intrinsic.operators(tau = 1, beta = 1, C = graph$mesh$C, G = graph$mesh$G,
+                                              d = 1, graph = graph)
+
+  Aprd <- graph$fem_basis(integration_points[, c(".edge_number", ".distance_on_edge")])
+  # Initialize an empty result data frame
+  result <- NULL
+  
+  if(!is.null(repl) && repl == ".all"){
+    repl <- unique(data[[".group"]])
+  } else{
+    repl <- data[[".group"]][1]
+  }
+  
+  for(rep_val in repl){
+    # Create a copy of integration points for this replicate
+    int_points_rep <- integration_points
+    
+    # Add replicate identifier
+    int_points_rep[[repl_col]] <- rep_val
+    
+    # Get data for this replicate
+    data_tmp <- select_repl_group_rSPDE_version(data, repl = rep_val, repl_col = repl_col, group = NULL, group_col = NULL)
+    data_tmp <- as.data.frame(data_tmp)
+    A <- graph$fem_basis(data_tmp[, c(".edge_number", ".distance_on_edge")])
+    
+    # Interpolate each covariate
+    for (cov_name in covariates) {
+      if (cov_name %in% names(data_tmp)) {
+        # Perform interpolation for this covariate
+        cov_values <- as.vector(predict(intrinsic_obj, A = A, Aprd = Aprd, Y = data_tmp[[cov_name]], sigma.e = 1e-7)$mean)
+        
+        # Add to this replicate's data frame
+        int_points_rep[[cov_name]] <- cov_values
+      } else {
+        warning(paste("Covariate", cov_name, "not found in data for replicate", rep_val))
+      }
+    }
+    
+    # Append to result
+    if(is.null(result)) {
+      result <- int_points_rep
+    } else {
+      result <- rbind(result, int_points_rep)
+    }
+  }
+  return(result)
+
+}
+
+
+
+#' Create integration points for log-Gaussian Cox processes on metric graphs
+#'
+#' This function creates integration points for approximating the integral in log-Gaussian Cox processes
+#' on metric graphs. It can either use the existing mesh in the graph, create a new mesh, or use
+#' manually specified integration points.
+#'
+#' @param graph A `metric_graph` object.
+#' @param use_current_mesh Logical; if TRUE, use the existing mesh in the graph as integration points.
+#' @param new_h Numeric; mesh size for creating a new mesh if `use_current_mesh` is FALSE.
+#' @param new_n Integer; alternative to new_h, specifies the approximate number of mesh points.
+#' @param manual_integration_points Logical; if TRUE, use manually specified integration points.
+#' @param integration_points Data frame with columns `edge_number`, `distance_on_edge` and `E` 
+#'        (integration weights) when `manual_integration` is TRUE.
+#' @param covariates Named vector of covariates at integration points or NULL if no covariates are used.
+#' @param interpolate Logical; if TRUE, interpolate covariates from the graph data to integration points.
+#' @param manual_covariates Named vector of covariates at integration points if interpolate is FALSE and covariates is not NULL. If interpolate is TRUE, this is ignored,
+#' and if interpolate is FALSE, and covariates is not NULL, then this must be provided.
+#' @param repl Vector of replicates to be used in the model. For all replicates, one must use ".all".
+#' @param repl_col Name of the column in the data that contains the replicates. Default is ".group".
+#' @param repl_to_interpolate Vector of replicates to be used for interpolation. If NULL, the first replicate is used.
+#' @param verbose Logical; if TRUE, print information about the integration points.
+#'
+#' @noRd
+create_integration_points <- function(graph, 
+                                     use_current_mesh = TRUE, 
+                                     new_h = NULL, 
+                                     new_n = NULL,
+                                     manual_integration_points = FALSE,
+                                     manual_covariates = NULL,
+                                     integration_points = NULL,
+                                     covariates = NULL,
+                                     interpolate = TRUE,
+                                     repl = NULL,
+                                     repl_col = ".group") {
+  
+  # Check graph input
+  # graph_check <- check_graph(graph)
+
+  # Check if covariates is not NULL
+  if (!is.null(covariates)) {
+    # Ensure covariates is a character vector
+    if (!is.character(covariates)) {
+      stop("covariates must be a character vector")
+    }
+    
+    # Get available data from the graph
+    graph_data <- graph$get_data(drop_na = TRUE)
+    graph_data <- as.data.frame(graph_data)
+    
+    # Check if each covariate exists in the graph data
+    missing_covs <- setdiff(covariates, names(graph_data))
+    if (length(missing_covs) > 0) {
+      stop("The following covariates are not found in the graph data: ", 
+           paste(missing_covs, collapse = ", "))
+    }
+  }
+  
+  if (!is.null(manual_integration_points)) {
+    # Use manually specified integration points
+    if (is.null(integration_points)) {
+      stop("When manual_integration_points is TRUE, integration_points must be provided")
+    }
+    
+    # Check if integration_points has required columns
+    required_cols <- c("edge_number", "distance_on_edge")
+    if (!all(required_cols %in% names(integration_points))) {
+      stop("integration_points must contain columns: ", paste(required_cols, collapse = ", "))
+    }
+    
+    # Use provided integration points
+    int_points <- integration_points
+    
+    # If E (weights) not provided, throw an error
+    if (!"E" %in% names(int_points)) {
+      stop("Integration weights (E) must be provided in integration_points")
+    }
+    
+  } else if (use_current_mesh) {
+    # Use existing mesh in the graph
+    if (is.null(graph$mesh)) {
+      stop("No mesh found in the graph. Either build a mesh first or set use_current_mesh = FALSE")
+    }
+    
+    # Extract mesh points and weights
+    int_points <- data.frame(
+      .edge_number = graph$mesh$VtE[,1],
+      .distance_on_edge = graph$mesh$VtE[,2],
+      .weights_int_points = graph$mesh$weights
+    )
+    
+  } else {
+    # Create a new mesh for integration
+    if (is.null(new_h) && is.null(new_n)) {
+      stop("Either new_h or new_n must be provided when use_current_mesh is FALSE")
+    }
+    
+    
+    # Build the mesh
+    if (!is.null(new_h)) {
+      graph$build_mesh(h = new_h)
+    } else {
+      graph$build_mesh(n = new_n)
+    }
+    
+    # Compute FEM if not already done
+    if (is.null(graph$mesh$C)) {
+      graph$compute_fem()
+    }
+    
+    # Extract mesh points and weights
+    int_points <- data.frame(
+      .edge_number = graph$mesh$VtE[,1],
+      .distance_on_edge = graph$mesh$VtE[,2],
+      .weights_int_points = graph$mesh$weights
+    )
+  }
+
+  # Handle covariates
+  if (interpolate) {
+    if (length(covariates) != 0) {
+      # Use linear interpolation for covariates
+      int_points <- linear_interpolation_graph(
+        graph = graph,
+        covariates = covariates,
+        integration_points = int_points,
+        repl = repl,
+        repl_col = repl_col
+      )
+    }
+  } else{
+    if(length(covariates) != 0){
+      if(is.null(manual_covariates)){
+        stop("When interpolate is FALSE, manual_covariates must be provided")
+      }
+      int_points <- cbind(int_points, manual_covariates)
+    }
+  } 
+  
+  return(int_points)
+}
+
+
+
+
+#' Data extraction from metric graphs for 'rSPDE' models
+#'
+#' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
+#'
+#' @param graph_rspde An `rspde_metric_graph_` or `inla_rspde_spacetime` object built with the
+#' `rspde.metric_graph()` or `rspde.spacetime()` function.
+#' @param name A character string with the base name of the effect.
+#' @param repl Which replicates? If there is no replicates, one
+#' can set `repl` to `NULL`. If one wants all replicates,
+#' then one sets to `repl` to `.all`.
+#' @param repl_col Which "column" of the data contains the replicate variable?
+#' @param group Which groups? If there is no groups, one
+#' can set `group` to `NULL`. If one wants all groups,
+#' then one sets to `group` to `.all`.
+#' @param group_col Which "column" of the data contains the group variable?
+#' @param covariates A vector of covariate names to be included in the model.
+#' @param only_pred Should only return the `data.frame` to the prediction data?
+#' @param time Column containing times for space time models. Not needed when using inlabru. Only for INLA implementation of space time model. 
+#' @param bru Should the data be processed for `inlabru`?
+#' @param tibble Should the data be returned as a `tidyr::tibble`?
+#' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
+#' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
+#' @noRd
+
+graph_data_rspde_internal <- function(graph_rspde, name = "field",
+                             repl = NULL,
+                             repl_col = NULL,
+                             group = NULL,
+                             group_col = NULL,
+                             covariates = NULL,
+                             only_pred = FALSE,
+                             time = NULL,
+                             bru = FALSE,
+                             tibble = FALSE,
+                             drop_na = FALSE, drop_all_na = TRUE) {
+  ret <- list()
+
+  rspde.order <- graph_rspde$rspde.order
+  nu <- graph_rspde$nu
+
+  if(inherits(graph_rspde, "inla_rspde_spacetime")){
+    rspde.order <- 0
+    nu <- 0.5
+    graph_rspde$integer.nu <- TRUE
+    graph_rspde$rspde.order <- 0
+    if(is.null(time) && !bru){
+      stop("If bru is FALSE, 'time' must be provided for space-time models!")
+    }
+  }
+
+
+  graph_tmp <- graph_rspde$mesh
+
+  if(!is.null(repl_col)){
+    if(!(repl_col %in% names(graph_tmp$.__enclos_env__$private$data))){
+      stop("repl_col must be a column in the data.")
+    }
+  }
+
+  if(!is.null(group_col)){
+    if(!(group_col %in% names(graph_tmp$.__enclos_env__$private$data))){
+      stop("group_col must be a column in the data.")
+    }
+  }
+
+  if(!is.null(repl) && is.null(repl_col)){
+    stop("repl_col must be provided if repl is not NULL.")
+  }
+
+  if(!is.null(group) && is.null(group_col)){
+    stop("group_col must be provided if group is not NULL.")
+  }
+
+
+  if (is.null((graph_tmp$.__enclos_env__$private$data))) {
+    stop("The graph has no data!")
+  }
+
+  if(is.null(repl) && !is.null(repl_col)){
+    stop("If repl_col is provided, repl must be provided.")
+  }
+
+  data <- graph_tmp$.__enclos_env__$private$data
+
+  if (only_pred) {
+    idx_anyNA <- !idx_not_any_NA(data)
+    data <- lapply(data, function(dat) {
+      return(dat[idx_anyNA])
+    })
+    drop_na <- FALSE
+    drop_all_na <- FALSE
+  }
+
+  if (!is.null(repl)) {
+    if (repl[1] == ".all") {
+      groups <- data[[repl_col]]
+      repl <- unique(groups[!is.na(groups)])
+    }
+  }
+
+  ret[["data"]] <- select_repl_group_rSPDE_version(data, repl = repl, repl_col, group = group, group_col = group_col)
+
+  if(is.null(repl_col)){
+    repl_vec <- rep(1, length(ret[["data"]][[".group"]]))
+  } else{
+    repl_vec <- ret[["data"]][[repl_col]]
+  }
+
+  repl <- unique(repl_vec)
+
+  if (!is.null(group_col)) {
+    group_vec <- ret[["data"]][[group_col]]
+    group <- unique(group_vec)
+  } else {
+    group_vec <- rep(1, length(ret[["data"]][[".group"]]))
+    group <- 1
+  }
+
+
+  n.repl <- length(unique(repl))
+
+  if (is.null(group)) {
+    n.group <- 1
+  } else if (group[1] == ".all") {
+    n.group <- length(unique(data[[group_col]]))
+  } else {
+    n.group <- length(unique(group))
+  }
+
+  if (tibble) {
+    ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+  }
+
+  if (drop_all_na) {
+    is_tbl <- inherits(ret, "tbl_df")
+    idx_temp <- idx_not_all_NA(ret[["data"]])
+    ret[["data"]] <- lapply(ret[["data"]], function(dat) {
+      dat[idx_temp]
+    })
+    if (is_tbl) {
+      ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+    }
+    repl_vec <- repl_vec[idx_temp]
+  }
+  if (drop_na) {
+    if (!inherits(ret[["data"]], "tbl_df")) {
+      idx_temp <- idx_not_any_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat) {
+        dat[idx_temp]
+      })
+    } else {
+      ret[["data"]] <- tidyr::drop_na(ret[["data"]])
+    }
+    repl_vec <- repl_vec[idx_temp]
+  }
+
+  ret[["repl"]] <- repl_vec
+
+  if (!is.null(group_col)) {
+    group_vec <- ret[["data"]][[group_col]]
+    group <- unique(group_vec)
+  } else {
+    group_vec <- rep(1, length(ret[["data"]][[".group"]]))
+    group <- 1
+  }
+
+  if(!is.null(graph_rspde$rspde.order) && !bru){
+
+    ret[["basis"]] <- Matrix::Matrix(nrow = 0, ncol = 0)
+
+    if(inherits(graph_rspde, "inla_rspde_spacetime")){
+      ret[["index"]] <- rSPDE::rspde.make.index(n.spde = graph_rspde$f$n, n.group = n.group, n.repl = n.repl, nu = nu, dim = 1, rspde.order = rspde.order, name = name)
+    } else{
+      ret[["index"]] <- rSPDE::rspde.make.index(mesh = graph_tmp, n.group = n.group, n.repl = n.repl, nu = nu, dim = 1, rspde.order = rspde.order, name = name)
+    }
+
+    loc_basis <- cbind(ret[["data"]][[".edge_number"]], ret[["data"]][[".distance_on_edge"]])
+
+    if(inherits(graph_rspde, "inla_rspde_spacetime")){
+      time_basis <- ret[["data"]][[time]]
+    }
+    blk_grp <- fmesher::fm_block(group_vec)
+    blk_rep <- fmesher::fm_block(repl_vec)
+
+    if(inherits(graph_rspde, "inla_rspde_spacetime")){
+      ret[["basis"]] <- graph_rspde$A(loc = loc_basis, time = time_basis)
+      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_grp), ret[["basis"]])
+      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_rep), ret[["basis"]])      
+    } else{
+      ret[["basis"]] <- graph_tmp$fem_basis(loc_basis)
+      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_grp), ret[["basis"]])
+      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_rep), ret[["basis"]])            
+    }
+
+    if (!graph_rspde$integer.nu) {
+      ret[["basis"]] <- kronecker(
+        matrix(1, 1, rspde.order + 1),
+        ret[["basis"]]
+      )
+    }
+  }
+
+  if(!is.null(covariates)){
+    cov_tmp <- list()
+    for(cov_var in covariates){
+      cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
+        if(!bru){
+          ret[["data"]][[cov_var]] <- NULL
+        }      
+    }
+    ret[["index"]] <- list(ret[["index"]], cov_tmp)
+    ret[["basis"]] <- list(ret[["basis"]], 1)
+  } 
+
+  ret[["data"]] <- as.data.frame(ret[["data"]])
+  if (!inherits(ret[["data"]], "metric_graph_data")) {
+    class(ret[["data"]]) <- c("metric_graph_data", class(ret[["data"]]))
+  }
+
+  return(ret)
+}
+
+
+
+
+
+#' Data extraction from metric graphs for 'rSPDE' models
+#'
+#' Extracts data from metric graphs to be used by 'INLA' and 'inlabru'.
+#'
+#' @param graph_rspde An `rspde_metric_graph_` or `inla_rspde_spacetime` object built with the
+#' `rspde.metric_graph()` or `rspde.spacetime()` function.
+#' @param name A character string with the base name of the effect.
+#' @param repl Which replicates? If there is no replicates, one
+#' can set `repl` to `NULL`. If one wants all replicates,
+#' then one sets to `repl` to `.all`.
+#' @param repl_col Which "column" of the data contains the replicate variable?
+#' @param group Which groups? If there is no groups, one
+#' can set `group` to `NULL`. If one wants all groups,
+#' then one sets to `group` to `.all`.
+#' @param group_col Which "column" of the data contains the group variable?
+#' @param covariates A vector of covariate names to be included in the model.
+#' @param only_pred Should only return the `data.frame` to the prediction data?
+#' @param time Column containing times for space time models. Not needed when using inlabru. Only for INLA implementation of space time model. 
+#' @param bru Should the data be processed for `inlabru`?
+#' @param tibble Should the data be returned as a `tidyr::tibble`?
+#' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
+#' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
+#' @noRd
+
+graph_data_linear_inla <- function(graph_rspde, 
+                             repl = NULL,
+                             repl_col = NULL,
+                             group = NULL,
+                             group_col = NULL,
+                             covariates = NULL,
+                             only_pred = FALSE,
+                             time = NULL,
+                             bru = FALSE,
+                             tibble = FALSE,
+                             drop_na = FALSE, drop_all_na = TRUE) {
+  ret <- list()
+
+  graph_tmp <- graph_rspde$mesh
+
+  if(!is.null(repl_col)){
+    if(!(repl_col %in% names(graph_tmp$.__enclos_env__$private$data))){
+      stop("repl_col must be a column in the data.")
+    }
+  }
+
+  if(!is.null(group_col)){
+    if(!(group_col %in% names(graph_tmp$.__enclos_env__$private$data))){
+      stop("group_col must be a column in the data.")
+    }
+  }
+
+  if(!is.null(repl) && is.null(repl_col)){
+    stop("repl_col must be provided if repl is not NULL.")
+  }
+
+  if(!is.null(group) && is.null(group_col)){
+    stop("group_col must be provided if group is not NULL.")
+  }
+
+
+  if (is.null((graph_tmp$.__enclos_env__$private$data))) {
+    stop("The graph has no data!")
+  }
+
+  if(is.null(repl) && !is.null(repl_col)){
+    stop("If repl_col is provided, repl must be provided.")
+  }
+
+  data <- graph_tmp$.__enclos_env__$private$data
+
+  if (only_pred) {
+    idx_anyNA <- !idx_not_any_NA(data)
+    data <- lapply(data, function(dat) {
+      return(dat[idx_anyNA])
+    })
+    drop_na <- FALSE
+    drop_all_na <- FALSE
+  }
+
+  if (!is.null(repl)) {
+    if (repl[1] == ".all") {
+      groups <- data[[repl_col]]
+      repl <- unique(groups[!is.na(groups)])
+    }
+  }
+
+  ret[["data"]] <- select_repl_group_rSPDE_version(data, repl = repl, repl_col, group = group, group_col = group_col)
+
+  if(is.null(repl_col)){
+    repl_vec <- rep(1, length(ret[["data"]][[".group"]]))
+  } else{
+    repl_vec <- ret[["data"]][[repl_col]]
+  }
+
+  repl <- unique(repl_vec)
+
+  if (!is.null(group_col)) {
+    group_vec <- ret[["data"]][[group_col]]
+    group <- unique(group_vec)
+  } else {
+    group_vec <- rep(1, length(ret[["data"]][[".group"]]))
+    group <- 1
+  }
+
+
+  n.repl <- length(unique(repl))
+
+  if (is.null(group)) {
+    n.group <- 1
+  } else if (group[1] == ".all") {
+    n.group <- length(unique(data[[group_col]]))
+  } else {
+    n.group <- length(unique(group))
+  }
+
+  if (tibble) {
+    ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+  }
+
+  if (drop_all_na) {
+    is_tbl <- inherits(ret, "tbl_df")
+    idx_temp <- idx_not_all_NA(ret[["data"]])
+    ret[["data"]] <- lapply(ret[["data"]], function(dat) {
+      dat[idx_temp]
+    })
+    if (is_tbl) {
+      ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+    }
+    repl_vec <- repl_vec[idx_temp]
+  }
+  if (drop_na) {
+    if (!inherits(ret[["data"]], "tbl_df")) {
+      idx_temp <- idx_not_any_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat) {
+        dat[idx_temp]
+      })
+    } else {
+      ret[["data"]] <- tidyr::drop_na(ret[["data"]])
+    }
+    repl_vec <- repl_vec[idx_temp]
+  }
+
+  ret[["repl"]] <- repl_vec
+
+  if (!is.null(group_col)) {
+    group_vec <- ret[["data"]][[group_col]]
+    group <- unique(group_vec)
+  } else {
+    group_vec <- rep(1, length(ret[["data"]][[".group"]]))
+    group <- 1
+  }
+
+  if(!is.null(covariates)){
+    cov_tmp <- list()
+    for(cov_var in covariates){
+      cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
+        if(!bru){
+          ret[["data"]][[cov_var]] <- NULL
+        }      
+    }
+    ret[["index"]] <- list(ret[["index"]], cov_tmp)
+    ret[["basis"]] <- list(ret[["basis"]], 1)
+  } 
+
+  ret[["data"]] <- as.data.frame(ret[["data"]])
+  if (!inherits(ret[["data"]], "metric_graph_data")) {
+    class(ret[["data"]]) <- c("metric_graph_data", class(ret[["data"]]))
+  }
+
+  return(ret)
+}
+
+
+
+
+
+
+

@@ -62,7 +62,8 @@ For this we can use the function `graph_lgcp` as follows:
   sigma <- 0.5
   range <- 2
   alpha <- 2
-  lgcp_sample <- graph_lgcp(intercept = 1, sigma = sigma,
+  cov_lgcp <- graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1])
+  lgcp_sample <- graph_lgcp_sim(intercept = -1 + 2*cov_lgcp, sigma = sigma,
                             range = range, alpha = alpha,
                             graph = graph)
 ```
@@ -74,17 +75,257 @@ graph$plot_function(X = exp(lgcp_sample$u), vertex_size = 0)
 To plot the simulated points, we can add them to the graph and then plot:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
 graph$add_observations(data = data.frame(y=rep(1,length(lgcp_sample$edge_loc)),
-                                         edge_number = lgcp_sample$edge_numbers,
-                                         distance_on_edge = lgcp_sample$edge_loc),
+                                         edge_number = lgcp_sample$edge_number,
+                                         distance_on_edge = lgcp_sample$edge_loc,
+                                         cov_lgcp = lgcp_sample$edge_number),
                        normalized = TRUE)
 graph$plot(vertex_size = 0, data = "y")
 ```
 
+In order to fit a log-Gaussian Cox process model, we need to specify integration points on the graph, be able to evaluate the covariates at such integration points. This process is a bit involved, so we have created an interface to simplify the process. In this interface, by default, the covariates are interpolated from the data provided in the `graph` object to obtain their values at the integration points. 
 
-## Fitting LGCP models in R-INLA
+The integration points are defined, by default, as the mesh locations if the metric graph object has a mesh. If the mesh is not provided, one must either provide the integration points manually or build a mesh.
+
+At the end of the vignette, we will also show how to fit the model in `INLA` without using our `INLA` interface for LGCP models.
 
 
-We are now in a position to fit the model with our `R-INLA` implementation. 
+# Fitting LGCP models with our `INLA` interface
+
+We will now fit the model using our `INLA` interface. To such an end, we will clear the observations from the graph and add the data to the graph.
+
+```{r}
+graph$clear_observations()
+
+#Add the data together with the exposure terms
+graph$add_observations(data = data.frame(y = rep(1,length(lgcp_sample$edge_loc)),
+                                         edge_number = lgcp_sample$edge_number,
+                                         distance_on_edge = lgcp_sample$edge_loc,
+                                         Intercept = 1,
+                                         cov_lgcp = lgcp_sample$edge_number/max(lgcp_sample$edge_number)),
+                       normalized = TRUE)
+```
+
+We have added the response variable $y$, however, this is not strictly necessary. If such a response variable is not provided, it will be assumed that all locations correspond to observed points.
+
+Let us now create the `rSPDE` model object:
+
+```{r}
+rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
+```
+
+We can now fit the model using the `lgcp_graph()` function:
+
+```{r}
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
+                      f(field, model = rspde_model), graph=graph)
+```
+
+Let us observe the `inla_fit` object:
+
+```{r}
+summary(inla_fit)
+```
+
+Let us extract the estimates in the original scale
+by using the `spde_metric_graph_result()` function, then
+taking a `summary()`:
+      
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
+We will now compare the means of the estimated values with
+the true values:
+
+```{r}
+  result_df <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, range),
+    mean = c(
+      spde_result$summary.std.dev$mean,
+      spde_result$summary.range$mean
+    ),
+    mode = c(
+      spde_result$summary.std.dev$mode,
+      spde_result$summary.range$mode
+    )
+  )
+  print(result_df)
+```
+
+If we have the actual values of the covariates at the integration points, we can pass them to the `lgcp_graph()` function via the `manual_covariates` argument.
+
+```{r}
+manual_covariates <- data.frame(Intercept = 1,
+                      cov_lgcp = graph$mesh$VtE[,1]/max(lgcp_sample$edge_number),
+                      .group = 1)
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+             graph=graph, manual_covariates = manual_covariates, interpolate = FALSE)
+```
+
+Let us observe the new `inla_fit` object:
+
+```{r}
+summary(inla_fit)
+```
+
+We can now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
+
+We can also plot the posterior marginal densities with the 
+help of the `gg_df()` function:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
+  posterior_df_fit <- gg_df(spde_result)
+
+  library(ggplot2)
+
+  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+Finally, we can plot the estimated field $u$:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
+n.obs <- length(graph$get_data()$y)
+n.field <- dim(graph$mesh$VtE)[1]
+u_posterior <- inla_fit$summary.linear.predictor$mean[(n.obs+1):(n.obs+n.field)]
+graph$plot_function(X = u_posterior, vertex_size = 0)
+```
+
+This can be compared with the field that was used to generate the data:
+```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
+graph$plot_function(X = lgcp_sample$u, vertex_size = 0)
+```
+
+
+We can also fit the model using the exact model by using the `graph_spde()` function as the SPDE model:
+
+```{r}
+spde_model <- graph_spde(graph, alpha = 1)
+```
+
+Let us now fit the model:
+
+```{r}
+inla_fit_spde <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
+                          f(field, model = spde_model), graph=graph)
+```
+
+Let us observe the new `inla_fit_spde` object:
+
+```{r}
+summary(inla_fit_spde)
+```
+
+We can now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit_spde, "field", spde_model)
+
+summary(spde_result)
+```
+
+# An example with replicates in our `INLA` interface
+
+We start by simulating the data.
+
+```{r}
+  n.rep <- 30
+  sigma <- 0.5
+  range <- 2
+  alpha <- 2
+  cov_lgcp <- graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1])  
+  max_edge_num <- max(graph$mesh$VtE[,1])
+  lgcp_sample_rep <- graph_lgcp_sim(n = n.rep, intercept = -1 + 2*cov_lgcp, sigma = sigma,
+                            range = range, alpha = alpha,
+                            graph = graph)
+```
+
+Let us clear the observations from the graph and add the simulated data.
+
+```{r}  
+graph$clear_observations()
+
+df_rep <- data.frame(y=rep(1,length(lgcp_sample_rep[[1]]$edge_loc)),
+                     edge_number = lgcp_sample_rep[[1]]$edge_number,
+                     distance_on_edge = lgcp_sample_rep[[1]]$edge_loc,
+                     Intercept = 1,
+                     cov_lgcp = lgcp_sample_rep[[1]]$edge_number/max_edge_num,
+                     rep = rep(1,length(lgcp_sample_rep[[1]]$edge_loc)))
+
+for(i in 2:n.rep){
+  df_rep <- rbind(df_rep, data.frame(y=rep(1,length(lgcp_sample_rep[[i]]$edge_loc)),
+                                       edge_number = lgcp_sample_rep[[i]]$edge_number,
+                                       distance_on_edge = lgcp_sample_rep[[i]]$edge_loc,
+                                       Intercept = 1,
+                                       cov_lgcp = lgcp_sample_rep[[i]]$edge_number/max_edge_num,
+                                       rep = rep(i,length(lgcp_sample_rep[[i]]$edge_loc))))
+}
+
+graph$add_observations(data = df_rep,
+                       normalized = TRUE,
+                        group = "rep")
+
+```
+
+Let us now fit the model. In this case, the default column for the replicates is `.group`, and also, by default, all replicates will be used.
+
+```{r}
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), graph=graph)
+```
+
+Let us observe the `inla_fit` object:
+
+```{r}
+summary(inla_fit)
+```
+
+Let us now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
+As in the previous case, we can also supply the covariates manually:
+
+```{r}
+manual_covariates <- data.frame(
+      Intercept = 1,
+      cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
+      .group = rep(1:30, each = nrow(graph$mesh$VtE))
+    )
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
+            f(field, model = rspde_model, replicate = field.repl), 
+              graph=graph, manual_covariates = manual_covariates)
+```
+
+Let us observe the `inla_fit` object:
+
+```{r}
+summary(inla_fit)
+```
+
+Let us now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
+
+# Fitting LGCP models without our `INLA` interface
+
+We are now in a position to fit the model with our `R-INLA` implementation, without using our `INLA` interface for LGCP models. 
 When working with log-Gaussian Cox processes, the likelihood has a term 
 $\int_\Gamma \exp(u(s)) ds$ that needs to be handled separately. 
 This is done by using the mid-point rule as suggested for SPDE models by [@lgcp](https://academic.oup.com/biomet/article/103/1/49/2389990)
@@ -112,14 +353,18 @@ graph$clear_observations()
 graph$add_observations(data = data.frame(y = rep(1,length(lgcp_sample$edge_loc)),
                                          e = rep(0,length(lgcp_sample$edge_loc)),
                                          edge_number = lgcp_sample$edge_number,
-                                         distance_on_edge = lgcp_sample$edge_loc),
+                                         distance_on_edge = lgcp_sample$edge_loc,
+                                         Intercept = 1,
+                                         cov_lgcp = lgcp_sample$edge_number/max(lgcp_sample$edge_number)),
                        normalized = TRUE)
 
 #Add integration points
 graph$add_observations(data = data.frame(y = rep(0,length(atilde)),
                                          e = atilde,
                                          edge_number = graph$mesh$VtE[,1],
-                                         distance_on_edge = graph$mesh$VtE[,2]),
+                                         distance_on_edge = graph$mesh$VtE[,2],
+                                         Intercept = 1,
+                                         cov_lgcp = graph$mesh$VtE[,1]/max(lgcp_sample$edge_number)),
                        normalized = TRUE)
 
 ```
@@ -134,7 +379,7 @@ rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 Next, we compute the auxiliary data:
 
 ```{r}
-data_rspde <- graph_data_rspde(rspde_model, name="field")
+data_rspde <- graph_data_spde(rspde_model, name="field", covariates = c("Intercept","cov_lgcp"))
 ```
 
 We now create the `inla.stack` object with the `inla.stack()` function. 
@@ -143,18 +388,17 @@ it is supplied to the stack by using the `graph_spde_data()` function.
 
 ```{r}
 stk <- inla.stack(data = data_rspde[["data"]], 
-                  A = data_rspde[["basis"]], 
-                  effects = c(data_rspde[["index"]], list(Intercept = 1)))
+                  A = data_rspde[["basis"]],
+                  effects = data_rspde[["index"]])
 ```
 
 We can now fit the model using `R-INLA`:
 
 ```{r, message=FALSE, warning=FALSE}
-spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model), 
+spde_fit <- inla(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e,
-                 num.threads = "1:1")
+                 E = inla.stack.data(stk)$e)
 ```
 
 Let us extract the estimates in the original scale
@@ -187,65 +431,40 @@ the true values:
 ```
 
 
-We can also plot the posterior marginal densities with the 
-help of the `gg_df()` function:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-  posterior_df_fit <- gg_df(spde_result)
-
-  library(ggplot2)
-
-  ggplot(posterior_df_fit) + geom_line(aes(x = x, y = y)) + 
-  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
-```
-
-Finally, we can plot the estimated field $u$:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-n.obs <- length(graph$get_data()$y)
-n.field <- dim(graph$mesh$VtE)[1]
-u_posterior <- spde_fit$summary.linear.predictor$mean[(n.obs+1):(n.obs+n.field)]
-graph$plot_function(X = u_posterior, vertex_size = 0)
-```
-
-This can be compared with the field that was used to generate the data:
-```{r, fig.show='hold',fig.align = "center",echo=TRUE,  warning=FALSE}
-graph$plot_function(X = lgcp_sample$u, vertex_size = 0)
-```
-
 # An example with replicates
-Let us now test show an example with replicates. Let us first simulate replicates of a latent field
-```{r}
-  n.rep <- 30
-  sigma <- 0.5
-  range <- 2
-  alpha <- 2
-  lgcp_sample <- graph_lgcp(n = n.rep, intercept = 1, sigma = sigma,
-                            range = range, alpha = alpha,
-                            graph = graph)
-```
-  We now clear the previous data and add the new data together with the exposure terms
+
+We now clear the previous data and add the new data together with the exposure terms
 ```{r}
   graph$clear_observations()
-  df_rep <- data.frame(y=rep(1,length(lgcp_sample[[1]]$edge_loc)),
-                                             e = rep(0,length(lgcp_sample[[1]]$edge_loc)),
-                                         edge_number = lgcp_sample[[1]]$edge_number,
-                                         distance_on_edge = lgcp_sample[[1]]$edge_loc,
-                                         rep = rep(1,length(lgcp_sample[[1]]$edge_loc)))
+  df_rep <- data.frame(y=rep(1,length(lgcp_sample_rep[[1]]$edge_loc)),
+                                             e = rep(0,length(lgcp_sample_rep[[1]]$edge_loc)),
+                                         edge_number = lgcp_sample_rep[[1]]$edge_number,
+                                         distance_on_edge = lgcp_sample_rep[[1]]$edge_loc,
+                                         Intercept = 1,
+                                         cov_lgcp = lgcp_sample_rep[[1]]$edge_number/max_edge_num,
+                                         rep = rep(1,length(lgcp_sample_rep[[1]]$edge_loc)))
 
   df_rep <- rbind(df_rep, data.frame(y = rep(0,length(atilde)),
                                          e = atilde,
                                          edge_number = graph$mesh$VtE[,1],
                                          distance_on_edge = graph$mesh$VtE[,2],
+                                         Intercept = 1,
+                                         cov_lgcp = graph$mesh$VtE[,1]/max_edge_num,
                                          rep = rep(1,length(atilde))))
   for(i in 2:n.rep){
-    df_rep <- rbind(df_rep, data.frame(y=rep(1,length(lgcp_sample[[i]]$edge_loc)),
-                                             e = rep(0,length(lgcp_sample[[i]]$edge_loc)),
-                                         edge_number = lgcp_sample[[i]]$edge_number,
-                                         distance_on_edge = lgcp_sample[[i]]$edge_loc,
-                                         rep = rep(i,length(lgcp_sample[[i]]$edge_loc))))
+    df_rep <- rbind(df_rep, data.frame(y=rep(1,length(lgcp_sample_rep[[i]]$edge_loc)),
+                                             e = rep(0,length(lgcp_sample_rep[[i]]$edge_loc)),
+                                         edge_number = lgcp_sample_rep[[i]]$edge_number,
+                                         distance_on_edge = lgcp_sample_rep[[i]]$edge_loc,
+                                         Intercept = 1,
+                                         cov_lgcp = lgcp_sample_rep[[i]]$edge_number/max_edge_num,
+                                         rep = rep(i,length(lgcp_sample_rep[[i]]$edge_loc))))
     df_rep <- rbind(df_rep, data.frame(y = rep(0,length(atilde)),
                                          e = atilde,
                                          edge_number = graph$mesh$VtE[,1],
                                          distance_on_edge = graph$mesh$VtE[,2],
+                                         Intercept = 1,
+                                         cov_lgcp = graph$mesh$VtE[,1]/max_edge_num,
                                          rep = rep(i,length(atilde))))                                        
 
   }
@@ -259,18 +478,19 @@ We can now define and fit the model as previously
 ```{r}
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 
-data_rspde <- graph_data_rspde(rspde_model, name = "field", 
-                                  repl = ".all", repl_col = "rep")
+data_rspde <- graph_data_spde(rspde_model, name = "field", 
+                                  repl = ".all", repl_col = "rep", 
+                                  covariates = c("Intercept","cov_lgcp"))
 
 stk <- inla.stack(data = data_rspde[["data"]], 
                   A = data_rspde[["basis"]], 
-                  effects = c(data_rspde[["index"]], list(Intercept = 1)))
+                  effects = data_rspde[["index"]])
 
-spde_fit <- inla(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+spde_fit <- inla(y ~ -1 + Intercept + cov_lgcp + 
+                 f(field, model = rspde_model, replicate = field.repl), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e, verbose=TRUE,
-                 num.threads = "1:1")
+                 E = inla.stack.data(stk)$e)
 ```
 Let's look at the summaries
 ```{r}
@@ -290,4 +510,5 @@ result_df <- data.frame(
   )
   print(result_df)
 ```
+
 ## References

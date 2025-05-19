@@ -1,3 +1,8 @@
+# MetricGraph 1.5.0
+* Several optimization improvements for the models in `graph_lme`.
+* Added a `parallel` option to `posterior_crossvalidation`.
+* Created an `INLA` interface for LGCP processes on metric graphs.
+
 # MetricGraph 1.4.1
 * Adding selected inverse function, for computing the inverse matrix elements only on nonzero entries of the original sparse matrix.
 * Adjusts on `add_observations()` and `plot_function()` methods.

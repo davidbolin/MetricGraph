@@ -123,6 +123,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
 \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
+\item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
 \item \href{#method-metric_graph-fem_basis}{\code{metric_graph$fem_basis()}}
@@ -1834,6 +1835,19 @@ The mesh is a list with the objects:
 \subsection{Returns}{
 No return value. Called for its side effects. The mesh is stored in
 the \code{mesh} element of the \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_version"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_version}{}}}
+\subsection{Method \code{get_version()}}{
+Get the version of MetricGraph package used to build the graph
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_version()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A character string with the version number
 }
 }
 \if{html}{\out{<hr>}}

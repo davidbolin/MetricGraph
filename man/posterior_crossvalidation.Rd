@@ -2,17 +2,63 @@
 % Please edit documentation in R/graph_inference.R
 \name{posterior_crossvalidation}
 \alias{posterior_crossvalidation}
-\title{Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
+\title{Cross-validation for \code{graph_lme} models assuming observations at
 the vertices of metric graphs}
 \usage{
-posterior_crossvalidation(object, factor = 1, tibble = TRUE)
+posterior_crossvalidation(
+  object,
+  scores = c("logscore", "crps", "scrps", "mae", "rmse"),
+  mode = "k-fold",
+  k = 10,
+  percentage = 20,
+  number_folds = 10,
+  train_test_indices = NULL,
+  true_CV = FALSE,
+  factor = 1,
+  tibble = TRUE,
+  parallel_folds = FALSE,
+  parallel_fitting = FALSE,
+  n_cores = parallel::detectCores() - 1,
+  print = FALSE,
+  seed = NULL,
+  return_indices = FALSE,
+  use_precomputed = TRUE
+)
 }
 \arguments{
 \item{object}{A fitted model using the \code{graph_lme()} function or a named list of fitted objects using the \code{graph_lme()} function.}
 
+\item{scores}{A vector of scores to compute. The options are "logscore", "crps", "scrps", "mae", and "rmse". By default, all scores are computed.}
+
+\item{mode}{Cross-validation mode. Options are "k-fold", "loo" (leave-one-out), or "lpo" (leave-percentage-out). Default is "k-fold".}
+
+\item{k}{Number of folds for k-fold cross-validation. Default is 10.}
+
+\item{percentage}{The percentage (from 1 to 99) of the data to be used to train the model. Will only be used if \code{mode} is "lpo". Default is 80.}
+
+\item{number_folds}{Number of folds to be done if \code{mode} is "lpo". Default is 10.}
+
+\item{train_test_indices}{Optional list containing train and test indices for each fold. If provided, k, mode, and percentage are ignored.}
+
+\item{true_CV}{Logical indicating whether to refit the model for each fold (TRUE) or use the posterior distribution from the fitted model (FALSE). Default is FALSE.}
+
 \item{factor}{Which factor to multiply the scores. The default is 1.}
 
 \item{tibble}{Return the scores as a \code{tidyr::tibble()}}
+
+\item{parallel_folds}{Logical indicating whether to run computations in parallel across folds. Default is FALSE.}
+
+\item{parallel_fitting}{Logical indicating whether to run model fitting in parallel. Default is FALSE.}
+
+\item{n_cores}{Number of cores to use for parallel computation. Default is parallel::detectCores() - 1.}
+
+\item{print}{Logical indicating whether to print progress of which fold is being processed. Default is FALSE.}
+
+\item{seed}{Random seed for reproducibility in fold creation. Default is NULL.}
+
+\item{return_indices}{Logical indicating whether to return the train/test indices used. Default is FALSE.}
+
+\item{use_precomputed}{Logical indicating whether to use precomputation for faster CV. Default is TRUE.}
 }
 \value{
 Vector with the posterior expectations and variances as well as
@@ -21,6 +67,7 @@ negatively oriented proper scoring rules: log-score, CRPS, and scaled
 CRPS.
 }
 \description{
-Leave-one-out crossvalidation for \code{graph_lme} models assuming observations at
-the vertices of metric graphs
+This function performs cross-validation by computing predictions for test data
+using either the posterior distribution from a fitted model (pseudo-CV) or by
+refitting the model for each fold (true CV).
 }
