@@ -1,4 +1,4 @@
-# MetricGraph (development version)
+# MetricGraph 1.5.0
 * Several optimization improvements for the models in `graph_lme`.
 * Added a `parallel` option to `posterior_crossvalidation`.
 * Created an `INLA` interface for LGCP processes on metric graphs.
