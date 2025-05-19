@@ -2545,9 +2545,6 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
 
   # Check if finite element matrices have been computed
   if (is.null(graph$mesh$C)) {
-    if (verbose) {
-      message("Computing finite element matrices...")
-    }
     graph$compute_fem()
   }
   
@@ -2558,9 +2555,6 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
   
   # Check if covariates are provided
   if (is.null(covariates)) {
-    if (verbose) {
-      message("No covariates provided for interpolation")
-    }
     return(integration_points)
   }
   
