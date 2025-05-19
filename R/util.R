@@ -2930,9 +2930,9 @@ graph_data_rspde_internal <- function(graph_rspde, name = "field",
     ret[["basis"]] <- Matrix::Matrix(nrow = 0, ncol = 0)
 
     if(inherits(graph_rspde, "inla_rspde_spacetime")){
-      ret[["index"]] <- rspde.make.index(n.spde = graph_rspde$f$n, n.group = n.group, n.repl = n.repl, nu = nu, dim = 1, rspde.order = rspde.order, name = name)
+      ret[["index"]] <- rSPDE::rspde.make.index(n.spde = graph_rspde$f$n, n.group = n.group, n.repl = n.repl, nu = nu, dim = 1, rspde.order = rspde.order, name = name)
     } else{
-      ret[["index"]] <- rspde.make.index(mesh = graph_tmp, n.group = n.group, n.repl = n.repl, nu = nu, dim = 1, rspde.order = rspde.order, name = name)
+      ret[["index"]] <- rSPDE::rspde.make.index(mesh = graph_tmp, n.group = n.group, n.repl = n.repl, nu = nu, dim = 1, rspde.order = rspde.order, name = name)
     }
 
     loc_basis <- cbind(ret[["data"]][[".edge_number"]], ret[["data"]][[".distance_on_edge"]])

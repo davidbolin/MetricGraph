@@ -211,10 +211,10 @@ lgcp_graph <- function(formula,
             }
           } else {
             aux_spde_model$mesh <- graph_bkp
-            data_spde <- graph_data_linear_inla(aux_spde_model, name = model_name, covariates = character_covariates, repl = repl, repl_col = repl_col)
+            data_spde <- graph_data_linear_inla(aux_spde_model, covariates = character_covariates, repl = repl, repl_col = repl_col)
           }
 
-          stk <- inla.stack(data = data_spde[["data"]], 
+          stk <- INLA::inla.stack(data = data_spde[["data"]], 
                   A = data_spde[["basis"]],
                   effects = data_spde[["index"]])
 
@@ -242,11 +242,11 @@ lgcp_graph <- function(formula,
             }
           }
           
-          inla_fit <- inla(formula,
-                           data = inla.stack.data(stk),
+          inla_fit <- INLA::inla(formula,
+                           data = INLA::inla.stack.data(stk),
                            family = "poisson",
-                           control.predictor = list(A = inla.stack.A(stk), compute = TRUE, link = 1),
-                           E = inla.stack.data(stk)[[".weights_int_points"]],
+                           control.predictor = list(A = INLA::inla.stack.A(stk), compute = TRUE, link = 1),
+                           E = INLA::inla.stack.data(stk)[[".weights_int_points"]],
                            ...)
           return(inla_fit)
 } 

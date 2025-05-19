@@ -13,6 +13,8 @@ lgcp_graph(
   use_current_mesh = TRUE,
   new_h = NULL,
   new_n = NULL,
+  repl = ".all",
+  repl_col = ".group",
   ...
 )
 }
@@ -33,6 +35,10 @@ for manually specified integration points, or NULL to use automatic integration 
 \item{new_h}{Numeric; mesh size for creating a new mesh if use_current_mesh is FALSE}
 
 \item{new_n}{Integer; alternative to new_h, specifies the approximate number of mesh points}
+
+\item{repl}{Vector of replicates to be used in the model. For all replicates, one must use ".all".}
+
+\item{repl_col}{Name of the column in the data that contains the replicates. Default is ".group".}
 
 \item{...}{Additional arguments to be passed to inla}
 }
