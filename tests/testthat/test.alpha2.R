@@ -17,7 +17,7 @@ test_that("Check agreement derivative covariance function agrees", {
   c <- 1/(4*kappa^3)
   x <- seq(-1, 1, length.out = 20)
   expect_equal(MetricGraph:::r_2(x, tau = 1/sigma, kappa = kappa, deriv = 1),
-               matern_derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
+              MetricGraph:::matern_derivative(x, kappa, 3/2, sigma)[,1]*c, tol=1e-9)
 })
 test_that("Check agreement derivative covariance function agrees", {
   set.seed(1)
@@ -72,15 +72,15 @@ test_that("test agreement precision matrix and article method", {
 
 
   build_C_beta1 <- function(L, kappa, sigma){
-    C_0 <- matern_neumann_free(c(0,L), c(0,L), kappa, sigma = 1,
+    C_0 <- MetricGraph:::matern_neumann_free(c(0,L), c(0,L), kappa, sigma = 1,
                                nu = 3/2, L = L,deriv = c(1,1))
     return(sigma^2 * solve(solve(C_0) - 0.5 * diag(2) / kappa^2))
   }
   C <- build_C_beta1(l_e, kappa, sigma)
-  r_free.2 <- matern_neumann_free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e)
-  rd1_free.2 <- matern_neumann_free2(x_, x_,C, kappa, sigma,
+  r_free.2 <- MetricGraph:::matern_neumann_free2(x_, x_,C, kappa, sigma, nu=3/2, L = l_e)
+  rd1_free.2 <- MetricGraph:::matern_neumann_free2(x_, x_,C, kappa, sigma,
                                      nu=3/2, L = l_e, deriv = c(0,1))
-  rd2_free.2 <- matern_neumann_free2(x_, x_,C, kappa, sigma,
+  rd2_free.2 <- MetricGraph:::matern_neumann_free2(x_, x_,C, kappa, sigma,
                                      nu=3/2, L = l_e, deriv = c(1,1))
   Sigma.2  <- rbind(cbind(r_free.2, rd1_free.2),
                     cbind(t(rd1_free.2),rd2_free.2)) * c
@@ -160,12 +160,12 @@ test_that("test likelihood",{
   Qtilde <- Qmod
   Qtilde <- Qtilde[-c(1:2),-c(1:2)]
   R <- Cholesky(Qtilde,LDL = FALSE, perm = TRUE)
-  V0 <- as.vector(solve(R, solve(R,rnorm(6), system = 'Lt')
+  V0 <- as.vector(Matrix::solve(R, Matrix::solve(R,rnorm(6), system = 'Lt')
                         , system = 'Pt'))
   u_e <- t(graph$CoB$T) %*% c(0, 0, V0)
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
-    X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
+    X <- rbind(X,cbind(MetricGraph:::sample_alpha2_line(kappa = kappa,
                                           tau = 1/sigma,
                                           sigma_e = sigma_e,
                                           u_e = u_e[4*(i-1) +1:4],
@@ -180,7 +180,7 @@ test_that("test likelihood",{
   graph$buildC(2, FALSE)
 
   #standard likelihood
-  lik <- -likelihood_alpha2(theta = theta, graph = graph, data_name = "y", 
+  lik <- -MetricGraph:::likelihood_alpha2(theta = theta, graph = graph, data_name = "y", 
                              X_cov = NULL, repl = NULL, BC = 1, parameterization = "spde")
   
   graph2 <- graph$clone()
@@ -189,12 +189,12 @@ test_that("test likelihood",{
 
   #covariance likelihood
 
-  lik2 <-likelihood_graph_covariance(graph = graph2,
+  lik2 <-MetricGraph:::likelihood_graph_covariance(graph = graph2,
                                      model = "WM2", repl = NULL, y_graph = graph2$get_data()[["y"]],
                                      log_scale = FALSE, X_cov = NULL)
   lik2 <- lik2(exp(theta))
   #likelihood with extended graph
-  lik3 <- -likelihood_alpha2(theta = theta, graph = graph2, data_name = "y", 
+  lik3 <- -MetricGraph:::likelihood_alpha2(theta = theta, graph = graph2, data_name = "y", 
                              X_cov = NULL, repl = NULL, BC = 1, parameterization = "spde")
 
   expect_equal(as.matrix(lik), as.matrix(lik2), tolerance = 1e-10)
@@ -225,7 +225,7 @@ test_that("test posterior mean",{
   u_e <- t(graph$CoB$T) %*% c(0, 0, V0)
   X <- c()
   for(i in 1:length(graph$edge_lengths)){
-    X <- rbind(X,cbind(sample_alpha2_line(kappa = kappa,
+    X <- rbind(X,cbind(MetricGraph:::sample_alpha2_line(kappa = kappa,
                                           tau = 1/sigma,
                                           sigma_e = sigma_e,
                                           u_e = u_e[4*(i-1) +1:4],

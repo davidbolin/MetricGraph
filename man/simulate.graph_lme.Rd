@@ -19,7 +19,7 @@
 
 \item{nsim}{The number of simulations.}
 
-\item{seed}{an object specifying if and how the random number generator should be initialized (‘seeded’).}
+\item{seed}{an object specifying if and how the random number generator should be initialized ('seeded').}
 
 \item{sample_latent}{If \code{FALSE}, samples for the response variable will be generated. If \code{TRUE}, samples for the latent model will be generated. The default is \code{FALSE}.}
 
