@@ -662,6 +662,10 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
          loc <- NULL
        }  
 
+
+  if(inherits(graph_spde, "rspde_metric_graph")){
+    return(graph_data_rspde_internal(graph_spde, name = name, covariates = covariates, repl = repl, repl_col = repl_col, group = group, group_col = group_col, only_pred = only_pred, tibble = tibble, drop_na = drop_na, drop_all_na = drop_all_na))
+  }
   
   if(!is.null(likelihood_col)){
     # Processing likelihoods
@@ -871,6 +875,42 @@ select_repl_group <- function(data_list, repl, repl_col, group, group_col){
 }
 
 
+# @noRd 
+select_repl_group_rSPDE_version <- function(data_list, repl, repl_col, group, group_col) {
+  if (!is.null(group) && is.null(group_col)) {
+    stop("If you specify group, you need to specify group_col!")
+  }
+  if(!is.null(repl) && is.null(repl_col)){
+    stop("If you specify repl, you need to specify repl_col!")
+  }
+  if(is.null(repl_col) && is.null(group_col)){
+    return(data_list)
+  }
+  if (!is.null(group)) {
+    grp <- data_list[[group_col]]
+    grp <- which(grp %in% group)
+    data_result <- lapply(data_list, function(dat) {
+      dat[grp]
+    })
+    if(!is.null(repl_col)){
+      replicates <- data_result[[repl_col]]
+      replicates <- which(replicates %in% repl)
+      data_result <- lapply(data_result, function(dat) {
+        dat[replicates]
+      })
+    }
+    return(data_result)
+  } else {
+    replicates <- data_list[[repl_col]]
+    replicates <- which(replicates %in% repl)
+    data_result <- lapply(data_list, function(dat) {
+      dat[replicates]
+    })
+    return(data_result)
+  }
+}
+
+
 #' @name spde_metric_graph_result
 #' @title Metric graph SPDE result extraction from 'INLA' estimation results
 #' @description Extract field and parameter values and distributions
@@ -915,6 +955,11 @@ spde_metric_graph_result <- function(inla, name,
                                      compute.summary = TRUE,
                                      n_samples = 5000,
                                      n_density = 1024) {
+
+  if(inherits(metric_graph_spde, "rspde_metric_graph")){
+    return(rSPDE::rspde.result(inla, name, metric_graph_spde))
+  }
+
   if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
     stop("You should provide an inla_metric_graph_spde object!")
   }
