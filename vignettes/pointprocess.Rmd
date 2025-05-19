@@ -159,8 +159,7 @@ We can now fit the model using `R-INLA`:
 spde_fit <- inla(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e)#,
-                #  num.threads = "1:1")
+                 E = inla.stack.data(stk)$e)
 ```
 
 Let us extract the estimates in the original scale
@@ -287,8 +286,10 @@ If we have the actual values of the covariates at the integration points, we can
 
 ```{r}
 manual_covariates <- data.frame(Intercept = 1,
-                                cov_lgcp = graph$mesh$VtE[,1]/max(lgcp_sample$edge_number))
-inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), graph=graph, manual_covariates = manual_covariates)
+                                cov_lgcp = graph$mesh$VtE[,1]/max(lgcp_sample$edge_number),
+                                .group = 1)
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), graph=graph,
+               manual_covariates = manual_covariates, interpolate = FALSE)
 ```
 
 Let us observe the new `inla_fit` object:
@@ -317,8 +318,19 @@ Let us now fit the model:
 inla_fit_spde <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model), graph=graph)
 ```
 
+Let us observe the new `inla_fit_spde` object:
 
+```{r}
+summary(inla_fit_spde)
+```
 
+We can now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit_spde, "field", spde_model)
+
+summary(spde_result)
+```
 
 # An example with replicates
 Let us now test show an example with replicates. Let us first simulate replicates of a latent field
@@ -378,7 +390,7 @@ We can now define and fit the model as previously
 ```{r}
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 
-data_rspde <- graph_data_rspde(rspde_model, name = "field", 
+data_rspde <- graph_data_spde(rspde_model, name = "field", 
                                   repl = ".all", repl_col = "rep", covariates = c("Intercept","cov_lgcp"))
 
 stk <- inla.stack(data = data_rspde[["data"]], 
@@ -388,8 +400,7 @@ stk <- inla.stack(data = data_rspde[["data"]],
 spde_fit <- inla(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e, verbose=TRUE)#,
-                #  num.threads = "1:1")
+                 E = inla.stack.data(stk)$e, verbose=TRUE)
 ```
 Let's look at the summaries
 ```{r}
@@ -409,6 +420,82 @@ result_df <- data.frame(
   )
   print(result_df)
 ```
+
+# An example with replicates in our `INLA` interface
+
+Let us now fit the same model using our `INLA` interface, which simplifies the process of fitting the model. To such an end, we will clear the observations from the graph and add the data as one would obtain it in a real world situation, so without exposure terms.
+
+```{r}  
+graph$clear_observations()
+
+df_rep <- data.frame(y=rep(1,length(lgcp_sample[[1]]$edge_loc)),
+                     edge_number = lgcp_sample[[1]]$edge_number,
+                     distance_on_edge = lgcp_sample[[1]]$edge_loc,
+                     Intercept = 1,
+                     cov_lgcp = lgcp_sample[[1]]$edge_number/max_edge_num,
+                     rep = rep(1,length(lgcp_sample[[1]]$edge_loc)))
+
+for(i in 2:n.rep){
+  df_rep <- rbind(df_rep, data.frame(y=rep(1,length(lgcp_sample[[i]]$edge_loc)),
+                                       edge_number = lgcp_sample[[i]]$edge_number,
+                                       distance_on_edge = lgcp_sample[[i]]$edge_loc,
+                                       Intercept = 1,
+                                       cov_lgcp = lgcp_sample[[i]]$edge_number/max_edge_num,
+                                       rep = rep(i,length(lgcp_sample[[i]]$edge_loc))))
+}
+
+graph$add_observations(data = df_rep,
+                       normalized = TRUE,
+                        group = "rep")
+
+```
+
+Let us now fit the model. In this case, the default column for the replicates is `.group`, and also, by default, all replicates will be used.
+
+```{r}
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), graph=graph)
+```
+
+Let us observe the `inla_fit` object:
+
+```{r}
+summary(inla_fit)
+```
+
+Let us now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
+As in the previous case, we can also supply the covariates manually:
+
+```{r}
+manual_covariates <- data.frame(
+      Intercept = 1,
+      cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
+      .group = rep(1:30, each = nrow(graph$mesh$VtE))
+    )
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+              graph=graph, manual_covariates = manual_covariates)
+```
+
+Let us observe the `inla_fit` object:
+
+```{r}
+summary(inla_fit)
+```
+
+Let us now extract the estimates in the original scale
+
+```{r}
+spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
+
+summary(spde_result)
+```
+
 
 
 

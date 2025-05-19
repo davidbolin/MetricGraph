@@ -2661,7 +2661,8 @@ create_integration_points <- function(graph,
     }
     
     # Get available data from the graph
-    graph_data <- graph$get_data(format = "list")
+    graph_data <- graph$get_data(drop_na = TRUE)
+    graph_data <- as.data.frame(graph_data)
     
     # Check if each covariate exists in the graph data
     missing_covs <- setdiff(covariates, names(graph_data))

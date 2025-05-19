@@ -112,7 +112,9 @@ lgcp_graph <- function(formula,
                        repl = ".all",
                        repl_col = ".group",
                        ...) {
-          
+          if(!is.null(manual_covariates)){
+            interpolate <- FALSE
+          }
           graph_bkp <- graph$clone()
           graph_bkp$.__enclos_env__$private$data[[".weights_int_points"]] <- rep(0, length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]]))
 
@@ -194,16 +196,21 @@ lgcp_graph <- function(formula,
             }
           }
 
-          if (!is.null(aux_spde_model)) {
-            aux_spde_model$mesh <- graph_bkp
-            
+          if(inherits(aux_spde_model, "inla_metric_graph_spde")){
+            aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization)
+          }
+
+
+          if (!is.null(aux_spde_model)) {            
             if(inherits(aux_spde_model, "inla_metric_graph_spde")){
             # Extract all covariate names from formula components
               data_spde <- graph_data_spde(aux_spde_model, name=model_name, covariates=character_covariates, repl = repl, repl_col = repl_col)
             } else{
+              aux_spde_model$mesh <- graph_bkp
               data_spde <- graph_data_rspde_internal(aux_spde_model, name=model_name, covariates=character_covariates, repl = repl, repl_col = repl_col)
             }
           } else {
+            aux_spde_model$mesh <- graph_bkp
             data_spde <- graph_data_linear_inla(aux_spde_model, name = model_name, covariates = character_covariates, repl = repl, repl_col = repl_col)
           }
 
@@ -238,7 +245,7 @@ lgcp_graph <- function(formula,
           inla_fit <- inla(formula,
                            data = inla.stack.data(stk),
                            family = "poisson",
-                           control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
+                           control.predictor = list(A = inla.stack.A(stk), compute = TRUE, link = 1),
                            E = inla.stack.data(stk)[[".weights_int_points"]],
                            ...)
           return(inla_fit)
