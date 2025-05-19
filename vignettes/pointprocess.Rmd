@@ -244,7 +244,8 @@ rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 We can now fit the model using the `lgcp_graph()` function:
 
 ```{r}
-inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), graph=graph)
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
+                      f(field, model = rspde_model), graph=graph)
 ```
 
 Let us observe the `inla_fit` object:
@@ -286,10 +287,10 @@ If we have the actual values of the covariates at the integration points, we can
 
 ```{r}
 manual_covariates <- data.frame(Intercept = 1,
-                                cov_lgcp = graph$mesh$VtE[,1]/max(lgcp_sample$edge_number),
-                                .group = 1)
-inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), graph=graph,
-               manual_covariates = manual_covariates, interpolate = FALSE)
+                      cov_lgcp = graph$mesh$VtE[,1]/max(lgcp_sample$edge_number),
+                      .group = 1)
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+             graph=graph, manual_covariates = manual_covariates, interpolate = FALSE)
 ```
 
 Let us observe the new `inla_fit` object:
@@ -391,16 +392,18 @@ We can now define and fit the model as previously
 rspde_model <- rspde.metric_graph(graph, nu = alpha - 1/2)
 
 data_rspde <- graph_data_spde(rspde_model, name = "field", 
-                                  repl = ".all", repl_col = "rep", covariates = c("Intercept","cov_lgcp"))
+                                  repl = ".all", repl_col = "rep", 
+                                  covariates = c("Intercept","cov_lgcp"))
 
 stk <- inla.stack(data = data_rspde[["data"]], 
                   A = data_rspde[["basis"]], 
                   effects = data_rspde[["index"]])
 
-spde_fit <- inla(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+spde_fit <- inla(y ~ -1 + Intercept + cov_lgcp + 
+                 f(field, model = rspde_model, replicate = field.repl), 
                  family = "poisson", data = inla.stack.data(stk),
                  control.predictor = list(A = inla.stack.A(stk), compute = TRUE),
-                 E = inla.stack.data(stk)$e, verbose=TRUE)
+                 E = inla.stack.data(stk)$e)
 ```
 Let's look at the summaries
 ```{r}
@@ -478,7 +481,8 @@ manual_covariates <- data.frame(
       cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
       .group = rep(1:30, each = nrow(graph$mesh$VtE))
     )
-inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
+            f(field, model = rspde_model, replicate = field.repl), 
               graph=graph, manual_covariates = manual_covariates)
 ```
 
