@@ -103,7 +103,8 @@ reference:
     - augment.graph_lme
   - title: Log-Cox Gaussian processes
     contents:
-    - graph_lgcp
+    - graph_lgcp_sim
+    - lgcp_graph
   - title: Space-time models
     contents:
     - simulate_spacetime
