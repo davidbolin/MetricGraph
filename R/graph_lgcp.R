@@ -229,8 +229,6 @@ precompute_lgcp_graph <- function(graph,
       start_tau = spde_model$args$start_tau, prior_tau = spde_model$args$prior_tau, factor_start_range = spde_model$args$factor_start_range, 
       type_start_range_bbox = spde_model$args$type_start_range_bbox, shared_lib = spde_model$args$shared_lib, debug = spde_model$args$debug,
       verbose = spde_model$args$verbose)
-      print(repl)
-      print(repl_col)
       data_spde <- graph_data_spde(spde_model, name=model_name, covariates=covariates, repl = repl, repl_col = repl_col)
     } else{
       spde_model$mesh <- graph_bkp

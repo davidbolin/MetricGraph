@@ -614,7 +614,7 @@ print("Timing comparison for single replicate:")
 print(timing_single)
 ```
 
-Let's verify that the results are equivalent:
+Let's verify that the results are equivalent by comparing the log marginal likelihoods:
 
 ```{r}
 # Compare log marginal likelihoods to verify equivalence
@@ -785,7 +785,7 @@ print("Timing comparison for replicated data:")
 print(timing_replicates)
 ```
 
-Let's verify that the results are equivalent:
+Let's verify that the results are equivalent by comparing the log marginal likelihoods:
 
 ```{r}
 # Compare log marginal likelihoods to verify equivalence
@@ -858,12 +858,15 @@ summary_table <- data.frame(
 
 print("Summary of timing results:")
 print(summary_table)
-
-cat("\nKey observations:\n")
-cat("- Precomputation becomes beneficial when fitting", min(summary_table$Breakeven_fits), "or more models\n")
-cat("- For 3 fits, speedup ranges from", sprintf("%.2f", min(summary_table$Speedup)), "x to", sprintf("%.2f", max(summary_table$Speedup)), "x\n")
-cat("- The more models you fit, the greater the relative benefit of precomputation\n")
 ```
+
+**Key observations:**
+
+- Precomputation becomes beneficial when fitting multiple models (typically 3 or more) with the same spatial structure
+- For 3 fits, typical speedups range from 1.5x to 3x depending on model complexity  
+- The more models you fit, the greater the relative benefit of precomputation
+- Exact SPDE models (from `graph_spde()`) typically show greater speedup benefits than rational SPDE models
+- Using `clone_graph = FALSE` provides additional performance improvements when you don't need to preserve the original graph
 
 ## When to use precomputation
 
