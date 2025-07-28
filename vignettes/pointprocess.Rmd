@@ -618,10 +618,13 @@ Let's verify that the results are equivalent by comparing the log marginal likel
 
 ```{r}
 # Compare log marginal likelihoods to verify equivalence
-cat("Log marginal likelihood comparison (fit2):\n")
-cat("Original:", fit2_orig$mlik[1], "\n")
-cat("Precomputed:", fit2_precomp$mlik[1], "\n")
-cat("Difference:", abs(fit2_orig$mlik[1] - fit2_precomp$mlik[1]), "\n")
+# Log marginal likelihood comparison (fit2):
+# Original:
+print(fit2_orig$mlik[1])
+# Precomputed:
+print(fit2_precomp$mlik[1])
+# Difference:
+print(abs(fit2_orig$mlik[1] - fit2_precomp$mlik[1]))
 ```
 
 ### Using manual covariates with precomputation
@@ -654,8 +657,10 @@ time_manual <- system.time({
                           graph = graph, precomputed_data = precomputed_manual)
 })
 
-cat("Manual covariates fit time:", time_manual[["elapsed"]], "seconds\n")
-cat("Manual covariates log marginal likelihood:", fit_manual$mlik[1], "\n")
+# Manual covariates fit time (seconds):
+print(time_manual[["elapsed"]])
+# Manual covariates log marginal likelihood:
+print(fit_manual$mlik[1])
 ```
 
 ### Performance optimization: avoiding graph cloning
@@ -674,13 +679,16 @@ time_without_clone <- system.time({
                             graph = graph, clone_graph = FALSE)
 })
 
-cat("Time with cloning:", time_with_clone[["elapsed"]], "seconds\n")
-cat("Time without cloning:", time_without_clone[["elapsed"]], "seconds\n")
-cat("Speedup factor:", round(time_with_clone[["elapsed"]] / time_without_clone[["elapsed"]], 2), "x\n")
+# Time with cloning (seconds):
+print(time_with_clone[["elapsed"]])
+# Time without cloning (seconds):
+print(time_without_clone[["elapsed"]])
+# Speedup factor:
+print(paste(round(time_with_clone[["elapsed"]] / time_without_clone[["elapsed"]], 2), "x"))
 
 # The results should be identical
-cat("Log marginal likelihood difference:", 
-    abs(fit_clone$mlik[1] - fit_no_clone$mlik[1]), "\n")
+# Log marginal likelihood difference:
+print(abs(fit_clone$mlik[1] - fit_no_clone$mlik[1]))
 ```
 
 You can also use `clone_graph = FALSE` with precomputation for even better performance:
@@ -705,8 +713,10 @@ time_fit_no_clone <- system.time({
                                     precomputed_data = precomputed_no_clone)
 })
 
-cat("Precomputation time (no clone):", time_precomp_no_clone[["elapsed"]], "seconds\n")
-cat("Fit time with precomputed data (no clone):", time_fit_no_clone[["elapsed"]], "seconds\n")
+# Precomputation time (no clone, seconds):
+print(time_precomp_no_clone[["elapsed"]])
+# Fit time with precomputed data (no clone, seconds):
+print(time_fit_no_clone[["elapsed"]])
 ```
 
 
@@ -789,10 +799,13 @@ Let's verify that the results are equivalent by comparing the log marginal likel
 
 ```{r}
 # Compare log marginal likelihoods to verify equivalence
-cat("Log marginal likelihood comparison (fit2):\n")
-cat("Original:", fit2_orig_rep$mlik[1], "\n")
-cat("Precomputed:", fit2_precomp_rep$mlik[1], "\n")
-cat("Difference:", abs(fit2_orig_rep$mlik[1] - fit2_precomp_rep$mlik[1]), "\n")
+# Log marginal likelihood comparison (fit2):
+# Original:
+print(fit2_orig_rep$mlik[1])
+# Precomputed:
+print(fit2_precomp_rep$mlik[1])
+# Difference:
+print(abs(fit2_orig_rep$mlik[1] - fit2_precomp_rep$mlik[1]))
 ```
 
 ### Using manual covariates with replicates
@@ -827,8 +840,10 @@ time_manual_rep <- system.time({
                               graph = graph, precomputed_data = precomputed_manual_rep)
 })
 
-cat("Manual covariates (replicates) fit time:", time_manual_rep[["elapsed"]], "seconds\n")
-cat("Manual covariates (replicates) log marginal likelihood:", fit_manual_rep$mlik[1], "\n")
+# Manual covariates (replicates) fit time (seconds):
+print(time_manual_rep[["elapsed"]])
+# Manual covariates (replicates) log marginal likelihood:
+print(fit_manual_rep$mlik[1])
 ```
 
 ## Summary and speedup analysis

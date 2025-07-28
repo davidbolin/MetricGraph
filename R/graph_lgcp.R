@@ -669,7 +669,7 @@ lgcp_graph <- function(formula,
                 formula_str <- gsub(pattern, replacement, formula_str)
                 
                 # Convert back to a formula object
-                formula <- as.formula(formula_str)
+                formula <- formula(paste(formula_str, collapse = ""))
                 break
               }
             }
@@ -762,7 +762,7 @@ lgcp_graph <- function(formula,
                 formula_str <- gsub(pattern, replacement, formula_str)
                 
                 # Convert back to a formula object
-                formula <- as.formula(formula_str)
+                formula <- formula(paste(formula_str, collapse = ""))
                 break
               }
             }
