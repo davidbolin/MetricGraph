@@ -2566,9 +2566,11 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
   result <- NULL
   
   if(!is.null(repl) && repl == ".all"){
-    repl <- unique(data[[".group"]])
+    repl <- unique(data[[repl_col]])
+  } else if(is.null(repl)){
+    repl <- data[[repl_col]][1]
   } else{
-    repl <- data[[".group"]][1]
+    repl <- unique(repl)
   }
   
   for(rep_val in repl){

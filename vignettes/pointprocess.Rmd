@@ -322,6 +322,27 @@ spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
 summary(spde_result)
 ```
 
+We can also fit the model with replicates using the exact model:
+
+```{r}
+inla_fit_spde_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
+                               f(field, model = spde_model, replicate = field.repl), 
+                               graph=graph)
+```
+
+Let us observe the `inla_fit_spde_rep` object:
+
+```{r}
+summary(inla_fit_spde_rep)
+```
+
+We can now extract the estimates in the original scale
+
+```{r}
+spde_result_rep <- spde_metric_graph_result(inla_fit_spde_rep, "field", spde_model)
+
+summary(spde_result_rep)
+```
 
 # Fitting LGCP models without our `INLA` interface
 
@@ -510,6 +531,8 @@ result_df <- data.frame(
   )
   print(result_df)
 ```
+
+
 # Using precomputed data for efficient model fitting
 
 When fitting multiple LGCP models with different formulas but the same spatial structure and covariates, it can be very efficient to precompute the expensive quantities once and reuse them. This is particularly useful for model selection, cross-validation, or exploring different covariate combinations.
@@ -533,7 +556,7 @@ graph$add_observations(data = data.frame(y = rep(1,length(lgcp_sample$edge_loc))
 # Create precomputed object with all available covariates
 precomputed_data <- precompute_lgcp_graph(
   resp_variable_name = "y",
-  spde_model = rspde_model,
+  spde_model = spde_model,
   model_name = "field",
   graph = graph,
   covariates = c("Intercept", "cov_lgcp"),
@@ -546,21 +569,21 @@ Now let's compare timings between the original approach and using precomputed da
 ```{r}
 # Time the original approach (multiple fits)
 time_original <- system.time({
-  fit1_orig <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model), 
+  fit1_orig <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model), 
                           graph = graph)
-  fit2_orig <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+  fit2_orig <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model), 
                           graph = graph)
-  fit3_orig <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model), 
+  fit3_orig <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model), 
                           graph = graph)
 })
 
 # Time the precomputed approach (multiple fits)
 time_precomputed <- system.time({
-  fit1_precomp <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model), 
+  fit1_precomp <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model), 
                              graph = graph, precomputed_data = precomputed_data)
-  fit2_precomp <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+  fit2_precomp <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model), 
                              graph = graph, precomputed_data = precomputed_data)
-  fit3_precomp <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model), 
+  fit3_precomp <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model), 
                              graph = graph, precomputed_data = precomputed_data)
 })
 
@@ -619,7 +642,7 @@ precomputed_manual <- precompute_lgcp_graph(
   resp_variable_name = "y",
   model_name = "field",
   covariates = c("Intercept", "cov_lgcp"),
-  spde_model = rspde_model,
+  spde_model = spde_model,
   manual_covariates = manual_covariates,
   interpolate = FALSE,
   use_current_mesh = TRUE
@@ -627,7 +650,7 @@ precomputed_manual <- precompute_lgcp_graph(
 
 # Fit model using manual covariates precomputed data
 time_manual <- system.time({
-  fit_manual <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+  fit_manual <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model), 
                           graph = graph, precomputed_data = precomputed_manual)
 })
 
@@ -642,12 +665,12 @@ For maximum performance, you can avoid cloning the graph by setting `clone_graph
 ```{r}
 # Performance comparison: with and without cloning
 time_with_clone <- system.time({
-  fit_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+  fit_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model), 
                          graph = graph, clone_graph = TRUE)
 })
 
 time_without_clone <- system.time({
-  fit_no_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+  fit_no_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model), 
                             graph = graph, clone_graph = FALSE)
 })
 
@@ -670,7 +693,7 @@ time_precomp_no_clone <- system.time({
     model_name = "field",
     graph = graph,
     covariates = c("Intercept", "cov_lgcp"),
-    spde_model = rspde_model,    
+    spde_model = spde_model,    
     clone_graph = FALSE
   )
 })
@@ -702,7 +725,7 @@ precomputed_data_rep <- precompute_lgcp_graph(
   graph = graph,
   resp_variable_name = "y",
   model_name = "field",
-  spde_model = rspde_model,
+  spde_model = spde_model,
   covariates = c("Intercept", "cov_lgcp"),
   repl = ".all",
   repl_col = "rep",
@@ -715,21 +738,21 @@ Time comparisons for replicated data:
 ```{r}
 # Time the original approach (multiple fits with replicates)
 time_original_rep <- system.time({
-  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
-  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
-  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
 })
 
 # Time the precomputed approach (multiple fits with replicates)
 time_precomputed_rep <- system.time({
-  fit1_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+  fit1_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
-  fit2_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+  fit2_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
-  fit3_precomp_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+  fit3_precomp_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
 })
 
@@ -739,7 +762,7 @@ time_precompute_rep <- system.time({
     graph = graph,
     resp_variable_name = "y",
     model_name = "field",
-    spde_model = rspde_model,
+    spde_model = spde_model,
     covariates = c("Intercept", "cov_lgcp"),
     repl = ".all",
     repl_col = "rep",

@@ -496,6 +496,20 @@ model$directional <- directional
 model$data_PtE <- suppressWarnings(graph_object$get_PtE())
 model$original_data <- graph_object$.__enclos_env__$private$data
 model$parameterization <- parameterization
+model$args <- list(
+  stationary_endpoints = stationary_endpoints,
+  start_range = start_range,
+  start_kappa = start_kappa,
+  prior_kappa = prior_kappa,
+  prior_sigma = prior_sigma,
+  start_tau = start_tau,
+  prior_tau = prior_tau,
+  factor_start_range = factor_start_range,
+  type_start_range_bbox = type_start_range_bbox,
+  shared_lib = shared_lib,
+  debug = debug,
+  verbose = verbose
+)
 model$Tc <- Tc
 model$alpha <- alpha
 if(alpha == 2){
@@ -662,7 +676,6 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
          loc <- NULL
        }  
 
-
   if(inherits(graph_spde, "rspde_metric_graph")){
     return(graph_data_rspde_internal(graph_spde, name = name, covariates = covariates, repl = repl, repl_col = repl_col, group = group, group_col = group_col, only_pred = only_pred, tibble = tibble, drop_na = drop_na, drop_all_na = drop_all_na))
   }
@@ -753,6 +766,27 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
   
     A <- Matrix::Diagonal(0)  
 
+    if(any(is.na(ret[["data"]][[repl_col]]))){
+      # Group by .group and fill NA values with first non-NA value within each group
+      groups <- unique(ret[["data"]][[".group"]])
+      for(grp in groups){
+        grp_idx <- which(ret[["data"]][[".group"]] == grp)
+        grp_repl_vals <- ret[["data"]][[repl_col]][grp_idx]
+        
+        if(any(is.na(grp_repl_vals))){
+          first_non_na <- grp_repl_vals[!is.na(grp_repl_vals)][1]
+          if(!is.na(first_non_na)){
+            ret[["data"]][[repl_col]][grp_idx][is.na(grp_repl_vals)] <- first_non_na
+          } else {
+            # If all values in group are NA, use repl[1] as fallback
+            ret[["data"]][[repl_col]][grp_idx][is.na(grp_repl_vals)] <- repl[1]
+          }
+        }
+      }
+    }
+
+    
+
     for(i in 1:n.repl){
      for(j in 1:n.group){
          data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], repl_col = repl_col, group = group[j], group_col = group_col)
@@ -763,6 +797,7 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
          } else{
            idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
          }
+
          # nV_tmp <- sum(idx_notna)        
          if(alpha == 1){
           if(!graph_spde$directional){

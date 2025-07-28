@@ -180,67 +180,65 @@ precompute_lgcp_graph <- function(graph,
                            clone_graph = TRUE) {
 
 
-          if(inherits(spde_model, "inla_metric_graph_spde")){
-            type_model <- "exact"
-          } else{
-            type_model <- "rational"
-          }
+  if(inherits(spde_model, "inla_metric_graph_spde")){
+    type_model <- "exact"
+  } else{
+    type_model <- "rational"
+  }
+  if(!is.null(manual_covariates)){
+    interpolate <- FALSE
+  }
+  if(clone_graph){
+    graph_bkp <- graph$clone()
+  } else{
+    graph_bkp <- graph
+  }
+  graph_bkp$.__enclos_env__$private$data[[".weights_int_points"]] <- rep(0, length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]]))
+  # Check if the response variable exists in the data
+  if (!resp_variable_name %in% names(graph_bkp$.__enclos_env__$private$data)) {
+    warning(paste0("Response variable '", resp_variable_name, "' not found in the data. A response variable will be created assuming counts on all available locations."))
+    graph_bkp$.__enclos_env__$private$data[[resp_variable_name]] <- rep(1, length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]]))
+  } else{
+    if(!(any(graph_bkp$.__enclos_env__$private$data[[resp_variable_name]] %in% c(0,1)))){
+      stop(paste0("Response variable '", resp_variable_name, "' must be a binary variable (0 or 1)"))
+    }
+  }
+  int_points <- create_integration_points(graph = graph_bkp,
+                                         use_current_mesh = use_current_mesh,
+                                         new_h = new_h,
+                                         new_n = new_n,
+                                         interpolate = interpolate,
+                                         covariates = covariates,
+                                         manual_integration_points = manual_integration_points,
+                                         manual_covariates = manual_covariates,
+                                         repl = repl,
+                                         repl_col = repl_col)
   
-          if(!is.null(manual_covariates)){
-            interpolate <- FALSE
-          }
-          if(clone_graph){
-            graph_bkp <- graph$clone()
-          } else{
-            graph_bkp <- graph
-          }
-          graph_bkp$.__enclos_env__$private$data[[".weights_int_points"]] <- rep(0, length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]]))
-
-          # Check if the response variable exists in the data
-          if (!resp_variable_name %in% names(graph_bkp$.__enclos_env__$private$data)) {
-            warning(paste0("Response variable '", resp_variable_name, "' not found in the data. A response variable will be created assuming counts on all available locations."))
-            graph_bkp$.__enclos_env__$private$data[[resp_variable_name]] <- rep(1, length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]]))
-          } else{
-            if(!(any(graph_bkp$.__enclos_env__$private$data[[resp_variable_name]] %in% c(0,1)))){
-              stop(paste0("Response variable '", resp_variable_name, "' must be a binary variable (0 or 1)"))
-            }
-          }
-
-          int_points <- create_integration_points(graph = graph_bkp,
-                                                 use_current_mesh = use_current_mesh,
-                                                 new_h = new_h,
-                                                 new_n = new_n,
-                                                 interpolate = interpolate,
-                                                 covariates = covariates,
-                                                 manual_integration_points = manual_integration_points,
-                                                 manual_covariates = manual_covariates,
-                                                 repl = repl,
-                                                 repl_col = repl_col)
-          
-          int_points[[resp_variable_name]] <- rep(0, nrow(int_points))
-
-          graph_bkp$add_observations(data = int_points,
-                                     edge_number = ".edge_number",
-                                     distance_on_edge = ".distance_on_edge",
-                                     normalized = TRUE,
-                                     group = repl_col,
-                                     verbose = 0)          
-          
-          if(type_model == "exact"){
-            spde_model <- graph_spde(graph_bkp, alpha = spde_model$alpha, parameterization = spde_model$parameterization)
-          }
+  int_points[[resp_variable_name]] <- rep(0, nrow(int_points))
+  graph_bkp$add_observations(data = int_points,
+                             edge_number = ".edge_number",
+                             distance_on_edge = ".distance_on_edge",
+                             normalized = TRUE,
+                             group = repl_col,
+                             verbose = 0)          
   
-            if(type_model == "exact"){
-            # Extract all covariate names from formula components
-              data_spde <- graph_data_spde(spde_model, name=model_name, covariates=covariates, repl = repl, repl_col = repl_col)
-            } else{
-              spde_model$mesh <- graph_bkp
-              data_spde <- graph_data_rspde_internal(spde_model, name=model_name, covariates=covariates, repl = repl, repl_col = repl_col)
-            }
-
-          stk <- INLA::inla.stack(data = data_spde[["data"]], 
-                  A = data_spde[["basis"]],
-                  effects = data_spde[["index"]])
+  graph_bkp2 <<- graph_bkp
+  
+  if(type_model == "exact"){
+      spde_model <- graph_spde(graph_bkp, alpha = spde_model$alpha, parameterization = spde_model$parameterization, stationary_endpoints = spde_model$args$stationary_endpoints, directional = spde_model$directional, start_range = spde_model$args$start_range, start_kappa = spde_model$args$start_kappa, prior_kappa = spde_model$args$prior_kappa, prior_sigma = spde_model$args$prior_sigma,
+      start_tau = spde_model$args$start_tau, prior_tau = spde_model$args$prior_tau, factor_start_range = spde_model$args$factor_start_range, 
+      type_start_range_bbox = spde_model$args$type_start_range_bbox, shared_lib = spde_model$args$shared_lib, debug = spde_model$args$debug,
+      verbose = spde_model$args$verbose)
+      print(repl)
+      print(repl_col)
+      data_spde <- graph_data_spde(spde_model, name=model_name, covariates=covariates, repl = repl, repl_col = repl_col)
+    } else{
+      spde_model$mesh <- graph_bkp
+      data_spde <- graph_data_rspde_internal(spde_model, name=model_name, covariates=covariates, repl = repl, repl_col = repl_col)
+    }
+  stk <- INLA::inla.stack(data = data_spde[["data"]], 
+          A = data_spde[["basis"]],
+          effects = data_spde[["index"]])
 
   # Create return object
   precomputed <- list(
@@ -354,6 +352,9 @@ lgcp_graph <- function(formula,
 
 
           if(!is.null(precomputed_data)){
+            if(!inherits(precomputed_data, "precomputed_lgcp")){
+              stop("The precomputed data must be a precomputed_lgcp object")
+            }
             graph_bkp <- precomputed_data$graph
             stk <- precomputed_data$stk
             if(precomputed_data$resp_variable_name != resp_variable_name){
@@ -441,7 +442,7 @@ lgcp_graph <- function(formula,
                                                  manual_covariates = manual_covariates,
                                                  repl = repl,
                                                  repl_col = repl_col)
-          
+
           int_points[[resp_variable_name]] <- rep(0, nrow(int_points))
 
           graph_bkp$add_observations(data = int_points,
@@ -449,10 +450,13 @@ lgcp_graph <- function(formula,
                                      distance_on_edge = ".distance_on_edge",
                                      normalized = TRUE,
                                      group = repl_col,
-                                     verbose = 0)          
+                                     verbose = 0)
 
           if(inherits(aux_spde_model, "inla_metric_graph_spde")){
-            aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization)
+            aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization, stationary_endpoints = aux_spde_model$args$stationary_endpoints, directional = aux_spde_model$directional, start_range = aux_spde_model$args$start_range, start_kappa = aux_spde_model$args$start_kappa, prior_kappa = aux_spde_model$args$prior_kappa, prior_sigma = aux_spde_model$args$prior_sigma,
+      start_tau = aux_spde_model$args$start_tau, prior_tau = aux_spde_model$args$prior_tau, factor_start_range = aux_spde_model$args$factor_start_range, 
+      type_start_range_bbox = aux_spde_model$args$type_start_range_bbox, shared_lib = aux_spde_model$args$shared_lib, debug = aux_spde_model$args$debug,
+      verbose = aux_spde_model$args$verbose)
           }
 
 
