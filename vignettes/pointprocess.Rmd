@@ -723,7 +723,7 @@ print(time_fit_no_clone[["elapsed"]])
 
 ## Example with replicates
 
-Now let's do the same comparison for the replicated data:
+Now let's do the same comparison for the replicated data. Since the replicates coincide with the ".group" column, we can use the default value for `repl` and `repl_col`.
 
 ```{r}
 # Clear and add the replicated data
@@ -737,8 +737,6 @@ precomputed_data_rep <- precompute_lgcp_graph(
   model_name = "field",
   spde_model = spde_model,
   covariates = c("Intercept", "cov_lgcp"),
-  repl = ".all",
-  repl_col = "rep",
   use_current_mesh = TRUE
 )
 ```
@@ -751,7 +749,7 @@ time_original_rep <- system.time({
   fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
   fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                              graph = graph)
+                              graph = graph, verbose = TRUE)
   fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
 })
@@ -761,7 +759,7 @@ time_precomputed_rep <- system.time({
   fit1_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
   fit2_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                                 graph = graph, precomputed_data = precomputed_data_rep)
+                                 graph = graph, precomputed_data = precomputed_data_rep, verbose = TRUE)
   fit3_precomp_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
 })
@@ -774,8 +772,6 @@ time_precompute_rep <- system.time({
     model_name = "field",
     spde_model = spde_model,
     covariates = c("Intercept", "cov_lgcp"),
-    repl = ".all",
-    repl_col = "rep",
     use_current_mesh = TRUE
   )
 })
