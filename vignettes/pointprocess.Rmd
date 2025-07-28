@@ -666,9 +666,11 @@ You can also use `clone_graph = FALSE` with precomputation for even better perfo
 # Precompute without cloning (faster but modifies the graph)
 time_precomp_no_clone <- system.time({
   precomputed_no_clone <- precompute_lgcp_graph(
+    resp_variable_name = "y",
+    model_name = "field",
     graph = graph,
     covariates = c("Intercept", "cov_lgcp"),
-    spde_model = rspde_model,
+    spde_model = rspde_model,    
     clone_graph = FALSE
   )
 })
@@ -677,13 +679,14 @@ time_precomp_no_clone <- system.time({
 time_fit_no_clone <- system.time({
   fit_precomp_no_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
                                     graph = graph, 
-                                    precomputed_data = precomputed_no_clone,
-                                    clone_graph = FALSE)
+                                    precomputed_data = precomputed_no_clone)
 })
 
 cat("Precomputation time (no clone):", time_precomp_no_clone[["elapsed"]], "seconds\n")
 cat("Fit time with precomputed data (no clone):", time_fit_no_clone[["elapsed"]], "seconds\n")
 ```
+
+
 
 ## Example with replicates
 
@@ -699,7 +702,7 @@ precomputed_data_rep <- precompute_lgcp_graph(
   graph = graph,
   resp_variable_name = "y",
   model_name = "field",
-  spde_model = spde_model,
+  spde_model = rspde_model,
   covariates = c("Intercept", "cov_lgcp"),
   repl = ".all",
   repl_col = "rep",
@@ -712,11 +715,11 @@ Time comparisons for replicated data:
 ```{r}
 # Time the original approach (multiple fits with replicates)
 time_original_rep <- system.time({
-  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
+  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
                               graph = graph)
-  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
+  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
                               graph = graph)
-  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
+  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
                               graph = graph)
 })
 

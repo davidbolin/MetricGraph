@@ -360,7 +360,6 @@ lgcp_graph <- function(formula,
               warning(paste0("The response variable name in the precomputed data (", precomputed_data$resp_variable_name, ") does not match the response variable name in the formula (", resp_variable_name, "). The variable in the precomputed data will be used."))
             }
             resp_variable_name <- precomputed_data$resp_variable_name
-            covariates <- precomputed_data$covariates
           # Check that all covariates in the formula are available in precomputed data
           missing_covariates <- setdiff(character_covariates, precomputed_data$covariates)
           if (length(missing_covariates) > 0) {
@@ -382,9 +381,8 @@ lgcp_graph <- function(formula,
           } else if (is.null(model_name) && !is.null(precomputed_data$model_name)) {
             model_name <- precomputed_data$model_name
           }
-
-          if(precomputed_data$type_model == "exact"){
             aux_spde_model <- precomputed_data$aux_spde_model
+
           # Update formula to use aux_spde_model instead of the original model name
           if (!is.null(model_name) && !is.null(aux_spde_model)) {
             # Extract the original formula
@@ -407,9 +405,6 @@ lgcp_graph <- function(formula,
                 break
               }
             }
-          } else{
-            stop("There was an error processing the model name in the formula.")
-          }           
           } 
 
           } else{
