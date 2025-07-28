@@ -436,31 +436,6 @@ lgcp_graph <- function(formula,
             }
           }
 
-          # Parse formula to extract covariates and their models
-          formula_components <- parse_formula_components(formula)
-          
-          # Extract covariate names where model is a character (is_character is TRUE)
-          character_covariates <- c()
-          for (component in formula_components) {
-            if (!is.null(component) && component$character) {
-              character_covariates <- c(character_covariates, component$covariate)
-            }
-          }
-
-          # Check for non-character models and validate their classes
-          for (component in formula_components) {
-            if (!is.null(component) && !component$character) {
-              # Validate model class
-              valid_classes <- c("inla_metric_graph_spde", "rspde_metric_graph")
-              if (!any(valid_classes == component$model)) {
-                stop(paste0("Model for '", component$covariate, 
-                           "' must be one of: '", 
-                           paste(valid_classes, collapse = "', '"), 
-                           "', but got '", component$model, "' instead"))
-              }
-            }
-          }
-
           int_points <- create_integration_points(graph = graph_bkp,
                                                  use_current_mesh = use_current_mesh,
                                                  new_h = new_h,
@@ -480,26 +455,6 @@ lgcp_graph <- function(formula,
                                      normalized = TRUE,
                                      group = repl_col,
                                      verbose = 0)          
-
-          # Extract model from formula components
-          model_name <- NULL
-          # Count non-character components (models)
-          non_character_count <- sum(sapply(formula_components, function(comp) {
-            !is.null(comp) && !comp$character
-          }))
-          
-          if (non_character_count > 1) {
-            stop("Only one spde-type model is allowed in the formula")
-          }
-          
-          # Extract the model if it exists
-          for (component in formula_components) {
-            if (!is.null(component) && !component$character) {
-              aux_spde_model <- get(component$model_name, envir = parent.frame())
-              model_name <- component$covariate
-              break
-            }
-          }
 
           if(inherits(aux_spde_model, "inla_metric_graph_spde")){
             aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization)
@@ -524,7 +479,7 @@ lgcp_graph <- function(formula,
                   effects = data_spde[["index"]])
 
           # Update formula to use aux_spde_model instead of the original model name
-          if (!is.null(model_name) && !is.null(aux_spde_model) && inherits(aux_spde_model, "inla_metric_graph_spde")) {
+          if (!is.null(model_name) && !is.null(aux_spde_model)) {
             # Extract the original formula
             formula_str <- deparse(formula)
             

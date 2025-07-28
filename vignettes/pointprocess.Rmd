@@ -697,8 +697,10 @@ graph$add_observations(data = df_rep, normalized = TRUE, group = "rep")
 # Create precomputed object for replicated data
 precomputed_data_rep <- precompute_lgcp_graph(
   graph = graph,
+  resp_variable_name = "y",
+  model_name = "field",
+  spde_model = spde_model,
   covariates = c("Intercept", "cov_lgcp"),
-  spde_model = rspde_model,
   repl = ".all",
   repl_col = "rep",
   use_current_mesh = TRUE
@@ -710,11 +712,11 @@ Time comparisons for replicated data:
 ```{r}
 # Time the original approach (multiple fits with replicates)
 time_original_rep <- system.time({
-  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
-  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
-  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
 })
 
@@ -732,8 +734,10 @@ time_precomputed_rep <- system.time({
 time_precompute_rep <- system.time({
   precomputed_temp_rep <- precompute_lgcp_graph(
     graph = graph,
-    covariates = c("Intercept", "cov_lgcp"),
+    resp_variable_name = "y",
+    model_name = "field",
     spde_model = rspde_model,
+    covariates = c("Intercept", "cov_lgcp"),
     repl = ".all",
     repl_col = "rep",
     use_current_mesh = TRUE
@@ -755,6 +759,16 @@ print("Timing comparison for replicated data:")
 print(timing_replicates)
 ```
 
+Let's verify that the results are equivalent:
+
+```{r}
+# Compare log marginal likelihoods to verify equivalence
+cat("Log marginal likelihood comparison (fit2):\n")
+cat("Original:", fit2_orig_rep$mlik[1], "\n")
+cat("Precomputed:", fit2_precomp_rep$mlik[1], "\n")
+cat("Difference:", abs(fit2_orig_rep$mlik[1] - fit2_precomp_rep$mlik[1]), "\n")
+```
+
 ### Using manual covariates with replicates
 
 For replicated data, manual covariates must include the replicate structure:
@@ -764,14 +778,16 @@ For replicated data, manual covariates must include the replicate structure:
 manual_covariates_rep <- data.frame(
   Intercept = 1,
   cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
-  .group = rep(1:30, each = nrow(graph$mesh$VtE))
+  rep = rep(1:30, each = nrow(graph$mesh$VtE))
 )
 
 # Precompute with manual covariates for replicates
 precomputed_manual_rep <- precompute_lgcp_graph(
   graph = graph,
-  covariates = c("Intercept", "cov_lgcp"),
+  resp_variable_name = "y",
+  model_name = "field",
   spde_model = rspde_model,
+  covariates = c("Intercept", "cov_lgcp"),
   manual_covariates = manual_covariates_rep,
   interpolate = FALSE,
   repl = ".all",
@@ -791,7 +807,7 @@ cat("Manual covariates (replicates) log marginal likelihood:", fit_manual_rep$ml
 
 ## Summary and speedup analysis
 
-Let's create a comprehensive comparison table and calculate speedups:
+Let's create a comprehensive comparison table and calculate speedups. Observe that this is a small graph and simple model, so the speedup is not as pronounced as it would be for larger graphs and more complex models. Also, the speedup is not as pronounced for replicated data as it is for single replicate data.
 
 ```{r}
 # Calculate speedups
