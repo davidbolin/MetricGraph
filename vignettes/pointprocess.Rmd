@@ -693,7 +693,7 @@ print(abs(fit_clone$mlik[1] - fit_no_clone$mlik[1]))
 
 You can also use `clone_graph = FALSE` with precomputation for even better performance:
 
-```{r}
+```{r, warning=FALSE}
 # Precompute without cloning (faster but modifies the graph)
 time_precomp_no_clone <- system.time({
   precomputed_no_clone <- precompute_lgcp_graph(
@@ -723,9 +723,9 @@ print(time_fit_no_clone[["elapsed"]])
 
 ## Example with replicates
 
-Now let's do the same comparison for the replicated data. Since the replicates coincide with the ".group" column, we can use the default value for `repl` and `repl_col`.
+Now let's do the same comparison for the replicated data. Since the replicates coincide with the ".group" column, we can use the default value for `repl` and `repl_col`. If this is not the case, you can specify the `repl` (to determined which replicates to use, and set it to ".all", which is the default, if you want to use all replicates) and `repl_col` arguments.
 
-```{r}
+```{r, warning=FALSE}
 # Clear and add the replicated data
 graph$clear_observations()
 graph$add_observations(data = df_rep, normalized = TRUE, group = "rep")
@@ -743,13 +743,13 @@ precomputed_data_rep <- precompute_lgcp_graph(
 
 Time comparisons for replicated data:
 
-```{r}
+```{r, warning=FALSE}
 # Time the original approach (multiple fits with replicates)
 time_original_rep <- system.time({
   fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
   fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                              graph = graph, verbose = TRUE)
+                              graph = graph)
   fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                               graph = graph)
 })
@@ -759,7 +759,7 @@ time_precomputed_rep <- system.time({
   fit1_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
   fit2_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                                 graph = graph, precomputed_data = precomputed_data_rep, verbose = TRUE)
+                                 graph = graph, precomputed_data = precomputed_data_rep)
   fit3_precomp_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
 })
@@ -806,9 +806,9 @@ print(abs(fit2_orig_rep$mlik[1] - fit2_precomp_rep$mlik[1]))
 
 ### Using manual covariates with replicates
 
-For replicated data, manual covariates must include the replicate structure:
+For replicated data, manual covariates must include the replicate structure. Since the replicates in the manual covariates are not `.group`, we need to specify the `repl_col` argument.
 
-```{r}
+```{r, warning=FALSE}
 # Create manual covariates for replicated data based on mesh nodes
 manual_covariates_rep <- data.frame(
   Intercept = 1,
@@ -825,7 +825,6 @@ precomputed_manual_rep <- precompute_lgcp_graph(
   covariates = c("Intercept", "cov_lgcp"),
   manual_covariates = manual_covariates_rep,
   interpolate = FALSE,
-  repl = ".all",
   repl_col = "rep",
   use_current_mesh = TRUE
 )
