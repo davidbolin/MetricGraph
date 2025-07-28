@@ -1,13 +1,78 @@
 
-#' Simulation of log-Gaussian Cox processes driven by Whittle-Matérn
-#' fields on metric graphs
-#' @param n Number of samples.
-#' @param intercept Mean value of the Gaussian process.
-#' @param sigma Parameter for marginal standard deviations.
-#' @param range Parameter for practical correlation range.
-#' @param alpha Smoothness parameter (1 or 2).
-#' @param graph A `metric_graph` object.
-#' @return List with Gaussian process sample and simulated points.
+#' Simulate log-Gaussian Cox processes on metric graphs
+#'
+#' This function simulates point patterns from a log-Gaussian Cox process (LGCP) 
+#' driven by Whittle-Matérn Gaussian random fields on metric graphs. The intensity 
+#' function is modeled as λ(s) = exp(β + u(s)), where β is an intercept parameter 
+#' and u(s) is a Gaussian field with Whittle-Matérn covariance.
+#'
+#' @param n Integer. Number of replicate point patterns to simulate. Default is 1.
+#' @param intercept Numeric scalar or vector. Mean value(s) of the log-intensity 
+#'   field. Can be a constant or vary spatially if provided as a vector of length 
+#'   equal to the number of mesh nodes.
+#' @param sigma Numeric. Marginal standard deviation parameter of the Gaussian field.
+#' @param range Numeric. Practical correlation range parameter of the Gaussian field.
+#' @param alpha Numeric. Smoothness parameter of the Whittle-Matérn field. Currently 
+#'   supports values 1 and 2, corresponding to exponential and Matérn-3/2 covariance 
+#'   functions respectively.
+#' @param graph A `metric_graph` object with a built mesh. The graph must have an 
+#'   existing mesh (built with `graph$build_mesh()`) and computed FEM matrices 
+#'   (computed with `graph$compute_fem()`).
+#'
+#' @return If `n = 1`, returns a list with components:
+#'   \describe{
+#'     \item{u}{Numeric vector of the simulated Gaussian field values at mesh nodes}
+#'     \item{edge_number}{Integer vector of edge numbers where points were simulated}
+#'     \item{edge_loc}{Numeric vector of locations along edges (normalized coordinates)}
+#'   }
+#'   If `n > 1`, returns a list of length `n`, where each element is a list with 
+#'   the above components.
+#'
+#' @details
+#' The function implements a two-step simulation procedure:
+#' \enumerate{
+#'   \item Simulate the Gaussian random field u(s) using finite element methods
+#'   \item Generate point locations using acceptance-rejection sampling from the 
+#'         intensity λ(s) = exp(β + u(s))
+#' }
+#'
+#' The Gaussian field is characterized by the SPDE:
+#' (κ² - Δ)^(α/2) τ u = W
+#' where κ, τ are derived from the range and sigma parameters, and W is white noise.
+#'
+#' @examples
+#' \dontrun{
+#' # Create a metric graph and build mesh
+#' graph <- metric_graph$new()
+#' graph$build_mesh(h = 0.1)
+#' graph$compute_fem()
+#'
+#' # Simulate a single point pattern
+#' lgcp_data <- graph_lgcp_sim(
+#'   intercept = -1, 
+#'   sigma = 0.5, 
+#'   range = 2, 
+#'   alpha = 2, 
+#'   graph = graph
+#' )
+#'
+#' # Simulate multiple replicates
+#' lgcp_replicates <- graph_lgcp_sim(
+#'   n = 10,
+#'   intercept = -1, 
+#'   sigma = 0.5, 
+#'   range = 2, 
+#'   alpha = 2, 
+#'   graph = graph
+#' )
+#'
+#' # Plot the simulated intensity
+#' graph$plot_function(X = exp(lgcp_data$u), vertex_size = 0)
+#' }
+#'
+#' @seealso \code{\link{lgcp_graph}} for fitting LGCP models, 
+#'   \code{\link{precompute_lgcp_graph}} for efficient model fitting
+#'
 #' @export
 graph_lgcp_sim <- function(n = 1, intercept = 0, sigma, range, alpha, graph) {
 
@@ -74,94 +139,184 @@ graph_lgcp_sim <- function(n = 1, intercept = 0, sigma, range, alpha, graph) {
 
 
 
-#' Precompute quantities for log-Gaussian Cox process models on metric graphs
+#' Precompute expensive quantities for efficient LGCP model fitting
 #'
-#' This function precomputes the expensive quantities needed for fitting LGCP models,
-#' allowing for efficient refitting with different formulas using the same covariates
-#' and spatial structure.
+#' This function precomputes the computationally expensive quantities needed for 
+#' fitting log-Gaussian Cox process (LGCP) models on metric graphs. It enables 
+#' efficient refitting of multiple models with different formulas while reusing 
+#' the same spatial structure, integration points, and covariates. This is 
+#' particularly beneficial for model selection, cross-validation, or sensitivity 
+#' analysis scenarios.
 #'
-#' @param graph A metric_graph object containing the network and point pattern data
-#' @param resp_variable_name Name of the response variable to be used in the model.
-#' @param model_name Name of the model to be used in the formula.
-#' @param spde_model SPDE model object (inla_metric_graph_spde or rspde_metric_graph)
-#' @param covariates Character vector of covariate names to include in precomputation
-#' @param interpolate Logical; if TRUE, interpolate covariates from the graph data to integration points
-#' @param manual_integration_points Data frame with columns edge_number, distance_on_edge, and E (integration weights)
-#'        for manually specified integration points, or NULL to use automatic integration points
-#' @param manual_covariates Named vector of covariates at integration points if interpolate is FALSE and covariates are used
-#' @param use_current_mesh Logical; if TRUE, use the existing mesh in the graph as integration points. 
-#'        If no mesh exists, one must be created or integration points provided manually. The mesh points 
-#'        in graph$mesh$VtE are used as the default integration points when use_current_mesh = TRUE.
-#' @param new_h Numeric; mesh size for creating a new mesh if use_current_mesh is FALSE
-#' @param new_n Integer; alternative to new_h, specifies the approximate number of mesh points
-#' @param repl Vector of replicates to be used in the model. For all replicates, one must use ".all".
-#' @param repl_col Name of the column in the data that contains the replicates. Default is ".group".
-#' @param clone_graph Logical; if TRUE (default), clone the graph to avoid modifying the original. 
-#'        If FALSE, work directly on the original graph (more efficient but modifies the input).
+#' @param graph A `metric_graph` object containing the network structure and 
+#'   point pattern data. Must have observations added via `add_observations()`.
+#' @param resp_variable_name Character. Name of the response variable (typically 
+#'   binary: 0 or 1) in the graph data that represents point occurrences.
+#' @param model_name Character. Name to be used for the spatial field in INLA 
+#'   formulas (e.g., "field" for `f(field, model = spde_model)`).
+#' @param spde_model An SPDE model object of class `inla_metric_graph_spde` 
+#'   (from `graph_spde()`) or `rspde_metric_graph` (from `rspde.metric_graph()`).
+#' @param covariates Character vector. Names of covariates to include in the 
+#'   precomputation. Only covariates listed here can be used in subsequent 
+#'   model fits with the precomputed data.
+#' @param interpolate Logical. If `TRUE` (default), interpolate covariate values 
+#'   from graph data to integration points. If `FALSE`, use `manual_covariates`.
+#' @param manual_integration_points Data frame with columns `edge_number`, 
+#'   `distance_on_edge`, and `E` (integration weights). If `NULL`, automatic 
+#'   integration points are created from the mesh or specified parameters.
+#' @param manual_covariates Data frame or named list containing covariate values 
+#'   at integration points. Required when `interpolate = FALSE`. Must include 
+#'   a `.group` column for replicates if using replicated data.
+#' @param use_current_mesh Logical. If `TRUE` (default), use the existing mesh 
+#'   in `graph$mesh$VtE` as integration points. If `FALSE` or no mesh exists, 
+#'   create a new mesh using `new_h` or `new_n`.
+#' @param new_h Numeric. Mesh resolution for creating a new mesh when 
+#'   `use_current_mesh = FALSE`. Smaller values create finer meshes.
+#' @param new_n Integer. Alternative to `new_h`, specifies the approximate 
+#'   number of mesh nodes for the new mesh.
+#' @param repl Character vector or `".all"`. Specifies which replicates to 
+#'   include in the model. Use `".all"` to include all available replicates.
+#' @param repl_col Character. Name of the column in the graph data that contains 
+#'   replicate identifiers. Default is `".group"`.
+#' @param clone_graph Logical. If `TRUE` (default), clone the graph to avoid 
+#'   modifying the original object. If `FALSE`, work directly on the original 
+#'   graph (faster but modifies the input).
 #'
-#' @return A list containing precomputed quantities that can be passed to lgcp_graph
+#' @return A list of class `"precomputed_lgcp"` containing:
+#'   \describe{
+#'     \item{graph}{The modified metric_graph object with integration points}
+#'     \item{covariates}{Vector of available covariate names}
+#'     \item{stk}{Precomputed INLA stack object}
+#'     \item{resp_variable_name}{Name of the response variable}
+#'     \item{aux_spde_model}{The SPDE model object prepared for the graph}
+#'     \item{type_model}{Type of SPDE model ("exact" or "rational")}
+#'     \item{model_name}{Name of the spatial field for formulas}
+#'   }
+#'
+#' @details
+#' This function is most beneficial when:
+#' \itemize{
+#'   \item Fitting multiple models with different covariate combinations
+#'   \item Performing model selection or cross-validation
+#'   \item Using exact SPDE models (which have higher setup costs)
+#'   \item Working with large graphs or complex spatial structures
+#' }
+#'
+#' The speedup typically becomes apparent when fitting 3 or more models, with 
+#' greater benefits for more complex spatial structures and exact SPDE models.
+#'
+#' @note 
+#' \itemize{
+#'   \item All covariates you plan to use must be specified in the initial 
+#'     precomputation
+#'   \item The spatial structure (mesh, integration points) is fixed during 
+#'     precomputation
+#'   \item Manual covariate values should correspond to mesh nodes in 
+#'     `graph$mesh$VtE` when `interpolate = FALSE`
+#' }
 #' 
 #' @examples
 #' \dontrun{
-#' # Create a metric graph with some data
+#' # Setup: Create graph with mesh and add point pattern data
 #' graph <- metric_graph$new()
-#' # ... add edges, vertices, and data with covariates ...
+#' graph$build_mesh(h = 0.1)
 #' 
-#' # Precompute expensive quantities for multiple model fits
-#' # Include all covariates you plan to use in any model
+#' # Add point pattern data with covariates
+#' point_data <- data.frame(
+#'   y = 1,  # All observed locations have y = 1
+#'   edge_number = c(1, 2, 3, 1, 2),
+#'   distance_on_edge = c(0.1, 0.3, 0.8, 0.9, 0.2),
+#'   elevation = c(100, 150, 200, 120, 180),
+#'   temperature = c(15, 12, 8, 14, 10)
+#' )
+#' graph$add_observations(point_data, normalized = TRUE)
+#' 
+#' # Create SPDE model
+#' spde_model <- graph_spde(graph, alpha = 1)
+#' 
+#' # Precompute for multiple model fitting scenarios
 #' precomputed_data <- precompute_lgcp_graph(
 #'   graph = graph,
-#'   covariates = c("covariate1", "covariate2", "covariate3"),
-#'   spde_model = my_spde_model,  # optional
+#'   resp_variable_name = "y",
+#'   model_name = "field",
+#'   spde_model = spde_model,
+#'   covariates = c("elevation", "temperature"),
 #'   use_current_mesh = TRUE
 #' )
 #' 
-#' # Now fit multiple models efficiently using the precomputed quantities
-#' # Model 1: Only covariate1
-#' fit1 <- lgcp_graph(
-#'   y ~ covariate1,
-#'   graph = graph,
-#'   precomputed_data = precomputed_data
-#' )
+#' # Now fit multiple models efficiently
+#' # Model selection: compare different covariate combinations
+#' fit1 <- lgcp_graph(y ~ elevation + f(field, model = spde_model),
+#'                    graph = graph, precomputed_data = precomputed_data)
 #' 
-#' # Model 2: Multiple covariates
-#' fit2 <- lgcp_graph(
-#'   y ~ covariate1 + covariate2,
-#'   graph = graph,
-#'   precomputed_data = precomputed_data
-#' )
+#' fit2 <- lgcp_graph(y ~ temperature + f(field, model = spde_model),
+#'                    graph = graph, precomputed_data = precomputed_data)
 #' 
-#' # Model 3: With SPDE model (if included in precomputation)
-#' fit3 <- lgcp_graph(
-#'   y ~ covariate1 + f(spatial_field, model = my_spde_model),
-#'   graph = graph,
-#'   precomputed_data = precomputed_data
-#' )
+#' fit3 <- lgcp_graph(y ~ elevation + temperature + f(field, model = spde_model),
+#'                    graph = graph, precomputed_data = precomputed_data)
 #' 
-#' # Note: You can only use covariates that were included in precomputation
-#' # This will fail if "new_covariate" was not in the original covariates list:
-#' # fit_error <- lgcp_graph(y ~ new_covariate, graph = graph, precomputed_data = precomputed_data)
+#' # Compare models using log marginal likelihood
+#' c(fit1$mlik[1], fit2$mlik[1], fit3$mlik[1])
 #' 
-#' # Using manual covariates based on mesh nodes
+#' # Using manual covariates (exact values at mesh nodes)
 #' manual_covs <- data.frame(
-#'   covariate1 = graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]),
-#'   covariate2 = 1,
+#'   elevation = graph$mesh$VtE[,1] * 50 + 100,  # Synthetic elevation
+#'   temperature = 20 - graph$mesh$VtE[,1] * 10, # Synthetic temperature
 #'   .group = 1
 #' )
+#' 
 #' precomputed_manual <- precompute_lgcp_graph(
 #'   graph = graph,
-#'   covariates = c("covariate1", "covariate2"),
+#'   resp_variable_name = "y", 
+#'   model_name = "field",
+#'   spde_model = spde_model,
+#'   covariates = c("elevation", "temperature"),
 #'   manual_covariates = manual_covs,
 #'   interpolate = FALSE
 #' )
 #' 
-#' # For better performance when you don't need to preserve the original graph
+#' # For maximum performance (modifies original graph)
 #' precomputed_fast <- precompute_lgcp_graph(
 #'   graph = graph,
-#'   covariates = c("covariate1", "covariate2"),
-#'   clone_graph = FALSE  # Works directly on the graph (faster but modifies input)
+#'   resp_variable_name = "y",
+#'   model_name = "field", 
+#'   spde_model = spde_model,
+#'   covariates = c("elevation", "temperature"),
+#'   clone_graph = FALSE
 #' )
+#' 
+#' # Example with replicates
+#' replicate_data <- data.frame(
+#'   y = 1,
+#'   edge_number = c(1, 2, 1, 3, 2, 3),
+#'   distance_on_edge = c(0.2, 0.4, 0.7, 0.1, 0.8, 0.6),
+#'   elevation = c(110, 160, 130, 190, 170, 210),
+#'   replicate_id = c(1, 1, 1, 2, 2, 2)
+#' )
+#' 
+#' graph$clear_observations()
+#' graph$add_observations(replicate_data, normalized = TRUE, group = "replicate_id")
+#' 
+#' precomputed_reps <- precompute_lgcp_graph(
+#'   graph = graph,
+#'   resp_variable_name = "y",
+#'   model_name = "field",
+#'   spde_model = spde_model, 
+#'   covariates = "elevation",
+#'   repl = ".all",
+#'   repl_col = "replicate_id"
+#' )
+#' 
+#' fit_reps <- lgcp_graph(y ~ elevation + f(field, model = spde_model, 
+#'                                         replicate = field.repl),
+#'                        graph = graph, precomputed_data = precomputed_reps)
 #' }
+#'
+#' @seealso 
+#' \code{\link{lgcp_graph}} for fitting LGCP models with precomputed data,
+#' \code{\link{graph_lgcp_sim}} for simulating LGCP data,
+#' \code{\link{graph_spde}} for exact SPDE models,
+#' \code{\link{spde_metric_graph_result}} for extracting spatial parameter estimates
 #' 
 #' @export
 precompute_lgcp_graph <- function(graph, 
@@ -258,29 +413,143 @@ precompute_lgcp_graph <- function(graph,
 
 
 
-#' Create a log-Gaussian Cox process model for metric graphs
+#' Fit log-Gaussian Cox process models on metric graphs
 #'
-#' This function creates a log-Gaussian Cox process model for point pattern data on metric graphs.
-#' It handles the creation of integration points and prepares the data for fitting with INLA.
+#' This function fits log-Gaussian Cox process (LGCP) models for point pattern 
+#' data on metric graphs using R-INLA. It handles the complex setup required for 
+#' LGCP modeling, including creation of integration points, data preparation, and 
+#' interface with INLA's Poisson likelihood framework. The function supports both 
+#' exact and rational SPDE approximations, multiple replicates, and efficient 
+#' refitting using precomputed quantities.
 #'
-#' @param formula A formula object specifying the model structure
-#' @param graph A metric_graph object containing the network and point pattern data
-#' @param interpolate Logical; if TRUE, interpolate covariates from the graph data to integration points
-#' @param manual_integration_points Data frame with columns edge_number, distance_on_edge, and E (integration weights)
-#'        for manually specified integration points, or NULL to use automatic integration points
-#' @param manual_covariates Named vector of covariates at integration points if interpolate is FALSE and covariates are used
-#' @param use_current_mesh Logical; if TRUE, use the existing mesh in the graph as integration points
-#' @param new_h Numeric; mesh size for creating a new mesh if use_current_mesh is FALSE
-#' @param new_n Integer; alternative to new_h, specifies the approximate number of mesh points
-#' @param repl Vector of replicates to be used in the model. For all replicates, one must use ".all".
-#' @param repl_col Name of the column in the data that contains the replicates. Default is ".group".
-#' @param clone_graph Logical; if TRUE (default), clone the graph to avoid modifying the original. 
-#'        If FALSE, work directly on the original graph (more efficient but modifies the input).
-#'        This argument is only used when the graph is not precomputed.
-#' @param precomputed_data Optional precomputed object from precompute_lgcp_graph() for efficient refitting. If provided, the replicates in the precomputed data are used.
-#' @param ... Additional arguments to be passed to inla
+#' @param formula A formula object specifying the model structure. Should follow 
+#'   INLA syntax, e.g., `y ~ covariate + f(field, model = spde_model)` where 
+#'   `field` is the spatial random effect and `spde_model` is an SPDE model object.
+#' @param graph A `metric_graph` object containing the network structure and 
+#'   point pattern data. Must have observations added via `add_observations()`.
+#' @param interpolate Logical. If `TRUE` (default), interpolate covariate values 
+#'   from graph data to integration points. If `FALSE`, use `manual_covariates`.
+#' @param manual_integration_points Data frame with columns `edge_number`, 
+#'   `distance_on_edge`, and `E` (integration weights). If `NULL`, automatic 
+#'   integration points are created.
+#' @param manual_covariates Data frame containing covariate values at integration 
+#'   points when `interpolate = FALSE`. Must include a `.group` column for 
+#'   replicates if using replicated data.
+#' @param use_current_mesh Logical. If `TRUE` (default), use the existing mesh 
+#'   in the graph as integration points. If `FALSE`, create a new mesh.
+#' @param new_h Numeric. Mesh resolution for creating a new mesh when 
+#'   `use_current_mesh = FALSE`. Smaller values create finer meshes.
+#' @param new_n Integer. Alternative to `new_h`, specifies the approximate 
+#'   number of mesh nodes for the new mesh.
+#' @param repl Character vector or `".all"`. Specifies which replicates to 
+#'   include in the model. Use `".all"` to include all available replicates.
+#' @param repl_col Character. Name of the column in the graph data that contains 
+#'   replicate identifiers. Default is `".group"`.
+#' @param clone_graph Logical. If `TRUE` (default), clone the graph to avoid 
+#'   modifying the original object. If `FALSE`, work directly on the original 
+#'   graph (faster but modifies the input). Only used when `precomputed_data` 
+#'   is `NULL`.
+#' @param precomputed_data Optional object of class `"precomputed_lgcp"` from 
+#'   `precompute_lgcp_graph()`. Enables efficient refitting with different 
+#'   formulas using the same spatial structure and covariates.
+#' @param ... Additional arguments passed to `INLA::inla()`, such as 
+#'   `control.inla`, `control.predictor`, `control.compute`, etc.
 #'
-#' @return An object containing the fitted LGCP model
+#' @return An object of class `"inla"` containing the fitted LGCP model. This 
+#'   includes posterior marginal distributions for model parameters, fitted 
+#'   values, and other standard INLA output components. Use 
+#'   `spde_metric_graph_result()` to extract spatial parameter estimates in 
+#'   their original scale.
+#'
+#' @details
+#' The function implements LGCP modeling using the approach of Simpson et al. (2016), 
+#' where the log-Gaussian Cox process with intensity λ(s) = exp(η(s)) is 
+#' approximated using a Poisson likelihood with carefully constructed integration 
+#' points and weights.
+#'
+#' The key steps are:
+#' \enumerate{
+#'   \item Create integration points (typically mesh nodes) across the graph
+#'   \item Set up data with observed points (response = 1, weights = 0) and 
+#'         integration points (response = 0, weights = integration weights)
+#'   \item Fit using Poisson regression with the constructed weights as exposure
+#' }
+#'
+#' The spatial component can be modeled using:
+#' \itemize{
+#'   \item Exact SPDE models via `graph_spde()` (slower setup, exact likelihood)
+#'   \item Rational SPDE approximations via `rspde.metric_graph()` (faster, approximate)
+#' }
+#'
+#' @section Performance:
+#' For fitting multiple models with the same spatial structure:
+#' \itemize{
+#'   \item Use `precompute_lgcp_graph()` first, then `lgcp_graph()` with 
+#'         `precomputed_data` for substantial speedups
+#'   \item Set `clone_graph = FALSE` for additional performance gains when 
+#'         you don't need to preserve the original graph
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Setup: Create graph with mesh and add point pattern data
+#' graph <- metric_graph$new()
+#' graph$build_mesh(h = 0.1)
+#' graph$add_observations(data = your_point_data, 
+#'                        edge_number = "edge_id", 
+#'                        distance_on_edge = "location")
+#'
+#' # Create SPDE model
+#' spde_model <- graph_spde(graph, alpha = 1)
+#' # or: rspde_model <- rspde.metric_graph(graph, nu = 1.5)
+#'
+#' # Fit basic LGCP model
+#' fit1 <- lgcp_graph(y ~ 1 + f(field, model = spde_model), 
+#'                    graph = graph)
+#'
+#' # Fit model with covariates
+#' fit2 <- lgcp_graph(y ~ elevation + temperature + 
+#'                        f(field, model = spde_model), 
+#'                    graph = graph)
+#'
+#' # Extract spatial parameter estimates
+#' spde_result <- spde_metric_graph_result(fit2, "field", spde_model)
+#' summary(spde_result)
+#'
+#' # Efficient fitting of multiple models
+#' precomputed <- precompute_lgcp_graph(
+#'   graph = graph,
+#'   resp_variable_name = "y",
+#'   model_name = "field", 
+#'   spde_model = spde_model,
+#'   covariates = c("elevation", "temperature", "slope")
+#' )
+#'
+#' # Now fit multiple models efficiently
+#' fit_a <- lgcp_graph(y ~ elevation + f(field, model = spde_model), 
+#'                     graph = graph, precomputed_data = precomputed)
+#' fit_b <- lgcp_graph(y ~ elevation + temperature + f(field, model = spde_model), 
+#'                     graph = graph, precomputed_data = precomputed)
+#' fit_c <- lgcp_graph(y ~ slope + f(field, model = spde_model), 
+#'                     graph = graph, precomputed_data = precomputed)
+#'
+#' # Model with replicates
+#' fit_rep <- lgcp_graph(y ~ covariate + f(field, model = spde_model, 
+#'                                        replicate = field.repl), 
+#'                       graph = graph)
+#' }
+#'
+#' @references
+#' Simpson, D., Illian, J., Lindgren, F., Sørbye, S., & Rue, H. (2016). 
+#' Going off grid: Computationally efficient inference for log-Gaussian Cox 
+#' processes. Biometrika, 103(1), 49-70.
+#'
+#' @seealso 
+#' \code{\link{graph_lgcp_sim}} for simulating LGCP data,
+#' \code{\link{precompute_lgcp_graph}} for efficient model refitting,
+#' \code{\link{graph_spde}} for exact SPDE models,
+#' \code{\link{spde_metric_graph_result}} for extracting spatial parameter estimates
+#'
 #' @export
 
 
