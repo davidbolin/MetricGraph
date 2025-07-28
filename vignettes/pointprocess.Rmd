@@ -341,7 +341,7 @@ with integration weights. These quantities can be obtained as
 Atilde <- graph$fem_basis(graph$mesh$VtE)
 atilde <- graph$mesh$weights
 ```
-The weights are used as exposure terms in the Poisson likelihiood in R-INLA. Because 
+The weights are used as exposure terms in the Poisson likelihood in R-INLA. Because 
 of this, the easiest way to construct the model is to add the integration points 
 as zero observations in the graph, with corresponding exposure weights. We also 
 need to add the exposure terms (which are zero) for the actual observation locations:
@@ -510,5 +510,334 @@ result_df <- data.frame(
   )
   print(result_df)
 ```
+# Using precomputed data for efficient model fitting
+
+When fitting multiple LGCP models with different formulas but the same spatial structure and covariates, it can be very efficient to precompute the expensive quantities once and reuse them. This is particularly useful for model selection, cross-validation, or exploring different covariate combinations.
+
+The `precompute_lgcp_graph()` function allows us to precompute integration points, mesh setup, and SPDE model structures. Then `lgcp_graph()` can use this precomputed data to fit models much faster. This approach is especially beneficial when using exact SPDE models created with the `graph_spde()` function, as these models require more computationally expensive setup operations compared to the rational SPDE models from the rSPDE package.
+
+## Example without replicates
+
+Let's start with a timing comparison for the single replicate case. First, we'll set up the data and create a precomputed object:
+
+```{r}
+# Clear and add the single replicate data
+graph$clear_observations()
+graph$add_observations(data = data.frame(y = rep(1,length(lgcp_sample$edge_loc)),
+                                         edge_number = lgcp_sample$edge_number,
+                                         distance_on_edge = lgcp_sample$edge_loc,
+                                         Intercept = 1,
+                                         cov_lgcp = lgcp_sample$edge_number/max(lgcp_sample$edge_number)),
+                       normalized = TRUE)
+
+# Create precomputed object with all available covariates
+precomputed_data <- precompute_lgcp_graph(
+  resp_variable_name = "y",
+  spde_model = rspde_model,
+  model_name = "field",
+  graph = graph,
+  covariates = c("Intercept", "cov_lgcp"),
+  use_current_mesh = TRUE
+)
+```
+
+Now let's compare timings between the original approach and using precomputed data:
+
+```{r}
+# Time the original approach (multiple fits)
+time_original <- system.time({
+  fit1_orig <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model), 
+                          graph = graph)
+  fit2_orig <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+                          graph = graph)
+  fit3_orig <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model), 
+                          graph = graph)
+})
+
+# Time the precomputed approach (multiple fits)
+time_precomputed <- system.time({
+  fit1_precomp <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model), 
+                             graph = graph, precomputed_data = precomputed_data)
+  fit2_precomp <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+                             graph = graph, precomputed_data = precomputed_data)
+  fit3_precomp <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model), 
+                             graph = graph, precomputed_data = precomputed_data)
+})
+
+# Time for creating precomputed object
+time_precompute <- system.time({
+  precomputed_temp <- precompute_lgcp_graph(
+  resp_variable_name = "y",
+  spde_model = rspde_model,
+  model_name = "field",
+  graph = graph,
+  covariates = c("Intercept", "cov_lgcp"),
+  use_current_mesh = TRUE
+)
+})
+
+# Create timing comparison table
+timing_single <- data.frame(
+  Method = c("Original (3 fits)", "Precomputation", "Precomputed (3 fits)", "Total precomputed"),
+  Time_seconds = c(
+    time_original[["elapsed"]], 
+    time_precompute[["elapsed"]], 
+    time_precomputed[["elapsed"]],
+    time_precompute[["elapsed"]] + time_precomputed[["elapsed"]]
+  )
+)
+
+print("Timing comparison for single replicate:")
+print(timing_single)
+```
+
+Let's verify that the results are equivalent:
+
+```{r}
+# Compare log marginal likelihoods to verify equivalence
+cat("Log marginal likelihood comparison (fit2):\n")
+cat("Original:", fit2_orig$mlik[1], "\n")
+cat("Precomputed:", fit2_precomp$mlik[1], "\n")
+cat("Difference:", abs(fit2_orig$mlik[1] - fit2_precomp$mlik[1]), "\n")
+```
+
+### Using manual covariates with precomputation
+
+We can also use manual covariates with precomputation. This is useful when you have the exact values of covariates at the integration points (mesh nodes in `graph$mesh$VtE`):
+
+```{r}
+# Create manual covariates based on mesh nodes
+manual_covariates <- data.frame(
+  Intercept = 1,
+  cov_lgcp = graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]),
+  .group = 1
+)
+
+# Precompute with manual covariates (interpolate = FALSE)
+precomputed_manual <- precompute_lgcp_graph(
+  graph = graph,
+  resp_variable_name = "y",
+  model_name = "field",
+  covariates = c("Intercept", "cov_lgcp"),
+  spde_model = rspde_model,
+  manual_covariates = manual_covariates,
+  interpolate = FALSE,
+  use_current_mesh = TRUE
+)
+
+# Fit model using manual covariates precomputed data
+time_manual <- system.time({
+  fit_manual <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+                          graph = graph, precomputed_data = precomputed_manual)
+})
+
+cat("Manual covariates fit time:", time_manual[["elapsed"]], "seconds\n")
+cat("Manual covariates log marginal likelihood:", fit_manual$mlik[1], "\n")
+```
+
+### Performance optimization: avoiding graph cloning
+
+For maximum performance, you can avoid cloning the graph by setting `clone_graph = FALSE`. This works directly on the original graph, which is faster but modifies the input:
+
+```{r}
+# Performance comparison: with and without cloning
+time_with_clone <- system.time({
+  fit_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+                         graph = graph, clone_graph = TRUE)
+})
+
+time_without_clone <- system.time({
+  fit_no_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+                            graph = graph, clone_graph = FALSE)
+})
+
+cat("Time with cloning:", time_with_clone[["elapsed"]], "seconds\n")
+cat("Time without cloning:", time_without_clone[["elapsed"]], "seconds\n")
+cat("Speedup factor:", round(time_with_clone[["elapsed"]] / time_without_clone[["elapsed"]], 2), "x\n")
+
+# The results should be identical
+cat("Log marginal likelihood difference:", 
+    abs(fit_clone$mlik[1] - fit_no_clone$mlik[1]), "\n")
+```
+
+You can also use `clone_graph = FALSE` with precomputation for even better performance:
+
+```{r}
+# Precompute without cloning (faster but modifies the graph)
+time_precomp_no_clone <- system.time({
+  precomputed_no_clone <- precompute_lgcp_graph(
+    graph = graph,
+    covariates = c("Intercept", "cov_lgcp"),
+    spde_model = rspde_model,
+    clone_graph = FALSE
+  )
+})
+
+# Fit using precomputed data without cloning
+time_fit_no_clone <- system.time({
+  fit_precomp_no_clone <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model), 
+                                    graph = graph, 
+                                    precomputed_data = precomputed_no_clone,
+                                    clone_graph = FALSE)
+})
+
+cat("Precomputation time (no clone):", time_precomp_no_clone[["elapsed"]], "seconds\n")
+cat("Fit time with precomputed data (no clone):", time_fit_no_clone[["elapsed"]], "seconds\n")
+```
+
+## Example with replicates
+
+Now let's do the same comparison for the replicated data:
+
+```{r}
+# Clear and add the replicated data
+graph$clear_observations()
+graph$add_observations(data = df_rep, normalized = TRUE, group = "rep")
+
+# Create precomputed object for replicated data
+precomputed_data_rep <- precompute_lgcp_graph(
+  graph = graph,
+  covariates = c("Intercept", "cov_lgcp"),
+  spde_model = rspde_model,
+  repl = ".all",
+  repl_col = "rep",
+  use_current_mesh = TRUE
+)
+```
+
+Time comparisons for replicated data:
+
+```{r}
+# Time the original approach (multiple fits with replicates)
+time_original_rep <- system.time({
+  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+                              graph = graph)
+  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+                              graph = graph)
+  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+                              graph = graph)
+})
+
+# Time the precomputed approach (multiple fits with replicates)
+time_precomputed_rep <- system.time({
+  fit1_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = rspde_model, replicate = field.repl), 
+                                 graph = graph, precomputed_data = precomputed_data_rep)
+  fit2_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+                                 graph = graph, precomputed_data = precomputed_data_rep)
+  fit3_precomp_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+                                 graph = graph, precomputed_data = precomputed_data_rep)
+})
+
+# Time for creating precomputed object with replicates
+time_precompute_rep <- system.time({
+  precomputed_temp_rep <- precompute_lgcp_graph(
+    graph = graph,
+    covariates = c("Intercept", "cov_lgcp"),
+    spde_model = rspde_model,
+    repl = ".all",
+    repl_col = "rep",
+    use_current_mesh = TRUE
+  )
+})
+
+# Create timing comparison table for replicates
+timing_replicates <- data.frame(
+  Method = c("Original (3 fits)", "Precomputation", "Precomputed (3 fits)", "Total precomputed"),
+  Time_seconds = c(
+    time_original_rep[["elapsed"]], 
+    time_precompute_rep[["elapsed"]], 
+    time_precomputed_rep[["elapsed"]],
+    time_precompute_rep[["elapsed"]] + time_precomputed_rep[["elapsed"]]
+  )
+)
+
+print("Timing comparison for replicated data:")
+print(timing_replicates)
+```
+
+### Using manual covariates with replicates
+
+For replicated data, manual covariates must include the replicate structure:
+
+```{r}
+# Create manual covariates for replicated data based on mesh nodes
+manual_covariates_rep <- data.frame(
+  Intercept = 1,
+  cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
+  .group = rep(1:30, each = nrow(graph$mesh$VtE))
+)
+
+# Precompute with manual covariates for replicates
+precomputed_manual_rep <- precompute_lgcp_graph(
+  graph = graph,
+  covariates = c("Intercept", "cov_lgcp"),
+  spde_model = rspde_model,
+  manual_covariates = manual_covariates_rep,
+  interpolate = FALSE,
+  repl = ".all",
+  repl_col = "rep",
+  use_current_mesh = TRUE
+)
+
+# Fit model using manual covariates for replicates
+time_manual_rep <- system.time({
+  fit_manual_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = rspde_model, replicate = field.repl), 
+                              graph = graph, precomputed_data = precomputed_manual_rep)
+})
+
+cat("Manual covariates (replicates) fit time:", time_manual_rep[["elapsed"]], "seconds\n")
+cat("Manual covariates (replicates) log marginal likelihood:", fit_manual_rep$mlik[1], "\n")
+```
+
+## Summary and speedup analysis
+
+Let's create a comprehensive comparison table and calculate speedups:
+
+```{r}
+# Calculate speedups
+speedup_single <- time_original[["elapsed"]] / (time_precompute[["elapsed"]] + time_precomputed[["elapsed"]])
+speedup_replicates <- time_original_rep[["elapsed"]] / (time_precompute_rep[["elapsed"]] + time_precomputed_rep[["elapsed"]])
+
+# If we do more fits, the speedup becomes more pronounced
+# Calculate break-even point (when precomputation becomes beneficial)
+breakeven_single <- time_precompute[["elapsed"]] / (time_original[["elapsed"]]/3 - time_precomputed[["elapsed"]]/3)
+breakeven_replicates <- time_precompute_rep[["elapsed"]] / (time_original_rep[["elapsed"]]/3 - time_precomputed_rep[["elapsed"]]/3)
+
+summary_table <- data.frame(
+  Scenario = c("Single replicate", "Multiple replicates"),
+  Original_3fits = c(time_original[["elapsed"]], time_original_rep[["elapsed"]]),
+  Precomputed_total = c(
+    time_precompute[["elapsed"]] + time_precomputed[["elapsed"]],
+    time_precompute_rep[["elapsed"]] + time_precomputed_rep[["elapsed"]]
+  ),
+  Speedup = c(speedup_single, speedup_replicates),
+  Breakeven_fits = pmax(1, ceiling(c(breakeven_single, breakeven_replicates)))
+)
+
+print("Summary of timing results:")
+print(summary_table)
+
+cat("\nKey observations:\n")
+cat("- Precomputation becomes beneficial when fitting", min(summary_table$Breakeven_fits), "or more models\n")
+cat("- For 3 fits, speedup ranges from", sprintf("%.2f", min(summary_table$Speedup)), "x to", sprintf("%.2f", max(summary_table$Speedup)), "x\n")
+cat("- The more models you fit, the greater the relative benefit of precomputation\n")
+```
+
+## When to use precomputation
+
+The `precompute_lgcp_graph()` function is most beneficial when:
+
+1. **Multiple model fits**: You plan to fit several models with different formulas but the same spatial structure
+2. **Model selection**: Comparing models with different covariate combinations
+3. **Sensitivity analysis**: Testing different covariate subsets while keeping the spatial component fixed
+
+**Important considerations**:
+- You can only use covariates that were included in the original precomputation
+- The spatial structure (mesh, integration points) is fixed during precomputation
+- The benefit increases with the number of model fits you perform
+- Manual covariates can be provided based on mesh nodes (`graph$mesh$VtE`) for exact covariate values at integration points
+- Use `clone_graph = FALSE` for maximum performance when you don't need to preserve the original graph state
+
+**Example use case**: If you have 10 potential covariates and want to compare all possible models with 1-3 covariates, precomputation would allow you to fit dozens of models very efficiently after the initial setup cost.
 
 ## References

@@ -15,6 +15,7 @@ lgcp_graph(
   new_n = NULL,
   repl = ".all",
   repl_col = ".group",
+  precomputed_data = NULL,
   ...
 )
 }
@@ -39,6 +40,8 @@ for manually specified integration points, or NULL to use automatic integration 
 \item{repl}{Vector of replicates to be used in the model. For all replicates, one must use ".all".}
 
 \item{repl_col}{Name of the column in the data that contains the replicates. Default is ".group".}
+
+\item{precomputed_data}{Optional precomputed object from precompute_lgcp_graph() for efficient refitting. If provided, the replicates in the precomputed data are used.}
 
 \item{...}{Additional arguments to be passed to inla}
 }

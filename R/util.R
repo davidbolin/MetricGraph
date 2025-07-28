@@ -2559,7 +2559,7 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
   }
   
   intrinsic_obj <- rSPDE::intrinsic.operators(tau = 1, beta = 1, C = graph$mesh$C, G = graph$mesh$G,
-                                              d = 1, graph = graph)
+                                              d = 1, graph = graph, scaling = 1)
 
   Aprd <- graph$fem_basis(integration_points[, c(".edge_number", ".distance_on_edge")])
   # Initialize an empty result data frame
@@ -2934,8 +2934,25 @@ graph_data_rspde_internal <- function(graph_rspde, name = "field",
     if(inherits(graph_rspde, "inla_rspde_spacetime")){
       time_basis <- ret[["data"]][[time]]
     }
-    blk_grp <- fmesher::fm_block(group_vec)
-    blk_rep <- fmesher::fm_block(repl_vec)
+
+    # Convert group_vec and repl_vec to numeric while preserving ordering
+    # Handle character vectors by creating a mapping to consecutive integers
+    if (is.character(group_vec) || is.factor(group_vec)) {
+      unique_groups <- unique(group_vec)
+      group_numeric <- match(group_vec, unique_groups)
+    } else {
+      group_numeric <- as.numeric(group_vec)
+    }
+    
+    if (is.character(repl_vec) || is.factor(repl_vec)) {
+      unique_repls <- unique(repl_vec)
+      repl_numeric <- match(repl_vec, unique_repls)
+    } else {
+      repl_numeric <- as.numeric(repl_vec)
+    }
+
+    blk_grp <- fmesher::fm_block(group_numeric)
+    blk_rep <- fmesher::fm_block(repl_numeric)
 
     if(inherits(graph_rspde, "inla_rspde_spacetime")){
       ret[["basis"]] <- graph_rspde$A(loc = loc_basis, time = time_basis)
