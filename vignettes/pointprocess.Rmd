@@ -1,6 +1,6 @@
 ---
 title: "Log-Gaussian Cox processes on metric graphs"
-author: "David Bolin, Alexandre B. Simas"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2023-01-30. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >

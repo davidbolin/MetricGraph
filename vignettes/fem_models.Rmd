@@ -1,6 +1,6 @@
 ---
 title: "Whittle--Matérn fields with general smoothness"
-author: "David Bolin, Alexandre B. Simas"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
