@@ -4761,8 +4761,7 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
       stop("no mesh provided")
     }
     nV <- dim(self$mesh$V)[1]
-    weights <- compute_C_matrix(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = FALSE)
-    self$mesh$weights <- rowSums(weights$C)
+    self$mesh$weights <- compute_mesh_weights(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV)
   },
 
   #' @description Deprecated - Computes observation matrix for mesh.

@@ -83,18 +83,17 @@ Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool pet
 // [[Rcpp::depends(RcppEigen)]]
 //
 
-//' @name compute_C_matrix
-//' @title Compute the C matrix
-//' @description Function used to compute the C matrix on metric graphs.
+//' @name compute_mesh_weights
+//' @title Compute the weights of the mesh nodes
+//' @description Function used to compute the weights of the mesh nodes on metric graphs.
 //' @param E [nx2 matrix] Matrix of edges
 //' @param h_e [n vector] Vector of h's
 //' @param nV [int] Number of vertices.
-//' @param petrov [bool] Whether to compute the Petrov-Galerkin matrix.
 //' @noRd
 //'
 // [[Rcpp::export]]
 
-Rcpp::List compute_C_matrix(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool petrov){
+Eigen::VectorXd compute_mesh_weights(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV){
 
   typedef Eigen::Triplet<double> Trip;
   std::vector<Trip> trp_C;
@@ -102,9 +101,6 @@ Rcpp::List compute_C_matrix(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool
   int v1,v2;
   int nE  = E.rows();
   Eigen::SparseMatrix<double> C(nV,nV);
-
-  std::vector<Trip> trp_Cpet;
-  Eigen::SparseMatrix<double> Cpet(nV,nE);
 
   for(i=0; i<nE; i++){
       v1 = E(i, 0)-1;
@@ -115,26 +111,19 @@ Rcpp::List compute_C_matrix(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool
       trp_C.push_back(Trip(v2,v2,h_e(i)/3));
       trp_C.push_back(Trip(v1,v2,h_e(i)/6));
       trp_C.push_back(Trip(v2,v1,h_e(i)/6));
-
-      if(petrov){
-        // Assembling Cpet
-        trp_Cpet.push_back(Trip(v1,i,h_e(i)/2));
-        trp_Cpet.push_back(Trip(v2,i,h_e(i)/2));
-
-      }
   }
 
   C.setFromTriplets(trp_C.begin(), trp_C.end());
 
-  Rcpp::List out;
-  out["C"] = C;
-
-  if(petrov){
-    Cpet.setFromTriplets(trp_Cpet.begin(), trp_Cpet.end());
-    out["Cpet"] = Cpet;
+  // Compute row sums
+  Eigen::VectorXd row_sums = Eigen::VectorXd::Zero(nV);
+  for (int k=0; k<C.outerSize(); ++k) {
+    for (Eigen::SparseMatrix<double>::InnerIterator it(C,k); it; ++it) {
+      row_sums(it.row()) += it.value();
+    }
   }
 
-  return(out);
+  return(row_sums);
 }
 
 // Obtain the coordinates of the projection of a point in a line. line = p0 + vt, point p

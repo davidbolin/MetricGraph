@@ -61,17 +61,16 @@ assemble_fem <- function(E, h_e, nV, petrov) {
     .Call(`_MetricGraph_assemble_fem`, E, h_e, nV, petrov)
 }
 
-#' @name compute_C_matrix
-#' @title Compute the C matrix
-#' @description Function used to compute the C matrix on metric graphs.
+#' @name compute_mesh_weights
+#' @title Compute the weights of the mesh nodes
+#' @description Function used to compute the weights of the mesh nodes on metric graphs.
 #' @param E [nx2 matrix] Matrix of edges
 #' @param h_e [n vector] Vector of h's
 #' @param nV [int] Number of vertices.
-#' @param petrov [bool] Whether to compute the Petrov-Galerkin matrix.
 #' @noRd
 #'
-compute_C_matrix <- function(E, h_e, nV, petrov) {
-    .Call(`_MetricGraph_compute_C_matrix`, E, h_e, nV, petrov)
+compute_mesh_weights <- function(E, h_e, nV) {
+    .Call(`_MetricGraph_compute_mesh_weights`, E, h_e, nV)
 }
 
 #' @name projectVecLine
