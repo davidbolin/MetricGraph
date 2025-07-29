@@ -66,6 +66,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_C_matrix
+Rcpp::List compute_C_matrix(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool petrov);
+RcppExport SEXP _MetricGraph_compute_C_matrix(SEXP ESEXP, SEXP h_eSEXP, SEXP nVSEXP, SEXP petrovSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type E(ESEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type h_e(h_eSEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    Rcpp::traits::input_parameter< bool >::type petrov(petrovSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_C_matrix(E, h_e, nV, petrov));
+    return rcpp_result_gen;
+END_RCPP
+}
 // projectVecLine
 Eigen::VectorXd projectVecLine(Eigen::MatrixXd lines, Eigen::MatrixXd points, int normalized);
 RcppExport SEXP _MetricGraph_projectVecLine(SEXP linesSEXP, SEXP pointsSEXP, SEXP normalizedSEXP) {
@@ -136,6 +150,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_construct_constraint_matrix", (DL_FUNC) &_MetricGraph_construct_constraint_matrix, 3},
     {"_MetricGraph_construct_directional_constraint_matrix", (DL_FUNC) &_MetricGraph_construct_directional_constraint_matrix, 6},
     {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 4},
+    {"_MetricGraph_compute_C_matrix", (DL_FUNC) &_MetricGraph_compute_C_matrix, 4},
     {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},
     {"_MetricGraph_interpolate2_aux", (DL_FUNC) &_MetricGraph_interpolate2_aux, 3},
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},

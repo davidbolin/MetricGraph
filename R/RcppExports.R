@@ -61,6 +61,19 @@ assemble_fem <- function(E, h_e, nV, petrov) {
     .Call(`_MetricGraph_assemble_fem`, E, h_e, nV, petrov)
 }
 
+#' @name compute_C_matrix
+#' @title Compute the C matrix
+#' @description Function used to compute the C matrix on metric graphs.
+#' @param E [nx2 matrix] Matrix of edges
+#' @param h_e [n vector] Vector of h's
+#' @param nV [int] Number of vertices.
+#' @param petrov [bool] Whether to compute the Petrov-Galerkin matrix.
+#' @noRd
+#'
+compute_C_matrix <- function(E, h_e, nV, petrov) {
+    .Call(`_MetricGraph_compute_C_matrix`, E, h_e, nV, petrov)
+}
+
 #' @name projectVecLine
 #' @title Projects SpatialPoints into SpatialLines
 #' @description Obtain the coordinates of the projection of points into lines.

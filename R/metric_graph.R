@@ -4751,6 +4751,20 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
     self$mesh$weights <- rowSums(self$mesh$C)
   },
 
+
+  #' @description Compute the weights of the mesh nodes.
+  #' @details Compute the weights of the mesh nodes.
+  #' @return No return value. Called for its side effects. The weights are stored in the `mesh` element in the
+  #' `metric_graph` object.
+  compute_mesh_weights = function() {
+    if (is.null(self$mesh)) {
+      stop("no mesh provided")
+    }
+    nV <- dim(self$mesh$V)[1]
+    weights <- compute_C_matrix(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = FALSE)
+    self$mesh$weights <- rowSums(weights$C)
+  },
+
   #' @description Deprecated - Computes observation matrix for mesh.
   #'
   #'  `r lifecycle::badge("deprecated")` in favour of `metric_graph$fem_basis()`.

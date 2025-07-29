@@ -80,6 +80,63 @@ Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool pet
     return(out);
 }
 
+// [[Rcpp::depends(RcppEigen)]]
+//
+
+//' @name compute_C_matrix
+//' @title Compute the C matrix
+//' @description Function used to compute the C matrix on metric graphs.
+//' @param E [nx2 matrix] Matrix of edges
+//' @param h_e [n vector] Vector of h's
+//' @param nV [int] Number of vertices.
+//' @param petrov [bool] Whether to compute the Petrov-Galerkin matrix.
+//' @noRd
+//'
+// [[Rcpp::export]]
+
+Rcpp::List compute_C_matrix(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool petrov){
+
+  typedef Eigen::Triplet<double> Trip;
+  std::vector<Trip> trp_C;
+  int i;
+  int v1,v2;
+  int nE  = E.rows();
+  Eigen::SparseMatrix<double> C(nV,nV);
+
+  std::vector<Trip> trp_Cpet;
+  Eigen::SparseMatrix<double> Cpet(nV,nE);
+
+  for(i=0; i<nE; i++){
+      v1 = E(i, 0)-1;
+      v2 = E(i, 1)-1;
+
+      // Assembling C
+      trp_C.push_back(Trip(v1,v1,h_e(i)/3));
+      trp_C.push_back(Trip(v2,v2,h_e(i)/3));
+      trp_C.push_back(Trip(v1,v2,h_e(i)/6));
+      trp_C.push_back(Trip(v2,v1,h_e(i)/6));
+
+      if(petrov){
+        // Assembling Cpet
+        trp_Cpet.push_back(Trip(v1,i,h_e(i)/2));
+        trp_Cpet.push_back(Trip(v2,i,h_e(i)/2));
+
+      }
+  }
+
+  C.setFromTriplets(trp_C.begin(), trp_C.end());
+
+  Rcpp::List out;
+  out["C"] = C;
+
+  if(petrov){
+    Cpet.setFromTriplets(trp_Cpet.begin(), trp_Cpet.end());
+    out["Cpet"] = Cpet;
+  }
+
+  return(out);
+}
+
 // Obtain the coordinates of the projection of a point in a line. line = p0 + vt, point p
 //' @name proj_vec
 //' @noRd

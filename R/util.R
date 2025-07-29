@@ -2693,6 +2693,10 @@ create_integration_points <- function(graph,
     if (is.null(graph$mesh)) {
       stop("No mesh found in the graph. Either build a mesh first or set use_current_mesh = FALSE")
     }
+
+    if(is.null(graph$mesh$weights)){
+      graph$compute_mesh_weights()
+    }
     
     # Extract mesh points and weights
     int_points <- data.frame(
@@ -2720,6 +2724,10 @@ create_integration_points <- function(graph,
       graph$compute_fem()
     }
     
+    if(is.null(graph$mesh$weights)){
+      graph$compute_mesh_weights()
+    }
+
     # Extract mesh points and weights
     int_points <- data.frame(
       .edge_number = graph$mesh$VtE[,1],

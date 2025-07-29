@@ -125,6 +125,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
+\item \href{#method-metric_graph-compute_mesh_weights}{\code{metric_graph$compute_mesh_weights()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
 \item \href{#method-metric_graph-fem_basis}{\code{metric_graph$fem_basis()}}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
@@ -1883,6 +1884,24 @@ No return value. Called for its side effects. The finite element
 matrices \code{C}, \code{G} and \code{B} are stored in the \code{mesh} element in the
 \code{metric_graph} object. If \code{petrov=TRUE}, the corresponding Petrov-Galerkin
 matrices are stored in \code{Cpet} and \code{Gpet}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_mesh_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_mesh_weights}{}}}
+\subsection{Method \code{compute_mesh_weights()}}{
+Compute the weights of the mesh nodes.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_mesh_weights()}\if{html}{\out{</div>}}
+}
+
+\subsection{Details}{
+Compute the weights of the mesh nodes.
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects. The weights are stored in the \code{mesh} element in the
+\code{metric_graph} object.
 }
 }
 \if{html}{\out{<hr>}}
