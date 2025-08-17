@@ -6439,60 +6439,21 @@ return(mapview_output)
 
   #Compute PtE for mesh given PtE for graph
   PtE_to_mesh = function(PtE){
+    # Use C++ implementation for better performance
     Vertexes <- self$VtEfirst()
-    VtE <- rbind(Vertexes, self$mesh$PtE)
-    PtE_update <- matrix(0, dim(PtE)[1], 2)
-    for (i in 1:dim(PtE)[1]) {
-      ei <- PtE[i, 1] #extract edge
-
-      #extract distances of all mesh nodes on edge including end points
-      ind.nodes <- which(self$mesh$PtE[,1] == ei)
-      dist.nodes <- self$mesh$PtE[ind.nodes,2]
-      if(length(ind.nodes)>0) {
-        ind <- c(self$E[ei,1], ind.nodes + self$nV, self$E[ei,2])
-        dists <- c(0,dist.nodes,1)
-      } else {
-        ind <- c(self$E[ei,1], self$E[ei,2])
-        dists <- c(0,1)
-      }
-      
-      ind2 <- sort(sort(abs(dists - PtE[i, 2]), index.return = TRUE)$ix[1:2])
-      v1 <- ind[ind2[1]] #vertex "before" the point
-      v2 <- ind[ind2[2]] #vertex "after" the point
-      d1 <- dists[ind2[1]] #distance on the edge of the point before
-      d2 <- dists[ind2[2]] #distance on the edge of the point after
-
-      #find the "edge" in the mesh on which the point is
-      if(v1 != v2){
-        # if they are different, only consider edges with different vertices as endpoints
-        valid_ind <- (rowSums(self$mesh$E == v1) > 0) & (rowSums(self$mesh$E == v2) > 0)
-        e <- which(valid_ind & (rowSums(self$mesh$E == v1) + rowSums(self$mesh$E == v2) == 2))
-      } else{
-        e <- which(rowSums((self$mesh$E == v1)) == 2)
-      }
-      # Handle the case of multiple edges
-      # In the case the edge lengths are different, we can identify
-      # In the case they are equal, we cannot identify, but it does not matter, as there is no difference then.
-      e_bkp <- e
-      if(length(e)>1){
-       ind <- which(self$edge_lengths[ei] == self$mesh$h_e[e])
-       e <- e[ind]
-       e <- e[1]
-      }
-      # a loop might have been split into smaller parts, in this case, we simply get the first
-      if(self$edge_lengths[ei] == sum(self$mesh$h_e[e_bkp])){
-        e <- e_bkp[which(self$mesh$E[e_bkp,1] == v1)]
-        e <- e[1]
-      }
-      for(ei in e){
-        if (self$mesh$E[ei, 1] == v1) { #edge starts in the vertex before
-          d <- (PtE[i, 2] - d1)/(d2 - d1)
-        } else {
-          d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
-        }
-          PtE_update[i, ] <- c(e, d)
-        }
-    } 
+    
+    # Call the C++ function
+    PtE_update <- PtE_to_mesh_cpp(
+      PtE = PtE,
+      VtE = Vertexes,
+      mesh_PtE = self$mesh$PtE,
+      E = self$E,
+      mesh_E = self$mesh$E,
+      edge_lengths = self$edge_lengths,
+      mesh_h_e = self$mesh$h_e,
+      nV = self$nV
+    )
+    
     return(PtE_update)
   },
 

@@ -132,6 +132,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// PtE_to_mesh_cpp
+Eigen::MatrixXd PtE_to_mesh_cpp(const Eigen::MatrixXd& PtE, const Eigen::MatrixXd& VtE, const Eigen::MatrixXd& mesh_PtE, const Eigen::MatrixXi& E, const Eigen::MatrixXi& mesh_E, const Eigen::VectorXd& edge_lengths, const Eigen::VectorXd& mesh_h_e, int nV);
+RcppExport SEXP _MetricGraph_PtE_to_mesh_cpp(SEXP PtESEXP, SEXP VtESEXP, SEXP mesh_PtESEXP, SEXP ESEXP, SEXP mesh_ESEXP, SEXP edge_lengthsSEXP, SEXP mesh_h_eSEXP, SEXP nVSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type PtE(PtESEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type VtE(VtESEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type mesh_PtE(mesh_PtESEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type E(ESEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type mesh_E(mesh_ESEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type edge_lengths(edge_lengthsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type mesh_h_e(mesh_h_eSEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    rcpp_result_gen = Rcpp::wrap(PtE_to_mesh_cpp(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV));
+    return rcpp_result_gen;
+END_RCPP
+}
 // selected_inv_cpp
 Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
 RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
@@ -154,6 +172,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_interpolate2_aux", (DL_FUNC) &_MetricGraph_interpolate2_aux, 3},
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
     {"_MetricGraph_generate_mesh", (DL_FUNC) &_MetricGraph_generate_mesh, 6},
+    {"_MetricGraph_PtE_to_mesh_cpp", (DL_FUNC) &_MetricGraph_PtE_to_mesh_cpp, 8},
     {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };

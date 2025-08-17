@@ -111,6 +111,23 @@ generate_mesh <- function(n_edges, edge_lengths, n_e, E, ind, continuous) {
     .Call(`_MetricGraph_generate_mesh`, n_edges, edge_lengths, n_e, E, ind, continuous)
 }
 
+#' @name PtE_to_mesh_cpp
+#' @title Convert PtE for mesh given PtE for graph
+#' @description C++ implementation of PtE_to_mesh function
+#' @param PtE [nx2 matrix] Matrix with edge indices and positions
+#' @param VtE [nx2 matrix] Matrix from VtEfirst()
+#' @param mesh_PtE [nx2 matrix] Mesh PtE matrix
+#' @param E [nx2 matrix] Graph edge matrix
+#' @param mesh_E [nx2 matrix] Mesh edge matrix
+#' @param edge_lengths [n vector] Vector of edge lengths
+#' @param mesh_h_e [n vector] Vector of mesh edge lengths
+#' @param nV [int] Number of vertices
+#' @noRd
+#'
+PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV) {
+    .Call(`_MetricGraph_PtE_to_mesh_cpp`, PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV)
+}
+
 selected_inv_cpp <- function(Q) {
     .Call(`_MetricGraph_selected_inv_cpp`, Q)
 }
