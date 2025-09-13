@@ -377,8 +377,6 @@ precompute_lgcp_graph <- function(graph,
                              group = repl_col,
                              verbose = 0)          
   
-  graph_bkp2 <<- graph_bkp
-  
   if(type_model == "exact"){
       spde_model <- graph_spde(graph_bkp, alpha = spde_model$alpha, parameterization = spde_model$parameterization, stationary_endpoints = spde_model$args$stationary_endpoints, directional = spde_model$directional, start_range = spde_model$args$start_range, start_kappa = spde_model$args$start_kappa, prior_kappa = spde_model$args$prior_kappa, prior_sigma = spde_model$args$prior_sigma,
       start_tau = spde_model$args$start_tau, prior_tau = spde_model$args$prior_tau, factor_start_range = spde_model$args$factor_start_range, 

@@ -1786,17 +1786,28 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Computes shortest path distances between the vertices in the
   #' graph
-  #' @param full Should the geodesic distances be computed for all
-  #' the available locations? If `FALSE`, it will be computed
-  #' separately for the locations of each group.
   #' @param obs Should the geodesic distances be computed at the observation
-  #' locations?
+  #' locations or only at vertices?
+  #' @param include_vertices If `obs` is `TRUE`, should the vertex locations be included in the resulting distance matrix?
+  #' @param all_groups Should the geodesic distances be computed for all
+  #' the available locations accross all groups? If `FALSE`, it will be computed
+  #' separately for the locations of each group.
   #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
   #' @param verbose Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @param full `r lifecycle::badge("deprecated")` Use `all_groups` instead.
   #' @return No return value. Called for its side effects. The computed geodesic
   #' distances are stored in the `geo_dist` element of the `metric_graph` object.
-  compute_geodist = function(full = FALSE, obs = TRUE, group = NULL, verbose = 0) {
+  compute_geodist = function(obs = TRUE, 
+                              include_vertices = FALSE, 
+                              all_groups = FALSE, 
+                              group = NULL, 
+                              verbose = 0,
+                              full = lifecycle::deprecated()) {
+    if(lifecycle::is_present(full)){
+      lifecycle::deprecate_warn("1.5.0.9000", "compute_geodist(full)", "compute_geodist(all_groups)")
+      all_groups <- full
+    }
     if(is.null(self$geo_dist)){
       self$geo_dist <- list()
     }
@@ -1824,10 +1835,10 @@ metric_graph <-  R6Class("metric_graph",
       if(verbose == 2){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
-    } else if(full){
+    } else if(all_groups){
       PtE_full <- self$get_PtE()
       self$geo_dist[[".complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
-                                                              normalized = TRUE, verbose = verbose)
+                                                              normalized = TRUE, verbose = verbose, include_vertices = include_vertices)
     } else{
       if(is.null(group)){
           group <- unique(private$data[[".group"]])
@@ -1838,7 +1849,7 @@ metric_graph <-  R6Class("metric_graph",
           PtE_group <- cbind(data_grp[[".edge_number"]][idx_notna],
                      data_grp[[".distance_on_edge"]][idx_notna])
           self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group,
-                                                              normalized = TRUE, verbose = verbose)
+                                                              normalized = TRUE, verbose = verbose, include_vertices = include_vertices)
       }
     }
   },
@@ -3443,6 +3454,7 @@ metric_graph <-  R6Class("metric_graph",
                               normalized = FALSE,
                               clear_obs = FALSE,
                               tibble = FALSE,
+                              pkg_spatial = NULL,
                               tolerance = max(self$edge_lengths)/2,
                               duplicated_strategy = "closest",
                               include_distance_to_graph = TRUE,

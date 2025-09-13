@@ -613,27 +613,33 @@ Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(
-  full = FALSE,
   obs = TRUE,
+  include_vertices = FALSE,
+  all_groups = FALSE,
   group = NULL,
-  verbose = 0
+  verbose = 0,
+  full = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{full}}{Should the geodesic distances be computed for all
-the available locations? If \code{FALSE}, it will be computed
-separately for the locations of each group.}
-
 \item{\code{obs}}{Should the geodesic distances be computed at the observation
-locations?}
+locations or only at vertices?}
+
+\item{\code{include_vertices}}{If \code{obs} is \code{TRUE}, should the vertex locations be included in the resulting distance matrix?}
+
+\item{\code{all_groups}}{Should the geodesic distances be computed for all
+the available locations accross all groups? If \code{FALSE}, it will be computed
+separately for the locations of each group.}
 
 \item{\code{group}}{Vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
 
 \item{\code{verbose}}{Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{full}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{all_groups} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1244,6 +1250,7 @@ Add observations to the metric graph.
   normalized = FALSE,
   clear_obs = FALSE,
   tibble = FALSE,
+  pkg_spatial = NULL,
   tolerance = max(self$edge_lengths)/2,
   duplicated_strategy = "closest",
   include_distance_to_graph = TRUE,
