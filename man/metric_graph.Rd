@@ -1250,7 +1250,6 @@ Add observations to the metric graph.
   normalized = FALSE,
   clear_obs = FALSE,
   tibble = FALSE,
-  pkg_spatial = NULL,
   tolerance = max(self$edge_lengths)/2,
   duplicated_strategy = "closest",
   include_distance_to_graph = TRUE,
