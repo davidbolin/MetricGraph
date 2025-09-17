@@ -6451,10 +6451,16 @@ return(mapview_output)
 
   #Compute PtE for mesh given PtE for graph
   PtE_to_mesh = function(PtE){
-    # Use C++ implementation for better performance
     Vertexes <- self$VtEfirst()
-    
-    # Call the C++ function
+    PtE <- as.matrix(PtE)
+    Vertexes <- as.matrix(Vertexes)
+    self$mesh$PtE <- as.matrix(self$mesh$PtE)
+    self$E <- as.matrix(self$E)
+    self$mesh$E <- as.matrix(self$mesh$E)
+    self$edge_lengths <- as.vector(self$edge_lengths)
+    self$mesh$h_e <- as.vector(self$mesh$h_e)
+    self$nV <- as.integer(self$nV)
+
     PtE_update <- PtE_to_mesh_cpp(
       PtE = PtE,
       VtE = Vertexes,
