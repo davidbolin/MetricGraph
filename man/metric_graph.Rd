@@ -136,6 +136,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-plot_movie}{\code{metric_graph$plot_movie()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
+\item \href{#method-metric_graph-update_graph}{\code{metric_graph$update_graph()}}
 \item \href{#method-metric_graph-coordinates}{\code{metric_graph$coordinates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
@@ -1011,7 +1012,8 @@ Adds observation locations as vertices in the graph.
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$observation_to_vertex(
   mesh_warning = TRUE,
   verbose = 0,
-  tolerance = deprecated()
+  tolerance = deprecated(),
+  parallel = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -1023,6 +1025,8 @@ Adds observation locations as vertices in the graph.
 \item{\code{verbose}}{Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
 
 \item{\code{tolerance}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}. Not used anymore}
+
+\item{\code{parallel}}{Logical. If TRUE, use parallel processing for edge splitting. Default is FALSE. Uses all available cores minus 1, with fallback to sequential processing if parallel package is not available.}
 
 \item{\code{share_weights}}{Should the same weight be shared among the split edges? If \code{FALSE}, the weights will be removed, and a common weight given by 1 will be given.}
 }
@@ -2306,6 +2310,33 @@ Returns a copy of the initial metric graph.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-update_graph"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-update_graph}{}}}
+\subsection{Method \code{update_graph()}}{
+Update an older version metric graph to the current package version.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$update_graph(verbose = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{Print progress messages. Default is TRUE.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+This function creates a new metric_graph object from an existing one,
+preserving all data, edge weights, mesh, distances, and other components while
+ensuring compatibility with the current package version. The new graph is created
+with minimal changes by disabling merges and other transformations.
+}
+
+\subsection{Returns}{
+A new \code{metric_graph} object compatible with the current package version.
 }
 }
 \if{html}{\out{<hr>}}

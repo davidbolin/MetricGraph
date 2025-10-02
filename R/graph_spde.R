@@ -34,6 +34,8 @@
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
 #' @param verbose Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.
+#' @param parallel Logical. If TRUE, use parallel processing for turning observations into vertices. Default is FALSE. Uses all available cores minus 1, with fallback to sequential processing if parallel package is not available.
+#' @param n_cores Integer. Number of cores to use for parallel processing. If NULL (default), uses all available cores minus 1. Only used when parallel = TRUE.
 #'
 #' @return An 'INLA' object.
 #' @details
@@ -74,7 +76,9 @@ graph_spde <- function(graph_object,
                        type_start_range_bbox = "diag",
                        shared_lib = "detect",
                        debug = FALSE,
-                       verbose = 0){
+                       verbose = 0,
+                       parallel = FALSE,
+                       n_cores = NULL){
 
   if(!(alpha%in%c(1,2))){
     stop("alpha must be either 1 or 2!")
@@ -87,7 +91,7 @@ graph_spde <- function(graph_object,
   }
 
   if(!is.null(graph_spde$.__enclos_env__$private$data)){
-    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
+    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose, parallel = parallel, n_cores = n_cores)
   }
 
   parameterization <- parameterization[[1]]
@@ -1462,7 +1466,7 @@ bru_graph_rep <- function(repl, graph_spde, repl_col){
 #' @param return_original_order Should the predictions be returned in the
 #' original order?
 #' @param num.threads	Specification of desired number of threads for parallel
-#' computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden to "1:1"
+#' computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden to "16:1"
 #' @param include	Character vector of component labels that are needed by the
 #' predictor expression; Default: NULL (include all components that are not
 #' explicitly excluded)
@@ -1736,7 +1740,7 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' unit interval to be passed to stats::quantile.
 #' @param num.threads	Specification of desired number of threads for parallel
 #' computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden
-#' to "1:1"
+#' to "16:1"
 #' @param include	Character vector of component labels that are needed by the
 #' predictor expression; Default: NULL (include all components that are not
 #' explicitly excluded)
