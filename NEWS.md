@@ -1,7 +1,7 @@
 # MetricGraph (development version)
-
-# MetricGraph 1.5.0.9000
 * Added `precompute_lgcp_graph()` function to precompute expensive quantities for LGCP models, allowing efficient refitting with different formulas using the same covariates and spatial structure.
+* Added `update_graph` function and method for new graphs, to allow one to easily update the graph object into newer versions of the package.
+* Improved `observation_to_vertex` method.
 
 # MetricGraph 1.5.0
 * Several optimization improvements for the models in `graph_lme`.
