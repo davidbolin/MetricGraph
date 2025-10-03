@@ -1025,7 +1025,7 @@ spde_metric_graph_result <- function(inla, name,
     return(rSPDE::rspde.result(inla, name, metric_graph_spde))
   }
 
-  if(!inherits(metric_graph_spde, "inla_metric_graph_spde")){
+  if(!inherits(metric_graph_spde, c("inla_metric_graph_spde", "inla_metric_graph_lgcp_spde"))){
     stop("You should provide an inla_metric_graph_spde object!")
   }
 

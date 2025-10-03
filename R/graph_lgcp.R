@@ -717,7 +717,7 @@ lgcp_graph <- function(formula,
                                      group = repl_col,
                                      verbose = 0)
 
-          if(inherits(aux_spde_model, "inla_metric_graph_spde") || inherits(aux_spde_model, "inla_metric_graph_lgcp_spde")){
+          if(inherits(aux_spde_model, c("inla_metric_graph_spde", "inla_metric_graph_lgcp_spde"))){
             aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization, stationary_endpoints = aux_spde_model$args$stationary_endpoints, directional = aux_spde_model$directional, start_range = aux_spde_model$args$start_range, start_kappa = aux_spde_model$args$start_kappa, prior_kappa = aux_spde_model$args$prior_kappa, prior_sigma = aux_spde_model$args$prior_sigma,
       start_tau = aux_spde_model$args$start_tau, prior_tau = aux_spde_model$args$prior_tau, factor_start_range = aux_spde_model$args$factor_start_range, 
       type_start_range_bbox = aux_spde_model$args$type_start_range_bbox, shared_lib = aux_spde_model$args$shared_lib, debug = aux_spde_model$args$debug,
