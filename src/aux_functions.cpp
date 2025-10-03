@@ -281,22 +281,28 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
 //' @name compute_length
 //' @title Compute length
 //' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
-//' @param coords nx2 matrix Matrix of the points of the lines
+//' The function expects coordinates with at least 2 columns (x, y). If more columns are provided,
+//' only the first two columns (x, y) are used for the calculation.
+//' @param coords nxk matrix Matrix of the points of the lines (k >= 2, typically nx2)
 //' @noRd
 //'
 // [[Rcpp::export]]
-double compute_length(Eigen::MatrixXd coords) {
-
-    double arclength = 0;
-
-    int i;
-
-    for(i = 0 ; i < coords.rows()-1; i++){
-         Eigen::VectorXd v = coords.row(i+1) - coords.row(i);
-         arclength = arclength + v.norm();
-     }
-
-    return(arclength);
+double compute_length(const Eigen::MatrixXd& coords) {
+  // Safety checks
+  if (coords.rows() < 2 || coords.cols() < 2) {
+      return 0.0;
+  }
+  
+  double arclength = 0.0;
+  
+  // Compute sum of Euclidean distances between consecutive points
+  for (int i = 0; i < coords.rows() - 1; ++i) {
+      const double dx = coords(i + 1, 0) - coords(i, 0);
+      const double dy = coords(i + 1, 1) - coords(i, 1);
+      arclength += std::sqrt(dx * dx + dy * dy);
+  }
+  
+  return arclength;
 }
 
 

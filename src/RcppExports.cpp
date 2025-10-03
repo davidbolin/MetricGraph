@@ -106,12 +106,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_length
-double compute_length(Eigen::MatrixXd coords);
+double compute_length(const Eigen::MatrixXd& coords);
 RcppExport SEXP _MetricGraph_compute_length(SEXP coordsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type coords(coordsSEXP);
     rcpp_result_gen = Rcpp::wrap(compute_length(coords));
     return rcpp_result_gen;
 END_RCPP

@@ -100,7 +100,9 @@ interpolate2_aux <- function(lines, pos, normalized = 0L) {
 #' @name compute_length
 #' @title Compute length
 #' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
-#' @param coords nx2 matrix Matrix of the points of the lines
+#' The function expects coordinates with at least 2 columns (x, y). If more columns are provided,
+#' only the first two columns (x, y) are used for the calculation.
+#' @param coords nxk matrix Matrix of the points of the lines (k >= 2, typically nx2)
 #' @noRd
 #'
 compute_length <- function(coords) {
