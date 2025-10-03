@@ -5,7 +5,7 @@ testthat::skip_on_cran()
     testthat::skip(message = 'INLA package is not installed. (see www.r-inla.org/download-install)')
   
   old_threads <- INLA::inla.getOption("num.threads")
-  INLA::inla.setOption(num.threads = "1:1")
+  INLA::inla.setOption(num.threads = "16:1")
 
 
 edge1 <- rbind(c(0,0),c(1,0))
@@ -77,6 +77,8 @@ spde_model_check <- graph_spde(graph, start_kappa = kappa,
                                     start_tau = tau,
                                     parameterization = "spde")
 
+class(spde_model_check$f$cgeneric) <- c(class(spde_model_check$f$cgeneric), "inla.cgeneric")
+
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
 
 expect_equal(sum((Q_chk@i - Q@i)^2), 0)
@@ -86,6 +88,7 @@ expect_equal(sum((Q_chk@x-Q@x)^2), 0)
   INLA::inla.setOption(num.threads = old_threads)
 })
 
+
 test_that("Check cgeneric precision matrices for alpha = 2", {
 set.seed(1)
 testthat::skip_on_cran()
@@ -93,7 +96,7 @@ testthat::skip_on_cran()
     testthat::skip(message = 'INLA package is not installed. (see www.r-inla.org/download-install)')
   
   old_threads <- INLA::inla.getOption("num.threads")
-  INLA::inla.setOption(num.threads = "1:1")
+  INLA::inla.setOption(num.threads = "16:1")
 
 
 edge1 <- rbind(c(0,0),c(1,0))
@@ -148,6 +151,8 @@ spde_model_check <- graph_spde(graph, alpha = 2, start_kappa = kappa,
                                     start_sigma = sigma,
                                     parameterization = "spde", stationary_endpoints="none")
 
+class(spde_model_check$f$cgeneric) <- c(class(spde_model_check$f$cgeneric), "inla.cgeneric")                                    
+
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
 
 expect_equal(sum((Q_chk@i - Q@i)^2), 0)
@@ -167,6 +172,8 @@ Q <- Tc%*%Q%*%t(Tc)
 spde_model_check <- graph_spde(graph, alpha = 2, start_kappa = kappa,
                                     start_sigma = sigma,
                                     parameterization = "spde", stationary_endpoints="all")
+
+class(spde_model_check$f$cgeneric) <- c(class(spde_model_check$f$cgeneric), "inla.cgeneric")
 
 Q_chk <- INLA::inla.cgeneric.q(spde_model_check)$Q
 

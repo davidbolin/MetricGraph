@@ -3,8 +3,8 @@
 #'
 #' This function simulates point patterns from a log-Gaussian Cox process (LGCP) 
 #' driven by Whittle-Matérn Gaussian random fields on metric graphs. The intensity 
-#' function is modeled as λ(s) = exp(β + u(s)), where β is an intercept parameter 
-#' and u(s) is a Gaussian field with Whittle-Matérn covariance.
+#' function is modeled as \\eqn{\\lambda(s) = \\exp(\\beta + u(s))}{λ(s) = exp(β + u(s))}, where \\eqn{\\beta}{β} is an intercept parameter 
+#' and \\eqn{u(s)}{u(s)} is a Gaussian field with Whittle-Matérn covariance.
 #'
 #' @param n Integer. Number of replicate point patterns to simulate. Default is 1.
 #' @param intercept Numeric scalar or vector. Mean value(s) of the log-intensity 
@@ -33,12 +33,12 @@
 #' \enumerate{
 #'   \item Simulate the Gaussian random field u(s) using finite element methods
 #'   \item Generate point locations using acceptance-rejection sampling from the 
-#'         intensity λ(s) = exp(β + u(s))
+#'         intensity \\eqn{\\lambda(s) = \\exp(\\beta + u(s))}{λ(s) = exp(β + u(s))}
 #' }
 #'
 #' The Gaussian field is characterized by the SPDE:
-#' (κ² - Δ)^(α/2) τ u = W
-#' where κ, τ are derived from the range and sigma parameters, and W is white noise.
+#' \\eqn{(\\kappa^2 - \\Delta)^{\\alpha/2} \\tau u = \\mathcal{W}}{(κ² - Δ)^(α/2) τ u = W}
+#' where \\eqn{\\kappa, \\tau}{κ, τ} are derived from the range and sigma parameters, and \\eqn{\\mathcal{W}}{W} is white noise.
 #'
 #' @examples
 #' \dontrun{
@@ -461,7 +461,7 @@ precompute_lgcp_graph <- function(graph,
 #'
 #' @details
 #' The function implements LGCP modeling using the approach of Simpson et al. (2016), 
-#' where the log-Gaussian Cox process with intensity λ(s) = exp(η(s)) is 
+#' where the log-Gaussian Cox process with intensity \\eqn{\\lambda(s) = \\exp(\\eta(s))}{λ(s) = exp(η(s))} is 
 #' approximated using a Poisson likelihood with carefully constructed integration 
 #' points and weights.
 #'

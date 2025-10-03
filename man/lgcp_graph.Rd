@@ -83,7 +83,7 @@ refitting using precomputed quantities.
 }
 \details{
 The function implements LGCP modeling using the approach of Simpson et al. (2016),
-where the log-Gaussian Cox process with intensity λ(s) = exp(η(s)) is
+where the log-Gaussian Cox process with intensity \\eqn{\\lambda(s) = \\exp(\\eta(s))}{λ(s) = exp(η(s))} is
 approximated using a Poisson likelihood with carefully constructed integration
 points and weights.
 
