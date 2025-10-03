@@ -584,7 +584,7 @@ lgcp_graph <- function(formula,
           for (component in formula_components) {
             if (!is.null(component) && !component$character) {
               # Validate model class
-              valid_classes <- c("inla_metric_graph_spde", "rspde_metric_graph")
+              valid_classes <- c("inla_metric_graph_spde", "rspde_metric_graph", "inla_metric_graph_lgcp_spde")
               if (!any(valid_classes == component$model)) {
                 stop(paste0("Model for '", component$covariate, 
                            "' must be one of: '", 
