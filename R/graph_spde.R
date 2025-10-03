@@ -34,8 +34,6 @@
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
 #' @param verbose Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.
-#' @param parallel Logical. If TRUE, use parallel processing for turning observations into vertices. Default is FALSE. Uses all available cores minus 1, with fallback to sequential processing if parallel package is not available.
-#' @param n_cores Integer. Number of cores to use for parallel processing. If NULL (default), uses all available cores minus 1. Only used when parallel = TRUE.
 #'
 #' @return An 'INLA' object.
 #' @details
@@ -76,9 +74,7 @@ graph_spde <- function(graph_object,
                        type_start_range_bbox = "diag",
                        shared_lib = "detect",
                        debug = FALSE,
-                       verbose = 0,
-                       parallel = FALSE,
-                       n_cores = NULL){
+                       verbose = 0){
 
   if(!(alpha%in%c(1,2))){
     stop("alpha must be either 1 or 2!")
@@ -91,7 +87,7 @@ graph_spde <- function(graph_object,
   }
 
   if(!is.null(graph_spde$.__enclos_env__$private$data)){
-    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose, parallel = parallel, n_cores = n_cores)
+    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
   }
 
   parameterization <- parameterization[[1]]
