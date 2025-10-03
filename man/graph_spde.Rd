@@ -7,6 +7,7 @@
 graph_spde(
   graph_object,
   alpha = 1,
+  LGCP = FALSE,
   directional = FALSE,
   stationary_endpoints = "all",
   parameterization = c("matern", "spde"),
@@ -29,6 +30,8 @@ graph_spde(
 \item{graph_object}{A \code{metric_graph} object.}
 
 \item{alpha}{The order of the SPDE.}
+
+\item{LGCP}{Logical. If TRUE, the model will be used as a latent model for a Log-Gaussian Cox Process. Default is FALSE.}
 
 \item{directional}{Should a directional model be used? Currently only implemented for \code{alpha=1}.}
 

@@ -205,10 +205,10 @@ graph$plot_function(X = lgcp_sample$u, vertex_size = 0)
 ```
 
 
-We can also fit the model using the exact model by using the `graph_spde()` function as the SPDE model:
+We can also fit the model using the exact model by using the `graph_spde()` function as the SPDE model, and we also set the `LGCP` argument to `TRUE`:
 
 ```{r}
-spde_model <- graph_spde(graph, alpha = 1)
+spde_model <- graph_spde(graph, alpha = 1, LGCP = TRUE)
 ```
 
 Let us now fit the model:

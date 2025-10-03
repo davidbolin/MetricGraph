@@ -6,6 +6,7 @@
 #'
 #' @param graph_object A `metric_graph` object.
 #' @param alpha The order of the SPDE.
+#' @param LGCP Logical. If TRUE, the model will be used as a latent model for a Log-Gaussian Cox Process. Default is FALSE.
 #' @param directional Should a directional model be used? Currently only implemented for `alpha=1`. 
 #' @param stationary_endpoints Which vertices of degree 1 should contain
 #' stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.
@@ -59,6 +60,7 @@
 #' @export
 graph_spde <- function(graph_object,
                        alpha = 1,
+                       LGCP = FALSE,
                        directional = FALSE,
                        stationary_endpoints = "all",
                        parameterization = c("matern", "spde"),
@@ -75,6 +77,34 @@ graph_spde <- function(graph_object,
                        shared_lib = "detect",
                        debug = FALSE,
                        verbose = 0){
+
+  if (LGCP) {
+    result <- list(
+      graph_object = graph_object,
+      alpha = alpha,
+      LGCP = LGCP,
+      directional = directional,
+      stationary_endpoints = stationary_endpoints,
+      parameterization = parameterization,
+      args = list(
+        start_range = start_range,
+        prior_range = prior_range,
+        start_kappa = start_kappa,
+        prior_kappa = prior_kappa,
+        start_sigma = start_sigma,
+        prior_sigma = prior_sigma,
+        start_tau = start_tau,
+        prior_tau = prior_tau,
+        factor_start_range = factor_start_range,
+        type_start_range_bbox = type_start_range_bbox,
+        shared_lib = shared_lib,
+        debug = debug,
+        verbose = verbose
+      )
+    )
+    class(result) <- "inla_metric_graph_lgcp_spde"
+    return(result)
+  }
 
   if(!(alpha%in%c(1,2))){
     stop("alpha must be either 1 or 2!")
