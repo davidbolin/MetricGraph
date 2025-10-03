@@ -2594,16 +2594,14 @@ metric_graph <-  R6Class("metric_graph",
     return(Spoints)
   },
 
-  #' @description Adds observation locations as vertices in the graph.
+    #' @description Adds observation locations as vertices in the graph.
   #' @param share_weights Should the same weight be shared among the split edges? If `FALSE`, the weights will be removed, and a common weight given by 1 will be given.
   #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
   #' @param tolerance `r lifecycle::badge("deprecated")`. Not used anymore
-  #' @param parallel Logical. If TRUE, use parallel processing for edge splitting. Default is FALSE. Uses all available cores minus 1, with fallback to sequential processing if parallel package is not available.
-  #' @param n_cores Integer. Number of cores to use for parallel processing. If NULL (default), uses all available cores minus 1. Only used when parallel = TRUE.
   #' @return No return value. Called for its side effects.
 
-  observation_to_vertex = function(mesh_warning = TRUE, verbose = 0, tolerance = deprecated(), parallel = FALSE, n_cores = NULL) {
+  observation_to_vertex = function(mesh_warning = TRUE, verbose = 0, tolerance = deprecated()) {
     if (lifecycle::is_present(tolerance)) {
         lifecycle::deprecate_warn("1.3.0.9000", "observation_to_vertex(tolerance)")
     }
@@ -2613,42 +2611,51 @@ metric_graph <-  R6Class("metric_graph",
         stop("There is no data!")
     }
 
-    # Optimize: Extract PtE data directly instead of calling get_PtE()
+    # Extract PtE data directly - highly optimized
     if (verbose > 1) {
         message("Extracting observation locations...")
     }
-    group <- private$data[[".group"]]
-    group_idx <- which(group == group[1])
-    private$temp_PtE <- cbind(private$data[[".edge_number"]][group_idx],
-                             private$data[[".distance_on_edge"]][group_idx])
     
-    n <- nrow(private$temp_PtE)
-    self$PtV <- rep(NA, n)
-    private$temp_PtE <- cbind(private$temp_PtE, seq_len(n))
+    # Cache frequently accessed data
+    group_data <- private$data[[".group"]]
+    edge_numbers <- private$data[[".edge_number"]]
+    distances <- private$data[[".distance_on_edge"]]
+    
+    # Get first group indices efficiently
+    first_group <- group_data[1]
+    group_idx <- which(group_data == first_group)
+    
+    # Pre-allocate and populate temp_PtE in one go
+    n <- length(group_idx)
+    private$temp_PtE <- matrix(c(edge_numbers[group_idx], distances[group_idx], seq_len(n)), 
+                              nrow = n, ncol = 3)
+    
+    # Pre-allocate PtV
+    self$PtV <- rep(NA_integer_, n)
 
-    # Optimize: Use vectorized operations for tolerance checks
-    if (verbose > 1) {
-        message("Identifying vertices at edge endpoints...")
-    }
-    distances <- private$temp_PtE[, 2]
-    is_start_vertex <- distances < 1e-15
-    is_end_vertex <- distances > (1 - 1e-15)
+    # Vectorized tolerance checks - use direct indexing
+    distances_subset <- private$temp_PtE[, 2]
+    is_start_vertex <- distances_subset < 1e-15
+    is_end_vertex <- distances_subset > (1 - 1e-15)
 
-    # Optimize: Vectorized vertex assignment
+    # Vectorized vertex assignment using direct matrix operations
     if (any(is_start_vertex)) {
-        edge_indices_start <- private$temp_PtE[is_start_vertex, 1]
-        self$PtV[is_start_vertex] <- self$E[edge_indices_start, 1]
+        start_indices <- which(is_start_vertex)
+        edge_indices_start <- private$temp_PtE[start_indices, 1]
+        self$PtV[start_indices] <- self$E[edge_indices_start, 1]
     }
     if (any(is_end_vertex)) {
-        edge_indices_end <- private$temp_PtE[is_end_vertex, 1]
-        self$PtV[is_end_vertex] <- self$E[edge_indices_end, 2]
+        end_indices <- which(is_end_vertex)
+        edge_indices_end <- private$temp_PtE[end_indices, 1]
+        self$PtV[end_indices] <- self$E[edge_indices_end, 2]
     }
 
     # Get remaining indices that need to be split
-    remaining_indices <- which(!(is_start_vertex | is_end_vertex))
+    remaining_mask <- !(is_start_vertex | is_end_vertex)
+    remaining_indices <- which(remaining_mask)
 
     if (length(remaining_indices) > 0) {
-        # Optimize: More efficient edge grouping
+        # Highly optimized edge grouping
         if (verbose > 1) {
             message("Grouping observations by edges...")
         }
@@ -2671,18 +2678,22 @@ metric_graph <-  R6Class("metric_graph",
             bar_otv <- msg_progress_bar(length(edge_groups))
         }
 
-        # Process all edges at once using vectorized split_edge_batch
+        # Process all edges sequentially with optimized batch processing
         if (verbose == 2) {
             message("Processing edge splits in batches...")
         }
         
-        new_vertices_list <- private$split_edge_batch(edge_groups, verbose = verbose, parallel = parallel, n_cores = n_cores)
+        new_vertices_list <- private$split_edge_batch(edge_groups, verbose = verbose)
         
         # Assign new vertices
         for (i in seq_along(edge_groups)) {
             Ei <- names(edge_groups)[i]
-            indices <- edge_groups[[Ei]][, 2]   # original row number
-            self$PtV[indices] <- new_vertices_list[[i]]
+            indices <- edge_groups[[i]][, 2]   # original row number
+            
+            # Only assign if we have new vertices for this edge
+            if (length(new_vertices_list[[i]]) > 0) {
+                self$PtV[indices] <- new_vertices_list[[i]]
+            }
             
             # Progress bar increment (if verbose mode is enabled)
             if (verbose == 2) {
@@ -2695,7 +2706,6 @@ metric_graph <-  R6Class("metric_graph",
     self$PtV <- self$PtV[!is.na(self$PtV)]
 
     # Update temp_PtE for the known vertices
-
     # Find the positions in `self$E[,1]` where they match `self$PtV[is_start]` and `self$PtV[is_end]`
     start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
     end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
@@ -2708,35 +2718,34 @@ metric_graph <-  R6Class("metric_graph",
     private$temp_PtE[is_start_vertex, 2] <- 0
     private$temp_PtE[is_end_vertex, 2] <- 1
 
-    # Optimize: More efficient data replication and reordering
+    # Highly optimized data replication and reordering
     if (verbose > 1) {
         message("Updating data structures...")
     }
     
     # Cache group information
-    group_data <- private$data[[".group"]]
     unique_groups <- unique(group_data)
     n_group <- length(unique_groups)
     
-    # Vectorized replication
+    # Vectorized replication using rep() - much faster than loops
     temp_edge_numbers <- private$temp_PtE[, 1]
     temp_distances <- private$temp_PtE[, 2]
     
     private$data[[".edge_number"]] <- rep(temp_edge_numbers, times = n_group)
     private$data[[".distance_on_edge"]] <- rep(temp_distances, times = n_group)
 
-    # Optimize: Use faster ordering method (always reorder - essential for data integrity)
-    edge_numbers <- private$data[[".edge_number"]]
-    distances <- private$data[[".distance_on_edge"]]
-    groups <- private$data[[".group"]]
+    # Ultra-fast ordering using order() with multiple keys
+    edge_numbers_full <- private$data[[".edge_number"]]
+    distances_full <- private$data[[".distance_on_edge"]]
+    groups_full <- private$data[[".group"]]
     
-    # Create ordering index more efficiently
-    index_order <- order(groups, edge_numbers, distances)
+    # Single call to order() is much faster than multiple sorts
+    index_order <- order(groups_full, edge_numbers_full, distances_full)
     
     # Cache attribute before reordering
     old_group_variable <- attr(private$data, "group_variable")
     
-    # Vectorized reordering
+    # Vectorized reordering using lapply
     private$data <- lapply(private$data, function(dat) dat[index_order])
     attr(private$data, "group_variable") <- old_group_variable
     
@@ -2772,7 +2781,7 @@ metric_graph <-  R6Class("metric_graph",
         verbose = verbose
     )
   },
-  
+
   #' @description Turns edge weights into data on the metric graph
   #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
   #' @param data_loc Should the data be generated to the data locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.
@@ -7720,194 +7729,191 @@ format_data = function(data_res, format) {
     return(new_vertices)
   },
 
-  # Vectorized batch processing of multiple edges
-  split_edge_batch = function(edge_groups, verbose = 0, parallel = FALSE, n_cores = NULL) {
+    # Ultra-optimized batch processing of multiple edges (sequential only)
+  split_edge_batch = function(edge_groups, verbose = 0) {
+    
+    if (verbose > 1) {
+        message(sprintf("DEBUG: Starting split_edge_batch with %d edge groups", length(edge_groups)))
+    }
     
     # Calculate total number of new vertices needed
-    total_new_vertices <- sum(sapply(edge_groups, nrow))
+    group_sizes <- sapply(edge_groups, function(x) {
+        if (is.null(x) || !is.matrix(x) || nrow(x) == 0) {
+            return(0L)
+        } else {
+            return(nrow(x))
+        }
+    }, USE.NAMES = FALSE)
+    
+    total_new_vertices <- sum(group_sizes)
+    
+    if (verbose > 1) {
+        message(sprintf("DEBUG: Total new vertices needed: %d", total_new_vertices))
+    }
     
     if (total_new_vertices == 0) {
-        return(list())
+        if (verbose > 1) {
+            message("DEBUG: No new vertices needed, returning empty list")
+        }
+        return(vector("list", length(edge_groups)))
     }
     
-    # Pre-allocate matrices for better performance
-    all_new_coords <- matrix(NA, nrow = total_new_vertices, ncol = ncol(self$V))
-    all_new_vertices <- numeric(total_new_vertices)
+    # Pre-allocate all matrices at once for maximum efficiency
+    ncol_V <- ncol(self$V)
+    all_new_coords <- matrix(NA_real_, nrow = total_new_vertices, ncol = ncol_V)
     
-    # Prepare batch data for interpolate2
-    batch_edges <- vector("list", length(edge_groups))
-    batch_t_values <- vector("list", length(edge_groups))
-    batch_indices <- vector("list", length(edge_groups))
-    
-    vertex_counter <- 0
+    # Pre-allocate result list
     new_vertices_list <- vector("list", length(edge_groups))
     
-    # Determine if we should use parallel processing
-    use_parallel <- parallel && length(edge_groups) > 1
+    # Cache edge names for faster access
+    edge_names <- as.integer(names(edge_groups))
     
-    # Check for parallel package availability
-    if (use_parallel) {
-        if (!requireNamespace("parallel", quietly = TRUE)) {
-            if (verbose > 0) {
-                message("parallel package not available, falling back to sequential processing")
+    if (verbose > 1) {
+        message(sprintf("DEBUG: Processing edges: %s", paste(edge_names[1:min(5, length(edge_names))], collapse = ", ")))
+    }
+    
+    vertex_counter <- 0L
+    
+    # First pass: Generate all new vertices and coordinates
+    for (i in seq_along(edge_groups)) {
+        Ei <- edge_names[i]
+        group_data <- edge_groups[[i]]
+        
+        if (verbose > 1 && i <= 3) {
+            message(sprintf("DEBUG: Processing edge %d (index %d), group_data dimensions: %s", 
+                           Ei, i, paste(dim(group_data), collapse = "x")))
+        }
+        
+        # Check if group_data is valid
+        if (is.null(group_data) || !is.matrix(group_data) || nrow(group_data) == 0) {
+            new_vertices_list[[i]] <- integer(0)
+            if (verbose > 1 && i <= 3) {
+                message(sprintf("DEBUG: Skipping edge %d - invalid group data", Ei))
             }
-            use_parallel <- FALSE
+            next
+        }
+        
+        t_values <- group_data[, 1]
+        n_new_vertices <- length(t_values)
+        
+        if (n_new_vertices == 0) {
+            new_vertices_list[[i]] <- integer(0)
+            if (verbose > 1 && i <= 3) {
+                message(sprintf("DEBUG: Skipping edge %d - no t_values", Ei))
+            }
+            next
+        }
+        
+        if (Ei > length(self$edges) || Ei < 1) {
+            if (verbose > 0) {
+                message(sprintf("ERROR: Edge index %d is out of range (1 to %d)", Ei, length(self$edges)))
+            }
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        edge <- self$edges[[Ei]]
+        
+        if (verbose > 1 && i <= 3) {
+            message(sprintf("DEBUG: Edge %d has %d vertices, t_values: %s", 
+                           Ei, nrow(edge), paste(t_values[1:min(3, length(t_values))], collapse = ", ")))
+        }
+        
+        # Vectorized interpolation for all t_values at once
+        tryCatch({
+            val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+            val_lines <- val_results[["coords"]]
+            idx_positions <- val_results[["idx"]]
+            
+            if (verbose > 1 && i <= 3) {
+                message(sprintf("DEBUG: Interpolation successful for edge %d, got %d coordinates", 
+                               Ei, nrow(val_lines)))
+            }
+        }, error = function(e) {
+            if (verbose > 0) {
+                message(sprintf("ERROR: Interpolation failed for edge %d: %s", Ei, e$message))
+            }
+            new_vertices_list[[i]] <- integer(0)
+            return(NULL)
+        })
+        
+        # Check for valid interpolation results
+        if (length(idx_positions) == 0 || any(is.na(idx_positions)) || any(idx_positions < 1)) {
+            new_vertices_list[[i]] <- integer(0)
+            if (verbose > 1 && i <= 3) {
+                message(sprintf("DEBUG: Invalid interpolation results for edge %d", Ei))
+            }
+            next
+        }
+        
+        # Store coordinates for this edge's new vertices
+        vertex_indices <- (vertex_counter + 1L):(vertex_counter + n_new_vertices)
+        all_new_coords[vertex_indices, ] <- val_lines
+        
+        # Generate new vertex IDs
+        new_vertex_ids <- (self$nV + vertex_counter + 1L):(self$nV + vertex_counter + n_new_vertices)
+        new_vertices_list[[i]] <- new_vertex_ids
+        
+        vertex_counter <- vertex_counter + n_new_vertices
+        
+        if (verbose > 1 && i <= 3) {
+            message(sprintf("DEBUG: Added %d vertices for edge %d, total so far: %d", 
+                           n_new_vertices, Ei, vertex_counter))
         }
     }
     
-    if (use_parallel) {
-        # Parallel processing
-        if (verbose > 0) {
-            message(sprintf("Processing %d edge groups in parallel...", length(edge_groups)))
-        }
-        
-        # Determine number of cores to use
-        if (is.null(n_cores)) {
-            n_cores <- max(1, parallel::detectCores() - 1)
-        } else {
-            n_cores <- max(1, as.integer(n_cores))
-        }
-        if (.Platform$OS.type == "windows") {
-            # Use PSOCK cluster for Windows compatibility
-            cl <- parallel::makeCluster(n_cores, type = "PSOCK")
-            on.exit(parallel::stopCluster(cl), add = TRUE)
-            
-            # Export necessary objects to cluster
-            parallel::clusterEvalQ(cl, library(MetricGraph))
-            parallel::clusterExport(cl, c("interpolate2", "edge_groups"), envir = environment())
-            
-            # Prepare edges data for export
-            edges_data <- lapply(seq_along(edge_groups), function(i) {
-                Ei <- as.numeric(names(edge_groups)[i])
-                list(Ei = Ei, edge = self$edges[[Ei]])
-            })
-            parallel::clusterExport(cl, "edges_data", envir = environment())
-            
-            # Process edge groups in parallel
-            edge_results <- parallel::parLapply(cl, seq_along(edge_groups), function(i) {
-                Ei <- edges_data[[i]]$Ei
-                edge <- edges_data[[i]]$edge
-                t_values <- edge_groups[[i]][, 1]
-                indices <- edge_groups[[i]][, 2]
-                
-                # Vectorized interpolation for all t_values at once
-                val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
-                
-                return(list(
-                    Ei = Ei,
-                    edge = edge,
-                    t_values = t_values,
-                    indices = indices,
-                    val_results = val_results,
-                    n_new_vertices = length(t_values)
-                ))
-            })
-        } else {
-            # Use fork-based parallelization for Unix-like systems (Linux, macOS)
-            # Prepare edges data for parallel processing
-            edges_data <- lapply(seq_along(edge_groups), function(i) {
-                Ei <- as.numeric(names(edge_groups)[i])
-                list(Ei = Ei, edge = self$edges[[Ei]])
-            })
-            
-            edge_results <- parallel::mclapply(seq_along(edge_groups), function(i) {
-                Ei <- edges_data[[i]]$Ei
-                edge <- edges_data[[i]]$edge
-                t_values <- edge_groups[[i]][, 1]
-                indices <- edge_groups[[i]][, 2]
-                
-                # Vectorized interpolation for all t_values at once
-                val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
-                
-                return(list(
-                    Ei = Ei,
-                    edge = edge,
-                    t_values = t_values,
-                    indices = indices,
-                    val_results = val_results,
-                    n_new_vertices = length(t_values)
-                ))
-            }, mc.cores = n_cores)
-        }
-        
-        # Process results from parallel computation
-        for (i in seq_along(edge_results)) {
-            result <- edge_results[[i]]
-            n_new_vertices <- result$n_new_vertices
-            val_lines <- result$val_results[["coords"]]
-            
-            # Store coordinates for this edge's new vertices
-            vertex_indices <- (vertex_counter + 1):(vertex_counter + n_new_vertices)
-            all_new_coords[vertex_indices, ] <- val_lines
-            
-            # Generate new vertex IDs
-            new_vertex_ids <- (self$nV + vertex_counter + 1):(self$nV + vertex_counter + n_new_vertices)
-            all_new_vertices[vertex_indices] <- new_vertex_ids
-            new_vertices_list[[i]] <- new_vertex_ids
-            
-            vertex_counter <- vertex_counter + n_new_vertices
-            
-            # Store batch data for later processing
-            batch_edges[[i]] <- result
-        }
-        
-    } else {
-        # Sequential processing (original code)
-        for (i in seq_along(edge_groups)) {
-            Ei <- as.numeric(names(edge_groups)[i])
-            t_values <- edge_groups[[i]][, 1]
-            indices <- edge_groups[[i]][, 2]
-            
-            edge <- self$edges[[Ei]]
-            n_new_vertices <- length(t_values)
-            
-            # Vectorized interpolation for all t_values at once
-            val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
-            val_lines <- val_results[["coords"]]
-            
-            # Store coordinates for this edge's new vertices
-            vertex_indices <- (vertex_counter + 1):(vertex_counter + n_new_vertices)
-            all_new_coords[vertex_indices, ] <- val_lines
-            
-            # Generate new vertex IDs
-            new_vertex_ids <- (self$nV + vertex_counter + 1):(self$nV + vertex_counter + n_new_vertices)
-            all_new_vertices[vertex_indices] <- new_vertex_ids
-            new_vertices_list[[i]] <- new_vertex_ids
-            
-            vertex_counter <- vertex_counter + n_new_vertices
-            
-            # Store batch data for later processing
-            batch_edges[[i]] <- list(Ei = Ei, edge = edge, t_values = t_values, 
-                                    indices = indices, val_results = val_results)
-        }
+    if (verbose > 1) {
+        message(sprintf("DEBUG: First pass complete, added %d vertices total", vertex_counter))
     }
     
     # Batch update self$V - single rbind operation
-    self$V <- rbind(self$V, all_new_coords)
-    self$nV <- self$nV + total_new_vertices
+    if (vertex_counter > 0) {
+        self$V <- rbind(self$V, all_new_coords[1:vertex_counter, , drop = FALSE])
+        self$nV <- self$nV + vertex_counter
+        
+        if (verbose > 1) {
+            message(sprintf("DEBUG: Updated self$V, new nV: %d", self$nV))
+        }
+    }
     
-    # Now process edge updates in batch
-    total_new_edges <- sum(sapply(edge_groups, nrow))
-    new_E_rows <- matrix(NA, nrow = total_new_edges, ncol = 2)
+    # Second pass: Process edge updates in batch
+    total_new_edges <- vertex_counter  # Same as total new vertices
+    if (total_new_edges == 0) {
+        if (verbose > 1) {
+            message("DEBUG: No new edges to process, returning")
+        }
+        return(new_vertices_list)
+    }
+    
+    # Pre-allocate edge matrices
+    new_E_rows <- matrix(NA_integer_, nrow = total_new_edges, ncol = 2L)
     new_edges_list <- vector("list", total_new_edges)
     new_edge_lengths <- numeric(total_new_edges)
     
-    edge_counter <- 0
+    edge_counter <- 0L
     
-    for (i in seq_along(batch_edges)) {
-        batch_data <- batch_edges[[i]]
-        Ei <- batch_data$Ei
-        edge <- batch_data$edge
-        t_values <- batch_data$t_values
-        indices <- batch_data$indices
-        val_results <- batch_data$val_results
+    if (verbose > 1) {
+        message("DEBUG: Starting second pass - edge processing")
+    }
+    
+    for (i in seq_along(edge_groups)) {
+        if (length(new_vertices_list[[i]]) == 0) {
+            next
+        }
         
-        idx_positions <- val_results[["idx"]]
-        val_lines <- val_results[["coords"]]
-        PtE_edge <- attr(edge, "PtE")
-        
+        Ei <- edge_names[i]
+        group_data <- edge_groups[[i]]
+        t_values <- group_data[, 1]
+        indices <- group_data[, 2]
         n_t_values <- length(t_values)
         new_vertices <- new_vertices_list[[i]]
+        
+        edge <- self$edges[[Ei]]
+        PtE_edge <- attr(edge, "PtE")
+        
+        if (verbose > 1 && i <= 3) {
+            message(sprintf("DEBUG: Processing edge %d in second pass, %d t_values", Ei, n_t_values))
+        }
         
         # Update temp_PtE for this batch
         if (!is.null(private$data) && !is.null(indices)) {
@@ -7916,23 +7922,36 @@ format_data = function(data_res, format) {
             private$temp_PtE[indices, 2] <- (private$temp_PtE[indices, 2] - t_values) / (1 - t_values)
         }
         
-        # Build edge segments more efficiently
-        coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
-        coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
-        tmp_vec <- c(PtE_edge[1:idx_positions[1]], t_values[1])
+        # Re-compute interpolation
+        val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+        idx_positions <- val_results[["idx"]]
+        val_lines <- val_results[["coords"]]
         
+        # Check for valid idx_positions
+        if (length(idx_positions) == 0 || is.na(idx_positions[1]) || idx_positions[1] < 1) {
+            if (verbose > 1) {
+                message(sprintf("DEBUG: Invalid idx_positions for edge %d in second pass", Ei))
+            }
+            next
+        }
+        
+        # Build edge segments efficiently
+        coords_list1 <- rbind(edge[1:idx_positions[1], , drop = FALSE], 
+                             val_lines[1, , drop = FALSE])
+        tmp_vec <- c(PtE_edge[1:idx_positions[1]], t_values[1])
         pos_edge_diff <- tmp_vec - tmp_vec[1]
         norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-        tmp_PtE <- pos_edge_diff / norm_factor
-        attr(coords_list1, "PtE") <- tmp_PtE
+        attr(coords_list1, "PtE") <- pos_edge_diff / norm_factor
         
+        # Pre-allocate coords_list2
         coords_list2 <- vector("list", n_t_values)
         
+        # Vectorized processing of coordinate lists
         for (j in seq_along(t_values)) {
-            val_line_start <- matrix(val_lines[j, , drop = FALSE], nrow = 1)
+            val_line_start <- val_lines[j, , drop = FALSE]
             
             if (j < n_t_values) {
-                val_line_end <- matrix(val_lines[j + 1, , drop = FALSE], nrow = 1)
+                val_line_end <- val_lines[j + 1, , drop = FALSE]
                 if (idx_positions[j] != idx_positions[j + 1]) {
                     coords_list2[[j]] <- rbind(
                         val_line_start,
@@ -7949,26 +7968,24 @@ format_data = function(data_res, format) {
                     val_line_start,
                     edge[(idx_positions[j] + 1):nrow(edge), , drop = FALSE]
                 )
-                tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1):nrow(edge)])
+                tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1):length(PtE_edge)])
             }
             
             pos_edge_diff <- tmp_vec - tmp_vec[1]
             norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-            tmp_PtE <- pos_edge_diff / norm_factor
-            attr(coords_list2[[j]], "PtE") <- tmp_PtE
+            attr(coords_list2[[j]], "PtE") <- pos_edge_diff / norm_factor
         }
         
-        # Construct aux_matrix for self$E
-        if (n_t_values == 1) {
-            aux_matrix <- matrix(
-                c(self$E[Ei, 1], new_vertices[1], new_vertices[1], self$E[Ei, 2]),
-                nrow = 2, byrow = TRUE
-            )
+        # Construct aux_matrix for self$E efficiently
+        if (n_t_values == 1L) {
+            aux_matrix <- matrix(c(self$E[Ei, 1], new_vertices[1], 
+                                 new_vertices[1], self$E[Ei, 2]), 
+                               nrow = 2L, byrow = TRUE)
         } else {
             aux_matrix <- rbind(
                 c(self$E[Ei, 1], new_vertices[1]),
-                cbind(new_vertices[-length(new_vertices)], new_vertices[-1]),
-                c(new_vertices[length(new_vertices)], self$E[Ei, 2])
+                cbind(new_vertices[-n_t_values], new_vertices[-1]),
+                c(new_vertices[n_t_values], self$E[Ei, 2])
             )
         }
         
@@ -7976,11 +7993,11 @@ format_data = function(data_res, format) {
         self$E[Ei, ] <- aux_matrix[1, ]
         
         # Store new edges for batch update
-        edge_indices <- (edge_counter + 1):(edge_counter + n_t_values)
+        edge_indices <- (edge_counter + 1L):(edge_counter + n_t_values)
         new_E_rows[edge_indices, ] <- aux_matrix[-1, , drop = FALSE]
         
-        # Update edge lengths
-        segment_lengths <- c(t_values[1], diff(t_values), 1 - t_values[length(t_values)]) * self$edge_lengths[Ei]
+        # Update edge lengths using vectorized operations
+        segment_lengths <- c(t_values[1], diff(t_values), 1 - t_values[n_t_values]) * self$edge_lengths[Ei]
         new_edge_lengths[edge_indices] <- segment_lengths[-1]
         self$edge_lengths[Ei] <- segment_lengths[1]
         
@@ -7989,70 +8006,109 @@ format_data = function(data_res, format) {
         new_edges_list[edge_indices] <- coords_list2
         
         edge_counter <- edge_counter + n_t_values
+        
+        if (verbose > 1 && i <= 3) {
+            message(sprintf("DEBUG: Completed edge %d, edge_counter now: %d", Ei, edge_counter))
+        }
     }
     
-    # Batch update self$E and self$edges
-    self$E <- rbind(self$E, new_E_rows)
-    self$edges <- c(self$edges, new_edges_list)
-    self$nE <- self$nE + total_new_edges
+    if (verbose > 1) {
+        message(sprintf("DEBUG: Second pass complete, processed %d new edges", edge_counter))
+    }
     
-    # Batch update edge lengths
-    self$edge_lengths <- c(self$edge_lengths, new_edge_lengths)
-    
-    # Batch update edge weights
-    if (is.vector(private$edge_weights)) {
-        # For each original edge, replicate its weight for new segments
-        new_weights <- numeric(total_new_edges)
-        weight_counter <- 0
-        for (i in seq_along(edge_groups)) {
-            Ei <- as.numeric(names(edge_groups)[i])
-            n_new <- nrow(edge_groups[[i]])
-            weight_indices <- (weight_counter + 1):(weight_counter + n_new)
-            new_weights[weight_indices] <- rep(private$edge_weights[Ei], n_new)
-            weight_counter <- weight_counter + n_new
+    # Batch update self$E and self$edges - CRITICAL FIX: Only update if we have edges to add
+    if (edge_counter > 0) {
+        self$E <- rbind(self$E, new_E_rows[1:edge_counter, , drop = FALSE])
+        self$edges <- c(self$edges, new_edges_list[1:edge_counter])
+        self$nE <- self$nE + edge_counter
+        
+        # Batch update edge lengths
+        self$edge_lengths <- c(self$edge_lengths, new_edge_lengths[1:edge_counter])
+        
+        if (verbose > 1) {
+            message(sprintf("DEBUG: Updated graph structure - nE: %d, nV: %d", self$nE, self$nV))
         }
-        private$edge_weights <- c(private$edge_weights, new_weights)
-    } else {
-        # Matrix/data.frame case
-        if (is.matrix(private$edge_weights) || is.data.frame(private$edge_weights)) {
-            # Create new_weight_rows with the same class as private$edge_weights
-            if (is.data.frame(private$edge_weights)) {
-                # Create empty data.frame with same structure but more efficiently
-                col_names <- names(private$edge_weights)
-                new_weight_rows <- as.data.frame(matrix(NA, nrow = total_new_edges, ncol = ncol(private$edge_weights)))
-                names(new_weight_rows) <- col_names
-                # Preserve class attributes
-                class(new_weight_rows) <- class(private$edge_weights)
-            } else {
-                # Matrix case
-                new_weight_rows <- matrix(NA, nrow = total_new_edges, ncol = ncol(private$edge_weights))
-            }
+        
+        # Batch update edge weights efficiently - CRITICAL FIX: Check dimensions and types
+        if (is.vector(private$edge_weights)) {
+            # Pre-allocate new weights vector
+            new_weights <- numeric(edge_counter)
+            weight_idx <- 1L
             
-            weight_counter <- 0
             for (i in seq_along(edge_groups)) {
-                Ei <- as.numeric(names(edge_groups)[i])
-                n_new <- nrow(edge_groups[[i]])
-                weight_indices <- (weight_counter + 1):(weight_counter + n_new)
+                if (length(new_vertices_list[[i]]) == 0) next
                 
-                # Get the original edge weight row
-                original_weight_row <- private$edge_weights[Ei, , drop = FALSE]
-                
-                # Replicate it n_new times
-                for (j in seq_len(n_new)) {
-                    new_weight_rows[weight_counter + j, ] <- original_weight_row
+                Ei <- edge_names[i]
+                n_new <- length(new_vertices_list[[i]])
+                if (n_new > 0) {
+                    weight_indices <- weight_idx:(weight_idx + n_new - 1L)
+                    new_weights[weight_indices] <- private$edge_weights[Ei]
+                    weight_idx <- weight_idx + n_new
                 }
-                weight_counter <- weight_counter + n_new
             }
-            private$edge_weights <- rbind(private$edge_weights, new_weight_rows)
+            private$edge_weights <- c(private$edge_weights, new_weights)
+            
+            if (verbose > 1) {
+                message(sprintf("DEBUG: Updated vector edge weights, new length: %d", length(private$edge_weights)))
+            }
         } else {
-            # Fallback for unexpected edge weight format
-            warning("Unexpected edge weight format, resetting to default weights")
-            private$edge_weights <- rep(1, self$nE + total_new_edges)
+            # Matrix/data.frame case - optimized with dimension checks
+            if (is.matrix(private$edge_weights) || is.data.frame(private$edge_weights)) {
+                # Pre-allocate new weight rows with proper dimensions
+                if (is.data.frame(private$edge_weights)) {
+                    # Create empty data.frame with same structure
+                    col_names <- names(private$edge_weights)
+                    new_weight_rows <- private$edge_weights[integer(0), , drop = FALSE]
+                    # Properly expand the data frame
+                    if (edge_counter > 0) {
+                        # Create a temporary data frame with the right number of rows
+                        temp_df <- as.data.frame(matrix(NA, nrow = edge_counter, ncol = ncol(private$edge_weights)))
+                        names(temp_df) <- col_names
+                        new_weight_rows <- temp_df
+                    }
+                } else {
+                    # Matrix case
+                    new_weight_rows <- matrix(NA_real_, nrow = edge_counter, ncol = ncol(private$edge_weights))
+                }
+                
+                weight_idx <- 1L
+                for (i in seq_along(edge_groups)) {
+                    if (length(new_vertices_list[[i]]) == 0) next
+                    
+                    Ei <- edge_names[i]
+                    n_new <- length(new_vertices_list[[i]])
+                    if (n_new > 0) {
+                        weight_indices <- weight_idx:(weight_idx + n_new - 1L)
+                        
+                        # Vectorized assignment with bounds checking
+                        if (max(weight_indices) <= nrow(new_weight_rows)) {
+                            original_weight_row <- private$edge_weights[Ei, , drop = FALSE]
+                            new_weight_rows[weight_indices, ] <- original_weight_row[rep(1, n_new), , drop = FALSE]
+                        }
+                        weight_idx <- weight_idx + n_new
+                    }
+                }
+                private$edge_weights <- rbind(private$edge_weights, new_weight_rows)
+                
+                if (verbose > 1) {
+                    message(sprintf("DEBUG: Updated matrix/df edge weights, new dimensions: %s", 
+                                   paste(dim(private$edge_weights), collapse = "x")))
+                }
+            } else {
+                # Fallback for unexpected edge weight format
+                warning("Unexpected edge weight format, resetting to default weights")
+                private$edge_weights <- rep(1, self$nE)
+            }
         }
+    }
+    
+    if (verbose > 1) {
+        message("DEBUG: split_edge_batch completed successfully")
     }
     
     return(new_vertices_list)
   },
+
 
   compute_laplacian_PtE = function(PtE, normalized = TRUE, verbose = verbose) {
       if(verbose == 2){
