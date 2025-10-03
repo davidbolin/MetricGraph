@@ -335,7 +335,7 @@ precompute_lgcp_graph <- function(graph,
                            clone_graph = TRUE) {
 
 
-  if(inherits(spde_model, "inla_metric_graph_spde")){
+  if(inherits(spde_model, c("inla_metric_graph_spde", "inla_metric_graph_lgcp_spde"))){
     type_model <- "exact"
   } else{
     type_model <- "rational"

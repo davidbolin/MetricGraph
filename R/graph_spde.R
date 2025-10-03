@@ -78,6 +78,8 @@ graph_spde <- function(graph_object,
                        debug = FALSE,
                        verbose = 0){
 
+  parameterization <- parameterization[[1]]
+
   if (LGCP) {
     result <- list(
       graph_object = graph_object,
@@ -120,7 +122,6 @@ graph_spde <- function(graph_object,
     graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
   }
 
-  parameterization <- parameterization[[1]]
   if(!(alpha%in%c(1,2))){
     stop("alpha must be either 1 or 2!")
   }
