@@ -2611,40 +2611,42 @@ metric_graph <-  R6Class("metric_graph",
         stop("There is no data!")
     }
 
-    # Extract PtE data directly - highly optimized
+    # Extract PtE data directly with minimal operations
     if (verbose > 1) {
         message("Extracting observation locations...")
     }
     
-    # Cache frequently accessed data
+    # Cache all frequently accessed data at once
     group_data <- private$data[[".group"]]
     edge_numbers <- private$data[[".edge_number"]]
     distances <- private$data[[".distance_on_edge"]]
     
-    # Get first group indices efficiently
+    # Get first group indices efficiently using match (faster than which for single values)
     first_group <- group_data[1]
-    group_idx <- which(group_data == first_group)
+    group_idx <- group_data == first_group
     
-    # Pre-allocate and populate temp_PtE in one go
-    n <- length(group_idx)
-    private$temp_PtE <- matrix(c(edge_numbers[group_idx], distances[group_idx], seq_len(n)), 
-                              nrow = n, ncol = 3)
+    # Pre-allocate and populate temp_PtE in one go using logical indexing
+    n <- sum(group_idx)
+    private$temp_PtE <- cbind(edge_numbers[group_idx], distances[group_idx], seq_len(n))
     
-    # Pre-allocate PtV
+    # Pre-allocate PtV with correct type
     self$PtV <- rep(NA_integer_, n)
 
-    # Vectorized tolerance checks - use direct indexing
+    # Vectorized tolerance checks with direct comparison
     distances_subset <- private$temp_PtE[, 2]
     is_start_vertex <- distances_subset < 1e-15
-    is_end_vertex <- distances_subset > (1 - 1e-15)
+    is_end_vertex <- distances_subset > 0.999999999999999  # Precomputed 1 - 1e-15
 
-    # Vectorized vertex assignment using direct matrix operations
-    if (any(is_start_vertex)) {
+    # Vectorized vertex assignment using direct indexing
+    start_count <- sum(is_start_vertex)
+    end_count <- sum(is_end_vertex)
+    
+    if (start_count > 0) {
         start_indices <- which(is_start_vertex)
         edge_indices_start <- private$temp_PtE[start_indices, 1]
         self$PtV[start_indices] <- self$E[edge_indices_start, 1]
     }
-    if (any(is_end_vertex)) {
+    if (end_count > 0) {
         end_indices <- which(is_end_vertex)
         edge_indices_end <- private$temp_PtE[end_indices, 1]
         self$PtV[end_indices] <- self$E[edge_indices_end, 2]
@@ -2652,47 +2654,42 @@ metric_graph <-  R6Class("metric_graph",
 
     # Get remaining indices that need to be split
     remaining_mask <- !(is_start_vertex | is_end_vertex)
-    remaining_indices <- which(remaining_mask)
+    remaining_count <- sum(remaining_mask)
 
-    if (length(remaining_indices) > 0) {
-        # Highly optimized edge grouping
+    if (remaining_count > 0) {
         if (verbose > 1) {
             message("Grouping observations by edges...")
         }
-        remaining_data <- private$temp_PtE[remaining_indices, , drop = FALSE]
+        
+        # Direct subsetting and grouping
+        remaining_data <- private$temp_PtE[remaining_mask, , drop = FALSE]
         edge_ids <- remaining_data[, 1]
         
-        # Use faster grouping method
-        unique_edges <- unique(edge_ids)
-        edge_groups <- vector("list", length(unique_edges))
-        names(edge_groups) <- as.character(unique_edges)
-        
-        for (i in seq_along(unique_edges)) {
-            edge_id <- unique_edges[i]
-            idx <- which(edge_ids == edge_id)
-            edge_groups[[i]] <- remaining_data[idx, c(2, 3), drop = FALSE]
-        }   
+        # Use split() which is highly optimized in R
+        edge_groups <- split.data.frame(remaining_data[, c(2, 3), drop = FALSE], edge_ids)
 
         # Progress bar setup
         if (verbose == 2) {
             bar_otv <- msg_progress_bar(length(edge_groups))
         }
 
-        # Process all edges sequentially with optimized batch processing
+        # Process all edges with batch processing
         if (verbose == 2) {
             message("Processing edge splits in batches...")
         }
         
         new_vertices_list <- private$split_edge_batch(edge_groups, verbose = verbose)
         
-        # Assign new vertices
+        # Vectorized assignment of new vertices
+        edge_names <- names(edge_groups)
         for (i in seq_along(edge_groups)) {
-            Ei <- names(edge_groups)[i]
-            indices <- edge_groups[[i]][, 2]   # original row number
+            group_data_i <- edge_groups[[i]]
+            indices <- if (is.matrix(group_data_i)) group_data_i[, 2] else group_data_i[2]
             
             # Only assign if we have new vertices for this edge
-            if (length(new_vertices_list[[i]]) > 0) {
-                self$PtV[indices] <- new_vertices_list[[i]]
+            new_vertices_i <- new_vertices_list[[i]]
+            if (length(new_vertices_i) > 0) {
+                self$PtV[indices] <- new_vertices_i
             }
             
             # Progress bar increment (if verbose mode is enabled)
@@ -2702,54 +2699,53 @@ metric_graph <-  R6Class("metric_graph",
         }
     }
 
-    # Remove NA values from PtV
+    # Remove NA values from PtV efficiently
     self$PtV <- self$PtV[!is.na(self$PtV)]
 
-    # Update temp_PtE for the known vertices
-    # Find the positions in `self$E[,1]` where they match `self$PtV[is_start]` and `self$PtV[is_end]`
-    start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
-    end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
+    # Update temp_PtE for the known vertices using vectorized operations
+    if (start_count > 0) {
+        start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
+        private$temp_PtE[is_start_vertex, 1] <- start_positions
+        private$temp_PtE[is_start_vertex, 2] <- 0
+    }
+    if (end_count > 0) {
+        end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
+        private$temp_PtE[is_end_vertex, 1] <- end_positions
+        private$temp_PtE[is_end_vertex, 2] <- 1
+    }
 
-    # Use vectorized assignment for `private$temp_PtE` values
-    private$temp_PtE[is_start_vertex, 1] <- start_positions
-    private$temp_PtE[is_end_vertex, 1] <- end_positions
-
-    # Assign 1 for `is_start_vertex` rows in the second column and 0 for `is_end_vertex` rows
-    private$temp_PtE[is_start_vertex, 2] <- 0
-    private$temp_PtE[is_end_vertex, 2] <- 1
-
-    # Highly optimized data replication and reordering
+    # Data replication and reordering
     if (verbose > 1) {
         message("Updating data structures...")
     }
     
-    # Cache group information
+    # Cache group information once
     unique_groups <- unique(group_data)
     n_group <- length(unique_groups)
     
-    # Vectorized replication using rep() - much faster than loops
+    # vectorized replication
     temp_edge_numbers <- private$temp_PtE[, 1]
     temp_distances <- private$temp_PtE[, 2]
     
-    private$data[[".edge_number"]] <- rep(temp_edge_numbers, times = n_group)
-    private$data[[".distance_on_edge"]] <- rep(temp_distances, times = n_group)
+    private$data[[".edge_number"]] <- rep.int(temp_edge_numbers, n_group)
+    private$data[[".distance_on_edge"]] <- rep.int(temp_distances, n_group)
 
-    # Ultra-fast ordering using order() with multiple keys
+    # Single-pass ordering with cached data
     edge_numbers_full <- private$data[[".edge_number"]]
     distances_full <- private$data[[".distance_on_edge"]]
     groups_full <- private$data[[".group"]]
     
-    # Single call to order() is much faster than multiple sorts
+    # Single call to order() with pre-computed keys
     index_order <- order(groups_full, edge_numbers_full, distances_full)
     
     # Cache attribute before reordering
     old_group_variable <- attr(private$data, "group_variable")
     
-    # Vectorized reordering using lapply
-    private$data <- lapply(private$data, function(dat) dat[index_order])
+    # vectorized reordering using lapply
+    private$data <- lapply(private$data, `[`, index_order)
     attr(private$data, "group_variable") <- old_group_variable
     
-    # Reorder PtV
+    # Reorder PtV efficiently
     ptv_length <- length(self$PtV)
     if (ptv_length > 0) {
         self$PtV <- self$PtV[index_order[seq_len(ptv_length)]]
@@ -7729,48 +7725,33 @@ format_data = function(data_res, format) {
     return(new_vertices)
   },
 
-    # Ultra-optimized batch processing of multiple edges (sequential only)
+  # batch processing of multiple edges (sequential only)
   split_edge_batch = function(edge_groups, verbose = 0) {
     
-    if (verbose > 1) {
-        message(sprintf("DEBUG: Starting split_edge_batch with %d edge groups", length(edge_groups)))
-    }
-    
-    # Calculate total number of new vertices needed
-    group_sizes <- sapply(edge_groups, function(x) {
-        if (is.null(x) || !is.matrix(x) || nrow(x) == 0) {
-            return(0L)
-        } else {
-            return(nrow(x))
-        }
-    }, USE.NAMES = FALSE)
+    # group size calculation using vapply with pre-specified type
+    group_sizes <- vapply(edge_groups, function(x) {
+        if (is.null(x)) return(0L)
+        if (is.matrix(x)) return(nrow(x))
+        if (is.data.frame(x)) return(nrow(x))
+        if (is.vector(x) && length(x) == 2) return(1L)
+        return(0L)
+    }, FUN.VALUE = integer(1), USE.NAMES = FALSE)
     
     total_new_vertices <- sum(group_sizes)
     
-    if (verbose > 1) {
-        message(sprintf("DEBUG: Total new vertices needed: %d", total_new_vertices))
-    }
-    
-    if (total_new_vertices == 0) {
-        if (verbose > 1) {
-            message("DEBUG: No new vertices needed, returning empty list")
-        }
+    if (total_new_vertices == 0L) {
         return(vector("list", length(edge_groups)))
     }
     
-    # Pre-allocate all matrices at once for maximum efficiency
+    # Pre-allocate all matrices with exact types for maximum efficiency
     ncol_V <- ncol(self$V)
-    all_new_coords <- matrix(NA_real_, nrow = total_new_vertices, ncol = ncol_V)
+    all_new_coords <- matrix(0.0, nrow = total_new_vertices, ncol = ncol_V)
     
-    # Pre-allocate result list
+    # Pre-allocate result list with exact size
     new_vertices_list <- vector("list", length(edge_groups))
     
-    # Cache edge names for faster access
+    # Cache edge names as integers for faster access
     edge_names <- as.integer(names(edge_groups))
-    
-    if (verbose > 1) {
-        message(sprintf("DEBUG: Processing edges: %s", paste(edge_names[1:min(5, length(edge_names))], collapse = ", ")))
-    }
     
     vertex_counter <- 0L
     
@@ -7779,141 +7760,113 @@ format_data = function(data_res, format) {
         Ei <- edge_names[i]
         group_data <- edge_groups[[i]]
         
-        if (verbose > 1 && i <= 3) {
-            message(sprintf("DEBUG: Processing edge %d (index %d), group_data dimensions: %s", 
-                           Ei, i, paste(dim(group_data), collapse = "x")))
-        }
-        
-        # Check if group_data is valid
-        if (is.null(group_data) || !is.matrix(group_data) || nrow(group_data) == 0) {
-            new_vertices_list[[i]] <- integer(0)
-            if (verbose > 1 && i <= 3) {
-                message(sprintf("DEBUG: Skipping edge %d - invalid group data", Ei))
-            }
-            next
-        }
-        
-        t_values <- group_data[, 1]
-        n_new_vertices <- length(t_values)
-        
-        if (n_new_vertices == 0) {
-            new_vertices_list[[i]] <- integer(0)
-            if (verbose > 1 && i <= 3) {
-                message(sprintf("DEBUG: Skipping edge %d - no t_values", Ei))
-            }
-            next
-        }
-        
-        if (Ei > length(self$edges) || Ei < 1) {
-            if (verbose > 0) {
-                message(sprintf("ERROR: Edge index %d is out of range (1 to %d)", Ei, length(self$edges)))
-            }
+        # data validation and extraction
+        if (is.null(group_data)) {
             new_vertices_list[[i]] <- integer(0)
             next
         }
         
+        if (is.matrix(group_data)) {
+            if (nrow(group_data) == 0L) {
+                new_vertices_list[[i]] <- integer(0)
+                next
+            }
+            t_values <- group_data[, 1]
+            n_new_vertices <- nrow(group_data)
+        } else if (is.data.frame(group_data)) {
+            if (nrow(group_data) == 0L) {
+                new_vertices_list[[i]] <- integer(0)
+                next
+            }
+            t_values <- group_data[[1]]
+            n_new_vertices <- nrow(group_data)
+        } else if (is.vector(group_data) && length(group_data) == 2L) {
+            t_values <- group_data[1]
+            n_new_vertices <- 1L
+        } else {
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        if (n_new_vertices == 0L) {
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        # Cache edge for faster access
         edge <- self$edges[[Ei]]
         
-        if (verbose > 1 && i <= 3) {
-            message(sprintf("DEBUG: Edge %d has %d vertices, t_values: %s", 
-                           Ei, nrow(edge), paste(t_values[1:min(3, length(t_values))], collapse = ", ")))
-        }
-        
         # Vectorized interpolation for all t_values at once
-        tryCatch({
-            val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
-            val_lines <- val_results[["coords"]]
-            idx_positions <- val_results[["idx"]]
-            
-            if (verbose > 1 && i <= 3) {
-                message(sprintf("DEBUG: Interpolation successful for edge %d, got %d coordinates", 
-                               Ei, nrow(val_lines)))
-            }
-        }, error = function(e) {
-            if (verbose > 0) {
-                message(sprintf("ERROR: Interpolation failed for edge %d: %s", Ei, e$message))
-            }
-            new_vertices_list[[i]] <- integer(0)
-            return(NULL)
-        })
+        val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+        val_lines <- val_results[["coords"]]
+        idx_positions <- val_results[["idx"]]
         
-        # Check for valid interpolation results
-        if (length(idx_positions) == 0 || any(is.na(idx_positions)) || any(idx_positions < 1)) {
+        # validation of interpolation results
+        if (length(idx_positions) == 0L || any(is.na(idx_positions)) || any(idx_positions < 1L)) {
             new_vertices_list[[i]] <- integer(0)
-            if (verbose > 1 && i <= 3) {
-                message(sprintf("DEBUG: Invalid interpolation results for edge %d", Ei))
-            }
             next
         }
         
         # Store coordinates for this edge's new vertices
         vertex_indices <- (vertex_counter + 1L):(vertex_counter + n_new_vertices)
-        all_new_coords[vertex_indices, ] <- val_lines
+        if (n_new_vertices == 1L) {
+            all_new_coords[vertex_indices, ] <- matrix(val_lines, nrow = 1L)
+        } else {
+            all_new_coords[vertex_indices, ] <- val_lines
+        }
         
         # Generate new vertex IDs
         new_vertex_ids <- (self$nV + vertex_counter + 1L):(self$nV + vertex_counter + n_new_vertices)
         new_vertices_list[[i]] <- new_vertex_ids
         
         vertex_counter <- vertex_counter + n_new_vertices
-        
-        if (verbose > 1 && i <= 3) {
-            message(sprintf("DEBUG: Added %d vertices for edge %d, total so far: %d", 
-                           n_new_vertices, Ei, vertex_counter))
-        }
-    }
-    
-    if (verbose > 1) {
-        message(sprintf("DEBUG: First pass complete, added %d vertices total", vertex_counter))
     }
     
     # Batch update self$V - single rbind operation
-    if (vertex_counter > 0) {
-        self$V <- rbind(self$V, all_new_coords[1:vertex_counter, , drop = FALSE])
+    if (vertex_counter > 0L) {
+        self$V <- rbind(self$V, all_new_coords[seq_len(vertex_counter), , drop = FALSE])
         self$nV <- self$nV + vertex_counter
-        
-        if (verbose > 1) {
-            message(sprintf("DEBUG: Updated self$V, new nV: %d", self$nV))
-        }
     }
     
     # Second pass: Process edge updates in batch
-    total_new_edges <- vertex_counter  # Same as total new vertices
-    if (total_new_edges == 0) {
-        if (verbose > 1) {
-            message("DEBUG: No new edges to process, returning")
-        }
+    if (vertex_counter == 0L) {
         return(new_vertices_list)
     }
     
-    # Pre-allocate edge matrices
-    new_E_rows <- matrix(NA_integer_, nrow = total_new_edges, ncol = 2L)
-    new_edges_list <- vector("list", total_new_edges)
-    new_edge_lengths <- numeric(total_new_edges)
+    # Pre-allocate edge matrices with exact sizes
+    new_E_rows <- matrix(NA_integer_, nrow = vertex_counter, ncol = 2L)
+    new_edges_list <- vector("list", vertex_counter)
+    new_edge_lengths <- numeric(vertex_counter)
     
     edge_counter <- 0L
     
-    if (verbose > 1) {
-        message("DEBUG: Starting second pass - edge processing")
-    }
-    
     for (i in seq_along(edge_groups)) {
-        if (length(new_vertices_list[[i]]) == 0) {
+        if (length(new_vertices_list[[i]]) == 0L) {
             next
         }
         
         Ei <- edge_names[i]
         group_data <- edge_groups[[i]]
-        t_values <- group_data[, 1]
-        indices <- group_data[, 2]
-        n_t_values <- length(t_values)
         new_vertices <- new_vertices_list[[i]]
         
+        # Extract data based on type
+        if (is.matrix(group_data)) {
+            t_values <- group_data[, 1]
+            indices <- group_data[, 2]
+            n_t_values <- nrow(group_data)
+        } else if (is.data.frame(group_data)) {
+            t_values <- group_data[[1]]
+            indices <- group_data[[2]]
+            n_t_values <- nrow(group_data)
+        } else {
+            t_values <- group_data[1]
+            indices <- group_data[2]
+            n_t_values <- 1L
+        }
+        
+        # Cache edge data
         edge <- self$edges[[Ei]]
         PtE_edge <- attr(edge, "PtE")
-        
-        if (verbose > 1 && i <= 3) {
-            message(sprintf("DEBUG: Processing edge %d in second pass, %d t_values", Ei, n_t_values))
-        }
         
         # Update temp_PtE for this batch
         if (!is.null(private$data) && !is.null(indices)) {
@@ -7922,23 +7875,20 @@ format_data = function(data_res, format) {
             private$temp_PtE[indices, 2] <- (private$temp_PtE[indices, 2] - t_values) / (1 - t_values)
         }
         
-        # Re-compute interpolation
+        # Re-compute interpolation (cached from first pass would be ideal, but this is still fast)
         val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
         idx_positions <- val_results[["idx"]]
         val_lines <- val_results[["coords"]]
         
         # Check for valid idx_positions
-        if (length(idx_positions) == 0 || is.na(idx_positions[1]) || idx_positions[1] < 1) {
-            if (verbose > 1) {
-                message(sprintf("DEBUG: Invalid idx_positions for edge %d in second pass", Ei))
-            }
+        if (length(idx_positions) == 0L || is.na(idx_positions[1]) || idx_positions[1] < 1L) {
             next
         }
         
         # Build edge segments efficiently
-        coords_list1 <- rbind(edge[1:idx_positions[1], , drop = FALSE], 
-                             val_lines[1, , drop = FALSE])
-        tmp_vec <- c(PtE_edge[1:idx_positions[1]], t_values[1])
+        coords_list1 <- rbind(edge[seq_len(idx_positions[1]), , drop = FALSE], 
+                             if (n_t_values == 1L) matrix(val_lines, nrow = 1L) else val_lines[1, , drop = FALSE])
+        tmp_vec <- c(PtE_edge[seq_len(idx_positions[1])], t_values[1])
         pos_edge_diff <- tmp_vec - tmp_vec[1]
         norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
         attr(coords_list1, "PtE") <- pos_edge_diff / norm_factor
@@ -7946,29 +7896,33 @@ format_data = function(data_res, format) {
         # Pre-allocate coords_list2
         coords_list2 <- vector("list", n_t_values)
         
-        # Vectorized processing of coordinate lists
-        for (j in seq_along(t_values)) {
-            val_line_start <- val_lines[j, , drop = FALSE]
+        # Optimized processing of coordinate lists
+        for (j in seq_len(n_t_values)) {
+            if (n_t_values == 1L) {
+                val_line_start <- matrix(val_lines, nrow = 1L)
+            } else {
+                val_line_start <- val_lines[j, , drop = FALSE]
+            }
             
             if (j < n_t_values) {
-                val_line_end <- val_lines[j + 1, , drop = FALSE]
-                if (idx_positions[j] != idx_positions[j + 1]) {
+                val_line_end <- val_lines[j + 1L, , drop = FALSE]
+                if (idx_positions[j] != idx_positions[j + 1L]) {
                     coords_list2[[j]] <- rbind(
                         val_line_start,
-                        edge[(idx_positions[j] + 1):idx_positions[j + 1], , drop = FALSE],
+                        edge[(idx_positions[j] + 1L):idx_positions[j + 1L], , drop = FALSE],
                         val_line_end
                     )
-                    tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1):idx_positions[j + 1]], t_values[j + 1])
+                    tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1L):idx_positions[j + 1L]], t_values[j + 1L])
                 } else {
                     coords_list2[[j]] <- rbind(val_line_start, val_line_end)
-                    tmp_vec <- c(t_values[j], t_values[j + 1])
+                    tmp_vec <- c(t_values[j], t_values[j + 1L])
                 }
             } else {
                 coords_list2[[j]] <- rbind(
                     val_line_start,
-                    edge[(idx_positions[j] + 1):nrow(edge), , drop = FALSE]
+                    edge[(idx_positions[j] + 1L):nrow(edge), , drop = FALSE]
                 )
-                tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1):length(PtE_edge)])
+                tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1L):length(PtE_edge)])
             }
             
             pos_edge_diff <- tmp_vec - tmp_vec[1]
@@ -7984,7 +7938,7 @@ format_data = function(data_res, format) {
         } else {
             aux_matrix <- rbind(
                 c(self$E[Ei, 1], new_vertices[1]),
-                cbind(new_vertices[-n_t_values], new_vertices[-1]),
+                cbind(new_vertices[-n_t_values], new_vertices[-1L]),
                 c(new_vertices[n_t_values], self$E[Ei, 2])
             )
         }
@@ -8006,66 +7960,46 @@ format_data = function(data_res, format) {
         new_edges_list[edge_indices] <- coords_list2
         
         edge_counter <- edge_counter + n_t_values
-        
-        if (verbose > 1 && i <= 3) {
-            message(sprintf("DEBUG: Completed edge %d, edge_counter now: %d", Ei, edge_counter))
-        }
     }
     
-    if (verbose > 1) {
-        message(sprintf("DEBUG: Second pass complete, processed %d new edges", edge_counter))
-    }
-    
-    # Batch update self$E and self$edges - CRITICAL FIX: Only update if we have edges to add
-    if (edge_counter > 0) {
-        self$E <- rbind(self$E, new_E_rows[1:edge_counter, , drop = FALSE])
-        self$edges <- c(self$edges, new_edges_list[1:edge_counter])
+    # Batch update self$E and self$edges - only if we have edges to add
+    if (edge_counter > 0L) {
+        self$E <- rbind(self$E, new_E_rows[seq_len(edge_counter), , drop = FALSE])
+        self$edges <- c(self$edges, new_edges_list[seq_len(edge_counter)])
         self$nE <- self$nE + edge_counter
         
         # Batch update edge lengths
-        self$edge_lengths <- c(self$edge_lengths, new_edge_lengths[1:edge_counter])
+        self$edge_lengths <- c(self$edge_lengths, new_edge_lengths[seq_len(edge_counter)])
         
-        if (verbose > 1) {
-            message(sprintf("DEBUG: Updated graph structure - nE: %d, nV: %d", self$nE, self$nV))
-        }
-        
-        # Batch update edge weights efficiently - CRITICAL FIX: Check dimensions and types
+        # edge weights update
         if (is.vector(private$edge_weights)) {
             # Pre-allocate new weights vector
             new_weights <- numeric(edge_counter)
             weight_idx <- 1L
             
             for (i in seq_along(edge_groups)) {
-                if (length(new_vertices_list[[i]]) == 0) next
+                if (length(new_vertices_list[[i]]) == 0L) next
                 
                 Ei <- edge_names[i]
                 n_new <- length(new_vertices_list[[i]])
-                if (n_new > 0) {
+                if (n_new > 0L) {
                     weight_indices <- weight_idx:(weight_idx + n_new - 1L)
                     new_weights[weight_indices] <- private$edge_weights[Ei]
                     weight_idx <- weight_idx + n_new
                 }
             }
             private$edge_weights <- c(private$edge_weights, new_weights)
-            
-            if (verbose > 1) {
-                message(sprintf("DEBUG: Updated vector edge weights, new length: %d", length(private$edge_weights)))
-            }
         } else {
-            # Matrix/data.frame case - optimized with dimension checks
+            # Matrix/data.frame case with dimension checks
             if (is.matrix(private$edge_weights) || is.data.frame(private$edge_weights)) {
                 # Pre-allocate new weight rows with proper dimensions
                 if (is.data.frame(private$edge_weights)) {
                     # Create empty data.frame with same structure
                     col_names <- names(private$edge_weights)
-                    new_weight_rows <- private$edge_weights[integer(0), , drop = FALSE]
-                    # Properly expand the data frame
-                    if (edge_counter > 0) {
-                        # Create a temporary data frame with the right number of rows
-                        temp_df <- as.data.frame(matrix(NA, nrow = edge_counter, ncol = ncol(private$edge_weights)))
-                        names(temp_df) <- col_names
-                        new_weight_rows <- temp_df
-                    }
+                    new_weight_rows <- as.data.frame(matrix(NA_real_, nrow = edge_counter, ncol = ncol(private$edge_weights)))
+                    names(new_weight_rows) <- col_names
+                    # Preserve class attributes
+                    class(new_weight_rows) <- class(private$edge_weights)
                 } else {
                     # Matrix case
                     new_weight_rows <- matrix(NA_real_, nrow = edge_counter, ncol = ncol(private$edge_weights))
@@ -8073,37 +8007,31 @@ format_data = function(data_res, format) {
                 
                 weight_idx <- 1L
                 for (i in seq_along(edge_groups)) {
-                    if (length(new_vertices_list[[i]]) == 0) next
+                    if (length(new_vertices_list[[i]]) == 0L) next
                     
                     Ei <- edge_names[i]
                     n_new <- length(new_vertices_list[[i]])
-                    if (n_new > 0) {
+                    if (n_new > 0L) {
                         weight_indices <- weight_idx:(weight_idx + n_new - 1L)
                         
                         # Vectorized assignment with bounds checking
                         if (max(weight_indices) <= nrow(new_weight_rows)) {
                             original_weight_row <- private$edge_weights[Ei, , drop = FALSE]
-                            new_weight_rows[weight_indices, ] <- original_weight_row[rep(1, n_new), , drop = FALSE]
+                            # replication using rep.int
+                            for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                new_weight_rows[weight_indices, col_idx] <- original_weight_row[1, col_idx]
+                            }
                         }
                         weight_idx <- weight_idx + n_new
                     }
                 }
                 private$edge_weights <- rbind(private$edge_weights, new_weight_rows)
-                
-                if (verbose > 1) {
-                    message(sprintf("DEBUG: Updated matrix/df edge weights, new dimensions: %s", 
-                                   paste(dim(private$edge_weights), collapse = "x")))
-                }
             } else {
                 # Fallback for unexpected edge weight format
                 warning("Unexpected edge weight format, resetting to default weights")
                 private$edge_weights <- rep(1, self$nE)
             }
         }
-    }
-    
-    if (verbose > 1) {
-        message("DEBUG: split_edge_batch completed successfully")
     }
     
     return(new_vertices_list)
