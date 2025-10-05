@@ -1871,6 +1871,14 @@ print.metric_graph_vertex <- function(x, n = 10, ...) {
   print(coord_tmp, row.names = FALSE)
 }
 
+#' @noRd 
+
+strip_units_if_present <- function(x) {
+  if (inherits(x, "units")) {
+    return(as.numeric(x))
+  }
+  return(x)
+}
 
 
 #' @noRd 
