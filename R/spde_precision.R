@@ -29,6 +29,19 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
   }
 }
 
+#' The precision matrix for all edges in the brownian moiton case
+#' @param theta - tau
+#' @param graph metric_graph object
+#' @param w ([0,1]) how two weight the top edge
+#' @param build (bool) if TRUE return the precision matrix otherwise return
+#' a list(i,j,x, nv)
+#' @return Precision matrix or list
+#' @noRd
+Q_BM <- function(theta, graph, w, BC = 0, build = TRUE) {
+
+
+
+}
 #' The precision matrix for all edges in the alpha=1 case assumes
 #' that the edges are not connected
 #' @param theta - tau, kappa
@@ -184,6 +197,15 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
     j_ <- c(j_[1:count], index)
     x_ <- c(x_[1:count], rep(0.5, length(index)))
     count <- count + length(index)
+  }else if(BC==2){
+
+    dV <- graph$get_vertices()$degree
+    index <- 1:length(dV)
+    i_ <- c(i_[1:count], index)
+    j_ <- c(j_[1:count], index)
+    x_ <- c(x_[1:count], -0.5*dV + 1)
+    count <- count + length(index)
+
   }
   if(build){
     Q <- Matrix::sparseMatrix(i = i_[1:count],
@@ -515,6 +537,65 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
     return(list(i = i_[1:count],
                 j = j_[1:count],
                 x = (2 * kappa * tau^2) * x_[1:count],
+                dims = c(graph$nV, graph$nV)))
+  }
+}
+
+#' The precision matrix for all vertices in the random walk case
+#' @param theta - tau
+#' @param graph metric_graph object
+#' @param build (bool) if TRUE return the precision matrix otherwise return
+#' a list(i,j,x, nv)
+#' @return Precision matrix or list
+#' @noRd
+Qrandomwalk <- function(theta, graph, build = TRUE) {
+
+  tau <- theta[1]
+  i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
+  count <- 0
+  for(i in 1:graph$nE){
+    l_e <- graph$edge_lengths[i]
+    l_e_inv <- 1/l_e
+
+    if (graph$E[i, 1] != graph$E[i, 2]) {
+
+      i_[count + 1] <- graph$E[i, 1]
+      j_[count + 1] <- graph$E[i, 1]
+      x_[count + 1] <- l_e_inv
+
+      i_[count + 2] <- graph$E[i, 2]
+      j_[count + 2] <- graph$E[i, 2]
+      x_[count + 2] <- l_e_inv
+
+
+      i_[count + 3] <- graph$E[i, 1]
+      j_[count + 3] <- graph$E[i, 2]
+      x_[count + 3] <- -l_e_inv
+
+      i_[count + 4] <- graph$E[i, 2]
+      j_[count + 4] <- graph$E[i, 1]
+      x_[count + 4] <- -l_e_inv
+      count <- count + 4
+    }else{
+      i_[count + 1] <- graph$E[i, 1]
+      j_[count + 1] <- graph$E[i, 1]
+      error("Circular edges are not implemented for random walk precision matrix")
+      #x_[count + 1] <- 0#tanh(0.5 * kappa * l_e)
+      count <- count + 1
+    }
+  }
+  if(build){
+    Q <- Matrix::sparseMatrix(i = i_[1:count],
+                              j = j_[1:count],
+                              x = tau * x_[1:count],
+                              dims = c(graph$nV, graph$nV))
+
+
+    return(Q)
+  } else {
+    return(list(i = i_[1:count],
+                j = j_[1:count],
+                x = tau * x_[1:count],
                 dims = c(graph$nV, graph$nV)))
   }
 }
