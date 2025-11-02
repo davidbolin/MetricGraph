@@ -119,6 +119,7 @@ graph_spde <- function(graph_object,
   }
 
   if(!is.null(graph_spde$.__enclos_env__$private$data)){
+    graph_spde$.__enclos_env__$private$data[[".internal_ordering"]] <- seq_len(length(graph_spde$.__enclos_env__$private$data[[".group"]]))
     graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
   }
 
@@ -579,6 +580,7 @@ if(alpha == 2){
     A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=   
 }
 model$A <- A_tmp
+model$ordering <- graph_spde$.__enclos_env__$private$data[[".internal_ordering"]]
 class(model) <- c("inla_metric_graph_spde", class(model))
 return(model)
 }

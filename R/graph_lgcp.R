@@ -773,6 +773,82 @@ lgcp_graph <- function(formula,
                            control.predictor = list(A = INLA::inla.stack.A(stk), compute = TRUE, link = 1),
                            E = INLA::inla.stack.data(stk)[[".weights_int_points"]],
                            ...)
+
+          if(inherits(aux_spde_model, "inla_metric_graph_spde")){
+            inla_fit[["graph_lgcp_ordering"]] <- aux_spde_model$ordering
+            full_inla_data <- graph_bkp$get_data()
+            original_order_idx <- order(aux_spde_model$ordering)
+
+            full_inla_data[[".predicted_field"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".predicted_field_std_dev"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".predicted_field_mode"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".predicted_field_quantile_0.025"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".predicted_field_quantile_0.975"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".predicted_field_quantile_0.5"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".linear_predictor"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".linear_predictor_std_dev"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".linear_predictor_mode"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".linear_predictor_quantile_0.025"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".linear_predictor_quantile_0.975"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".linear_predictor_quantile_0.5"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".fitted_values"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".fitted_values_std_dev"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".fitted_values_mode"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".fitted_values_quantile_0.025"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".fitted_values_quantile_0.975"]] <- numeric(nrow(full_inla_data))
+            full_inla_data[[".fitted_values_quantile_0.5"]] <- numeric(nrow(full_inla_data))
+
+            full_inla_data[[".predicted_field"]] <- inla_fit$summary.random[[model_name]]$mean[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".predicted_field_std_dev"]] <- inla_fit$summary.random[[model_name]]$sd[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".predicted_field_mode"]] <- inla_fit$summary.random[[model_name]]$mode[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".predicted_field_quantile_0.025"]] <- inla_fit$summary.random[[model_name]]$`0.025quant`[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".predicted_field_quantile_0.975"]] <- inla_fit$summary.random[[model_name]]$`0.975quant`[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".predicted_field_quantile_0.5"]] <- inla_fit$summary.random[[model_name]]$`0.5quant`[1:nrow(full_inla_data)][original_order_idx]
+
+            full_inla_data[[".linear_predictor"]] <- inla_fit$summary.linear.predictor$mean[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".linear_predictor_std_dev"]] <- inla_fit$summary.linear.predictor$sd[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".linear_predictor_mode"]] <- inla_fit$summary.linear.predictor$mode[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".linear_predictor_quantile_0.025"]] <- inla_fit$summary.linear.predictor$`0.025quant`[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".linear_predictor_quantile_0.975"]] <- inla_fit$summary.linear.predictor$`0.975quant`[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".linear_predictor_quantile_0.5"]] <- inla_fit$summary.linear.predictor$`0.5quant`[1:nrow(full_inla_data)][original_order_idx]
+
+            full_inla_data[[".fitted_values"]] <- inla_fit$summary.fitted.values$mean[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".fitted_values_std_dev"]] <- inla_fit$summary.fitted.values$sd[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".fitted_values_mode"]] <- inla_fit$summary.fitted.values$mode[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".fitted_values_quantile_0.025"]] <- inla_fit$summary.fitted.values$`0.025quant`[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".fitted_values_quantile_0.975"]] <- inla_fit$summary.fitted.values$`0.975quant`[1:nrow(full_inla_data)][original_order_idx]
+            full_inla_data[[".fitted_values_quantile_0.5"]] <- inla_fit$summary.fitted.values$`0.5quant`[1:nrow(full_inla_data)][original_order_idx]
+            
+          } else{
+
+            full_inla_data <- graph_bkp$get_data()
+            idx_int_points <- which(full_inla_data[[resp_variable_name]] == 0)
+
+            full_inla_data[[".predicted_field"]] <- rep(NA, nrow(full_inla_data))
+            # predicted field only available at the mesh nodes
+            full_inla_data[[".predicted_field"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$mean[1:nrow(int_points)]
+            full_inla_data[[".predicted_field_std_dev"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$sd[1:nrow(int_points)]
+            full_inla_data[[".predicted_field_mode"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$mode[1:nrow(int_points)]
+            full_inla_data[[".predicted_field_quantile_0.025"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.025quant`[1:nrow(int_points)]
+            full_inla_data[[".predicted_field_quantile_0.975"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.975quant`[1:nrow(int_points)]
+            full_inla_data[[".predicted_field_quantile_0.5"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.5quant`[1:nrow(int_points)]
+
+            full_inla_data[[".linear_predictor"]] <- inla_fit$summary.linear.predictor$mean[1:nrow(full_inla_data)]
+            full_inla_data[[".linear_predictor_std_dev"]] <- inla_fit$summary.linear.predictor$sd[1:nrow(full_inla_data)]
+            full_inla_data[[".linear_predictor_mode"]] <- inla_fit$summary.linear.predictor$mode[1:nrow(full_inla_data)]
+            full_inla_data[[".linear_predictor_quantile_0.025"]] <- inla_fit$summary.linear.predictor$`0.025quant`[1:nrow(full_inla_data)]
+            full_inla_data[[".linear_predictor_quantile_0.975"]] <- inla_fit$summary.linear.predictor$`0.975quant`[1:nrow(full_inla_data)]
+            full_inla_data[[".linear_predictor_quantile_0.5"]] <- inla_fit$summary.linear.predictor$`0.5quant`[1:nrow(full_inla_data)]
+
+            full_inla_data[[".fitted_values"]] <- inla_fit$summary.fitted.values$mean[1:nrow(full_inla_data)]
+            full_inla_data[[".fitted_values_std_dev"]] <- inla_fit$summary.fitted.values$sd[1:nrow(full_inla_data)]
+            full_inla_data[[".fitted_values_mode"]] <- inla_fit$summary.fitted.values$mode[1:nrow(full_inla_data)]
+            full_inla_data[[".fitted_values_quantile_0.025"]] <- inla_fit$summary.fitted.values$`0.025quant`[1:nrow(full_inla_data)]
+            full_inla_data[[".fitted_values_quantile_0.975"]] <- inla_fit$summary.fitted.values$`0.975quant`[1:nrow(full_inla_data)]
+            full_inla_data[[".fitted_values_quantile_0.5"]] <- inla_fit$summary.fitted.values$`0.5quant`[1:nrow(full_inla_data)]
+          }
+          
+          inla_fit[["graph_fitted_data"]] <- full_inla_data
           return(inla_fit)
 } 
 
