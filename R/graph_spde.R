@@ -116,6 +116,67 @@ graph_spde <- function(graph_object,
 
   parameterization <- parameterization[[1]]
 
+  # Validation checks for bounds
+  validate_bound <- function(bound, bound_name) {
+    if (!is.null(bound)) {
+      if (!is.numeric(bound) || length(bound) != 1) {
+        stop(paste0(bound_name, " must be a single numeric value."))
+      }
+      if (is.na(bound)) {
+        stop(paste0(bound_name, " cannot be NA."))
+      }
+      if (bound < 0) {
+        stop(paste0(bound_name, " cannot be negative."))
+      }
+    }
+  }
+
+  # Validate all bounds
+  validate_bound(range_lower_bound, "range_lower_bound")
+  validate_bound(range_upper_bound, "range_upper_bound")
+  validate_bound(kappa_lower_bound, "kappa_lower_bound")
+  validate_bound(kappa_upper_bound, "kappa_upper_bound")
+  validate_bound(sigma_lower_bound, "sigma_lower_bound")
+  validate_bound(sigma_upper_bound, "sigma_upper_bound")
+  validate_bound(tau_lower_bound, "tau_lower_bound")
+  validate_bound(tau_upper_bound, "tau_upper_bound")
+
+  # Check that upper bounds are greater than lower bounds
+  if (!is.null(range_lower_bound) && !is.null(range_upper_bound)) {
+    if (range_upper_bound <= range_lower_bound) {
+      stop("range_upper_bound must be greater than range_lower_bound.")
+    }
+  }
+  if (!is.null(kappa_lower_bound) && !is.null(kappa_upper_bound)) {
+    if (kappa_upper_bound <= kappa_lower_bound) {
+      stop("kappa_upper_bound must be greater than kappa_lower_bound.")
+    }
+  }
+  if (!is.null(sigma_lower_bound) && !is.null(sigma_upper_bound)) {
+    if (sigma_upper_bound <= sigma_lower_bound) {
+      stop("sigma_upper_bound must be greater than sigma_lower_bound.")
+    }
+  }
+  if (!is.null(tau_lower_bound) && !is.null(tau_upper_bound)) {
+    if (tau_upper_bound <= tau_lower_bound) {
+      stop("tau_upper_bound must be greater than tau_lower_bound.")
+    }
+  }
+
+  # Validate prec_inc parameters
+  if (!is.numeric(range_prec_inc) || length(range_prec_inc) != 1 || range_prec_inc < 0) {
+    stop("range_prec_inc must be a non-negative numeric value.")
+  }
+  if (!is.numeric(kappa_prec_inc) || length(kappa_prec_inc) != 1 || kappa_prec_inc < 0) {
+    stop("kappa_prec_inc must be a non-negative numeric value.")
+  }
+  if (!is.numeric(sigma_prec_inc) || length(sigma_prec_inc) != 1 || sigma_prec_inc < 0) {
+    stop("sigma_prec_inc must be a non-negative numeric value.")
+  }
+  if (!is.numeric(tau_prec_inc) || length(tau_prec_inc) != 1 || tau_prec_inc < 0) {
+    stop("tau_prec_inc must be a non-negative numeric value.")
+  }
+
   if (LGCP) {
     result <- list(
       graph_object = graph_object,
@@ -480,23 +541,30 @@ graph_spde <- function(graph_object,
     prior_sigma$sdlog <- sqrt(10)
   }
 
-  # Setup beta priors for bounded parameters
+  # Setup beta priors for bounded parameters based on graph_starting_values
   # For param1 (kappa/range)
   if(has_param1_upper){
     # Using beta prior for bounded parameter
     if(parameterization == "matern"){
-      # range parameter
+      # range parameter - use the mean from graph_starting_values
       if(is.null(prior_range$mean)){
-        prior_range$mean <- min(1, (param1_upper - param1_lower) / 2) + param1_lower
+        prior_range$mean <- exp(prior_range$meanlog)
+        # Ensure it's within bounds
+        if(prior_range$mean <= param1_lower || prior_range$mean >= param1_upper){
+          prior_range$mean <- (param1_upper + param1_lower) / 2
+        }
       }
       if(is.null(prior_range$prec)){
         mu_temp <- (prior_range$mean - param1_lower) / (param1_upper - param1_lower)
         prior_range$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param1_prec_inc
       }
     } else{
-      # kappa parameter
+      # kappa parameter - use the mean from graph_starting_values
       if(is.null(prior_kappa$mean)){
-        prior_kappa$mean <- min(1, (param1_upper - param1_lower) / 2) + param1_lower
+        prior_kappa$mean <- exp(prior_kappa$meanlog)
+        if(prior_kappa$mean <= param1_lower || prior_kappa$mean >= param1_upper){
+          prior_kappa$mean <- (param1_upper + param1_lower) / 2
+        }
       }
       if(is.null(prior_kappa$prec)){
         mu_temp <- (prior_kappa$mean - param1_lower) / (param1_upper - param1_lower)
@@ -509,18 +577,24 @@ graph_spde <- function(graph_object,
   if(has_param2_upper){
     # Using beta prior for bounded parameter
     if(parameterization == "matern"){
-      # sigma parameter
+      # sigma parameter - use the mean from graph_starting_values
       if(is.null(prior_sigma$mean)){
-        prior_sigma$mean <- min(1, (param2_upper - param2_lower) / 2) + param2_lower
+        prior_sigma$mean <- exp(prior_sigma$meanlog)
+        if(prior_sigma$mean <= param2_lower || prior_sigma$mean >= param2_upper){
+          prior_sigma$mean <- (param2_upper + param2_lower) / 2
+        }
       }
       if(is.null(prior_sigma$prec)){
         mu_temp <- (prior_sigma$mean - param2_lower) / (param2_upper - param2_lower)
         prior_sigma$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param2_prec_inc
       }
     } else{
-      # tau parameter
+      # tau parameter - convert from sigma prior
       if(is.null(prior_tau$mean)){
-        prior_tau$mean <- min(1, (param2_upper - param2_lower) / 2) + param2_lower
+        prior_tau$mean <- exp(-prior_sigma$meanlog)
+        if(prior_tau$mean <= param2_lower || prior_tau$mean >= param2_upper){
+          prior_tau$mean <- (param2_upper + param2_lower) / 2
+        }
       }
       if(is.null(prior_tau$prec)){
         mu_temp <- (prior_tau$mean - param2_lower) / (param2_upper - param2_lower)
@@ -754,6 +828,14 @@ model$args <- list(
   prior_sigma = prior_sigma,
   start_tau = start_tau,
   prior_tau = prior_tau,
+  range_lower_bound = range_lower_bound,
+  range_upper_bound = range_upper_bound,
+  kappa_lower_bound = kappa_lower_bound,
+  kappa_upper_bound = kappa_upper_bound,
+  sigma_lower_bound = sigma_lower_bound,
+  sigma_upper_bound = sigma_upper_bound,
+  tau_lower_bound = tau_lower_bound,
+  tau_upper_bound = tau_upper_bound,
   factor_start_range = factor_start_range,
   type_start_range_bbox = type_start_range_bbox,
   shared_lib = shared_lib,
@@ -1269,14 +1351,52 @@ spde_metric_graph_result <- function(inla, name,
     result$marginals.values <- inla$marginals.random[[name]]
   }
 
+  # Extract bounds from metric_graph_spde object
   if(parameterization == "spde"){
     name_theta1 <- "reciprocal_tau"
     name_theta1_t <- "tau"
     name_theta2 <- "kappa"
+    theta1_lower <- ifelse(is.null(metric_graph_spde$args$tau_lower_bound), 0, metric_graph_spde$args$tau_lower_bound)
+    theta1_upper <- metric_graph_spde$args$tau_upper_bound
+    theta2_lower <- ifelse(is.null(metric_graph_spde$args$kappa_lower_bound), 0, metric_graph_spde$args$kappa_lower_bound)
+    theta2_upper <- metric_graph_spde$args$kappa_upper_bound
   } else{
     name_theta1 <- "reciprocal_tau"
     name_theta1_t <- "sigma"
     name_theta2 <- "range"
+    theta1_lower <- ifelse(is.null(metric_graph_spde$args$sigma_lower_bound), 0, metric_graph_spde$args$sigma_lower_bound)
+    theta1_upper <- metric_graph_spde$args$sigma_upper_bound
+    theta2_lower <- ifelse(is.null(metric_graph_spde$args$range_lower_bound), 0, metric_graph_spde$args$range_lower_bound)
+    theta2_upper <- metric_graph_spde$args$range_upper_bound
+  }
+
+  # Define transformation functions based on bounds
+  # For theta1 (reciprocal_tau, which we transform to tau or sigma)
+  if(!is.null(theta1_upper)){
+    # Logit transformation
+    transform_theta1 <- function(y) {
+      theta1_lower + (theta1_upper - theta1_lower) * exp(y) / (1.0 + exp(y))
+    }
+  } else if(theta1_lower > 0){
+    # Shifted exponential
+    transform_theta1 <- function(y) theta1_lower + exp(y)
+  } else{
+    # Standard log
+    transform_theta1 <- function(y) exp(y)
+  }
+
+  # For theta2 (kappa or range)
+  if(!is.null(theta2_upper)){
+    # Logit transformation
+    transform_theta2 <- function(y) {
+      theta2_lower + (theta2_upper - theta2_lower) * exp(y) / (1.0 + exp(y))
+    }
+  } else if(theta2_lower > 0){
+    # Shifted exponential
+    transform_theta2 <- function(y) theta2_lower + exp(y)
+  } else{
+    # Standard log
+    transform_theta2 <- function(y) exp(y)
   }
 
 
@@ -1305,30 +1425,33 @@ spde_metric_graph_result <- function(inla, name,
     names(result[[paste0("marginals.log.",name_theta2)]]) <- name_theta2
 
     if(parameterization == "spde"){
+            # For tau: reciprocal_tau -> tau (so we need to invert)
             result[[paste0("marginals.",name_theta1_t)]] <- lapply(
               result[[paste0("marginals.log.",name_theta1)]],
               function(x) {
                 INLA::inla.tmarginal(
-                  function(y) exp(-y),
+                  function(y) 1.0 / transform_theta1(y),
                   x
                 )
               }
             )
             names(result[[paste0("marginals.",name_theta1_t)]]) <- name_theta1_t
+            # For kappa: use theta2 transformation
             result[[paste0("marginals.",name_theta2)]] <- lapply(
               result[[paste0("marginals.log.",name_theta2)]],
               function(x) {
                 INLA::inla.tmarginal(
-                  function(y) exp(y),
+                  transform_theta2,
                   x
                 )
               }
             )
     } else{
             hyperpar_sample <- INLA::inla.hyperpar.sample(n_samples, inla)
-            reciprocal_tau_est <- exp(hyperpar_sample[, paste0('Theta1 for ',name)])
+            # Apply transformations to get reciprocal_tau and range in original scale
+            reciprocal_tau_est <- transform_theta1(hyperpar_sample[, paste0('Theta1 for ',name)])
             tau_est <- 1/reciprocal_tau_est
-            range_est <- exp(hyperpar_sample[, paste0('Theta2 for ',name)])
+            range_est <- transform_theta2(hyperpar_sample[, paste0('Theta2 for ',name)])
             kappa_est <- sqrt(8*nu)/range_est
             sigma_est <- sqrt(gamma(nu) / (tau_est^2 * kappa_est^(2 * nu) *
                     (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
@@ -1343,7 +1466,7 @@ spde_metric_graph_result <- function(inla, name,
               result[[paste0("marginals.log.",name_theta2)]],
               function(x) {
                 INLA::inla.tmarginal(
-                  function(y) exp(y),
+                  transform_theta2,
                   x
                 )
               }
