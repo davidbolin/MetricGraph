@@ -399,7 +399,8 @@ precompute_lgcp_graph <- function(graph,
     resp_variable_name = resp_variable_name,
     aux_spde_model = spde_model,
     type_model = type_model,
-    model_name = model_name
+    model_name = model_name,
+    nrow_int_points = nrow(int_points)
   )
   
   class(precomputed) <- "precomputed_lgcp"
@@ -565,7 +566,6 @@ lgcp_graph <- function(formula,
                        clone_graph = TRUE,
                        precomputed_data = NULL,
                        ...) {
-
         # Extract response variable name from the left-hand side of formula
           resp_variable_name <- as.character(formula[[2]])
 
@@ -622,6 +622,7 @@ lgcp_graph <- function(formula,
             }
             graph_bkp <- precomputed_data$graph
             stk <- precomputed_data$stk
+            nrow_int_points <- precomputed_data$nrow_int_points
             if(precomputed_data$resp_variable_name != resp_variable_name){
               warning(paste0("The response variable name in the precomputed data (", precomputed_data$resp_variable_name, ") does not match the response variable name in the formula (", resp_variable_name, "). The variable in the precomputed data will be used."))
             }
@@ -709,6 +710,8 @@ lgcp_graph <- function(formula,
                                                  repl_col = repl_col)
 
           int_points[[resp_variable_name]] <- rep(0, nrow(int_points))
+            
+          nrow_int_points <- nrow(int_points)
 
           graph_bkp$add_observations(data = int_points,
                                      edge_number = ".edge_number",
@@ -766,7 +769,7 @@ lgcp_graph <- function(formula,
             }
           }
           }
-          
+            
           inla_fit <- INLA::inla(formula,
                            data = INLA::inla.stack.data(stk),
                            family = "poisson",
@@ -820,18 +823,24 @@ lgcp_graph <- function(formula,
             full_inla_data[[".fitted_values_quantile_0.5"]] <- inla_fit$summary.fitted.values$`0.5quant`[1:nrow(full_inla_data)][original_order_idx]
             
           } else{
-
             full_inla_data <- graph_bkp$get_data()
             idx_int_points <- which(full_inla_data[[resp_variable_name]] == 0)
 
             full_inla_data[[".predicted_field"]] <- rep(NA, nrow(full_inla_data))
+            full_inla_data[[".predicted_field_std_dev"]] <- rep(NA, nrow(full_inla_data))
+            full_inla_data[[".predicted_field_mode"]] <- rep(NA, nrow(full_inla_data))
+            full_inla_data[[".predicted_field_quantile_0.025"]] <- rep(NA, nrow(full_inla_data))
+            full_inla_data[[".predicted_field_quantile_0.975"]] <- rep(NA, nrow(full_inla_data))
+            full_inla_data[[".predicted_field_quantile_0.5"]] <- rep(NA, nrow(full_inla_data))
+
+
             # predicted field only available at the mesh nodes
-            full_inla_data[[".predicted_field"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$mean[1:nrow(int_points)]
-            full_inla_data[[".predicted_field_std_dev"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$sd[1:nrow(int_points)]
-            full_inla_data[[".predicted_field_mode"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$mode[1:nrow(int_points)]
-            full_inla_data[[".predicted_field_quantile_0.025"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.025quant`[1:nrow(int_points)]
-            full_inla_data[[".predicted_field_quantile_0.975"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.975quant`[1:nrow(int_points)]
-            full_inla_data[[".predicted_field_quantile_0.5"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.5quant`[1:nrow(int_points)]
+            full_inla_data[[".predicted_field"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$mean[1:nrow_int_points]
+            full_inla_data[[".predicted_field_std_dev"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$sd[1:nrow_int_points]
+            full_inla_data[[".predicted_field_mode"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$mode[1:nrow_int_points]
+            full_inla_data[[".predicted_field_quantile_0.025"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.025quant`[1:nrow_int_points]
+            full_inla_data[[".predicted_field_quantile_0.975"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.975quant`[1:nrow_int_points]
+            full_inla_data[[".predicted_field_quantile_0.5"]][idx_int_points] <- inla_fit$summary.random[[model_name]]$`0.5quant`[1:nrow_int_points]
 
             full_inla_data[[".linear_predictor"]] <- inla_fit$summary.linear.predictor$mean[1:nrow(full_inla_data)]
             full_inla_data[[".linear_predictor_std_dev"]] <- inla_fit$summary.linear.predictor$sd[1:nrow(full_inla_data)]
