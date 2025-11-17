@@ -15,16 +15,40 @@
 #' @param start_sigma Starting value for sigma.
 #' @param prior_sigma a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of sigma on the log scale.
+#' If bounds are specified, it can also contain `mean` and `prec` for the beta prior.
+#' @param sigma_lower_bound Lower bound for the sigma parameter. Default is NULL (no lower bound, or 0).
+#' @param sigma_upper_bound Upper bound for the sigma parameter. Default is NULL (no upper bound).
+#' If specified, a beta prior will be used.
+#' @param sigma_prec_inc Amount to increase the precision in the beta prior
+#' distribution for the sigma parameter. Default is 1.
 #' @param start_tau Starting value for tau.
 #' @param prior_tau a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of tau on the log scale.
+#' If bounds are specified, it can also contain `mean` and `prec` for the beta prior.
+#' @param tau_lower_bound Lower bound for the tau parameter. Default is NULL (no lower bound, or 0).
+#' @param tau_upper_bound Upper bound for the tau parameter. Default is NULL (no upper bound).
+#' If specified, a beta prior will be used.
+#' @param tau_prec_inc Amount to increase the precision in the beta prior
+#' distribution for the tau parameter. Default is 1.
 #' @param start_range Starting value for range parameter.
 #' @param prior_range a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of the range parameter on
-#' the log scale. Will not be used if prior.kappa is non-null.
+#' the log scale. Will not be used if prior.kappa is non-null. If bounds are specified,
+#' it can also contain `mean` and `prec` for the beta prior.
+#' @param range_lower_bound Lower bound for the range parameter. Default is NULL (no lower bound, or 0).
+#' @param range_upper_bound Upper bound for the range parameter. Default is NULL (no upper bound).
+#' If specified, a beta prior will be used.
+#' @param range_prec_inc Amount to increase the precision in the beta prior
+#' distribution for the range parameter. Default is 1. Similar to nu.prec.inc in rspde.matern().
 #' @param start_kappa Starting value for kappa.
 #' @param prior_kappa a `list` containing the elements `meanlog` and
 #' `sdlog`, that is, the mean and standard deviation of kappa on the log scale.
+#' If bounds are specified, it can also contain `mean` and `prec` for the beta prior.
+#' @param kappa_lower_bound Lower bound for the kappa parameter. Default is NULL (no lower bound, or 0).
+#' @param kappa_upper_bound Upper bound for the kappa parameter. Default is NULL (no upper bound).
+#' If specified, a beta prior will be used.
+#' @param kappa_prec_inc Amount to increase the precision in the beta prior
+#' distribution for the kappa parameter. Default is 1.
 #' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
 #' @param type_start_range_bbox Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
@@ -66,12 +90,24 @@ graph_spde <- function(graph_object,
                        parameterization = c("matern", "spde"),
                        start_range = NULL,
                        prior_range = NULL,
+                       range_lower_bound = NULL,
+                       range_upper_bound = NULL,
+                       range_prec_inc = 1,
                        start_kappa = NULL,
                        prior_kappa = NULL,
+                       kappa_lower_bound = NULL,
+                       kappa_upper_bound = NULL,
+                       kappa_prec_inc = 1,
                        start_sigma = NULL,
                        prior_sigma = NULL,
+                       sigma_lower_bound = NULL,
+                       sigma_upper_bound = NULL,
+                       sigma_prec_inc = 1,
                        start_tau = NULL,
                        prior_tau = NULL,
+                       tau_lower_bound = NULL,
+                       tau_upper_bound = NULL,
+                       tau_prec_inc = 1,
                        factor_start_range = 0.3,
                        type_start_range_bbox = "diag",
                        shared_lib = "detect",
@@ -90,12 +126,24 @@ graph_spde <- function(graph_object,
       args = list(
         start_range = start_range,
         prior_range = prior_range,
+        range_lower_bound = range_lower_bound,
+        range_upper_bound = range_upper_bound,
+        range_prec_inc = range_prec_inc,
         start_kappa = start_kappa,
         prior_kappa = prior_kappa,
+        kappa_lower_bound = kappa_lower_bound,
+        kappa_upper_bound = kappa_upper_bound,
+        kappa_prec_inc = kappa_prec_inc,
         start_sigma = start_sigma,
         prior_sigma = prior_sigma,
+        sigma_lower_bound = sigma_lower_bound,
+        sigma_upper_bound = sigma_upper_bound,
+        sigma_prec_inc = sigma_prec_inc,
         start_tau = start_tau,
         prior_tau = prior_tau,
+        tau_lower_bound = tau_lower_bound,
+        tau_upper_bound = tau_upper_bound,
+        tau_prec_inc = tau_prec_inc,
         stationary_endpoints = stationary_endpoints,
         factor_start_range = factor_start_range,
         type_start_range_bbox = type_start_range_bbox,
@@ -350,8 +398,44 @@ graph_spde <- function(graph_object,
   }
 
 
-  ## End of alpha = 2 
-  
+  ## End of alpha = 2
+
+  # Process bounds for parameters
+  # Determine which parameterization to use
+  if(parameterization == "matern"){
+    param1_name <- "range"
+    param2_name <- "sigma"
+    param1_lower <- range_lower_bound
+    param1_upper <- range_upper_bound
+    param1_prec_inc <- range_prec_inc
+    param2_lower <- sigma_lower_bound
+    param2_upper <- sigma_upper_bound
+    param2_prec_inc <- sigma_prec_inc
+  } else{
+    param1_name <- "kappa"
+    param2_name <- "tau"
+    param1_lower <- kappa_lower_bound
+    param1_upper <- kappa_upper_bound
+    param1_prec_inc <- kappa_prec_inc
+    param2_lower <- tau_lower_bound
+    param2_upper <- tau_upper_bound
+    param2_prec_inc <- tau_prec_inc
+  }
+
+  # Determine if we have bounds
+  has_param1_upper <- !is.null(param1_upper)
+  has_param1_lower <- !is.null(param1_lower)
+  has_param2_upper <- !is.null(param2_upper)
+  has_param2_lower <- !is.null(param2_lower)
+
+  # Set default lower bounds if not specified
+  if(is.null(param1_lower)){
+    param1_lower <- 0
+  }
+  if(is.null(param2_lower)){
+    param2_lower <- 0
+  }
+
     if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
       model_start <- ifelse(alpha==1,"alpha1", "alpha2")
       if(verbose>0){
@@ -385,7 +469,7 @@ graph_spde <- function(graph_object,
     prior_sigma$meanlog <- 0
   }
   # converting to reciprocal tau
-  const_tmp <-  sqrt(gamma(nu) / (exp(prior_kappa$meanlog)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
+  const_tmp <-  sqrt(gamma(nu) / (exp(prior_kappa$meanlog)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
   prior_sigma$meanlog <- log(exp(prior_sigma$meanlog)/const_tmp)
 
   if(!is.null(prior_tau$meanlog)){
@@ -396,34 +480,144 @@ graph_spde <- function(graph_object,
     prior_sigma$sdlog <- sqrt(10)
   }
 
-  if (is.null(start_kappa)) {
-    start_lkappa <- prior_kappa$meanlog
-  } else{
-    start_lkappa <- log(start_kappa)
-  }
-  if (is.null(start_sigma)) {
-    start_lsigma <- prior_sigma$meanlog
-  } else{
-    start_lsigma <- log(start_sigma)
-  }
-  # converting to reciprocal tau
-  const_tmp <-  sqrt(gamma(nu) / (exp(start_lkappa)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))   
-  start_lsigma <- log(exp(start_lsigma)/const_tmp)
-  if(!is.null(start_tau)){
-    start_lsigma <- -log(start_tau)
-  }
-  if(is.null(start_range)){
-    start_lrange <- prior_range$meanlog
-  } else{
-    start_lrange <- log(start_range)
+  # Setup beta priors for bounded parameters
+  # For param1 (kappa/range)
+  if(has_param1_upper){
+    # Using beta prior for bounded parameter
+    if(parameterization == "matern"){
+      # range parameter
+      if(is.null(prior_range$mean)){
+        prior_range$mean <- min(1, (param1_upper - param1_lower) / 2) + param1_lower
+      }
+      if(is.null(prior_range$prec)){
+        mu_temp <- (prior_range$mean - param1_lower) / (param1_upper - param1_lower)
+        prior_range$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param1_prec_inc
+      }
+    } else{
+      # kappa parameter
+      if(is.null(prior_kappa$mean)){
+        prior_kappa$mean <- min(1, (param1_upper - param1_lower) / 2) + param1_lower
+      }
+      if(is.null(prior_kappa$prec)){
+        mu_temp <- (prior_kappa$mean - param1_lower) / (param1_upper - param1_lower)
+        prior_kappa$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param1_prec_inc
+      }
+    }
   }
 
-  if(parameterization == "matern"){
-    start_theta <- start_lrange
-    prior_theta <- prior_range
-  } else{
-    start_theta <- start_lkappa
+  # For param2 (tau/sigma)
+  if(has_param2_upper){
+    # Using beta prior for bounded parameter
+    if(parameterization == "matern"){
+      # sigma parameter
+      if(is.null(prior_sigma$mean)){
+        prior_sigma$mean <- min(1, (param2_upper - param2_lower) / 2) + param2_lower
+      }
+      if(is.null(prior_sigma$prec)){
+        mu_temp <- (prior_sigma$mean - param2_lower) / (param2_upper - param2_lower)
+        prior_sigma$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param2_prec_inc
+      }
+    } else{
+      # tau parameter
+      if(is.null(prior_tau$mean)){
+        prior_tau$mean <- min(1, (param2_upper - param2_lower) / 2) + param2_lower
+      }
+      if(is.null(prior_tau$prec)){
+        mu_temp <- (prior_tau$mean - param2_lower) / (param2_upper - param2_lower)
+        prior_tau$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param2_prec_inc
+      }
+    }
+  }
+
+  # Handle starting values for bounded parameters
+  if (is.null(start_kappa)) {
+    if(has_param1_upper && parameterization == "spde"){
+      # Use mean for beta prior
+      start_kappa <- prior_kappa$mean
+    } else{
+      start_kappa <- exp(prior_kappa$meanlog)
+    }
+  }
+
+  if (is.null(start_sigma)) {
+    if(has_param2_upper && parameterization == "matern"){
+      # Use mean for beta prior
+      start_sigma <- prior_sigma$mean
+    } else{
+      start_sigma <- exp(prior_sigma$meanlog)
+    }
+  }
+
+  if(is.null(start_range)){
+    if(has_param1_upper && parameterization == "matern"){
+      # Use mean for beta prior
+      start_range <- prior_range$mean
+    } else{
+      start_range <- exp(prior_range$meanlog)
+    }
+  }
+
+  if(is.null(start_tau)){
+    if(has_param2_upper && parameterization == "spde"){
+      # Use mean for beta prior
+      start_tau <- prior_tau$mean
+    } else if(!is.null(prior_tau$meanlog)){
+      start_tau <- exp(prior_tau$meanlog)
+    }
+  }
+
+  # Compute transformed starting values based on parameterization type
+  if(parameterization == "spde"){
+    # For kappa
+    if(has_param1_upper){
+      # logit transformation: log(x - lower) - log(upper - x)
+      start_theta <- log(start_kappa - kappa_lower_bound) - log(kappa_upper_bound - start_kappa)
+    } else if(has_param1_lower && kappa_lower_bound > 0){
+      # shifted log transformation: log(x - lower)
+      start_theta <- log(start_kappa - kappa_lower_bound)
+    } else{
+      start_theta <- log(start_kappa)
+    }
     prior_theta <- prior_kappa
+
+    # For tau (similar to sigma)
+    if(has_param2_upper){
+      start_lsigma <- log(start_tau - tau_lower_bound) - log(tau_upper_bound - start_tau)
+    } else if(has_param2_lower && tau_lower_bound > 0){
+      start_lsigma <- log(start_tau - tau_lower_bound)
+    } else{
+      # converting to reciprocal tau
+      const_tmp <-  sqrt(gamma(nu) / (start_kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+      start_lsigma <- log(start_sigma/const_tmp)
+      if(!is.null(start_tau)){
+        start_lsigma <- -log(start_tau)
+      }
+    }
+  } else{
+    # For range
+    if(has_param1_upper){
+      # logit transformation
+      start_theta <- log(start_range - range_lower_bound) - log(range_upper_bound - start_range)
+    } else if(has_param1_lower && range_lower_bound > 0){
+      # shifted log transformation
+      start_theta <- log(start_range - range_lower_bound)
+    } else{
+      start_theta <- log(start_range)
+    }
+    prior_theta <- prior_range
+
+    # For sigma
+    if(has_param2_upper){
+      # logit transformation
+      start_lsigma <- log(start_sigma - sigma_lower_bound) - log(sigma_upper_bound - start_sigma)
+    } else if(has_param2_lower && sigma_lower_bound > 0){
+      # shifted log transformation
+      start_lsigma <- log(start_sigma - sigma_lower_bound)
+    } else{
+      # converting to reciprocal tau
+      const_tmp <-  sqrt(gamma(nu) / (exp(log(sqrt(8*nu)) - log(start_range))^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+      start_lsigma <- log(start_sigma/const_tmp)
+    }
   }
 
   ### Location of object files
@@ -476,8 +670,16 @@ if(alpha == 1){
             start_lsigma = start_lsigma,
             prior_theta_meanlog = prior_theta$meanlog,
             prior_theta_sdlog = prior_theta$sdlog,
+            prior_theta_mean = ifelse(is.null(prior_theta$mean), 0, prior_theta$mean),
+            prior_theta_prec = ifelse(is.null(prior_theta$prec), 0, prior_theta$prec),
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
+            prior_sigma_mean = ifelse(is.null(prior_sigma$mean), 0, prior_sigma$mean),
+            prior_sigma_prec = ifelse(is.null(prior_sigma$prec), 0, prior_sigma$prec),
+            theta_lower_bound = param1_lower,
+            theta_upper_bound = ifelse(is.null(param1_upper), -1, param1_upper),
+            sigma_lower_bound = param2_lower,
+            sigma_upper_bound = ifelse(is.null(param2_upper), -1, param2_upper),
             parameterization = parameterization))
   } else{
       model <-
@@ -493,8 +695,16 @@ if(alpha == 1){
             start_lsigma = start_lsigma,
             prior_theta_meanlog = prior_theta$meanlog,
             prior_theta_sdlog = prior_theta$sdlog,
+            prior_theta_mean = ifelse(is.null(prior_theta$mean), 0, prior_theta$mean),
+            prior_theta_prec = ifelse(is.null(prior_theta$prec), 0, prior_theta$prec),
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
+            prior_sigma_mean = ifelse(is.null(prior_sigma$mean), 0, prior_sigma$mean),
+            prior_sigma_prec = ifelse(is.null(prior_sigma$prec), 0, prior_sigma$prec),
+            theta_lower_bound = param1_lower,
+            theta_upper_bound = ifelse(is.null(param1_upper), -1, param1_upper),
+            sigma_lower_bound = param2_lower,
+            sigma_upper_bound = ifelse(is.null(param2_upper), -1, param2_upper),
             parameterization = parameterization,
             w = weights_directional,
             BC = as.integer(BC),
@@ -519,8 +729,16 @@ if(alpha == 1){
             start_lsigma = start_lsigma,
             prior_theta_meanlog = prior_theta$meanlog,
             prior_theta_sdlog = prior_theta$sdlog,
+            prior_theta_mean = ifelse(is.null(prior_theta$mean), 0, prior_theta$mean),
+            prior_theta_prec = ifelse(is.null(prior_theta$prec), 0, prior_theta$prec),
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
+            prior_sigma_mean = ifelse(is.null(prior_sigma$mean), 0, prior_sigma$mean),
+            prior_sigma_prec = ifelse(is.null(prior_sigma$prec), 0, prior_sigma$prec),
+            theta_lower_bound = param1_lower,
+            theta_upper_bound = ifelse(is.null(param1_upper), -1, param1_upper),
+            sigma_lower_bound = param2_lower,
+            sigma_upper_bound = ifelse(is.null(param2_upper), -1, param2_upper),
             parameterization = parameterization))
 }
 model$graph_spde <- graph_spde
