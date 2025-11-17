@@ -1112,7 +1112,12 @@ intersection2 <- function(lines1, lines2){
 intersection3 <- function(lines1_sf, lines2_sf){
   inter_lines <- sf::st_intersection(lines1_sf, lines2_sf)
   inter_lines <- unique(inter_lines)
-  return(sf::st_as_sfc(inter_lines))
+  if (inherits(inter_lines, "sfc")) {
+  inter_lines
+  } else {
+    sf::st_as_sfc(inter_lines)
+  }
+  return(inter_lines)
 }
 
 #' @noRd

@@ -267,7 +267,7 @@ likelihood_alpha1_directional <- function(theta,
 #' @noRd
 likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
                              X_cov = NULL, repl, BC, parameterization) {
-  if(is.null(graph$C)){
+  if(is.null(graph$CoB)){
     graph$buildC(2)
   } else if(graph$CoB$alpha == 1){
      graph$buildC(2)
@@ -534,7 +534,7 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
                               X_cov = NULL, repl = NULL) {
 
   # Ensure we have alpha=2 basis construction
-  if(is.null(graph$C)){
+  if(is.null(graph$CoB)){
     graph$buildC(2)
   } else if(graph$CoB$alpha == 1){
     graph$buildC(2)

@@ -6345,20 +6345,35 @@ return(mapview_output)
       if (verbose) {
         message("Adding observation data...")
       }
-      
-      # Extract coordinate data
-      coord_data <- data.frame(
-        x = old_data[[".coord_x"]],
-        y = old_data[[".coord_y"]]
-      )
-      
-      # Remove coordinate columns and internal columns from data to add
-      data_to_add <- old_data
-      internal_cols <- c(".coord_x", ".coord_y", ".edge_number", ".distance_on_edge", ".group")
-      data_to_add[internal_cols] <- NULL
-      
-      # Add observations
-      new_graph$add_observations(coord = coord_data, data = data_to_add, verbose = if (verbose) 1 else 0)
+      tryCatch({
+        internal_cols <- c(".edge_number", ".distance_on_edge")
+        old_data[internal_cols] <- NULL
+        if(inherits(old_data, "metric_graph_data")){
+          class(old_data) <- setdiff(class(old_data), "metric_graph_data")
+        }
+
+        # Convert to sf object if CRS is available
+        if(!is.null(old_crs) && all(c(".coord_x", ".coord_y") %in% names(old_data))) {
+          old_data_df <- as.data.frame(old_data)
+          old_data <- sf::st_as_sf(
+            old_data_df,
+            coords = c(".coord_x", ".coord_y"),
+            crs = old_crs
+          )
+        }
+
+        # Add observations
+        new_graph$add_observations(
+          data = old_data, 
+          coord_x = ".coord_x", 
+          coord_y = ".coord_y", 
+          data_coords = "spatial", 
+          group = ".group", 
+          verbose = if (verbose) 1 else 0
+        )
+      }, error = function(e) {
+        if (verbose) message("Could not restore observation data: ", e$message)
+      })
     }
     
     # Restore computed components if they existed
@@ -6425,7 +6440,7 @@ return(mapview_output)
       message("Graph update completed successfully!")
       message(sprintf("New graph: %d vertices, %d edges", new_graph$nV, new_graph$nE))
       if (!is.null(old_data)) {
-        message(sprintf("Observations: %d locations", length(old_data[[".coord_x"]])))
+      message(sprintf("Total observations: %d", length(old_data[[".group"]])))
       }
     }
     
@@ -6477,7 +6492,6 @@ return(mapview_output)
       }
 
       Points <- matrix(NA, nrow=nrow(PtE), ncol=ncol(PtE))
-
 
       for (i in 1:dim(PtE)[1]) {
         Points[i,] <- interpolate2(self$edges[[PtE[i, 1]]] ,
@@ -8023,8 +8037,44 @@ format_data = function(data_res, format) {
                         if (max(weight_indices) <= nrow(new_weight_rows)) {
                             original_weight_row <- private$edge_weights[Ei, , drop = FALSE]
                             # replication using rep.int
-                            for (col_idx in seq_len(ncol(new_weight_rows))) {
-                                new_weight_rows[weight_indices, col_idx] <- original_weight_row[1, col_idx]
+                            # Handle different edge weight formats safely
+                            if (is.data.frame(original_weight_row)) {
+                                # For data.frames/tibbles, iterate through each column
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    # Extract the column value - this gets the actual atomic value
+                                    col_value <- original_weight_row[[col_idx]]
+                                    
+                                    # Check the type of the target column and the source value
+                                    target_col <- new_weight_rows[[col_idx]]
+                                    
+                                    # Ensure type compatibility
+                                    if (is.character(col_value) || is.factor(col_value)) {
+                                        # For character/factor columns, convert to character
+                                        new_weight_rows[[col_idx]][weight_indices] <- as.character(col_value)
+                                    } else if (is.numeric(col_value)) {
+                                        # For numeric columns
+                                        new_weight_rows[[col_idx]][weight_indices] <- col_value
+                                    } else {
+                                        # For other types, try direct assignment
+                                        new_weight_rows[[col_idx]][weight_indices] <- col_value
+                                    }
+                                }
+                            } else if (is.matrix(original_weight_row)) {
+                                # For matrices, direct indexing works
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    new_weight_rows[weight_indices, col_idx] <- original_weight_row[1, col_idx]
+                                }
+                            } else if (is.null(original_weight_row)) {
+                                # Handle NULL case - fill with NA
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    new_weight_rows[weight_indices, col_idx] <- NA
+                                }
+                            } else {
+                                # Fallback for unexpected types - convert to matrix first
+                                original_weight_row <- as.matrix(original_weight_row)
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    new_weight_rows[weight_indices, col_idx] <- original_weight_row[1, col_idx]
+                                }
                             }
                         }
                         weight_idx <- weight_idx + n_new
@@ -8973,15 +9023,10 @@ graph_components <-  R6::R6Class("graph_components",
 #'
 #' @export
 update_graph <- function(old_graph, verbose = TRUE) {
-  
+
   # Check if input is a metric_graph object
   if (!inherits(old_graph, "metric_graph")) {
     stop("Input must be a metric_graph object")
-  }
-  
-  # Check if the method exists (for newer graphs)
-  if ("update_graph" %in% names(old_graph)) {
-    return(old_graph$update_graph(verbose = verbose))
   }
   
   # For older graphs without the method, implement it directly
@@ -8997,6 +9042,7 @@ update_graph <- function(old_graph, verbose = TRUE) {
   
   # Extract edge weights if they exist
   old_edge_weights <- NULL
+
   if (!is.null(old_graph$.__enclos_env__$private$edge_weights)) {
     tryCatch({
       old_edge_weights <- old_graph$get_edge_weights(data.frame = TRUE)
@@ -9004,7 +9050,7 @@ update_graph <- function(old_graph, verbose = TRUE) {
       if (verbose) message("Could not extract edge weights, using defaults")
     })
   }
-  
+
   # Extract data if it exists
   old_data <- NULL
   if (!is.null(old_graph$.__enclos_env__$private$data)) {
@@ -9058,14 +9104,16 @@ update_graph <- function(old_graph, verbose = TRUE) {
   if (!is.null(old_edges)) {
     new_graph$edges <- old_edges
   }
+
   if (!is.null(old_edge_lengths)) {
     new_graph$edge_lengths <- old_edge_lengths
   }
-  
+
   # Set directional weight functions if they existed
   if (!is.null(old_dir_weights_in)) {
     new_graph$DirectionalWeightFunction_in <- old_dir_weights_in
   }
+
   if (!is.null(old_dir_weights_out)) {
     new_graph$DirectionalWeightFunction_out <- old_dir_weights_out
   }
@@ -9076,23 +9124,35 @@ update_graph <- function(old_graph, verbose = TRUE) {
       message("Adding observation data...")
     }
     
-    tryCatch({
-      # Extract coordinate data
-      coord_data <- data.frame(
-        x = old_data[[".coord_x"]],
-        y = old_data[[".coord_y"]]
+  tryCatch({
+    internal_cols <- c(".edge_number", ".distance_on_edge")
+    old_data[internal_cols] <- NULL
+    if(inherits(old_data, "metric_graph_data")){
+      class(old_data) <- setdiff(class(old_data), "metric_graph_data")
+    }
+    
+    # Convert to sf object if CRS is available
+    if(!is.null(old_crs) && all(c(".coord_x", ".coord_y") %in% names(old_data))) {
+      old_data_df <- as.data.frame(old_data)
+      old_data <- sf::st_as_sf(
+        old_data_df,
+        coords = c(".coord_x", ".coord_y"),
+        crs = old_crs
       )
-      
-      # Remove coordinate columns and internal columns from data to add
-      data_to_add <- old_data
-      internal_cols <- c(".coord_x", ".coord_y", ".edge_number", ".distance_on_edge", ".group")
-      data_to_add[internal_cols] <- NULL
-      
-      # Add observations
-      new_graph$add_observations(coord = coord_data, data = data_to_add, verbose = if (verbose) 1 else 0)
-    }, error = function(e) {
-      if (verbose) message("Could not restore observation data: ", e$message)
-    })
+    }
+    
+    # Add observations
+    new_graph$add_observations(
+      data = old_data, 
+      coord_x = ".coord_x", 
+      coord_y = ".coord_y", 
+      data_coords = "spatial", 
+      group = ".group", 
+      verbose = if (verbose) 1 else 0
+    )
+  }, error = function(e) {
+    if (verbose) message("Could not restore observation data: ", e$message)
+  })
   }
   
   # Restore computed components if they existed
@@ -9154,12 +9214,12 @@ update_graph <- function(old_graph, verbose = TRUE) {
   if (!is.null(old_graph$vertices)) {
     new_graph$vertices <- old_graph$vertices
   }
-  
+
   if (verbose) {
     message("Graph update completed successfully!")
     message(sprintf("New graph: %d vertices, %d edges", new_graph$nV, new_graph$nE))
     if (!is.null(old_data)) {
-      message(sprintf("Observations: %d locations", length(old_data[[".coord_x"]])))
+      message(sprintf("Total observations: %d", length(old_data[[".group"]])))
     }
   }
   
