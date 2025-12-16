@@ -1,4 +1,3 @@
-
 #' 'INLA' implementation of Whittle-Matérn fields for metric graphs
 #'
 #' This function creates an 'INLA' object that can be used
@@ -7,7 +6,7 @@
 #' @param graph_object A `metric_graph` object.
 #' @param alpha The order of the SPDE.
 #' @param LGCP Logical. If TRUE, the model will be used as a latent model for a Log-Gaussian Cox Process. Default is FALSE.
-#' @param directional Should a directional model be used? Currently only implemented for `alpha=1`. 
+#' @param directional Should a directional model be used? Currently only implemented for `alpha=1`.
 #' @param stationary_endpoints Which vertices of degree 1 should contain
 #' stationary boundary conditions? Set to "all" for all vertices of degree 1, "none" for none of the vertices of degree 1, or pass the indices of the vertices of degree 1 for which stationary conditions are desired.
 #' @param parameterization Which parameterization to be used? The options are
@@ -112,8 +111,7 @@ graph_spde <- function(graph_object,
                        type_start_range_bbox = "diag",
                        shared_lib = "detect",
                        debug = FALSE,
-                       verbose = 0){
-
+                       verbose = 0) {
   parameterization <- parameterization[[1]]
 
   # Validation checks for bounds
@@ -217,22 +215,22 @@ graph_spde <- function(graph_object,
     return(result)
   }
 
-  if(!(alpha%in%c(1,2))){
+  if (!(alpha %in% c(1, 2))) {
     stop("alpha must be either 1 or 2!")
   }
 
   graph_spde <- graph_object$clone()
 
-  if(verbose>0){
+  if (verbose > 0) {
     message("Turning observations into vertices...")
   }
 
-  if(!is.null(graph_spde$.__enclos_env__$private$data)){
+  if (!is.null(graph_spde$.__enclos_env__$private$data)) {
     graph_spde$.__enclos_env__$private$data[[".internal_ordering"]] <- seq_len(length(graph_spde$.__enclos_env__$private$data[[".group"]]))
-    graph_spde$observation_to_vertex(mesh_warning=FALSE, verbose = verbose)
+    graph_spde$observation_to_vertex(mesh_warning = FALSE, verbose = verbose)
   }
 
-  if(!(alpha%in%c(1,2))){
+  if (!(alpha %in% c(1, 2))) {
     stop("alpha must be either 1 or 2!")
   }
 
@@ -243,184 +241,191 @@ graph_spde <- function(graph_object,
   EtV <- graph_spde$E
   El <- graph_spde$edge_lengths
 
-  if(verbose>0){
+  if (verbose > 0) {
     message("Constructing the sparsity graph...")
   }
 
-  i_ <- j_ <- rep(0, dim(V)[1]*4)
+  i_ <- j_ <- rep(0, dim(V)[1] * 4)
   nE <- dim(EtV)[1]
   count <- 0
-  if(alpha == 1){
-    if(!directional){
-      for(i in 1:nE){
+  if (alpha == 1) {
+    if (!directional) {
+      for (i in 1:nE) {
         l_e <- El[i]
-    
-        if(EtV[i,1]!=EtV[i,2]){
-        
-          i_[count + 1] <- EtV[i,1] - 1
-          j_[count + 1] <- EtV[i,1] - 1
-    
-          i_[count + 2] <- EtV[i,2] - 1
-          j_[count + 2] <- EtV[i,2] - 1
-    
-    
-          i_[count + 3] <- EtV[i,1] - 1
-          j_[count + 3] <- EtV[i,2] - 1
-    
-          i_[count + 4] <- EtV[i,2] - 1
-          j_[count + 4] <- EtV[i,1] - 1
+
+        if (EtV[i, 1] != EtV[i, 2]) {
+          i_[count + 1] <- EtV[i, 1] - 1
+          j_[count + 1] <- EtV[i, 1] - 1
+
+          i_[count + 2] <- EtV[i, 2] - 1
+          j_[count + 2] <- EtV[i, 2] - 1
+
+
+          i_[count + 3] <- EtV[i, 1] - 1
+          j_[count + 3] <- EtV[i, 2] - 1
+
+          i_[count + 4] <- EtV[i, 2] - 1
+          j_[count + 4] <- EtV[i, 1] - 1
           count <- count + 4
-        }else{
-          i_[count + 1] <- EtV[i,1] - 1
-          j_[count + 1] <- EtV[i,1] - 1
+        } else {
+          i_[count + 1] <- EtV[i, 1] - 1
+          j_[count + 1] <- EtV[i, 1] - 1
           count <- count + 1
         }
       }
       n.v <- dim(V)[1]
-    
-      if(stationary_endpoints == "all"){
+
+      if (stationary_endpoints == "all") {
         i.table <- table(i_[1:count])
-        index <- as.integer(names(which(i.table<3)))
+        index <- as.integer(names(which(i.table < 3)))
         index <- index
-      } else if(stationary_endpoints == "none"){
+      } else if (stationary_endpoints == "none") {
         index <- NULL
-      } else{
+      } else {
         index <- stationary_endpoints - 1
       }
-        if(!is.null(index)){
-        #does this work for circle?
-            i_ <- c(i_[1:count], index)
-            j_ <- c(j_[1:count], index)
-            count <- count + length(index)
-        }
-    
-        if(is.null(index)){
-            index <- -1
-        }
-    
-        EtV2 <- EtV[,1]
-        EtV3 <- EtV[,2]
-        El <- as.vector(El)
-    
-    
+      if (!is.null(index)) {
+        # does this work for circle?
+        i_ <- c(i_[1:count], index)
+        j_ <- c(j_[1:count], index)
+        count <- count + length(index)
+      }
+
+      if (is.null(index)) {
+        index <- -1
+      }
+
+      EtV2 <- EtV[, 1]
+      EtV3 <- EtV[, 2]
+      El <- as.vector(El)
+
+
       idx_ij <- order(i_, j_)
       j_ <- j_[idx_ij]
       i_ <- i_[idx_ij]
-    
+
       idx_sub <- which(i_ <= j_)
       j_ <- j_[idx_sub]
       i_ <- i_[idx_sub]
-    
+
       graph_matrix_1 <- cbind(i_, j_)
       graph_matrix <- unique(graph_matrix_1)
-    
+
       count_idx <- numeric(nrow(graph_matrix))
-    
+
       row_tmp <- 1
-      for(i in 1:nrow(graph_matrix)){
+      for (i in 1:nrow(graph_matrix)) {
         count_tmp <- 0
         j <- row_tmp
-        while(j <= nrow(graph_matrix_1) && all(graph_matrix[i,]==graph_matrix_1[j,])){
+        while (j <= nrow(graph_matrix_1) && all(graph_matrix[i, ] == graph_matrix_1[j, ])) {
           count_tmp <- count_tmp + 1
           j <- j + 1
         }
         row_tmp <- j
         count_idx[i] <- count_tmp
       }
-    
-      i_ <- graph_matrix[,1]
-      j_ <- graph_matrix[,2]
-    
+
+      i_ <- graph_matrix[, 1]
+      j_ <- graph_matrix[, 2]
+
       idx_ij <- idx_ij[idx_sub]
-      idx_ij <- sort(idx_ij, index.return=TRUE)
+      idx_ij <- sort(idx_ij, index.return = TRUE)
       idx_ij <- idx_ij$ix
-    
+
       idx_ij <- idx_ij - 1
-    } else{
-    weights_directional <- 0
-    Q_tmp <- Qalpha1_edges(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=stationary_endpoints, w = weights_directional)
-    
-    if(is.character(stationary_endpoints)){
-      stationary_endpoints <- stationary_endpoints[[1]]
-      if(!(stationary_endpoints %in% c("all", "none"))){
-        stop("If stationary_endpoints is a string, it must be either 'all' or 'none', otherwise it must be a numeric vector.")
+    } else {
+      weights_directional <- 0
+      Q_tmp <- Qalpha1_edges(theta = c(1, 1), graph = graph_spde, BC = BC, stationary_points = stationary_endpoints, w = weights_directional)
+
+      if (is.character(stationary_endpoints)) {
+        stationary_endpoints <- stationary_endpoints[[1]]
+        if (!(stationary_endpoints %in% c("all", "none"))) {
+          stop("If stationary_endpoints is a string, it must be either 'all' or 'none', otherwise it must be a numeric vector.")
+        }
+        stat_indices <- which(graph_spde$get_degrees("indegree") == 0)
+      } else {
+        stat_indices <- stationary_endpoints
+        if (!is.numeric(stat_indices)) {
+          stop("stationary_endpoints must be either numeric or a string.")
+        }
       }
-      stat_indices <- which(graph_spde$get_degrees("indegree")==0)
-    } else{
-      stat_indices <- stationary_endpoints
-      if(!is.numeric(stat_indices)){
-        stop("stationary_endpoints must be either numeric or a string.")
+      if (stationary_endpoints == "none") {
+        BC <- 0
+      } else {
+        BC <- 1
       }
+
+      ind_stat_indices <- NULL
+
+      for (v in stat_indices) {
+        edge <- which(graph_spde$E[, 1] == v)[1] # only put stationary of one of indices
+        ind_stat_indices <- c(ind_stat_indices, 2 * (edge - 1))
+      }
+
+      if (is.null(graph_spde$CoB)) {
+        graph_spde$buildDirectionalConstraints(alpha = 1)
+      } else if (graph_spde$CoB$alpha == 2) {
+        graph_spde$buildDirectionalConstraints(alpha = 1)
+      }
+      if (length(graph_spde$CoB$S) == 0) {
+        Tc <- graph_spde$CoB$T
+      } else {
+        n_const <- length(graph_spde$CoB$S)
+        ind.const <- c(1:n_const)
+        Tc <- graph_spde$CoB$T[-ind.const, ]
+      }
+      Q_tmp <- Tc %*% Q_tmp %*% t(Tc)
+
+      Q_tmp <- INLA::inla.as.sparse(Q_tmp)
+      ii <- Q_tmp@i
+      Q_tmp@i <- Q_tmp@j
+      Q_tmp@j <- ii
+      idx <- which(Q_tmp@i <= Q_tmp@j)
+      Q_tmp@i <- Q_tmp@i[idx]
+      Q_tmp@j <- Q_tmp@j[idx]
+      Q_tmp@x <- Q_tmp@x[idx]
+
+      i_ <- Q_tmp@i
+      j_ <- Q_tmp@j
+
+      Tc <- as(Tc, "TsparseMatrix")
+      i_Tc <- Tc@i
+      j_Tc <- Tc@j
+      x_Tc <- Tc@x
     }
-    if(stationary_endpoints == "none"){
+  } else if (alpha == 2) {
+    if (directional) {
+      stop("Directional models are currently not implemented for 'alpha=2'.")
+    }
+    if (stationary_endpoints == "all") {
+      i.table <- table(c(graph_spde$E))
+      index <- as.integer(names(which(i.table == 1)))
+      BC <- 1
+    } else if (stationary_endpoints == "none") {
+      index <- NULL
       BC <- 0
-    } else{
+    } else {
+      index <- stationary_endpoints - 1
       BC <- 1
     }
 
-    ind_stat_indices <- NULL
-
-    for (v in stat_indices) {
-      edge <- which(graph_spde$E[,1]==v)[1] #only put stationary of one of indices
-      ind_stat_indices <- c(ind_stat_indices, 2 *  (edge-1))
-    }
-    
-    if(is.null(graph_spde$CoB)){
-      graph_spde$buildDirectionalConstraints(alpha = 1)
-    } else if(graph_spde$CoB$alpha == 2){
-      graph_spde$buildDirectionalConstraints(alpha = 1)
-    }
-    n_const <- length(graph_spde$CoB$S)
-    ind.const <- c(1:n_const)
-    Tc <- graph_spde$CoB$T[-ind.const, ]                      
-    Q_tmp <- Tc%*%Q_tmp%*%t(Tc)
-
-    Q_tmp <- INLA::inla.as.sparse(Q_tmp)
-    ii <- Q_tmp@i
-    Q_tmp@i <- Q_tmp@j
-    Q_tmp@j <- ii
-    idx <- which(Q_tmp@i <= Q_tmp@j)
-    Q_tmp@i <- Q_tmp@i[idx]
-    Q_tmp@j <- Q_tmp@j[idx]
-    Q_tmp@x <- Q_tmp@x[idx]
-    
-    i_ <- Q_tmp@i
-    j_ <- Q_tmp@j
-
-    Tc <- as(Tc, "TsparseMatrix")
-    i_Tc <- Tc@i
-    j_Tc <- Tc@j
-    x_Tc <- Tc@x
-    }
-  } else if(alpha == 2){
-    if(directional){
-      stop("Directional models are currently not implemented for 'alpha=2'.")
-    }
-    if(stationary_endpoints == "all"){
-        i.table <- table(c(graph_spde$E))
-        index <- as.integer(names(which(i.table == 1)))
-        BC = 1
-    } else if(stationary_endpoints == "none"){
-      index <- NULL
-      BC = 0
-    } else{
-        index <- stationary_endpoints - 1
-        BC = 1
-    }
-
-    Q_tmp <- Qalpha2(theta = c(1,1), graph = graph_spde, BC=BC, stationary_points=index)
-    if(verbose>0){
+    Q_tmp <- Qalpha2(theta = c(1, 1), graph = graph_spde, BC = BC, stationary_points = index)
+    if (verbose > 0) {
       message("Checking/Computing constraint matrix...")
     }
-    if(is.null(graph_spde$CoB)){
+    if (is.null(graph_spde$CoB)) {
       graph_spde$buildC(2, edge_constraint = BC)
-    } else if(graph_spde$CoB$alpha == 1){
+    } else if (graph_spde$CoB$alpha == 1) {
       graph_spde$buildC(2, edge_constraint = BC)
     }
-    n_const <- length(graph_spde$CoB$S)
-    ind.const <- c(1:n_const)
-    Tc <- graph_spde$CoB$T[-ind.const, ]                      
-    Q_tmp <- Tc%*%Q_tmp%*%t(Tc)
+    if (length(graph_spde$CoB$S) == 0) {
+      Tc <- graph_spde$CoB$T
+    } else {
+      n_const <- length(graph_spde$CoB$S)
+      ind.const <- c(1:n_const)
+      Tc <- graph_spde$CoB$T[-ind.const, ]
+    }
+    Q_tmp <- Tc %*% Q_tmp %*% t(Tc)
 
     Q_tmp <- INLA::inla.as.sparse(Q_tmp)
     ii <- Q_tmp@i
@@ -430,11 +435,11 @@ graph_spde <- function(graph_object,
     Q_tmp@i <- Q_tmp@i[idx]
     Q_tmp@j <- Q_tmp@j[idx]
     Q_tmp@x <- Q_tmp@x[idx]
-    
+
     i_ <- Q_tmp@i
     j_ <- Q_tmp@j
 
-    if(is.null(index)){
+    if (is.null(index)) {
       index <- -1
     }
     Tc <- as(Tc, "TsparseMatrix")
@@ -443,17 +448,17 @@ graph_spde <- function(graph_object,
     x_Tc <- Tc@x
     lower.edges <- NULL
     upper.edges <- NULL
-    if(!is.null(index)){
+    if (!is.null(index)) {
       lower.edges <- which(graph_spde$E[, 1] %in% index)
       upper.edges <- which(graph_spde$E[, 2] %in% index)
     }
 
     lower_edges_len <- length(lower.edges)
     upper_edges_len <- length(upper.edges)
-    if(length(lower.edges) == 0){
+    if (length(lower.edges) == 0) {
       lower.edges <- -1
     }
-    if(length(upper.edges)==0){
+    if (length(upper.edges) == 0) {
       upper.edges <- -1
     }
   }
@@ -463,7 +468,7 @@ graph_spde <- function(graph_object,
 
   # Process bounds for parameters
   # Determine which parameterization to use
-  if(parameterization == "matern"){
+  if (parameterization == "matern") {
     param1_name <- "range"
     param2_name <- "sigma"
     param1_lower <- range_lower_bound
@@ -472,7 +477,7 @@ graph_spde <- function(graph_object,
     param2_lower <- sigma_lower_bound
     param2_upper <- sigma_upper_bound
     param2_prec_inc <- sigma_prec_inc
-  } else{
+  } else {
     param1_name <- "kappa"
     param2_name <- "tau"
     param1_lower <- kappa_lower_bound
@@ -490,83 +495,84 @@ graph_spde <- function(graph_object,
   has_param2_lower <- !is.null(param2_lower)
 
   # Set default lower bounds if not specified
-  if(is.null(param1_lower)){
+  if (is.null(param1_lower)) {
     param1_lower <- 0
   }
-  if(is.null(param2_lower)){
+  if (is.null(param2_lower)) {
     param2_lower <- 0
   }
 
-    if(is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)){
-      model_start <- ifelse(alpha==1,"alpha1", "alpha2")
-      if(verbose>0){
-          message("Computing starting values...")
-      }
-      start_values_vector <- graph_starting_values(graph_spde,
-                      model = model_start, data=FALSE,
-                      factor_start_range = factor_start_range,
-                      type_start_range_bbox = type_start_range_bbox)$start_values
-
-      prior_kappa$meanlog <- log(start_values_vector[3])
-      prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
-    } else if(is.null(prior_range$meanlog)){
-      prior_range$meanlog <- log(sqrt(8 * nu)) -
-      prior_kappa$meanlog
-    } else{
-      prior_kappa$meanlog <- log(sqrt(8 * nu)) -
-      prior_range$meanlog
+  if (is.null(prior_kappa$meanlog) && is.null(prior_range$meanlog)) {
+    model_start <- ifelse(alpha == 1, "alpha1", "alpha2")
+    if (verbose > 0) {
+      message("Computing starting values...")
     }
+    start_values_vector <- graph_starting_values(graph_spde,
+      model = model_start, data = FALSE,
+      factor_start_range = factor_start_range,
+      type_start_range_bbox = type_start_range_bbox
+    )$start_values
+
+    prior_kappa$meanlog <- log(start_values_vector[3])
+    prior_range$meanlog <- log(sqrt(8 * nu)) - prior_kappa$meanlog
+  } else if (is.null(prior_range$meanlog)) {
+    prior_range$meanlog <- log(sqrt(8 * nu)) -
+      prior_kappa$meanlog
+  } else {
+    prior_kappa$meanlog <- log(sqrt(8 * nu)) -
+      prior_range$meanlog
+  }
 
   if (is.null(prior_kappa$sdlog)) {
     prior_kappa$sdlog <- sqrt(10)
   }
 
-  if(is.null(prior_range$sdlog)){
+  if (is.null(prior_range$sdlog)) {
     prior_range$sdlog <- sqrt(10)
   }
 
-  if(is.null(prior_sigma$meanlog)){
+  if (is.null(prior_sigma$meanlog)) {
     # the prior for sigma
     prior_sigma$meanlog <- 0
   }
   # converting to reciprocal tau
-  const_tmp <-  sqrt(gamma(nu) / (exp(prior_kappa$meanlog)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
-  prior_sigma$meanlog <- log(exp(prior_sigma$meanlog)/const_tmp)
+  const_tmp <- sqrt(gamma(nu) / (exp(prior_kappa$meanlog)^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+  prior_sigma$meanlog <- log(exp(prior_sigma$meanlog) / const_tmp)
 
-  if(!is.null(prior_tau$meanlog)){
+  if (!is.null(prior_tau$meanlog)) {
     prior_sigma$meanlog <- -prior_tau$meanlog
   }
 
-  if(is.null(prior_sigma$sdlog)){
+  if (is.null(prior_sigma$sdlog)) {
     prior_sigma$sdlog <- sqrt(10)
   }
 
   # Setup beta priors for bounded parameters based on graph_starting_values
   # For param1 (kappa/range)
-  if(has_param1_upper){
+  if (has_param1_upper) {
     # Using beta prior for bounded parameter
-    if(parameterization == "matern"){
+    if (parameterization == "matern") {
       # range parameter - use the mean from graph_starting_values
-      if(is.null(prior_range$mean)){
+      if (is.null(prior_range$mean)) {
         prior_range$mean <- exp(prior_range$meanlog)
         # Ensure it's within bounds
-        if(prior_range$mean <= param1_lower || prior_range$mean >= param1_upper){
+        if (prior_range$mean <= param1_lower || prior_range$mean >= param1_upper) {
           prior_range$mean <- (param1_upper + param1_lower) / 2
         }
       }
-      if(is.null(prior_range$prec)){
+      if (is.null(prior_range$prec)) {
         mu_temp <- (prior_range$mean - param1_lower) / (param1_upper - param1_lower)
         prior_range$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param1_prec_inc
       }
-    } else{
+    } else {
       # kappa parameter - use the mean from graph_starting_values
-      if(is.null(prior_kappa$mean)){
+      if (is.null(prior_kappa$mean)) {
         prior_kappa$mean <- exp(prior_kappa$meanlog)
-        if(prior_kappa$mean <= param1_lower || prior_kappa$mean >= param1_upper){
+        if (prior_kappa$mean <= param1_lower || prior_kappa$mean >= param1_upper) {
           prior_kappa$mean <- (param1_upper + param1_lower) / 2
         }
       }
-      if(is.null(prior_kappa$prec)){
+      if (is.null(prior_kappa$prec)) {
         mu_temp <- (prior_kappa$mean - param1_lower) / (param1_upper - param1_lower)
         prior_kappa$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param1_prec_inc
       }
@@ -574,29 +580,29 @@ graph_spde <- function(graph_object,
   }
 
   # For param2 (tau/sigma)
-  if(has_param2_upper){
+  if (has_param2_upper) {
     # Using beta prior for bounded parameter
-    if(parameterization == "matern"){
+    if (parameterization == "matern") {
       # sigma parameter - use the mean from graph_starting_values
-      if(is.null(prior_sigma$mean)){
+      if (is.null(prior_sigma$mean)) {
         prior_sigma$mean <- exp(prior_sigma$meanlog)
-        if(prior_sigma$mean <= param2_lower || prior_sigma$mean >= param2_upper){
+        if (prior_sigma$mean <= param2_lower || prior_sigma$mean >= param2_upper) {
           prior_sigma$mean <- (param2_upper + param2_lower) / 2
         }
       }
-      if(is.null(prior_sigma$prec)){
+      if (is.null(prior_sigma$prec)) {
         mu_temp <- (prior_sigma$mean - param2_lower) / (param2_upper - param2_lower)
         prior_sigma$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param2_prec_inc
       }
-    } else{
+    } else {
       # tau parameter - convert from sigma prior
-      if(is.null(prior_tau$mean)){
+      if (is.null(prior_tau$mean)) {
         prior_tau$mean <- exp(-prior_sigma$meanlog)
-        if(prior_tau$mean <= param2_lower || prior_tau$mean >= param2_upper){
+        if (prior_tau$mean <= param2_lower || prior_tau$mean >= param2_upper) {
           prior_tau$mean <- (param2_upper + param2_lower) / 2
         }
       }
-      if(is.null(prior_tau$prec)){
+      if (is.null(prior_tau$prec)) {
         mu_temp <- (prior_tau$mean - param2_lower) / (param2_upper - param2_lower)
         prior_tau$prec <- max(1 / mu_temp, 1 / (1 - mu_temp)) + param2_prec_inc
       }
@@ -605,92 +611,92 @@ graph_spde <- function(graph_object,
 
   # Handle starting values for bounded parameters
   if (is.null(start_kappa)) {
-    if(has_param1_upper && parameterization == "spde"){
+    if (has_param1_upper && parameterization == "spde") {
       # Use mean for beta prior
       start_kappa <- prior_kappa$mean
-    } else{
+    } else {
       start_kappa <- exp(prior_kappa$meanlog)
     }
   }
 
   if (is.null(start_sigma)) {
-    if(has_param2_upper && parameterization == "matern"){
+    if (has_param2_upper && parameterization == "matern") {
       # Use mean for beta prior
       start_sigma <- prior_sigma$mean
-    } else{
+    } else {
       start_sigma <- exp(prior_sigma$meanlog)
     }
   }
 
-  if(is.null(start_range)){
-    if(has_param1_upper && parameterization == "matern"){
+  if (is.null(start_range)) {
+    if (has_param1_upper && parameterization == "matern") {
       # Use mean for beta prior
       start_range <- prior_range$mean
-    } else{
+    } else {
       start_range <- exp(prior_range$meanlog)
     }
   }
 
-  if(is.null(start_tau)){
-    if(has_param2_upper && parameterization == "spde"){
+  if (is.null(start_tau)) {
+    if (has_param2_upper && parameterization == "spde") {
       # Use mean for beta prior
       start_tau <- prior_tau$mean
-    } else if(!is.null(prior_tau$meanlog)){
+    } else if (!is.null(prior_tau$meanlog)) {
       start_tau <- exp(prior_tau$meanlog)
     }
   }
 
   # Compute transformed starting values based on parameterization type
-  if(parameterization == "spde"){
+  if (parameterization == "spde") {
     # For kappa
-    if(has_param1_upper){
+    if (has_param1_upper) {
       # logit transformation: log(x - lower) - log(upper - x)
       start_theta <- log(start_kappa - kappa_lower_bound) - log(kappa_upper_bound - start_kappa)
-    } else if(has_param1_lower && kappa_lower_bound > 0){
+    } else if (has_param1_lower && kappa_lower_bound > 0) {
       # shifted log transformation: log(x - lower)
       start_theta <- log(start_kappa - kappa_lower_bound)
-    } else{
+    } else {
       start_theta <- log(start_kappa)
     }
     prior_theta <- prior_kappa
 
     # For tau (similar to sigma)
-    if(has_param2_upper){
+    if (has_param2_upper) {
       start_lsigma <- log(start_tau - tau_lower_bound) - log(tau_upper_bound - start_tau)
-    } else if(has_param2_lower && tau_lower_bound > 0){
+    } else if (has_param2_lower && tau_lower_bound > 0) {
       start_lsigma <- log(start_tau - tau_lower_bound)
-    } else{
+    } else {
       # converting to reciprocal tau
-      const_tmp <-  sqrt(gamma(nu) / (start_kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
-      start_lsigma <- log(start_sigma/const_tmp)
-      if(!is.null(start_tau)){
+      const_tmp <- sqrt(gamma(nu) / (start_kappa^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+      start_lsigma <- log(start_sigma / const_tmp)
+      if (!is.null(start_tau)) {
         start_lsigma <- -log(start_tau)
       }
     }
-  } else{
+  } else {
     # For range
-    if(has_param1_upper){
+    if (has_param1_upper) {
       # logit transformation
       start_theta <- log(start_range - range_lower_bound) - log(range_upper_bound - start_range)
-    } else if(has_param1_lower && range_lower_bound > 0){
+    } else if (has_param1_lower && range_lower_bound > 0) {
       # shifted log transformation
       start_theta <- log(start_range - range_lower_bound)
-    } else{
+    } else {
       start_theta <- log(start_range)
     }
     prior_theta <- prior_range
 
     # For sigma
-    if(has_param2_upper){
+    if (has_param2_upper) {
       # logit transformation
       start_lsigma <- log(start_sigma - sigma_lower_bound) - log(sigma_upper_bound - start_sigma)
-    } else if(has_param2_lower && sigma_lower_bound > 0){
+    } else if (has_param2_lower && sigma_lower_bound > 0) {
       # shifted log transformation
       start_lsigma <- log(start_sigma - sigma_lower_bound)
-    } else{
+    } else {
       # converting to reciprocal tau
-      const_tmp <-  sqrt(gamma(nu) / (exp(log(sqrt(8*nu)) - log(start_range))^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
-      start_lsigma <- log(start_sigma/const_tmp)
+      const_tmp <- sqrt(gamma(nu) / (exp(log(sqrt(8 * nu)) - log(start_range))^(2 * nu) * (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+      start_lsigma <- log(start_sigma / const_tmp)
     }
   }
 
@@ -698,40 +704,42 @@ graph_spde <- function(graph_object,
 
   gpgraph_lib <- shared_lib
 
-  if(shared_lib == "INLA"){
-    gpgraph_lib <- INLA::inla.external.lib('rSPDE')
-  } else if(shared_lib == "rSPDE"){
-    gpgraph_lib <- system.file('shared', package='rSPDE')
-    if(Sys.info()['sysname']=='Windows') {
-		gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.dll")
-            } else {
-		gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.so")
-            }
-  } else if(shared_lib == "detect"){
-    gpgraph_lib_local <- system.file('shared', package='rSPDE')
-    if(Sys.info()['sysname']=='Windows') {
-		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.dll")
-            } else {
-		gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.so")
-            }
-    if(file.exists(gpgraph_lib_local)){
+  if (shared_lib == "INLA") {
+    gpgraph_lib <- INLA::inla.external.lib("rSPDE")
+  } else if (shared_lib == "rSPDE") {
+    gpgraph_lib <- system.file("shared", package = "rSPDE")
+    if (Sys.info()["sysname"] == "Windows") {
+      gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.dll")
+    } else {
+      gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.so")
+    }
+  } else if (shared_lib == "detect") {
+    gpgraph_lib_local <- system.file("shared", package = "rSPDE")
+    if (Sys.info()["sysname"] == "Windows") {
+      gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.dll")
+    } else {
+      gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.so")
+    }
+    if (file.exists(gpgraph_lib_local)) {
       gpgraph_lib <- gpgraph_lib_local
-    } else{
-      gpgraph_lib <- INLA::inla.external.lib('rSPDE')
+    } else {
+      gpgraph_lib <- INLA::inla.external.lib("rSPDE")
     }
   }
 
-  if(verbose > 0){
+  if (verbose > 0) {
     message("Creating INLA model...")
   }
 
-if(alpha == 1){
-  if(!directional){
+  if (alpha == 1) {
+    if (!directional) {
       model <-
-        do.call(eval(parse(text='INLA::inla.cgeneric.define')),
-        list(model="inla_cgeneric_gpgraph_alpha1_model",
-            shlib=gpgraph_lib,
-            n=as.integer(n.v), debug=debug,
+        do.call(
+          eval(parse(text = "INLA::inla.cgeneric.define")),
+          list(
+            model = "inla_cgeneric_gpgraph_alpha1_model",
+            shlib = gpgraph_lib,
+            n = as.integer(n.v), debug = debug,
             prec_graph_i = as.integer(i_),
             prec_graph_j = as.integer(j_),
             index_graph = as.integer(idx_ij),
@@ -754,13 +762,17 @@ if(alpha == 1){
             theta_upper_bound = ifelse(is.null(param1_upper), -1, param1_upper),
             sigma_lower_bound = param2_lower,
             sigma_upper_bound = ifelse(is.null(param2_upper), -1, param2_upper),
-            parameterization = parameterization))
-  } else{
+            parameterization = parameterization
+          )
+        )
+    } else {
       model <-
-        do.call(eval(parse(text='INLA::inla.cgeneric.define')),
-        list(model="inla_cgeneric_gpgraph_alpha1_directional_model",
-            shlib=gpgraph_lib,
-            n=dim(Q_tmp)[1], debug=debug,
+        do.call(
+          eval(parse(text = "INLA::inla.cgeneric.define")),
+          list(
+            model = "inla_cgeneric_gpgraph_alpha1_directional_model",
+            shlib = gpgraph_lib,
+            n = dim(Q_tmp)[1], debug = debug,
             prec_graph_i = as.integer(i_),
             prec_graph_j = as.integer(j_),
             Tc = Tc,
@@ -771,118 +783,115 @@ if(alpha == 1){
             prior_theta_sdlog = prior_theta$sdlog,
             prior_sigma_meanlog = prior_sigma$meanlog,
             prior_sigma_sdlog = prior_sigma$sdlog,
-            prior_theta_mean = ifelse(is.null(prior_theta$mean), 0, prior_theta$mean),
-            prior_theta_prec = ifelse(is.null(prior_theta$prec), 0, prior_theta$prec),
-            prior_sigma_mean = ifelse(is.null(prior_sigma$mean), 0, prior_sigma$mean),
-            prior_sigma_prec = ifelse(is.null(prior_sigma$prec), 0, prior_sigma$prec),
-            theta_lower_bound = param1_lower,
-            theta_upper_bound = ifelse(is.null(param1_upper), -1, param1_upper),
-            sigma_lower_bound = param2_lower,
-            sigma_upper_bound = ifelse(is.null(param2_upper), -1, param2_upper),
             parameterization = parameterization,
             w = weights_directional,
             BC = as.integer(BC),
-            ind_stat_indices = as.integer(ind_stat_indices)))
-  }
-
-} else{
+            ind_stat_indices = as.integer(ind_stat_indices)
+          )
+        )
+    }
+  } else {
     model <-
-        do.call(eval(parse(text='INLA::inla.cgeneric.define')),
-        list(model="inla_cgeneric_gpgraph_alpha2_model",
-            shlib=gpgraph_lib,
-            n=dim(Q_tmp)[1], debug=debug,
-            prec_graph_i = as.integer(i_),
-            prec_graph_j = as.integer(j_),
-            Tc = Tc,
-            El = El,
-            upper_edges = as.integer(upper.edges),
-            lower_edges = as.integer(lower.edges),
-            upper_edges_len = upper_edges_len,
-            lower_edges_len = lower_edges_len,
-            start_theta = start_theta,
-            start_lsigma = start_lsigma,
-            prior_theta_meanlog = prior_theta$meanlog,
-            prior_theta_sdlog = prior_theta$sdlog,
-            prior_sigma_meanlog = prior_sigma$meanlog,
-            prior_sigma_sdlog = prior_sigma$sdlog,
-            prior_theta_mean = ifelse(is.null(prior_theta$mean), 0, prior_theta$mean),
-            prior_theta_prec = ifelse(is.null(prior_theta$prec), 0, prior_theta$prec),
-            prior_sigma_mean = ifelse(is.null(prior_sigma$mean), 0, prior_sigma$mean),
-            prior_sigma_prec = ifelse(is.null(prior_sigma$prec), 0, prior_sigma$prec),
-            theta_lower_bound = param1_lower,
-            theta_upper_bound = ifelse(is.null(param1_upper), -1, param1_upper),
-            sigma_lower_bound = param2_lower,
-            sigma_upper_bound = ifelse(is.null(param2_upper), -1, param2_upper),
-            parameterization = parameterization))
-}
-model$graph_spde <- graph_spde
-model$directional <- directional
-model$data_PtE <- suppressWarnings(graph_object$get_PtE())
-model$original_data <- graph_object$.__enclos_env__$private$data
-model$parameterization <- parameterization
-model$args <- list(
-  stationary_endpoints = stationary_endpoints,
-  start_range = start_range,
-  start_kappa = start_kappa,
-  prior_kappa = prior_kappa,
-  prior_sigma = prior_sigma,
-  start_tau = start_tau,
-  prior_tau = prior_tau,
-  range_lower_bound = range_lower_bound,
-  range_upper_bound = range_upper_bound,
-  kappa_lower_bound = kappa_lower_bound,
-  kappa_upper_bound = kappa_upper_bound,
-  sigma_lower_bound = sigma_lower_bound,
-  sigma_upper_bound = sigma_upper_bound,
-  tau_lower_bound = tau_lower_bound,
-  tau_upper_bound = tau_upper_bound,
-  factor_start_range = factor_start_range,
-  type_start_range_bbox = type_start_range_bbox,
-  shared_lib = shared_lib,
-  debug = debug,
-  verbose = verbose
-)
-model$Tc <- Tc
-model$alpha <- alpha
-if(alpha == 2){
+      do.call(
+        eval(parse(text = "INLA::inla.cgeneric.define")),
+        list(
+          model = "inla_cgeneric_gpgraph_alpha2_model",
+          shlib = gpgraph_lib,
+          n = dim(Q_tmp)[1], debug = debug,
+          prec_graph_i = as.integer(i_),
+          prec_graph_j = as.integer(j_),
+          Tc = Tc,
+          El = El,
+          upper_edges = as.integer(upper.edges),
+          lower_edges = as.integer(lower.edges),
+          upper_edges_len = upper_edges_len,
+          lower_edges_len = lower_edges_len,
+          start_theta = start_theta,
+          start_lsigma = start_lsigma,
+          prior_theta_meanlog = prior_theta$meanlog,
+          prior_theta_sdlog = prior_theta$sdlog,
+          prior_sigma_meanlog = prior_sigma$meanlog,
+          prior_sigma_sdlog = prior_sigma$sdlog,
+          parameterization = parameterization
+        )
+      )
+  }
+  model$graph_spde <- graph_spde
+  model$directional <- directional
+  model$data_PtE <- suppressWarnings(graph_object$get_PtE())
+  model$original_data <- graph_object$.__enclos_env__$private$data
+  model$parameterization <- parameterization
+  model$args <- list(
+    stationary_endpoints = stationary_endpoints,
+    start_range = start_range,
+    start_kappa = start_kappa,
+    prior_kappa = prior_kappa,
+    prior_sigma = prior_sigma,
+    start_tau = start_tau,
+    prior_tau = prior_tau,
+    range_lower_bound = range_lower_bound,
+    range_upper_bound = range_upper_bound,
+    kappa_lower_bound = kappa_lower_bound,
+    kappa_upper_bound = kappa_upper_bound,
+    sigma_lower_bound = sigma_lower_bound,
+    sigma_upper_bound = sigma_upper_bound,
+    tau_lower_bound = tau_lower_bound,
+    tau_upper_bound = tau_upper_bound,
+    factor_start_range = factor_start_range,
+    type_start_range_bbox = type_start_range_bbox,
+    shared_lib = shared_lib,
+    debug = debug,
+    verbose = verbose
+  )
+  model$Tc <- Tc
+  model$alpha <- alpha
+  if (alpha == 2) {
     A_tmp <- t(Tc)
-    index.obs1 <- sapply(graph_spde$PtV, function(i){idx_temp <- i == graph_spde$E[,1]
-                                                                      idx_temp <- which(idx_temp)
-                                                                      return(idx_temp[1])})
-    index.obs1 <- (index.obs1-1)*4+1
+    index.obs1 <- sapply(graph_spde$PtV, function(i) {
+      idx_temp <- i == graph_spde$E[, 1]
+      idx_temp <- which(idx_temp)
+      return(idx_temp[1])
+    })
+    index.obs1 <- (index.obs1 - 1) * 4 + 1
     index.obs2 <- NULL
     na_obs1 <- is.na(index.obs1)
-    if(any(na_obs1)){
-          idx_na <- which(na_obs1)
-          PtV_NA <- graph_spde$PtV[idx_na]
-          index.obs2 <- sapply(PtV_NA, function(i){idx_temp <- i == graph_spde$E[,2]
-                                                                      idx_temp <- which(idx_temp)
-                                                                      return(idx_temp[1])})
-          index.obs1[na_obs1] <- (index.obs2-1)*4 + 3                                                                      
-          }
-    A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=    
-} else if(directional){
+    if (any(na_obs1)) {
+      idx_na <- which(na_obs1)
+      PtV_NA <- graph_spde$PtV[idx_na]
+      index.obs2 <- sapply(PtV_NA, function(i) {
+        idx_temp <- i == graph_spde$E[, 2]
+        idx_temp <- which(idx_temp)
+        return(idx_temp[1])
+      })
+      index.obs1[na_obs1] <- (index.obs2 - 1) * 4 + 3
+    }
+    A_tmp <- A_tmp[index.obs1, ] # A matrix for alpha=
+  } else if (directional) {
     A_tmp <- t(Tc)
-    index.obs1 <- sapply(graph_spde$PtV, function(i){idx_temp <- i == graph_spde$E[,1]
-                                                                      idx_temp <- which(idx_temp)
-                                                                      return(idx_temp[1])})
-    index.obs1 <- (index.obs1-1)*2+1
+    index.obs1 <- sapply(graph_spde$PtV, function(i) {
+      idx_temp <- i == graph_spde$E[, 1]
+      idx_temp <- which(idx_temp)
+      return(idx_temp[1])
+    })
+    index.obs1 <- (index.obs1 - 1) * 2 + 1
     index.obs2 <- NULL
     na_obs1 <- is.na(index.obs1)
-    if(any(na_obs1)){
-          idx_na <- which(na_obs1)
-          PtV_NA <- graph_spde$PtV[idx_na]
-          index.obs2 <- sapply(PtV_NA, function(i){idx_temp <- i == graph_spde$E[,2]
-                                                                      idx_temp <- which(idx_temp)
-                                                                      return(idx_temp[1])})
-          index.obs1[na_obs1] <- (index.obs2-1)*2 + 2                                                                      
-          }
-    A_tmp <- A_tmp[index.obs1,] #A matrix for alpha=   
-}
-model$A <- A_tmp
-model$ordering <- graph_spde$.__enclos_env__$private$data[[".internal_ordering"]]
-class(model) <- c("inla_metric_graph_spde", class(model))
-return(model)
+    if (any(na_obs1)) {
+      idx_na <- which(na_obs1)
+      PtV_NA <- graph_spde$PtV[idx_na]
+      index.obs2 <- sapply(PtV_NA, function(i) {
+        idx_temp <- i == graph_spde$E[, 2]
+        idx_temp <- which(idx_temp)
+        return(idx_temp[1])
+      })
+      index.obs1[na_obs1] <- (index.obs2 - 1) * 2 + 2
+    }
+    A_tmp <- A_tmp[index.obs1, ] # A matrix for alpha=
+  }
+  model$A <- A_tmp
+  model$ordering <- graph_spde$.__enclos_env__$private$data[[".internal_ordering"]]
+  class(model) <- c("inla_metric_graph_spde", class(model))
+  return(model)
 }
 
 
@@ -900,19 +909,19 @@ return(model)
 #'
 #' @return A list of indexes.
 #' @noRd
-graph_spde_make_index <- function (name,
-                                   graph_spde,
-                                   n.group = 1,
-                                   n.repl = 1,
-                                   ...) {
-    n.spde <- graph_spde$f$n
-    name.group <- paste(name, ".group", sep = "")
-    name.repl <- paste(name, ".repl", sep = "")
-    out <- list()
-    out[[name]] <- rep(rep(1:n.spde, times = n.group), times = n.repl)
-    out[[name.group]] <- rep(rep(1:n.group, each = n.spde), times = n.repl)
-    out[[name.repl]] <- rep(1:n.repl, each = n.spde * n.group)
-    return(out)
+graph_spde_make_index <- function(name,
+                                  graph_spde,
+                                  n.group = 1,
+                                  n.repl = 1,
+                                  ...) {
+  n.spde <- graph_spde$f$n
+  name.group <- paste(name, ".group", sep = "")
+  name.repl <- paste(name, ".repl", sep = "")
+  out <- list()
+  out[[name]] <- rep(rep(1:n.spde, times = n.group), times = n.repl)
+  out[[name.group]] <- rep(rep(1:n.group, each = n.spde), times = n.repl)
+  out[[name.repl]] <- rep(1:n.repl, each = n.spde * n.group)
+  return(out)
 }
 
 
@@ -930,10 +939,10 @@ graph_spde_make_index <- function (name,
 #' @return The observation matrix.
 #' @export
 
-graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all_na = TRUE) {
-    lifecycle::deprecate_warn("1.3.0", "graph_spde_basis()", "graph_data_spde()")
-    warning("This function only works for alpha = 1. Use graph_data_spde() function for alpha = 1 and alpha = 2.")
-   return(graph_spde$graph_spde$.__enclos_env__$private$A(group = repl, drop_na = drop_na, drop_all_na = drop_all_na))
+graph_spde_basis <- function(graph_spde, repl = NULL, drop_na = FALSE, drop_all_na = TRUE) {
+  lifecycle::deprecate_warn("1.3.0", "graph_spde_basis()", "graph_data_spde()")
+  warning("This function only works for alpha = 1. Use graph_data_spde() function for alpha = 1 and alpha = 2.")
+  return(graph_spde$graph_spde$.__enclos_env__$private$A(group = repl, drop_na = drop_na, drop_all_na = drop_all_na))
 }
 
 #' Deprecated - Observation/prediction matrices for 'SPDE' models
@@ -948,9 +957,9 @@ graph_spde_basis <- function (graph_spde, repl = NULL, drop_na = FALSE, drop_all
 #' @return The observation matrix.
 #' @export
 
-graph_spde_make_A <- function(graph_spde, repl = NULL){
+graph_spde_make_A <- function(graph_spde, repl = NULL) {
   lifecycle::deprecate_warn("1.2.0", "graph_spde_make_A()", "graph_spde_basis()")
-    warning("This function only works for alpha = 1. Use graph_data_spde() function for alpha = 1 and alpha = 2.")
+  warning("This function only works for alpha = 1. Use graph_data_spde() function for alpha = 1 and alpha = 2.")
   return(graph_spde_basis(graph_spde, repl = repl, drop_na = FALSE, drop_all_na = FALSE))
 }
 
@@ -984,45 +993,44 @@ graph_spde_make_A <- function(graph_spde, repl = NULL){
 #' @return An 'INLA' and 'inlabru' friendly list with the data.
 #' @export
 
-graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col = NULL, group = NULL, 
-                                group_col = NULL,
-                                likelihood_col = NULL,
-                                resp_col = NULL,
-                                covariates = NULL,
-                                only_pred = FALSE,
-                                loc_name = NULL,
-                                tibble = FALSE,
-                                drop_na = FALSE, drop_all_na = TRUE,
-                                loc = deprecated()){
+graph_data_spde <- function(graph_spde, name = "field", repl = NULL, repl_col = NULL, group = NULL,
+                            group_col = NULL,
+                            likelihood_col = NULL,
+                            resp_col = NULL,
+                            covariates = NULL,
+                            only_pred = FALSE,
+                            loc_name = NULL,
+                            tibble = FALSE,
+                            drop_na = FALSE, drop_all_na = TRUE,
+                            loc = deprecated()) {
+  if (lifecycle::is_present(loc)) {
+    if (is.null(loc_name)) {
+      lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+        details = c("`loc` was provided but not `loc_name`. Setting `loc_name <- loc`.")
+      )
+      loc_name <- loc
+    } else {
+      lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
+        details = c("Both `loc_name` and `loc` were provided. Only `loc_name` will be considered.")
+      )
+    }
+    loc <- NULL
+  }
 
-        if (lifecycle::is_present(loc)) {
-         if (is.null(loc_name)) {
-           lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
-             details = c("`loc` was provided but not `loc_name`. Setting `loc_name <- loc`.")
-           )
-           loc_name <- loc
-         } else {
-           lifecycle::deprecate_warn("1.2.0", "graph_data_spde(loc)", "graph_data_spde(loc_name)",
-             details = c("Both `loc_name` and `loc` were provided. Only `loc_name` will be considered.")
-           )
-         }
-         loc <- NULL
-       }  
-
-  if(inherits(graph_spde, "rspde_metric_graph")){
+  if (inherits(graph_spde, "rspde_metric_graph")) {
     return(graph_data_rspde_internal(graph_spde, name = name, covariates = covariates, repl = repl, repl_col = repl_col, group = group, group_col = group_col, only_pred = only_pred, tibble = tibble, drop_na = drop_na, drop_all_na = drop_all_na))
   }
-  
-  if(!is.null(likelihood_col)){
+
+  if (!is.null(likelihood_col)) {
     # Processing likelihoods
-    if(any(is.na(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]]))){
+    if (any(is.na(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]]))) {
       tmp_group_col_val <- graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]
       tmp_unique_group_val <- unique(tmp_group_col_val)
-      for(tmp_i in tmp_unique_group_val){
+      for (tmp_i in tmp_unique_group_val) {
         idx_tmp <- (tmp_group_col_val == tmp_i)
         idx_like_val_temp <- !is.na(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]][idx_tmp])
         like_val_temp <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]][idx_tmp][idx_like_val_temp])
-        if(length(like_val_temp)>1){
+        if (length(like_val_temp) > 1) {
           stop("Likelihood processing error. There was something wrong when grouping the likelihood data.")
         }
         graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]][idx_tmp] <- like_val_temp
@@ -1030,20 +1038,20 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
     }
 
     like_val <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[likelihood_col]])
-    if(is.null(resp_col)){
+    if (is.null(resp_col)) {
       stop("If likelihood_col is non-NULL, then resp_col should be non-NULL!")
     }
-  } else{
+  } else {
     like_val <- 1
   }
 
-  if(is.null(repl_col)){
-    graph_spde$graph_spde$.__enclos_env__$private$data[[".dummy_repl_col"]] <- rep(1,length(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]))
+  if (is.null(repl_col)) {
+    graph_spde$graph_spde$.__enclos_env__$private$data[[".dummy_repl_col"]] <- rep(1, length(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]))
     repl_col <- ".dummy_repl_col"
   }
 
-    if(is.null(group_col)){
-    graph_spde$graph_spde$.__enclos_env__$private$data[[".dummy_group_col"]] <- rep(1,length(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]))
+  if (is.null(group_col)) {
+    graph_spde$graph_spde$.__enclos_env__$private$data[[".dummy_group_col"]] <- rep(1, length(graph_spde$graph_spde$.__enclos_env__$private$data[[".group"]]))
     group_col <- ".dummy_group_col"
   }
 
@@ -1051,64 +1059,66 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
 
   ret_list <- list()
 
-  for(lik in like_val){
+  for (lik in like_val) {
     ret <- list()
-    
+
     graph_tmp <- graph_spde$graph_spde$clone()
 
-    if(is.null(repl) || repl[1] == ".all") {
+    if (is.null(repl) || repl[1] == ".all") {
       groups <- graph_tmp$.__enclos_env__$private$data[[repl_col]]
       repl <- unique(groups)
-    }     
+    }
 
     lik_tmp <- lik
 
-    if(length(like_val) == 1){
+    if (length(like_val) == 1) {
       lik_tmp <- NULL
-    } 
+    }
 
-    graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik_tmp, group_col = likelihood_col)   
+    graph_tmp$.__enclos_env__$private$data <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = lik_tmp, group_col = likelihood_col)
 
-    if(is.null((graph_tmp$.__enclos_env__$private$data))){
+    if (is.null((graph_tmp$.__enclos_env__$private$data))) {
       stop("The graph has no data!")
     }
-    if(only_pred){
+    if (only_pred) {
       idx_anyNA <- !idx_not_any_NA(graph_tmp$.__enclos_env__$private$data)
-      graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat){return(dat[idx_anyNA])})
+      graph_tmp$.__enclos_env__$private$data <- lapply(graph_tmp$.__enclos_env__$private$data, function(dat) {
+        return(dat[idx_anyNA])
+      })
       drop_na <- FALSE
       drop_all_na <- FALSE
     }
-  
-     ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col,  group = group, group_col = group_col)   
+
+    ret[["data"]] <- select_repl_group(graph_tmp$.__enclos_env__$private$data, repl = repl, repl_col = repl_col, group = group, group_col = group_col)
 
     n.repl <- length(unique(repl))
-  
-    if(is.null(group)){
-      if(!is.null(group_col)){
+
+    if (is.null(group)) {
+      if (!is.null(group_col)) {
         n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
         group <- unique(graph_tmp$.__enclos_env__$private$data[[group_col]])
-      } else{
+      } else {
         n.group <- 1
       }
-    } else if (group[1] == ".all"){
+    } else if (group[1] == ".all") {
       n.group <- length(unique(graph_tmp$.__enclos_env__$private$data[[group_col]]))
       group <- unique(graph_tmp$.__enclos_env__$private$data[[group_col]])
-    } else{
+    } else {
       n.group <- length(unique(group))
     }
-  
-    A <- Matrix::Diagonal(0)  
 
-    if(any(is.na(ret[["data"]][[repl_col]]))){
+    A <- Matrix::Diagonal(0)
+
+    if (any(is.na(ret[["data"]][[repl_col]]))) {
       # Group by .group and fill NA values with first non-NA value within each group
       groups <- unique(ret[["data"]][[".group"]])
-      for(grp in groups){
+      for (grp in groups) {
         grp_idx <- which(ret[["data"]][[".group"]] == grp)
         grp_repl_vals <- ret[["data"]][[repl_col]][grp_idx]
-        
-        if(any(is.na(grp_repl_vals))){
+
+        if (any(is.na(grp_repl_vals))) {
           first_non_na <- grp_repl_vals[!is.na(grp_repl_vals)][1]
-          if(!is.na(first_non_na)){
+          if (!is.na(first_non_na)) {
             ret[["data"]][[repl_col]][grp_idx][is.na(grp_repl_vals)] <- first_non_na
           } else {
             # If all values in group are NA, use repl[1] as fallback
@@ -1118,103 +1128,111 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
       }
     }
 
-    
 
-    for(i in 1:n.repl){
-     for(j in 1:n.group){
-         data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], repl_col = repl_col, group = group[j], group_col = group_col)
-         if(drop_na){
-           idx_notna <- idx_not_any_NA(data_group_repl)
-         } else if(drop_all_na){
-           idx_notna <- idx_not_all_NA(data_group_repl)
-         } else{
-           idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
-         }
 
-         # nV_tmp <- sum(idx_notna)        
-         if(alpha == 1){
-          if(!graph_spde$directional){
-            A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
-          } else{
-           A_tmp <- graph_spde$A 
-           A_tmp <- A_tmp[idx_notna,]
-          }
-         } else{
-           A_tmp <- graph_spde$A 
-           A_tmp <- A_tmp[idx_notna,]
-         }
-         A <- Matrix::bdiag(A, A_tmp)
-     }
-    }
-   
-    if(tibble){
-      ret[["data"]] <-tidyr::as_tibble(ret[["data"]])
-    }
-  
-    if(drop_all_na){
-      is_tbl <- inherits(ret, "tbl_df")
-        idx_temp <- idx_not_all_NA(ret[["data"]])
-        ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]}) 
-        if(is_tbl){
-          ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+    for (i in 1:n.repl) {
+      for (j in 1:n.group) {
+        data_group_repl <- select_repl_group(ret[["data"]], repl = repl[i], repl_col = repl_col, group = group[j], group_col = group_col)
+        if (drop_na) {
+          idx_notna <- idx_not_any_NA(data_group_repl)
+        } else if (drop_all_na) {
+          idx_notna <- idx_not_all_NA(data_group_repl)
+        } else {
+          idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
         }
-    }    
-    if(drop_na){
-      if(!inherits(ret[["data"]], "tbl_df")){
+
+        # nV_tmp <- sum(idx_notna)
+        if (alpha == 1) {
+          if (!graph_spde$directional) {
+            A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
+          } else {
+            A_tmp <- graph_spde$A
+            A_tmp <- A_tmp[idx_notna, ]
+          }
+        } else {
+          A_tmp <- graph_spde$A
+          A_tmp <- A_tmp[idx_notna, ]
+        }
+        A <- Matrix::bdiag(A, A_tmp)
+      }
+    }
+
+    if (tibble) {
+      ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+    }
+
+    if (drop_all_na) {
+      is_tbl <- inherits(ret, "tbl_df")
+      idx_temp <- idx_not_all_NA(ret[["data"]])
+      ret[["data"]] <- lapply(ret[["data"]], function(dat) {
+        dat[idx_temp]
+      })
+      if (is_tbl) {
+        ret[["data"]] <- tidyr::as_tibble(ret[["data"]])
+      }
+    }
+    if (drop_na) {
+      if (!inherits(ret[["data"]], "tbl_df")) {
         idx_temp <- idx_not_any_NA(ret[["data"]])
-        ret[["data"]] <- lapply(ret[["data"]], function(dat){dat[idx_temp]})
-      } else{
+        ret[["data"]] <- lapply(ret[["data"]], function(dat) {
+          dat[idx_temp]
+        })
+      } else {
         ret[["data"]] <- tidyr::drop_na(ret[["data"]])
       }
     }
-    
-    if(!is.null(loc_name)){
-        ret[["data"]][[loc_name]] <- cbind(ret[["data"]][[".edge_number"]],
-                            ret[["data"]][[".distance_on_edge"]])
+
+    if (!is.null(loc_name)) {
+      ret[["data"]][[loc_name]] <- cbind(
+        ret[["data"]][[".edge_number"]],
+        ret[["data"]][[".distance_on_edge"]]
+      )
     }
-  
-    if(!inherits(ret[["data"]], "metric_graph_data")){
+
+    if (!inherits(ret[["data"]], "metric_graph_data")) {
       class(ret[["data"]]) <- c("metric_graph_data", class(ret))
     }
-  
+
     ret[["repl"]] <- bru_graph_rep(repl = repl, graph_spde = graph_spde, repl_col = repl_col)
-  
-     ret[["group"]] <- bru_graph_rep(repl = group, graph_spde = graph_spde, repl_col = group_col)
-  
-     ret[["index"]] <- graph_spde_make_index(name = name, graph_spde = graph_spde,
-                                     n.group = n.group,
-                                     n.repl = n.repl)
-    
-    if(!is.null(covariates)){
+
+    ret[["group"]] <- bru_graph_rep(repl = group, graph_spde = graph_spde, repl_col = group_col)
+
+    ret[["index"]] <- graph_spde_make_index(
+      name = name, graph_spde = graph_spde,
+      n.group = n.group,
+      n.repl = n.repl
+    )
+
+    if (!is.null(covariates)) {
       cov_tmp <- list()
-      for(cov_var in covariates){
+      for (cov_var in covariates) {
         cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
-        if(is.null(loc_name)){
+        if (is.null(loc_name)) {
           ret[["data"]][[cov_var]] <- NULL
         }
       }
       ret[["index"]] <- list(ret[["index"]], cov_tmp)
       ret[["basis"]] <- list(A, 1)
-    } else{
+    } else {
       ret[["basis"]] <- A
     }
-        
+
 
     ret_list[[lik]] <- ret
   }
-  
-  if(is.null(likelihood_col)){
+
+  if (is.null(likelihood_col)) {
     return(ret)
-  } else if(is.null(loc_name)){
+  } else if (is.null(loc_name)) {
     count <- 1
-    for(lik in like_val){
+    for (lik in like_val) {
       tmp_data <- matrix(nrow = length(ret_list[[lik]][["data"]][[resp_col]]), ncol = length(like_val))
-      tmp_data[,count] <- ret_list[[lik]][["data"]][[resp_col]]
+      tmp_data[, count] <- ret_list[[lik]][["data"]][[resp_col]]
       ret_list[[lik]][["data"]][[resp_col]] <- tmp_data
       count <- count + 1
     }
   }
-  
+
   return(ret_list)
 }
 
@@ -1222,36 +1240,42 @@ graph_data_spde <- function (graph_spde, name = "field", repl = NULL, repl_col =
 #' Select replicate and group
 #' @noRd
 #'
-select_repl_group <- function(data_list, repl, repl_col, group, group_col){
-    if(!is.null(group) && is.null(group_col)){
-      stop("If you specify group, you need to specify group_col!")
-    }
-    if(!is.null(group)){
-      grp <- data_list[[group_col]]
-      grp <- which(grp %in% group)
-      data_result <- lapply(data_list, function(dat){dat[grp]})
-      replicates <- data_result[[repl_col]]
-      replicates <- which(replicates %in% repl)
-      data_result <- lapply(data_result, function(dat){dat[replicates]})
-      return(data_result)
-    } else{
-      replicates <- data_list[[repl_col]]
-      replicates <- which(replicates %in% repl)
-      data_result <- lapply(data_list, function(dat){dat[replicates]})
-      return(data_result)
-    }
+select_repl_group <- function(data_list, repl, repl_col, group, group_col) {
+  if (!is.null(group) && is.null(group_col)) {
+    stop("If you specify group, you need to specify group_col!")
+  }
+  if (!is.null(group)) {
+    grp <- data_list[[group_col]]
+    grp <- which(grp %in% group)
+    data_result <- lapply(data_list, function(dat) {
+      dat[grp]
+    })
+    replicates <- data_result[[repl_col]]
+    replicates <- which(replicates %in% repl)
+    data_result <- lapply(data_result, function(dat) {
+      dat[replicates]
+    })
+    return(data_result)
+  } else {
+    replicates <- data_list[[repl_col]]
+    replicates <- which(replicates %in% repl)
+    data_result <- lapply(data_list, function(dat) {
+      dat[replicates]
+    })
+    return(data_result)
+  }
 }
 
 
-# @noRd 
+# @noRd
 select_repl_group_rSPDE_version <- function(data_list, repl, repl_col, group, group_col) {
   if (!is.null(group) && is.null(group_col)) {
     stop("If you specify group, you need to specify group_col!")
   }
-  if(!is.null(repl) && is.null(repl_col)){
+  if (!is.null(repl) && is.null(repl_col)) {
     stop("If you specify repl, you need to specify repl_col!")
   }
-  if(is.null(repl_col) && is.null(group_col)){
+  if (is.null(repl_col) && is.null(group_col)) {
     return(data_list)
   }
   if (!is.null(group)) {
@@ -1260,7 +1284,7 @@ select_repl_group_rSPDE_version <- function(data_list, repl, repl_col, group, gr
     data_result <- lapply(data_list, function(dat) {
       dat[grp]
     })
-    if(!is.null(repl_col)){
+    if (!is.null(repl_col)) {
       replicates <- data_result[[repl_col]]
       replicates <- which(replicates %in% repl)
       data_result <- lapply(data_result, function(dat) {
@@ -1323,12 +1347,11 @@ spde_metric_graph_result <- function(inla, name,
                                      compute.summary = TRUE,
                                      n_samples = 5000,
                                      n_density = 1024) {
-
-  if(inherits(metric_graph_spde, "rspde_metric_graph")){
+  if (inherits(metric_graph_spde, "rspde_metric_graph")) {
     return(rSPDE::rspde.result(inla, name, metric_graph_spde))
   }
 
-  if(!inherits(metric_graph_spde, c("inla_metric_graph_spde", "inla_metric_graph_lgcp_spde"))){
+  if (!inherits(metric_graph_spde, c("inla_metric_graph_spde", "inla_metric_graph_lgcp_spde"))) {
     stop("You should provide an inla_metric_graph_spde object!")
   }
 
@@ -1339,11 +1362,11 @@ spde_metric_graph_result <- function(inla, name,
 
   parameterization <- metric_graph_spde$parameterization
 
-    if(parameterization == "spde"){
-      row_names <- c("tau", "kappa")
-    } else{
-      row_names <- c("sigma", "range")
-    }
+  if (parameterization == "spde") {
+    row_names <- c("tau", "kappa")
+  } else {
+    row_names <- c("sigma", "range")
+  }
 
   result$summary.values <- inla$summary.random[[name]]
 
@@ -1352,7 +1375,7 @@ spde_metric_graph_result <- function(inla, name,
   }
 
   # Extract bounds from metric_graph_spde object
-  if(parameterization == "spde"){
+  if (parameterization == "spde") {
     name_theta1 <- "reciprocal_tau"
     name_theta1_t <- "tau"
     name_theta2 <- "kappa"
@@ -1360,7 +1383,7 @@ spde_metric_graph_result <- function(inla, name,
     theta1_upper <- metric_graph_spde$args$tau_upper_bound
     theta2_lower <- ifelse(is.null(metric_graph_spde$args$kappa_lower_bound), 0, metric_graph_spde$args$kappa_lower_bound)
     theta2_upper <- metric_graph_spde$args$kappa_upper_bound
-  } else{
+  } else {
     name_theta1 <- "reciprocal_tau"
     name_theta1_t <- "sigma"
     name_theta2 <- "range"
@@ -1372,105 +1395,105 @@ spde_metric_graph_result <- function(inla, name,
 
   # Define transformation functions based on bounds
   # For theta1 (reciprocal_tau, which we transform to tau or sigma)
-  if(!is.null(theta1_upper)){
+  if (!is.null(theta1_upper)) {
     # Logit transformation
     transform_theta1 <- function(y) {
       theta1_lower + (theta1_upper - theta1_lower) * exp(y) / (1.0 + exp(y))
     }
-  } else if(theta1_lower > 0){
+  } else if (theta1_lower > 0) {
     # Shifted exponential
     transform_theta1 <- function(y) theta1_lower + exp(y)
-  } else{
+  } else {
     # Standard log
     transform_theta1 <- function(y) exp(y)
   }
 
   # For theta2 (kappa or range)
-  if(!is.null(theta2_upper)){
+  if (!is.null(theta2_upper)) {
     # Logit transformation
     transform_theta2 <- function(y) {
       theta2_lower + (theta2_upper - theta2_lower) * exp(y) / (1.0 + exp(y))
     }
-  } else if(theta2_lower > 0){
+  } else if (theta2_lower > 0) {
     # Shifted exponential
     transform_theta2 <- function(y) theta2_lower + exp(y)
-  } else{
+  } else {
     # Standard log
     transform_theta2 <- function(y) exp(y)
   }
 
 
-  result[[paste0("summary.log.",name_theta1)]] <- INLA::inla.extract.el(
+  result[[paste0("summary.log.", name_theta1)]] <- INLA::inla.extract.el(
     inla$summary.hyperpar,
     paste("Theta1 for ", name, "$", sep = "")
   )
-  rownames(  result[[paste0("summary.log.",name_theta1)]]) <- paste0("log(",name_theta1,")")
+  rownames(result[[paste0("summary.log.", name_theta1)]]) <- paste0("log(", name_theta1, ")")
 
-  result[[paste0("summary.log.",name_theta2)]] <- INLA::inla.extract.el(
+  result[[paste0("summary.log.", name_theta2)]] <- INLA::inla.extract.el(
     inla$summary.hyperpar,
     paste("Theta2 for ", name, "$", sep = "")
   )
-  rownames(result[[paste0("summary.log.",name_theta2)]]) <- paste0("log(", name_theta2,")")
+  rownames(result[[paste0("summary.log.", name_theta2)]]) <- paste0("log(", name_theta2, ")")
 
   if (!is.null(inla$marginals.hyperpar[[paste0("Theta1 for ", name)]])) {
-    result[[paste0("marginals.log.",name_theta1)]] <- INLA::inla.extract.el(
+    result[[paste0("marginals.log.", name_theta1)]] <- INLA::inla.extract.el(
       inla$marginals.hyperpar,
       paste("Theta1 for ", name, "$", sep = "")
     )
-    names(result[[paste0("marginals.log.",name_theta1)]]) <- name_theta1
-    result[[paste0("marginals.log.",name_theta2)]] <- INLA::inla.extract.el(
+    names(result[[paste0("marginals.log.", name_theta1)]]) <- name_theta1
+    result[[paste0("marginals.log.", name_theta2)]] <- INLA::inla.extract.el(
       inla$marginals.hyperpar,
       paste("Theta2 for ", name, "$", sep = "")
     )
-    names(result[[paste0("marginals.log.",name_theta2)]]) <- name_theta2
+    names(result[[paste0("marginals.log.", name_theta2)]]) <- name_theta2
 
-    if(parameterization == "spde"){
-            # For tau: reciprocal_tau -> tau (so we need to invert)
-            result[[paste0("marginals.",name_theta1_t)]] <- lapply(
-              result[[paste0("marginals.log.",name_theta1)]],
-              function(x) {
-                INLA::inla.tmarginal(
-                  function(y) 1.0 / transform_theta1(y),
-                  x
-                )
-              }
-            )
-            names(result[[paste0("marginals.",name_theta1_t)]]) <- name_theta1_t
-            # For kappa: use theta2 transformation
-            result[[paste0("marginals.",name_theta2)]] <- lapply(
-              result[[paste0("marginals.log.",name_theta2)]],
-              function(x) {
-                INLA::inla.tmarginal(
-                  transform_theta2,
-                  x
-                )
-              }
-            )
-    } else{
-            hyperpar_sample <- INLA::inla.hyperpar.sample(n_samples, inla)
-            # Apply transformations to get reciprocal_tau and range in original scale
-            reciprocal_tau_est <- transform_theta1(hyperpar_sample[, paste0('Theta1 for ',name)])
-            tau_est <- 1/reciprocal_tau_est
-            range_est <- transform_theta2(hyperpar_sample[, paste0('Theta2 for ',name)])
-            kappa_est <- sqrt(8*nu)/range_est
-            sigma_est <- sqrt(gamma(nu) / (tau_est^2 * kappa_est^(2 * nu) *
-                    (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
+    if (parameterization == "spde") {
+      # For tau: reciprocal_tau -> tau (so we need to invert)
+      result[[paste0("marginals.", name_theta1_t)]] <- lapply(
+        result[[paste0("marginals.log.", name_theta1)]],
+        function(x) {
+          INLA::inla.tmarginal(
+            function(y) 1.0 / transform_theta1(y),
+            x
+          )
+        }
+      )
+      names(result[[paste0("marginals.", name_theta1_t)]]) <- name_theta1_t
+      # For kappa: use theta2 transformation
+      result[[paste0("marginals.", name_theta2)]] <- lapply(
+        result[[paste0("marginals.log.", name_theta2)]],
+        function(x) {
+          INLA::inla.tmarginal(
+            transform_theta2,
+            x
+          )
+        }
+      )
+    } else {
+      hyperpar_sample <- INLA::inla.hyperpar.sample(n_samples, inla)
+      # Apply transformations to get reciprocal_tau and range in original scale
+      reciprocal_tau_est <- transform_theta1(hyperpar_sample[, paste0("Theta1 for ", name)])
+      tau_est <- 1 / reciprocal_tau_est
+      range_est <- transform_theta2(hyperpar_sample[, paste0("Theta2 for ", name)])
+      kappa_est <- sqrt(8 * nu) / range_est
+      sigma_est <- sqrt(gamma(nu) / (tau_est^2 * kappa_est^(2 * nu) *
+        (4 * pi)^(1 / 2) * gamma(nu + 1 / 2)))
 
-            density_sigma <- stats::density(sigma_est, n = n_density)
+      density_sigma <- stats::density(sigma_est, n = n_density)
 
-            result[[paste0("marginals.",name_theta1_t)]] <- list()
-            result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]] <- cbind(density_sigma$x, density_sigma$y)
-            colnames(result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]]) <- c("x","y")
+      result[[paste0("marginals.", name_theta1_t)]] <- list()
+      result[[paste0("marginals.", name_theta1_t)]][[name_theta1_t]] <- cbind(density_sigma$x, density_sigma$y)
+      colnames(result[[paste0("marginals.", name_theta1_t)]][[name_theta1_t]]) <- c("x", "y")
 
-            result[[paste0("marginals.",name_theta2)]] <- lapply(
-              result[[paste0("marginals.log.",name_theta2)]],
-              function(x) {
-                INLA::inla.tmarginal(
-                  transform_theta2,
-                  x
-                )
-              }
-            )
+      result[[paste0("marginals.", name_theta2)]] <- lapply(
+        result[[paste0("marginals.log.", name_theta2)]],
+        function(x) {
+          INLA::inla.tmarginal(
+            transform_theta2,
+            x
+          )
+        }
+      )
     }
   }
 
@@ -1485,8 +1508,10 @@ spde_metric_graph_result <- function(inla, name,
           } else if (z > max_x) {
             return(0)
           } else {
-            return(approx(x = density_df[, "x"],
-            y = density_df[, "y"], xout = z)$y)
+            return(approx(
+              x = density_df[, "x"],
+              y = density_df[, "y"], xout = z
+            )$y)
           }
         })
         return(dens)
@@ -1495,31 +1520,32 @@ spde_metric_graph_result <- function(inla, name,
         f = function(z) {
           denstemp(z)
         }, lower = min_x, upper = max_x,
-                  stop.on.error = FALSE,
+        stop.on.error = FALSE,
         subdivisions = nrow(density_df)
       )$value
       return(norm_const)
     }
 
-    norm_const_theta1 <- norm_const(result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]])
-    result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]][, "y"] <-
-    result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]][, "y"] / norm_const_theta1
+    norm_const_theta1 <- norm_const(result[[paste0("marginals.", name_theta1_t)]][[name_theta1_t]])
+    result[[paste0("marginals.", name_theta1_t)]][[name_theta1_t]][, "y"] <-
+      result[[paste0("marginals.", name_theta1_t)]][[name_theta1_t]][, "y"] / norm_const_theta1
 
-    norm_const_theta2 <- norm_const(result[[paste0("marginals.",name_theta2)]][[name_theta2]])
-    result[[paste0("marginals.",name_theta2)]][[name_theta2]][, "y"] <-
-    result[[paste0("marginals.",name_theta2)]][[name_theta2]][, "y"] / norm_const_theta2
-
-
+    norm_const_theta2 <- norm_const(result[[paste0("marginals.", name_theta2)]][[name_theta2]])
+    result[[paste0("marginals.", name_theta2)]][[name_theta2]][, "y"] <-
+      result[[paste0("marginals.", name_theta2)]][[name_theta2]][, "y"] / norm_const_theta2
 
 
-    result[[paste0("summary.",name_theta1_t)]] <- create_summary_from_density(result[[paste0("marginals.",name_theta1_t)]][[name_theta1_t]],
-    name = name_theta1_t)
-    result[[paste0("summary.",name_theta2)]] <-
-    create_summary_from_density(result[[paste0("marginals.",name_theta2)]][[name_theta2]], name = name_theta2)
+
+
+    result[[paste0("summary.", name_theta1_t)]] <- create_summary_from_density(result[[paste0("marginals.", name_theta1_t)]][[name_theta1_t]],
+      name = name_theta1_t
+    )
+    result[[paste0("summary.", name_theta2)]] <-
+      create_summary_from_density(result[[paste0("marginals.", name_theta2)]][[name_theta2]], name = name_theta2)
   }
 
   class(result) <- "metric_graph_spde_result"
-  result$params <- c(name_theta1_t,name_theta2)
+  result$params <- c(name_theta1_t, name_theta2)
   return(result)
 }
 
@@ -1539,36 +1565,40 @@ spde_metric_graph_result <- function(inla, name,
 #' @return A `data.frame` containing the posterior densities.
 #' @export
 gg_df.metric_graph_spde_result <- function(result,
-                          parameter = result$params,
-                          transform = TRUE,
-                          restrict_x_axis = parameter,
-                          restrict_quantiles = list(sigma = c(0,1),
-                          range = c(0,1),
-                          kappa = c(0,1),
-                          sigma = c(0,1)),...) {
-      parameter <- intersect(parameter, c("kappa", "range", "sigma"))
-      if(length(parameter) == 0){
-        stop("You should choose at least one of the parameters 'kappa', 'range' or 'sigma'!")
-      }
+                                           parameter = result$params,
+                                           transform = TRUE,
+                                           restrict_x_axis = parameter,
+                                           restrict_quantiles = list(
+                                             sigma = c(0, 1),
+                                             range = c(0, 1),
+                                             kappa = c(0, 1),
+                                             sigma = c(0, 1)
+                                           ), ...) {
+  parameter <- intersect(parameter, c("kappa", "range", "sigma"))
+  if (length(parameter) == 0) {
+    stop("You should choose at least one of the parameters 'kappa', 'range' or 'sigma'!")
+  }
 
   spde_result <- result
   param <- parameter[[1]]
-  if(transform){
+  if (transform) {
     param <- paste0("marginals.", param)
-  } else{
-      param <- paste0("marginals.log.", param)
+  } else {
+    param <- paste0("marginals.log.", param)
   }
-  ret_df <- data.frame(x = spde_result[[param]][[parameter[1]]][,1],
-  y = spde_result[[param]][[parameter[1]]][,2],
-  parameter = parameter[[1]])
+  ret_df <- data.frame(
+    x = spde_result[[param]][[parameter[1]]][, 1],
+    y = spde_result[[param]][[parameter[1]]][, 2],
+    parameter = parameter[[1]]
+  )
 
-  if(parameter[[1]] %in% restrict_x_axis){
-    if(is.null( restrict_quantiles[[parameter[[1]]]])){
+  if (parameter[[1]] %in% restrict_x_axis) {
+    if (is.null(restrict_quantiles[[parameter[[1]]]])) {
       warning("If you want to restrict x axis you should provide a quantile for the parameter!")
-       restrict_quantiles[[parameter[[1]]]] <- c(0,1)
+      restrict_quantiles[[parameter[[1]]]] <- c(0, 1)
     }
-    d_t <- c(0,diff(ret_df$x))
-    emp_cdf <- cumsum(d_t*ret_df$y)
+    d_t <- c(0, diff(ret_df$x))
+    emp_cdf <- cumsum(d_t * ret_df$y)
     lower_quant <- restrict_quantiles[[parameter[[1]]]][1]
     upper_quant <- restrict_quantiles[[parameter[[1]]]][2]
     filter_coord <- (emp_cdf >= lower_quant) * (emp_cdf <= upper_quant)
@@ -1576,35 +1606,37 @@ gg_df.metric_graph_spde_result <- function(result,
     ret_df <- ret_df[filter_coord, ]
   }
 
-  if(length(parameter) > 1){
-  for(i in 2:length(parameter)){
-  param <- parameter[[i]]
-  if(transform){
-    param <- paste0("marginals.", param)
-  } else{
-      param <- paste0("marginals.log.", param)
-  }
-    tmp <- data.frame(x = spde_result[[param]][[parameter[i]]][,1],
-      y = spde_result[[param]][[parameter[i]]][,2],
-      parameter = parameter[[i]])
+  if (length(parameter) > 1) {
+    for (i in 2:length(parameter)) {
+      param <- parameter[[i]]
+      if (transform) {
+        param <- paste0("marginals.", param)
+      } else {
+        param <- paste0("marginals.log.", param)
+      }
+      tmp <- data.frame(
+        x = spde_result[[param]][[parameter[i]]][, 1],
+        y = spde_result[[param]][[parameter[i]]][, 2],
+        parameter = parameter[[i]]
+      )
 
-    if(parameter[[i]] %in% restrict_x_axis){
-    if(is.null( restrict_quantiles[[parameter[[i]]]])){
-      warning(paste("No quantile for", parameter[[i]]))
-      warning("If you want to restrict x axis you should provide a quantile for the parameter!")
-       restrict_quantiles[[parameter[[i]]]] <- c(0,1)
+      if (parameter[[i]] %in% restrict_x_axis) {
+        if (is.null(restrict_quantiles[[parameter[[i]]]])) {
+          warning(paste("No quantile for", parameter[[i]]))
+          warning("If you want to restrict x axis you should provide a quantile for the parameter!")
+          restrict_quantiles[[parameter[[i]]]] <- c(0, 1)
+        }
+        d_t <- c(0, diff(tmp$x))
+        emp_cdf <- cumsum(d_t * tmp$y)
+        lower_quant <- restrict_quantiles[[parameter[[i]]]][1]
+        upper_quant <- restrict_quantiles[[parameter[[i]]]][2]
+        filter_coord <- (emp_cdf >= lower_quant) * (emp_cdf <= upper_quant)
+        filter_coord <- as.logical(filter_coord)
+        tmp <- tmp[filter_coord, ]
+      }
+
+      ret_df <- rbind(ret_df, tmp)
     }
-    d_t <- c(0,diff(tmp$x))
-    emp_cdf <- cumsum(d_t*tmp$y)
-    lower_quant <- restrict_quantiles[[parameter[[i]]]][1]
-    upper_quant <- restrict_quantiles[[parameter[[i]]]][2]
-    filter_coord <- (emp_cdf >= lower_quant) * (emp_cdf <= upper_quant)
-    filter_coord <- as.logical(filter_coord)
-    tmp <- tmp[filter_coord, ]
-  }
-
-    ret_df <- rbind(ret_df, tmp)
-  }
   }
   return(ret_df)
 }
@@ -1625,15 +1657,14 @@ gg_df.metric_graph_spde_result <- function(result,
 #' @method summary metric_graph_spde_result
 
 summary.metric_graph_spde_result <- function(object,
-                                 digits = 6,
-                                 ...) {
-
-  if (is.null(object[[paste0("summary.",object$params[1])]])) {
+                                             digits = 6,
+                                             ...) {
+  if (is.null(object[[paste0("summary.", object$params[1])]])) {
     warning("The summary was not computed, rerun spde_metric_graph_result with
     compute.summary set to TRUE.")
   } else {
-    out <- object[[paste0("summary.",object$params[1])]]
-    out <- rbind(out, object[[paste0("summary.",object$params[2])]])
+    out <- object[[paste0("summary.", object$params[1])]]
+    out <- rbind(out, object[[paste0("summary.", object$params[2])]])
     return(signif(out, digits = digits))
   }
 }
@@ -1653,7 +1684,7 @@ summary.metric_graph_spde_result <- function(object,
 #' }
 #'
 
-bru_get_mapper.inla_metric_graph_spde <- function(model, ...){
+bru_get_mapper.inla_metric_graph_spde <- function(model, ...) {
   mapper <- list(model = model)
   inlabru::bru_mapper_define(mapper, new_class = "bru_mapper_inla_metric_graph_spde")
 }
@@ -1672,20 +1703,28 @@ ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
 #' @rdname bru_mapper.inla_metric_graph_spde
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   model <- mapper[["model"]]
-  if(model$alpha == 1 && !(model$directional)){
+  if (model$alpha == 1 && !(model$directional)) {
     pte_tmp <- model$graph_spde$get_PtE()
-    input_list <- lapply(1:nrow(input), function(i){input[i,]})
-    pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
+    input_list <- lapply(1:nrow(input), function(i) {
+      input[i, ]
+    })
+    pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i) {
+      pte_tmp[i, ]
+    })
     idx_tmp <- match(input_list, pte_tmp_list)
     A_tmp <- model$graph_spde$.__enclos_env__$private$A()
-    return(A_tmp[idx_tmp, , drop=FALSE])
-  } else{
+    return(A_tmp[idx_tmp, , drop = FALSE])
+  } else {
     pte_tmp <- model$graph_spde$get_PtE()
-    input_list <- lapply(1:nrow(input), function(i){input[i,]})
-    pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i){pte_tmp[i,]})
+    input_list <- lapply(1:nrow(input), function(i) {
+      input[i, ]
+    })
+    pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i) {
+      pte_tmp[i, ]
+    })
     idx_tmp <- match(input_list, pte_tmp_list)
     A_tmp <- model$A
-    return(A_tmp[idx_tmp, , drop=FALSE])    
+    return(A_tmp[idx_tmp, , drop = FALSE])
   }
 }
 
@@ -1726,7 +1765,7 @@ create_summary_from_density <- function(density_df, name) {
       } else {
         stats::integrate(
           f = denstemp, lower = min_x, upper = v,
-                  stop.on.error = FALSE,
+          stop.on.error = FALSE,
           subdivisions = min(nrow(density_df), 500)
         )$value
       }
@@ -1738,7 +1777,7 @@ create_summary_from_density <- function(density_df, name) {
     f = function(z) {
       denstemp(z) * z
     }, lower = min_x, upper = max_x,
-                  stop.on.error = FALSE,
+    stop.on.error = FALSE,
     subdivisions = nrow(density_df)
   )$value
 
@@ -1746,7 +1785,7 @@ create_summary_from_density <- function(density_df, name) {
     f = function(z) {
       denstemp(z) * (z - mean_temp)^2
     }, lower = min_x, upper = max_x,
-                  stop.on.error = FALSE,
+    stop.on.error = FALSE,
     subdivisions = nrow(density_df)
   )$value)
 
@@ -1770,8 +1809,10 @@ create_summary_from_density <- function(density_df, name) {
     `0.5quant` = qtemp(0.5), `0.975quant` = qtemp(0.975), mode = mode_temp
   )
   rownames(out) <- name
-  colnames(out) <- c("mean", "sd", "0.025quant",
-  "0.5quant", "0.975quant", "mode")
+  colnames(out) <- c(
+    "mean", "sd", "0.025quant",
+    "0.5quant", "0.975quant", "mode"
+  )
   return(out)
 }
 
@@ -1786,14 +1827,14 @@ create_summary_from_density <- function(density_df, name) {
 #' @return A vector of replicates to be used with 'inlabru'.
 #' @noRd
 
-bru_graph_rep <- function(repl, graph_spde, repl_col){
+bru_graph_rep <- function(repl, graph_spde, repl_col) {
   groups <- unique(graph_spde$graph_spde$.__enclos_env__$private$data[[repl_col]])
-  if(repl[1] == ".all"){
+  if (repl[1] == ".all") {
     repl <- groups
   }
   n_groups <- length(groups)
   length_resp <- sum(graph_spde$graph_spde$.__enclos_env__$private$data[[repl_col]] == groups[1])
-  return(rep(repl, each = length_resp ))
+  return(rep(repl, each = length_resp))
 }
 
 #' @name predict.inla_metric_graph_spde
@@ -1874,7 +1915,7 @@ predict.inla_metric_graph_spde <- function(object,
                                            drop = FALSE,
                                            tolerance_merge = 1e-5,
                                            ...,
-                                           data = deprecated()){
+                                           data = deprecated()) {
   if (lifecycle::is_present(data)) {
     if (is.null(newdata)) {
       lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
@@ -1891,7 +1932,7 @@ predict.inla_metric_graph_spde <- function(object,
 
   data <- newdata
   data_coords <- data_coords[[1]]
-  if(!(data_coords %in% c("PtE", "euclidean"))){
+  if (!(data_coords %in% c("PtE", "euclidean"))) {
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }
   graph_tmp <- object$graph_spde$get_initial_graph()
@@ -1902,82 +1943,92 @@ predict.inla_metric_graph_spde <- function(object,
 
   group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
 
-  if(group_variables == ".none"){
-  graph_tmp$add_observations(data = original_data,
-                  edge_number = ".edge_number",
-                  distance_on_edge = ".distance_on_edge",
-                  data_coords = "PtE",
-                  normalized = TRUE,
-                  verbose=0,
-                  suppress_warnings = TRUE)
-  } else{
-      graph_tmp$add_observations(data = original_data,
-                  edge_number = ".edge_number",
-                  distance_on_edge = ".distance_on_edge",
-                  data_coords = "PtE",
-                  normalized = TRUE,
-                  verbose=0,
-                  group = group_variables,
-                  suppress_warnings = TRUE)
+  if (group_variables == ".none") {
+    graph_tmp$add_observations(
+      data = original_data,
+      edge_number = ".edge_number",
+      distance_on_edge = ".distance_on_edge",
+      data_coords = "PtE",
+      normalized = TRUE,
+      verbose = 0,
+      suppress_warnings = TRUE
+    )
+  } else {
+    graph_tmp$add_observations(
+      data = original_data,
+      edge_number = ".edge_number",
+      distance_on_edge = ".distance_on_edge",
+      data_coords = "PtE",
+      normalized = TRUE,
+      verbose = 0,
+      group = group_variables,
+      suppress_warnings = TRUE
+    )
   }
 
   new_data <- data
   new_data[[name_locations]] <- NULL
   n_locations <- nrow(data[[name_locations]])
   names_columns <- names(original_data)
-  names_columns <- setdiff(names_columns, c(".group", ".coord_x",
-                                            ".coord_y", ".edge_number",
-                                            ".distance_on_edge"))
+  names_columns <- setdiff(names_columns, c(
+    ".group", ".coord_x",
+    ".coord_y", ".edge_number",
+    ".distance_on_edge"
+  ))
 
   # for(name_column in names_columns){
   #   new_data[[name_column]] <- rep(NA, n_locations)
   # }
-  if(data_coords == "PtE"){
-    new_data[[".edge_number"]] <- data[[name_locations]][,1]
-    new_data[[".distance_on_edge"]] <- data[[name_locations]][,2]
-  } else{
-    new_data[[".coord_x"]] <- data[[name_locations]][,1]
-    new_data[[".coord_y"]] <- data[[name_locations]][,2]
+  if (data_coords == "PtE") {
+    new_data[[".edge_number"]] <- data[[name_locations]][, 1]
+    new_data[[".distance_on_edge"]] <- data[[name_locations]][, 2]
+  } else {
+    new_data[[".coord_x"]] <- data[[name_locations]][, 1]
+    new_data[[".coord_y"]] <- data[[name_locations]][, 2]
   }
 
   new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
 
-  if(group_variables == ".none"){
+  if (group_variables == ".none") {
     group_variables <- NULL
-  } else if(group_variables == ".group"){
-    if(!(".group" %in% names(new_data))){
-      if(length(unique(original_data[[".group"]])) == 1){
+  } else if (group_variables == ".group") {
+    if (!(".group" %in% names(new_data))) {
+      if (length(unique(original_data[[".group"]])) == 1) {
         new_data[[".group"]] <- rep(unique(original_data[[".group"]]), length(new_data[[".edge_number"]]))
       }
     }
-  } 
+  }
 
-  if(!is.null(group_variables)){
-    if(!(group_variables %in% names(new_data))){
+  if (!is.null(group_variables)) {
+    if (!(group_variables %in% names(new_data))) {
       warning("The replicate variable was not found in newdata. Predictions were only given for the first replicate.")
       new_data[[".group"]] <- rep(original_data[[group_variables]][1], length(new_data[[".edge_number"]]))
     }
   }
 
 
-  graph_tmp$add_observations(data = new_data,
-                  edge_number = ".edge_number",
-                  distance_on_edge = ".distance_on_edge",
-                  coord_x = ".coord_x",
-                  coord_y = ".coord_y",
-                  data_coords = data_coords,
-                  normalized = normalized,
-                  group = group_variables,
-                  verbose=0,
-                  suppress_warnings = TRUE,
-                  tolerance_merge = tolerance_merge)
+  graph_tmp$add_observations(
+    data = new_data,
+    edge_number = ".edge_number",
+    distance_on_edge = ".distance_on_edge",
+    coord_x = ".coord_x",
+    coord_y = ".coord_y",
+    data_coords = data_coords,
+    normalized = normalized,
+    group = group_variables,
+    verbose = 0,
+    suppress_warnings = TRUE,
+    tolerance_merge = tolerance_merge
+  )
 
   dummy1 <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]]
 
   graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]] <- 1:length(graph_tmp$.__enclos_env__$private$data[["__dummy_var"]])
 
-  pred_PtE <- cbind(graph_tmp$.__enclos_env__$private$data[[".edge_number"]],
-                          graph_tmp$.__enclos_env__$private$data[[".distance_on_edge"]])
+  pred_PtE <- cbind(
+    graph_tmp$.__enclos_env__$private$data[[".edge_number"]],
+    graph_tmp$.__enclos_env__$private$data[[".distance_on_edge"]]
+  )
 
   # pred_PtE <- pred_PtE[!is.na(dummy1),]
 
@@ -1988,7 +2039,7 @@ predict.inla_metric_graph_spde <- function(object,
   #                   coord_y = ".coord_y",
   #                   data_coords = "euclidean", verbose=0)
 
-  graph_tmp$observation_to_vertex(mesh_warning=FALSE)
+  graph_tmp$observation_to_vertex(mesh_warning = FALSE)
 
   # tmp_list2 <- cbind(graph_tmp$data[[".coord_x"]],
   #                                       graph_tmp$data[[".coord_y"]])
@@ -1999,15 +2050,19 @@ predict.inla_metric_graph_spde <- function(object,
 
   idx_list <- !is.na(new_data_list[["__dummy_var"]])
 
-  new_data_list <- lapply(new_data_list, function(dat){dat[idx_list]})
+  new_data_list <- lapply(new_data_list, function(dat) {
+    dat[idx_list]
+  })
 
-  pred_PtE <- pred_PtE[graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]],][idx_list,]
+  pred_PtE <- pred_PtE[graph_tmp$.__enclos_env__$private$data[["__dummy_var2"]], ][idx_list, ]
 
   # new_data_list[[name_locations]] <- cbind(graph_tmp$data[[".edge_number"]][idx_list],
   #                                             graph_tmp$data[[".distance_on_edge"]][idx_list])
 
-  new_data_list[[name_locations]] <- cbind(new_data_list[[".edge_number"]],
-                                              new_data_list[[".distance_on_edge"]])                                      
+  new_data_list[[name_locations]] <- cbind(
+    new_data_list[[".edge_number"]],
+    new_data_list[[".distance_on_edge"]]
+  )
 
   spde____model <- graph_spde(graph_tmp, alpha = object$alpha, directional = object$directional)
 
@@ -2016,36 +2071,53 @@ predict.inla_metric_graph_spde <- function(object,
   cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
   cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
 
-  new_data_tmp <- graph_data_spde(spde____model, loc_name = name_locations, 
-                        drop_all_na = FALSE, drop_na = FALSE, group = group, group_col = group_col,
-                        repl_col = repl_col, repl = repl)[["data"]]
+  new_data_tmp <- graph_data_spde(spde____model,
+    loc_name = name_locations,
+    drop_all_na = FALSE, drop_na = FALSE, group = group, group_col = group_col,
+    repl_col = repl_col, repl = repl
+  )[["data"]]
 
 
   info <- bru_fit[["bru_info"]]
   info[["options"]] <- inlabru::bru_call_options(inlabru::bru_options(info[["options"]]))
 
   bru_fit_new <- inlabru::bru(cmp,
-          data = new_data_tmp, options = info[["options"]])
-  
-  pred <- predict(object = bru_fit_new,
-                    newdata = new_data_list,
-                    formula = formula,
-                    n.samples = n.samples,
-                    seed = seed,
-                    probs = probs,
-                    num.threads = num.threads,
-                    include = include,
-                    exclude = exclude,
-                    drop = drop,
-                    ...)
+    data = new_data_tmp, options = info[["options"]], allow_combine = FALSE
+  )
+
+  pred <- predict(
+    object = bru_fit_new,
+    newdata = new_data_list,
+    formula = formula,
+    n.samples = n.samples,
+    seed = seed,
+    probs = probs,
+    num.threads = num.threads,
+    include = include,
+    exclude = exclude,
+    drop = drop,
+    ...
+  )
 
   pred_list <- list()
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
-  if(return_original_order){
+  if (return_original_order) {
     ord <- graph_tmp$.__enclos_env__$private$data[["__dummy_var"]][idx_list]
-    pred_list[["pred"]][ord,] <- pred
-    pred_list[["PtE_pred"]][ord,] <- pred_PtE
+
+    # Reorder 'pred'
+    if (is.vector(pred_list[["pred"]]) && !is.list(pred_list[["pred"]])) {
+      pred_list[["pred"]] <- pred_list[["pred"]][order(ord)]
+    } else {
+      pred_list[["pred"]] <- pred_list[["pred"]][order(ord), , drop = FALSE]
+    }
+
+    # Reorder 'PtE_pred'
+    if (is.vector(pred_list[["PtE_pred"]]) && !is.list(pred_list[["PtE_pred"]])) {
+      pred_list[["PtE_pred"]] <- pred_list[["PtE_pred"]][order(ord)]
+    } else {
+      pred_list[["PtE_pred"]] <- pred_list[["PtE_pred"]][order(ord), , drop = FALSE]
+    }
   }
   pred_list[["initial_graph"]] <- graph_tmp$get_initial_graph()
   # pred_list[["new_model"]] <- spde____model
@@ -2068,15 +2140,17 @@ predict.inla_metric_graph_spde <- function(object,
 #' @return A 'ggplot2' object.
 #' @export
 
-plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
+plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...) {
   m_prd_bru <- x$pred$mean
   PtE_prd <- x$PtE_pred
-  newdata <- data.frame("edge_number" = PtE_prd[,1],
-                        "distance_on_edge" = PtE_prd[,2],
-                        "pred_y" = m_prd_bru)
+  newdata <- data.frame(
+    "edge_number" = PtE_prd[, 1],
+    "distance_on_edge" = PtE_prd[, 2],
+    "pred_y" = m_prd_bru
+  )
   newdata <- x$initial_graph$process_data(data = newdata, normalized = TRUE)
-  
-  p <- x$initial_graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
+
+  p <- x$initial_graph$plot_function(data = "pred_y", newdata = newdata, vertex_size = vertex_size, ...)
   p
 }
 
@@ -2127,21 +2201,21 @@ plot.graph_bru_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' @export
 
 predict.rspde_metric_graph <- function(object,
-                                           cmp,
-                                           bru_fit,
-                                           newdata = NULL,
-                                           formula = NULL,
-                                           data_coords = c("PtE", "euclidean"),
-                                           normalized = TRUE,
-                                           n.samples = 100,
-                                           seed = 0L,
-                                           probs = c(0.025, 0.5, 0.975),
-                                           num.threads = NULL,
-                                           include = NULL,
-                                           exclude = NULL,
-                                           drop = FALSE,
-                                           ...,
-                                           data = deprecated()){
+                                       cmp,
+                                       bru_fit,
+                                       newdata = NULL,
+                                       formula = NULL,
+                                       data_coords = c("PtE", "euclidean"),
+                                       normalized = TRUE,
+                                       n.samples = 100,
+                                       seed = 0L,
+                                       probs = c(0.025, 0.5, 0.975),
+                                       num.threads = NULL,
+                                       include = NULL,
+                                       exclude = NULL,
+                                       drop = FALSE,
+                                       ...,
+                                       data = deprecated()) {
   if (lifecycle::is_present(data)) {
     if (is.null(newdata)) {
       lifecycle::deprecate_warn("1.2.0", "predict(data)", "predict(newdata)",
@@ -2158,34 +2232,36 @@ predict.rspde_metric_graph <- function(object,
 
   data <- newdata
   data_coords <- data_coords[[1]]
-  if(!(data_coords %in% c("PtE", "euclidean"))){
+  if (!(data_coords %in% c("PtE", "euclidean"))) {
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }
   graph_tmp <- object$mesh$get_initial_graph()
   name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
 
-  if(data_coords == "PtE"){
-    if(normalized){
+  if (data_coords == "PtE") {
+    if (normalized) {
       pred_PtE <- data[[name_locations]]
-    } else{
+    } else {
       pred_PtE <- data[[name_locations]]
-      pred_PtE[,2] <- pred_PtE[,2]/graph_tmp$edge_lengths[pred_PtE[, 1]]
+      pred_PtE[, 2] <- pred_PtE[, 2] / graph_tmp$edge_lengths[pred_PtE[, 1]]
     }
-  } else{
+  } else {
     pred_PtE <- graph_tmp$coordinates(XY = data[[name_locations]])
   }
 
-  pred <- predict(object = bru_fit,
-                    newdata = newdata,
-                    formula = formula,
-                    n.samples = n.samples,
-                    seed = seed,
-                    probs = probs,
-                    num.threads = num.threads,
-                    include = include,
-                    exclude = exclude,
-                    drop = drop,
-                    ...)
+  pred <- predict(
+    object = bru_fit,
+    newdata = newdata,
+    formula = formula,
+    n.samples = n.samples,
+    seed = seed,
+    probs = probs,
+    num.threads = num.threads,
+    include = include,
+    exclude = exclude,
+    drop = drop,
+    ...
+  )
   pred_list <- list()
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE
@@ -2206,8 +2282,8 @@ predict.rspde_metric_graph <- function(object,
 #' @export
 
 process_rspde_predictions <- function(pred,
-                                        graph,
-                                        PtE = NULL){
+                                      graph,
+                                      PtE = NULL) {
   pred_list <- list()
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- PtE
@@ -2229,16 +2305,18 @@ process_rspde_predictions <- function(pred,
 #' @return A 'ggplot2' object.
 #' @export
 
-plot.graph_bru_proc_pred <- function(x, y = NULL, vertex_size = 0, ...){
+plot.graph_bru_proc_pred <- function(x, y = NULL, vertex_size = 0, ...) {
   m_prd_bru <- x$pred$mean
   PtE_prd <- x$PtE_pred
   graph <- x$graph
-  newdata <- data.frame("edge_number" = PtE_prd[,1],
-                        "distance_on_edge" = PtE_prd[,2],
-                        "pred_y" = m_prd_bru)
+  newdata <- data.frame(
+    "edge_number" = PtE_prd[, 1],
+    "distance_on_edge" = PtE_prd[, 2],
+    "pred_y" = m_prd_bru
+  )
   newdata <- graph$process_data(data = newdata, normalized = TRUE)
-  
-  p <- graph$plot_function(data = "pred_y", newdata=newdata, vertex_size = vertex_size,...)
+
+  p <- graph$plot_function(data = "pred_y", newdata = newdata, vertex_size = vertex_size, ...)
   p
 }
 
@@ -2259,20 +2337,20 @@ plot.graph_bru_proc_pred <- function(x, y = NULL, vertex_size = 0, ...){
 #' @export
 
 graph_bru_process_data <- function(data, edge_number = "edge_number",
-                                        distance_on_edge = "distance_on_edge",
-                                        loc = "loc"){
-                                        if(inherits(data, "metric_graph_data")){
-                                          edge_number <- ".edge_number"
-                                          distance_on_edge = ".distance_on_edge"
-                                        }
-                                        if(is.null(data[[edge_number]])){
-                                          stop(paste("No column",edge_number,"was found in data."))
-                                        }
-                                        if(is.null(data[[distance_on_edge]])){
-                                          stop(paste("No column",distance_on_edge,"was found in data."))
-                                        }                                        
-                                        data[[loc]] <- cbind(data[[edge_number]], data[[distance_on_edge]])
-                                        data[[edge_number]] <- NULL
-                                        data[[distance_on_edge]] <- NULL
-                                        return(data)
-                                        }
+                                   distance_on_edge = "distance_on_edge",
+                                   loc = "loc") {
+  if (inherits(data, "metric_graph_data")) {
+    edge_number <- ".edge_number"
+    distance_on_edge <- ".distance_on_edge"
+  }
+  if (is.null(data[[edge_number]])) {
+    stop(paste("No column", edge_number, "was found in data."))
+  }
+  if (is.null(data[[distance_on_edge]])) {
+    stop(paste("No column", distance_on_edge, "was found in data."))
+  }
+  data[[loc]] <- cbind(data[[edge_number]], data[[distance_on_edge]])
+  data[[edge_number]] <- NULL
+  data[[distance_on_edge]] <- NULL
+  return(data)
+}

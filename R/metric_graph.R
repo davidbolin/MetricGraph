@@ -4644,7 +4644,8 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
-      temp_E <- apply(self$E,2,as.integer)
+      temp_E <- self$E
+      temp_E[] <- as.integer(temp_E)
 
       self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
       self$CoB <- c_basis2(self$C)
@@ -5311,8 +5312,6 @@ return(mapview_output)
   #' @param group If there are groups, which group to plot? If `group` is a
   #' number, it will be the index of the group as stored internally. If `group`
   #' is a character, then the group will be chosen by its name.
-  #' @param X A vector with values for the function
-  #' evaluated at the mesh in the graph
   #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
   #' @param continuous Should continuity be assumed when the plot uses `newdata`?
   #' @param interpolate_plot Should the values to be plotted be interpolated?
@@ -5331,12 +5330,12 @@ return(mapview_output)
   #' @param p Previous plot to which the new plot should be added.
   #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
   #' @param improve_plot  `r lifecycle::badge("deprecated")` Use `interpolate` instead. There is no need to use it to improve the edges.
+  #' @param X `r lifecycle::badge("deprecated")` Use `newdata` instead.
   #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
   #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
   plot_function = function(data = NULL,
                            newdata = NULL,
                            group = 1,
-                           X = NULL,
                            type = c("ggplot", "plotly", "mapview"),
                            continuous = TRUE,
                            interpolate_plot = TRUE,
@@ -5355,11 +5354,17 @@ return(mapview_output)
                            p = NULL,
                            plotly = deprecated(),
                            improve_plot = deprecated(),
+                           X = deprecated(),
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
     }
 
+    if(lifecycle::is_present(X)){
+      lifecycle::deprecate_warn("1.3.0.9000", "plot_function(X)", "plot_function(newdata)",
+        details = c("The argument `X` is deprecated; please use `newdata` to ensure the correct order when plotting.")
+      )
+    }
 
      if (lifecycle::is_present(plotly)) {
       lifecycle::deprecate_warn("1.3.0.9000", "plot(plotly)", "plot(type)",
