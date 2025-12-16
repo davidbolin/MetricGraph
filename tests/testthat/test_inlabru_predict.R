@@ -8,6 +8,7 @@ test_that("Inlabru predict method works for alpha = 1", {
 
     # Create a simple graph with two edges
     edge <- rbind(c(0, 0), c(1, 0))
+    edges <- list(edge)
     graph <- metric_graph$new(edges = edges)
 
     # Add observations at vertices only (2 points)
