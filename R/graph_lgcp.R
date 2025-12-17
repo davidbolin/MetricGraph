@@ -858,6 +858,7 @@ lgcp_graph <- function(formula,
           }
           
           inla_fit[["graph_fitted_data"]] <- full_inla_data
+          inla_fit[[".interpolated_covariates"]] <- interpolate
           return(inla_fit)
 } 
 
