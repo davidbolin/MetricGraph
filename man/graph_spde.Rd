@@ -13,12 +13,24 @@ graph_spde(
   parameterization = c("matern", "spde"),
   start_range = NULL,
   prior_range = NULL,
+  range_lower_bound = NULL,
+  range_upper_bound = NULL,
+  range_prec_inc = 1,
   start_kappa = NULL,
   prior_kappa = NULL,
+  kappa_lower_bound = NULL,
+  kappa_upper_bound = NULL,
+  kappa_prec_inc = 1,
   start_sigma = NULL,
   prior_sigma = NULL,
+  sigma_lower_bound = NULL,
+  sigma_upper_bound = NULL,
+  sigma_prec_inc = 1,
   start_tau = NULL,
   prior_tau = NULL,
+  tau_lower_bound = NULL,
+  tau_upper_bound = NULL,
+  tau_prec_inc = 1,
   factor_start_range = 0.3,
   type_start_range_bbox = "diag",
   shared_lib = "detect",
@@ -45,22 +57,58 @@ stationary boundary conditions? Set to "all" for all vertices of degree 1, "none
 
 \item{prior_range}{a \code{list} containing the elements \code{meanlog} and
 \code{sdlog}, that is, the mean and standard deviation of the range parameter on
-the log scale. Will not be used if prior.kappa is non-null.}
+the log scale. Will not be used if prior.kappa is non-null. If bounds are specified,
+it can also contain \code{mean} and \code{prec} for the beta prior.}
+
+\item{range_lower_bound}{Lower bound for the range parameter. Default is NULL (no lower bound, or 0).}
+
+\item{range_upper_bound}{Upper bound for the range parameter. Default is NULL (no upper bound).
+If specified, a beta prior will be used.}
+
+\item{range_prec_inc}{Amount to increase the precision in the beta prior
+distribution for the range parameter. Default is 1. Similar to nu.prec.inc in rspde.matern().}
 
 \item{start_kappa}{Starting value for kappa.}
 
 \item{prior_kappa}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation of kappa on the log scale.}
+\code{sdlog}, that is, the mean and standard deviation of kappa on the log scale.
+If bounds are specified, it can also contain \code{mean} and \code{prec} for the beta prior.}
+
+\item{kappa_lower_bound}{Lower bound for the kappa parameter. Default is NULL (no lower bound, or 0).}
+
+\item{kappa_upper_bound}{Upper bound for the kappa parameter. Default is NULL (no upper bound).
+If specified, a beta prior will be used.}
+
+\item{kappa_prec_inc}{Amount to increase the precision in the beta prior
+distribution for the kappa parameter. Default is 1.}
 
 \item{start_sigma}{Starting value for sigma.}
 
 \item{prior_sigma}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.}
+\code{sdlog}, that is, the mean and standard deviation of sigma on the log scale.
+If bounds are specified, it can also contain \code{mean} and \code{prec} for the beta prior.}
+
+\item{sigma_lower_bound}{Lower bound for the sigma parameter. Default is NULL (no lower bound, or 0).}
+
+\item{sigma_upper_bound}{Upper bound for the sigma parameter. Default is NULL (no upper bound).
+If specified, a beta prior will be used.}
+
+\item{sigma_prec_inc}{Amount to increase the precision in the beta prior
+distribution for the sigma parameter. Default is 1.}
 
 \item{start_tau}{Starting value for tau.}
 
 \item{prior_tau}{a \code{list} containing the elements \code{meanlog} and
-\code{sdlog}, that is, the mean and standard deviation of tau on the log scale.}
+\code{sdlog}, that is, the mean and standard deviation of tau on the log scale.
+If bounds are specified, it can also contain \code{mean} and \code{prec} for the beta prior.}
+
+\item{tau_lower_bound}{Lower bound for the tau parameter. Default is NULL (no lower bound, or 0).}
+
+\item{tau_upper_bound}{Upper bound for the tau parameter. Default is NULL (no upper bound).
+If specified, a beta prior will be used.}
+
+\item{tau_prec_inc}{Amount to increase the precision in the beta prior
+distribution for the tau parameter. Default is 1.}
 
 \item{factor_start_range}{Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.}
 

@@ -3221,6 +3221,7 @@ graph_data_linear_inla <- function(graph_rspde,
 #' data_on_mesh_ordered_custom <- match_mesh_data(graph, data_on_mesh,
 #'                                                edge_col = "my_edge_id",
 #'                                                dist_col = "my_dist_on_edge")
+#' @export
 match_mesh_data <- function(graph, 
                             data, 
                             edge_col = ".edge_number", 

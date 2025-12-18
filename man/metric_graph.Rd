@@ -2140,7 +2140,6 @@ Plots continuous function on the graph.
   data = NULL,
   newdata = NULL,
   group = 1,
-  X = NULL,
   type = c("ggplot", "plotly", "mapview"),
   continuous = TRUE,
   interpolate_plot = TRUE,
@@ -2159,6 +2158,7 @@ Plots continuous function on the graph.
   p = NULL,
   plotly = deprecated(),
   improve_plot = deprecated(),
+  X = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -2174,9 +2174,6 @@ plotted.}
 \item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
 number, it will be the index of the group as stored internally. If \code{group}
 is a character, then the group will be chosen by its name.}
-
-\item{\code{X}}{A vector with values for the function
-evaluated at the mesh in the graph}
 
 \item{\code{type}}{The type of plot to be returned. The options are \code{ggplot} (the default), that uses \code{ggplot2}; \code{plotly} that uses \code{plot_ly} for 3D plots, which requires the \code{plotly} package, and \code{mapview} that uses the \code{mapview} function, to build interactive plots, which requires the \code{mapview} package.}
 
@@ -2213,6 +2210,8 @@ evaluated at the mesh in the graph}
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
 
 \item{\code{improve_plot}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{interpolate} instead. There is no need to use it to improve the edges.}
+
+\item{\code{X}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{newdata} instead.}
 
 \item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }
