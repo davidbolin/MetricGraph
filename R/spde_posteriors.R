@@ -264,7 +264,7 @@ posterior_mean_obs_alpha2 <- function(theta,
 #' Computes the posterior expectation for each node in the graph
 #' @param theta     - (sigma_e, tau)
 #' @param graph - metric_graph object
-#' @parm resp      - data
+#' @param resp      - data
 #' @param PtE_resp - location
 #' @param rem.edge  - remove edge
 #' @noRd
