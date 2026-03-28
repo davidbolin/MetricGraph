@@ -3419,7 +3419,7 @@ class(self$edges) <- "metric_graph_edges"
     data <- process_data_add_obs(PtE, new_data = data, old_data = NULL,
                                         group_vector, suppress_warnings = suppress_warnings)
 
-    data <- standardize_df_positions(data, self)
+    data <- standardize_df_positions(data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
     ## convert to Spoints and add
     group_1 <- data[[".group"]]
     group_1 <- which(group_1 == group_1[1])
