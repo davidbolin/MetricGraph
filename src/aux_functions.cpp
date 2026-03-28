@@ -265,7 +265,8 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
             }
         }
 
-        double dist_pos = (pos_rel(i) - dist_vec(tmp_ind))/(dist_vec(tmp_ind+1)-dist_vec(tmp_ind));
+        double denom    = dist_vec(tmp_ind+1) - dist_vec(tmp_ind);
+        double dist_pos = (denom == 0.0) ? 0.0 : (pos_rel(i) - dist_vec(tmp_ind)) / denom;
 
         out_mat.row(i) = lines.row(tmp_ind) + (lines.row(tmp_ind+1) - lines.row(tmp_ind))*dist_pos;
         idx_pos(i) = tmp_ind+1;

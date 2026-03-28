@@ -7667,10 +7667,17 @@ format_data = function(data_res, format) {
     coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
     coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
     tmp_vec <- c(PtE_edge[1:idx_positions[1]], t_values[1])
-
+    # Remove duplicate consecutive rows
+    if (nrow(coords_list1) > 1L) {
+      is_dup <- c(FALSE, rowSums(diff(coords_list1)^2) == 0)
+      if (any(is_dup)) {
+        coords_list1 <- coords_list1[!is_dup, , drop = FALSE]
+        tmp_vec      <- tmp_vec[!is_dup]
+      }
+    }
     pos_edge_diff <- tmp_vec - tmp_vec[1]
     norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-    tmp_PtE <- pos_edge_diff / norm_factor
+    tmp_PtE <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
 
     # Add tmp_PtE as an attribute
     attr(coords_list1, "PtE") <- tmp_PtE
@@ -7706,9 +7713,17 @@ format_data = function(data_res, format) {
         tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):nrow(edge)])
       }
 
+      # Remove duplicate consecutive rows
+      if (nrow(coords_list2[[i]]) > 1L) {
+        is_dup <- c(FALSE, rowSums(diff(coords_list2[[i]])^2) == 0)
+        if (any(is_dup)) {
+          coords_list2[[i]] <- coords_list2[[i]][!is_dup, , drop = FALSE]
+          tmp_vec            <- tmp_vec[!is_dup]
+        }
+      }
       pos_edge_diff <- tmp_vec - tmp_vec[1]
       norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-      tmp_PtE <- pos_edge_diff / norm_factor
+      tmp_PtE <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
 
       # Add tmp_PtE as an attribute
       attr(coords_list2[[i]], "PtE") <- tmp_PtE
@@ -7910,16 +7925,25 @@ format_data = function(data_res, format) {
         }
         
         # Build edge segments efficiently
-        coords_list1 <- rbind(edge[seq_len(idx_positions[1]), , drop = FALSE], 
+        coords_list1 <- rbind(edge[seq_len(idx_positions[1]), , drop = FALSE],
                              if (n_t_values == 1L) matrix(val_lines, nrow = 1L) else val_lines[1, , drop = FALSE])
         tmp_vec <- c(PtE_edge[seq_len(idx_positions[1])], t_values[1])
+        # Remove duplicate consecutive rows (can arise when split point coincides
+        # numerically with an existing edge coordinate)
+        if (nrow(coords_list1) > 1L) {
+            is_dup <- c(FALSE, rowSums(diff(coords_list1)^2) == 0)
+            if (any(is_dup)) {
+                coords_list1 <- coords_list1[!is_dup, , drop = FALSE]
+                tmp_vec      <- tmp_vec[!is_dup]
+            }
+        }
         pos_edge_diff <- tmp_vec - tmp_vec[1]
-        norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-        attr(coords_list1, "PtE") <- pos_edge_diff / norm_factor
-        
+        norm_factor   <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
+        attr(coords_list1, "PtE") <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
+
         # Pre-allocate coords_list2
         coords_list2 <- vector("list", n_t_values)
-        
+
         # Optimized processing of coordinate lists
         for (j in seq_len(n_t_values)) {
             if (n_t_values == 1L) {
@@ -7927,7 +7951,7 @@ format_data = function(data_res, format) {
             } else {
                 val_line_start <- val_lines[j, , drop = FALSE]
             }
-            
+
             if (j < n_t_values) {
                 val_line_end <- val_lines[j + 1L, , drop = FALSE]
                 if (idx_positions[j] != idx_positions[j + 1L]) {
@@ -7948,10 +7972,18 @@ format_data = function(data_res, format) {
                 )
                 tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1L):length(PtE_edge)])
             }
-            
+
+            # Remove duplicate consecutive rows
+            if (nrow(coords_list2[[j]]) > 1L) {
+                is_dup <- c(FALSE, rowSums(diff(coords_list2[[j]])^2) == 0)
+                if (any(is_dup)) {
+                    coords_list2[[j]] <- coords_list2[[j]][!is_dup, , drop = FALSE]
+                    tmp_vec            <- tmp_vec[!is_dup]
+                }
+            }
             pos_edge_diff <- tmp_vec - tmp_vec[1]
-            norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-            attr(coords_list2[[j]], "PtE") <- pos_edge_diff / norm_factor
+            norm_factor   <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
+            attr(coords_list2[[j]], "PtE") <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
         }
         
         # Construct aux_matrix for self$E efficiently
