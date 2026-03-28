@@ -1883,14 +1883,14 @@ class(self$edges) <- "metric_graph_edges"
           df_temp <- unique(df_temp)
         }
 
-        df_temp <- standardize_df_positions(df_temp, self)
+        df_temp <- standardize_df_positions(df_temp, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
 
         graph.temp$build_mesh(h = 10000)
 
         df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
-        df_temp2 <- standardize_df_positions(df_temp2, self)
+        df_temp2 <- standardize_df_positions(df_temp2, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
 
         df_temp$included <- TRUE
         temp_merge <- merge(df_temp, df_temp2, all = TRUE)
