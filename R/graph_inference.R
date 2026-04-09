@@ -985,12 +985,13 @@ Efnorm <- function(mu, sigma) {
 #' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
 #' @param factor Which factor to multiply the scores. The default is 1.
 #' @param tibble Return the scores as a `tidyr::tibble()`
+#' @param which_repl Which replicates to consider?
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
 #' @export
-posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE)
+posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, which_repl = NULL)
 {
   if(!inherits(object,"graph_lme") && !is.list(object)){
     stop("object should be of class graph_lme or a list of objects of class graph_lme.")
@@ -1143,8 +1144,12 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE)
     }
   }
 
-  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
-  repl <- unique(repl_vec)
+  if(is.null(which_repl)){
+    repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+    repl <- unique(repl_vec)
+  } else {
+    repl <- which_repl
+  }
 
   n_obs <- sum(repl_vec == repl[1])
 

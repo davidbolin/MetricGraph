@@ -5,7 +5,12 @@
 \title{Leave-one-out pseudo-crossvalidation for \code{graph_lme} models assuming observations at
 the vertices of metric graphs}
 \usage{
-posterior_crossvalidation_loo(object, factor = 1, tibble = TRUE)
+posterior_crossvalidation_loo(
+  object,
+  factor = 1,
+  tibble = TRUE,
+  which_repl = NULL
+)
 }
 \arguments{
 \item{object}{A fitted model using the \code{graph_lme()} function or a named list of fitted objects using the \code{graph_lme()} function.}
@@ -13,6 +18,8 @@ posterior_crossvalidation_loo(object, factor = 1, tibble = TRUE)
 \item{factor}{Which factor to multiply the scores. The default is 1.}
 
 \item{tibble}{Return the scores as a \code{tidyr::tibble()}}
+
+\item{which_repl}{Which replicates to consider?}
 }
 \value{
 Vector with the posterior expectations and variances as well as
