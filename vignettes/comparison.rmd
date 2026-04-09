@@ -206,7 +206,7 @@ the results:
 
 ```{r}
 res <- posterior_crossvalidation_loo(fitted_models_list, tibble=FALSE)
-res$scores
+knitr::kable(res$scores, digits = 3)
 ```
 
 ## Kriging 
