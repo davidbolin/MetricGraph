@@ -969,3 +969,269 @@ Efnorm <- function(mu, sigma) {
   return(sigma * sqrt(2 / pi) * exp(-(mu ^ 2) / (2 * sigma ^ 2)) + mu * (1 -
                                                                            2 * pnorm(-mu / sigma)))
 }
+
+
+
+
+
+#' Leave-one-out pseudo-crossvalidation for `graph_lme` models assuming observations at
+#' the vertices of metric graphs
+#'
+#' This function performs pseudo-crossvalidation by computing leave-one-out predictions
+#' using the posterior distribution from a fitted model. In pseudo-crossvalidation,
+#' the model parameters are kept fixed at the values estimated from the full dataset
+#' (those provided in the object), rather than re-estimating them for each fold.
+#'
+#' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
+#' @param factor Which factor to multiply the scores. The default is 1.
+#' @param tibble Return the scores as a `tidyr::tibble()`
+#' @return Vector with the posterior expectations and variances as well as
+#' mean absolute error (MAE), root mean squared errors (RMSE), and three
+#' negatively oriented proper scoring rules: log-score, CRPS, and scaled
+#' CRPS.
+#' @export
+posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE)
+{
+  if(!inherits(object,"graph_lme") && !is.list(object)){
+    stop("object should be of class graph_lme or a list of objects of class graph_lme.")
+  }
+
+  if(!inherits(object,"graph_lme")){
+    if(is.null(names(object))){
+      warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
+    }
+    results_list <- lapply(object, function(obj){posterior_crossvalidation_loo(obj, factor=factor, tibble=FALSE)})
+    res <- list()
+    res[["mu"]] <- lapply(results_list, function(dat){dat[["mu"]]})
+    res[["var"]] <- lapply(results_list, function(dat){dat[["var"]]})
+    res[["scores"]] <- lapply(results_list, function(dat){dat[["scores"]]})
+    scores <- do.call(rbind, res[["scores"]])
+    row.names(scores) <- names(res[["scores"]])
+    if(tibble){
+      scores[["Model"]] <- row.names(scores)
+      scores <- tidyr::as_tibble(scores)
+      scores <- scores[, c("Model", "logscore", "crps", "scrps", "mae", "rmse")]
+    }
+    res[["scores"]] <- scores
+    return(res)
+  }
+
+  graph <- object$graph$clone()
+
+  graph$observation_to_vertex(mesh_warning = FALSE)
+
+  beta_cov <- object$coeff$fixed_effects
+  sigma_e <- object$coeff$measurement_error
+  tau <- object$coeff$random_effects[1]
+  kappa <- object$coeff$random_effects[2]
+
+  # if(tolower(object$latent_model$type) == "whittlematern"){
+  #   if(object$parameterization_latent == "matern"){
+  #     kappa <- ifelse(object$latent_model$alpha == 1,
+  #                 sqrt(8 * 0.5) / kappa, sqrt(8 * (1.5)) / kappa)
+  #   }
+  # }
+
+  if(tolower(object$latent_model$type) == "isocov"){
+    if(object$latent_model$cov_function_name == "other"){
+      stop("Currently the cross-validation is only implemented for the exponential covariance function.")
+    }
+    model <- "isoExp"
+    sigma <- object$coeff$random_effects[1]
+  } else if(tolower(object$latent_model$type) == "whittlematern"){
+    if(object$latent_model$alpha == 1){
+      if(object$latent_model$directional==0){
+        model <- "WM alpha1"
+      }else{
+        model <- "WMD alpha1"
+      }
+    } else {
+      model <- "WM alpha2"
+    }
+  } else{
+    graph$compute_laplacian(full=TRUE)
+    if(object$latent_model$alpha == 1){
+      model <- "GL1"
+    } else {
+      model <- "GL2"
+    }
+  }
+
+  BC <- object$BC
+
+  #setup matrices for prediction
+  if(model == "isoExp"){
+    graph$compute_resdist(full = TRUE)
+    Sigma <- as.matrix(sigma^2 * exp(-kappa*graph$res_dist[[".complete"]]))
+
+    # nV <- nrow(graph$res_dist[[".complete"]]) - length(graph$get_data()[[".group"]])
+
+    # Sigma <- Sigma[-c(1:nV), -c(1:nV)]
+
+    Sigma.o <- Sigma
+
+    diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
+  } else if(model == "WM alpha2"){
+    if(is.null(graph$C)){
+      graph$buildC(2)
+    } else if(graph$CoB$alpha == 1){
+      graph$buildC(2)
+    }
+
+    n.c <- 1:length(graph$CoB$S)
+    Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
+    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
+    Qtilde <- Qtilde[-n.c, -n.c]
+    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
+      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
+    PtE = graph$get_PtE()
+    index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
+      (3 * (PtE[, 2] != 0))
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+    Sigma.o <- Sigma
+    diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
+  }else if(model == "WMD alpha1"){
+    if(is.null(graph$C)){
+      graph$buildDirectionalConstraints(1)
+    } else if(graph$CoB$alpha == 2){
+      graph$buildDirectionalConstraints(1)
+    }
+
+    Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=BC, build=TRUE)
+    n_const <- length(graph$CoB$S)
+    ind.const <- c(1:n_const)
+    Tc <- graph$CoB$T[-ind.const, ]
+    Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
+    Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
+    PtE = graph$get_PtE()
+    index.obs <- 2*(PtE[, 1] - 1) + (PtE[, 2]> 1-0.001) + 1
+    Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
+    Sigma.o <- Sigma
+    diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
+  }else if (model %in% c("WM alpha1", "GL1", "GL2")) {
+    if(model == "WM alpha1"){
+      Q <- Qalpha1(c(tau, kappa), graph, BC = BC)
+    } else if(model == "GL1"){
+      Q <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]]) * tau^2
+    } else if (model == "GL2") {
+      K <- (kappa^2*Matrix::Diagonal(graph$nV,1) + graph$Laplacian[[1]])
+      Q <- K %*% K * tau^2
+    }
+  } else {
+    stop("Wrong model choice.")
+  }
+
+  if(!is.matrix(object$model_matrix)){
+    object$model_matrix <- matrix(object$model_matrix, ncol=1)
+  }
+
+  y_graph <- object$model_matrix[,1]
+
+  ind <- 1:length(y_graph)
+
+  if(ncol(object$model_matrix) > 1){
+    X_cov <- object$model_matrix[,-1]
+  } else{
+    X_cov <- NULL
+  }
+
+  if(!is.null(X_cov)){
+    if(all(dim(X_cov) == c(0,1))){
+      names_temp <- colnames(X_cov)
+      X_cov <- matrix(1, nrow = length(y_graph))
+      colnames(X_cov) <- names_temp
+    }
+  }
+
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+  repl <- unique(repl_vec)
+
+  n_obs <- sum(repl_vec == repl[1])
+
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, n_obs)
+  mae <- rmse <- rep(0, n_obs)
+
+
+  for(i in 1:n_obs){
+        idx_repl <- repl_vec == repl[1]
+        y_graph_repl <- y_graph[idx_repl]
+
+        y_cv <- y_graph_repl[-i]
+        v_cv <- y_cv
+        if(!is.null(X_cov)){
+          X_cov_repl <- X_cov[idx_repl, , drop = FALSE]
+          v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+          mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
+        } else {
+          mu_fe <- 0
+        }
+
+        if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1" ){
+          mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
+          Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
+                                                              Sigma.o[-i, i])
+          var.p[i] <- diag(Sigma.p)
+        } else {
+          A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+          Q.p <- Q + t(A) %*% A / sigma_e^2
+          mu.p[i] <- solve(Q.p,
+                           as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
+          v <- rep(0,dim(Q.p)[1])
+          v[graph$PtV[i]] <- 1
+          var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+        }
+        logscore[i] <- LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+        crps[i] <- CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+        scrps[i] <- SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+        mae[i] <- abs(y_graph_repl[i] - mu.p[i])
+        rmse[i] <- (y_graph_repl[i] - mu.p[i])^2
+      if(length(repl)>1){
+        for (j in 2:length(repl)) {
+          y_graph_repl <- y_graph[repl_vec == repl[j]]
+          y_cv <- y_graph_repl[-i]
+          v_cv <- y_cv
+          if(!is.null(X_cov)){
+            X_cov_repl <- X_cov[idx_repl,, drop = FALSE]
+            v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+            mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
+          } else {
+            mu_fe <- 0
+          }
+
+          if(model == "isoExp" || model == "WM alpha2"|| model == "WMD alpha1"){
+            mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
+            Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
+                                                                Sigma.o[-i, i])
+            var.p[i] <- diag(Sigma.p)
+          } else {
+            A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+            Q.p <- Q + t(A) %*% A / sigma_e^2
+            mu.p[i] <- solve(Q.p,
+                             as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
+            v <- rep(0,dim(Q.p)[1])
+            v[graph$PtV[i]] <- 1
+            var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+          }
+          logscore[i] <- logscore[i] + LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+          crps[i] <- crps[i] + CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+          scrps[i] <- scrps[i] + SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
+          mae[i] <- mae[i] + abs(y_graph_repl[i] - mu.p[i])
+          rmse[i] <- rmse[i] + (y_graph_repl[i] - mu.p[i])^2
+        }
+    }
+  }
+  res <- list(mu = mu.p,
+              var = var.p)
+  res[["scores"]] <- data.frame(logscore = -factor * mean(logscore/length(repl), na.rm = TRUE),
+              crps = -factor * mean(crps/length(repl), na.rm = TRUE),
+              scrps = -factor * mean(scrps/length(repl), na.rm = TRUE),
+              mae = factor * mean(mae/length(repl), na.rm = TRUE),
+              rmse = factor * sqrt(mean(rmse/length(repl), na.rm = TRUE)))
+  attr(res[["scores"]], "factor") <- factor
+  if(tibble){
+    res[["scores"]] <- tidyr::as_tibble(res[["scores"]])
+    return(res)
+  } else{
+    return(res)
+  }
+}

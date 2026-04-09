@@ -53,7 +53,7 @@ Let us fit the different models, that is, we will assume several different possi
 
 ```{r}
 fit_alpha1 <- graph_lme(y ~ 1, graph=pems_graph, BC = 0,
-            model = list(type = "WhittleMatern", alpha = 1))
+            model = list(type = "WhittleMatern", alpha = 1), optim_method = "Nelder-Mead")
 ```
 
 and look at its summary:
@@ -66,7 +66,7 @@ Now, we will fit a Whittle-Matérn field with `alpha = 2`:
 
 ```{r}
 fit_alpha2 <- graph_lme(y ~ 1, graph=pems_graph, BC = 0,
-            model = list(type = "WhittleMatern", alpha = 2))
+            model = list(type = "WhittleMatern", alpha = 2), optim_method = "Nelder-Mead")
 ```
 
 and its summary:
@@ -80,10 +80,10 @@ We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`, and by pe
 
 ```{r}
 fit_alpha1_bc <- graph_lme(y ~ 1, graph=pems_graph, BC = 1,
-        model = list(type = "WhittleMatern", alpha = 1))
+        model = list(type = "WhittleMatern", alpha = 1), optim_method = "Nelder-Mead")
 
 fit_alpha2_bc <- graph_lme(y ~ 1, graph=pems_graph, BC = 1,
-        model = list(type = "WhittleMatern", alpha = 2))
+        model = list(type = "WhittleMatern", alpha = 2), optim_method = "Nelder-Mead")
 ```
 
 Now, let us look at the summaries:
@@ -103,9 +103,9 @@ and then use those results as starting values for the complete optimization. The
 fit_GL1 <- graph_lme(y ~ -1, graph=pems_graph, 
             model = list(type = "graphLaplacian", alpha = 1), optim_method = "Nelder-Mead")
 fit_GL1 <- graph_lme(y ~ 1, graph=pems_graph, 
-            model = list(type = "graphLaplacian", alpha = 1), previous_fit = fit_GL1)
+            model = list(type = "graphLaplacian", alpha = 1), previous_fit = fit_GL1, optim_method = "Nelder-Mead")
 fit_GL2 <- graph_lme(y ~ 1, graph=pems_graph,
-            model = list(type = "graphLaplacian", alpha = 2), previous_fit = fit_GL1)
+            model = list(type = "graphLaplacian", alpha = 2), previous_fit = fit_GL1, optim_method = "Nelder-Mead")
 ```
 
 and look at their summaries:
@@ -126,7 +126,7 @@ Let us now fit a Gaussian field with isotropic exponential covariance function:
 
 ```{r}
 fit_isoexp <- graph_lme(y ~ 1, graph=pems_graph, 
-                model = list(type = "isoCov"))
+                model = list(type = "isoCov"), optim_method = "Nelder-Mead")
 ```
 
 and look at the summary:
@@ -205,7 +205,7 @@ leave-one-out cross validation based on the estimated parameters and compare
 the results:
 
 ```{r}
-res <- posterior_crossvalidation(fitted_models_list, tibble=FALSE, mode = "loo")
+res <- posterior_crossvalidation_loo(fitted_models_list, tibble=FALSE)
 res$scores
 ```
 
