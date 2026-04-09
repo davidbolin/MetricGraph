@@ -32,7 +32,7 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 #' The precision matrix for all edges in the brownian moiton case
 #' @param theta - tau
 #' @param graph metric_graph object
-#' @param w ([0,1]) how two weight the top edge
+#' @param w numeric between 0 and 1; how to weight the top edge
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list
@@ -46,7 +46,7 @@ Q_BM <- function(theta, graph, w, BC = 0, build = TRUE) {
 #' that the edges are not connected
 #' @param theta - tau, kappa
 #' @param graph metric_graph object
-#' @param w ([0,1]) how two weight the top edge
+#' @param w numeric between 0 and 1; how to weight the top edge
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
@@ -249,7 +249,7 @@ Q00 <- function(l,kappa,tau) {
 #' The precision matrix for all vertices in the alpha=2 case
 #' @param theta - tau, kappa
 #' @param graph metric_graph object
-#' @param w ([0,1]) how two weight the top edge
+#' @param w numeric between 0 and 1; how to weight the top edge
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 gives stationary boundary conditions
 #' @param build (bool) if TRUE return the precision matrix otherwise return
@@ -455,7 +455,7 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
 #' boundary conditions and BC=1 gives stationary boundary conditions
 #' BC=2 stationary boundary conditions only on Outwards vertices
 #' BC=3 stationary boundary conditions only on Outwards inwards
-#' @param w ([0,1]) how to weight the top edge
+#' @param w numeric between 0 and 1; how to weight the top edge
 #' @param build (bool) if TRUE return the precision matrix otherwise return
 #' a list(i,j,x, nv)
 #' @return Precision matrix or list

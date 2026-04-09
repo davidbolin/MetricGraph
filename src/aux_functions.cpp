@@ -9,9 +9,9 @@ using namespace Rcpp;
 //' @name assemble_fem
 //' @title Construction of FEM matrices
 //' @description Function used to construct FEM matrices on metric graphs.
-//' @param E [nx2 matrix] Matrix of edges
-//' @param h_e [n vector] Vector of h's
-//' @param nV [int] Number of vertices
+//' @param E `nx2 matrix` Matrix of edges
+//' @param h_e `n vector` Vector of h's
+//' @param nV `int` Number of vertices
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -86,9 +86,9 @@ Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool pet
 //' @name compute_mesh_weights
 //' @title Compute the weights of the mesh nodes
 //' @description Function used to compute the weights of the mesh nodes on metric graphs.
-//' @param E [nx2 matrix] Matrix of edges
-//' @param h_e [n vector] Vector of h's
-//' @param nV [int] Number of vertices.
+//' @param E `nx2 matrix` Matrix of edges
+//' @param h_e `n vector` Vector of h's
+//' @param nV `int` Number of vertices.
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -204,9 +204,9 @@ double proj_vec_line(Eigen::MatrixXd line, Eigen::VectorXd point, int normalized
 //' @name projectVecLine
 //' @title Projects SpatialPoints into SpatialLines
 //' @description Obtain the coordinates of the projection of points into lines.
-//' @param lines [nx2 matrix] Matrix of the points of the lines
-//' @param points [nx2 matrix] Matrix of the points
-//' @param normalized [int] 0 means not normalized, 1 means normalized
+//' @param lines `nx2 matrix` Matrix of the points of the lines
+//' @param points `nx2 matrix` Matrix of the points
+//' @param normalized `int` 0 means not normalized, 1 means normalized
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -225,9 +225,9 @@ Eigen::VectorXd projectVecLine(Eigen::MatrixXd lines, Eigen::MatrixXd points, in
 //' @name interpolate2
 //' @title Finds the point with respect to a distance along the line
 //' @description Finds the point with respect to a distance along the line
-//' @param lines [nx2 matrix] Matrix of the points of the lines
-//' @param pos [k vector] vector of positions.
-//' @param normalized [int] 0 means not normalized, 1 means normalized
+//' @param lines `nx2 matrix` Matrix of the points of the lines
+//' @param pos `k vector` vector of positions.
+//' @param normalized `int` 0 means not normalized, 1 means normalized
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -371,14 +371,14 @@ List generate_mesh(int n_edges, NumericVector edge_lengths, IntegerVector n_e,
 //' @name PtE_to_mesh_cpp
 //' @title Convert PtE for mesh given PtE for graph
 //' @description C++ implementation of PtE_to_mesh function
-//' @param PtE [nx2 matrix] Matrix with edge indices and positions
-//' @param VtE [nx2 matrix] Matrix from VtEfirst()
-//' @param mesh_PtE [nx2 matrix] Mesh PtE matrix
-//' @param E [nx2 matrix] Graph edge matrix
-//' @param mesh_E [nx2 matrix] Mesh edge matrix
-//' @param edge_lengths [n vector] Vector of edge lengths
-//' @param mesh_h_e [n vector] Vector of mesh edge lengths
-//' @param nV [int] Number of vertices
+//' @param PtE `nx2 matrix` Matrix with edge indices and positions
+//' @param VtE `nx2 matrix` Matrix from VtEfirst()
+//' @param mesh_PtE `nx2 matrix` Mesh PtE matrix
+//' @param E `nx2 matrix` Graph edge matrix
+//' @param mesh_E `nx2 matrix` Mesh edge matrix
+//' @param edge_lengths `n vector` Vector of edge lengths
+//' @param mesh_h_e `n vector` Vector of mesh edge lengths
+//' @param nV `int` Number of vertices
 //' @noRd
 //'
 // [[Rcpp::export]]

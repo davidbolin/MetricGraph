@@ -99,6 +99,7 @@ reference:
     - simulate.graph_lme
     - summary.graph_lme
     - posterior_crossvalidation
+    - posterior_crossvalidation_loo
     - graph_starting_values
     - glance.graph_lme
     - augment.graph_lme
@@ -141,7 +142,6 @@ reference:
   - title: Misc functions
     contents:
     - selected_inv
-    - match_mesh_data
   - title: Datasets
     contents:
     - pems

@@ -16,8 +16,8 @@ NULL
 #' @description The SVD-based constraint basis construction for non-overlapping
 #' subsets of constraints. Algorithm 1 from the reference.
 #' Creating a basis from the matrix A
-#' @param A [nxk matrix] must have rank k
-#' @param eps_limit [double] used as a limit of small value
+#' @param A `nxk matrix` must have rank k
+#' @param eps_limit `double` used as a limit of small value
 #' @return T (n x n) the basis matrix
 #' @noRd
 #'
@@ -52,9 +52,9 @@ NULL
 #' @name assemble_fem
 #' @title Construction of FEM matrices
 #' @description Function used to construct FEM matrices on metric graphs.
-#' @param E [nx2 matrix] Matrix of edges
-#' @param h_e [n vector] Vector of h's
-#' @param nV [int] Number of vertices
+#' @param E `nx2 matrix` Matrix of edges
+#' @param h_e `n vector` Vector of h's
+#' @param nV `int` Number of vertices
 #' @noRd
 #'
 assemble_fem <- function(E, h_e, nV, petrov) {
@@ -64,9 +64,9 @@ assemble_fem <- function(E, h_e, nV, petrov) {
 #' @name compute_mesh_weights
 #' @title Compute the weights of the mesh nodes
 #' @description Function used to compute the weights of the mesh nodes on metric graphs.
-#' @param E [nx2 matrix] Matrix of edges
-#' @param h_e [n vector] Vector of h's
-#' @param nV [int] Number of vertices.
+#' @param E `nx2 matrix` Matrix of edges
+#' @param h_e `n vector` Vector of h's
+#' @param nV `int` Number of vertices.
 #' @noRd
 #'
 compute_mesh_weights <- function(E, h_e, nV) {
@@ -76,9 +76,9 @@ compute_mesh_weights <- function(E, h_e, nV) {
 #' @name projectVecLine
 #' @title Projects SpatialPoints into SpatialLines
 #' @description Obtain the coordinates of the projection of points into lines.
-#' @param lines [nx2 matrix] Matrix of the points of the lines
-#' @param points [nx2 matrix] Matrix of the points
-#' @param normalized [int] 0 means not normalized, 1 means normalized
+#' @param lines `nx2 matrix` Matrix of the points of the lines
+#' @param points `nx2 matrix` Matrix of the points
+#' @param normalized `int` 0 means not normalized, 1 means normalized
 #' @noRd
 #'
 projectVecLine <- function(lines, points, normalized = 0L) {
@@ -88,9 +88,9 @@ projectVecLine <- function(lines, points, normalized = 0L) {
 #' @name interpolate2
 #' @title Finds the point with respect to a distance along the line
 #' @description Finds the point with respect to a distance along the line
-#' @param lines [nx2 matrix] Matrix of the points of the lines
-#' @param pos [k vector] vector of positions.
-#' @param normalized [int] 0 means not normalized, 1 means normalized
+#' @param lines `nx2 matrix` Matrix of the points of the lines
+#' @param pos `k vector` vector of positions.
+#' @param normalized `int` 0 means not normalized, 1 means normalized
 #' @noRd
 #'
 interpolate2_aux <- function(lines, pos, normalized = 0L) {
@@ -116,14 +116,14 @@ generate_mesh <- function(n_edges, edge_lengths, n_e, E, ind, continuous) {
 #' @name PtE_to_mesh_cpp
 #' @title Convert PtE for mesh given PtE for graph
 #' @description C++ implementation of PtE_to_mesh function
-#' @param PtE [nx2 matrix] Matrix with edge indices and positions
-#' @param VtE [nx2 matrix] Matrix from VtEfirst()
-#' @param mesh_PtE [nx2 matrix] Mesh PtE matrix
-#' @param E [nx2 matrix] Graph edge matrix
-#' @param mesh_E [nx2 matrix] Mesh edge matrix
-#' @param edge_lengths [n vector] Vector of edge lengths
-#' @param mesh_h_e [n vector] Vector of mesh edge lengths
-#' @param nV [int] Number of vertices
+#' @param PtE `nx2 matrix` Matrix with edge indices and positions
+#' @param VtE `nx2 matrix` Matrix from VtEfirst()
+#' @param mesh_PtE `nx2 matrix` Mesh PtE matrix
+#' @param E `nx2 matrix` Graph edge matrix
+#' @param mesh_E `nx2 matrix` Mesh edge matrix
+#' @param edge_lengths `n vector` Vector of edge lengths
+#' @param mesh_h_e `n vector` Vector of mesh edge lengths
+#' @param nV `int` Number of vertices
 #' @noRd
 #'
 PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV) {

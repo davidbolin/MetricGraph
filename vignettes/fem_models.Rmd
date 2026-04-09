@@ -121,7 +121,7 @@ can use the `precision()` method on object returned by the `matern.operators()` 
 
 As an illustration of the model, let us compute the covariance function between the process at $s=(2,0.1)$, that is, the point at edge 2 and distance on edge 0.1, and all the other mesh points. To this end, we can use the helper function `cov_function_mesh` that is contained in the `op` object:
 ```{r, message=FALSE, warning=FALSE}
-  c_cov <- op$cov_function_mesh(matrix(c(2,0.1),1,2))
+  c_cov <- cov_function_mesh(op, matrix(c(2,0.1),1,2))
   graph$plot_function(c_cov, type = "plotly")
 ```
 

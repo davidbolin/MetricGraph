@@ -36,8 +36,8 @@ void set_diff(std::vector<int> & A,
 //' @description The SVD-based constraint basis construction for non-overlapping
 //' subsets of constraints. Algorithm 1 from the reference.
 //' Creating a basis from the matrix A
-//' @param A [nxk matrix] must have rank k
-//' @param eps_limit [double] used as a limit of small value
+//' @param A `nxk matrix` must have rank k
+//' @param eps_limit `double` used as a limit of small value
 //' @return T (n x n) the basis matrix
 //' @noRd
 //'

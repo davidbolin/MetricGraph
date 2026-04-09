@@ -10,7 +10,7 @@
 #' @param directional use directional model
 #' @param leave.edge.out compute the mean of the graph if the observations
 #' are not on the edge
-#' @param no_nugget depricated set theta[1]=0 to fix
+#' @param no_nugget Deprecated; set `theta[1] = 0` to fix
 #' @noRd
 posterior_mean_obs_alpha1 <- function(theta,
                                       graph,
@@ -353,7 +353,7 @@ posterior_mean_random_walk <- function(theta,
 #' @param type decides where to predict, 'obs' or 'mesh'.
 #' @param leave.edge.out compute the mean of the graph if the observations
 #' are not on the edge
-#' @param no_nugget depricated set theta[1]=0 to fix
+#' @param no_nugget Deprecated; set `theta[1] = 0` to fix
 #' @noRd
 posterior_mean_obs_random_walk <- function(theta,
                                       graph,

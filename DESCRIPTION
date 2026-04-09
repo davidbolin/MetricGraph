@@ -11,7 +11,7 @@ Description: Facilitates creation and manipulation of metric graphs, such as str
 License: GPL (>=2)
 Depends: R (>= 4.1.0)
 Imports: stats, RANN, ggplot2, igraph, sf, rSPDE (>= 2.3.3), Matrix, methods,  Rcpp (>= 1.0.5), R6, lifecycle, sp, dplyr, tidyr, magrittr, broom, zoo, ggnewscale
-Suggests: knitr, testthat, INLA (>= 22.12.14), inlabru, osmdata, sn,  plotly, parallel, optimParallel, numDeriv, SSN2, cowplot, leaflet, mapview, viridis, fmesher
+Suggests: knitr, testthat, INLA (>= 22.12.14), inlabru, osmdata, sn,  plotly, parallel, optimParallel, numDeriv, SSN2, cowplot, leaflet, mapview, viridis, fmesher, data.table
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 BugReports: https://github.com/davidbolin/MetricGraph/issues
 URL: https://davidbolin.github.io/MetricGraph/
