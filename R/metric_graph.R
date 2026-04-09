@@ -4652,7 +4652,7 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
       self$CoB$T <- t(self$CoB$T)
       self$CoB$alpha <- 2
     }else{
-      error("only alpha=2 implemented")
+      stop("only alpha=2 implemented")
     }
   },
 

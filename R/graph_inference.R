@@ -1144,8 +1144,9 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
     }
   }
 
+  repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
+
   if(is.null(which_repl)){
-    repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
     repl <- unique(repl_vec)
   } else {
     repl <- which_repl

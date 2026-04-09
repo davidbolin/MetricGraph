@@ -579,7 +579,7 @@ Qrandomwalk <- function(theta, graph, build = TRUE) {
     }else{
       i_[count + 1] <- graph$E[i, 1]
       j_[count + 1] <- graph$E[i, 1]
-      error("Circular edges are not implemented for random walk precision matrix")
+      stop("Circular edges are not implemented for random walk precision matrix")
       #x_[count + 1] <- 0#tanh(0.5 * kappa * l_e)
       count <- count + 1
     }
