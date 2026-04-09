@@ -141,6 +141,7 @@ reference:
   - title: Misc functions
     contents:
     - selected_inv
+    - match_mesh_data
   - title: Datasets
     contents:
     - pems
