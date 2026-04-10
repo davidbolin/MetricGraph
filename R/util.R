@@ -3191,3 +3191,116 @@ graph_data_linear_inla <- function(graph_rspde,
   return(ret)
 }
 
+
+  #' Match Data Frame Rows to Graph Mesh Order
+#'
+#' Reorders the rows of a data frame to align with the specific ordering of points
+#' along the edges of a metric graph's mesh. This ensures that data associated
+#' with locations on the graph are correctly aligned with the graph's internal
+#' mesh structure, which is essential for spatial operations and visualizations.
+#'
+#' @param graph A metric graph object with a mesh component containing VtE.
+#' @param data A data.frame to be reordered. It must contain columns for
+#'   edge numbers and distances along those edges.
+#' @param edge_col Character. Name of the column in `data` that contains the
+#'   edge numbers. Default: ".edge_number".
+#' @param dist_col Character. Name of the column in `data` that contains the
+#'   distance along the edge for each point. Default: ".distance_on_edge".
+#'
+#' @return A reordered data.frame where rows correspond to the order of
+#'   points in `graph$mesh$VtE`. If the input `data` was an `sf` object,
+#'   the returned object will also be an `sf` object with its geometry
+#'   reordered accordingly.
+#'
+#' @export
+match_mesh_data <- function(graph, 
+                            data, 
+                            edge_col = ".edge_number", 
+                            dist_col = ".distance_on_edge") {
+  
+  # Check if data is an sf object and handle accordingly
+  is_sf <- inherits(data, "sf")
+  if (is_sf) {
+    # Store geometry separately and work with regular data frame
+    geom_col <- attr(data, "sf_column")
+    data_geom <- sf::st_geometry(data)
+    data <- sf::st_drop_geometry(data)
+  }
+  
+  # Extract mesh VtE information (VtE is a matrix: [,1] = edge_number, [,2] = distance_on_edge)
+  mesh_vte <- graph$mesh$VtE
+  
+  # Convert matrix to data frame for vectorized operations
+  mesh_df <- data.frame(
+    edge_number = as.integer(mesh_vte[, 1]),
+    distance = mesh_vte[, 2],
+    mesh_idx = seq_len(nrow(mesh_vte))
+  )
+  
+  # Prepare data with integer edge numbers and index
+  data_df <- data.frame(
+    edge_number = as.integer(data[[edge_col]]),
+    distance = data[[dist_col]],
+    data_idx = seq_len(nrow(data))
+  )
+  
+  # Group by edge_number and rank by distance within each group
+  mesh_ranked <- mesh_df |>
+    dplyr::group_by(edge_number) |>
+    dplyr::arrange(distance, .by_group = TRUE) |>
+    dplyr::mutate(rank = dplyr::row_number()) |>
+    dplyr::ungroup()
+  
+  data_ranked <- data_df |>
+    dplyr::group_by(edge_number) |>
+    dplyr::arrange(distance, .by_group = TRUE) |>
+    dplyr::mutate(rank = dplyr::row_number()) |>
+    dplyr::ungroup()
+  
+  # Join mesh and data by edge_number and rank
+  # This matches points on the same edge with the same rank (position when sorted by distance)
+  matched <- mesh_ranked |>
+    dplyr::left_join(data_ranked, by = c("edge_number", "rank"), suffix = c("_mesh", "_data"))
+  
+  # Check for missing matches
+  n_na <- sum(is.na(matched$data_idx))
+  if (n_na > 0) {
+    warning("Matching resulted in ", n_na, " NA values out of ", 
+            nrow(matched), " total rows. ",
+            "This may indicate mismatched row counts between mesh and data on some edges.")
+    
+    # Identify problematic edges
+    problem_edges <- matched |>
+      dplyr::filter(is.na(data_idx)) |>
+      dplyr::pull(edge_number) |>
+      unique()
+    
+    if (length(problem_edges) > 0) {
+      warning("Edges with matching issues: ", paste(problem_edges, collapse = ", "))
+    }
+  }
+  
+  # Sort by original mesh index to maintain mesh order, then extract data indices
+  result_indices <- matched |>
+    dplyr::arrange(mesh_idx) |>
+    dplyr::pull(data_idx)
+  
+  # Check if we have NA indices and stop with informative error
+  if (any(is.na(result_indices))) {
+    stop("Cannot reorder data: matching failed for some mesh points.\n",
+         "This usually means the mesh and data have different numbers of points on some edges.\n",
+         "Number of mesh points: ", nrow(mesh_vte), "\n",
+         "Number of data points: ", nrow(data), "\n",
+         "Please check if data_on_mesh is filtered correctly (e.g., by .group).")
+  }
+  
+  # Return reordered data
+  result <- data[result_indices, ]
+  
+  # If input was sf, reattach geometry in the correct order
+  if (is_sf) {
+    result <- sf::st_sf(result, geometry = data_geom[result_indices])
+  }
+  
+  return(result)
+}
