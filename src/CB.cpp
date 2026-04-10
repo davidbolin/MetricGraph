@@ -53,9 +53,9 @@ Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A,
     }
   }
   std::vector<Eigen::Triplet<double>> tripletListT;
-  tripletListT.reserve(static_cast<size_t>(counter) *
-                           static_cast<size_t>(counter) +
-                       (A.cols() - counter));
+  // tripletListT.reserve(static_cast<size_t>(counter) *
+  //                          static_cast<size_t>(counter) +
+  //                      (A.cols() - counter));
   Eigen::SparseMatrix<double> A_ID = A * P;
   std::vector<int> index_A(A.rows());
   for (int i = 0; i < A.rows(); i++)
