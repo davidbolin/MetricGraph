@@ -150,6 +150,41 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_PtE_edges_cpp
+List compute_PtE_edges_cpp(List edges, bool longlat);
+RcppExport SEXP _MetricGraph_compute_PtE_edges_cpp(SEXP edgesSEXP, SEXP longlatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type edges(edgesSEXP);
+    Rcpp::traits::input_parameter< bool >::type longlat(longlatSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_PtE_edges_cpp(edges, longlat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_edge_lengths_cpp
+NumericVector compute_edge_lengths_cpp(List edges, bool longlat);
+RcppExport SEXP _MetricGraph_compute_edge_lengths_cpp(SEXP edgesSEXP, SEXP longlatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type edges(edgesSEXP);
+    Rcpp::traits::input_parameter< bool >::type longlat(longlatSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_edge_lengths_cpp(edges, longlat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// postprocess_edges_cpp
+List postprocess_edges_cpp(List edges);
+RcppExport SEXP _MetricGraph_postprocess_edges_cpp(SEXP edgesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type edges(edgesSEXP);
+    rcpp_result_gen = Rcpp::wrap(postprocess_edges_cpp(edges));
+    return rcpp_result_gen;
+END_RCPP
+}
 // selected_inv_cpp
 Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
 RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
@@ -173,6 +208,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
     {"_MetricGraph_generate_mesh", (DL_FUNC) &_MetricGraph_generate_mesh, 6},
     {"_MetricGraph_PtE_to_mesh_cpp", (DL_FUNC) &_MetricGraph_PtE_to_mesh_cpp, 8},
+    {"_MetricGraph_compute_PtE_edges_cpp", (DL_FUNC) &_MetricGraph_compute_PtE_edges_cpp, 2},
+    {"_MetricGraph_compute_edge_lengths_cpp", (DL_FUNC) &_MetricGraph_compute_edge_lengths_cpp, 2},
+    {"_MetricGraph_postprocess_edges_cpp", (DL_FUNC) &_MetricGraph_postprocess_edges_cpp, 1},
     {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };

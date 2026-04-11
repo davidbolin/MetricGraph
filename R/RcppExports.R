@@ -130,6 +130,67 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
     .Call(`_MetricGraph_PtE_to_mesh_cpp`, PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV)
 }
 
+#' @name compute_PtE_edges_cpp
+#' @title Per-edge cumulative relative positions
+#' @description Given a list of edges (each a 2-column numeric matrix of
+#' vertex coordinates), compute, for every edge, the cumulative arc-length
+#' normalized to lie in [0, 1]. Returns a list of numeric vectors, one per
+#' edge, each starting at 0 and ending at 1.
+#'
+#' Degenerate (zero-length) edges return a vector of NaN values, matching
+#' the R-side \code{0/0} semantics of the original \code{approx_coordinates}
+#' implementation.
+#'
+#' @param edges List of two-column numeric matrices.
+#' @param longlat Logical. If TRUE, use haversine on (lon, lat) in degrees;
+#' otherwise use planar Euclidean distances.
+#' @return A list of numeric vectors, the same length as \code{edges}.
+#' @noRd
+compute_PtE_edges_cpp <- function(edges, longlat) {
+    .Call(`_MetricGraph_compute_PtE_edges_cpp`, edges, longlat)
+}
+
+#' @name compute_edge_lengths_cpp
+#' @title Per-edge total polyline lengths
+#' @description Given a list of edges (each a 2-column numeric matrix of
+#' vertex coordinates), compute the total polyline length of each edge.
+#' Returns a numeric vector of length \code{length(edges)}.
+#'
+#' Replaces a per-edge \code{sapply(self$edges, compute_line_lengths, ...)}
+#' that, in the lon/lat case, constructed an \code{sf::st_sfc} linestring
+#' object per edge -- ~9000x slower than necessary at OSM scales. The R6
+#' caller is responsible for any final unit conversion (km / miles / etc).
+#'
+#' @param edges List of two-column numeric matrices.
+#' @param longlat Logical. If TRUE, treat columns as (lon, lat) in degrees
+#' and return lengths in metres (haversine on a sphere of radius
+#' 6371008.8 m). If FALSE, return planar Euclidean lengths in whatever
+#' coordinate units the edges happen to be in.
+#' @return A numeric vector of edge lengths.
+#' @noRd
+compute_edge_lengths_cpp <- function(edges, longlat) {
+    .Call(`_MetricGraph_compute_edge_lengths_cpp`, edges, longlat)
+}
+
+#' @name postprocess_edges_cpp
+#' @title Dedupe interior polyline points while preserving endpoints
+#' @description translation of the post-merge "clean edges"
+#' \code{lapply} that the metric_graph constructor runs after the
+#' vertex-merge step. For each edge, deduplicates rows by exact
+#' \code{(x, y)} equality, while forcing the original first row to remain
+#' at position 1 and the original last row to be appended at the end.
+#'
+#' Linear scan beats hashing here because edges typically have only 2-15
+#' points; constant overhead of an unordered_set wins for n > ~50.
+#'
+#' @param edges List of two-column numeric matrices.
+#' @return A list of two-column numeric matrices with deduped interior
+#' rows. May have fewer rows than the input.
+#' @noRd
+postprocess_edges_cpp <- function(edges) {
+    .Call(`_MetricGraph_postprocess_edges_cpp`, edges)
+}
+
 selected_inv_cpp <- function(Q) {
     .Call(`_MetricGraph_selected_inv_cpp`, Q)
 }
