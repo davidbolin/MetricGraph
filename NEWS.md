@@ -1,3 +1,5 @@
+# MetricGraph (development version)
+
 # MetricGraph 1.5.1
 * Added `precompute_lgcp_graph()` to precompute expensive quantities for LGCP models.
 * Added `update_graph()` method to update graph objects to newer versions of the package.
