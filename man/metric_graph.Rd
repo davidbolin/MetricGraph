@@ -125,6 +125,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
+\item \href{#method-metric_graph-compute_mesh_weights}{\code{metric_graph$compute_mesh_weights()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
 \item \href{#method-metric_graph-fem_basis}{\code{metric_graph$fem_basis()}}
 \item \href{#method-metric_graph-VtEfirst}{\code{metric_graph$VtEfirst()}}
@@ -135,6 +136,7 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-plot_movie}{\code{metric_graph$plot_movie()}}
 \item \href{#method-metric_graph-add_mesh_observations}{\code{metric_graph$add_mesh_observations()}}
 \item \href{#method-metric_graph-get_initial_graph}{\code{metric_graph$get_initial_graph()}}
+\item \href{#method-metric_graph-update_graph}{\code{metric_graph$update_graph()}}
 \item \href{#method-metric_graph-coordinates}{\code{metric_graph$coordinates()}}
 \item \href{#method-metric_graph-clone}{\code{metric_graph$clone()}}
 }
@@ -612,27 +614,33 @@ Computes shortest path distances between the vertices in the
 graph
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_geodist(
-  full = FALSE,
   obs = TRUE,
+  include_vertices = FALSE,
+  all_groups = FALSE,
   group = NULL,
-  verbose = 0
+  verbose = 0,
+  full = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{full}}{Should the geodesic distances be computed for all
-the available locations? If \code{FALSE}, it will be computed
-separately for the locations of each group.}
-
 \item{\code{obs}}{Should the geodesic distances be computed at the observation
-locations?}
+locations or only at vertices?}
+
+\item{\code{include_vertices}}{If \code{obs} is \code{TRUE}, should the vertex locations be included in the resulting distance matrix?}
+
+\item{\code{all_groups}}{Should the geodesic distances be computed for all
+the available locations accross all groups? If \code{FALSE}, it will be computed
+separately for the locations of each group.}
 
 \item{\code{group}}{Vector or list containing which groups to compute the distance
 for. If \code{NULL}, it will be computed for all groups.}
 
 \item{\code{verbose}}{Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.}
+
+\item{\code{full}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{all_groups} instead.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1886,6 +1894,24 @@ matrices are stored in \code{Cpet} and \code{Gpet}.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_mesh_weights"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_mesh_weights}{}}}
+\subsection{Method \code{compute_mesh_weights()}}{
+Compute the weights of the mesh nodes.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$compute_mesh_weights()}\if{html}{\out{</div>}}
+}
+
+\subsection{Details}{
+Compute the weights of the mesh nodes.
+}
+
+\subsection{Returns}{
+No return value. Called for its side effects. The weights are stored in the \code{mesh} element in the
+\code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-mesh_A"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-mesh_A}{}}}
 \subsection{Method \code{mesh_A()}}{
@@ -2114,7 +2140,6 @@ Plots continuous function on the graph.
   data = NULL,
   newdata = NULL,
   group = 1,
-  X = NULL,
   type = c("ggplot", "plotly", "mapview"),
   continuous = TRUE,
   interpolate_plot = TRUE,
@@ -2133,6 +2158,7 @@ Plots continuous function on the graph.
   p = NULL,
   plotly = deprecated(),
   improve_plot = deprecated(),
+  X = deprecated(),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -2148,9 +2174,6 @@ plotted.}
 \item{\code{group}}{If there are groups, which group to plot? If \code{group} is a
 number, it will be the index of the group as stored internally. If \code{group}
 is a character, then the group will be chosen by its name.}
-
-\item{\code{X}}{A vector with values for the function
-evaluated at the mesh in the graph}
 
 \item{\code{type}}{The type of plot to be returned. The options are \code{ggplot} (the default), that uses \code{ggplot2}; \code{plotly} that uses \code{plot_ly} for 3D plots, which requires the \code{plotly} package, and \code{mapview} that uses the \code{mapview} function, to build interactive plots, which requires the \code{mapview} package.}
 
@@ -2187,6 +2210,8 @@ evaluated at the mesh in the graph}
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
 
 \item{\code{improve_plot}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{interpolate} instead. There is no need to use it to improve the edges.}
+
+\item{\code{X}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{newdata} instead.}
 
 \item{\code{...}}{Additional arguments for \code{ggplot()} or \code{plot_ly()}}
 }
@@ -2281,6 +2306,33 @@ Returns a copy of the initial metric graph.
 
 \subsection{Returns}{
 A \code{metric_graph} object.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-update_graph"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-update_graph}{}}}
+\subsection{Method \code{update_graph()}}{
+Update an older version metric graph to the current package version.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$update_graph(verbose = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{Print progress messages. Default is TRUE.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+This function creates a new metric_graph object from an existing one,
+preserving all data, edge weights, mesh, distances, and other components while
+ensuring compatibility with the current package version. The new graph is created
+with minimal changes by disabling merges and other transformations.
+}
+
+\subsection{Returns}{
+A new \code{metric_graph} object compatible with the current package version.
 }
 }
 \if{html}{\out{<hr>}}

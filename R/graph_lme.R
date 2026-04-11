@@ -1482,14 +1482,14 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, sd_post_re =
  if(pred_int || se_fit){
     pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_pred_variances = TRUE,
                   posterior_samples = FALSE, edge_number = ".edge_number",
-                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
+                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = TRUE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
  } else if(conf_int || sd_post_re){
     pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = TRUE,
                   posterior_samples = FALSE, edge_number = ".edge_number",
-                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
+                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = TRUE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
   } else{
       pred <- stats::predict(x, newdata = newdata, which_repl = which_repl, compute_variances = FALSE, posterior_samples = FALSE, edge_number = ".edge_number",
-                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = FALSE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
+                  distance_on_edge = ".distance_on_edge", normalized = TRUE, return_original_order = TRUE, return_as_list = FALSE, no_nugget = no_nugget, check_euclidean = check_euclidean)
   }
 
   newdata[[".fitted"]] <- pred$mean
@@ -2347,11 +2347,7 @@ predict.graph_lme <- function(object,
 
         mu_fe <- mu[idx_repl, , drop=FALSE]
         mu_fe <- mu_fe[idx_prd, , drop=FALSE]
-        if(is.null(precomputed)){
-          mu_re <- mu_krig[ord_idx]
-        } else{
-          mu_re <- mu_krig
-        }
+        mu_re <- mu_krig
 
         mu_krig <- mu_fe + mu_re
     } else if (cond_wm){
@@ -2381,7 +2377,7 @@ predict.graph_lme <- function(object,
 
         mu_krig <- mu_fe + mu_re
 
-      } else{          
+      } else{
         if((!compute_variances && !compute_pred_variances) || is.null(directional) || directional == 0){
           mu_krig <- posterior_mean_obs_alpha1(c(sigma.e,tau,kappa),
                         graph = graph_bkp, PtE_resp = PtE_obs, resp = y_repl,
@@ -2392,11 +2388,7 @@ predict.graph_lme <- function(object,
           diag(cov_Obs) <- diag(cov_Obs) + sigma_e^2              
           mu_krig <- cov_loc %*%  solve(cov_Obs, y_repl)
         }
-          if(is.null(precomputed)){
-            mu_re <- mu_krig[ord_idx]      
-          } else{
-            mu_re <- mu_krig   
-          }
+          mu_re <- mu_krig
           mu_fe <- mu[idx_repl, , drop=FALSE]
           mu_fe <- mu_fe[idx_prd, , drop=FALSE]
 

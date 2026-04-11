@@ -73,6 +73,7 @@ reference:
     contents:
     - metric_graph
     - graph_components
+    - update_graph
   - title: INLA and SPDE approach on metric graphs
     contents:
     - graph_spde
@@ -98,12 +99,15 @@ reference:
     - simulate.graph_lme
     - summary.graph_lme
     - posterior_crossvalidation
+    - posterior_crossvalidation_loo
     - graph_starting_values
     - glance.graph_lme
     - augment.graph_lme
   - title: Log-Cox Gaussian processes
     contents:
-    - graph_lgcp
+    - graph_lgcp_sim
+    - lgcp_graph
+    - precompute_lgcp_graph
   - title: Space-time models
     contents:
     - simulate_spacetime

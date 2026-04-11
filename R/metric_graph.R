@@ -1217,134 +1217,139 @@ metric_graph <-  R6Class("metric_graph",
   #' @return No return value. Called for its side effects.
 
   set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
-                            directional_weights = NULL, verbose = 0) {
-  # Validate input types early
-    if(!is.vector(weights) && !is.data.frame(weights) && !is.null(weights)){
-      stop("'weights' must be either a vector or a data.frame!")
-    }
+                          directional_weights = NULL, verbose = 0) {
 
-    if(verbose == 2){
-      message("Setting edge weights...")
-    }
+# Validate input types early
+  if(!is.vector(weights) && !is.data.frame(weights) && !is.null(weights)){
+    stop("'weights' must be either a vector or a data.frame!")
+  }
 
-    if(!is.null(weights)){
-        if(is.vector(weights)){
-          if ( (length(weights) != 1) && (length(weights) != self$nE)){
-            stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
-          }
-          if(length(weights)==1){
-            private$edge_weights <- rep(weights, self$nE)
-          } else{
-            private$edge_weights <- weights
-          }
+  if(verbose == 2){
+    message("Setting edge weights...")
+  }
+
+  if(!is.null(weights)){
+      if(is.vector(weights)){
+        if ( (length(weights) != 1) && (length(weights) != self$nE)){
+          stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+        }
+        if(length(weights)==1){
+          private$edge_weights <- rep(weights, self$nE)
         } else{
-          if(nrow(weights) != self$nE){
-            stop("The number of rows of weights must be equal to the number of edges!")
-          }
           private$edge_weights <- weights
-          if(!(".weights" %in% colnames(private$edge_weights))){
-            private$edge_weights[, ".weights"] <- 1
-          }
         }
-    } else{
-      weights <- private$edge_weights
-    }
+        # Strip units from vector weights
+        private$edge_weights <- sapply(private$edge_weights, strip_units_if_present)
+      } else{
+        if(nrow(weights) != self$nE){
+          stop("The number of rows of weights must be equal to the number of edges!")
+        }
+        private$edge_weights <- weights
+        if(!(".weights" %in% colnames(private$edge_weights))){
+          private$edge_weights[, ".weights"] <- 1
+        }
+        # Strip units from data.frame weights
+        private$edge_weights[] <- lapply(private$edge_weights, strip_units_if_present)
+      }
+  } else{
+    weights <- private$edge_weights
+  }
 
-    if(!is.null(kirchhoff_weights)){
-        if(length(kirchhoff_weights)>1){
-          warning("Only the first entry of 'kirchhoff_weights' was used.")
-          kirchhoff_weights <- kirchhoff_weights[[1]]
+  if(!is.null(kirchhoff_weights)){
+      if(length(kirchhoff_weights)>1){
+        warning("Only the first entry of 'kirchhoff_weights' was used.")
+        kirchhoff_weights <- kirchhoff_weights[[1]]
+      }
+      if(!is.numeric(kirchhoff_weights)){
+        if(!is.character(kirchhoff_weights)){
+          stop("'kirchhoff_weights' must be either a number of a string.")
         }
-        if(!is.numeric(kirchhoff_weights)){
-          if(!is.character(kirchhoff_weights)){
-            stop("'kirchhoff_weights' must be either a number of a string.")
-          }
-          if(!(kirchhoff_weights%in%colnames(weights))){
-            stop(paste(kirchhoff_weights, "is not a column of 'weights'!"))
+        if(!(kirchhoff_weights%in%colnames(weights))){
+          stop(paste(kirchhoff_weights, "is not a column of 'weights'!"))
+        }
+      } else{
+        if(!is.data.frame(weights)){
+          if(kirchhoff_weights != 1){
+            stop("Since 'weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
           }
         } else{
-          if(!is.data.frame(weights)){
-            if(kirchhoff_weights != 1){
-              stop("Since 'weights' is not a data.frame, 'kirchhoff_weights' must be either NULL or 1.")
-            }
-          } else{
-            if(kirchhoff_weights %%1 != 0){
-              stop("'kirchhoff_weights' must be an integer.")
-            }
-            if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(weights))){
-              stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
-            }
+          if(kirchhoff_weights %%1 != 0){
+            stop("'kirchhoff_weights' must be an integer.")
+          }
+          if((kirchhoff_weights < 1) || (kirchhoff_weights > ncol(weights))){
+            stop("'kirchhoff_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
           }
         }
-        private$kirchhoff_weights <- kirchhoff_weights
-       } else{
-        if(is.vector(weights)){
-          private$kirchhoff_weights <- 1
-        } else{
-          private$kirchhoff_weights <- ".weights"
-        }        
-       }
+      }
+      private$kirchhoff_weights <- kirchhoff_weights
+     } else{
+      if(is.vector(weights)){
+        private$kirchhoff_weights <- 1
+      } else{
+        private$kirchhoff_weights <- ".weights"
+      }        
+     }
 
-      if(!is.null(directional_weights)){
-        if(!is.numeric(directional_weights)){
-          if(!is.character(directional_weights)){
-            stop("'directional_weights' must be either a numerical vector of a string vector.")
-          }
-          if(!(directional_weights%in%colnames(weights))){
-            stop(paste(directional_weights, "is not a column of 'weights'!"))
+    if(!is.null(directional_weights)){
+      if(!is.numeric(directional_weights)){
+        if(!is.character(directional_weights)){
+          stop("'directional_weights' must be either a numerical vector of a string vector.")
+        }
+        if(!(directional_weights%in%colnames(weights))){
+          stop(paste(directional_weights, "is not a column of 'weights'!"))
+        }
+      } else{
+        if(!is.data.frame(weights)){
+          if(directional_weights != 1){
+            stop("Since 'weights' is not a data.frame, 'directional_weights' must be either NULL or 1.")
           }
         } else{
-          if(!is.data.frame(weights)){
-            if(directional_weights != 1){
-              stop("Since 'weights' is not a data.frame, 'directional_weights' must be either NULL or 1.")
-            }
-          } else{
-            if(directional_weights %%1 != 0){
-              stop("'directional_weights' must be an integer.")
-            }
-            if((directional_weights < 1) || (directional_weights > ncol(weights))){
-              stop("'directional_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
-            }
+          if(directional_weights %%1 != 0){
+            stop("'directional_weights' must be an integer.")
+          }
+          if((directional_weights < 1) || (directional_weights > ncol(weights))){
+            stop("'directional_weights' must be a positive integer number smaller or equal to the number of columns of 'weights'.")
           }
         }
-        private$directional_weights <- directional_weights
-       } else{
-        if(is.vector(weights)){
-          private$directional_weights <- 1
-        } else{
-          private$directional_weights <- ".weights"
-        }
-       }
+      }
+      private$directional_weights <- directional_weights
+     } else{
+      if(is.vector(weights)){
+        private$directional_weights <- 1
+      } else{
+        private$directional_weights <- ".weights"
+      }
+     }
 
-  # Get edge lengths and preallocate attributes
-  edge_lengths <- self$get_edge_lengths()
-  edges_PtE <- lapply(self$edges, function(edge) attr(edge, "PtE"))
-  nE <- self$nE
+# Get edge lengths and preallocate attributes
+edge_lengths <- self$get_edge_lengths()
+edges_PtE <- lapply(self$edges, function(edge) attr(edge, "PtE"))
+nE <- self$nE
 
-  # Use `lapply` with indexing for varying attributes
-  self$edges <- lapply(seq_along(self$edges), function(i) {
-    edge <- self$edges[[i]]
-    if(is.data.frame(private$edge_weights)){
-      attr(edge, "weight") <- private$edge_weights[i, , drop=FALSE]
-    } else{
-      attr(edge, "weight") <- private$edge_weights[i]
-    }
-    attr(edge, "length") <- edge_lengths[i]
-    attr(edge, "id") <- i
-    attr(edge, "PtE") <- edges_PtE[[i]]
-    attr(edge, "longlat") <- private$longlat
-    attr(edge, "crs") <- private$crs$input
-    attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
-    attr(edge, "directional_weights") <- private$directional_weights
+# Use `lapply` with indexing for varying attributes
+self$edges <- lapply(seq_along(self$edges), function(i) {
+  edge <- self$edges[[i]]
+  if(is.data.frame(private$edge_weights)){
+    attr(edge, "weight") <- private$edge_weights[i, , drop=FALSE]
+  } else{
+    attr(edge, "weight") <- private$edge_weights[i]
+  }
+  attr(edge, "length") <- edge_lengths[i]
+  attr(edge, "id") <- i
+  attr(edge, "PtE") <- edges_PtE[[i]]
+  attr(edge, "longlat") <- private$longlat
+  attr(edge, "crs") <- private$crs$input
+  attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
+  attr(edge, "directional_weights") <- private$directional_weights
 
-    # Set the class for each edge
-    class(edge) <- "metric_graph_edge"
-    edge
-  })
+  # Set the class for each edge
+  class(edge) <- "metric_graph_edge"
+  edge
+})
 
-  # Set the class of `self$edges` to `metric_graph_edges`
-  class(self$edges) <- "metric_graph_edges"
-  },
+# Set the class of `self$edges` to `metric_graph_edges`
+class(self$edges) <- "metric_graph_edges"
+},
 
 
   #' @description Gets the edge weights
@@ -1786,17 +1791,28 @@ metric_graph <-  R6Class("metric_graph",
 
   #' @description Computes shortest path distances between the vertices in the
   #' graph
-  #' @param full Should the geodesic distances be computed for all
-  #' the available locations? If `FALSE`, it will be computed
-  #' separately for the locations of each group.
   #' @param obs Should the geodesic distances be computed at the observation
-  #' locations?
+  #' locations or only at vertices?
+  #' @param include_vertices If `obs` is `TRUE`, should the vertex locations be included in the resulting distance matrix?
+  #' @param all_groups Should the geodesic distances be computed for all
+  #' the available locations accross all groups? If `FALSE`, it will be computed
+  #' separately for the locations of each group.
   #' @param group Vector or list containing which groups to compute the distance
   #' for. If `NULL`, it will be computed for all groups.
   #' @param verbose Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+  #' @param full `r lifecycle::badge("deprecated")` Use `all_groups` instead.
   #' @return No return value. Called for its side effects. The computed geodesic
   #' distances are stored in the `geo_dist` element of the `metric_graph` object.
-  compute_geodist = function(full = FALSE, obs = TRUE, group = NULL, verbose = 0) {
+  compute_geodist = function(obs = TRUE, 
+                              include_vertices = FALSE, 
+                              all_groups = FALSE, 
+                              group = NULL, 
+                              verbose = 0,
+                              full = lifecycle::deprecated()) {
+    if(lifecycle::is_present(full)){
+      lifecycle::deprecate_warn("1.5.0.9000", "compute_geodist(full)", "compute_geodist(all_groups)")
+      all_groups <- full
+    }
     if(is.null(self$geo_dist)){
       self$geo_dist <- list()
     }
@@ -1824,10 +1840,10 @@ metric_graph <-  R6Class("metric_graph",
       if(verbose == 2){
         message(sprintf("time: %.3f s", t[["elapsed"]]))
       }
-    } else if(full){
+    } else if(all_groups){
       PtE_full <- self$get_PtE()
       self$geo_dist[[".complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
-                                                              normalized = TRUE, verbose = verbose)
+                                                              normalized = TRUE, verbose = verbose, include_vertices = include_vertices)
     } else{
       if(is.null(group)){
           group <- unique(private$data[[".group"]])
@@ -1838,7 +1854,7 @@ metric_graph <-  R6Class("metric_graph",
           PtE_group <- cbind(data_grp[[".edge_number"]][idx_notna],
                      data_grp[[".distance_on_edge"]][idx_notna])
           self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group,
-                                                              normalized = TRUE, verbose = verbose)
+                                                              normalized = TRUE, verbose = verbose, include_vertices = include_vertices)
       }
     }
   },
@@ -1867,14 +1883,14 @@ metric_graph <-  R6Class("metric_graph",
           df_temp <- unique(df_temp)
         }
 
-        df_temp <- standardize_df_positions(df_temp, self)
+        df_temp <- standardize_df_positions(df_temp, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
 
         graph.temp$build_mesh(h = 10000)
 
         df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                   distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
-        df_temp2 <- standardize_df_positions(df_temp2, self)
+        df_temp2 <- standardize_df_positions(df_temp2, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
 
         df_temp$included <- TRUE
         temp_merge <- merge(df_temp, df_temp2, all = TRUE)
@@ -2583,7 +2599,7 @@ metric_graph <-  R6Class("metric_graph",
     return(Spoints)
   },
 
-  #' @description Adds observation locations as vertices in the graph.
+    #' @description Adds observation locations as vertices in the graph.
   #' @param share_weights Should the same weight be shared among the split edges? If `FALSE`, the weights will be removed, and a common weight given by 1 will be given.
   #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
   #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
@@ -2600,86 +2616,145 @@ metric_graph <-  R6Class("metric_graph",
         stop("There is no data!")
     }
 
-    private$temp_PtE <- self$get_PtE()
-    n <- nrow(private$temp_PtE)
-    self$PtV <- rep(NA, n)
-    private$temp_PtE <- cbind(private$temp_PtE, seq_len(n))
+    # Extract PtE data directly with minimal operations
+    if (verbose > 1) {
+        message("Extracting observation locations...")
+    }
+    
+    # Cache all frequently accessed data at once
+    group_data <- private$data[[".group"]]
+    edge_numbers <- private$data[[".edge_number"]]
+    distances <- private$data[[".distance_on_edge"]]
+    
+    # Get first group indices efficiently using match (faster than which for single values)
+    first_group <- group_data[1]
+    group_idx <- group_data == first_group
+    
+    # Pre-allocate and populate temp_PtE in one go using logical indexing
+    n <- sum(group_idx)
+    private$temp_PtE <- cbind(edge_numbers[group_idx], distances[group_idx], seq_len(n))
+    
+    # Pre-allocate PtV with correct type
+    self$PtV <- rep(NA_integer_, n)
 
-    # Identify start and end vertices based on the tolerance
-    is_start_vertex <- abs(private$temp_PtE[, 2]) < 1e-15
-    is_end_vertex <- private$temp_PtE[, 2] > 1 - 1e-15
+    # Vectorized tolerance checks with direct comparison
+    distances_subset <- private$temp_PtE[, 2]
+    is_start_vertex <- distances_subset < 1e-15
+    is_end_vertex <- distances_subset > 0.999999999999999  # Precomputed 1 - 1e-15
 
-    # Assign known vertices directly
-    self$PtV[is_start_vertex] <- self$E[private$temp_PtE[is_start_vertex, 1], 1]
-    self$PtV[is_end_vertex] <- self$E[private$temp_PtE[is_end_vertex, 1], 2]
+    # Vectorized vertex assignment using direct indexing
+    start_count <- sum(is_start_vertex)
+    end_count <- sum(is_end_vertex)
+    
+    if (start_count > 0) {
+        start_indices <- which(is_start_vertex)
+        edge_indices_start <- private$temp_PtE[start_indices, 1]
+        self$PtV[start_indices] <- self$E[edge_indices_start, 1]
+    }
+    if (end_count > 0) {
+        end_indices <- which(is_end_vertex)
+        edge_indices_end <- private$temp_PtE[end_indices, 1]
+        self$PtV[end_indices] <- self$E[edge_indices_end, 2]
+    }
 
     # Get remaining indices that need to be split
-    remaining_indices <- which(!(is_start_vertex | is_end_vertex))
+    remaining_mask <- !(is_start_vertex | is_end_vertex)
+    remaining_count <- sum(remaining_mask)
 
-    # Group PtE by edges
-    edge_groups <- split(private$temp_PtE[remaining_indices, c(2, 3)], private$temp_PtE[remaining_indices, 1])
-    edge_groups <- lapply(edge_groups, function(coords) matrix(coords, ncol = 2, byrow = FALSE))   
-
-    # Progress bar setup
-    if (verbose == 2) {
-        bar_otv <- msg_progress_bar(length(edge_groups))
-    }
-
-    # Loop over each edge in `edge_groups`
-    for (Ei in names(edge_groups)) {
-        
-        # Extract `t_values` and `indices`
-        t_values <- edge_groups[[Ei]][, 1]  # positions on edges
-        indices <- edge_groups[[Ei]][, 2]   # original row number
-        
-        # Progress bar increment (if verbose mode is enabled)
-        if (verbose == 2) {
-            bar_otv$increment()
+    if (remaining_count > 0) {
+        if (verbose > 1) {
+            message("Grouping observations by edges...")
         }
         
-        # Perform `private$split_edge`
-        new_vertices <- private$split_edge(as.numeric(Ei), t_values,  indices = indices)
+        # Direct subsetting and grouping
+        remaining_data <- private$temp_PtE[remaining_mask, , drop = FALSE]
+        edge_ids <- remaining_data[, 1]
         
-        # Assign new vertices
-        self$PtV[indices] <- new_vertices
+        # Use split() which is highly optimized in R
+        edge_groups <- split.data.frame(remaining_data[, c(2, 3), drop = FALSE], edge_ids)
+
+        # Progress bar setup
+        if (verbose == 2) {
+            bar_otv <- msg_progress_bar(length(edge_groups))
+        }
+
+        # Process all edges with batch processing
+        if (verbose == 2) {
+            message("Processing edge splits in batches...")
+        }
+        
+        new_vertices_list <- private$split_edge_batch(edge_groups, verbose = verbose)
+        
+        # Vectorized assignment of new vertices
+        edge_names <- names(edge_groups)
+        for (i in seq_along(edge_groups)) {
+            group_data_i <- edge_groups[[i]]
+            indices <- if (is.matrix(group_data_i)) group_data_i[, 2] else group_data_i[2]
+            
+            # Only assign if we have new vertices for this edge
+            new_vertices_i <- new_vertices_list[[i]]
+            if (length(new_vertices_i) > 0) {
+                self$PtV[indices] <- new_vertices_i
+            }
+            
+            # Progress bar increment (if verbose mode is enabled)
+            if (verbose == 2) {
+                bar_otv$increment()
+            }
+        }
     }
 
-    # Remove NA values from PtV
+    # Remove NA values from PtV efficiently
     self$PtV <- self$PtV[!is.na(self$PtV)]
 
-    # Update temp_PtE for the known vertices
+    # Update temp_PtE for the known vertices using vectorized operations
+    if (start_count > 0) {
+        start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
+        private$temp_PtE[is_start_vertex, 1] <- start_positions
+        private$temp_PtE[is_start_vertex, 2] <- 0
+    }
+    if (end_count > 0) {
+        end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
+        private$temp_PtE[is_end_vertex, 1] <- end_positions
+        private$temp_PtE[is_end_vertex, 2] <- 1
+    }
 
-    # Find the positions in `self$E[,1]` where they match `self$PtV[is_start]` and `self$PtV[is_end]`
-    start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
-    end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
+    # Data replication and reordering
+    if (verbose > 1) {
+        message("Updating data structures...")
+    }
+    
+    # Cache group information once
+    unique_groups <- unique(group_data)
+    n_group <- length(unique_groups)
+    
+    # vectorized replication
+    temp_edge_numbers <- private$temp_PtE[, 1]
+    temp_distances <- private$temp_PtE[, 2]
+    
+    private$data[[".edge_number"]] <- rep.int(temp_edge_numbers, n_group)
+    private$data[[".distance_on_edge"]] <- rep.int(temp_distances, n_group)
 
-    # Use vectorized assignment for `private$temp_PtE` values
-    private$temp_PtE[is_start_vertex, 1] <- start_positions
-    private$temp_PtE[is_end_vertex, 1] <- end_positions
-
-    # Assign 1 for `is_start_vertex` rows in the second column and 0 for `is_end_vertex` rows
-    private$temp_PtE[is_start_vertex, 2] <- 0
-    private$temp_PtE[is_end_vertex, 2] <- 1
-
-    # Replicate edge numbers and distances for the number of groups
-    n_group <- length(unique(private$data[[".group"]]))
-    private$data[[".edge_number"]] <- rep(private$temp_PtE[, 1], times = n_group)
-    private$data[[".distance_on_edge"]] <- rep(private$temp_PtE[, 2], times = n_group)
-
-    # Reorder the data based on group and edge information
-    tmp_df <- data.frame(
-        PtE1 = private$data[[".edge_number"]],
-        PtE2 = private$data[[".distance_on_edge"]],
-        group = private$data[[".group"]]
-    )
-    index_order <- order(tmp_df$group, tmp_df$PtE1, tmp_df$PtE2)
+    # Single-pass ordering with cached data
+    edge_numbers_full <- private$data[[".edge_number"]]
+    distances_full <- private$data[[".distance_on_edge"]]
+    groups_full <- private$data[[".group"]]
+    
+    # Single call to order() with pre-computed keys
+    index_order <- order(groups_full, edge_numbers_full, distances_full)
+    
+    # Cache attribute before reordering
     old_group_variable <- attr(private$data, "group_variable")
     
-    private$data <- lapply(private$data, function(dat) dat[index_order])
+    # vectorized reordering using lapply
+    private$data <- lapply(private$data, `[`, index_order)
     attr(private$data, "group_variable") <- old_group_variable
-
-    # Reorder PtV according to index_order
-    self$PtV <- self$PtV[index_order[1:length(self$PtV)]]
+    
+    # Reorder PtV efficiently
+    ptv_length <- length(self$PtV)
+    if (ptv_length > 0) {
+        self$PtV <- self$PtV[index_order[seq_len(ptv_length)]]
+    }
 
     # Reset temporary data
     private$temp_PtE <- NULL
@@ -2707,7 +2782,7 @@ metric_graph <-  R6Class("metric_graph",
         verbose = verbose
     )
   },
-  
+
   #' @description Turns edge weights into data on the metric graph
   #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
   #' @param data_loc Should the data be generated to the data locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.
@@ -3344,7 +3419,7 @@ metric_graph <-  R6Class("metric_graph",
     data <- process_data_add_obs(PtE, new_data = data, old_data = NULL,
                                         group_vector, suppress_warnings = suppress_warnings)
 
-    data <- standardize_df_positions(data, self)
+    data <- standardize_df_positions(data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
     ## convert to Spoints and add
     group_1 <- data[[".group"]]
     group_1 <- which(group_1 == group_1[1])
@@ -4569,14 +4644,15 @@ mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble")
   buildC = function(alpha = 2, edge_constraint = FALSE) {
 
     if(alpha==2){
-      temp_E <- apply(self$E,2,as.integer)
+      temp_E <- self$E
+      temp_E[] <- as.integer(temp_E)
 
       self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
       self$CoB <- c_basis2(self$C)
       self$CoB$T <- t(self$CoB$T)
       self$CoB$alpha <- 2
     }else{
-      error("only alpha=2 implemented")
+      stop("only alpha=2 implemented")
     }
   },
 
@@ -4749,6 +4825,19 @@ build_mesh = function(h = NULL, n = NULL, continuous = TRUE,
     }
 
     self$mesh$weights <- rowSums(self$mesh$C)
+  },
+
+
+  #' @description Compute the weights of the mesh nodes.
+  #' @details Compute the weights of the mesh nodes.
+  #' @return No return value. Called for its side effects. The weights are stored in the `mesh` element in the
+  #' `metric_graph` object.
+  compute_mesh_weights = function() {
+    if (is.null(self$mesh)) {
+      stop("no mesh provided")
+    }
+    nV <- dim(self$mesh$V)[1]
+    self$mesh$weights <- compute_mesh_weights(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV)
   },
 
   #' @description Deprecated - Computes observation matrix for mesh.
@@ -5223,8 +5312,6 @@ return(mapview_output)
   #' @param group If there are groups, which group to plot? If `group` is a
   #' number, it will be the index of the group as stored internally. If `group`
   #' is a character, then the group will be chosen by its name.
-  #' @param X A vector with values for the function
-  #' evaluated at the mesh in the graph
   #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
   #' @param continuous Should continuity be assumed when the plot uses `newdata`?
   #' @param interpolate_plot Should the values to be plotted be interpolated?
@@ -5243,12 +5330,12 @@ return(mapview_output)
   #' @param p Previous plot to which the new plot should be added.
   #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
   #' @param improve_plot  `r lifecycle::badge("deprecated")` Use `interpolate` instead. There is no need to use it to improve the edges.
+  #' @param X `r lifecycle::badge("deprecated")` Use `newdata` instead.
   #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
   #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
   plot_function = function(data = NULL,
                            newdata = NULL,
                            group = 1,
-                           X = NULL,
                            type = c("ggplot", "plotly", "mapview"),
                            continuous = TRUE,
                            interpolate_plot = TRUE,
@@ -5267,11 +5354,17 @@ return(mapview_output)
                            p = NULL,
                            plotly = deprecated(),
                            improve_plot = deprecated(),
+                           X = deprecated(),
                            ...){
     if (is.null(line_width)) {
       line_width = edge_width
     }
 
+    if(lifecycle::is_present(X)){
+      lifecycle::deprecate_warn("1.3.0.9000", "plot_function(X)", "plot_function(newdata)",
+        details = c("The argument `X` is deprecated; please use `newdata` to ensure the correct order when plotting.")
+      )
+    }
 
      if (lifecycle::is_present(plotly)) {
       lifecycle::deprecate_warn("1.3.0.9000", "plot(plotly)", "plot(type)",
@@ -6167,6 +6260,198 @@ return(mapview_output)
     return(tmp_graph)
   },
 
+  #' @description Update an older version metric graph to the current package version.
+  #' @details This function creates a new metric_graph object from an existing one,
+  #' preserving all data, edge weights, mesh, distances, and other components while
+  #' ensuring compatibility with the current package version. The new graph is created
+  #' with minimal changes by disabling merges and other transformations.
+  #' @param verbose Print progress messages. Default is TRUE.
+  #' @return A new `metric_graph` object compatible with the current package version.
+  update_graph = function(verbose = TRUE) {
+    
+    if (verbose) {
+      message("Updating metric graph to current package version...")
+    }
+    
+    # Extract all components from the current graph
+    old_V <- self$V
+    old_E <- self$E
+    old_edges <- self$edges
+    old_edge_lengths <- self$edge_lengths
+    
+    # Extract edge weights if they exist
+    old_edge_weights <- NULL
+    if (!is.null(private$edge_weights)) {
+      old_edge_weights <- self$get_edge_weights(data.frame = TRUE)
+    }
+    
+    # Extract data if it exists
+    old_data <- NULL
+    if (!is.null(private$data)) {
+      old_data <- self$get_data(format = "list")
+    }
+    
+    # Extract other private components
+    old_longlat <- private$longlat
+    old_crs <- private$crs
+    old_proj4string <- private$proj4string
+    old_length_unit <- private$length_unit
+    old_vertex_unit <- private$vertex_unit
+    old_which_longlat <- private$which_longlat
+    
+    # Extract directional weight functions if they exist
+    old_dir_weights_in <- self$DirectionalWeightFunction_in
+    old_dir_weights_out <- self$DirectionalWeightFunction_out
+    
+    if (verbose) {
+      message("Creating new graph with minimal changes...")
+    }
+    
+    # Create new graph with settings that minimize changes
+    new_graph <- metric_graph$new(
+      V = old_V,
+      E = old_E,
+      edge_weights = old_edge_weights,
+      longlat = old_longlat,
+      crs = old_crs,
+      proj4string = old_proj4string,
+      vertex_unit = old_vertex_unit,
+      length_unit = old_length_unit,
+      which_longlat = old_which_longlat,
+      # Critical settings to minimize changes
+      perform_merges = FALSE,           # No merges
+      remove_circles = FALSE,           # Don't remove circles
+      remove_deg2 = FALSE,             # Don't remove degree-2 vertices
+      merge_close_vertices = FALSE,     # Don't merge close vertices
+      check_connected = FALSE,          # Skip connectivity check
+      auto_remove_point_edges = FALSE,  # Don't remove point edges
+      tolerance = list(vertex_vertex = 0, vertex_edge = 0, edge_edge = 0), # Zero tolerances
+      verbose = if (verbose) 1 else 0
+    )
+    
+    # Manually set edges and edge_lengths to preserve exact structure
+    if (!is.null(old_edges)) {
+      new_graph$edges <- old_edges
+    }
+    if (!is.null(old_edge_lengths)) {
+      new_graph$edge_lengths <- old_edge_lengths
+    }
+    
+    # Set directional weight functions if they existed
+    if (!is.null(old_dir_weights_in)) {
+      new_graph$DirectionalWeightFunction_in <- old_dir_weights_in
+    }
+    if (!is.null(old_dir_weights_out)) {
+      new_graph$DirectionalWeightFunction_out <- old_dir_weights_out
+    }
+    
+    # Add data if it existed
+    if (!is.null(old_data)) {
+      if (verbose) {
+        message("Adding observation data...")
+      }
+      tryCatch({
+        internal_cols <- c(".edge_number", ".distance_on_edge")
+        old_data[internal_cols] <- NULL
+        if(inherits(old_data, "metric_graph_data")){
+          class(old_data) <- setdiff(class(old_data), "metric_graph_data")
+        }
+
+        # Convert to sf object if CRS is available
+        if(!is.null(old_crs) && all(c(".coord_x", ".coord_y") %in% names(old_data))) {
+          old_data_df <- as.data.frame(old_data)
+          old_data <- sf::st_as_sf(
+            old_data_df,
+            coords = c(".coord_x", ".coord_y"),
+            crs = old_crs
+          )
+        }
+
+        # Add observations
+        new_graph$add_observations(
+          data = old_data, 
+          coord_x = ".coord_x", 
+          coord_y = ".coord_y", 
+          data_coords = "spatial", 
+          group = ".group", 
+          verbose = if (verbose) 1 else 0
+        )
+      }, error = function(e) {
+        if (verbose) message("Could not restore observation data: ", e$message)
+      })
+    }
+    
+    # Restore computed components if they existed
+    if (verbose) {
+      message("Restoring computed components...")
+    }
+    
+    # Restore mesh if it existed
+    if (!is.null(self$mesh)) {
+      if (verbose) {
+        message("Restoring mesh...")
+      }
+      new_graph$mesh <- self$mesh
+    }
+    
+    # Restore geodesic distances if they existed
+    if (!is.null(self$geo_dist)) {
+      if (verbose) {
+        message("Restoring geodesic distances...")
+      }
+      new_graph$geo_dist <- self$geo_dist
+    }
+    
+    # Restore resistance distances if they existed
+    if (!is.null(self$res_dist)) {
+      if (verbose) {
+        message("Restoring resistance distances...")
+      }
+      new_graph$res_dist <- self$res_dist
+    }
+    
+    # Restore Laplacian if it existed
+    if (!is.null(self$Laplacian)) {
+      if (verbose) {
+        message("Restoring Laplacian matrix...")
+      }
+      new_graph$Laplacian <- self$Laplacian
+    }
+    
+    # Restore constraint matrix and CoB if they existed
+    if (!is.null(self$C)) {
+      new_graph$C <- self$C
+    }
+    if (!is.null(self$CoB)) {
+      new_graph$CoB <- self$CoB
+    }
+    
+    # Restore PtV if it existed
+    if (!is.null(self$PtV)) {
+      new_graph$PtV <- self$PtV
+    }
+    
+    # Restore characteristics if they existed
+    if (!is.null(self$characteristics)) {
+      new_graph$characteristics <- self$characteristics
+    }
+    
+    # Restore vertices with attributes if they existed
+    if (!is.null(self$vertices)) {
+      new_graph$vertices <- self$vertices
+    }
+    
+    if (verbose) {
+      message("Graph update completed successfully!")
+      message(sprintf("New graph: %d vertices, %d edges", new_graph$nV, new_graph$nE))
+      if (!is.null(old_data)) {
+      message(sprintf("Total observations: %d", length(old_data[[".group"]])))
+      }
+    }
+    
+    return(new_graph)
+  },
+
   #' @description Convert between locations on the graph and Euclidean
   #' coordinates.
   #' @param PtE Matrix with locations on the graph (edge number and normalized
@@ -6212,7 +6497,6 @@ return(mapview_output)
       }
 
       Points <- matrix(NA, nrow=nrow(PtE), ncol=ncol(PtE))
-
 
       for (i in 1:dim(PtE)[1]) {
         Points[i,] <- interpolate2(self$edges[[PtE[i, 1]]] ,
@@ -6427,59 +6711,26 @@ return(mapview_output)
   #Compute PtE for mesh given PtE for graph
   PtE_to_mesh = function(PtE){
     Vertexes <- self$VtEfirst()
-    VtE <- rbind(Vertexes, self$mesh$PtE)
-    PtE_update <- matrix(0, dim(PtE)[1], 2)
-    for (i in 1:dim(PtE)[1]) {
-      ei <- PtE[i, 1] #extract edge
+    PtE <- as.matrix(PtE)
+    Vertexes <- as.matrix(Vertexes)
+    self$mesh$PtE <- as.matrix(self$mesh$PtE)
+    self$E <- as.matrix(self$E)
+    self$mesh$E <- as.matrix(self$mesh$E)
+    self$edge_lengths <- as.vector(self$edge_lengths)
+    self$mesh$h_e <- as.vector(self$mesh$h_e)
+    self$nV <- as.integer(self$nV)
 
-      #extract distances of all mesh nodes on edge including end points
-      ind.nodes <- which(self$mesh$PtE[,1] == ei)
-      dist.nodes <- self$mesh$PtE[ind.nodes,2]
-      if(length(ind.nodes)>0) {
-        ind <- c(self$E[ei,1], ind.nodes + self$nV, self$E[ei,2])
-        dists <- c(0,dist.nodes,1)
-      } else {
-        ind <- c(self$E[ei,1], self$E[ei,2])
-        dists <- c(0,1)
-      }
-      
-      ind2 <- sort(sort(abs(dists - PtE[i, 2]), index.return = TRUE)$ix[1:2])
-      v1 <- ind[ind2[1]] #vertex "before" the point
-      v2 <- ind[ind2[2]] #vertex "after" the point
-      d1 <- dists[ind2[1]] #distance on the edge of the point before
-      d2 <- dists[ind2[2]] #distance on the edge of the point after
-
-      #find the "edge" in the mesh on which the point is
-      if(v1 != v2){
-        # if they are different, only consider edges with different vertices as endpoints
-        valid_ind <- (rowSums(self$mesh$E == v1) > 0) & (rowSums(self$mesh$E == v2) > 0)
-        e <- which(valid_ind & (rowSums(self$mesh$E == v1) + rowSums(self$mesh$E == v2) == 2))
-      } else{
-        e <- which(rowSums((self$mesh$E == v1)) == 2)
-      }
-      # Handle the case of multiple edges
-      # In the case the edge lengths are different, we can identify
-      # In the case they are equal, we cannot identify, but it does not matter, as there is no difference then.
-      e_bkp <- e
-      if(length(e)>1){
-       ind <- which(self$edge_lengths[ei] == self$mesh$h_e[e])
-       e <- e[ind]
-       e <- e[1]
-      }
-      # a loop might have been split into smaller parts, in this case, we simply get the first
-      if(self$edge_lengths[ei] == sum(self$mesh$h_e[e_bkp])){
-        e <- e_bkp[which(self$mesh$E[e_bkp,1] == v1)]
-        e <- e[1]
-      }
-      for(ei in e){
-        if (self$mesh$E[ei, 1] == v1) { #edge starts in the vertex before
-          d <- (PtE[i, 2] - d1)/(d2 - d1)
-        } else {
-          d <- 1- (PtE[i, 2] - d1)/(d2 - d1)
-        }
-          PtE_update[i, ] <- c(e, d)
-        }
-    } 
+    PtE_update <- PtE_to_mesh_cpp(
+      PtE = PtE,
+      VtE = Vertexes,
+      mesh_PtE = self$mesh$PtE,
+      E = self$E,
+      mesh_E = self$mesh$E,
+      edge_lengths = self$edge_lengths,
+      mesh_h_e = self$mesh$h_e,
+      nV = self$nV
+    )
+    
     return(PtE_update)
   },
 
@@ -7416,10 +7667,17 @@ format_data = function(data_res, format) {
     coords_list1 <- edge[1:idx_positions[1], , drop = FALSE]
     coords_list1 <- rbind(coords_list1, val_lines[1, , drop = FALSE])
     tmp_vec <- c(PtE_edge[1:idx_positions[1]], t_values[1])
-
+    # Remove duplicate consecutive rows
+    if (nrow(coords_list1) > 1L) {
+      is_dup <- c(FALSE, rowSums(diff(coords_list1)^2) == 0)
+      if (any(is_dup)) {
+        coords_list1 <- coords_list1[!is_dup, , drop = FALSE]
+        tmp_vec      <- tmp_vec[!is_dup]
+      }
+    }
     pos_edge_diff <- tmp_vec - tmp_vec[1]
     norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-    tmp_PtE <- pos_edge_diff / norm_factor
+    tmp_PtE <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
 
     # Add tmp_PtE as an attribute
     attr(coords_list1, "PtE") <- tmp_PtE
@@ -7455,9 +7713,17 @@ format_data = function(data_res, format) {
         tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):nrow(edge)])
       }
 
+      # Remove duplicate consecutive rows
+      if (nrow(coords_list2[[i]]) > 1L) {
+        is_dup <- c(FALSE, rowSums(diff(coords_list2[[i]])^2) == 0)
+        if (any(is_dup)) {
+          coords_list2[[i]] <- coords_list2[[i]][!is_dup, , drop = FALSE]
+          tmp_vec            <- tmp_vec[!is_dup]
+        }
+      }
       pos_edge_diff <- tmp_vec - tmp_vec[1]
       norm_factor <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
-      tmp_PtE <- pos_edge_diff / norm_factor
+      tmp_PtE <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
 
       # Add tmp_PtE as an attribute
       attr(coords_list2[[i]], "PtE") <- tmp_PtE
@@ -7497,6 +7763,372 @@ format_data = function(data_res, format) {
 
     return(new_vertices)
   },
+
+  # batch processing of multiple edges (sequential only)
+  split_edge_batch = function(edge_groups, verbose = 0) {
+    
+    # group size calculation using vapply with pre-specified type
+    group_sizes <- vapply(edge_groups, function(x) {
+        if (is.null(x)) return(0L)
+        if (is.matrix(x)) return(nrow(x))
+        if (is.data.frame(x)) return(nrow(x))
+        if (is.vector(x) && length(x) == 2) return(1L)
+        return(0L)
+    }, FUN.VALUE = integer(1), USE.NAMES = FALSE)
+    
+    total_new_vertices <- sum(group_sizes)
+    
+    if (total_new_vertices == 0L) {
+        return(vector("list", length(edge_groups)))
+    }
+    
+    # Pre-allocate all matrices with exact types for maximum efficiency
+    ncol_V <- ncol(self$V)
+    all_new_coords <- matrix(0.0, nrow = total_new_vertices, ncol = ncol_V)
+    
+    # Pre-allocate result list with exact size
+    new_vertices_list <- vector("list", length(edge_groups))
+    
+    # Cache edge names as integers for faster access
+    edge_names <- as.integer(names(edge_groups))
+    
+    vertex_counter <- 0L
+    
+    # First pass: Generate all new vertices and coordinates
+    for (i in seq_along(edge_groups)) {
+        Ei <- edge_names[i]
+        group_data <- edge_groups[[i]]
+        
+        # data validation and extraction
+        if (is.null(group_data)) {
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        if (is.matrix(group_data)) {
+            if (nrow(group_data) == 0L) {
+                new_vertices_list[[i]] <- integer(0)
+                next
+            }
+            t_values <- group_data[, 1]
+            n_new_vertices <- nrow(group_data)
+        } else if (is.data.frame(group_data)) {
+            if (nrow(group_data) == 0L) {
+                new_vertices_list[[i]] <- integer(0)
+                next
+            }
+            t_values <- group_data[[1]]
+            n_new_vertices <- nrow(group_data)
+        } else if (is.vector(group_data) && length(group_data) == 2L) {
+            t_values <- group_data[1]
+            n_new_vertices <- 1L
+        } else {
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        if (n_new_vertices == 0L) {
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        # Cache edge for faster access
+        edge <- self$edges[[Ei]]
+        
+        # Vectorized interpolation for all t_values at once
+        val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+        val_lines <- val_results[["coords"]]
+        idx_positions <- val_results[["idx"]]
+        
+        # validation of interpolation results
+        if (length(idx_positions) == 0L || any(is.na(idx_positions)) || any(idx_positions < 1L)) {
+            new_vertices_list[[i]] <- integer(0)
+            next
+        }
+        
+        # Store coordinates for this edge's new vertices
+        vertex_indices <- (vertex_counter + 1L):(vertex_counter + n_new_vertices)
+        if (n_new_vertices == 1L) {
+            all_new_coords[vertex_indices, ] <- matrix(val_lines, nrow = 1L)
+        } else {
+            all_new_coords[vertex_indices, ] <- val_lines
+        }
+        
+        # Generate new vertex IDs
+        new_vertex_ids <- (self$nV + vertex_counter + 1L):(self$nV + vertex_counter + n_new_vertices)
+        new_vertices_list[[i]] <- new_vertex_ids
+        
+        vertex_counter <- vertex_counter + n_new_vertices
+    }
+    
+    # Batch update self$V - single rbind operation
+    if (vertex_counter > 0L) {
+        self$V <- rbind(self$V, all_new_coords[seq_len(vertex_counter), , drop = FALSE])
+        self$nV <- self$nV + vertex_counter
+    }
+    
+    # Second pass: Process edge updates in batch
+    if (vertex_counter == 0L) {
+        return(new_vertices_list)
+    }
+    
+    # Pre-allocate edge matrices with exact sizes
+    new_E_rows <- matrix(NA_integer_, nrow = vertex_counter, ncol = 2L)
+    new_edges_list <- vector("list", vertex_counter)
+    new_edge_lengths <- numeric(vertex_counter)
+    
+    edge_counter <- 0L
+    
+    for (i in seq_along(edge_groups)) {
+        if (length(new_vertices_list[[i]]) == 0L) {
+            next
+        }
+        
+        Ei <- edge_names[i]
+        group_data <- edge_groups[[i]]
+        new_vertices <- new_vertices_list[[i]]
+        
+        # Extract data based on type
+        if (is.matrix(group_data)) {
+            t_values <- group_data[, 1]
+            indices <- group_data[, 2]
+            n_t_values <- nrow(group_data)
+        } else if (is.data.frame(group_data)) {
+            t_values <- group_data[[1]]
+            indices <- group_data[[2]]
+            n_t_values <- nrow(group_data)
+        } else {
+            t_values <- group_data[1]
+            indices <- group_data[2]
+            n_t_values <- 1L
+        }
+        
+        # Cache edge data
+        edge <- self$edges[[Ei]]
+        PtE_edge <- attr(edge, "PtE")
+        
+        # Update temp_PtE for this batch
+        if (!is.null(private$data) && !is.null(indices)) {
+            edge_updates <- self$nE + edge_counter + seq_len(n_t_values)
+            private$temp_PtE[indices, 1] <- edge_updates
+            private$temp_PtE[indices, 2] <- (private$temp_PtE[indices, 2] - t_values) / (1 - t_values)
+        }
+        
+        # Re-compute interpolation (cached from first pass would be ideal, but this is still fast)
+        val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+        idx_positions <- val_results[["idx"]]
+        val_lines <- val_results[["coords"]]
+        
+        # Check for valid idx_positions
+        if (length(idx_positions) == 0L || is.na(idx_positions[1]) || idx_positions[1] < 1L) {
+            next
+        }
+        
+        # Build edge segments efficiently
+        coords_list1 <- rbind(edge[seq_len(idx_positions[1]), , drop = FALSE],
+                             if (n_t_values == 1L) matrix(val_lines, nrow = 1L) else val_lines[1, , drop = FALSE])
+        tmp_vec <- c(PtE_edge[seq_len(idx_positions[1])], t_values[1])
+        # Remove duplicate consecutive rows (can arise when split point coincides
+        # numerically with an existing edge coordinate)
+        if (nrow(coords_list1) > 1L) {
+            is_dup <- c(FALSE, rowSums(diff(coords_list1)^2) == 0)
+            if (any(is_dup)) {
+                coords_list1 <- coords_list1[!is_dup, , drop = FALSE]
+                tmp_vec      <- tmp_vec[!is_dup]
+            }
+        }
+        pos_edge_diff <- tmp_vec - tmp_vec[1]
+        norm_factor   <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
+        attr(coords_list1, "PtE") <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
+
+        # Pre-allocate coords_list2
+        coords_list2 <- vector("list", n_t_values)
+
+        # Optimized processing of coordinate lists
+        for (j in seq_len(n_t_values)) {
+            if (n_t_values == 1L) {
+                val_line_start <- matrix(val_lines, nrow = 1L)
+            } else {
+                val_line_start <- val_lines[j, , drop = FALSE]
+            }
+
+            if (j < n_t_values) {
+                val_line_end <- val_lines[j + 1L, , drop = FALSE]
+                if (idx_positions[j] != idx_positions[j + 1L]) {
+                    coords_list2[[j]] <- rbind(
+                        val_line_start,
+                        edge[(idx_positions[j] + 1L):idx_positions[j + 1L], , drop = FALSE],
+                        val_line_end
+                    )
+                    tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1L):idx_positions[j + 1L]], t_values[j + 1L])
+                } else {
+                    coords_list2[[j]] <- rbind(val_line_start, val_line_end)
+                    tmp_vec <- c(t_values[j], t_values[j + 1L])
+                }
+            } else {
+                coords_list2[[j]] <- rbind(
+                    val_line_start,
+                    edge[(idx_positions[j] + 1L):nrow(edge), , drop = FALSE]
+                )
+                tmp_vec <- c(t_values[j], PtE_edge[(idx_positions[j] + 1L):length(PtE_edge)])
+            }
+
+            # Remove duplicate consecutive rows
+            if (nrow(coords_list2[[j]]) > 1L) {
+                is_dup <- c(FALSE, rowSums(diff(coords_list2[[j]])^2) == 0)
+                if (any(is_dup)) {
+                    coords_list2[[j]] <- coords_list2[[j]][!is_dup, , drop = FALSE]
+                    tmp_vec            <- tmp_vec[!is_dup]
+                }
+            }
+            pos_edge_diff <- tmp_vec - tmp_vec[1]
+            norm_factor   <- tmp_vec[length(tmp_vec)] - tmp_vec[1]
+            attr(coords_list2[[j]], "PtE") <- if (norm_factor == 0) numeric(length(tmp_vec)) else pos_edge_diff / norm_factor
+        }
+        
+        # Construct aux_matrix for self$E efficiently
+        if (n_t_values == 1L) {
+            aux_matrix <- matrix(c(self$E[Ei, 1], new_vertices[1], 
+                                 new_vertices[1], self$E[Ei, 2]), 
+                               nrow = 2L, byrow = TRUE)
+        } else {
+            aux_matrix <- rbind(
+                c(self$E[Ei, 1], new_vertices[1]),
+                cbind(new_vertices[-n_t_values], new_vertices[-1L]),
+                c(new_vertices[n_t_values], self$E[Ei, 2])
+            )
+        }
+        
+        # Update the original edge (first row of aux_matrix)
+        self$E[Ei, ] <- aux_matrix[1, ]
+        
+        # Store new edges for batch update
+        edge_indices <- (edge_counter + 1L):(edge_counter + n_t_values)
+        new_E_rows[edge_indices, ] <- aux_matrix[-1, , drop = FALSE]
+        
+        # Update edge lengths using vectorized operations
+        segment_lengths <- c(t_values[1], diff(t_values), 1 - t_values[n_t_values]) * self$edge_lengths[Ei]
+        new_edge_lengths[edge_indices] <- segment_lengths[-1]
+        self$edge_lengths[Ei] <- segment_lengths[1]
+        
+        # Update edges
+        self$edges[[Ei]] <- coords_list1
+        new_edges_list[edge_indices] <- coords_list2
+        
+        edge_counter <- edge_counter + n_t_values
+    }
+    
+    # Batch update self$E and self$edges - only if we have edges to add
+    if (edge_counter > 0L) {
+        self$E <- rbind(self$E, new_E_rows[seq_len(edge_counter), , drop = FALSE])
+        self$edges <- c(self$edges, new_edges_list[seq_len(edge_counter)])
+        self$nE <- self$nE + edge_counter
+        
+        # Batch update edge lengths
+        self$edge_lengths <- c(self$edge_lengths, new_edge_lengths[seq_len(edge_counter)])
+        
+        # edge weights update
+        if (is.vector(private$edge_weights)) {
+            # Pre-allocate new weights vector
+            new_weights <- numeric(edge_counter)
+            weight_idx <- 1L
+            
+            for (i in seq_along(edge_groups)) {
+                if (length(new_vertices_list[[i]]) == 0L) next
+                
+                Ei <- edge_names[i]
+                n_new <- length(new_vertices_list[[i]])
+                if (n_new > 0L) {
+                    weight_indices <- weight_idx:(weight_idx + n_new - 1L)
+                    new_weights[weight_indices] <- private$edge_weights[Ei]
+                    weight_idx <- weight_idx + n_new
+                }
+            }
+            private$edge_weights <- c(private$edge_weights, new_weights)
+        } else {
+            # Matrix/data.frame case with dimension checks
+            if (is.matrix(private$edge_weights) || is.data.frame(private$edge_weights)) {
+                # Pre-allocate new weight rows with proper dimensions
+                if (is.data.frame(private$edge_weights)) {
+                    # Create empty data.frame with same structure
+                    col_names <- names(private$edge_weights)
+                    new_weight_rows <- as.data.frame(matrix(NA_real_, nrow = edge_counter, ncol = ncol(private$edge_weights)))
+                    names(new_weight_rows) <- col_names
+                    # Preserve class attributes
+                    class(new_weight_rows) <- class(private$edge_weights)
+                } else {
+                    # Matrix case
+                    new_weight_rows <- matrix(NA_real_, nrow = edge_counter, ncol = ncol(private$edge_weights))
+                }
+                
+                weight_idx <- 1L
+                for (i in seq_along(edge_groups)) {
+                    if (length(new_vertices_list[[i]]) == 0L) next
+                    
+                    Ei <- edge_names[i]
+                    n_new <- length(new_vertices_list[[i]])
+                    if (n_new > 0L) {
+                        weight_indices <- weight_idx:(weight_idx + n_new - 1L)
+                        
+                        # Vectorized assignment with bounds checking
+                        if (max(weight_indices) <= nrow(new_weight_rows)) {
+                            original_weight_row <- private$edge_weights[Ei, , drop = FALSE]
+                            # replication using rep.int
+                            # Handle different edge weight formats safely
+                            if (is.data.frame(original_weight_row)) {
+                                # For data.frames/tibbles, iterate through each column
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    # Extract the column value - this gets the actual atomic value
+                                    col_value <- original_weight_row[[col_idx]]
+                                    
+                                    # Check the type of the target column and the source value
+                                    target_col <- new_weight_rows[[col_idx]]
+                                    
+                                    # Ensure type compatibility
+                                    if (is.character(col_value) || is.factor(col_value)) {
+                                        # For character/factor columns, convert to character
+                                        new_weight_rows[[col_idx]][weight_indices] <- as.character(col_value)
+                                    } else if (is.numeric(col_value)) {
+                                        # For numeric columns
+                                        new_weight_rows[[col_idx]][weight_indices] <- col_value
+                                    } else {
+                                        # For other types, try direct assignment
+                                        new_weight_rows[[col_idx]][weight_indices] <- col_value
+                                    }
+                                }
+                            } else if (is.matrix(original_weight_row)) {
+                                # For matrices, direct indexing works
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    new_weight_rows[weight_indices, col_idx] <- original_weight_row[1, col_idx]
+                                }
+                            } else if (is.null(original_weight_row)) {
+                                # Handle NULL case - fill with NA
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    new_weight_rows[weight_indices, col_idx] <- NA
+                                }
+                            } else {
+                                # Fallback for unexpected types - convert to matrix first
+                                original_weight_row <- as.matrix(original_weight_row)
+                                for (col_idx in seq_len(ncol(new_weight_rows))) {
+                                    new_weight_rows[weight_indices, col_idx] <- original_weight_row[1, col_idx]
+                                }
+                            }
+                        }
+                        weight_idx <- weight_idx + n_new
+                    }
+                }
+                private$edge_weights <- rbind(private$edge_weights, new_weight_rows)
+            } else {
+                # Fallback for unexpected edge weight format
+                warning("Unexpected edge weight format, resetting to default weights")
+                private$edge_weights <- rep(1, self$nE)
+            }
+        }
+    }
+    
+    return(new_vertices_list)
+  },
+
 
   compute_laplacian_PtE = function(PtE, normalized = TRUE, verbose = verbose) {
       if(verbose == 2){
@@ -8387,3 +9019,246 @@ graph_components <-  R6::R6Class("graph_components",
      }
      return(p)
    }))
+
+
+#' Update an older version metric graph to the current package version
+#'
+#' @description This function creates a new metric_graph object from an existing one,
+#' preserving all data, edge weights, mesh, distances, and other components while
+#' ensuring compatibility with the current package version. The new graph is created
+#' with minimal changes by disabling merges and other transformations.
+#'
+#' @param old_graph A metric_graph object from an older version of the package
+#' @param verbose Logical. Print progress messages. Default is TRUE.
+#'
+#' @return A new metric_graph object compatible with the current package version
+#'
+#' @details This function is useful when loading metric graphs created with older
+#' versions of the MetricGraph package. It ensures that all components (vertices,
+#' edges, data, mesh, distances, etc.) are preserved while updating the internal
+#' structure to be compatible with the current package version.
+#'
+#' The function works by:
+#' \itemize{
+#'   \item Extracting all components from the old graph
+#'   \item Creating a new graph with settings that minimize structural changes
+#'   \item Restoring all computed components (mesh, distances, etc.)
+#'   \item Re-adding observation data if present
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Load an old graph object
+#' old_graph <- readRDS("old_graph.rds")
+#' 
+#' # Update to current version
+#' new_graph <- update_graph(old_graph)
+#' 
+#' # Or use the method directly
+#' new_graph <- old_graph$update_graph()
+#' }
+#'
+#' @export
+update_graph <- function(old_graph, verbose = TRUE) {
+
+  # Check if input is a metric_graph object
+  if (!inherits(old_graph, "metric_graph")) {
+    stop("Input must be a metric_graph object")
+  }
+  
+  # For older graphs without the method, implement it directly
+  if (verbose) {
+    message("Updating metric graph to current package version...")
+  }
+  
+  # Extract all components from the current graph
+  old_V <- old_graph$V
+  old_E <- old_graph$E
+  old_edges <- old_graph$edges
+  old_edge_lengths <- old_graph$edge_lengths
+  
+  # Extract edge weights if they exist
+  old_edge_weights <- NULL
+
+  if (!is.null(old_graph$.__enclos_env__$private$edge_weights)) {
+    tryCatch({
+      old_edge_weights <- old_graph$get_edge_weights(data.frame = TRUE)
+    }, error = function(e) {
+      if (verbose) message("Could not extract edge weights, using defaults")
+    })
+  }
+
+  # Extract data if it exists
+  old_data <- NULL
+  if (!is.null(old_graph$.__enclos_env__$private$data)) {
+    tryCatch({
+      old_data <- old_graph$get_data(format = "list")
+    }, error = function(e) {
+      if (verbose) message("Could not extract data, skipping")
+    })
+  }
+  
+  # Extract other private components safely
+  private_env <- old_graph$.__enclos_env__$private
+  old_longlat <- if (!is.null(private_env$longlat)) private_env$longlat else NULL
+  old_crs <- if (!is.null(private_env$crs)) private_env$crs else NULL
+  old_proj4string <- if (!is.null(private_env$proj4string)) private_env$proj4string else NULL
+  old_length_unit <- if (!is.null(private_env$length_unit)) private_env$length_unit else NULL
+  old_vertex_unit <- if (!is.null(private_env$vertex_unit)) private_env$vertex_unit else NULL
+  old_which_longlat <- if (!is.null(private_env$which_longlat)) private_env$which_longlat else "sp"
+  
+  # Extract directional weight functions if they exist
+  old_dir_weights_in <- old_graph$DirectionalWeightFunction_in
+  old_dir_weights_out <- old_graph$DirectionalWeightFunction_out
+  
+  if (verbose) {
+    message("Creating new graph with minimal changes...")
+  }
+  
+  # Create new graph with settings that minimize changes
+  new_graph <- metric_graph$new(
+    V = old_V,
+    E = old_E,
+    edge_weights = old_edge_weights,
+    longlat = old_longlat,
+    crs = old_crs,
+    proj4string = old_proj4string,
+    vertex_unit = old_vertex_unit,
+    length_unit = old_length_unit,
+    which_longlat = old_which_longlat,
+    # Critical settings to minimize changes
+    perform_merges = FALSE,           # No merges
+    remove_circles = FALSE,           # Don't remove circles
+    remove_deg2 = FALSE,             # Don't remove degree-2 vertices
+    merge_close_vertices = FALSE,     # Don't merge close vertices
+    check_connected = FALSE,          # Skip connectivity check
+    auto_remove_point_edges = FALSE,  # Don't remove point edges
+    tolerance = list(vertex_vertex = 0, vertex_edge = 0, edge_edge = 0), # Zero tolerances
+    verbose = if (verbose) 1 else 0
+  )
+  
+  # Manually set edges and edge_lengths to preserve exact structure
+  if (!is.null(old_edges)) {
+    new_graph$edges <- old_edges
+  }
+
+  if (!is.null(old_edge_lengths)) {
+    new_graph$edge_lengths <- old_edge_lengths
+  }
+
+  # Set directional weight functions if they existed
+  if (!is.null(old_dir_weights_in)) {
+    new_graph$DirectionalWeightFunction_in <- old_dir_weights_in
+  }
+
+  if (!is.null(old_dir_weights_out)) {
+    new_graph$DirectionalWeightFunction_out <- old_dir_weights_out
+  }
+  
+  # Add data if it existed
+  if (!is.null(old_data)) {
+    if (verbose) {
+      message("Adding observation data...")
+    }
+    
+  tryCatch({
+    internal_cols <- c(".edge_number", ".distance_on_edge")
+    old_data[internal_cols] <- NULL
+    if(inherits(old_data, "metric_graph_data")){
+      class(old_data) <- setdiff(class(old_data), "metric_graph_data")
+    }
+    
+    # Convert to sf object if CRS is available
+    if(!is.null(old_crs) && all(c(".coord_x", ".coord_y") %in% names(old_data))) {
+      old_data_df <- as.data.frame(old_data)
+      old_data <- sf::st_as_sf(
+        old_data_df,
+        coords = c(".coord_x", ".coord_y"),
+        crs = old_crs
+      )
+    }
+    
+    # Add observations
+    new_graph$add_observations(
+      data = old_data, 
+      coord_x = ".coord_x", 
+      coord_y = ".coord_y", 
+      data_coords = "spatial", 
+      group = ".group", 
+      verbose = if (verbose) 1 else 0
+    )
+  }, error = function(e) {
+    if (verbose) message("Could not restore observation data: ", e$message)
+  })
+  }
+  
+  # Restore computed components if they existed
+  if (verbose) {
+    message("Restoring computed components...")
+  }
+  
+  # Restore mesh if it existed
+  if (!is.null(old_graph$mesh)) {
+    if (verbose) {
+      message("Restoring mesh...")
+    }
+    new_graph$mesh <- old_graph$mesh
+  }
+  
+  # Restore geodesic distances if they existed
+  if (!is.null(old_graph$geo_dist)) {
+    if (verbose) {
+      message("Restoring geodesic distances...")
+    }
+    new_graph$geo_dist <- old_graph$geo_dist
+  }
+  
+  # Restore resistance distances if they existed
+  if (!is.null(old_graph$res_dist)) {
+    if (verbose) {
+      message("Restoring resistance distances...")
+    }
+    new_graph$res_dist <- old_graph$res_dist
+  }
+  
+  # Restore Laplacian if it existed
+  if (!is.null(old_graph$Laplacian)) {
+    if (verbose) {
+      message("Restoring Laplacian matrix...")
+    }
+    new_graph$Laplacian <- old_graph$Laplacian
+  }
+  
+  # Restore constraint matrix and CoB if they existed
+  if (!is.null(old_graph$C)) {
+    new_graph$C <- old_graph$C
+  }
+  if (!is.null(old_graph$CoB)) {
+    new_graph$CoB <- old_graph$CoB
+  }
+  
+  # Restore PtV if it existed
+  if (!is.null(old_graph$PtV)) {
+    new_graph$PtV <- old_graph$PtV
+  }
+  
+  # Restore characteristics if they existed
+  if (!is.null(old_graph$characteristics)) {
+    new_graph$characteristics <- old_graph$characteristics
+  }
+  
+  # Restore vertices with attributes if they existed
+  if (!is.null(old_graph$vertices)) {
+    new_graph$vertices <- old_graph$vertices
+  }
+
+  if (verbose) {
+    message("Graph update completed successfully!")
+    message(sprintf("New graph: %d vertices, %d edges", new_graph$nV, new_graph$nE))
+    if (!is.null(old_data)) {
+      message(sprintf("Total observations: %d", length(old_data[[".group"]])))
+    }
+  }
+  
+  return(new_graph)
+}

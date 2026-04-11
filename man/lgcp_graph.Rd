@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph_lgcp.R
 \name{lgcp_graph}
 \alias{lgcp_graph}
-\title{Create a log-Gaussian Cox process model for metric graphs}
+\title{Fit log-Gaussian Cox process models on metric graphs}
 \usage{
 lgcp_graph(
   formula,
@@ -15,37 +15,161 @@ lgcp_graph(
   new_n = NULL,
   repl = ".all",
   repl_col = ".group",
+  clone_graph = TRUE,
+  precomputed_data = NULL,
   ...
 )
 }
 \arguments{
-\item{formula}{A formula object specifying the model structure}
+\item{formula}{A formula object specifying the model structure. Should follow
+INLA syntax, e.g., \code{y ~ covariate + f(field, model = spde_model)} where
+\code{field} is the spatial random effect and \code{spde_model} is an SPDE model object.}
 
-\item{graph}{A metric_graph object containing the network and point pattern data}
+\item{graph}{A \code{metric_graph} object containing the network structure and
+point pattern data. Must have observations added via \code{add_observations()}.}
 
-\item{interpolate}{Logical; if TRUE, interpolate covariates from the graph data to integration points}
+\item{interpolate}{Logical. If \code{TRUE} (default), interpolate covariate values
+from graph data to integration points. If \code{FALSE}, use \code{manual_covariates}.}
 
-\item{manual_integration_points}{Data frame with columns edge_number, distance_on_edge, and E (integration weights)
-for manually specified integration points, or NULL to use automatic integration points}
+\item{manual_integration_points}{Data frame with columns \code{edge_number},
+\code{distance_on_edge}, and \code{E} (integration weights). If \code{NULL}, automatic
+integration points are created.}
 
-\item{manual_covariates}{Named vector of covariates at integration points if interpolate is FALSE and covariates are used}
+\item{manual_covariates}{Data frame containing covariate values at integration
+points when \code{interpolate = FALSE}. Must include a \code{.group} column for
+replicates if using replicated data.}
 
-\item{use_current_mesh}{Logical; if TRUE, use the existing mesh in the graph as integration points}
+\item{use_current_mesh}{Logical. If \code{TRUE} (default), use the existing mesh
+in the graph as integration points. If \code{FALSE}, create a new mesh.}
 
-\item{new_h}{Numeric; mesh size for creating a new mesh if use_current_mesh is FALSE}
+\item{new_h}{Numeric. Mesh resolution for creating a new mesh when
+\code{use_current_mesh = FALSE}. Smaller values create finer meshes.}
 
-\item{new_n}{Integer; alternative to new_h, specifies the approximate number of mesh points}
+\item{new_n}{Integer. Alternative to \code{new_h}, specifies the approximate
+number of mesh nodes for the new mesh.}
 
-\item{repl}{Vector of replicates to be used in the model. For all replicates, one must use ".all".}
+\item{repl}{Character vector or \code{".all"}. Specifies which replicates to
+include in the model. Use \code{".all"} to include all available replicates.}
 
-\item{repl_col}{Name of the column in the data that contains the replicates. Default is ".group".}
+\item{repl_col}{Character. Name of the column in the graph data that contains
+replicate identifiers. Default is \code{".group"}.}
 
-\item{...}{Additional arguments to be passed to inla}
+\item{clone_graph}{Logical. If \code{TRUE} (default), clone the graph to avoid
+modifying the original object. If \code{FALSE}, work directly on the original
+graph (faster but modifies the input). Only used when \code{precomputed_data}
+is \code{NULL}.}
+
+\item{precomputed_data}{Optional object of class \code{"precomputed_lgcp"} from
+\code{precompute_lgcp_graph()}. Enables efficient refitting with different
+formulas using the same spatial structure and covariates.}
+
+\item{...}{Additional arguments passed to \code{INLA::inla()}, such as
+\code{control.inla}, \code{control.predictor}, \code{control.compute}, etc.}
 }
 \value{
-An object containing the fitted LGCP model
+An object of class \code{"inla"} containing the fitted LGCP model. This
+includes posterior marginal distributions for model parameters, fitted
+values, and other standard INLA output components. Use
+\code{spde_metric_graph_result()} to extract spatial parameter estimates in
+their original scale.
 }
 \description{
-This function creates a log-Gaussian Cox process model for point pattern data on metric graphs.
-It handles the creation of integration points and prepares the data for fitting with INLA.
+This function fits log-Gaussian Cox process (LGCP) models for point pattern
+data on metric graphs using R-INLA. It handles the complex setup required for
+LGCP modeling, including creation of integration points, data preparation, and
+interface with INLA's Poisson likelihood framework. The function supports both
+exact and rational SPDE approximations, multiple replicates, and efficient
+refitting using precomputed quantities.
+}
+\details{
+The function implements LGCP modeling using the approach of Simpson et al. (2016),
+where the log-Gaussian Cox process with intensity \eqn{\lambda(s) = exp(\eta(s))}{lambda(s) = exp(eta(s))} is
+approximated using a Poisson likelihood with carefully constructed integration
+points and weights.
+
+The key steps are:
+\enumerate{
+\item Create integration points (typically mesh nodes) across the graph
+\item Set up data with observed points (response = 1, weights = 0) and
+integration points (response = 0, weights = integration weights)
+\item Fit using Poisson regression with the constructed weights as exposure
+}
+
+The spatial component can be modeled using:
+\itemize{
+\item Exact SPDE models via \code{graph_spde()} (slower setup, exact likelihood)
+\item Rational SPDE approximations via \code{rspde.metric_graph()} (faster, approximate)
+}
+}
+\section{Performance}{
+
+For fitting multiple models with the same spatial structure:
+\itemize{
+\item Use \code{precompute_lgcp_graph()} first, then \code{lgcp_graph()} with
+\code{precomputed_data} for substantial speedups
+\item Set \code{clone_graph = FALSE} for additional performance gains when
+you don't need to preserve the original graph
+}
+}
+
+\examples{
+\dontrun{
+# Setup: Create graph with mesh and add point pattern data
+graph <- metric_graph$new()
+graph$build_mesh(h = 0.1)
+graph$add_observations(data = your_point_data, 
+                       edge_number = "edge_id", 
+                       distance_on_edge = "location")
+
+# Create SPDE model
+spde_model <- graph_spde(graph, alpha = 1)
+# or: rspde_model <- rspde.metric_graph(graph, nu = 1.5)
+
+# Fit basic LGCP model
+fit1 <- lgcp_graph(y ~ 1 + f(field, model = spde_model), 
+                   graph = graph)
+
+# Fit model with covariates
+fit2 <- lgcp_graph(y ~ elevation + temperature + 
+                       f(field, model = spde_model), 
+                   graph = graph)
+
+# Extract spatial parameter estimates
+spde_result <- spde_metric_graph_result(fit2, "field", spde_model)
+summary(spde_result)
+
+# Efficient fitting of multiple models
+precomputed <- precompute_lgcp_graph(
+  graph = graph,
+  resp_variable_name = "y",
+  model_name = "field", 
+  spde_model = spde_model,
+  covariates = c("elevation", "temperature", "slope")
+)
+
+# Now fit multiple models efficiently
+fit_a <- lgcp_graph(y ~ elevation + f(field, model = spde_model), 
+                    graph = graph, precomputed_data = precomputed)
+fit_b <- lgcp_graph(y ~ elevation + temperature + f(field, model = spde_model), 
+                    graph = graph, precomputed_data = precomputed)
+fit_c <- lgcp_graph(y ~ slope + f(field, model = spde_model), 
+                    graph = graph, precomputed_data = precomputed)
+
+# Model with replicates
+fit_rep <- lgcp_graph(y ~ covariate + f(field, model = spde_model, 
+                                       replicate = field.repl), 
+                      graph = graph)
+}
+
+}
+\references{
+Simpson, D., Illian, J., Lindgren, F., Sørbye, S., & Rue, H. (2016).
+Going off grid: Computationally efficient inference for log-Gaussian Cox
+processes. Biometrika, 103(1), 49-70.
+}
+\seealso{
+\code{\link{graph_lgcp_sim}} for simulating LGCP data,
+\code{\link{precompute_lgcp_graph}} for efficient model refitting,
+\code{\link{graph_spde}} for exact SPDE models,
+\code{\link{spde_metric_graph_result}} for extracting spatial parameter estimates
 }

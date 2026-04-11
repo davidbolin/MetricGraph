@@ -220,7 +220,7 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
 
       Q <- spde_precision(kappa = kappa, tau = tau,
                           alpha = 2, graph = graph, BC = BC)
-      if(is.null(graph$C)){
+      if(is.null(graph$CoB)){
         graph$buildC(2)
       } else if(graph$CoB$alpha == 1){
         graph$buildC(2)

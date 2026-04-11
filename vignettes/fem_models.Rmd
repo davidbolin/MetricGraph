@@ -1,6 +1,6 @@
 ---
 title: "Whittle--Matérn fields with general smoothness"
-author: "David Bolin, Alexandre B. Simas"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
 date: "Created: 2022-11-23. Last modified: `r Sys.Date()`."
 output: rmarkdown::html_vignette
 vignette: >
@@ -121,7 +121,7 @@ can use the `precision()` method on object returned by the `matern.operators()` 
 
 As an illustration of the model, let us compute the covariance function between the process at $s=(2,0.1)$, that is, the point at edge 2 and distance on edge 0.1, and all the other mesh points. To this end, we can use the helper function `cov_function_mesh` that is contained in the `op` object:
 ```{r, message=FALSE, warning=FALSE}
-  c_cov <- op$cov_function_mesh(matrix(c(2,0.1),1,2))
+  c_cov <- cov_function_mesh(op, matrix(c(2,0.1),1,2))
   graph$plot_function(c_cov, type = "plotly")
 ```
 
@@ -131,7 +131,7 @@ As an illustration of the model, let us compute the covariance function between 
 
 There is built-in support for computing log-likelihood functions and performing kriging prediction in the `rSPDE` package which we can use for the graph model. To illustrate this, we 
 use the simulation to create some noisy observations of the process. 
-We generate the observations as $Y_i = 1 + 2x_{i1} - 3 x_{i2} + u(s_i) + \varepsilon_i$, where $\varepsilon_i \sim N(0,\sigma_e^2)$ is Gaussian measurement noise, $x_1$ and $x_2$ are covariates generated the relative positions of the observations on the graph.
+We generate the observations as $Y_i = 1 + 2x_{i1} - 3 x_{i2} + u(s_i) + \varepsilon_i$, where $\varepsilon_i \sim N(0,\sigma_e^2)$ is Gaussian measurement noise, $x_1$ and $x_2$ are covariates generated from the relative positions of the observations on the graph.
 ```{r}
     sigma.e <- 0.1
 
@@ -232,22 +232,22 @@ The `graph_lme` function provides flexibility in model fitting by allowing users
 Parameters can be fixed by using the `model_options` argument with elements of the form `fix_parname = value`, where `parname` is the name of the parameter you want to fix. The parameters that can be fixed in the `model_options` list are:
 
 - `fix_sigma_e`: Fix the standard deviation of the noise parameter $\sigma_\varepsilon$
-- `fix_sigma`: Fix the standard deviation parameter σ
+- `fix_sigma`: Fix the standard deviation parameter $\sigma$
 - `fix_range`: Fix the range parameter
-- `fix_alpha`: Fix the fractional power α
+- `fix_alpha`: Fix the fractional power $\alpha$
 
 ### Setting starting values
 
 Similarly, you can set starting values for parameters using elements of the form `start_parname = value` in the `model_options` list. This is particularly useful when the default starting values might be far from the optimal values, which could lead to slow convergence or convergence to a local minimum.
 
 - `start_sigma_e`: Starting value for the standard deviation of the noise parameter $\sigma_\varepsilon$
-- `start_sigma`: Starting value for the standard deviation parameter σ
+- `start_sigma`: Starting value for the standard deviation parameter $\sigma$
 - `start_range`: Starting value for the range parameter
-- `start_alpha`: Starting value for the fractional power α
+- `start_alpha`: Starting value for the fractional power $\alpha$
 
 ### Example: Fixing and setting starting values
 
-Let us demonstrate how to use these parameters with a graph model example. We will fix the standard deviation σ to 1 and set the starting value for the range parameter to 0.5, on the previous example.
+Let us demonstrate how to use these parameters with a graph model example. We will fix the standard deviation $\sigma$ to 1 and set the starting value for the range parameter to 0.5, on the previous example.
 
 ```{r}
 # Fit model with fixed sigma and start_range

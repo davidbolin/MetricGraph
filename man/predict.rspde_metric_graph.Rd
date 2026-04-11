@@ -60,7 +60,7 @@ unit interval to be passed to stats::quantile.}
 
 \item{num.threads}{Specification of desired number of threads for parallel
 computations. Default NULL, leaves it up to 'INLA'. When seed != 0, overridden
-to "1:1"}
+to "16:1"}
 
 \item{include}{Character vector of component labels that are needed by the
 predictor expression; Default: NULL (include all components that are not
