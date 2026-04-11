@@ -257,6 +257,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// aeqd_project_cpp
+NumericMatrix aeqd_project_cpp(NumericMatrix pts, double lon0, double lat0);
+RcppExport SEXP _MetricGraph_aeqd_project_cpp(SEXP ptsSEXP, SEXP lon0SEXP, SEXP lat0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type pts(ptsSEXP);
+    Rcpp::traits::input_parameter< double >::type lon0(lon0SEXP);
+    Rcpp::traits::input_parameter< double >::type lat0(lat0SEXP);
+    rcpp_result_gen = Rcpp::wrap(aeqd_project_cpp(pts, lon0, lat0));
+    return rcpp_result_gen;
+END_RCPP
+}
 // selected_inv_cpp
 Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
 RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
@@ -288,6 +301,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_compute_PtE_edges_cpp", (DL_FUNC) &_MetricGraph_compute_PtE_edges_cpp, 2},
     {"_MetricGraph_compute_edge_lengths_cpp", (DL_FUNC) &_MetricGraph_compute_edge_lengths_cpp, 2},
     {"_MetricGraph_postprocess_edges_cpp", (DL_FUNC) &_MetricGraph_postprocess_edges_cpp, 1},
+    {"_MetricGraph_aeqd_project_cpp", (DL_FUNC) &_MetricGraph_aeqd_project_cpp, 3},
     {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };

@@ -19,6 +19,8 @@ using namespace Rcpp;
 // =============================================================================
 
 static const double METRIC_GRAPH_R_EARTH = 6371008.8; // WGS84 mean radius (m)
+// Note: R headers (GraphicsEngine.h) #define DEG2RAD as a macro, so we
+// must use a different identifier here.
 static const double METRIC_GRAPH_D2R = M_PI / 180.0;
 
 //' @name compute_PtE_edges_cpp
@@ -28,9 +30,7 @@ static const double METRIC_GRAPH_D2R = M_PI / 180.0;
 //' normalized to lie in the standard unit interval. Returns a list of numeric vectors, one per
 //' edge, each starting at 0 and ending at 1.
 //'
-//' Degenerate (zero-length) edges return a vector of NaN values, matching
-//' the R-side \code{0/0} semantics of the original \code{approx_coordinates}
-//' implementation.
+//' Degenerate (zero-length) edges return a vector of NaN values
 //'
 //' @param edges List of two-column numeric matrices.
 //' @param longlat Logical. If TRUE, use haversine on (lon, lat) in degrees;
@@ -104,11 +104,6 @@ List compute_PtE_edges_cpp(List edges, bool longlat) {
 //' vertex coordinates), compute the total polyline length of each edge.
 //' Returns a numeric vector of length \code{length(edges)}.
 //'
-//' Replaces a per-edge \code{sapply(self$edges, compute_line_lengths, ...)}
-//' that, in the lon/lat case, constructed an \code{sf::st_sfc} linestring
-//' object per edge -- ~9000x slower than necessary at OSM scales. The R6
-//' caller is responsible for any final unit conversion (km / miles / etc).
-//'
 //' @param edges List of two-column numeric matrices.
 //' @param longlat Logical. If TRUE, treat columns as (lon, lat) in degrees
 //' and return lengths in metres (haversine on a sphere of radius
@@ -164,15 +159,11 @@ NumericVector compute_edge_lengths_cpp(List edges, bool longlat) {
 
 //' @name postprocess_edges_cpp
 //' @title Dedupe interior polyline points while preserving endpoints
-//' @description translation of the post-merge "clean edges"
+//' @description Translation of the post-merge "clean edges"
 //' \code{lapply} that the metric_graph constructor runs after the
 //' vertex-merge step. For each edge, deduplicates rows by exact
 //' \code{(x, y)} equality, while forcing the original first row to remain
 //' at position 1 and the original last row to be appended at the end.
-//'
-//' Linear scan beats hashing here because edges typically have only 2-15
-//' points; constant overhead of an unordered_set wins for n > ~50.
-//'
 //' @param edges List of two-column numeric matrices.
 //' @return A list of two-column numeric matrices with deduped interior
 //' rows. May have fewer rows than the input.
@@ -254,6 +245,59 @@ List postprocess_edges_cpp(List edges) {
       }
       out[i] = out_e;
     }
+  }
+
+  return out;
+}
+
+//' @name aeqd_project_cpp
+//' @title Closed-form spherical Azimuthal Equidistant projection
+//' @description Forward projects (lon, lat) coordinates to local AEQD-style
+//' planar coordinates centered on a given (lon0, lat0). Output is in metres
+//' on a sphere of radius 6371008.8 m (WGS84 mean Earth radius).
+//'
+//' Forward formula:
+//' \preformatted{
+//'   c = acos(sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon - lon0))
+//'   k = c / sin(c)             (-> 1 as c -> 0)
+//'   x = R * k * cos(lat) * sin(lon - lon0)
+//'   y = R * k * (cos(lat0)*sin(lat) - sin(lat0)*cos(lat)*cos(lon - lon0))
+//' }
+//'
+//' @param pts Two-column numeric matrix of (lon, lat) coordinates in degrees.
+//' @param lon0 Longitude of the projection center, in degrees.
+//' @param lat0 Latitude of the projection center, in degrees.
+//' @return A two-column numeric matrix of planar (x, y) coordinates in metres.
+//' @noRd
+// [[Rcpp::export]]
+NumericMatrix aeqd_project_cpp(NumericMatrix pts, double lon0, double lat0) {
+  int n = pts.nrow();
+  NumericMatrix out(n, 2);
+  const double R = METRIC_GRAPH_R_EARTH;
+  const double D2R = METRIC_GRAPH_D2R;
+
+  double lat0r = lat0 * D2R;
+  double lon0r = lon0 * D2R;
+  double cos_lat0 = std::cos(lat0r);
+  double sin_lat0 = std::sin(lat0r);
+
+  for (int i = 0; i < n; i++) {
+    double lonr = pts(i, 0) * D2R;
+    double latr = pts(i, 1) * D2R;
+    double cos_lat = std::cos(latr);
+    double sin_lat = std::sin(latr);
+    double dlon = lonr - lon0r;
+    double cos_dlon = std::cos(dlon);
+    double sin_dlon = std::sin(dlon);
+
+    double cos_c = sin_lat0 * sin_lat + cos_lat0 * cos_lat * cos_dlon;
+    if (cos_c > 1.0) cos_c = 1.0;
+    if (cos_c < -1.0) cos_c = -1.0;
+    double c_ang = std::acos(cos_c);
+    double k = (c_ang < 1e-12) ? 1.0 : (c_ang / std::sin(c_ang));
+
+    out(i, 0) = R * k * cos_lat * sin_dlon;
+    out(i, 1) = R * k * (cos_lat0 * sin_lat - sin_lat0 * cos_lat * cos_dlon);
   }
 
   return out;
