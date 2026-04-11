@@ -270,6 +270,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// split_one_edge_cpp
+List split_one_edge_cpp(NumericMatrix edge, NumericVector PtE_edge, NumericVector t_values, double edge_len, IntegerVector E_row, int first_new_v);
+RcppExport SEXP _MetricGraph_split_one_edge_cpp(SEXP edgeSEXP, SEXP PtE_edgeSEXP, SEXP t_valuesSEXP, SEXP edge_lenSEXP, SEXP E_rowSEXP, SEXP first_new_vSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type edge(edgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type PtE_edge(PtE_edgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type t_values(t_valuesSEXP);
+    Rcpp::traits::input_parameter< double >::type edge_len(edge_lenSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type E_row(E_rowSEXP);
+    Rcpp::traits::input_parameter< int >::type first_new_v(first_new_vSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_one_edge_cpp(edge, PtE_edge, t_values, edge_len, E_row, first_new_v));
+    return rcpp_result_gen;
+END_RCPP
+}
+// split_edges_batch_cpp
+List split_edges_batch_cpp(List edges_full, List PtE_full, IntegerMatrix E_full, NumericVector edge_lens, IntegerVector edge_ids, List t_values_list, IntegerVector first_new_vs);
+RcppExport SEXP _MetricGraph_split_edges_batch_cpp(SEXP edges_fullSEXP, SEXP PtE_fullSEXP, SEXP E_fullSEXP, SEXP edge_lensSEXP, SEXP edge_idsSEXP, SEXP t_values_listSEXP, SEXP first_new_vsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type edges_full(edges_fullSEXP);
+    Rcpp::traits::input_parameter< List >::type PtE_full(PtE_fullSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type E_full(E_fullSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type edge_lens(edge_lensSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type edge_ids(edge_idsSEXP);
+    Rcpp::traits::input_parameter< List >::type t_values_list(t_values_listSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type first_new_vs(first_new_vsSEXP);
+    rcpp_result_gen = Rcpp::wrap(split_edges_batch_cpp(edges_full, PtE_full, E_full, edge_lens, edge_ids, t_values_list, first_new_vs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // selected_inv_cpp
 Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
 RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
@@ -302,6 +335,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_compute_edge_lengths_cpp", (DL_FUNC) &_MetricGraph_compute_edge_lengths_cpp, 2},
     {"_MetricGraph_postprocess_edges_cpp", (DL_FUNC) &_MetricGraph_postprocess_edges_cpp, 1},
     {"_MetricGraph_aeqd_project_cpp", (DL_FUNC) &_MetricGraph_aeqd_project_cpp, 3},
+    {"_MetricGraph_split_one_edge_cpp", (DL_FUNC) &_MetricGraph_split_one_edge_cpp, 6},
+    {"_MetricGraph_split_edges_batch_cpp", (DL_FUNC) &_MetricGraph_split_edges_batch_cpp, 7},
     {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };

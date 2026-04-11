@@ -154,10 +154,10 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
 #' @title Per-edge cumulative relative positions
 #' @description Given a list of edges (each a 2-column numeric matrix of
 #' vertex coordinates), compute, for every edge, the cumulative arc-length
-#' normalized to lie in the standard unit interval. Returns a list of numeric vectors, one per
+#' normalized to lie in [0, 1]. Returns a list of numeric vectors, one per
 #' edge, each starting at 0 and ending at 1.
 #'
-#' Degenerate (zero-length) edges return a vector of NaN values
+#' Degenerate (zero-length) edges return a vector of NaN values.
 #'
 #' @param edges List of two-column numeric matrices.
 #' @param longlat Logical. If TRUE, use haversine on (lon, lat) in degrees;
@@ -187,11 +187,12 @@ compute_edge_lengths_cpp <- function(edges, longlat) {
 
 #' @name postprocess_edges_cpp
 #' @title Dedupe interior polyline points while preserving endpoints
-#' @description Translation of the post-merge "clean edges"
+#' @description Bit-faithful translation of the post-merge "clean edges"
 #' \code{lapply} that the metric_graph constructor runs after the
 #' vertex-merge step. For each edge, deduplicates rows by exact
 #' \code{(x, y)} equality, while forcing the original first row to remain
 #' at position 1 and the original last row to be appended at the end.
+#'
 #' @param edges List of two-column numeric matrices.
 #' @return A list of two-column numeric matrices with deduped interior
 #' rows. May have fewer rows than the input.
@@ -221,6 +222,43 @@ postprocess_edges_cpp <- function(edges) {
 #' @noRd
 aeqd_project_cpp <- function(pts, lon0, lat0) {
     .Call(`_MetricGraph_aeqd_project_cpp`, pts, lon0, lat0)
+}
+
+#' @name split_one_edge_cpp
+#' @title Inner edge-splitting work for split_edge_batch (one edge)
+#' @description Processes a single edge: builds coords_list1 (the first
+#' segment of the original edge ending at the first split point), coords_list2
+#' (a List of subsequent segments between split points and from the last
+#' split to the end of the edge), segment_lengths (a NumericVector of length
+#' n_split + 1), and the aux_matrix (an IntegerMatrix of (n_split + 1) x 2
+#' giving the new E rows). Each segment carries a PtE attribute renormalized
+#' to [0, 1].
+#' @param edge nx2 matrix: the polyline
+#' @param PtE_edge n vector: PtE values at each polyline point
+#' @param t_values n_split vector: sorted positions in [0,1] where to split
+#' @param edge_len double: original edge length
+#' @param E_row IntegerVector(2): current E[Ei,] = (start_v, end_v)
+#' @param first_new_v int: ID of the first new vertex for this edge
+#' @noRd
+split_one_edge_cpp <- function(edge, PtE_edge, t_values, edge_len, E_row, first_new_v) {
+    .Call(`_MetricGraph_split_one_edge_cpp`, edge, PtE_edge, t_values, edge_len, E_row, first_new_v)
+}
+
+#' @name split_edges_batch_cpp
+#' @title Batched inner edge-splitting work for split_edge_batch
+#' @description Processes all edge groups in one call. Returns a List of
+#' per-group results, each matching split_one_edge_cpp's output structure.
+#' @param edges_full List: full self$edges, looked up by Ei (1-indexed)
+#' @param PtE_full List: precomputed PtE attributes for each edge in edges_full
+#' (caller extracts these once to avoid attr() lookups inside C++)
+#' @param E_full IntegerMatrix: full self$E
+#' @param edge_lens NumericVector: full self$edge_lengths
+#' @param edge_ids IntegerVector: which edge each group refers to (1-indexed)
+#' @param t_values_list List: per-group t_values
+#' @param first_new_vs IntegerVector: ID of the first new vertex for each group
+#' @noRd
+split_edges_batch_cpp <- function(edges_full, PtE_full, E_full, edge_lens, edge_ids, t_values_list, first_new_vs) {
+    .Call(`_MetricGraph_split_edges_batch_cpp`, edges_full, PtE_full, E_full, edge_lens, edge_ids, t_values_list, first_new_vs)
 }
 
 selected_inv_cpp <- function(Q) {
