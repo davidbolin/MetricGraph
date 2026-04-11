@@ -21,16 +21,36 @@ NULL
 #' @return T (n x n) the basis matrix
 #' @noRd
 #'
-c_basis2 <- function(A, eps_limit = 1e-10) {
-    .Call(`_MetricGraph_c_basis2`, A, eps_limit)
+c_basis2_old <- function(A, eps_limit = 1e-10) {
+    .Call(`_MetricGraph_c_basis2_old`, A, eps_limit)
+}
+
+construct_constraint_matrix_old <- function(E, nV, edge_constraint) {
+    .Call(`_MetricGraph_construct_constraint_matrix_old`, E, nV, edge_constraint)
+}
+
+construct_directional_constraint_matrix_old <- function(E, nV, nE, alpha, V_indegree, V_outdegree) {
+    .Call(`_MetricGraph_construct_directional_constraint_matrix_old`, E, nV, nE, alpha, V_indegree, V_outdegree)
 }
 
 construct_constraint_matrix <- function(E, nV, edge_constraint) {
     .Call(`_MetricGraph_construct_constraint_matrix`, E, nV, edge_constraint)
 }
 
-construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree) {
-    .Call(`_MetricGraph_construct_directional_constraint_matrix`, E, nV, nE, alpha, V_indegree, V_outdegree)
+c_basis2_graph <- function(E, nV, edge_constraint) {
+    .Call(`_MetricGraph_c_basis2_graph`, E, nV, edge_constraint)
+}
+
+construct_directional_constraint_matrix_fast <- function(E, nV, nE, alpha, V_indegree, V_outdegree, w_out, w_in) {
+    .Call(`_MetricGraph_construct_directional_constraint_matrix_fast`, E, nV, nE, alpha, V_indegree, V_outdegree, w_out, w_in)
+}
+
+c_basis2_directional_graph <- function(E, nV, nE, alpha, V_indegree, V_outdegree) {
+    .Call(`_MetricGraph_c_basis2_directional_graph`, E, nV, nE, alpha, V_indegree, V_outdegree)
+}
+
+c_basis2 <- function(A, eps_limit = 1e-10) {
+    .Call(`_MetricGraph_c_basis2`, A, eps_limit)
 }
 
 #' @name proj_vec
@@ -134,7 +154,7 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
 #' @title Per-edge cumulative relative positions
 #' @description Given a list of edges (each a 2-column numeric matrix of
 #' vertex coordinates), compute, for every edge, the cumulative arc-length
-#' normalized to lie in [0, 1]. Returns a list of numeric vectors, one per
+#' normalized to lie in the standard unit interval. Returns a list of numeric vectors, one per
 #' edge, each starting at 0 and ending at 1.
 #'
 #' Degenerate (zero-length) edges return a vector of NaN values, matching

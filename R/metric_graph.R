@@ -4575,7 +4575,7 @@ metric_graph <-  R6Class("metric_graph",
                              if(alpha %% 1 != 0){
                                stop("alpha should be an integer")
                              }
-
+                         
                              weight <- self$get_edge_weights()
                              weight <- as.vector(weight[[private$directional_weights]])
                              V_indegree = self$get_degrees("indegree")
@@ -4599,11 +4599,11 @@ metric_graph <-  R6Class("metric_graph",
                              #       i_[count + 1:(n_in+1)] <- count_constraint + 1
                              #       j_[count + 1:(n_in+1)] <- c(2 * alpha * (out_edges[i]-1) + der,
                              #                                   2 * alpha * (in_edges-1)  + alpha + der)
-
-
+                         
+                         
                              #       x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges[i]])),
                              #                                   as.matrix(self$DirectionalWeightFunction_in(weight[in_edges])))
-
+                         
                              #       count <- count + (n_in+1)
                              #       count_constraint <- count_constraint + 1
                              #     }
@@ -4619,7 +4619,7 @@ metric_graph <-  R6Class("metric_graph",
                              #         i_[count + 1:2] <- count_constraint + 1
                              #         j_[count + 1:2] <- c(2 * alpha * (out_edges[i]-1) + der,
                              #                              2 * alpha * (out_edges[i-1]-1)   + der)
-
+                         
                              #         x_[count + 1:2] <- c(1,
                              #                              -1)
                              #         count <- count + 2
@@ -4633,18 +4633,39 @@ metric_graph <-  R6Class("metric_graph",
                              #                           x = x_[1:count],
                              #                           dims = c(count_constraint, 2*alpha*self$nE))
                              # self$C = C
-                             temp_E <- apply(self$E,2,as.integer)
-                             self$C <-construct_directional_constraint_matrix(E = temp_E, nV = as.integer(self$nV), nE = as.integer(self$nE), alpha = as.integer(alpha),
-                                                                              V_indegree = as.integer(V_indegree), V_outdegree = as.integer(V_outdegree), weight = weight,
-                                                                              DirectionalWeightFunction_out = self$DirectionalWeightFunction_out,
-                                                                              DirectionalWeightFunction_in = self$DirectionalWeightFunction_in)
-
+                             temp_E <- apply(self$E, 2, as.integer)
+                             nE_int <- as.integer(self$nE)
+                         
+                             # Pre-compute per-edge weight values in R, then delegate assembly to C++.
+                             # w_out: one scalar per edge (applied to out-edge of a type-1 constraint row)
+                             # w_in:  one scalar per edge (applied to in-edge of a type-1 constraint row)
+                             f_out <- self$DirectionalWeightFunction_out  # local ref avoids repeated $ lookup
+                             f_in  <- self$DirectionalWeightFunction_in
+                             w_out_vec <- vapply(weight, f_out, numeric(1), USE.NAMES = FALSE)
+                         
+                             # Group in-edges by vertex (once, O(nE)); apply f_in per type-1 vertex
+                             # using lapply (C-loop) to avoid R for-loop overhead.
+                             in_edges_list <- split(seq_len(self$nE), self$E[, 2])
+                             type1_chars   <- as.character(which(V_indegree > 0 & V_outdegree > 0))
+                             type1_in_list <- in_edges_list[type1_chars]
+                         
+                             w_in_parts <- lapply(type1_in_list, function(ie) f_in(weight[ie]))
+                         
+                             w_in_vec <- numeric(self$nE)
+                             for (i in seq_along(type1_chars)) {
+                               w_in_vec[type1_in_list[[i]]] <- w_in_parts[[i]]
+                             }
+                         
+                             self$C <- construct_directional_constraint_matrix_fast(
+                               temp_E, as.integer(self$nV), nE_int, as.integer(alpha),
+                               as.integer(V_indegree), as.integer(V_outdegree),
+                               as.numeric(w_out_vec), as.numeric(w_in_vec))
                              self$CoB <- c_basis2(self$C)
                              self$CoB$T <- t(self$CoB$T)
                              self$CoB$alpha <- 1
                            },
-
-
+                         
+                         
                            #' @description Build Kirchoff constraint matrix from edges.
                            #' @param alpha the type of constraint (currently only supports 2)
                            #' @param edge_constraint if TRUE, add constraints on vertices of degree 1
@@ -4652,13 +4673,13 @@ metric_graph <-  R6Class("metric_graph",
                            #' in the same vertex)
                            #' @return No return value. Called for its side effects.
                            buildC = function(alpha = 2, edge_constraint = FALSE) {
-
+                           
                              if(alpha==2){
                                temp_E <- self$E
                                temp_E[] <- as.integer(temp_E)
-
+                         
                                self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
-                               self$CoB <- c_basis2(self$C)
+                               self$CoB <- c_basis2_graph(temp_E, as.integer(self$nV), as.integer(edge_constraint))
                                self$CoB$T <- t(self$CoB$T)
                                self$CoB$alpha <- 2
                              }else{

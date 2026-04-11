@@ -37,8 +37,8 @@ void set_diff(std::vector<int> &A, std::vector<int> &B, std::vector<int> &C) {
 //' @noRd
 //'
 // [[Rcpp::export]]
-Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A,
-                    double eps_limit = 1e-10) {
+Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A,
+                        double eps_limit = 1e-10) {
 
   Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> P(A.cols());
   P.setIdentity();
@@ -197,8 +197,8 @@ Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A,
 
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double>
-construct_constraint_matrix(const Eigen::MatrixXi &E, int nV,
-                            int edge_constraint) {
+construct_constraint_matrix_old(const Eigen::MatrixXi &E, int nV,
+                                int edge_constraint) {
   int nE = E.rows(); // Number of edges inferred from the rows of E
 
   // Reserve memory based on expected constraints
@@ -286,7 +286,7 @@ construct_constraint_matrix(const Eigen::MatrixXi &E, int nV,
 // pass the directional weight functions to C.
 
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> construct_directional_constraint_matrix(
+Eigen::SparseMatrix<double> construct_directional_constraint_matrix_old(
     const Eigen::MatrixXi &E, int nV, int nE, int alpha,
     const std::vector<int> &V_indegree, const std::vector<int> &V_outdegree) {
 

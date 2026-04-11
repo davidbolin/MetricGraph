@@ -25,7 +25,7 @@ static const double METRIC_GRAPH_D2R = M_PI / 180.0;
 //' @title Per-edge cumulative relative positions
 //' @description Given a list of edges (each a 2-column numeric matrix of
 //' vertex coordinates), compute, for every edge, the cumulative arc-length
-//' normalized to lie in [0, 1]. Returns a list of numeric vectors, one per
+//' normalized to lie in the standard unit interval. Returns a list of numeric vectors, one per
 //' edge, each starting at 0 and ending at 1.
 //'
 //' Degenerate (zero-length) edges return a vector of NaN values, matching

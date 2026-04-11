@@ -11,15 +11,44 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// c_basis2
-Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
-RcppExport SEXP _MetricGraph_c_basis2(SEXP ASEXP, SEXP eps_limitSEXP) {
+// c_basis2_old
+Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+RcppExport SEXP _MetricGraph_c_basis2_old(SEXP ASEXP, SEXP eps_limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
     Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_basis2(A, eps_limit));
+    rcpp_result_gen = Rcpp::wrap(c_basis2_old(A, eps_limit));
+    return rcpp_result_gen;
+END_RCPP
+}
+// construct_constraint_matrix_old
+Eigen::SparseMatrix<double> construct_constraint_matrix_old(const Eigen::MatrixXi& E, int nV, int edge_constraint);
+RcppExport SEXP _MetricGraph_construct_constraint_matrix_old(SEXP ESEXP, SEXP nVSEXP, SEXP edge_constraintSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type E(ESEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    Rcpp::traits::input_parameter< int >::type edge_constraint(edge_constraintSEXP);
+    rcpp_result_gen = Rcpp::wrap(construct_constraint_matrix_old(E, nV, edge_constraint));
+    return rcpp_result_gen;
+END_RCPP
+}
+// construct_directional_constraint_matrix_old
+Eigen::SparseMatrix<double> construct_directional_constraint_matrix_old(const Eigen::MatrixXi& E, int nV, int nE, int alpha, const std::vector<int>& V_indegree, const std::vector<int>& V_outdegree);
+RcppExport SEXP _MetricGraph_construct_directional_constraint_matrix_old(SEXP ESEXP, SEXP nVSEXP, SEXP nESEXP, SEXP alphaSEXP, SEXP V_indegreeSEXP, SEXP V_outdegreeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type E(ESEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    Rcpp::traits::input_parameter< int >::type nE(nESEXP);
+    Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type V_indegree(V_indegreeSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type V_outdegree(V_outdegreeSEXP);
+    rcpp_result_gen = Rcpp::wrap(construct_directional_constraint_matrix_old(E, nV, nE, alpha, V_indegree, V_outdegree));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -36,9 +65,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// construct_directional_constraint_matrix
-Eigen::SparseMatrix<double> construct_directional_constraint_matrix(const Eigen::MatrixXi& E, int nV, int nE, int alpha, const std::vector<int>& V_indegree, const std::vector<int>& V_outdegree);
-RcppExport SEXP _MetricGraph_construct_directional_constraint_matrix(SEXP ESEXP, SEXP nVSEXP, SEXP nESEXP, SEXP alphaSEXP, SEXP V_indegreeSEXP, SEXP V_outdegreeSEXP) {
+// c_basis2_graph
+Rcpp::List c_basis2_graph(const Eigen::MatrixXi& E, int nV, int edge_constraint);
+RcppExport SEXP _MetricGraph_c_basis2_graph(SEXP ESEXP, SEXP nVSEXP, SEXP edge_constraintSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type E(ESEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    Rcpp::traits::input_parameter< int >::type edge_constraint(edge_constraintSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_basis2_graph(E, nV, edge_constraint));
+    return rcpp_result_gen;
+END_RCPP
+}
+// construct_directional_constraint_matrix_fast
+Eigen::SparseMatrix<double> construct_directional_constraint_matrix_fast(const Eigen::MatrixXi& E, int nV, int nE, int alpha, const std::vector<int>& V_indegree, const std::vector<int>& V_outdegree, const std::vector<double>& w_out, const std::vector<double>& w_in);
+RcppExport SEXP _MetricGraph_construct_directional_constraint_matrix_fast(SEXP ESEXP, SEXP nVSEXP, SEXP nESEXP, SEXP alphaSEXP, SEXP V_indegreeSEXP, SEXP V_outdegreeSEXP, SEXP w_outSEXP, SEXP w_inSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +90,37 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type V_indegree(V_indegreeSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type V_outdegree(V_outdegreeSEXP);
-    rcpp_result_gen = Rcpp::wrap(construct_directional_constraint_matrix(E, nV, nE, alpha, V_indegree, V_outdegree));
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type w_out(w_outSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type w_in(w_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(construct_directional_constraint_matrix_fast(E, nV, nE, alpha, V_indegree, V_outdegree, w_out, w_in));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_basis2_directional_graph
+Rcpp::List c_basis2_directional_graph(const Eigen::MatrixXi& E, int nV, int nE, int alpha, const std::vector<int>& V_indegree, const std::vector<int>& V_outdegree);
+RcppExport SEXP _MetricGraph_c_basis2_directional_graph(SEXP ESEXP, SEXP nVSEXP, SEXP nESEXP, SEXP alphaSEXP, SEXP V_indegreeSEXP, SEXP V_outdegreeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXi& >::type E(ESEXP);
+    Rcpp::traits::input_parameter< int >::type nV(nVSEXP);
+    Rcpp::traits::input_parameter< int >::type nE(nESEXP);
+    Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type V_indegree(V_indegreeSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type V_outdegree(V_outdegreeSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_basis2_directional_graph(E, nV, nE, alpha, V_indegree, V_outdegree));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_basis2
+Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+RcppExport SEXP _MetricGraph_c_basis2(SEXP ASEXP, SEXP eps_limitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_basis2(A, eps_limit));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -198,9 +270,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
+    {"_MetricGraph_c_basis2_old", (DL_FUNC) &_MetricGraph_c_basis2_old, 2},
+    {"_MetricGraph_construct_constraint_matrix_old", (DL_FUNC) &_MetricGraph_construct_constraint_matrix_old, 3},
+    {"_MetricGraph_construct_directional_constraint_matrix_old", (DL_FUNC) &_MetricGraph_construct_directional_constraint_matrix_old, 6},
     {"_MetricGraph_construct_constraint_matrix", (DL_FUNC) &_MetricGraph_construct_constraint_matrix, 3},
-    {"_MetricGraph_construct_directional_constraint_matrix", (DL_FUNC) &_MetricGraph_construct_directional_constraint_matrix, 6},
+    {"_MetricGraph_c_basis2_graph", (DL_FUNC) &_MetricGraph_c_basis2_graph, 3},
+    {"_MetricGraph_construct_directional_constraint_matrix_fast", (DL_FUNC) &_MetricGraph_construct_directional_constraint_matrix_fast, 8},
+    {"_MetricGraph_c_basis2_directional_graph", (DL_FUNC) &_MetricGraph_c_basis2_directional_graph, 6},
+    {"_MetricGraph_c_basis2", (DL_FUNC) &_MetricGraph_c_basis2, 2},
     {"_MetricGraph_assemble_fem", (DL_FUNC) &_MetricGraph_assemble_fem, 4},
     {"_MetricGraph_compute_mesh_weights", (DL_FUNC) &_MetricGraph_compute_mesh_weights, 3},
     {"_MetricGraph_projectVecLine", (DL_FUNC) &_MetricGraph_projectVecLine, 3},
