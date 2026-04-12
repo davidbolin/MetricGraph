@@ -1141,17 +1141,23 @@ graph_data_spde <- function(graph_spde, name = "field", repl = NULL, repl_col = 
           idx_notna <- rep(TRUE, length(data_group_repl[[repl_col]]))
         }
 
-        # nV_tmp <- sum(idx_notna)
+        # Use .loc_idx (sparse format) when available to index into PtV / A.
+        # For the legacy full-grid format, .loc_idx is absent and idx_notna
+        # is used directly as a positional index (backward compatible).
+        if (!is.null(data_group_repl[[".loc_idx"]])) {
+          loc_sel <- data_group_repl[[".loc_idx"]][idx_notna]
+        } else {
+          loc_sel <- idx_notna   # legacy positional index
+        }
+
         if (alpha == 1) {
           if (!graph_spde$directional) {
-            A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[idx_notna], ]
+            A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[loc_sel], ]
           } else {
-            A_tmp <- graph_spde$A
-            A_tmp <- A_tmp[idx_notna, ]
+            A_tmp <- graph_spde$A[loc_sel, , drop = FALSE]
           }
         } else {
-          A_tmp <- graph_spde$A
-          A_tmp <- A_tmp[idx_notna, ]
+          A_tmp <- graph_spde$A[loc_sel, , drop = FALSE]
         }
         A <- Matrix::bdiag(A, A_tmp)
       }

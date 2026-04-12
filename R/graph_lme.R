@@ -1990,8 +1990,13 @@ predict.graph_lme <- function(object,
       normalized <- TRUE
     }
   
+    # Save prediction PtE before merge operations so idx_prd is not lost
+    # when sparse add_observations overwrites prediction rows with obs data
+    pred_PtE_edges_save <- data[[edge_number]]
+    pred_PtE_dists_save <- data[[distance_on_edge]]
+
     ord_idx <- order(data[[edge_number]], data[[distance_on_edge]])
-  
+
     if(!is.null(data[[as.character(object$response_var)]])){
       data[[as.character(object$response_var)]] <- NULL
     }
@@ -2038,10 +2043,17 @@ predict.graph_lme <- function(object,
 
     n <- sum(graph_bkp$.__enclos_env__$private$data[[".group"]] == graph_bkp$.__enclos_env__$private$data[[".group"]][1])
 
-    if(!is.null(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]])){
-        idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["__dummy_var"]][1:n])
-    } else {
-        idx_prd <- !is.na(graph_bkp$.__enclos_env__$private$data[["X__dummy_var"]][1:n])
+    # Compute idx_prd by matching saved prediction PtE against first-group rows.
+    # This is robust to sparse add_observations overwriting __dummy_var when
+    # prediction locations overlap with observation locations.
+    {
+      grp1_mask <- graph_bkp$.__enclos_env__$private$data[[".group"]] ==
+                     graph_bkp$.__enclos_env__$private$data[[".group"]][1]
+      e_grp1 <- graph_bkp$.__enclos_env__$private$data[[".edge_number"]][grp1_mask]
+      d_grp1 <- graph_bkp$.__enclos_env__$private$data[[".distance_on_edge"]][grp1_mask]
+      pred_key  <- paste(pred_PtE_edges_save, pred_PtE_dists_save, sep = ";")
+      grp1_key  <- paste(e_grp1, d_grp1, sep = ";")
+      idx_prd   <- grp1_key %in% pred_key
     }
 
   } else {

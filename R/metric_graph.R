@@ -2787,6 +2787,23 @@ metric_graph <-  R6Class("metric_graph",
          warning("There is no data!")
          return(invisible(NULL))
        }
+       # Return all unique (edge, dist) pairs across all groups, sorted numerically.
+       # In the common case (same locations for all groups) this equals the
+       # first-group locations; for LGCP-style replicates with different events
+       # per replicate this returns the full union.
+       if (!is.null(private$data[[".loc_idx"]])) {
+         # Sparse format: reconstruct unique locs from .loc_idx ordering
+         e <- private$data[[".edge_number"]]
+         d <- private$data[[".distance_on_edge"]]
+         idx <- private$data[[".loc_idx"]]
+         # Re-order by .loc_idx to get unique locations in canonical order
+         ord_uniq <- order(idx, e, d)
+         keep <- !duplicated(idx[ord_uniq])
+         e_u <- e[ord_uniq][keep]
+         d_u <- d[ord_uniq][keep]
+         return(cbind(e_u, d_u))
+       }
+       # Legacy full-grid format: first group's locations (same for all groups)
        group <- private$data[[".group"]]
        group <- which(group == group[1])
        PtE <- cbind(private$data[[".edge_number"]][group],
@@ -2836,155 +2853,110 @@ metric_graph <-  R6Class("metric_graph",
          lifecycle::deprecate_warn("1.3.0.9000", "observation_to_vertex(tolerance)")
        }
 
-       # Initialize temp data
        if (is.null(private$data)) {
          stop("There is no data!")
        }
 
-       # Extract PtE data directly with minimal operations
-       if (verbose > 1) {
-         message("Extracting observation locations...")
-       }
+       if (verbose > 1) message("Extracting observation locations...")
 
-       # Cache all frequently accessed data at once
-       group_data <- private$data[[".group"]]
        edge_numbers <- private$data[[".edge_number"]]
-       distances <- private$data[[".distance_on_edge"]]
+       distances    <- private$data[[".distance_on_edge"]]
+       loc_idx_orig <- private$data[[".loc_idx"]]
 
-       # Get first group indices efficiently using match (faster than which for single values)
-       first_group <- group_data[1]
-       group_idx <- group_data == first_group
-
-       # Pre-allocate and populate temp_PtE in one go using logical indexing
-       n <- sum(group_idx)
-       private$temp_PtE <- cbind(edge_numbers[group_idx], distances[group_idx], seq_len(n))
-
-       # Pre-allocate PtV with correct type
-       self$PtV <- rep(NA_integer_, n)
-
-       # Vectorized tolerance checks with direct comparison
-       distances_subset <- private$temp_PtE[, 2]
-       is_start_vertex <- distances_subset < 1e-15
-       is_end_vertex <- distances_subset > 0.999999999999999  # Precomputed 1 - 1e-15
-
-       # Vectorized vertex assignment using direct indexing
-       start_count <- sum(is_start_vertex)
-       end_count <- sum(is_end_vertex)
-
-       if (start_count > 0) {
-         start_indices <- which(is_start_vertex)
-         edge_indices_start <- private$temp_PtE[start_indices, 1]
-         self$PtV[start_indices] <- self$E[edge_indices_start, 1]
-       }
-       if (end_count > 0) {
-         end_indices <- which(is_end_vertex)
-         edge_indices_end <- private$temp_PtE[end_indices, 1]
-         self$PtV[end_indices] <- self$E[edge_indices_end, 2]
+       # ── Build unique-location table ────────────────────────────────────────
+       # Sparse format: .loc_idx maps each row to its unique (edge, dist).
+       # Fall back to first-group approach when .loc_idx is absent (legacy).
+       if (!is.null(loc_idx_orig)) {
+         n_unique <- max(loc_idx_orig)
+         ord_by_idx <- order(loc_idx_orig)
+         keep_first <- !duplicated(loc_idx_orig[ord_by_idx])
+         unique_e <- edge_numbers[ord_by_idx][keep_first]
+         unique_d <- distances[ord_by_idx][keep_first]
+       } else {
+         # Legacy full-grid: all groups share the same first-group locations
+         grp      <- private$data[[".group"]]
+         fg_mask  <- grp == grp[1]
+         unique_e <- edge_numbers[fg_mask]
+         unique_d <- distances[fg_mask]
+         n_unique <- sum(fg_mask)
+         loc_idx_orig <- rep(seq_len(n_unique), length(unique(grp)))
        }
 
-       # Get remaining indices that need to be split
-       remaining_mask <- !(is_start_vertex | is_end_vertex)
+       # temp_PtE columns: [edge, dist, unique_loc_idx]
+       private$temp_PtE <- cbind(unique_e, unique_d, seq_len(n_unique))
+       self$PtV         <- rep(NA_integer_, n_unique)
+
+       # ── Classify unique locations ──────────────────────────────────────────
+       is_start_vertex <- unique_d < 1e-15
+       is_end_vertex   <- unique_d > 0.999999999999999
+
+       if (any(is_start_vertex)) {
+         idx <- which(is_start_vertex)
+         self$PtV[idx] <- self$E[unique_e[idx], 1]
+       }
+       if (any(is_end_vertex)) {
+         idx <- which(is_end_vertex)
+         self$PtV[idx] <- self$E[unique_e[idx], 2]
+       }
+
+       # ── Split interior locations ───────────────────────────────────────────
+       remaining_mask  <- !(is_start_vertex | is_end_vertex)
        remaining_count <- sum(remaining_mask)
 
        if (remaining_count > 0) {
-         if (verbose > 1) {
-           message("Grouping observations by edges...")
-         }
-
-         # Direct subsetting and grouping
+         if (verbose > 1) message("Grouping observations by edges...")
          remaining_data <- private$temp_PtE[remaining_mask, , drop = FALSE]
-         edge_ids <- remaining_data[, 1]
+         edge_ids       <- remaining_data[, 1]
+         edge_groups    <- split.data.frame(remaining_data[, c(2, 3), drop = FALSE], edge_ids)
 
-         # Use split() which is highly optimized in R
-         edge_groups <- split.data.frame(remaining_data[, c(2, 3), drop = FALSE], edge_ids)
-
-         # Progress bar setup
          if (verbose == 2) {
            bar_otv <- msg_progress_bar(length(edge_groups))
-         }
-
-         # Process all edges with batch processing
-         if (verbose == 2) {
            message("Processing edge splits in batches...")
          }
 
          new_vertices_list <- private$split_edge_batch(edge_groups, verbose = verbose)
 
-         # Vectorized assignment of new vertices
-         edge_names <- names(edge_groups)
          for (i in seq_along(edge_groups)) {
-           group_data_i <- edge_groups[[i]]
-           indices <- if (is.matrix(group_data_i)) group_data_i[, 2] else group_data_i[2]
-
-           # Only assign if we have new vertices for this edge
-           new_vertices_i <- new_vertices_list[[i]]
-           if (length(new_vertices_i) > 0) {
-             self$PtV[indices] <- new_vertices_i
-           }
-
-           # Progress bar increment (if verbose mode is enabled)
-           if (verbose == 2) {
-             bar_otv$increment()
-           }
+           gdi     <- edge_groups[[i]]
+           indices <- if (is.matrix(gdi)) gdi[, 2] else gdi[2]
+           nvi     <- new_vertices_list[[i]]
+           if (length(nvi) > 0) self$PtV[indices] <- nvi
+           if (verbose == 2) bar_otv$increment()
          }
        }
 
-       # Remove NA values from PtV efficiently
-       self$PtV <- self$PtV[!is.na(self$PtV)]
-
-       # Update temp_PtE for the known vertices using vectorized operations
-       if (start_count > 0) {
-         start_positions <- match(self$PtV[is_start_vertex], self$E[, 1])
-         private$temp_PtE[is_start_vertex, 1] <- start_positions
-         private$temp_PtE[is_start_vertex, 2] <- 0
+       # ── Update temp_PtE edge numbers after graph changes ──────────────────
+       # Edge numbering may shift after splits; remap boundary observations.
+       valid_ptv <- !is.na(self$PtV)
+       if (any(is_start_vertex & valid_ptv)) {
+         idx <- which(is_start_vertex & valid_ptv)
+         private$temp_PtE[idx, 1] <- match(self$PtV[idx], self$E[, 1])
+         private$temp_PtE[idx, 2] <- 0
        }
-       if (end_count > 0) {
-         end_positions <- match(self$PtV[is_end_vertex], self$E[, 2])
-         private$temp_PtE[is_end_vertex, 1] <- end_positions
-         private$temp_PtE[is_end_vertex, 2] <- 1
+       if (any(is_end_vertex & valid_ptv)) {
+         idx <- which(is_end_vertex & valid_ptv)
+         private$temp_PtE[idx, 1] <- match(self$PtV[idx], self$E[, 2])
+         private$temp_PtE[idx, 2] <- 1
        }
+       self$PtV <- self$PtV[!is.na(self$PtV)]  # compact (defensive)
 
-       # Data replication and reordering
-       if (verbose > 1) {
-         message("Updating data structures...")
-       }
+       # ── Propagate updated (edge, dist) to every data row via loc_idx ──────
+       if (verbose > 1) message("Updating data structures...")
 
-       # Cache group information once
-       unique_groups <- unique(group_data)
-       n_group <- length(unique_groups)
+       private$data[[".edge_number"]]      <- private$temp_PtE[loc_idx_orig, 1]
+       private$data[[".distance_on_edge"]] <- private$temp_PtE[loc_idx_orig, 2]
 
-       # vectorized replication
-       temp_edge_numbers <- private$temp_PtE[, 1]
-       temp_distances <- private$temp_PtE[, 2]
+       # ── Re-sort all rows and rebuild .loc_idx ─────────────────────────────
+       index_order <- order(private$data[[".group"]],
+                            private$data[[".edge_number"]],
+                            private$data[[".distance_on_edge"]])
 
-       private$data[[".edge_number"]] <- rep.int(temp_edge_numbers, n_group)
-       private$data[[".distance_on_edge"]] <- rep.int(temp_distances, n_group)
-
-       # Single-pass ordering with cached data
-       edge_numbers_full <- private$data[[".edge_number"]]
-       distances_full <- private$data[[".distance_on_edge"]]
-       groups_full <- private$data[[".group"]]
-
-       # Single call to order() with pre-computed keys
-       index_order <- order(groups_full, edge_numbers_full, distances_full)
-
-       # Cache attribute before reordering
        old_group_variable <- attr(private$data, "group_variable")
-
-       # vectorized reordering using lapply
-       private$data <- lapply(private$data, `[`, index_order)
+       private$data       <- lapply(private$data, `[`, index_order)
        attr(private$data, "group_variable") <- old_group_variable
 
-       # Reorder PtV efficiently
-       ptv_length <- length(self$PtV)
-       if (ptv_length > 0) {
-         self$PtV <- self$PtV[index_order[seq_len(ptv_length)]]
-       }
-
-       # Reset temporary data
        private$temp_PtE <- NULL
 
-       # Invalidate cached distances and recompute if necessary
        self$geo_dist <- NULL
        self$res_dist <- NULL
        if (!is.null(self$CoB)) self$buildC(2)
@@ -2996,15 +2968,41 @@ metric_graph <-  R6Class("metric_graph",
          }
        }
 
-       # Update vertices and reference edges
        private$ref_edges <- map_into_reference_edge(self, verbose = verbose)
-       private$data <- standardize_df_positions(private$data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
+       private$data <- standardize_df_positions(private$data, self,
+                         edge_number = ".edge_number",
+                         distance_on_edge = ".distance_on_edge")
        private$create_update_vertices(verbose = verbose)
+
+       # Rebuild .loc_idx and PtV from canonical post-standardize positions.
+       # standardize_df_positions may remap dist=1 obs to (ref_edge, 0), which
+       # can change sort order. Re-sort data and rebuild .loc_idx from scratch.
+       # PtV is rebuilt via ref_edges reverse-lookup (canonical vertex positions).
+       new_e_fin <- private$data[[".edge_number"]]
+       new_d_fin <- private$data[[".distance_on_edge"]]
+       idx_sort  <- order(private$data[[".group"]], new_e_fin, new_d_fin)
+       if (!identical(idx_sort, seq_along(idx_sort))) {
+         old_gv_fin <- attr(private$data, "group_variable")
+         private$data <- lapply(private$data, `[`, idx_sort)
+         attr(private$data, "group_variable") <- old_gv_fin
+         new_e_fin <- private$data[[".edge_number"]]
+         new_d_fin <- private$data[[".distance_on_edge"]]
+       }
+       sep_fin    <- "|"
+       uloc_fin   <- unique(data.frame(e = new_e_fin, d = new_d_fin))
+       uloc_fin   <- uloc_fin[order(uloc_fin$e, uloc_fin$d), , drop = FALSE]
+       ukey_fin   <- paste(uloc_fin$e, uloc_fin$d, sep = sep_fin)
+       rkey_fin   <- paste(new_e_fin, new_d_fin, sep = sep_fin)
+       private$data[[".loc_idx"]] <- match(rkey_fin, ukey_fin)
+       # Each canonical (edge, dist) maps to exactly one vertex via ref_edges
+       ref_key_fin <- paste(private$ref_edges[, 1], private$ref_edges[, 2], sep = sep_fin)
+       self$PtV    <- match(ukey_fin, ref_key_fin)
+
        self$set_edge_weights(
-         weights = private$edge_weights,
-         kirchhoff_weights = private$kirchhoff_weights,
-         directional_weights = private$directional_weights,
-         verbose = verbose
+         weights              = private$edge_weights,
+         kirchhoff_weights    = private$kirchhoff_weights,
+         directional_weights  = private$directional_weights,
+         verbose              = verbose
        )
      },
 
@@ -3396,14 +3394,11 @@ metric_graph <-  R6Class("metric_graph",
          rm(data_group_tmp)
          data <- lapply(data, function(dat){dat[ord_tmp]})
          rm(ord_tmp)
-         data[[".dummy_var"]] <- as.character(data[[group[1]]])
-         if(length(group)>1){
-           for(j in 2:length(group)){
-             data[[".dummy_var"]] <- sapply(1:length(data[[".dummy_var"]]), function(i){paste0(data[[".dummy_var"]][i], group_sep,data[[group[j]]][i])})
-           }
-         }
-         data[[".group"]] <- data[[".dummy_var"]]
-         data[[".dummy_var"]] <- NULL
+          # Vectorized group-key construction (replaces per-element sapply loop)
+          data[[".group"]] <- Reduce(
+            function(a, b) paste(a, b, sep = group_sep),
+            lapply(group, function(g) as.character(data[[g]]))
+          )
        }
 
        ## convert everything to PtE
@@ -3448,143 +3443,42 @@ metric_graph <-  R6Class("metric_graph",
            point_coords <- cbind(data[[coord_x]], data[[coord_y]])
            PtE <- self$coordinates(XY = point_coords)
 
+           fact    <- process_factor_unit(private$vertex_unit, private$length_unit)
+           grp_dat <- data[[".group"]]
+           if(length(grp_dat) == 0) grp_dat <- rep(1L, nrow(PtE))
 
-           if(tolower(duplicated_strategy) == "closest"){
-             norm_XY <- NULL
-             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-             PtE_new <- NULL
-             far_points <- NULL
-             dup_points <- NULL
-             closest_points <- NULL
-             grp_dat <- data[[".group"]]
-             if(length(grp_dat) == 0){
-               grp_dat <- rep(1, nrow(PtE))
-             }
+           flt <- filter_spatial_obs_groups(
+             graph = self, PtE = PtE, point_coords = point_coords,
+             grp_dat = grp_dat, tolerance = tolerance,
+             duplicated_strategy = duplicated_strategy,
+             fact = fact, crs = private$crs, longlat = private$longlat,
+             proj4string = private$proj4string,
+             which_longlat = private$which_longlat,
+             length_unit = private$length_unit,
+             transform = private$transform,
+             suppress_warnings = suppress_warnings
+           )
 
-             for(grp in unique(grp_dat)){
-               idx_grp <- which(grp_dat == grp)
-               PtE_grp <- PtE[idx_grp,, drop=FALSE]
-               XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
-               point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
-               # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-               norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-               # norm_XY <- max(norm_XY)
-               # if(norm_XY > tolerance){
-               #   warning("There was at least one point whose location is far from the graph,
-               #     please consider checking the input.")
-               #   }
-               far_points_grp <- (norm_XY_grp > tolerance)
-               PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
-               XY_new_grp <- XY_new_grp[!far_points_grp,,drop=FALSE]
-               point_coords_grp <- point_coords_grp[!far_points_grp,,drop=FALSE]
-               dup_points_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast=TRUE)
-               norm_XY_grp <- norm_XY_grp[!far_points_grp]
-               if(any(dup_points_grp)){
-                 old_new_coords <- cbind(point_coords_grp[dup_points_grp,], XY_new_grp[dup_points_grp,], norm_XY_grp[dup_points_grp], which(dup_points_grp))
-                 old_new_coords <- as.data.frame(old_new_coords)
-                 colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
-                 old_new_coords <- dplyr::as_tibble(old_new_coords)
-                 old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::mutate(min_idx = dist == min_dist, min_idx = get_only_first(min_idx)) %>% dplyr::ungroup()
-                 min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
-                 closest_points_grp <- rep(FALSE, length(dup_points_grp))
-                 closest_points_grp[min_dist_idx] <- TRUE
-                 norm_XY_grp <- norm_XY_grp[!closest_points_grp]
-                 PtE_grp <- PtE_grp[!closest_points_grp,,drop=FALSE]
-                 closest_points <- c(closest_points, closest_points_grp)
-               } else{
-                 closest_points_grp <- rep(FALSE, length(norm_XY_grp))
-                 closest_points <- c(closest_points, closest_points_grp)
-               }
+           PtE          <- flt$PtE
+           far_points   <- flt$far_mask
+           norm_XY      <- flt$norm_XY
+           closest_mask <- flt$closest_mask
 
-               dup_points <- c(dup_points, dup_points_grp)
-               far_points <- c(far_points, far_points_grp)
-               PtE_new <- rbind(PtE_new, PtE_grp)
-               norm_XY <- c(norm_XY, norm_XY_grp)
-             }
-             PtE <- PtE_new
-
-             if(sum(dup_points)>0){
-               if(!suppress_warnings){
-                 warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy'   to 'jitter'.")
-               }
-             }
-
-             data <- lapply(data, function(dat){dat[!far_points]})
-             if(!is.null(closest_points)){
-               removed_data <-  lapply(data, function(dat){dat[closest_points]})
-               data <- lapply(data, function(dat){dat[!closest_points]})
-             }
-             if(any(far_points)){
-               if(!suppress_warnings){
-                 warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
-               }
-             }
-             if(include_distance_to_graph){
-               data[[".distance_to_graph"]] <- norm_XY
-             }
-
-
-           } else if(tolower(duplicated_strategy) == "jitter"){
-             norm_XY <- NULL
-             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-             PtE_new <- NULL
-             far_points <- NULL
-
-             grp_dat <- data[[".group"]]
-             if(length(grp_dat) == 0){
-               grp_dat <- rep(1, nrow(PtE))
-             }
-
-             for(grp in unique(grp_dat)){
-               idx_grp <- which(grp_dat == grp)
-               PtE_grp <- PtE[idx_grp,, drop=FALSE]
-               dup_points_grp <- duplicated(PtE_grp)
-               while(sum(dup_points_grp)>0){
-                 cond_0 <- PtE_grp[dup_points_grp,2] == 0
-                 cond_1 <- PtE_grp[dup_points_grp,2] == 1
-                 idx_pte0 <- which(cond_0)
-                 idx_pte1 <-  which(cond_1)
-                 idx_other_pte <- which(!cond_0 & !cond_1)
-                 d_points <- which(dup_points_grp)
-                 if(length(idx_pte0)>0){
-                   PtE_grp[d_points[idx_pte0],2] <- PtE_grp[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
-                 }
-                 if(length(idx_pte1)>0){
-                   PtE_grp[d_points[idx_pte1],2] <- PtE_grp[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))
-                 }
-                 if(length(idx_other_pte)>0){
-                   delta_dif <- min(1e-2, 1-max(PtE_grp[d_points[idx_other_pte],2]), min(PtE_grp[d_points[idx_other_pte],2]))
-                   PtE_grp[d_points[idx_other_pte],2] <- PtE_grp[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
-                 }
-                 dup_points_grp <- duplicated(PtE_grp)
-               }
-               XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
-               point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
-               norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-               far_points_grp <- (norm_XY_grp > tolerance)
-               PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
-               norm_XY_grp <- norm_XY_grp[!far_points_grp]
-               far_points <- c(far_points, far_points_grp)
-               PtE_new <- rbind(PtE_new, PtE_grp)
-               norm_XY <- c(norm_XY, norm_XY_grp)
-             }
-             PtE <- PtE_new
-             data <- lapply(data, function(dat){dat[!far_points]})
-             if(any(far_points)){
-               if(!suppress_warnings){
-                 warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
-               }
-             }
-             # PtE <- PtE[!far_points,,drop=FALSE]
-             if(include_distance_to_graph){
-               data[[".distance_to_graph"]] <- norm_XY
-             }
-           } else{
-             stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
+           if(flt$has_dup && !suppress_warnings){
+             warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
+           }
+           if(any(far_points) && !suppress_warnings){
+             warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is", sum(far_points)))
            }
 
-           rm(far_points)
-           rm(norm_XY)
+           data <- lapply(data, function(dat) dat[!far_points])
+           if(any(closest_mask)){
+             removed_data <- lapply(data, function(dat) dat[closest_mask])
+             data <- lapply(data, function(dat) dat[!closest_mask])
+           }
+           if(include_distance_to_graph){
+             data[[".distance_to_graph"]] <- norm_XY
+           }
 
          } else{
            stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
@@ -3646,13 +3540,25 @@ coordinates!"))
 
          data <- standardize_df_positions(data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
          ## convert to Spoints and add
-         group_1 <- data[[".group"]]
-         group_1 <- which(group_1 == group_1[1])
-         PtE <- cbind(data[[".edge_number"]][group_1],
-                      data[[".distance_on_edge"]][group_1])
-         spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
-         data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
-         data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
+         loc_idx_stored <- data[[".loc_idx"]]
+         if (!is.null(loc_idx_stored)) {
+           # Sparse mode: extract unique locs in sorted order (by loc_idx)
+           ord_u <- order(loc_idx_stored)
+           first_occ <- ord_u[!duplicated(loc_idx_stored[ord_u])]
+           PtE_uniq <- cbind(data[[".edge_number"]][first_occ],
+                             data[[".distance_on_edge"]][first_occ])
+           spatial_points_uniq <- self$coordinates(PtE = PtE_uniq, normalized = TRUE)
+           data[[".coord_x"]] <- spatial_points_uniq[loc_idx_stored, 1]
+           data[[".coord_y"]] <- spatial_points_uniq[loc_idx_stored, 2]
+         } else {
+           group_1 <- data[[".group"]]
+           group_1 <- which(group_1 == group_1[1])
+           PtE <- cbind(data[[".edge_number"]][group_1],
+                        data[[".distance_on_edge"]][group_1])
+           spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
+           data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
+           data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
+         }
 
          if(format == "tibble"){
            data <- tidyr::as_tibble(data)
@@ -3916,14 +3822,11 @@ coordinates!"))
          rm(data_group_tmp)
          data <- lapply(data, function(dat){dat[ord_tmp]})
          rm(ord_tmp)
-         data[[".dummy_var"]] <- as.character(data[[group[1]]])
-         if(length(group)>1){
-           for(j in 2:length(group)){
-             data[[".dummy_var"]] <- sapply(1:length(data[[".dummy_var"]]), function(i){paste0(data[[".dummy_var"]][i], group_sep,data[[group[j]]][i])})
-           }
-         }
-         data[[".group"]] <- data[[".dummy_var"]]
-         data[[".dummy_var"]] <- NULL
+          # Vectorized group-key construction (replaces per-element sapply loop)
+          data[[".group"]] <- Reduce(
+            function(a, b) paste(a, b, sep = group_sep),
+            lapply(group, function(g) as.character(data[[g]]))
+          )
        }
 
 
@@ -3973,143 +3876,44 @@ coordinates!"))
            point_coords <- cbind(data[[coord_x]], data[[coord_y]])
            PtE <- self$coordinates(XY = point_coords)
 
-           if(tolower(duplicated_strategy) == "closest"){
-             norm_XY <- NULL
-             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-             PtE_new <- NULL
-             far_points <- NULL
-             dup_points <- NULL
-             closest_points <- NULL
-             grp_dat <- data[[".group"]]
-             if(length(grp_dat) == 0){
-               grp_dat <- rep(1, nrow(PtE))
-             }
+           fact    <- process_factor_unit(private$vertex_unit, private$length_unit)
+           grp_dat <- data[[".group"]]
+           if(length(grp_dat) == 0) grp_dat <- rep(1L, nrow(PtE))
 
-             for(grp in unique(grp_dat)){
-               idx_grp <- which(grp_dat == grp)
-               PtE_grp <- PtE[idx_grp,, drop=FALSE]
-               XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
-               point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
-               # norm_XY <- max(sqrt(rowSums( (point_coords-XY_new)^2 )))
-               norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-               # norm_XY <- max(norm_XY)
-               # if(norm_XY > tolerance){
-               #   warning("There was at least one point whose location is far from the graph,
-               #     please consider checking the input.")
-               #   }
-               far_points_grp <- (norm_XY_grp > tolerance)
-               PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
-               XY_new_grp <- XY_new_grp[!far_points_grp,,drop=FALSE]
-               point_coords_grp <- point_coords_grp[!far_points_grp,,drop=FALSE]
-               dup_points_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast=TRUE)
-               norm_XY_grp <- norm_XY_grp[!far_points_grp]
-               if(any(dup_points_grp)){
-                 old_new_coords <- cbind(point_coords_grp[dup_points_grp,], XY_new_grp[dup_points_grp,], norm_XY_grp[dup_points_grp], which(dup_points_grp))
-                 old_new_coords <- as.data.frame(old_new_coords)
-                 colnames(old_new_coords) <- c("coordx", "coordy", "pcoordx", "pcoordy", "dist", "idx")
-                 old_new_coords <- dplyr::as_tibble(old_new_coords)
-                 old_new_coords <- old_new_coords %>% dplyr::group_by(pcoordx, pcoordy) %>% dplyr::mutate(min_dist = min(dist)) %>% dplyr::mutate(min_idx = dist == min_dist, min_idx = get_only_first(min_idx)) %>% dplyr::ungroup()
-                 min_dist_idx <- old_new_coords[["idx"]][!old_new_coords[["min_idx"]]]
-                 closest_points_grp <- rep(FALSE, length(dup_points_grp))
-                 closest_points_grp[min_dist_idx] <- TRUE
-                 norm_XY_grp <- norm_XY_grp[!closest_points_grp]
-                 PtE_grp <- PtE_grp[!closest_points_grp,,drop=FALSE]
-                 closest_points <- c(closest_points, closest_points_grp)
-               } else{
-                 closest_points_grp <- rep(FALSE, length(norm_XY_grp))
-                 closest_points <- c(closest_points, closest_points_grp)
-               }
+           flt <- filter_spatial_obs_groups(
+             graph = self, PtE = PtE, point_coords = point_coords,
+             grp_dat = grp_dat, tolerance = tolerance,
+             duplicated_strategy = duplicated_strategy,
+             fact = fact, crs = private$crs, longlat = private$longlat,
+             proj4string = private$proj4string,
+             which_longlat = private$which_longlat,
+             length_unit = private$length_unit,
+             transform = private$transform,
+             suppress_warnings = suppress_warnings
+           )
 
-               dup_points <- c(dup_points, dup_points_grp)
-               far_points <- c(far_points, far_points_grp)
-               PtE_new <- rbind(PtE_new, PtE_grp)
-               norm_XY <- c(norm_XY, norm_XY_grp)
-             }
-             PtE <- PtE_new
+           PtE          <- flt$PtE
+           far_points   <- flt$far_mask
+           norm_XY      <- flt$norm_XY
+           closest_mask <- flt$closest_mask
 
-             if(sum(dup_points)>0){
-               if(!suppress_warnings){
-                 warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
-               }
-             }
-             if(any(far_points)){
-               if(!suppress_warnings){
-                 warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
-               }
-               far_data <- lapply(data, function(dat){dat[far_points]})
-             }
-             data <- lapply(data, function(dat){dat[!far_points]})
-             if(!is.null(closest_points)){
-               removed_data <-  lapply(data, function(dat){dat[closest_points]})
-               data <- lapply(data, function(dat){dat[!closest_points]})
-             }
-             if(include_distance_to_graph){
-               data[[".distance_to_graph"]] <- norm_XY
-             }
-
-
-           } else if(tolower(duplicated_strategy) == "jitter"){
-             norm_XY <- NULL
-             fact <- process_factor_unit(private$vertex_unit, private$length_unit)
-             PtE_new <- NULL
-             far_points <- NULL
-
-             grp_dat <- data[[".group"]]
-             if(length(grp_dat) == 0){
-               grp_dat <- rep(1, nrow(PtE))
-             }
-
-             for(grp in unique(grp_dat)){
-               idx_grp <- which(grp_dat == grp)
-               PtE_grp <- PtE[idx_grp,, drop=FALSE]
-               dup_points_grp <- duplicated(PtE_grp)
-               while(sum(dup_points_grp)>0){
-                 cond_0 <- PtE_grp[dup_points_grp,2] == 0
-                 cond_1 <- PtE_grp[dup_points_grp,2] == 1
-                 idx_pte0 <- which(cond_0)
-                 idx_pte1 <-  which(cond_1)
-                 idx_other_pte <- which(!cond_0 & !cond_1)
-                 d_points <- which(dup_points_grp)
-                 if(length(idx_pte0)>0){
-                   PtE_grp[d_points[idx_pte0],2] <- PtE_grp[d_points[idx_pte0],2] + 1e-2 * runif(length(idx_pte0))
-                 }
-                 if(length(idx_pte1)>0){
-                   PtE_grp[d_points[idx_pte1],2] <- PtE_grp[d_points[idx_pte1],2] - 1e-2 * runif(length(idx_pte1))
-                 }
-                 if(length(idx_other_pte)>0){
-                   delta_dif <- min(1e-2, 1-max(PtE_grp[d_points[idx_other_pte],2]), min(PtE_grp[d_points[idx_other_pte],2]))
-                   PtE_grp[d_points[idx_other_pte],2] <- PtE_grp[d_points[idx_other_pte],2] + delta_dif * runif(length(idx_other_pte))
-                 }
-                 dup_points_grp <- duplicated(PtE_grp)
-               }
-               XY_new_grp <- self$coordinates(PtE = PtE_grp, normalized = TRUE)
-               point_coords_grp <- point_coords[idx_grp,, drop=FALSE]
-               norm_XY_grp <- compute_aux_distances(lines = point_coords_grp, points = XY_new_grp, crs = private$crs, longlat = private$longlat, proj4string = private$proj4string, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform)
-               far_points_grp <- (norm_XY_grp > tolerance)
-               PtE_grp <- PtE_grp[!far_points_grp,,drop=FALSE]
-               norm_XY_grp <- norm_XY_grp[!far_points_grp]
-               far_points <- c(far_points, far_points_grp)
-               PtE_new <- rbind(PtE_new, PtE_grp)
-               norm_XY <- c(norm_XY, norm_XY_grp)
-             }
-             PtE <- PtE_new
-             if(any(far_points)){
-               if(!suppress_warnings){
-                 warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is",sum(far_points)))
-               }
-               far_data <- lapply(data, function(dat){dat[far_points]})
-             }
-             data <- lapply(data, function(dat){dat[!far_points]})
-             # PtE <- PtE[!far_points,,drop=FALSE]
-             if(include_distance_to_graph){
-               data[[".distance_to_graph"]] <- norm_XY
-             }
-           } else{
-             stop(paste(duplicated_strategy, "is not a valid duplicated strategy!"))
+           if(flt$has_dup && !suppress_warnings){
+             warning("There were points projected at the same location. Only the closest point was kept. To keep all the observations change 'duplicated_strategy' to 'jitter'.")
            }
-
-           rm(far_points)
-           rm(norm_XY)
+           if(any(far_points)){
+             if(!suppress_warnings){
+               warning(paste("There were points that were farther than the tolerance. These points were removed. If you want them projected into the graph, please increase the tolerance. The total number of points removed due do being far is", sum(far_points)))
+             }
+             far_data <- lapply(data, function(dat) dat[far_points])
+           }
+           data <- lapply(data, function(dat) dat[!far_points])
+           if(any(closest_mask)){
+             removed_data <- lapply(data, function(dat) dat[closest_mask])
+             data         <- lapply(data, function(dat) dat[!closest_mask])
+           }
+           if(include_distance_to_graph){
+             data[[".distance_to_graph"]] <- norm_XY
+           }
 
          } else{
            stop("The options for 'data_coords' are 'PtE' and 'spatial'.")
@@ -4223,8 +4027,16 @@ coordinates!"))
 
          spatial_points <- self$coordinates(PtE = PtE, normalized = TRUE)
 
-         private$data[[".coord_x"]] <- rep(spatial_points[,1], times = n_group)
-         private$data[[".coord_y"]] <- rep(spatial_points[,2], times = n_group)
+         # Sparse format: use .loc_idx to map each row to its unique-location coords.
+         # Legacy full-grid: replicate spatial_points n_group times.
+         loc_idx_stored <- private$data[[".loc_idx"]]
+         if (!is.null(loc_idx_stored)) {
+           private$data[[".coord_x"]] <- spatial_points[loc_idx_stored, 1]
+           private$data[[".coord_y"]] <- spatial_points[loc_idx_stored, 2]
+         } else {
+           private$data[[".coord_x"]] <- rep(spatial_points[, 1], times = n_group)
+           private$data[[".coord_y"]] <- rep(spatial_points[, 2], times = n_group)
+         }
          if(tibble){
            private$data <- tidyr::as_tibble(private$data)
          }
