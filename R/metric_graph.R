@@ -2312,9 +2312,9 @@ metric_graph <-  R6Class("metric_graph",
        t <- system.time({
          degrees <- private$degrees$degrees
 
-         # Finding problematic vertices, that is, vertices with incompatible directions
-         # They will not be pruned.
-         problematic <- sapply(self$vertices, function(vert){attr(vert,"problematic")})
+         problematic <- vapply(self$vertices,
+                               function(vert) isTRUE(attr(vert, "problematic")),
+                               logical(1))
 
          if((verbose > 0) && (sum(problematic) > 0)){
            message(paste(sum(problematic), "vertices were not pruned due to incompatible directions."))
@@ -2382,18 +2382,24 @@ metric_graph <-  R6Class("metric_graph",
 
          if (any(is_chain_v)) {
 
-           # Build vertex -> incident edges adjacency for chain vertices
+           # Vectorized adjacency build for chain vertices
+           ea <- E[, 1L]; eb <- E[, 2L]
+           mask_a <- is_chain_v[ea]
+           mask_b <- is_chain_v[eb] & (ea != eb)
+
+           v_list <- c(ea[mask_a],    eb[mask_b])
+           e_list <- c(which(mask_a), which(mask_b))
+
+           ord      <- order(v_list)
+           v_sorted <- v_list[ord]
+           e_sorted <- e_list[ord]
+
            chain_e1 <- integer(nV_loc)
            chain_e2 <- integer(nV_loc)
-           for (k in seq_len(nE_loc)) {
-             a <- E[k, 1L]; b <- E[k, 2L]
-             if (is_chain_v[a]) {
-               if (chain_e1[a] == 0L) chain_e1[a] <- k else chain_e2[a] <- k
-             }
-             if (is_chain_v[b] && a != b) {
-               if (chain_e1[b] == 0L) chain_e1[b] <- k else chain_e2[b] <- k
-             }
-           }
+           dup      <- duplicated(v_sorted)
+           first    <- !dup
+           chain_e1[v_sorted[first]] <- e_sorted[first]
+           chain_e2[v_sorted[dup]]   <- e_sorted[dup]
 
            # ----- Walk chains -----
            edge_consumed  <- logical(nE_loc)
@@ -2401,16 +2407,16 @@ metric_graph <-  R6Class("metric_graph",
            chains <- vector("list", 64L)
            chains_n <- 0L
 
+           # Upper bound on any chain length: number of chain vertices + 1
+           max_chain_len <- sum(is_chain_v) + 1L
+
            walk_chain <- function(start_v, start_e) {
-             e_seq  <- integer(64); o_seq <- logical(64); iv_seq <- integer(64)
+             e_seq  <- integer(max_chain_len)
+             o_seq  <- logical(max_chain_len)
+             iv_seq <- integer(max_chain_len)
              n <- 0L; cur_v <- start_v; cur_e <- start_e
              repeat {
                n <- n + 1L
-               if (n > length(e_seq)) {
-                 e_seq  <- c(e_seq,  integer(length(e_seq)))
-                 o_seq  <- c(o_seq,  logical(length(o_seq)))
-                 iv_seq <- c(iv_seq, integer(length(iv_seq)))
-               }
                a <- E[cur_e, 1L]; b <- E[cur_e, 2L]
                next_v <- if (a == cur_v) b else a
                e_seq[n] <- cur_e
@@ -2467,10 +2473,24 @@ metric_graph <-  R6Class("metric_graph",
                orient <- ch$o
                n_seg  <- length(e_ids)
 
-               pieces      <- vector("list", n_seg)
-               pte_pieces  <- vector("list", n_seg)
-               lens        <- numeric(n_seg)
+               # Pre-compute total row count for the merged edge
+               lens <- numeric(n_seg)
+               nrows_seg <- integer(n_seg)
+               for (s in seq_len(n_seg)) {
+                 ed_k <- e_ids[s]
+                 nr <- nrow(edges_loc[[ed_k]])
+                 lens[s] <- edge_len[ed_k]
+                 nrows_seg[s] <- if (s == 1L) nr else nr - 1L
+               }
+               total_rows <- sum(nrows_seg)
+               merged_len <- sum(lens)
 
+               # Pre-allocate merged coordinate matrix and PtE vector
+               merged_coords <- matrix(NA_real_, nrow = total_rows, ncol = 2L)
+               merged_pte    <- numeric(total_rows)
+               seg_starts    <- c(0, cumsum(lens)[-n_seg])
+
+               row_cursor <- 0L
                for (s in seq_len(n_seg)) {
                  ed_k <- e_ids[s]
                  ec   <- unclass(edges_loc[[ed_k]])
@@ -2479,26 +2499,17 @@ metric_graph <-  R6Class("metric_graph",
                    ec  <- ec[nrow(ec):1L, , drop = FALSE]
                    pte <- 1 - rev(pte)
                  }
-                 lens[s] <- edge_len[ed_k]
-                 if (s == 1L) {
-                   pieces[[s]]     <- ec
-                   pte_pieces[[s]] <- pte
-                 } else {
-                   pieces[[s]]     <- ec[-1L, , drop = FALSE]
-                   pte_pieces[[s]] <- pte[-1L]
+                 if (s > 1L) {
+                   ec  <- ec[-1L, , drop = FALSE]
+                   pte <- pte[-1L]
                  }
+                 nr <- nrows_seg[s]
+                 idx <- row_cursor + seq_len(nr)
+                 merged_coords[idx, ] <- ec
+                 merged_pte[idx] <- (seg_starts[s] + pte * lens[s]) / merged_len
+                 row_cursor <- row_cursor + nr
                }
-
-               merged_coords <- do.call(rbind, pieces)
-               merged_len    <- sum(lens)
-               cum_offset    <- 0
-               pte_combined  <- numeric(0)
-               for (s in seq_along(pte_pieces)) {
-                 pte_combined <- c(pte_combined, cum_offset + pte_pieces[[s]] * lens[s])
-                 cum_offset   <- cum_offset + lens[s]
-               }
-               pte_combined <- pte_combined / merged_len
-               attr(merged_coords, "PtE") <- pte_combined
+               attr(merged_coords, "PtE") <- merged_pte
 
                slot <- min(e_ids)
                edges_loc[[slot]] <- merged_coords
@@ -2511,19 +2522,57 @@ metric_graph <-  R6Class("metric_graph",
 
                # If check_weights is FALSE, the chain may span weight boundaries;
                # warn if any edge in the chain has a weight different from slot.
-               if (!check_weights) {
-                 w_slot <- if (ew_is_df) edge_w[slot, , drop = FALSE] else edge_w[slot]
-                 for (ed_k in dropped) {
-                   wk <- if (ew_is_df) edge_w[ed_k, , drop = FALSE] else edge_w[ed_k]
-                   diff <- if (ew_is_df) compare_with_na(wk, w_slot, is_matrix = TRUE)
-                   else          compare_with_na(wk, w_slot)
-                   if (isTRUE(diff)) { prune_warning_local <- TRUE; break }
+               if (!check_weights && length(dropped) > 0L) {
+                 if (!ew_is_df) {
+                   # Vectorized comparison for scalar weights
+                   if (any(compare_with_na(edge_w[dropped], edge_w[slot]))) {
+                     prune_warning_local <- TRUE
+                   }
+                 } else {
+                   w_slot <- edge_w[slot, , drop = FALSE]
+                   for (ed_k in dropped) {
+                     wk <- edge_w[ed_k, , drop = FALSE]
+                     if (isTRUE(compare_with_na(wk, w_slot, is_matrix = TRUE))) {
+                       prune_warning_local <- TRUE; break
+                     }
+                   }
                  }
+               }
+             }
+
+             # Build edge remap for fast data location update:
+             # For each old edge, record (slot_edge, offset, flipped, merged_length)
+             # so observation PtE can be recomputed analytically in O(N).
+             edge_remap_slot   <- seq_len(nE_loc)  # default: maps to itself
+             edge_remap_offset <- numeric(nE_loc)   # cumulative offset in merged edge
+             edge_remap_mlen   <- edge_len          # merged edge total length
+             edge_remap_flip   <- logical(nE_loc)   # whether this segment was flipped
+             edge_len_orig     <- self$edge_lengths  # snapshot before merge modifies edge_len
+
+             for (ci in seq_len(chains_n)) {
+               ch <- chains[[ci]]
+               if (ch$is_cycle) next
+               e_ids  <- ch$e
+               orient <- ch$o
+               slot   <- min(e_ids)
+               cum_off <- 0
+               for (s in seq_along(e_ids)) {
+                 eid <- e_ids[s]
+                 edge_remap_slot[eid]   <- slot
+                 edge_remap_offset[eid] <- cum_off
+                 edge_remap_flip[eid]   <- !orient[s]
+                 edge_remap_mlen[eid]   <- edge_len[slot]
+                 cum_off <- cum_off + edge_len_orig[eid]
                }
              }
 
              # Compact: keep surviving rows/elements only, relabel E
              keep_e <- !edge_drop
+             # Build old-to-new edge index mapping
+             old_to_new_e <- integer(nE_loc)
+             old_to_new_e[keep_e] <- seq_len(sum(keep_e))
+             edge_remap_new_idx <- old_to_new_e[edge_remap_slot]
+
              edges_loc <- edges_loc[keep_e]
              edge_len  <- edge_len[keep_e]
              E         <- E[keep_e, , drop = FALSE]
@@ -2573,7 +2622,9 @@ metric_graph <-  R6Class("metric_graph",
            private$compute_degrees(add = TRUE)
            private$create_update_vertices(verbose = 0)
            deg_now <- private$degrees$degrees
-           prob_now <- sapply(self$vertices, function(vert) attr(vert, "problematic"))
+           prob_now <- vapply(self$vertices,
+                             function(vert) isTRUE(attr(vert, "problematic")),
+                             logical(1))
            res <- list(
              degrees = deg_now,
              problematic = prob_now,
@@ -2625,25 +2676,55 @@ metric_graph <-  R6Class("metric_graph",
 
          edge_lengths_ <- self$get_edge_lengths()
 
-         self$edges <- lapply(1:self$nE, function(i){
-           edge <- self$edges[[i]]
-           if(is.vector(private$edge_weights)){
-             attr(edge,"weight") <- private$edge_weights[i]
-           } else{
-             attr(edge,"weight") <- private$edge_weights[i, ,drop=FALSE]
-           }
-           attr(edge, "longlat") <- private$longlat
-           attr(edge, "crs") <- private$crs$input
-           attr(edge, "length") <- edge_lengths_[i]
-           attr(edge, "id") <- i
-           attr(edge, "kirchhoff_weight") <- private$kirchhoff_weights
-           attr(edge, "directional_weights") <- private$directional_weights
-           class(edge) <- "metric_graph_edge"
-           if(verbose == 2){
+         # Hoist R6 active bindings out of the per-edge closure
+         ew_local        <- private$edge_weights
+         ew_is_vec       <- is.vector(ew_local)
+         longlat_local   <- private$longlat
+         crs_local       <- private$crs$input
+         kw_local        <- private$kirchhoff_weights
+         dw_local        <- private$directional_weights
+         edges_local     <- self$edges
+         nE_now          <- self$nE
+
+         if (verbose == 2) {
+           for (i in seq_len(nE_now)) {
+             edge <- edges_local[[i]]
+             if (ew_is_vec) {
+               attr(edge, "weight") <- ew_local[i]
+             } else {
+               attr(edge, "weight") <- ew_local[i, , drop = FALSE]
+             }
+             attr(edge, "longlat")             <- longlat_local
+             attr(edge, "crs")                 <- crs_local
+             attr(edge, "length")              <- edge_lengths_[i]
+             attr(edge, "id")                  <- i
+             attr(edge, "kirchhoff_weight")    <- kw_local
+             attr(edge, "directional_weights") <- dw_local
+             class(edge) <- "metric_graph_edge"
+             edges_local[[i]] <- edge
              bar_update_attr_edges$increment()
            }
-           return(edge)
-         })
+         } else {
+           # Fast path: lapply avoids repeated copy-on-modify of the list spine
+           edges_local <- lapply(seq_len(nE_now), function(i) {
+             edge <- edges_local[[i]]
+             if (ew_is_vec) {
+               attr(edge, "weight") <- ew_local[i]
+             } else {
+               attr(edge, "weight") <- ew_local[i, , drop = FALSE]
+             }
+             attr(edge, "longlat")             <- longlat_local
+             attr(edge, "crs")                 <- crs_local
+             attr(edge, "length")              <- edge_lengths_[i]
+             attr(edge, "id")                  <- i
+             attr(edge, "kirchhoff_weight")    <- kw_local
+             attr(edge, "directional_weights") <- dw_local
+             class(edge) <- "metric_graph_edge"
+             edge
+           })
+         }
+         class(edges_local) <- "metric_graph_edges"
+         self$edges <- edges_local
 
 
 
@@ -2658,13 +2739,34 @@ metric_graph <-  R6Class("metric_graph",
            message("Updating data locations.")
          }
          t <- system.time({
-           x_coord <- private$data[[".coord_x"]]
-           y_coord <- private$data[[".coord_y"]]
-           new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
-           group_vec <- private$data[[".group"]]
-           private$data[[".edge_number"]] <- new_PtE[,1]
-           private$data[[".distance_on_edge"]] <- new_PtE[,2]
-           order_idx <- order(group_vec, new_PtE[,1], new_PtE[,2])
+           has_remap <- exists("edge_remap_new_idx", inherits = FALSE) &&
+                        !needs_fallback
+           if (has_remap) {
+             # Fast analytical remap: O(N) instead of O(N*E) snap
+             old_en  <- private$data[[".edge_number"]]
+             old_doe <- private$data[[".distance_on_edge"]]
+             old_len <- edge_len_orig[old_en]
+             new_en  <- as.numeric(edge_remap_new_idx[old_en])
+             new_doe <- (edge_remap_offset[old_en] +
+                           ifelse(edge_remap_flip[old_en],
+                                  (1 - old_doe) * old_len,
+                                  old_doe * old_len)) /
+                        edge_remap_mlen[old_en]
+             group_vec <- private$data[[".group"]]
+             private$data[[".edge_number"]] <- new_en
+             private$data[[".distance_on_edge"]] <- new_doe
+           } else {
+             # Fallback: full geometric re-snap
+             x_coord <- private$data[[".coord_x"]]
+             y_coord <- private$data[[".coord_y"]]
+             new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
+             group_vec <- private$data[[".group"]]
+             private$data[[".edge_number"]] <- new_PtE[, 1]
+             private$data[[".distance_on_edge"]] <- new_PtE[, 2]
+           }
+           order_idx <- order(group_vec,
+                              private$data[[".edge_number"]],
+                              private$data[[".distance_on_edge"]])
            old_group_variable <- attr(private$data, "group_variable")
            private$data <- lapply(private$data, function(dat){dat[order_idx]})
            attr(private$data, "group_variable") <- old_group_variable
@@ -5396,7 +5498,9 @@ larger than 1")
                                             return = TRUE,
                                             verbose = 0,
                                             suppress_warnings = TRUE)
-         data <- edge_weight
+         meta_cols <- c(".edge_number", ".distance_on_edge", ".group",
+                        ".loc_idx", ".coord_x", ".coord_y")
+         data <- setdiff(names(newdata), meta_cols)[1]
        }
 
        if(is.null(data) && is.null(X) && is.null(edge_weight)){
@@ -5484,8 +5588,11 @@ larger than 1")
          .X_by_edge <- vector("list", .nE)
          for (.nm in names(.X_split)) {
            .ei <- as.integer(.nm)
-           if (.ei >= 1L && .ei <= .nE)
-             .X_by_edge[[.ei]] <- .Xm[.X_split[[.nm]], 2:3, drop = FALSE]
+           if (.ei >= 1L && .ei <= .nE) {
+             .xj <- .Xm[.X_split[[.nm]], 2:3, drop = FALSE]
+             if (nrow(.xj) > 1L) .xj <- .xj[order(.xj[,1]), , drop = FALSE]
+             .X_by_edge[[.ei]] <- .xj
+           }
          }
        } else {
          .X_by_edge <- NULL
@@ -5515,7 +5622,6 @@ larger than 1")
          Vs <- self$E[i, 1]
          Ve <- self$E[i, 2]
          if (mesh) {
-           ## OPT: O(1) lookup instead of scanning mesh$PtE[,1] every iteration
            ind_rows <- if (is.null(.mesh_idx_by_edge)) integer(0)
            else .mesh_idx_by_edge[[i]]
            if (is.null(ind_rows)) ind_rows <- integer(0)
@@ -5542,17 +5648,18 @@ larger than 1")
 
            if(interpolate_plot){
              PtE_tmp <- PtE_edges[[i]]
-             PtE_tmp <- setdiff(PtE_tmp, vals[,1])
-             if(length(PtE_tmp)>0){
-               PtE_tmp <- cbind(PtE_tmp, NA)
-               vals <- rbind(vals,PtE_tmp)
+             PtE_new <- PtE_tmp[is.na(match(PtE_tmp, vals[,1]))]
+             if(length(PtE_new) > 0){
+               n_old <- nrow(vals)
+               combined <- matrix(NA_real_, nrow = n_old + length(PtE_new), ncol = 2)
+               combined[seq_len(n_old), ] <- vals
+               combined[n_old + seq_along(PtE_new), 1] <- PtE_new
+               vals <- combined[order(combined[,1]), , drop = FALSE]
+             } else {
+               vals <- vals[order(vals[,1]), , drop = FALSE]
              }
 
              if(nrow(vals) > 0) {
-               # Sort by first column
-               ord_idx <- order(vals[,1])
-               vals <- vals[ord_idx,]
-
                # Add boundary points if needed
                if(vals[1,1] > 0) {
                  vals <- rbind(c(0,NA), vals)
@@ -5562,31 +5669,26 @@ larger than 1")
                }
 
                # Only proceed with interpolation if there are any non-NA values
-               if(any(!is.na(vals[,2]))) {
-                 max_val <- max(vals[,2], na.rm=TRUE)
-                 min_val <- min(vals[,2], na.rm=TRUE)
+               .ok <- !is.na(vals[,1]) & !is.na(vals[,2])
+               if(any(.ok)) {
+                 max_val <- max(vals[,2], na.rm = TRUE)
+                 min_val <- min(vals[,2], na.rm = TRUE)
 
-                 # Perform interpolation
-                 interpolated <- try(
-                   zoo::na.approx(object = vals[,2],
-                                  x = vals[,1],
-                                  na.rm=FALSE,
-                                  ties = "mean"),
-                   silent = TRUE
-                 )
-
-                 if(!inherits(interpolated, "try-error")) {
-                   vals[,2] <- na.const(pmax(pmin(interpolated, max_val), min_val))
+                 if(length(unique(vals[.ok, 1])) >= 2L) {
+                   ap <- stats::approx(x = vals[.ok, 1], y = vals[.ok, 2],
+                                       xout = vals[,1], rule = 1, ties = mean)
+                   vals[,2] <- na.const(pmax(pmin(ap$y, max_val), min_val))
+                 } else {
+                   vals[,2] <- na.const(vals[,2])
                  }
                }
                # Keep only values in [0,1] range
-               vals <- vals[(vals[,1] >= 0) & (vals[,1] <= 1),]
+               vals <- vals[(vals[,1] >= 0) & (vals[,1] <= 1), , drop = FALSE]
              }
            }
 
 
          } else {
-           ## OPTIMIZED: O(1) lookup instead of full-X scan + per-iter coercion
            .Xi <- .X_by_edge[[i]]
            vals <- if (is.null(.Xi)) matrix(numeric(0), 0, 2) else .Xi
 
@@ -5604,7 +5706,8 @@ larger than 1")
 
                    # Process edges starting at Ve
                    if (length(start_Ei) > 0) {
-                     valid_X_start <- do.call(rbind, .X_by_edge[start_Ei]); if (is.null(valid_X_start)) valid_X_start <- matrix(numeric(0), 0, 2)
+                     valid_X_start <- do.call(rbind, .X_by_edge[start_Ei])
+                     if (is.null(valid_X_start)) valid_X_start <- matrix(numeric(0), 0, 2)
                      ind_start <- which(valid_X_start[, 1] == 0)
                      if (length(ind_start) > 0) {
                        ind_min <- which.min(valid_X_start[ind_start, 2])
@@ -5614,7 +5717,8 @@ larger than 1")
 
                    # Process edges ending at Ve
                    if (length(end_Ei) > 0) {
-                     valid_X_end <- do.call(rbind, .X_by_edge[end_Ei]); if (is.null(valid_X_end)) valid_X_end <- matrix(numeric(0), 0, 2)
+                     valid_X_end <- do.call(rbind, .X_by_edge[end_Ei])
+                     if (is.null(valid_X_end)) valid_X_end <- matrix(numeric(0), 0, 2)
                      ind_end <- which(valid_X_end[, 1] == 1)
                      if (length(ind_end) > 0) {
                        ind_max <- which.max(valid_X_end[ind_end, 2])
@@ -5638,15 +5742,16 @@ larger than 1")
 
                  if   (min(vals[, 1]) > 0) {
                    # Check if we can add start value from another edge
-                   start_Ei <- .edges_from_v[[Vs]]  # OPT: O(1)
-                   end_Ei   <- .edges_to_v[[Vs]]  # OPT: O(1)
+                   start_Ei <- .edges_from_v[[Vs]]
+                   end_Ei   <- .edges_to_v[[Vs]]
 
                    min.val <- NA
                    max.val <- NA
 
                    # Process edges starting at Vs
                    if (length(start_Ei) > 0) {
-                     valid_X_start <- do.call(rbind, .X_by_edge[start_Ei]); if (is.null(valid_X_start)) valid_X_start <- matrix(numeric(0), 0, 2)
+                     valid_X_start <- do.call(rbind, .X_by_edge[start_Ei])
+                     if (is.null(valid_X_start)) valid_X_start <- matrix(numeric(0), 0, 2)
                      ind_start <- which(valid_X_start[, 1] == 0)
                      if (length(ind_start) > 0) {
                        ind_min <- which.min(valid_X_start[ind_start, 2])
@@ -5656,7 +5761,8 @@ larger than 1")
 
                    # Process edges ending at Vs
                    if (length(end_Ei) > 0) {
-                     valid_X_end <- do.call(rbind, .X_by_edge[end_Ei]); if (is.null(valid_X_end)) valid_X_end <- matrix(numeric(0), 0, 2)
+                     valid_X_end <- do.call(rbind, .X_by_edge[end_Ei])
+                     if (is.null(valid_X_end)) valid_X_end <- matrix(numeric(0), 0, 2)
                      ind_end <- which(valid_X_end[, 1] == 1)
                      if (length(ind_end) > 0) {
                        ind_max <- which.max(valid_X_end[ind_end, 2])
@@ -5684,7 +5790,6 @@ larger than 1")
                } else {
                  PtE_tmp <- PtE_edges[[i]]
 
-                 ## OPT: replace four O(nE) scans with O(1) lookups
                  .Vs_i <- .Efrom[i]; .Ve_i <- .Eto[i]
                  .end_at_Vs   <- .edges_to_v[[.Vs_i]]
                  .start_at_Vs <- setdiff(.edges_from_v[[.Vs_i]], i)
@@ -5695,7 +5800,7 @@ larger than 1")
                  if (length(.end_at_Vs) > 0) {
                    edge_new <- .end_at_Vs[1]
                    new_val <- .X_by_edge[[edge_new]]
-                   if (nrow(new_val) > 0) {
+                   if (NROW(new_val) > 0) {
                      sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, max(new_val[, 1]))
                      new_val[, 1] <- new_val[, 1] - sub_fact
                      vals <- rbind(vals, new_val)
@@ -5703,7 +5808,7 @@ larger than 1")
                  } else if (length(.start_at_Vs) > 0) {
                    edge_new <- .start_at_Vs[1]
                    new_val <- .X_by_edge[[edge_new]]
-                   if (nrow(new_val) > 0) {
+                   if (NROW(new_val) > 0) {
                      sum_fact <- ifelse(any(vals[, 1] == 1), -1e-6, min(new_val[, 1]))
                      new_val[, 1] <- -new_val[, 1] + sum_fact
                      vals <- rbind(vals, new_val)
@@ -5714,7 +5819,7 @@ larger than 1")
                  if (length(.start_at_Ve) > 0) {
                    edge_new <- .start_at_Ve[1]
                    new_val <- .X_by_edge[[edge_new]]
-                   if (nrow(new_val) > 0) {
+                   if (NROW(new_val) > 0) {
                      sum_fact <- ifelse(any(vals[, 1] == 1), 1 + 1e-6, 1 - min(new_val[, 1]))
                      new_val[, 1] <- new_val[, 1] + sum_fact
                      vals <- rbind(vals, new_val)
@@ -5722,173 +5827,166 @@ larger than 1")
                  } else if (length(.end_at_Ve) > 0) {
                    edge_new <- .end_at_Ve[1]
                    new_val <- .X_by_edge[[edge_new]]
-                   if (nrow(new_val) > 0) {
+                   if (NROW(new_val) > 0) {
                      sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, -max(new_val[, 1]) - 1)
                      new_val[, 1] <- -new_val[, 1] - sub_fact
                      vals <- rbind(vals, new_val)
                    }
                  }
 
-                 # Add remaining values from PtE_tmp not in vals
-                 PtE_tmp <- setdiff(PtE_tmp, vals[, 1])
-                 if (length(PtE_tmp) > 0) {
-                   PtE_tmp <- cbind(PtE_tmp, NA)
-                   PtE_tmp <- as.data.frame(PtE_tmp)
-                   colnames(PtE_tmp) <- c(".distance_on_edge", data)
-                   vals <- rbind(vals, PtE_tmp)
+                 # Add remaining PtE values not already in vals
+                 PtE_new <- PtE_tmp[is.na(match(PtE_tmp, vals[, 1]))]
+                 if (length(PtE_new) > 0) {
+                   n_old <- NROW(vals)
+                   combined <- matrix(NA_real_, nrow = n_old + length(PtE_new), ncol = 2)
+                   combined[seq_len(n_old), ] <- as.matrix(vals[, 1:2])
+                   combined[n_old + seq_along(PtE_new), 1] <- PtE_new
+                   vals <- combined[order(combined[,1]), , drop = FALSE]
+                 } else {
+                   vals <- as.matrix(vals[, 1:2])
+                   vals <- vals[order(vals[, 1]), , drop = FALSE]
                  }
 
-                 # Sort values by the first column
-                 ord_idx <- order(vals[, 1])
-                 vals <- vals[ord_idx, ]
-
                  # Only proceed if there are any non-NA values
-                 if(any(!is.na(vals[,2]))) {
-                   max_val <- max(vals[,2], na.rm = TRUE)
-                   min_val <- min(vals[,2], na.rm = TRUE)
+                 .ok <- !is.na(vals[,1]) & !is.na(vals[,2])
+                 if(any(.ok)) {
+                   max_val <- max(vals[.ok, 2])
+                   min_val <- min(vals[.ok, 2])
 
-                   # Try interpolation with error handling
-                   interpolated <- try(
-                     zoo::na.approx(
-                       object = vals[,2],
-                       x = vals[,1],
-                       na.rm = FALSE,
-                       ties = "mean"
-                     ),
-                     silent = TRUE
-                   )
-
-                   if(!inherits(interpolated, "try-error")) {
-                     vals[,2] <- na.const(
-                       pmax(
-                         pmin(
-                           interpolated,
-                           max_val
-                         ),
-                         min_val
-                       )
-                     )
+                   if(length(unique(vals[.ok, 1])) >= 2L) {
+                     ap <- stats::approx(x = vals[.ok, 1], y = vals[.ok, 2],
+                                         xout = vals[,1], rule = 1, ties = mean)
+                     vals[,2] <- na.const(pmax(pmin(ap$y, max_val), min_val))
+                   } else {
+                     vals[,2] <- na.const(vals[,2])
                    }
-                 } # If all values are NA, vals[,2] remains unchanged
-
+                 }
 
                  # Filter values to lie within [0, 1]
-                 vals <- vals[(vals[, 1] >= 0) & (vals[, 1] <= 1), ]
+                 vals <- vals[(vals[, 1] >= 0) & (vals[, 1] <= 1), , drop = FALSE]
 
                  # Add a starting value if vals is non-empty and no value at 0
-                 if (nrow(vals) > 0 && !any(vals[, 1] == 0)) {
-                   vals <- rbind(c(0, vals[1, 2, drop = TRUE]), vals)
+                 if (NROW(vals) > 0 && !any(vals[, 1] == 0)) {
+                   vals <- rbind(c(0, vals[1, 2]), vals)
                  }
                }
              } else{
                if(interpolate_plot){
                  vals <- NULL
-                 Ei <- self$E[, 1] == Ve #edges that start in Ve
-                 Ei <- which(Ei)
-                 if (sum(Ei) > 0) {
-                   ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
-                   if(sum(ind)>0){
-                     ind <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                     min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
-                   } else {
-                     ind <- NULL
-                     ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                     min.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val]
-                   }} else{
-                     ind <- NULL
-                     ind.val <- integer(0)
-                   }
-                 if (length(ind) > 0) {
-                   vals <- rbind(vals, c(1, min.val))
-                   # if(length(min.val)>0){
-                   #   vals <- rbind(vals, c(1, min.val[[1]]))
-                   # } else{
-                   #   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
-                   # }
-                   vals <- rbind(vals, c(1, X[ind, 3,drop=TRUE]))
+                 # Helper: combine observations from multiple edges into [pos, val] matrix
+                 .gather_obs <- function(edge_ids) {
+                   obs <- do.call(rbind, .X_by_edge[edge_ids])
+                   if (is.null(obs) || nrow(obs) == 0) NULL else obs
                  }
-                 else {
-                   Ei <- self$E[, 2] == Ve #edges that end in Ve
-                   Ei <- which(Ei)
-                   if (sum(Ei)  > 0) {
-                     ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
-                     if(sum(ind)>0){
-                       ind <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                       max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind]
+
+                 # Find value at Ve (end of current edge) from neighbor edges
+                 .ve_val <- NULL
+                 Ei <- .edges_from_v[[Ve]]
+                 .have_min <- FALSE
+                 if (length(Ei) > 0) {
+                   .obs <- .gather_obs(Ei)
+                   if (!is.null(.obs)) {
+                     .at0 <- which(.obs[, 1] == 0)
+                     if(length(.at0) > 0){
+                       .idx <- which.min(.obs[, 1])
+                       min.val <- .obs[.idx, 2]
+                       .ve_val <- min.val
+                       .have_min <- TRUE
                      } else {
-                       ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                       max.val <- X[X[,1,drop=TRUE] %in% Ei, 3,drop=TRUE][ind.val.max]
-                       if(length(ind.val) == 0){
-                         ind <- ind.val.max
-                       } else if (length(ind.val.max) == 0){
-                         ind <- ind.val
-                       } else{
-                         ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
-                       }
-                     } } else{
-                       if(length(ind.val)>0){
-                         ind <- ind.val
-                       } else{
-                         ind <- NULL
-                       }
+                       .idx <- which.min(.obs[, 1])
+                       min.val <- .obs[.idx, 2]
+                       .have_min <- TRUE
                      }
-                   if (length(ind) > 0){
-                     # if(length(max.val)>0){
-                     #   vals <- rbind(vals, c(1, max.val[[1]]))
-                     # } else{
-                     #   vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
-                     # }
-                     vals <- rbind(vals, c(1, X[ind, 3, drop=TRUE]))
+                   }
+                 }
+                 if (!is.null(.ve_val)) {
+                   vals <- rbind(vals, c(1, .ve_val), c(1, .ve_val))
+                 } else {
+                   Ei <- .edges_to_v[[Ve]]
+                   .ve_val2 <- NULL
+                   if (length(Ei) > 0) {
+                     .obs <- .gather_obs(Ei)
+                     if (!is.null(.obs)) {
+                       .at1 <- which(.obs[, 1] == 1)
+                       if(length(.at1) > 0){
+                         .idx <- which.max(.obs[, 1])
+                         .ve_val2 <- .obs[.idx, 2]
+                       } else {
+                         .idx_max <- which.max(.obs[, 1])
+                         max.val <- .obs[.idx_max, 2]
+                         if(!.have_min){
+                           .ve_val2 <- max.val
+                         } else if (length(.idx_max) == 0){
+                           .ve_val2 <- min.val
+                         } else{
+                           .ve_val2 <- ifelse(1-max.val < min.val, max.val, min.val)
+                         }
+                       }
+                     } else if (.have_min) {
+                       .ve_val2 <- min.val
+                     }
+                   } else if (.have_min) {
+                     .ve_val2 <- min.val
+                   }
+                   if (!is.null(.ve_val2)){
+                     vals <- rbind(vals, c(1, .ve_val2))
                    }
                  }
 
-                 Ei <- self$E[, 1] == Vs #edges that start in Vs
-                 Ei <- which(Ei)
-                 if (sum(Ei) > 0) {
-                   ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 0)
-                   if(sum(ind)>0){
-                     ind <- ind[1]
-                   } else {
-                     ind <- NULL
-                     ind.val <- which.min(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                     min.val <- X[ind.val, 2,drop=TRUE]
-                   }} else{
-                     ind <- NULL
-                     ind.val <- integer(0)
-                   }
-                 if (length(ind) > 0) {
-                   vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
-                 } else {
-                   Ei <- self$E[, 2] == Vs #edges that end in Vs
-                   Ei <- which(Ei)
-                   if (sum(Ei) > 0) {
-                     ind <- which(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE] == 1)
-                     if(sum(ind)>0){
-                       ind <- ind[1]
+                 # Find value at Vs (start of current edge) from neighbor edges
+                 .vs_val <- NULL
+                 Ei <- .edges_from_v[[Vs]]
+                 .have_min_vs <- FALSE
+                 if (length(Ei) > 0) {
+                   .obs <- .gather_obs(Ei)
+                   if (!is.null(.obs)) {
+                     .at0 <- which(.obs[, 1] == 0)
+                     if(length(.at0) > 0){
+                       .vs_val <- .obs[.at0[1], 2]
                      } else {
-                       ind.val.max <- which.max(X[X[,1,drop=TRUE] %in% Ei, 2,drop=TRUE])
-                       max.val <- X[ind.val.max, 2,drop=TRUE]
-                       if(length(ind.val) == 0){
-                         ind <- ind.val.max
-                       } else if (length(ind.val.max) == 0){
-                         ind <- ind.val
-                       } else{
-                         ind <- ifelse(1-max.val < min.val, ind.val.max, ind.val)
-                       }
-                     } } else{
-                       if(length(ind.val)>0){
-                         ind <- ind.val
-                       } else{
-                         ind <- NULL
-                       }
+                       .idx <- which.min(.obs[, 1])
+                       min.val <- .obs[.idx, 1]
+                       .have_min_vs <- TRUE
                      }
-                   if (length(ind) > 0) {
-                     vals <- rbind(c(0, X[ind, 3, drop=TRUE]), vals)
-                   } else{
-                     vals <- rbind(c(0, vals[1, 2, drop=TRUE]), vals)
                    }
                  }
-                 if(ncol(vals)<2){
+                 if (!is.null(.vs_val)) {
+                   vals <- rbind(c(0, .vs_val), vals)
+                 } else {
+                   Ei <- .edges_to_v[[Vs]]
+                   .vs_val2 <- NULL
+                   if (length(Ei) > 0) {
+                     .obs <- .gather_obs(Ei)
+                     if (!is.null(.obs)) {
+                       .at1 <- which(.obs[, 1] == 1)
+                       if(length(.at1) > 0){
+                         .vs_val2 <- .obs[.at1[1], 2]
+                       } else {
+                         .idx_max <- which.max(.obs[, 1])
+                         max.val <- .obs[.idx_max, 1]
+                         if(!.have_min_vs){
+                           .vs_val2 <- .obs[.idx_max, 2]
+                         } else if (length(.idx_max) == 0){
+                           .vs_val2 <- min.val
+                         } else{
+                           .vs_val2 <- ifelse(1-max.val < min.val, .obs[.idx_max, 2], min.val)
+                         }
+                       }
+                     } else if (.have_min_vs) {
+                       .vs_val2 <- min.val
+                     } else if (!is.null(vals) && NROW(vals) > 0) {
+                       .vs_val2 <- vals[1, 2]
+                     }
+                   } else if (.have_min_vs) {
+                     .vs_val2 <- min.val
+                   } else if (!is.null(vals) && NROW(vals) > 0) {
+                     .vs_val2 <- vals[1, 2]
+                   }
+                   if (!is.null(.vs_val2)){
+                     vals <- rbind(c(0, .vs_val2), vals)
+                   }
+                 }
+                 if(!is.null(vals) && NCOL(vals)<2){
                    vals <- NULL
                  }
                }
@@ -5896,36 +5994,19 @@ larger than 1")
            } else if(interpolate_plot){
 
              PtE_tmp <- PtE_edges[[i]]
-             PtE_tmp <- setdiff(PtE_tmp, vals[,1])
-             if(length(PtE_tmp)>0){
-               PtE_tmp <- cbind(PtE_tmp, NA)
-               PtE_tmp <- as.data.frame(PtE_tmp)
-               colnames(PtE_tmp) <- c(".distance_on_edge", data)
-               vals <- rbind(vals,PtE_tmp)
+             PtE_new <- PtE_tmp[is.na(match(PtE_tmp, vals[,1]))]
+             if(length(PtE_new) > 0){
+               n_old <- NROW(vals)
+               combined <- matrix(NA_real_, nrow = n_old + length(PtE_new), ncol = 2)
+               combined[seq_len(n_old), ] <- as.matrix(vals[, 1:2])
+               combined[n_old + seq_along(PtE_new), 1] <- PtE_new
+               vals <- combined[order(combined[,1]), , drop = FALSE]
+             } else {
+               vals <- as.matrix(vals[, 1:2])
+               vals <- vals[order(vals[,1]), , drop = FALSE]
              }
-             # if(nrow(vals)>0){
-             #   ord_idx <- order(vals[,1])
-             #   vals <- vals[ord_idx,]
-             #   if(vals[1,1] > 0){
-             #     vals <- rbind(c(0,NA), vals)
-             #   }
-             #   if(vals[nrow(vals),1] < 1){
-             #     vals <- rbind(vals, c(1,NA))
-             #   }
-             #   max_val <- max(vals[,2], na.rm=TRUE)
-             #   min_val <- min(vals[,2], na.rm=TRUE)
-             #   vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-             #                                         x = vals[,1],
-             #                                             na.rm=FALSE, ties = "mean"),
-             #                                      max_val), min_val))
-             #   vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
-             # }
 
              if(nrow(vals) > 0) {
-               # Sort by first column
-               ord_idx <- order(vals[,1])
-               vals <- vals[ord_idx,]
-
                # Add boundary points if needed
                if(vals[1,1] > 0) {
                  vals <- rbind(c(0,NA), vals)
@@ -5935,44 +6016,34 @@ larger than 1")
                }
 
                # Only proceed with interpolation if there are any non-NA values
-               if(any(!is.na(vals[,2]))) {
-                 max_val <- max(vals[,2], na.rm=TRUE)
-                 min_val <- min(vals[,2], na.rm=TRUE)
+               .ok <- !is.na(vals[,1]) & !is.na(vals[,2])
+               if(any(.ok)) {
+                 max_val <- max(vals[,2], na.rm = TRUE)
+                 min_val <- min(vals[,2], na.rm = TRUE)
 
-                 # Perform interpolation
-                 interpolated <- try(
-                   zoo::na.approx(object = vals[,2],
-                                  x = vals[,1],
-                                  na.rm=FALSE,
-                                  ties = "mean"),
-                   silent = TRUE
-                 )
-
-                 if(!inherits(interpolated, "try-error")) {
-                   vals[,2] <- na.const(pmax(pmin(interpolated, max_val), min_val))
+                 if(length(unique(vals[.ok, 1])) >= 2L) {
+                   ap <- stats::approx(x = vals[.ok, 1], y = vals[.ok, 2],
+                                       xout = vals[,1], rule = 1, ties = mean)
+                   vals[,2] <- na.const(pmax(pmin(ap$y, max_val), min_val))
+                 } else {
+                   vals[,2] <- na.const(vals[,2])
                  }
                }
                # Keep only values in [0,1] range
-               vals <- vals[(vals[,1] >= 0) & (vals[,1] <= 1),]
+               vals <- vals[(vals[,1] >= 0) & (vals[,1] <= 1), , drop = FALSE]
              }
 
            }
          }
 
-         data.to.plot <- vals
-         if(!is.null(data.to.plot)){
-           data.to.plot.order <- data.to.plot[order(vals[, 1,drop=TRUE]), ,
-                                              drop = FALSE]
-
-
+         if(!is.null(vals) && NROW(vals) > 0){
            coords <- interpolate2(self$edges[[i]],
-                                  pos = data.to.plot.order[, 1, drop = TRUE],
+                                  pos = vals[, 1, drop = TRUE],
                                   normalized = TRUE)
 
-           ## OPT: store into preallocated slot instead of growing with c()
            .out[[kk]] <- list(x = coords[, 1],
                               y = coords[, 2],
-                              z = data.to.plot.order[, 2, drop = TRUE],
+                              z = vals[, 2, drop = TRUE],
                               i = kk,
                               n = length(coords[, 1]))
            kk = kk+1L
@@ -5982,7 +6053,7 @@ larger than 1")
 
        }
 
-       ## OPT: single-shot assembly of the final data.frame
+       # single-shot assembly of the final data.frame
        .out <- .out[seq_len(kk - 1L)]
        if (length(.out) == 0L) {
          data <- data.frame(x = numeric(0), y = numeric(0),
@@ -6037,12 +6108,12 @@ larger than 1")
            p <- ggplot(data = data) +
              geom_path( mapping = aes(x = x, y = y,
                                       group = i,
-                                      colour = z), linewidth = line_width) + labs(colour = "") + scale_color # + scale_color_viridis() +
+                                      colour = z), linewidth = line_width) + labs(colour = "") + scale_color
          } else {
            p <- p + geom_path(data = data, mapping =
                                 aes(x = x, y = y,
                                     group = i, colour = z),
-                              linewidth = line_width) + labs(colour = "") + scale_color # + scale_color_viridis()
+                              linewidth = line_width) + labs(colour = "") + scale_color
          }
          p <- self$plot(edge_width = 0, vertex_size = vertex_size,
                         vertex_color = vertex_color, p = p)
@@ -6115,6 +6186,9 @@ larger than 1")
        }
        return(p)
      },
+
+
+
 
      #' @description Plots a movie of a continuous function evolving on the graph.
      #' @param X A m x T matrix where the ith column represents the function at the
@@ -8409,32 +8483,18 @@ turned to vertices and the A matrix will then be computed")
        has_crs     <- !is.null(private$crs$input)
        crs_val     <- if (has_crs) private$crs$input else NULL
 
-       if (!has_crs) {
-         self$vertices <- lapply(seq_len(n_vertices), function(i) {
-           vert <- c(X[i], Y[i])
-           attr(vert, "degree")      <- deg[i]
-           attr(vert, "indegree")    <- indg[i]
-           attr(vert, "outdegree")   <- outg[i]
-           attr(vert, "problematic") <- problematic[i]
-           attr(vert, "longlat")     <- longlat_val
-           attr(vert, "id")          <- i
-           class(vert) <- "metric_graph_vertex"
-           vert
-         })
-       } else {
-         self$vertices <- lapply(seq_len(n_vertices), function(i) {
-           vert <- c(X[i], Y[i])
-           attr(vert, "degree")      <- deg[i]
-           attr(vert, "indegree")    <- indg[i]
-           attr(vert, "outdegree")   <- outg[i]
-           attr(vert, "problematic") <- problematic[i]
-           attr(vert, "longlat")     <- longlat_val
-           attr(vert, "crs")         <- crs_val
-           attr(vert, "id")          <- i
-           class(vert) <- "metric_graph_vertex"
-           vert
-         })
-       }
+       self$vertices <- lapply(seq_len(n_vertices), function(i) {
+         vert <- c(X[i], Y[i])
+         attr(vert, "degree")      <- deg[i]
+         attr(vert, "indegree")    <- indg[i]
+         attr(vert, "outdegree")   <- outg[i]
+         attr(vert, "problematic") <- problematic[i]
+         attr(vert, "longlat")     <- longlat_val
+         if (has_crs) attr(vert, "crs") <- crs_val
+         attr(vert, "id")          <- i
+         class(vert) <- "metric_graph_vertex"
+         vert
+       })
 
        class(self$vertices) <- "metric_graph_vertices"
      },
