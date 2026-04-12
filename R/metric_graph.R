@@ -825,10 +825,6 @@ metric_graph <-  R6Class("metric_graph",
            message("Post-processing the edges")
          }
 
-         # OPTIMIZED: bit-faithful translation of the original lapply that
-         # deduped interior polyline points while preserving the first and
-         # last vertex of each edge. ~80x faster per edge in C++; the original
-         # R loop was a per-edge unique() + rbind() pattern.
          t <- system.time({
            self$edges <- postprocess_edges_cpp(self$edges)
          })
@@ -1326,10 +1322,6 @@ metric_graph <-  R6Class("metric_graph",
        edges_PtE <- lapply(self$edges, function(edge) attr(edge, "PtE"))
        nE <- self$nE
 
-       # OPTIMIZATION: pull self$edges into a local before the lapply. The original
-       # `self$edges[[i]]` access inside the closure body goes through R6 active
-       # binding every iteration -- with 20k+ edges that's seconds of pure dispatch
-       # overhead. Mutate the local list and write it back in one shot at the end.
        edges_local <- self$edges
        ew_local    <- private$edge_weights
        ew_is_df    <- is.data.frame(ew_local)
@@ -2211,27 +2203,9 @@ metric_graph <-  R6Class("metric_graph",
          return(invisible(NULL))
        }
 
-       # OPTIMIZATION: pull self$edges into a local for the attribute-attach
-       # loop. R6 active-binding access in a tight loop is ~25x slower than
-       # local indexing, and the R6 setter would deep-copy the entire list
-       # on every iteration.
        edges_local <- self$edges
 
        if (approx) {
-         # ===========================================================
-         # Compiled fast path. The Rcpp helper walks every edge in
-         # one C++ loop, accumulating segment lengths and normalizing
-         # in place. ~6x faster than the original per-edge R loop and
-         # ~2x faster than the vectorized R version.
-         #
-         # When private$longlat is TRUE, the helper uses haversine
-         # distances on (lon, lat) in degrees -- this matches the
-         # accuracy of sf::st_length to ~1e-13 relative for typical
-         # metric-graph edges, while being ~100x faster than calling
-         # sf::st_length once per edge. When private$longlat is
-         # FALSE, planar Euclidean distances are used, which is
-         # bit-identical to the original approx_coordinates() output.
-         # ===========================================================
          use_longlat <- isTRUE(private$longlat)
          ptes <- compute_PtE_edges_cpp(edges_local, use_longlat)
          for (j in seq_len(nE)) {
@@ -2334,27 +2308,7 @@ metric_graph <-  R6Class("metric_graph",
      #' would be merged are compatible in terms of direction.
      #'
      prune_vertices = function(check_weights = TRUE, check_circles = TRUE, verbose = FALSE){
-       # =========================================================================
-       # OPTIMIZED: the original implementation called private$remove.first.deg2
-       # once per degree-2 vertex inside a while loop, and each call was O(nE)
-       # because it did `self$E[-i,]`, `self$edges[[i]] <- NULL`, etc. -- the
-       # classic shrinking-array antipattern. Total work was O(nE * nV_deg2),
-       # plus catastrophic R6 active-binding overhead. On a chain graph with
-       # ~14k edges this took ~16 seconds; on a real OSM build it would
-       # extrapolate to several minutes.
-       #
-       # We now identify ALL degree-2 chains in one walk, merge each chain in
-       # one shot (concatenating coordinates, summing lengths, combining PtE),
-       # and rebuild self$V / self$E / self$edges / self$edge_lengths /
-       # private$edge_weights ONCE at the end. Loop chains (where the chain's
-       # two anchors are the same vertex) cannot be batched cleanly because
-       # the original picks a midpoint by greedy vertex-id-ordered merging,
-       # so we delegate any residual loop chains to the original
-       # remove.first.deg2 serial loop -- which now operates on a graph that
-       # is missing all the open chains, so the residual cost is microscopic.
-       # For a chain graph at n_main=40 (3,118 edges) this is ~100x faster;
-       # the speedup grows with graph size.
-       # =========================================================================
+
        t <- system.time({
          degrees <- private$degrees$degrees
 
@@ -2414,7 +2368,7 @@ metric_graph <-  R6Class("metric_graph",
            message(sprintf("removing %d vertices", to.prune))
          }
 
-         # ----- Pull state into locals (R6 active bindings are slow in tight loops) -----
+         # Pull state into locals (R6 active bindings are slow in tight loops)
          V          <- self$V
          E          <- self$E
          edges_loc  <- self$edges
@@ -2428,7 +2382,7 @@ metric_graph <-  R6Class("metric_graph",
 
          if (any(is_chain_v)) {
 
-           # ----- Build vertex -> incident edges adjacency for chain vertices -----
+           # Build vertex -> incident edges adjacency for chain vertices
            chain_e1 <- integer(nV_loc)
            chain_e2 <- integer(nV_loc)
            for (k in seq_len(nE_loc)) {
@@ -2499,7 +2453,7 @@ metric_graph <-  R6Class("metric_graph",
            # 2) closed cycle chains (handled by serial fallback below; we just
            #    need to NOT touch their edges/vertices in the batch step)
 
-           # ----- Apply per-chain merges ----------------------------------------
+           # Apply per-chain merges
            edge_drop <- logical(nE_loc)
            vert_drop <- logical(nV_loc)
            prune_warning_local <- FALSE
@@ -2597,9 +2551,6 @@ metric_graph <-  R6Class("metric_graph",
          # ----- Serial fallback for any residual loop chains ---------------------
          # After the batch step, the only remaining deg-2 non-problematic vertices
          # are those on closed loops (chains whose anchors are the same vertex).
-         # In typical OSM data this is empty, so most of the time we never enter
-         # this branch and skip the (expensive) rebuild of self$vertices that the
-         # fallback would otherwise need.
          #
          # We check cheaply via tabulate(E) on the new E and the "old" problematic
          # flags carried through the keep_v subset, avoiding any R6 active-binding
@@ -2618,8 +2569,7 @@ metric_graph <-  R6Class("metric_graph",
          }
          if (needs_fallback) {
            # Refresh self$vertices and degrees so the serial helper sees consistent
-           # state. The post-prune block below will rebuild them again, but the
-           # cost is only ~50 ms on a 10k-vertex graph.
+           # state.
            private$compute_degrees(add = TRUE)
            private$create_update_vertices(verbose = 0)
            deg_now <- private$degrees$degrees
@@ -2970,8 +2920,8 @@ metric_graph <-  R6Class("metric_graph",
 
        private$ref_edges <- map_into_reference_edge(self, verbose = verbose)
        private$data <- standardize_df_positions(private$data, self,
-                         edge_number = ".edge_number",
-                         distance_on_edge = ".distance_on_edge")
+                                                edge_number = ".edge_number",
+                                                distance_on_edge = ".distance_on_edge")
        private$create_update_vertices(verbose = verbose)
 
        # Rebuild .loc_idx and PtV from canonical post-standardize positions.
@@ -3394,11 +3344,11 @@ metric_graph <-  R6Class("metric_graph",
          rm(data_group_tmp)
          data <- lapply(data, function(dat){dat[ord_tmp]})
          rm(ord_tmp)
-          # Vectorized group-key construction (replaces per-element sapply loop)
-          data[[".group"]] <- Reduce(
-            function(a, b) paste(a, b, sep = group_sep),
-            lapply(group, function(g) as.character(data[[g]]))
-          )
+         # Vectorized group-key construction (replaces per-element sapply loop)
+         data[[".group"]] <- Reduce(
+           function(a, b) paste(a, b, sep = group_sep),
+           lapply(group, function(g) as.character(data[[g]]))
+         )
        }
 
        ## convert everything to PtE
@@ -3822,11 +3772,11 @@ coordinates!"))
          rm(data_group_tmp)
          data <- lapply(data, function(dat){dat[ord_tmp]})
          rm(ord_tmp)
-          # Vectorized group-key construction (replaces per-element sapply loop)
-          data[[".group"]] <- Reduce(
-            function(a, b) paste(a, b, sep = group_sep),
-            lapply(group, function(g) as.character(data[[g]]))
-          )
+         # Vectorized group-key construction (replaces per-element sapply loop)
+         data[[".group"]] <- Reduce(
+           function(a, b) paste(a, b, sep = group_sep),
+           lapply(group, function(g) as.character(data[[g]]))
+         )
        }
 
 
@@ -4853,7 +4803,6 @@ coordinates!"))
            }
          }
        }
-       # }
 
        if(petrov) {
          self$mesh$Cpet <- fem_temp$Cpet
@@ -5401,6 +5350,8 @@ larger than 1")
          lifecycle::deprecate_warn("1.3.0.9000", "plot_function(X)", "plot_function(newdata)",
                                    details = c("The argument `X` is deprecated; please use `newdata` to ensure the correct order when plotting.")
          )
+       } else {
+         X <- NULL
        }
 
        if (lifecycle::is_present(plotly)) {
@@ -5505,15 +5456,56 @@ larger than 1")
 
        PtE_edges <- lapply(self$edges, function(edge){attr(edge, "PtE")})
 
-       x.loc <- y.loc <- z.loc <- i.loc <- NULL
-       kk = 1
+       .nE        <- self$nE
+       .edges_loc <- self$edges
+       .Efrom     <- self$E[, 1]
+       .Eto       <- self$E[, 2]
+       .n_v       <- max(c(.Efrom, .Eto, dim(self$V)[1]))
+
+       if (!mesh) {
+         X <- as.data.frame(X)
+         .Xm <- as.matrix(X[, 1:3])  # numeric matrix: edge_no, pos, value
+         .X_split <- split(seq_len(nrow(.Xm)), .Xm[, 1])
+         .X_by_edge <- vector("list", .nE)
+         for (.nm in names(.X_split)) {
+           .ei <- as.integer(.nm)
+           if (.ei >= 1L && .ei <= .nE)
+             .X_by_edge[[.ei]] <- .Xm[.X_split[[.nm]], 2:3, drop = FALSE]
+         }
+       } else {
+         .X_by_edge <- NULL
+       }
+
+       .edges_from_v <- vector("list", .n_v)  # integer-indexed adjacency
+       .edges_to_v   <- vector("list", .n_v)
+       for (.i in seq_len(.nE)) {
+         .vf <- .Efrom[.i]; .vt <- .Eto[.i]
+         .edges_from_v[[.vf]] <- c(.edges_from_v[[.vf]], .i)
+         .edges_to_v[[.vt]]   <- c(.edges_to_v[[.vt]],   .i)
+       }
+
+       .mesh_idx_by_edge <- if (mesh && !is.null(self$mesh$PtE)) {
+         .tmp <- vector("list", .nE)
+         .ms  <- split(seq_len(nrow(self$mesh$PtE)), self$mesh$PtE[, 1])
+         for (.nm in names(.ms)) {
+           .ei <- as.integer(.nm)
+           if (.ei >= 1L && .ei <= .nE) .tmp[[.ei]] <- .ms[[.nm]]
+         }
+         .tmp
+       } else NULL
+
+       .out <- vector("list", .nE)
+       kk = 1L
        for (i in 1:self$nE) {
          Vs <- self$E[i, 1]
          Ve <- self$E[i, 2]
          if (mesh) {
-           ind <- self$mesh$PtE[, 1] == i
+           ## OPT: O(1) lookup instead of scanning mesh$PtE[,1] every iteration
+           ind_rows <- if (is.null(.mesh_idx_by_edge)) integer(0)
+           else .mesh_idx_by_edge[[i]]
+           if (is.null(ind_rows)) ind_rows <- integer(0)
 
-           if (sum(ind)==0) {
+           if (length(ind_rows) == 0) {
              if(attr(self$mesh,"continuous")){
                vals <- rbind(c(0, XV[Vs]),
                              c(1, XV[Ve]))
@@ -5524,10 +5516,10 @@ larger than 1")
            } else {
              if(attr(self$mesh,"continuous")) {
                vals <- rbind(c(0, XV[Vs]),
-                             cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind)]),
+                             cbind(self$mesh$PtE[ind_rows, 2], X[n.v + ind_rows]),
                              c(1, XV[Ve]))
              } else {
-               vals <- cbind(self$mesh$PtE[ind, 2], X[which(ind)])
+               vals <- cbind(self$mesh$PtE[ind_rows, 2], X[ind_rows])
              }
 
 
@@ -5541,23 +5533,6 @@ larger than 1")
                vals <- rbind(vals,PtE_tmp)
              }
 
-             # if(nrow(vals)>0){
-             #   ord_idx <- order(vals[,1])
-             #   vals <- vals[ord_idx,]
-             #   if(vals[1,1] > 0){
-             #     vals <- rbind(c(0,NA), vals)
-             #   }
-             #   if(vals[nrow(vals),1] < 1){
-             #     vals <- rbind(vals, c(1,NA))
-             #   }
-             #   max_val <- max(vals[,2], na.rm=TRUE)
-             #   min_val <- min(vals[,2], na.rm=TRUE)
-             #   vals[,2] <- na.const(pmax(pmin(object = zoo::na.approx(object = vals[,2],
-             #                                         x = vals[,1],
-             #                                             na.rm=FALSE, ties = "mean"),
-             #                                      max_val), min_val))
-             #   vals <- vals[(vals[,1] >= 0) & (vals[,1]<=1),]
-             # }
              if(nrow(vals) > 0) {
                # Sort by first column
                ord_idx <- order(vals[,1])
@@ -5596,8 +5571,9 @@ larger than 1")
 
 
          } else {
-           X <- as.data.frame(X)
-           vals <- X[X[, 1]==i, 2:3, drop = FALSE]
+           ## OPTIMIZED: O(1) lookup instead of full-X scan + per-iter coercion
+           .Xi <- .X_by_edge[[i]]
+           vals <- if (is.null(.Xi)) matrix(numeric(0), 0, 2) else .Xi
 
            if(continuous){
              if(nrow(vals)>0){
@@ -5605,29 +5581,29 @@ larger than 1")
                if(!interpolate_plot){
                  if (max(vals[, 1]) < 1) {
                    # Check if we can add end value from another edge
-                   start_Ei <- which(self$E[, 1] == Ve)  # Edges that start at Ve
-                   end_Ei <- which(self$E[, 2] == Ve)    # Edges that end at Ve
+                   start_Ei <- .edges_from_v[[Ve]]  # OPT: O(1)
+                   end_Ei   <- .edges_to_v[[Ve]]  # OPT: O(1)
 
                    min.val <- NA
                    max.val <- NA
 
                    # Process edges starting at Ve
                    if (length(start_Ei) > 0) {
-                     valid_X_start <- X[X[, 1] %in% start_Ei, , drop = FALSE]
-                     ind_start <- which(valid_X_start[, 2] == 0)
+                     valid_X_start <- do.call(rbind, .X_by_edge[start_Ei]); if (is.null(valid_X_start)) valid_X_start <- matrix(numeric(0), 0, 2)
+                     ind_start <- which(valid_X_start[, 1] == 0)
                      if (length(ind_start) > 0) {
-                       ind_min <- which.min(valid_X_start[ind_start, 3])
-                       min.val <- valid_X_start[ind_start, 3][ind_min]
+                       ind_min <- which.min(valid_X_start[ind_start, 2])
+                       min.val <- valid_X_start[ind_start, 2][ind_min]
                      }
                    }
 
                    # Process edges ending at Ve
                    if (length(end_Ei) > 0) {
-                     valid_X_end <- X[X[, 1] %in% end_Ei, , drop = FALSE]
-                     ind_end <- which(valid_X_end[, 2] == 1)
+                     valid_X_end <- do.call(rbind, .X_by_edge[end_Ei]); if (is.null(valid_X_end)) valid_X_end <- matrix(numeric(0), 0, 2)
+                     ind_end <- which(valid_X_end[, 1] == 1)
                      if (length(ind_end) > 0) {
-                       ind_max <- which.max(valid_X_end[ind_end, 3])
-                       max.val <- valid_X_end[ind_end, 3][ind_max]
+                       ind_max <- which.max(valid_X_end[ind_end, 2])
+                       max.val <- valid_X_end[ind_end, 2][ind_max]
                      }
                    }
 
@@ -5647,29 +5623,29 @@ larger than 1")
 
                  if   (min(vals[, 1]) > 0) {
                    # Check if we can add start value from another edge
-                   start_Ei <- which(self$E[, 1] == Vs)  # Edges that start at Vs
-                   end_Ei <- which(self$E[, 2] == Vs)    # Edges that end at Vs
+                   start_Ei <- .edges_from_v[[Vs]]  # OPT: O(1)
+                   end_Ei   <- .edges_to_v[[Vs]]  # OPT: O(1)
 
                    min.val <- NA
                    max.val <- NA
 
                    # Process edges starting at Vs
                    if (length(start_Ei) > 0) {
-                     valid_X_start <- X[X[, 1] %in% start_Ei, , drop = FALSE]
-                     ind_start <- which(valid_X_start[, 2] == 0)
+                     valid_X_start <- do.call(rbind, .X_by_edge[start_Ei]); if (is.null(valid_X_start)) valid_X_start <- matrix(numeric(0), 0, 2)
+                     ind_start <- which(valid_X_start[, 1] == 0)
                      if (length(ind_start) > 0) {
-                       ind_min <- which.min(valid_X_start[ind_start, 3])
-                       min.val <- valid_X_start[ind_start, 3][ind_min]
+                       ind_min <- which.min(valid_X_start[ind_start, 2])
+                       min.val <- valid_X_start[ind_start, 2][ind_min]
                      }
                    }
 
                    # Process edges ending at Vs
                    if (length(end_Ei) > 0) {
-                     valid_X_end <- X[X[, 1] %in% end_Ei, , drop = FALSE]
-                     ind_end <- which(valid_X_end[, 2] == 1)
+                     valid_X_end <- do.call(rbind, .X_by_edge[end_Ei]); if (is.null(valid_X_end)) valid_X_end <- matrix(numeric(0), 0, 2)
+                     ind_end <- which(valid_X_end[, 1] == 1)
                      if (length(ind_end) > 0) {
-                       ind_max <- which.max(valid_X_end[ind_end, 3])
-                       max.val <- valid_X_end[ind_end, 3][ind_max]
+                       ind_max <- which.max(valid_X_end[ind_end, 2])
+                       max.val <- valid_X_end[ind_end, 2][ind_max]
                      }
                    }
 
@@ -5693,20 +5669,25 @@ larger than 1")
                } else {
                  PtE_tmp <- PtE_edges[[i]]
 
+                 ## OPT: replace four O(nE) scans with O(1) lookups
+                 .Vs_i <- .Efrom[i]; .Ve_i <- .Eto[i]
+                 .end_at_Vs   <- .edges_to_v[[.Vs_i]]
+                 .start_at_Vs <- setdiff(.edges_from_v[[.Vs_i]], i)
+                 .start_at_Ve <- .edges_from_v[[.Ve_i]]
+                 .end_at_Ve   <- .edges_to_v[[.Ve_i]]
+
                  # Check for edges ending at the starting point of the current edge
-                 if (any(self$E[, 2] == self$E[i, 1])) {
-                   edge_new <- which(self$E[, 2] == self$E[i, 1])[1]
-                   idx_new <- which(X[, 1] == edge_new)
-                   new_val <- X[idx_new, 2:3, drop = FALSE]
+                 if (length(.end_at_Vs) > 0) {
+                   edge_new <- .end_at_Vs[1]
+                   new_val <- .X_by_edge[[edge_new]]
                    if (nrow(new_val) > 0) {
                      sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, max(new_val[, 1]))
                      new_val[, 1] <- new_val[, 1] - sub_fact
                      vals <- rbind(vals, new_val)
                    }
-                 } else if (any(self$E[-i, 1] == self$E[i, 1])) {
-                   edge_new <- which(self$E[-i, 1] == self$E[i, 1])[1]
-                   idx_new <- which(X[, 1] == edge_new)
-                   new_val <- X[idx_new, 2:3, drop = FALSE]
+                 } else if (length(.start_at_Vs) > 0) {
+                   edge_new <- .start_at_Vs[1]
+                   new_val <- .X_by_edge[[edge_new]]
                    if (nrow(new_val) > 0) {
                      sum_fact <- ifelse(any(vals[, 1] == 1), -1e-6, min(new_val[, 1]))
                      new_val[, 1] <- -new_val[, 1] + sum_fact
@@ -5715,19 +5696,17 @@ larger than 1")
                  }
 
                  # Check for edges starting at the ending point of the current edge
-                 if (any(self$E[, 1] == self$E[i, 2])) {
-                   edge_new <- which(self$E[, 1] == self$E[i, 2])[1]
-                   idx_new <- which(X[, 1] == edge_new)
-                   new_val <- X[idx_new, 2:3, drop = FALSE]
+                 if (length(.start_at_Ve) > 0) {
+                   edge_new <- .start_at_Ve[1]
+                   new_val <- .X_by_edge[[edge_new]]
                    if (nrow(new_val) > 0) {
                      sum_fact <- ifelse(any(vals[, 1] == 1), 1 + 1e-6, 1 - min(new_val[, 1]))
                      new_val[, 1] <- new_val[, 1] + sum_fact
                      vals <- rbind(vals, new_val)
                    }
-                 } else if (any(self$E[, 2] == self$E[i, 2])) {
-                   edge_new <- which(self$E[, 2] == self$E[i, 2])[1]
-                   idx_new <- which(X[, 1] == edge_new)
-                   new_val <- X[idx_new, 2:3, drop = FALSE]
+                 } else if (length(.end_at_Ve) > 0) {
+                   edge_new <- .end_at_Ve[1]
+                   new_val <- .X_by_edge[[edge_new]]
                    if (nrow(new_val) > 0) {
                      sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, -max(new_val[, 1]) - 1)
                      new_val[, 1] <- -new_val[, 1] - sub_fact
@@ -5747,19 +5726,6 @@ larger than 1")
                  # Sort values by the first column
                  ord_idx <- order(vals[, 1])
                  vals <- vals[ord_idx, ]
-
-                 # Interpolate missing values within bounds
-                 # max_val <- max(vals[, 2], na.rm = TRUE)
-                 # min_val <- min(vals[, 2], na.rm = TRUE)
-                 # vals[, 2] <- na.const(
-                 #   pmax(
-                 #     pmin(
-                 #       zoo::na.approx(object = vals[, 2], x = vals[, 1], na.rm = FALSE, ties = "mean"),
-                 #       max_val
-                 #     ),
-                 #     min_val
-                 #   )
-                 # )
 
                  # Only proceed if there are any non-NA values
                  if(any(!is.na(vals[,2]))) {
@@ -5988,18 +5954,33 @@ larger than 1")
                                   pos = data.to.plot.order[, 1, drop = TRUE],
                                   normalized = TRUE)
 
-           x.loc <- c(x.loc, coords[, 1])
-           y.loc <- c(y.loc, coords[, 2])
-           z.loc <- c(z.loc, data.to.plot.order[, 2, drop=TRUE])
-           i.loc <- c(i.loc, rep(kk, length(coords[, 1])))
-           kk = kk+1
+           ## OPT: store into preallocated slot instead of growing with c()
+           .out[[kk]] <- list(x = coords[, 1],
+                              y = coords[, 2],
+                              z = data.to.plot.order[, 2, drop = TRUE],
+                              i = kk,
+                              n = length(coords[, 1]))
+           kk = kk+1L
          }
 
 
 
        }
 
-       data <- data.frame(x = x.loc, y = y.loc, i = i.loc, z = z.loc)
+       ## OPT: single-shot assembly of the final data.frame
+       .out <- .out[seq_len(kk - 1L)]
+       if (length(.out) == 0L) {
+         data <- data.frame(x = numeric(0), y = numeric(0),
+                            i = integer(0), z = numeric(0))
+       } else {
+         .lens <- vapply(.out, `[[`, integer(1), "n")
+         data <- data.frame(
+           x = unlist(lapply(.out, `[[`, "x"), use.names = FALSE),
+           y = unlist(lapply(.out, `[[`, "y"), use.names = FALSE),
+           i = rep.int(vapply(.out, `[[`, integer(1), "i"), .lens),
+           z = unlist(lapply(.out, `[[`, "z"), use.names = FALSE)
+         )
+       }
 
        if(type == "plotly"){
          requireNamespace("plotly")
@@ -6016,9 +5997,9 @@ larger than 1")
                                             color = line_color),
                                 split = ~i, showlegend = FALSE, ...)
          if(support_width > 0) {
-           data.mesh <- data.frame(x = c(x.loc, x.loc), y = c(y.loc, y.loc),
-                                   z = c(rep(0, length(z.loc)), z.loc),
-                                   i = rep(1:length(z.loc), 2))
+           data.mesh <- data.frame(x = c(data$x, data$x), y = c(data$y, data$y),
+                                   z = c(rep(0, nrow(data)), data$z),
+                                   i = rep(seq_len(nrow(data)), 2))
            p <- plotly::add_trace(p, data = data.mesh, x = ~y, y = ~x, z = ~z,
                                   mode = "lines", type = "scatter3d",
                                   line = list(width = support_width,
@@ -6077,12 +6058,6 @@ larger than 1")
              i = group_data$i[-nrow(group_data)]
            )
          }))
-
-         data_sf <- sf::st_as_sf(
-           data_segment,
-           geometry = sf::st_sfc(linestrings),
-           crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_
-         )
 
          data_sf <- sf::st_as_sf(
            data_segment,
@@ -6180,22 +6155,37 @@ larger than 1")
        n.v <- dim(self$V)[1]
        XV <- X[1:n.v,]
 
-       x.loc <- y.loc <- z.loc <- i.loc <- f.loc <-  NULL
-       kk = 1
+       .nE_loc    <- self$nE
+       .Efrom_loc <- self$E[, 1]
+       .Eto_loc   <- self$E[, 2]
+       .edges_loc <- self$edges
+       .mesh_PtE  <- self$mesh$PtE
+       .mesh_idx_by_edge <- vector("list", .nE_loc)
+       if (!is.null(.mesh_PtE)) {
+         .ms <- split(seq_len(nrow(.mesh_PtE)), .mesh_PtE[, 1])
+         for (.nm in names(.ms)) {
+           .ei <- as.integer(.nm)
+           if (.ei >= 1L && .ei <= .nE_loc) .mesh_idx_by_edge[[.ei]] <- .ms[[.nm]]
+         }
+       }
+
+       .out <- vector("list", .nE_loc)
+       kk = 1L
        frames <- dim(X)[2]
        for (i in 1:self$nE) {
-         Vs <- self$E[i, 1]
-         Ve <- self$E[i, 2]
+         Vs <- .Efrom_loc[i]
+         Ve <- .Eto_loc[i]
 
-         ind <- self$mesh$PtE[, 1] == i
+         ind_rows <- .mesh_idx_by_edge[[i]]
+         if (is.null(ind_rows)) ind_rows <- integer(0)
 
-         if (sum(ind)==0) {
+         if (length(ind_rows) == 0L) {
            vals <- rbind(c(0, XV[Vs,]),
                          c(1, XV[Ve,]))
 
          } else {
            vals <- rbind(c(0, XV[Vs,]),
-                         cbind(self$mesh$PtE[ind, 2], X[n.v + which(ind),]),
+                         cbind(.mesh_PtE[ind_rows, 2], X[n.v + ind_rows,]),
                          c(1, XV[Ve,]))
 
          }
@@ -6205,29 +6195,47 @@ larger than 1")
                                             drop = FALSE]
 
 
-         coords <- interpolate2(self$edges[[i]],
+         coords <- interpolate2(.edges_loc[[i]],
                                 pos = data.to.plot.order[, 1, drop = TRUE],
                                 normalized = TRUE)
-         x.loc <- c(x.loc, rep(coords[, 1], frames))
-         y.loc <- c(y.loc, rep(coords[, 2], frames))
-         z.loc <- c(z.loc, c(data.to.plot.order[, 2:(frames+1)]))
-         i.loc <- c(i.loc, rep(rep(kk, length(coords[, 1])), frames))
-         f.loc <- c(f.loc, rep(1:frames, each = length(coords[, 1])))
-         kk = kk+1
+         .nc <- length(coords[, 1])
+         .out[[kk]] <- list(x = rep(coords[, 1], frames),
+                            y = rep(coords[, 2], frames),
+                            z = c(data.to.plot.order[, 2:(frames + 1)]),
+                            i = rep(rep(kk, .nc), frames),
+                            f = rep(seq_len(frames), each = .nc),
+                            n = .nc * frames)
+         kk = kk + 1L
        }
-       data <- data.frame(x = x.loc, y = y.loc, z = z.loc, i = i.loc, f = f.loc)
+       .out <- .out[seq_len(kk - 1L)]
+       if (length(.out) == 0L) {
+         data <- data.frame(x = numeric(0), y = numeric(0), z = numeric(0),
+                            i = integer(0), f = integer(0))
+       } else {
+         data <- data.frame(
+           x = unlist(lapply(.out, `[[`, "x"), use.names = FALSE),
+           y = unlist(lapply(.out, `[[`, "y"), use.names = FALSE),
+           z = unlist(lapply(.out, `[[`, "z"), use.names = FALSE),
+           i = unlist(lapply(.out, `[[`, "i"), use.names = FALSE),
+           f = unlist(lapply(.out, `[[`, "f"), use.names = FALSE)
+         )
+       }
 
        if(plotly){
          requireNamespace("plotly")
-         x <- y <- ei <- NULL
-         for (i in 1:self$nE) {
-           xi <- self$edges[[i]][, 1]
-           yi <- self$edges[[i]][, 2]
-           ii <- rep(i,length(xi))
-           x <- c(x, xi)
-           y <- c(y, yi)
-           ei <- c(ei, ii)
+         ## OPT: preallocate + cache; avoids growing x/y/ei with c() each iter
+         .xs <- vector("list", .nE_loc)
+         .ys <- vector("list", .nE_loc)
+         .es <- vector("list", .nE_loc)
+         for (i in seq_len(.nE_loc)) {
+           .ei <- .edges_loc[[i]]
+           .xs[[i]] <- .ei[, 1]
+           .ys[[i]] <- .ei[, 2]
+           .es[[i]] <- rep.int(i, nrow(.ei))
          }
+         x  <- unlist(.xs, use.names = FALSE)
+         y  <- unlist(.ys, use.names = FALSE)
+         ei <- unlist(.es, use.names = FALSE)
          frames <- dim(X)[2]
          data.graph <- data.frame(x = rep(x, frames),
                                   y = rep(y, frames),
@@ -6617,18 +6625,6 @@ larger than 1")
          proj4string <- NULL
        }
 
-       # ===========================================================
-       # OPTIMIZED IMPLEMENTATION for very large graphs (e.g. OSM).
-       #
-       # The previous implementation built a 2*nE x 2*nE pairwise
-       # distance matrix and then ran two O(n^2) loops, which makes
-       # it infeasible past a few thousand edges. We instead:
-       #   (1) gather endpoint coordinates in one vectorized pass,
-       #   (2) cluster them via a kd-tree (RANN::nn2) in O(n log n),
-       #   (3) snap edge endpoints to cluster representatives via
-       #       vectorized assignment, and
-       #   (4) compute all edge lengths in a single batched call.
-       # ===========================================================
 
        nE <- length(self$edges)
        if (nE == 0) {
@@ -6644,10 +6640,6 @@ larger than 1")
          message("Part 1/2 (vectorized)")
        }
 
-       # OPTIMIZATION: pull self$edges into a local once. R6 active-binding
-       # access in the loops below is ~25-30x slower than local list indexing
-       # for large edge counts (each `self$edges[[i]] <- e` would deep-copy
-       # the entire list). We mutate the local and write it back at the end.
        edges_local <- self$edges
 
        # ----- Step 1: collect first/last point of every edge -----
@@ -6671,7 +6663,7 @@ larger than 1")
        # `project` / `which_projection` arguments only affect the legacy
        # `project_data = TRUE` path that physically rewrites the edge coords.
        #
-       # OPTIMIZATION: previously this used sp::spTransform / sf::st_transform
+       # previously this used sp::spTransform / sf::st_transform
        # via a full PROJ round-trip, which costs ~1 second for 40k points and
        # was the dominant lon/lat hot spot. We now compute the AEQD forward
        # formula directly via aeqd_project_cpp -- a closed-form trig
@@ -7231,14 +7223,12 @@ larger than 1")
        nv <- self$nV
        if (nv < 2) return(invisible(NULL))
 
-       # ===========================================================
-       # OPTIMIZED: instead of building a full nV x nV pairwise
+       # instead of building a full nV x nV pairwise
        # distance matrix and running an O(nV * nE) merge loop,
        # do a kd-tree neighbor query and resolve merges with a
        # single batched relabelling pass.
-       # ===========================================================
 
-       # ----- 1. working metric coords for nn2 ---------------------------------
+       # 1. working metric coords for nn2
        if (private$longlat) {
          # Closed-form spherical AEQD centered on the bbox of the vertices.
          # See compute_PtE_edges optimization notes -- this is ~460x faster than
@@ -7253,7 +7243,7 @@ larger than 1")
          work <- self$V * fact
        }
 
-       # ----- 2. find merge pairs ----------------------------------------------
+       # 2. find merge pairs
        k_search <- as.integer(min(20L, nv))
        nn <- nn2(work, work, k = k_search,
                  searchtype = "radius", radius = tolerance)
@@ -7277,7 +7267,7 @@ larger than 1")
        i_vec <- which(has_pair)
        j_vec <- nn_idx[cbind(i_vec, best_col[i_vec])]
 
-       # ----- 3. union-find to compute final cluster labels --------------------
+       # 3. union-find to compute final cluster labels
        parent <- seq_len(nv)
        find_root <- function(x) {
          while (parent[x] != x) {
@@ -7308,7 +7298,6 @@ larger than 1")
 
        # Update each edge's first / last point to the new vertex coordinates.
        # Pull self$edges into a local first to avoid R6 active-binding overhead
-       # in the loop (~25x faster than per-iteration self$edges[[e]] <- access).
        if (length(self$edges) > 0L) {
          edges_local <- self$edges
          for (e in seq_along(edges_local)) {
@@ -7498,25 +7487,12 @@ larger than 1")
      # Compute lengths
 
      compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data, transform){
-       # ===========================================================
-       # OPTIMIZED: previously this called compute_line_lengths once
-       # per edge inside an sapply, which constructed an sf::st_sfc
-       # linestring object per edge in the lon/lat case (~9000x
-       # slower than necessary) and paid full R-level call overhead
-       # in the planar case (~22x slower than necessary).
-       #
-       # We now call compute_edge_lengths_cpp once over the whole
-       # edge list. The C++ helper handles both branches with the
-       # same haversine / Euclidean code that compute_PtE_edges_cpp
-       # uses, so the two stay numerically consistent.
-       #
+
        # The fall-back branch (transform = TRUE) is rare -- it
        # triggers only when longlat is TRUE AND which_longlat == 'sp'
        # AND a non-WGS84 CRS was provided -- and goes through the
        # original per-edge sapply because it needs sp::spTransform
-       # per edge. Could be batched too, but it's not on the OSM
-       # hot path.
-       # ===========================================================
+       # per edge.
 
        nE <- length(self$edges)
        if (nE == 0L) return(numeric(0))
@@ -7952,9 +7928,9 @@ turned to vertices and the A matrix will then be computed")
 
      # batch processing of multiple edges (sequential only)
      split_edge_batch = function(edge_groups, verbose = 0) {
-       # =========================================================================
-       # OPTIMIZED v3: pushes the entire inner edge-splitting work into a single
-       # batched C++ call (split_edges_batch_cpp). The R wrapper now does:
+
+       # Pushes the entire inner edge-splitting work into a single
+       # batched C++ call (split_edges_batch_cpp). The R wrapper does:
        #   1. A cheap pre-pass to extract t_values/indices per group + compute
        #      first_new_v offsets
        #   2. ONE C++ call that processes all edges in compiled native code,
@@ -7963,14 +7939,6 @@ turned to vertices and the A matrix will then be computed")
        #   3. A thin R loop that only does buffer assignments into pre-allocated
        #      locals + the temp_PtE updates
        #   4. A single batched write-back to self$* at the end
-       #
-       # Performance history on 20k obs / 7080 edges:
-       #   - Original (R6 writes per iter):                        ~3.14 s
-       #   - v1 (R6 fix, single pass, vectorized weight prop):     ~0.85 s
-       #   - v2 (single-edge C++ inner helper):                    ~0.85 s
-       #     (per-call Rcpp overhead + R-side bookkeeping dominated)
-       #   - v3 (batched C++ inner loop, this version):            ~0.10 s
-       # =========================================================================
 
        n_groups <- length(edge_groups)
        if (n_groups == 0L) return(list())
@@ -7988,7 +7956,7 @@ turned to vertices and the A matrix will then be computed")
          return(vector("list", n_groups))
        }
 
-       # ----- Pull state into locals (R6 active bindings are slow in tight loops) -----
+       # Pull state into locals (R6 active bindings are slow in tight loops)
        V_loc        <- self$V
        E_loc        <- self$E
        edges_loc    <- self$edges
@@ -8003,7 +7971,7 @@ turned to vertices and the A matrix will then be computed")
 
        edge_names <- as.integer(names(edge_groups))
 
-       # ----- Pre-pass: extract t_values, indices per group; compute first_new_vs -----
+       # Pre-pass: extract t_values, indices per group; compute first_new_vs
        t_values_list <- vector("list", n_groups)
        indices_list  <- vector("list", n_groups)
        first_new_vs  <- integer(n_groups)
@@ -8031,14 +7999,14 @@ turned to vertices and the A matrix will then be computed")
          valid_groups[i] <- TRUE
        }
 
-       # ----- Pre-extract PtE attributes once (avoids attr() calls in C++) -----
+       # Pre-extract PtE attributes once (avoids attr() calls in C++)
        PtE_full <- lapply(edges_loc, function(e) attr(e, "PtE"))
 
-       # ----- ONE batched C++ call processes all edge groups -----
+       # ONE batched C++ call processes all edge groups
        cpp_results <- split_edges_batch_cpp(edges_loc, PtE_full, E_loc, edge_len_loc,
                                             edge_names, t_values_list, first_new_vs)
 
-       # ----- Pre-allocate output buffers -----
+       # Pre-allocate output buffers
        all_new_coords    <- matrix(0.0, nrow = total_new_vertices, ncol = ncol_V)
        new_E_rows        <- matrix(NA_integer_, nrow = total_new_vertices, ncol = 2L)
        new_edges_list    <- vector("list", total_new_vertices)
@@ -8049,7 +8017,7 @@ turned to vertices and the A matrix will then be computed")
        vertex_counter <- 0L
        edge_counter   <- 0L
 
-       # ----- Thin R loop: only buffer assignments + temp_PtE update -----
+       # Thin R loop: only buffer assignments + temp_PtE update
        for (i in seq_len(n_groups)) {
          if (!valid_groups[i]) {
            new_vertices_list[[i]] <- integer(0); next
@@ -8090,18 +8058,18 @@ turned to vertices and the A matrix will then be computed")
          edge_counter <- edge_counter + n_new
        }
 
-       # ----- Append new vertices to local V -----
+       # Append new vertices to local V
        if (vertex_counter > 0L) {
          V_loc <- rbind(V_loc, all_new_coords[seq_len(vertex_counter), , drop = FALSE])
        }
 
-       # ----- Append new edges to local E / edges / edge_lengths -----
+       # Append new edges to local E / edges / edge_lengths
        if (edge_counter > 0L) {
          E_loc        <- rbind(E_loc, new_E_rows[seq_len(edge_counter), , drop = FALSE])
          edges_loc    <- c(edges_loc, new_edges_list[seq_len(edge_counter)])
          edge_len_loc <- c(edge_len_loc, new_edge_lengths[seq_len(edge_counter)])
 
-         # ----- Vectorized edge_weights propagation -----
+         # Vectorized edge_weights propagation
          # src_ids[k] is the original edge id of the k-th new edge.
          # ew_loc[src_ids] is the per-new-edge weight (or row of weights).
          src_ids <- src_edge_per_new_edge[seq_len(edge_counter)]
@@ -8120,7 +8088,6 @@ turned to vertices and the A matrix will then be computed")
          }
        }
 
-       # ----- Single batched write back -----
        self$V            <- V_loc
        self$E            <- E_loc
        self$edges        <- edges_loc
@@ -8415,18 +8382,6 @@ turned to vertices and the A matrix will then be computed")
        }
 
        colnames(self$V) <- c("X", "Y")
-
-       # ===========================================================
-       # OPTIMIZED: the previous version built a data.frame and then
-       # did `vertices_df[i, c("X","Y")]` inside an lapply over
-       # 1:n_vertices. Per-row data.frame indexing carries enormous
-       # constant overhead and dominates graph construction past a
-       # few thousand vertices. We pull every column into a plain
-       # vector once and index those vectors inside the lapply --
-       # the R-level loop is unavoidable (each vertex needs its own
-       # attr() metadata) but per-iteration cost drops by 1-2 orders
-       # of magnitude.
-       # ===========================================================
 
        X    <- self$V[, 1L]
        Y    <- self$V[, 2L]
