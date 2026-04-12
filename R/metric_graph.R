@@ -4879,19 +4879,34 @@ larger than 1")
      #' if the vertex is at the start of the edge and 1 if the vertex
      #' is at the end of the edge.
      VtEfirst = function() {
+       E_local <- self$E
        n.V <- dim(self$V)[1]
-       VtE <- matrix(0, n.V, 2)
+       n.E <- dim(E_local)[1]
 
-       for (i in 1:n.V) {
-         Ei <- which(self$E[, 1] == i)[1]
-         pos <- 0
-         if (is.na(Ei) == 1) {
-           pos <- 1
-           Ei <- which(self$E[, 2] == i)[1]
-         }
-         VtE[i,] <- c(Ei, pos)
+       # Defaults match the original: vertices not found in column 1 get pos = 1;
+       # vertices not found at all stay (NA, 1).
+       VtE <- matrix(0L, nrow = n.V, ncol = 2L)
+       VtE[, 1L] <- NA_integer_
+       VtE[, 2L] <- 1L
+
+       if (n.E > 0L) {
+         # Iterate edge indices in decreasing order so that, under R's
+         # "last assignment wins" rule for duplicated subscripts, the SMALLEST
+         # edge index ends up stored for each vertex — same as which(...)[1].
+         idx <- n.E:1L
+
+         # Lower-priority pass: column-2 matches (pos = 1).
+         v2 <- E_local[idx, 2L]
+         VtE[v2, 1L] <- idx
+         # pos column already 1L; no need to touch it.
+
+         # Higher-priority pass: column-1 matches (pos = 0). Overwrites col-2 hits.
+         v1 <- E_local[idx, 1L]
+         VtE[v1, 1L] <- idx
+         VtE[v1, 2L] <- 0L
        }
-       return(VtE)
+
+       VtE
      },
 
      #' @description Plots the metric graph.
