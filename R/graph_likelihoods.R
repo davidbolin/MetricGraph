@@ -125,6 +125,7 @@ likelihood_alpha1_directional <- function(theta,
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -164,7 +165,7 @@ likelihood_alpha1_directional <- function(theta,
 
     for (e in obs.edges) {
 
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_rep[obs.id]
       idx_na <- is.na(y_i)
       y_i <- y_i[!idx_na]
@@ -180,7 +181,7 @@ likelihood_alpha1_directional <- function(theta,
         if(n_cov == 0){
           X_cov_repl <- 0
         } else{
-          X_cov_repl <- X_cov_rep[PtE[,1] == e, ,drop = FALSE]
+          X_cov_repl <- X_cov_rep[obs.id, ,drop = FALSE]
           X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
           y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
         }
@@ -317,6 +318,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   # Get .loc_idx for data-row to unique-loc mapping (handles n_obs > n_unique after obs_to_vertex)
   loc_idx_all <- tryCatch(
@@ -364,13 +366,13 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       for (e in obs.edges) {
         # Find which data rows are on edge e, supporting n_obs > n_unique (duplicate locs)
         if (need_expand) {
-          uniq_on_e   <- which(PtE[, 1] == e)
+          uniq_on_e   <- obs_idx_by_edge[[as.character(e)]]
           obs.id_data <- which(loc_idx_repl %in% uniq_on_e)
           obs_dists_e <- PtE[loc_idx_repl[obs.id_data], 2]
           y_i <- y_rep[obs.id_data]
         } else {
-          obs.id      <- PtE[, 1] == e
-          obs.id_data <- which(obs.id)
+          obs.id      <- obs_idx_by_edge[[as.character(e)]]
+          obs.id_data <- obs.id
           obs_dists_e <- PtE[obs.id, 2]
           y_i <- y_rep[obs.id]
         }
@@ -588,6 +590,7 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
   # Get observation points
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   # Precalculate constants
   n_const <- length(graph$CoB$S)
@@ -641,7 +644,7 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
       # Use character names for edge indices
       edge_name <- paste0("edge_", e)
 
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_rep[obs.id]
       idx_na <- is.na(y_i)
       y_i <- y_i[!idx_na]
@@ -961,7 +964,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   l <- 0
 
   for(i in repl){
-      A <- Matrix::Diagonal(graph$nV)[graph$PtV, ]
+      .row_idx <- graph$PtV
+      A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                x = 1, dims = c(length(.row_idx), graph$nV))
       ind_tmp <- (repl_vec %in% i)
       y_tmp <- y[ind_tmp]
       if(ncol(X_cov) == 0){
@@ -1043,6 +1048,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -1086,7 +1092,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     }
     for (e in obs.edges) {
       # Use pre-computed replicate indices
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
 
       # More efficient indexing
       y_i <- y_reply[obs.id]
@@ -1231,6 +1237,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
 
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
@@ -1285,7 +1292,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
       edge_name <- paste0("edge_", e)
 
       # Use pre-computed replicate indices
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_reply[obs.id]
 
       idx_na <- is.na(y_i)
@@ -1365,6 +1372,7 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- precomputeddata$obs.edges
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -1540,6 +1548,7 @@ likelihood_randomwalk <- function(theta, graph, data_name = NULL, manual_y = NUL
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -1583,7 +1592,7 @@ likelihood_randomwalk <- function(theta, graph, data_name = NULL, manual_y = NUL
     }
     for (e in obs.edges) {
       # Use pre-computed replicate indices
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
 
       # More efficient indexing
       y_i <- y_reply[obs.id]
@@ -2439,6 +2448,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   # Get observation points
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   # Initialize precomputed data structure
   precomputed <- list()
@@ -2495,7 +2505,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
       # Use character names for edge indices
       edge_name <- paste0("edge_", e)
 
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_rep[obs.id]
 
       idx_na <- is.na(y_i)

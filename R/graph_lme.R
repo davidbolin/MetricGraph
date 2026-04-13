@@ -2233,7 +2233,9 @@ predict.graph_lme <- function(object,
   }
 
   if(!cond_wm && !cond_isocov){
-    A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+    .row_idx <- graph_bkp$PtV
+    A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                              x = 1, dims = c(length(.row_idx), dim(Q)[1]))
   }
 
   idx_obs_full <- as.vector(!is.na(Y))
@@ -2277,7 +2279,9 @@ predict.graph_lme <- function(object,
           if(!is.null(directional) && directional == 0 || is.null(directional)){
             Q <- spde_precision(kappa = kappa, tau = tau,
                               alpha = 1, graph = graph_bkp, BC = BC)
-            A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+            .row_idx <- graph_bkp$PtV
+            A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                      x = 1, dims = c(length(.row_idx), dim(Q)[1]))
           } else{
               if(is.null(graph_bkp[["C"]])){
                 graph_bkp$buildDirectionalConstraints(1)
@@ -2323,7 +2327,9 @@ predict.graph_lme <- function(object,
         } else if(cond_alpha1){
           if(!is.null(precomputed$Q)){
             Q <- precomputed$Q
-            A <- Matrix::Diagonal(dim(Q)[1])[graph_bkp$PtV, , drop=FALSE]
+            .row_idx <- graph_bkp$PtV
+            A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                      x = 1, dims = c(length(.row_idx), dim(Q)[1]))
           } else if (!cond_alpha2){
             stop("Error processing precomputed data. Q is not available.")
           }
@@ -2815,7 +2821,9 @@ get_covariance_precision <- function(object){
   }
 
   if(attr(prec_cov,"prec_cov")  == "prec"){
-    A <- Matrix::Diagonal(dim(prec_cov)[1])[graph_bkp$PtV, ]
+    .row_idx <- graph_bkp$PtV
+    A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                              x = 1, dims = c(length(.row_idx), dim(prec_cov)[1]))
   } else{
     A <- NULL
   }

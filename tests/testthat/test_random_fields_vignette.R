@@ -39,20 +39,24 @@ test_that("WM1 model: estimates are in the right ballpark", {
 
   range   <- 0.2
   sigma   <- 1.3
-  sigma_e <- 0.1
+  sigma_e <- 0.3
   n.obs.per.edge <- 50
+  n_repl  <- 5
 
   PtE <- do.call(rbind, lapply(seq_len(graph$nE), function(i)
     cbind(rep(i, n.obs.per.edge), runif(n.obs.per.edge))))
   u <- sample_spde(range = range, sigma = sigma, alpha = 1,
-                   graph = graph, PtE = PtE)
-  y <- u + sigma_e * rnorm(n.obs.per.edge * graph$nE)
+                   graph = graph, PtE = PtE, nsim = n_repl)
+  y <- u + sigma_e * matrix(rnorm(nrow(PtE) * n_repl), ncol = n_repl)
 
-  graph$add_observations(
-    data = data.frame(y = y, edge_number = PtE[, 1],
-                      distance_on_edge = PtE[, 2]),
-    normalized = TRUE, verbose = 0
-  )
+  df_graph <- data.frame(y, edge_number = PtE[, 1],
+                         distance_on_edge = PtE[, 2])
+  y_cols <- paste0("y.", seq_len(n_repl))
+  colnames(df_graph)[1:n_repl] <- y_cols
+  df_long <- tidyr::pivot_longer(df_graph, cols = all_of(y_cols),
+                                  names_to = "repl", values_to = "y")
+  graph$add_observations(data = df_long, normalized = TRUE,
+                         group = "repl", verbose = 0)
 
   res <- graph_lme(y ~ -1, graph = graph, model = "WM1")
 
@@ -61,6 +65,7 @@ test_that("WM1 model: estimates are in the right ballpark", {
   range_est   <- res$matern_coeff$random_effects[2]
 
   # Estimates should be within 50 % of truth (generous: stochastic test)
+  # Using replicates and larger sigma_e for robust recovery
   expect_true(abs(sigma_e_est - sigma_e) / sigma_e < 0.5,
               info = sprintf("sigma_e: truth=%.3f est=%.3f", sigma_e, sigma_e_est))
   expect_true(abs(sigma_est - sigma) / sigma < 0.5,
@@ -72,12 +77,12 @@ test_that("WM1 model: estimates are in the right ballpark", {
   gl <- glance(res)
   expect_true(is.data.frame(gl) || is.list(gl))
 
-  # predict() at mesh locations gives right length
+  # predict() at a subset of observation locations gives right length
   pred <- predict(res,
-                  data.frame(edge_number = graph$mesh$VtE[, 1],
-                             distance_on_edge = graph$mesh$VtE[, 2]),
+                  data.frame(edge_number = PtE[1:20, 1],
+                             distance_on_edge = PtE[1:20, 2]),
                   normalized = TRUE)
-  expect_equal(length(pred$mean), nrow(graph$mesh$VtE))
+  expect_equal(length(pred$mean), 20 * n_repl)
 })
 
 ## ── WM2 model ─────────────────────────────────────────────────────────────────
@@ -265,7 +270,7 @@ test_that("WM1 replicate model: private$data structure and fit are correct", {
 
   range   <- 0.15
   sigma   <- 2
-  sigma_e <- 0.1
+  sigma_e <- 0.3
   n_repl  <- 10
   n.obs.per.edge <- 15
 

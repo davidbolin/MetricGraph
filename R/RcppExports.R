@@ -154,7 +154,7 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
 #' @title Per-edge cumulative relative positions
 #' @description Given a list of edges (each a 2-column numeric matrix of
 #' vertex coordinates), compute, for every edge, the cumulative arc-length
-#' normalized to lie in [0, 1]. Returns a list of numeric vectors, one per
+#' normalized to lie in \[0, 1\]. Returns a list of numeric vectors, one per
 #' edge, each starting at 0 and ending at 1.
 #'
 #' Degenerate (zero-length) edges return a vector of NaN values.
@@ -232,12 +232,12 @@ aeqd_project_cpp <- function(pts, lon0, lat0) {
 #' split to the end of the edge), segment_lengths (a NumericVector of length
 #' n_split + 1), and the aux_matrix (an IntegerMatrix of (n_split + 1) x 2
 #' giving the new E rows). Each segment carries a PtE attribute renormalized
-#' to [0, 1].
+#' to \[0, 1\].
 #' @param edge nx2 matrix: the polyline
 #' @param PtE_edge n vector: PtE values at each polyline point
-#' @param t_values n_split vector: sorted positions in [0,1] where to split
+#' @param t_values n_split vector: sorted positions in \[0, 1\] where to split
 #' @param edge_len double: original edge length
-#' @param E_row IntegerVector(2): current E[Ei,] = (start_v, end_v)
+#' @param E_row IntegerVector(2): current E\[Ei,\] = (start_v, end_v)
 #' @param first_new_v int: ID of the first new vertex for this edge
 #' @noRd
 split_one_edge_cpp <- function(edge, PtE_edge, t_values, edge_len, E_row, first_new_v) {

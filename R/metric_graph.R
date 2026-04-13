@@ -2114,7 +2114,7 @@ metric_graph <-  R6Class("metric_graph",
          message("Computing auxiliary geodesic distances...")
        }
        t <- system.time(
-         graph.temp$compute_geodist(full=TRUE,verbose = verbose)
+         graph.temp$compute_geodist(all_groups=TRUE,verbose = verbose)
        )
        if(verbose == 2){
          message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -4663,65 +4663,34 @@ coordinates!"))
        weight <- as.vector(weight[[private$directional_weights]])
        V_indegree = self$get_degrees("indegree")
        V_outdegree = self$get_degrees("outdegree")
-       # index_outdegree <- V_outdegree > 0 & V_indegree >0
-       # index_in0      <- V_indegree == 0
-       # nC = (sum(V_outdegree[index_outdegree] *(1 + V_indegree[index_outdegree])) + sum(V_outdegree[index_in0]-1)) * alpha
-       # i_  =  rep(0, nC)
-       # j_  =  rep(0, nC)
-       # x_  =  rep(0, nC)
-       # Vs <- which(index_outdegree)
-       # count_constraint <- 0
-       # count <- 0
-       # for (v in Vs) {
-       #   out_edges   <- which(self$E[, 1] %in% v)
-       #   in_edges    <- which(self$E[, 2] %in% v)
-       #   #for each out edge
-       #   n_in <- length(in_edges)
-       #   for(i in 1:length(out_edges)){
-       #     for(der in 1:alpha){
-       #       i_[count + 1:(n_in+1)] <- count_constraint + 1
-       #       j_[count + 1:(n_in+1)] <- c(2 * alpha * (out_edges[i]-1) + der,
-       #                                   2 * alpha * (in_edges-1)  + alpha + der)
 
+       temp_E <- apply(self$E, 2, as.integer)
+       nE_int <- as.integer(self$nE)
 
-       #       x_[count + 1:(n_in+1)] <- c(as.matrix(self$DirectionalWeightFunction_out(weight[out_edges[i]])),
-       #                                   as.matrix(self$DirectionalWeightFunction_in(weight[in_edges])))
+       # Pre-compute per-edge weight values in R, then delegate assembly to C++.
+       # w_out: one scalar per edge (applied to out-edge of a type-1 constraint row)
+       # w_in:  one scalar per edge (applied to in-edge of a type-1 constraint row)
+       f_out <- self$DirectionalWeightFunction_out  # local ref avoids repeated $ lookup
+       f_in  <- self$DirectionalWeightFunction_in
+       w_out_vec <- vapply(weight, f_out, numeric(1), USE.NAMES = FALSE)
 
-       #       count <- count + (n_in+1)
-       #       count_constraint <- count_constraint + 1
-       #     }
-       #   }
-       # }
-       # Vs0 <- which(index_in0)
-       # for (v in Vs0) {
-       #   out_edges   <- which(self$E[, 1] %in% v)
-       #   #for each out edge
-       #   if(length(out_edges)>1){
-       #     for(i in 2:length(out_edges)){
-       #       for(der in 1:alpha){
-       #         i_[count + 1:2] <- count_constraint + 1
-       #         j_[count + 1:2] <- c(2 * alpha * (out_edges[i]-1) + der,
-       #                              2 * alpha * (out_edges[i-1]-1)   + der)
+       # Group in-edges by vertex (once, O(nE)); apply f_in per type-1 vertex
+       # using lapply (C-loop) to avoid R for-loop overhead.
+       in_edges_list <- split(seq_len(self$nE), self$E[, 2])
+       type1_chars   <- as.character(which(V_indegree > 0 & V_outdegree > 0))
+       type1_in_list <- in_edges_list[type1_chars]
 
-       #         x_[count + 1:2] <- c(1,
-       #                              -1)
-       #         count <- count + 2
-       #         count_constraint <- count_constraint + 1
-       #       }
-       #     }
-       #   }
-       # }
-       # C <- Matrix::sparseMatrix(i = i_[1:count],
-       #                           j = j_[1:count],
-       #                           x = x_[1:count],
-       #                           dims = c(count_constraint, 2*alpha*self$nE))
-       # self$C = C
-       temp_E <- apply(self$E,2,as.integer)
-       self$C <-construct_directional_constraint_matrix(E = temp_E, nV = as.integer(self$nV), nE = as.integer(self$nE), alpha = as.integer(alpha),
-                                                        V_indegree = as.integer(V_indegree), V_outdegree = as.integer(V_outdegree), weight = weight,
-                                                        DirectionalWeightFunction_out = self$DirectionalWeightFunction_out,
-                                                        DirectionalWeightFunction_in = self$DirectionalWeightFunction_in)
+       w_in_parts <- lapply(type1_in_list, function(ie) f_in(weight[ie]))
 
+       w_in_vec <- numeric(self$nE)
+       for (i in seq_along(type1_chars)) {
+         w_in_vec[type1_in_list[[i]]] <- w_in_parts[[i]]
+       }
+
+       self$C <- construct_directional_constraint_matrix_fast(
+         temp_E, as.integer(self$nV), nE_int, as.integer(alpha),
+         as.integer(V_indegree), as.integer(V_outdegree),
+         as.numeric(w_out_vec), as.numeric(w_in_vec))
        self$CoB <- c_basis2(self$C)
        self$CoB$T <- t(self$CoB$T)
        self$CoB$alpha <- 1
@@ -4741,7 +4710,7 @@ coordinates!"))
          temp_E[] <- as.integer(temp_E)
 
          self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
-         self$CoB <- c_basis2(self$C)
+         self$CoB <- c_basis2_graph(temp_E, as.integer(self$nV), as.integer(edge_constraint))
          self$CoB$T <- t(self$CoB$T)
          self$CoB$alpha <- 2
        }else{
@@ -4893,10 +4862,20 @@ coordinates!"))
          K_dim       <- dim(self$mesh$C)[1]
          K_diag_loc  <- numeric(K_dim)
 
+         # Precompute vertex-to-mesh-edge adjacency list (O(nE_mesh))
+         nE_mesh <- nrow(mE_loc)
+         vtx_mesh_edges <- vector("list", K_dim)
+         for(k in seq_len(nE_mesh)) {
+           v1 <- mE_loc[k, 1L]
+           v2 <- mE_loc[k, 2L]
+           vtx_mesh_edges[[v1]] <- c(vtx_mesh_edges[[v1]], k)
+           vtx_mesh_edges[[v2]] <- c(vtx_mesh_edges[[v2]], k)
+         }
+
          for(i in seq_len(nV_loc)) {
            deg_i <- attr(vertices_loc[[i]], "degree")
            if(deg_i > 1) {
-             edges.mesh <- which(rowSums(mE_loc == i) > 0)
+             edges.mesh <- vtx_mesh_edges[[i]]
              n_em <- length(edges.mesh)
              w <- numeric(n_em)
              h <- numeric(n_em)
@@ -5637,16 +5616,18 @@ larger than 1")
 
        .out <- vector("list", .nE)
        kk = 1L
-       for (i in 1:self$nE) {
-         Vs <- self$E[i, 1]
-         Ve <- self$E[i, 2]
+       .mesh_continuous <- if (mesh) attr(self$mesh, "continuous") else FALSE
+       .mesh_PtE <- if (mesh) self$mesh$PtE else NULL
+       for (i in seq_len(.nE)) {
+         Vs <- .Efrom[i]
+         Ve <- .Eto[i]
          if (mesh) {
            ind_rows <- if (is.null(.mesh_idx_by_edge)) integer(0)
            else .mesh_idx_by_edge[[i]]
            if (is.null(ind_rows)) ind_rows <- integer(0)
 
            if (length(ind_rows) == 0) {
-             if(attr(self$mesh,"continuous")){
+             if(.mesh_continuous){
                vals <- rbind(c(0, XV[Vs]),
                              c(1, XV[Ve]))
              } else{
@@ -5654,12 +5635,12 @@ larger than 1")
              }
 
            } else {
-             if(attr(self$mesh,"continuous")) {
+             if(.mesh_continuous) {
                vals <- rbind(c(0, XV[Vs]),
-                             cbind(self$mesh$PtE[ind_rows, 2], X[n.v + ind_rows]),
+                             cbind(.mesh_PtE[ind_rows, 2], X[n.v + ind_rows]),
                              c(1, XV[Ve]))
              } else {
-               vals <- cbind(self$mesh$PtE[ind_rows, 2], X[ind_rows])
+               vals <- cbind(.mesh_PtE[ind_rows, 2], X[ind_rows])
              }
 
 
@@ -6056,7 +6037,7 @@ larger than 1")
          }
 
          if(!is.null(vals) && NROW(vals) > 0){
-           coords <- interpolate2(self$edges[[i]],
+           coords <- interpolate2(.edges_loc[[i]],
                                   pos = vals[, 1, drop = TRUE],
                                   normalized = TRUE)
 
@@ -6649,11 +6630,17 @@ larger than 1")
            PtE <- cbind(PtE[, 1], PtE[, 2] / self$edge_lengths[PtE[, 1]])
          }
 
-         Points <- matrix(NA, nrow=nrow(PtE), ncol=ncol(PtE))
+         Points <- matrix(NA_real_, nrow=nrow(PtE), ncol=2L)
 
-         for (i in 1:dim(PtE)[1]) {
-           Points[i,] <- interpolate2(self$edges[[PtE[i, 1]]] ,
-                                      pos = PtE[i, 2], normalized = TRUE)
+         # Batch observations by edge: split indices once, then one C++ call per edge
+         edge_ids <- PtE[, 1]
+         idx_by_edge <- split(seq_len(nrow(PtE)), edge_ids)
+         for (nm in names(idx_by_edge)) {
+           idx <- idx_by_edge[[nm]]
+           e <- as.integer(nm)
+           pts <- interpolate2(self$edges[[e]],
+                               pos = PtE[idx, 2], normalized = TRUE)
+           Points[idx, ] <- pts
          }
          return(Points)
        } else {
@@ -7687,7 +7674,10 @@ turned to vertices and the A matrix will then be computed")
        n_group <- length(unique(group))
 
        if(!drop_na && !drop_all_na){
-         A <- Matrix::Diagonal(self$nV)[self$PtV, ]
+         row_idx <- self$PtV
+         A <- Matrix::sparseMatrix(
+           i = seq_along(row_idx), j = row_idx,
+           x = 1, dims = c(length(row_idx), self$nV))
          return(Matrix::kronecker(Diagonal(n_group),A))
        } else {
          data_group <- select_group(private$data, group[1])
@@ -7696,9 +7686,10 @@ turned to vertices and the A matrix will then be computed")
          } else if(drop_all_na){
            idx_notna <- idx_not_all_NA(data_group)
          }
-         # nV_tmp <- sum(idx_notna)
-         # A <- Matrix::Diagonal(nV_tmp)[self$PtV[idx_notna], ]
-         A <- Matrix::Diagonal(self$nV)[self$PtV[idx_notna], ]
+         row_idx <- self$PtV[idx_notna]
+         A <- Matrix::sparseMatrix(
+           i = seq_along(row_idx), j = row_idx,
+           x = 1, dims = c(length(row_idx), self$nV))
          if(n_group > 1){
            for (i in 2:length(group)) {
              data_group <- select_group(private$data, group[i])
@@ -7707,8 +7698,10 @@ turned to vertices and the A matrix will then be computed")
              } else if(drop_all_na){
                idx_notna <- idx_not_all_NA(data_group)
              }
-             # nV_tmp <- sum(idx_notna)
-             A <- Matrix::bdiag(A, Matrix::Diagonal(self$nV)[self$PtV[idx_notna], ])
+             row_idx <- self$PtV[idx_notna]
+             A <- Matrix::bdiag(A, Matrix::sparseMatrix(
+               i = seq_along(row_idx), j = row_idx,
+               x = 1, dims = c(length(row_idx), self$nV)))
            }
          }
          return(A)

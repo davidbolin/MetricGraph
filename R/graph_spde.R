@@ -847,46 +847,26 @@ graph_spde <- function(graph_object,
   model$alpha <- alpha
   if (alpha == 2) {
     A_tmp <- t(Tc)
-    index.obs1 <- sapply(graph_spde$PtV, function(i) {
-      idx_temp <- i == graph_spde$E[, 1]
-      idx_temp <- which(idx_temp)
-      return(idx_temp[1])
-    })
+    index.obs1 <- match(graph_spde$PtV, graph_spde$E[, 1])
     index.obs1 <- (index.obs1 - 1) * 4 + 1
-    index.obs2 <- NULL
     na_obs1 <- is.na(index.obs1)
     if (any(na_obs1)) {
-      idx_na <- which(na_obs1)
-      PtV_NA <- graph_spde$PtV[idx_na]
-      index.obs2 <- sapply(PtV_NA, function(i) {
-        idx_temp <- i == graph_spde$E[, 2]
-        idx_temp <- which(idx_temp)
-        return(idx_temp[1])
-      })
+      PtV_NA <- graph_spde$PtV[na_obs1]
+      index.obs2 <- match(PtV_NA, graph_spde$E[, 2])
       index.obs1[na_obs1] <- (index.obs2 - 1) * 4 + 3
     }
-    A_tmp <- A_tmp[index.obs1, ] # A matrix for alpha=
+    A_tmp <- A_tmp[index.obs1, ] # A matrix for alpha=2
   } else if (directional) {
     A_tmp <- t(Tc)
-    index.obs1 <- sapply(graph_spde$PtV, function(i) {
-      idx_temp <- i == graph_spde$E[, 1]
-      idx_temp <- which(idx_temp)
-      return(idx_temp[1])
-    })
+    index.obs1 <- match(graph_spde$PtV, graph_spde$E[, 1])
     index.obs1 <- (index.obs1 - 1) * 2 + 1
-    index.obs2 <- NULL
     na_obs1 <- is.na(index.obs1)
     if (any(na_obs1)) {
-      idx_na <- which(na_obs1)
-      PtV_NA <- graph_spde$PtV[idx_na]
-      index.obs2 <- sapply(PtV_NA, function(i) {
-        idx_temp <- i == graph_spde$E[, 2]
-        idx_temp <- which(idx_temp)
-        return(idx_temp[1])
-      })
+      PtV_NA <- graph_spde$PtV[na_obs1]
+      index.obs2 <- match(PtV_NA, graph_spde$E[, 2])
       index.obs1[na_obs1] <- (index.obs2 - 1) * 2 + 2
     }
-    A_tmp <- A_tmp[index.obs1, ] # A matrix for alpha=
+    A_tmp <- A_tmp[index.obs1, ] # A matrix for directional
   }
   model$A <- A_tmp
   model$ordering <- graph_spde$.__enclos_env__$private$data[[".internal_ordering"]]
@@ -1152,7 +1132,10 @@ graph_data_spde <- function(graph_spde, name = "field", repl = NULL, repl_col = 
 
         if (alpha == 1) {
           if (!graph_spde$directional) {
-            A_tmp <- Matrix::Diagonal(graph_tmp$nV)[graph_tmp$PtV[loc_sel], ]
+            row_idx <- graph_tmp$PtV[loc_sel]
+            A_tmp <- Matrix::sparseMatrix(
+              i = seq_along(row_idx), j = row_idx,
+              x = 1, dims = c(length(row_idx), graph_tmp$nV))
           } else {
             A_tmp <- graph_spde$A[loc_sel, , drop = FALSE]
           }

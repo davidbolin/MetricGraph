@@ -179,7 +179,12 @@ simulate_spacetime <- function(graph, t, kappa, rho, gamma, alpha,
     stop("not implemented")
   }
   if(beta == 0) {
-    R <- chol(graph$mesh$C)
+    R_C <- Cholesky(forceSymmetric(graph$mesh$C), LDL = FALSE, perm = TRUE)
+    # Extract sparse L and permutation so L %*% z is fast
+    L_C <- as(R_C, "Matrix")    # lower triangular sparse factor
+    perm_C <- R_C@perm + 1L     # 0-indexed -> 1-indexed permutation
+    iperm_C <- integer(n)
+    iperm_C[perm_C] <- seq_len(n)  # inverse permutation
   } else {
     stop("not implemented")
   }
@@ -187,8 +192,10 @@ simulate_spacetime <- function(graph, t, kappa, rho, gamma, alpha,
   U[,1] <- u0
   for(i in 1:(length(t)-1)){
     dt <- t[i+1]-t[i]
+    # Sample w ~ N(0, C): P C P' = L L', so w = P' L z
+    Cz <- as.vector(L_C %*% rnorm(n))[iperm_C]
     U[,i+1] <- as.vector(solve(graph$mesh$C + dt*gamma*L,
-                               graph$mesh$C%*%U[,i] + sqrt(dt)*sigma*R%*%rnorm(n)))
+                               graph$mesh$C%*%U[,i] + sqrt(dt)*sigma*Cz))
   }
   return(U)
 }

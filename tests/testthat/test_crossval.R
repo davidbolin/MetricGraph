@@ -32,7 +32,7 @@ test_that("Check likelihoods for alternative models", {
 
 
   graph$observation_to_vertex()
-  graph$compute_geodist(full=TRUE)
+  graph$compute_geodist(all_groups=TRUE)
   graph$compute_resdist(full=TRUE)
   lik.exp.v2 <- likelihood_graph_covariance(graph, model = "isoCov", cov_function = exp_covariance, log_scale = FALSE, y_graph = graph$get_data()$y, X_cov = NULL, repl = NULL)
   lik.exp.v2 <- lik.exp.v2(theta)

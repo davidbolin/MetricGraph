@@ -100,10 +100,10 @@ graph_lgcp_sim <- function(n = 1, intercept = 0, sigma, range, alpha, graph) {
   } else {
     stop("not implemented yet")
   }
-  R <- chol(Q)
+  R <- Cholesky(forceSymmetric(Q), LDL = FALSE, perm = TRUE)
   result <- list()
   for(i in 1:n){
-    tmp <- solve(R, rnorm(dim(Q)[1]))
+    tmp <- as.vector(solve(R, solve(R, rnorm(dim(Q)[1]), system = "Lt"), system = "Pt"))
     u <- intercept + tmp
 
     lambda_max <- max(exp(u))
