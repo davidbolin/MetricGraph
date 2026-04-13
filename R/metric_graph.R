@@ -1879,19 +1879,20 @@ metric_graph <-  R6Class("metric_graph",
          df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                                edge_number = PtE[,1],
                                distance_on_edge = PtE[,2])
+
+         df_temp <- standardize_df_positions(df_temp, self)
+
          if(sum(duplicated(df_temp))>0){
            warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
            df_temp <- unique(df_temp)
          }
-
-         df_temp <- standardize_df_positions(df_temp, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
 
          graph.temp$build_mesh(h = 10000)
 
          df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                 distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
-         df_temp2 <- standardize_df_positions(df_temp2, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
+         df_temp2 <- standardize_df_positions(df_temp2, self)
 
          df_temp$included <- TRUE
          temp_merge <- merge(df_temp, df_temp2, all = TRUE)
@@ -2068,8 +2069,11 @@ metric_graph <-  R6Class("metric_graph",
          df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
                                edge_number = PtE[,1],
                                distance_on_edge = PtE[,2])
+
+         df_temp <- standardize_df_positions(df_temp, self)
+
          if(sum(duplicated(df_temp))>0){
-           warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
+           warning("Duplicated locations were found when computing resdist. The returned values are given for unique locations.")
            df_temp <- unique(df_temp)
          }
 
@@ -2078,6 +2082,8 @@ metric_graph <-  R6Class("metric_graph",
          df_temp2 <- data.frame(y = 0,
                                 edge_number = graph.temp$mesh$VtE[1:nrow(self$V), 1],
                                 distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V), 2])
+
+         df_temp2 <- standardize_df_positions(df_temp2, self)
 
          df_temp$included <- TRUE
          temp_merge <- merge(df_temp, df_temp2, all = TRUE)
