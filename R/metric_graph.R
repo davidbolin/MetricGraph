@@ -2936,22 +2936,23 @@ metric_graph <-  R6Class("metric_graph",
 
        # temp_PtE columns: [edge, dist, unique_loc_idx]
        private$temp_PtE <- cbind(unique_e, unique_d, seq_len(n_unique))
-       self$PtV         <- rep(NA_integer_, n_unique)
+       ptv_local <- rep(NA_integer_, n_unique)
 
-       # ── Classify unique locations ──────────────────────────────────────────
+       # Classify unique locations
        is_start_vertex <- unique_d < 1e-15
        is_end_vertex   <- unique_d > 0.999999999999999
 
+       E_local <- self$E
        if (any(is_start_vertex)) {
          idx <- which(is_start_vertex)
-         self$PtV[idx] <- self$E[unique_e[idx], 1]
+         ptv_local[idx] <- E_local[unique_e[idx], 1]
        }
        if (any(is_end_vertex)) {
          idx <- which(is_end_vertex)
-         self$PtV[idx] <- self$E[unique_e[idx], 2]
+         ptv_local[idx] <- E_local[unique_e[idx], 2]
        }
 
-       # ── Split interior locations ───────────────────────────────────────────
+       # plit interior locations
        remaining_mask  <- !(is_start_vertex | is_end_vertex)
        remaining_count <- sum(remaining_mask)
 
@@ -2972,33 +2973,35 @@ metric_graph <-  R6Class("metric_graph",
            gdi     <- edge_groups[[i]]
            indices <- if (is.matrix(gdi)) gdi[, 2] else gdi[2]
            nvi     <- new_vertices_list[[i]]
-           if (length(nvi) > 0) self$PtV[indices] <- nvi
+           if (length(nvi) > 0) ptv_local[indices] <- nvi
            if (verbose == 2) bar_otv$increment()
          }
        }
 
-       # ── Update temp_PtE edge numbers after graph changes ──────────────────
+       # Update temp_PtE edge numbers after graph changes
        # Edge numbering may shift after splits; remap boundary observations.
-       valid_ptv <- !is.na(self$PtV)
+       # split_edge_batch may have mutated self$E, so re-fetch.
+       E_local <- self$E
+       valid_ptv <- !is.na(ptv_local)
        if (any(is_start_vertex & valid_ptv)) {
          idx <- which(is_start_vertex & valid_ptv)
-         private$temp_PtE[idx, 1] <- match(self$PtV[idx], self$E[, 1])
+         private$temp_PtE[idx, 1] <- match(ptv_local[idx], E_local[, 1])
          private$temp_PtE[idx, 2] <- 0
        }
        if (any(is_end_vertex & valid_ptv)) {
          idx <- which(is_end_vertex & valid_ptv)
-         private$temp_PtE[idx, 1] <- match(self$PtV[idx], self$E[, 2])
+         private$temp_PtE[idx, 1] <- match(ptv_local[idx], E_local[, 2])
          private$temp_PtE[idx, 2] <- 1
        }
-       self$PtV <- self$PtV[!is.na(self$PtV)]  # compact (defensive)
+       self$PtV <- ptv_local[!is.na(ptv_local)]  # compact (defensive), single flush
 
-       # ── Propagate updated (edge, dist) to every data row via loc_idx ──────
+       # Propagate updated (edge, dist) to every data row via loc_idx
        if (verbose > 1) message("Updating data structures...")
 
        private$data[[".edge_number"]]      <- private$temp_PtE[loc_idx_orig, 1]
        private$data[[".distance_on_edge"]] <- private$temp_PtE[loc_idx_orig, 2]
 
-       # ── Re-sort all rows and rebuild .loc_idx ─────────────────────────────
+       # Re-sort all rows and rebuild .loc_idx
        index_order <- order(private$data[[".group"]],
                             private$data[[".edge_number"]],
                             private$data[[".distance_on_edge"]])
@@ -3057,6 +3060,7 @@ metric_graph <-  R6Class("metric_graph",
          verbose              = verbose
        )
      },
+
 
      #' @description Turns edge weights into data on the metric graph
      #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
@@ -4879,31 +4883,46 @@ coordinates!"))
        self$mesh$K <- Diagonal(dim(self$mesh$C)[1],
                                c(rep(0, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
 
-       # if(!all(private$get_edge_weights_internal()==1)){
        if(!is.null(private$kirchhoff_weights)){
-         for(i in 1:self$nV) {
-           if(attr(self$vertices[[i]],"degree") > 1) {
-             edges.i <- which(rowSums(self$E==i)>0)
-             edges.mesh <- which(rowSums(self$mesh$E==i)>0)
-             w <- rep(0,length(edges.mesh))
-             h <- rep(0,length(edges.mesh))
-             for(j in 1:length(edges.mesh)) {
-               V.e <- self$mesh$E[edges.mesh[j],which(self$mesh$E[edges.mesh[j],]!=i)]
+         nV_loc      <- self$nV
+         mE_loc      <- self$mesh$E
+         mVtE_loc    <- self$mesh$VtE
+         mh_loc      <- self$mesh$h_e
+         edges_loc   <- self$edges
+         vertices_loc <- self$vertices
+         K_dim       <- dim(self$mesh$C)[1]
+         K_diag_loc  <- numeric(K_dim)
+
+         for(i in seq_len(nV_loc)) {
+           deg_i <- attr(vertices_loc[[i]], "degree")
+           if(deg_i > 1) {
+             edges.mesh <- which(rowSums(mE_loc == i) > 0)
+             n_em <- length(edges.mesh)
+             w <- numeric(n_em)
+             h <- numeric(n_em)
+             for(j in seq_len(n_em)) {
+               em_j <- edges.mesh[j]
+               row_j <- mE_loc[em_j, ]
+               V.e <- row_j[row_j != i]
                if(length(V.e) == 0){
-                 V.e <- self$mesh$E[edges.mesh[j],1]
+                 V.e <- row_j[1]
                }
-               E.e <- self$mesh$VtE[V.e,1] #the edge the mesh node is on
-               # w[j] <- attr(self$edges[[E.e]],"weight")
-               kw <- attr(self$edges[[E.e]], "kirchhoff_weight")
-               w_tmp <- attr(self$edges[[E.e]],"weight")
-               w[j] <- w_tmp[[kw]]
-               h[j] <- self$mesh$h_e[edges.mesh[j]]
+               E.e <- mVtE_loc[V.e, 1]            # the edge the mesh node is on
+               edge_attrs <- edges_loc[[E.e]]
+               kw    <- attr(edge_attrs, "kirchhoff_weight")
+               w_tmp <- attr(edge_attrs, "weight")
+               w[j]  <- w_tmp[[kw]]
+               h[j]  <- mh_loc[em_j]
              }
-             for(j in 2:attr(self$vertices[[i]],"degree")){
-               self$mesh$K[i,i] <- self$mesh$K[i,i] +  (w[j]/w[1] - 1)/h[j]
+             w1 <- w[1]
+             acc <- 0
+             for(j in 2:deg_i){
+               acc <- acc + (w[j]/w1 - 1)/h[j]
              }
+             K_diag_loc[i] <- acc
            }
          }
+         self$mesh$K <- Diagonal(K_dim, K_diag_loc)
        }
 
        if(petrov) {
@@ -7894,17 +7913,12 @@ turned to vertices and the A matrix will then be computed")
        idx_positions <- val_results[["idx"]]
        val_lines <- val_results[["coords"]]
 
-       # Initialize new_vertices
-       new_vertices <- numeric(length(t_values))
-
-       # Loop through each value in t_values, updating self$V conditionally
-       for (i in seq_along(t_values)) {
-         val_line <- matrix(val_lines[i, , drop = FALSE], nrow = 1)
-         newV <- self$nV + 1
-         self$V <- rbind(self$V, val_line)
-         self$nV <- self$nV + 1
-         new_vertices[i] <- newV
-       }
+       # One-shot vertex growth (replaces per-i rbind + self$nV increment loop).
+       n_t <- length(t_values)
+       nV_old <- self$nV
+       new_vertices <- nV_old + seq_len(n_t)
+       self$V  <- rbind(self$V, val_lines)
+       self$nV <- nV_old + n_t
 
        # Edge updates
        edge_updates <- self$nE + seq_len(length(t_values))
@@ -7980,17 +7994,18 @@ turned to vertices and the A matrix will then be computed")
          attr(coords_list2[[i]], "PtE") <- tmp_PtE
        }
 
-       # Construct aux_matrix for self$E
+       # Construct aux_matrix for self$E (hoist endpoints once)
+       E_row_Ei <- self$E[Ei, ]
        if (length(t_values) == 1) {
          aux_matrix <- matrix(
-           c(self$E[Ei, 1], new_vertices[1], new_vertices[1], self$E[Ei, 2]),
+           c(E_row_Ei[1], new_vertices[1], new_vertices[1], E_row_Ei[2]),
            nrow = 2, byrow = TRUE
          )
        } else {
          aux_matrix <- rbind(
-           c(self$E[Ei, 1], new_vertices[1]),
+           c(E_row_Ei[1], new_vertices[1]),
            cbind(new_vertices[-length(new_vertices)], new_vertices[-1]),
-           c(new_vertices[length(new_vertices)], self$E[Ei, 2])
+           c(new_vertices[length(new_vertices)], E_row_Ei[2])
          )
        }
 
@@ -8001,19 +8016,25 @@ turned to vertices and the A matrix will then be computed")
        self$edges <- c(self$edges, coords_list2)
        self$nE <- self$nE + length(t_values)
 
-       # Update edge lengths and weights
-       segment_lengths <- c(t_values[1], diff(t_values), 1 - t_values[length(t_values)]) * self$edge_lengths[Ei]
+       # Update edge lengths and weights (reuse cached edge_length)
+       segment_lengths <- c(t_values[1], diff(t_values),
+                            1 - t_values[length(t_values)]) * edge_length
        self$edge_lengths <- c(self$edge_lengths, segment_lengths[-1])
        self$edge_lengths[Ei] <- segment_lengths[1]
 
        if (is.vector(private$edge_weights)) {
-         private$edge_weights <- c(private$edge_weights, rep(private$edge_weights[Ei], length(t_values)))
+         private$edge_weights <- c(private$edge_weights,
+                                   rep(private$edge_weights[Ei], length(t_values)))
        } else {
-         private$edge_weights <- rbind(private$edge_weights, do.call(rbind, replicate(length(t_values), private$edge_weights[Ei, , drop = FALSE], simplify = FALSE)))
+         private$edge_weights <- rbind(private$edge_weights,
+                                       do.call(rbind, replicate(length(t_values),
+                                                                private$edge_weights[Ei, , drop = FALSE],
+                                                                simplify = FALSE)))
        }
 
        return(new_vertices)
      },
+
 
      # batch processing of multiple edges (sequential only)
      split_edge_batch = function(edge_groups, verbose = 0) {
