@@ -1,8 +1,8 @@
 #' @title Metric graph
 #' @description Class representing a general metric graph.
 #' @details A graph object created from vertex and edge matrices, or from an
-#' `sp::SpatialLines` object where each line is representing and edge. For more details,
-#'  see the vignette:
+#' `sp::SpatialLines` object where each line is representing and edge. For more
+#' details, see the vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graphs.
 #' @examples
@@ -50,12 +50,15 @@ metric_graph <-  R6Class("metric_graph",
      #' @field edges The coordinates of the edges in the graph.
      edges = NULL,
 
-     #' @field DirectionalWeightFunction_in Function for inwards weights in directional models
+     #' @field DirectionalWeightFunction_in Function for inwards weights in
+     #' directional models
      DirectionalWeightFunction_in  =NULL,
-     #' @field DirectionalWeightFunction_out Function for outwards weights in directional models
+     #' @field DirectionalWeightFunction_out Function for outwards weights in
+     #' directional models
      DirectionalWeightFunction_out  = NULL,
 
-     #' @field vertices The coordinates of the vertices in the graph, along with several attributes.
+     #' @field vertices The coordinates of the vertices in the graph, along with
+     #' several attributes.
      vertices = NULL,
 
 
@@ -73,31 +76,92 @@ metric_graph <-  R6Class("metric_graph",
      characteristics = NULL,
 
      #' @description Create a new `metric_graph` object.
-     #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
-     #' @param V n x 2 matrix with Euclidean coordinates of the n vertices. If non-NULL, no merges will be performed.
-     #' @param E m x 2 matrix where each row represents one of the m edges. If non-NULL, no merges will be performed.
-     #' @param vertex_unit The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
-     #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default, when longlat is `TRUE`, or an `sf` or `sp` objects are provided, is 'km'.
-     #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
-     #' each row gives a vector of weights to its corresponding edge. Can be changed by using the `set_edge_weights()` method.
-     #' @param kirchhoff_weights If non-null, the name (or number) of the column of `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `edge_weights` is a single number and those are the Kirchhoff weights.
-     #' @param directional_weights If non-null, the name (or number) of the column of `edge_weights` that contain the directional weights. The default is the first column of the edge weights.
-     #' @param longlat There are three options: `NULL`, `TRUE` or `FALSE`. If `NULL` (the default option), the `edges` argument will be checked to see if there is a CRS or proj4string available, if so, `longlat` will be set to `TRUE`, otherwise, it will be set to `FALSE`. If `TRUE`, then it is assumed that the coordinates are given.
-     #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE` it takes precedence over
-     #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'` and `length_unit = 'm'`.
-     #' @param include_obs If the object is of class `SSN`, should the observations be added? If `NULL` and the edges are of class `SSN`, the data will be automatically added. If `FALSE`, the data will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the observations to be added as observations.
-     #' @param add_obs_options List containing additional options to be passed to the `add_observations()` method when adding observations from `SSN` data?
-     #' @param include_edge_weights If the object is of class `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame`, `MULTILINESTRING`, `LINESTRING`, `sfc_LINESTRING`, `sfc_MULTILINESTRING`, should the edge data (if any) be added as edge weights? If `NULL`, the edge data will be added as edge weights, if `FALSE` they will not be added. Alternatively, one can set this argument to the numbers or names of the columns of the edge data to be added as edge weights.
-     #' @param crs Coordinate reference system to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default choice, if the `edges` object does not have CRS nor proj4string, is `sf::st_crs(4326)`.
-     #' @param proj4string Projection string of class CRS-class to be used in case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default choice, if the `edges` object does not have CRS nor proj4string, is `sp::CRS("+proj=longlat +datum=WGS84")`.
-     #' @param which_longlat Compute the distance using which package? The options are `sp` and `sf`. The default is `sp`.
-     #' @param project If `longlat` is `TRUE` should a projection be used to compute the distances to be used for the tolerances (see `tolerance` below)? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
-     #' @param project_data If `longlat` is `TRUE` should the vertices be project to planar coordinates? The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
-     #' @param which_projection Which projection should be used in case `project` is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string. The default is `Winkel tripel`.
-     #' @param manual_edge_lengths If non-NULL, a vector containing the edges lengths, and all the quantities related to edge lengths will be computed in terms of these. If merges are performed, it is likely that the merges will override the manual edge lengths. In such a case, to provide manual edge lengths, one should either set the `perform_merges` argument to `FALSE` or use the `set_manual_edge_lengths()` method.
-     #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`. The default option is `NULL`. If `NULL`, it will be set to `FALSE` unless 'edges', 'V' and 'E' are `NULL`, in which case it will be set to `TRUE`. If FALSE, this will take priority over the other arguments, and no merges (except the optional `merge_close_vertices` below) will be performed. Note that the merge on the additional `merge_close_vertices` might still be performed, if it is set to `TRUE`.
-     #' @param approx_edge_PtE Should the relative positions on the edges be approximated? The default is `TRUE`. If `FALSE`, the speed can be considerably slower, especially for large metric graphs.
-     #' @param tolerance List that provides tolerances during the construction of the graph:
+     #' @param edges A list containing coordinates as `m x 2` matrices (that is,
+     #' of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of
+     #' points connected by straightlines. Alternatively, you can also prove an
+     #' object of type `SSN`, `osmdata_sp`, `osmdata_sf`, `SpatialLinesDataFrame`
+     #' or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
+     #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
+     #' If non-NULL, no merges will be performed.
+     #' @param E m x 2 matrix where each row represents one of the m edges.
+     #' If non-NULL, no merges will be performed.
+     #' @param vertex_unit The unit in which the vertices are specified.
+     #' The options are 'degree' (the great circle distance in km), 'km', 'm'
+     #' and 'miles'. The default is `NULL`, which means no unit. However, if you
+     #' set `length_unit`, you need to set `vertex_unit`.
+     #' @param length_unit The unit in which the lengths will be computed.
+     #' The options are 'km', 'm' and 'miles'. The default, when longlat is `TRUE`,
+     #' or an `sf` or `sp` objects are provided, is 'km'.
+     #' @param edge_weights Either a number, a numerical vector with length given by
+     #' the number of edges, providing the edge weights, or a `data.frame` with the
+     #' number of rows being equal to the number of edges, where
+     #' each row gives a vector of weights to its corresponding edge. Can be changed
+     #' by using the `set_edge_weights()` method.
+     #' @param kirchhoff_weights If non-null, the name (or number) of the column of
+     #' `edge_weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`)
+     #' in case `edge_weights` is a single number and those are the Kirchhoff weights.
+     #' @param directional_weights If non-null, the name (or number) of the column of
+     #' `edge_weights` that contain the directional weights. The default is the
+     #' first column of the edge weights.
+     #' @param longlat There are three options: `NULL`, `TRUE` or `FALSE`. If `NULL`
+     #' (the default option), the `edges` argument will be checked to see if there
+     #' is a CRS or proj4string available, if so, `longlat` will be set to `TRUE`,
+     #' otherwise, it will be set to `FALSE`. If `TRUE`, then it is assumed that the
+     #' coordinates are given.
+     #' in Longitude/Latitude and that distances should be computed in meters. If `TRUE`
+     #' it takes precedence over
+     #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'`
+     #' and `length_unit = 'm'`.
+     #' @param include_obs If the object is of class `SSN`, should the observations
+     #' be added? If `NULL` and the edges are of class `SSN`, the data will be
+     #' automatically added. If `FALSE`, the data will not be added. Alternatively,
+     #' one can set this argument to the numbers or names of the columns of the
+     #' observations to be added as observations.
+     #' @param add_obs_options List containing additional options to be passed to
+     #' the `add_observations()` method when adding observations from `SSN` data?
+     #' @param include_edge_weights If the object is of class `SSN`, `osmdata_sp`,
+     #' `osmdata_sf`, `SpatialLinesDataFrame`, `MULTILINESTRING`, `LINESTRING`,
+     #' `sfc_LINESTRING`, `sfc_MULTILINESTRING`, should the edge data (if any) be
+     #' added as edge weights? If `NULL`, the edge data will be added as edge weights,
+     #' if `FALSE` they will not be added. Alternatively, one can set this argument
+     #' to the numbers or names of the columns of the edge data to be added as edge
+     #' weights.
+     #' @param crs Coordinate reference system to be used in case `longlat` is set
+     #' to `TRUE` and `which_longlat` is `sf`. Object of class crs. The default
+     #' choice, if the `edges` object does not have CRS nor proj4string, is `sf::st_crs(4326)`.
+     #' @param proj4string Projection string of class CRS-class to be used in
+     #' case `longlat` is set to `TRUE` and `which_longlat` is `sp`. The default
+     #' choice, if the `edges` object does not have CRS nor proj4string, is
+     #' `sp::CRS("+proj=longlat +datum=WGS84")`.
+     #' @param which_longlat Compute the distance using which package? The options
+     #' are `sp` and `sf`. The default is `sp`.
+     #' @param project If `longlat` is `TRUE` should a projection be used to
+     #' compute the distances to be used for the tolerances (see `tolerance` below)?
+     #' The default is `FALSE`. When `TRUE`, the construction of the graph is faster.
+     #' @param project_data If `longlat` is `TRUE` should the vertices be project
+     #' to planar coordinates? The default is `FALSE`. When `TRUE`, the construction
+     #' of the graph is faster.
+     #' @param which_projection Which projection should be used in case `project`
+     #' is `TRUE`? The options are `Robinson`, `Winkel tripel` or a proj4string.
+     #' The default is `Winkel tripel`.
+     #' @param manual_edge_lengths If non-NULL, a vector containing the edges
+     #' lengths, and all the quantities related to edge lengths will be computed
+     #' in terms of these. If merges are performed, it is likely that the merges
+     #' will override the manual edge lengths. In such a case, to provide manual
+     #' edge lengths, one should either set the `perform_merges` argument to `FALSE`
+     #' or use the `set_manual_edge_lengths()` method.
+     #' @param perform_merges There are three options, `NULL`, `TRUE` or `FALSE`.
+     #' The default option is `NULL`. If `NULL`, it will be set to `FALSE` unless
+     #' 'edges', 'V' and 'E' are `NULL`, in which case it will be set to `TRUE`.
+     #' If FALSE, this will take priority over the other arguments, and no merges
+     #' (except the optional `merge_close_vertices` below) will be performed.
+     #' Note that the merge on the additional `merge_close_vertices` might still
+     #' be performed, if it is set to `TRUE`.
+     #' @param approx_edge_PtE Should the relative positions on the edges be
+     #' approximated? The default is `TRUE`. If `FALSE`, the speed can be considerably
+     #' slower, especially for large metric graphs.
+     #' @param tolerance List that provides tolerances during the construction
+     #' of the graph:
      #' - `vertex_vertex` Vertices that are closer than this number are merged (default = 1e-7).
      #' - `vertex_edge` If a vertex at the end of one edge is closer than this
      #' number to another edge, this vertex is connected to that edge
@@ -112,13 +176,25 @@ metric_graph <-  R6Class("metric_graph",
      #' connected and a warning is given if this is not the case.
      #' @param remove_deg2 Set to `TRUE` to remove all vertices of degree 2 in the
      #' initialization. Default is `FALSE`.
-     #' @param merge_close_vertices Should an additional step to merge close vertices be done? The options are `NULL` (the default), `TRUE` or `FALSE`. If `NULL`, it will be determined automatically. If `TRUE` this step will be performed even if `perfom_merges` is set to `FALSE`.
-     #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance `vertex_vertex` when merging close vertices at the additional step?
-     #' @param remove_circles All circlular edges with a length smaller than this number
-     #' are removed. If `TRUE`, the `vertex_vertex` tolerance will be used. If `FALSE`, no circles will be removed.
-     #' @param auto_remove_point_edges Should edges of length zero, that is, edges that are actually points, be automatically removed?
-     #' @param verbose Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param merge_close_vertices Should an additional step to merge close vertices
+     #' be done? The options are `NULL` (the default), `TRUE` or `FALSE`. If `NULL`,
+     #' it will be determined automatically. If `TRUE` this step will be performed
+     #' even if `perfom_merges` is set to `FALSE`.
+     #' @param factor_merge_close_vertices Which factor to be multiplied by tolerance
+     #' `vertex_vertex` when merging close vertices at the additional step?
+     #' @param remove_circles All circlular edges with a length smaller than this
+     #' number are removed. If `TRUE`, the `vertex_vertex` tolerance will be used.
+     #' If `FALSE`, no circles will be removed.
+     #' @param auto_remove_point_edges Should edges of length zero, that is, edges
+     #' that are actually points, be automatically removed?
+     #' @param verbose Print progress of graph creation. There are 3 levels of
+     #' verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1,
+     #' only messages regarding important steps are printed. Finally, in level 2,
+     #' messages detailing all the steps are printed. The default is 1.
      #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
+     #' @param .assemble Expert option for assembling the graph by skipping the
+     #' entire constructor pipeline and instead populate the R6 object directly
+     #' from a pre-computed list. Intended for internal use.
      #' @details A graph object can be initialized in two ways. The first method
      #' is to specify V and E. In this case, all edges are assumed to be straight
      #' lines. The second option is to specify the graph via the `lines` input.
@@ -158,7 +234,25 @@ metric_graph <-  R6Class("metric_graph",
                            verbose = 1,
                            add_obs_options = list(return_removed = FALSE,
                                                   verbose = verbose),
-                           lines = deprecated()) {
+                           lines = deprecated(),
+                           .assemble = NULL) {
+
+       if (!is.null(.assemble)) {
+         pub  <- .assemble$public
+         priv <- .assemble$private
+         if (!is.null(pub)) {
+           for (nm in names(pub)) {
+             assign(nm, pub[[nm]], envir = self)
+           }
+         }
+         if (!is.null(priv)) {
+           for (nm in names(priv)) {
+             assign(nm, priv[[nm]], envir = private)
+           }
+         }
+         private$disconnected <- TRUE
+         return(invisible(self))
+       }
 
        start_construction_time <- Sys.time()
 
@@ -244,7 +338,8 @@ metric_graph <-  R6Class("metric_graph",
              stop("invalid option passed to include_edge_weights.")
            }
          }
-       } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))){
+       } else if(inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING",
+                                   "sfc_MULTILINESTRING", "sf"))){
          if(is.null(longlat) || longlat){
            if(!is.na(sf::st_crs(edges))){
              longlat <- TRUE
@@ -289,12 +384,14 @@ metric_graph <-  R6Class("metric_graph",
 
        if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
-           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)", "metric_graph$new(edges)",
+           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)",
+                                     "metric_graph$new(edges)",
                                      details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
            )
            edges <- lines
          } else {
-           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)", "metric_graph$new(edges)",
+           lifecycle::deprecate_warn("1.2.0", "metric_graph$new(lines)",
+                                     "metric_graph$new(edges)",
                                      details = c("Both `edges` and `lines` were provided. Only `edges` will be considered.")
            )
          }
@@ -473,7 +570,8 @@ metric_graph <-  R6Class("metric_graph",
            stop("'vertex_unit' must be a string!")
          }
          if(!(vertex_unit %in% valid_units_vertex)){
-           stop(paste("The possible options for 'vertex_unit' are ", toString(valid_units_vertex)))
+           stop(paste("The possible options for 'vertex_unit' are ",
+                      toString(valid_units_vertex)))
          }
          private$vertex_unit <- vertex_unit
        }
@@ -487,7 +585,8 @@ metric_graph <-  R6Class("metric_graph",
            length_unit <- "km"
          }
          if(!(length_unit %in% valid_units_length)){
-           stop(paste("The possible options for 'length_unit' are ", toString(valid_units_length)))
+           stop(paste("The possible options for 'length_unit' are ",
+                      toString(valid_units_length)))
          }
          private$length_unit <- length_unit
        }
@@ -592,7 +691,8 @@ metric_graph <-  R6Class("metric_graph",
            self$edges <- lapply(1:length(tmp_lines), function(i){tmp_lines@lines[[i]]@Lines[[1]]@coords})
          } else if (inherits(edges,"SpatialLines")) {
            self$edges = lapply(1:length(edges), function(i){edges@lines[[i]]@Lines[[1]]@coords})
-         } else if (inherits(edges, c("MULTILINESTRING", "LINESTRING", "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))) {
+         } else if (inherits(edges, c("MULTILINESTRING", "LINESTRING",
+                                      "sfc_LINESTRING", "sfc_MULTILINESTRING", "sf"))) {
            # Ensure 'edges' is an 'sf' object if it is not already
            if (!inherits(edges, "sf")) {
              # Convert to 'sfc' (simple feature geometry list column)
@@ -610,8 +710,11 @@ metric_graph <-  R6Class("metric_graph",
            # Extract coordinates for the valid edges
            coords_multilinestring <- sf::st_coordinates(sf::st_geometry(valid_edges))
 
-           split_coords <- split(coords_multilinestring[, 1:2, drop = FALSE], coords_multilinestring[, "L1"])
-           self$edges <- lapply(split_coords, function(coords) matrix(coords, ncol=2, byrow=FALSE))
+           split_coords <- split(coords_multilinestring[, 1:2, drop = FALSE],
+                                 coords_multilinestring[, "L1"])
+           self$edges <- lapply(split_coords, function(coords) matrix(coords,
+                                                                      ncol=2,
+                                                                      byrow=FALSE))
          } else if(is.list(edges)){
            self$edges <- check_lines_input(edges)
          } else {
@@ -652,7 +755,8 @@ metric_graph <-  R6Class("metric_graph",
        private$compute_bounding_box()
 
        if(!is.null(manual_edge_lengths)){
-         self$set_manual_edge_lengths(edge_lengths = manual_edge_lengths, unit = length_unit)
+         self$set_manual_edge_lengths(edge_lengths = manual_edge_lengths,
+                                      unit = length_unit)
        }
 
        if(private$perform_merges){
@@ -667,9 +771,16 @@ metric_graph <-  R6Class("metric_graph",
 
          t <- system.time(
            private$line_to_vertex(tolerance = tolerance$vertex_vertex,
-                                  longlat = private$longlat, factor_unit, verbose=verbose,
-                                  private$crs, private$proj4string, which_longlat, private$length_unit, private$vertex_unit,
-                                  project, which_projection, project_data)
+                                  longlat = private$longlat,
+                                  factor_unit, verbose=verbose,
+                                  private$crs,
+                                  private$proj4string,
+                                  which_longlat,
+                                  private$length_unit,
+                                  private$vertex_unit,
+                                  project,
+                                  which_projection,
+                                  project_data)
          )
 
          if(verbose == 2){
@@ -697,8 +808,13 @@ metric_graph <-  R6Class("metric_graph",
              }
 
              t <- system.time(
-               points_add <- private$find_edge_edge_points(tol = tolerance$edge_edge, verbose=verbose,
-                                                           crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
+               points_add <- private$find_edge_edge_points(tol = tolerance$edge_edge,
+                                                           verbose=verbose,
+                                                           crs=private$crs,
+                                                           proj4string = private$proj4string,
+                                                           longlat=private$longlat,
+                                                           fact = factor_unit,
+                                                           which_longlat = which_longlat)
              )
 
              if(verbose == 2){
@@ -728,7 +844,8 @@ metric_graph <-  R6Class("metric_graph",
                PtE <- na.omit(PtE)
 
                t <- system.time(
-                 private$add_vertices(PtE, tolerance = tolerance$edge_edge, verbose = verbose)
+                 private$add_vertices(PtE, tolerance = tolerance$edge_edge,
+                                      verbose = verbose)
                )
 
                if(verbose == 2){
@@ -747,8 +864,13 @@ metric_graph <-  R6Class("metric_graph",
 
              t <- system.time(
                PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
-                                                             tolerance = tolerance$vertex_edge, verbose = verbose,
-                                                             crs=private$crs, proj4string = private$proj4string, longlat=private$longlat, fact = factor_unit, which_longlat = which_longlat)
+                                                             tolerance = tolerance$vertex_edge,
+                                                             verbose = verbose,
+                                                             crs=private$crs,
+                                                             proj4string = private$proj4string,
+                                                             longlat=private$longlat,
+                                                             fact = factor_unit,
+                                                             which_longlat = which_longlat)
              )
 
              if(verbose == 2){
@@ -777,7 +899,8 @@ metric_graph <-  R6Class("metric_graph",
                PtE_tmp <- na.omit(PtE_tmp)
 
                t <- system.time(
-                 private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge, verbose=verbose)
+                 private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge,
+                                      verbose=verbose)
                )
 
                if(verbose == 2){
@@ -788,19 +911,32 @@ metric_graph <-  R6Class("metric_graph",
            }
 
            if(merge_close_vertices){
-             private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
+             private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex,
+                                          factor_unit)
            }
 
            if(auto_remove_point_edges){
-             private$remove_circles(1e-15, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+             private$remove_circles(1e-15, verbose=verbose,longlat = private$longlat,
+                                    unit=length_unit, crs=private$crs,
+                                    proj4string=private$proj4string,
+                                    which_longlat=which_longlat,
+                                    vertex_unit=vertex_unit, project_data)
            }
 
            if(is.logical(remove_circles)){
              if(remove_circles){
-               private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+               private$remove_circles(tolerance$vertex_vertex, verbose=verbose,
+                                      longlat = private$longlat, unit=length_unit,
+                                      crs=private$crs, proj4string=private$proj4string,
+                                      which_longlat=which_longlat,
+                                      vertex_unit=vertex_unit, project_data)
              }
            } else {
-             private$remove_circles(remove_circles, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+             private$remove_circles(remove_circles, verbose = verbose,
+                                    longlat = private$longlat, unit = length_unit,
+                                    crs=private$crs, proj4string = private$proj4string,
+                                    which_longlat=which_longlat,
+                                    vertex_unit=vertex_unit, project_data)
              remove_circles <- TRUE
            }
 
@@ -810,7 +946,13 @@ metric_graph <-  R6Class("metric_graph",
                message("Recomputing edge lengths")
              }
              t <- system.time({
-               self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
+               self$edge_lengths <- private$compute_lengths(private$longlat,
+                                                            private$length_unit,
+                                                            private$crs,
+                                                            private$proj4string,
+                                                            private$which_longlat,
+                                                            private$vertex_unit,
+                                                            project_data,private$transform)
              })
              if(verbose == 2){
                message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -880,7 +1022,8 @@ metric_graph <-  R6Class("metric_graph",
            if (verbose > 0) {
              message("Merging close vertices")
            }
-           private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex, factor_unit)
+           private$merge_close_vertices(factor_merge_close_vertices * tolerance$vertex_vertex,
+                                        factor_unit)
          }
        }
 
@@ -889,7 +1032,13 @@ metric_graph <-  R6Class("metric_graph",
            message("Computing edge lengths")
          }
          t <- system.time({
-           self$edge_lengths <- private$compute_lengths(private$longlat, private$length_unit, private$crs, private$proj4string, private$which_longlat, private$vertex_unit, project_data,private$transform)
+           self$edge_lengths <- private$compute_lengths(private$longlat,
+                                                        private$length_unit,
+                                                        private$crs,
+                                                        private$proj4string,
+                                                        private$which_longlat,
+                                                        private$vertex_unit,
+                                                        project_data,private$transform)
          })
          if(verbose == 2){
            message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -898,16 +1047,29 @@ metric_graph <-  R6Class("metric_graph",
 
 
        if(auto_remove_point_edges){
-         private$remove_circles(1e-15, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+         private$remove_circles(1e-15, verbose = verbose,
+                                longlat = private$longlat,
+                                unit = length_unit, crs=private$crs,
+                                proj4string = private$proj4string,
+                                which_longlat = which_longlat,
+                                vertex_unit = vertex_unit, project_data)
        }
 
        if(!private$perform_merges){
          if(is.logical(remove_circles)){
            if(remove_circles){
-             private$remove_circles(tolerance$vertex_vertex, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+             private$remove_circles(tolerance$vertex_vertex, verbose = verbose,
+                                    longlat = private$longlat, unit = length_unit,
+                                    crs=private$crs, proj4string = private$proj4string,
+                                    which_longlat = which_longlat,
+                                    vertex_unit = vertex_unit, project_data)
            }
          } else {
-           private$remove_circles(remove_circles, verbose=verbose,longlat = private$longlat, unit=length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=which_longlat, vertex_unit=vertex_unit, project_data)
+           private$remove_circles(remove_circles, verbose = verbose,
+                                  longlat = private$longlat, unit = length_unit,
+                                  crs = private$crs, proj4string = private$proj4string,
+                                  which_longlat = which_longlat,
+                                  vertex_unit = vertex_unit, project_data)
            remove_circles <- TRUE
          }
        }
@@ -916,7 +1078,8 @@ metric_graph <-  R6Class("metric_graph",
        construction_time <- end_construction_time - start_construction_time
 
        if(verbose > 0){
-         message(sprintf('Total construction time: %.2f %s', construction_time, units(construction_time)))
+         message(sprintf('Total construction time: %.2f %s', construction_time,
+                         units(construction_time)))
        }
 
        # Checking if graph is connected
@@ -952,7 +1115,10 @@ metric_graph <-  R6Class("metric_graph",
        # Cloning again to add the initial graph to the initial graph
        private$initial_graph <- self$clone()
 
-       self$set_edge_weights(weights = private$edge_weights, kirchhoff_weights = private$kirchhoff_weights, directional_weights = private$directional_weights, verbose=verbose)
+       self$set_edge_weights(weights = private$edge_weights,
+                             kirchhoff_weights = private$kirchhoff_weights,
+                             directional_weights = private$directional_weights,
+                             verbose=verbose)
 
        self$setDirectionalWeightFunction()
 
@@ -990,22 +1156,33 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Sets the edge weights
-     #' @param tolerance Tolerance at which circles with length less than this will be removed.
-     #' @param verbose Print progress of graph creation. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param tolerance Tolerance at which circles with length less than this
+     #' will be removed.
+     #' @param verbose Print progress of graph creation. There are 3 levels of
+     #' verbose, level 0, 1 and 2. In level 0, no messages are printed.
+     #' In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed.
+     #' The default is 1.
      #' @return No return value. Called for its side effects.
-
      remove_small_circles = function(tolerance, verbose = 1){
-       private$remove_circles(tolerance, verbose=verbose,longlat = private$longlat, unit=private$length_unit, crs=private$crs, proj4string=private$proj4string, which_longlat=private$which_longlat, vertex_unit=private$vertex_unit, project_data = private$project_data)
+       private$remove_circles(tolerance, verbose = verbose,
+                              longlat = private$longlat,
+                              unit=private$length_unit,
+                              crs=private$crs,
+                              proj4string = private$proj4string,
+                              which_longlat = private$which_longlat,
+                              vertex_unit = private$vertex_unit,
+                              project_data = private$project_data)
        private$create_update_vertices(verbose=verbose)
      },
-
      #' @description Exports the edges of the MetricGraph object as an `sf` or `sp`.
      #' @param format The format for the exported object. The options are `sf` (default), `sp` and `list`.
      #' @return
-     #' For `format == "sf"`, the function returns an `sf` object of `LINESTRING` geometries, where the associated data frame includes edge weights.
+     #' For `format == "sf"`, the function returns an `sf` object of `LINESTRING`
+     #' geometries, where the associated data frame includes edge weights.
      #'
-     #' For `format == "sp"`, the function returns a `SpatialLinesDataFrame` where the data frame includes edge weights.
-
+     #' For `format == "sp"`, the function returns a `SpatialLinesDataFrame` where
+     #' the data frame includes edge weights.
      get_edges = function(format = c("sf", "sp", "list")){
        format <- format[[1]]
        if(!(format%in%c("sf", "sp", "list"))){
@@ -1022,14 +1199,17 @@ metric_graph <-  R6Class("metric_graph",
 
          ew_tmp[[".edge_lengths"]] <- self$edge_lengths
 
-         edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else sf::NA_crs_)
+         edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries),
+                               crs = if(!is.null(private$crs)) private$crs else sf::NA_crs_)
          return(edges_sf)
        } else if(format == "sp"){
          edges_list <- lapply(1:length(self$edges), function(i) {
-           sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
+           sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1],
+                                    ncol = dim(self$edges[[i]])[2]))
          })
          sp_edges <- sp::SpatialLines(
-           lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
+           lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]),
+                                                              ID = as.character(i))),
            proj4string = if (!is.null(private$crs)) private$proj4string else sp::CRS(NA_character_)
          )
          if(is.vector(private$edge_weights)){
@@ -1039,17 +1219,18 @@ metric_graph <-  R6Class("metric_graph",
          }
          ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
          ew_tmp[[".edge_lengths"]] <- self$edge_lengths
-         edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
+         edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp,
+                                                 match.ID = ".ID")
          return(edges_sldf)
        } else{
          return(self$edges)
        }
      },
-
      #' @description Bounding box of the metric graph
-     #' @param format If the metric graph has a coordinate reference system, the format for the exported object. The options are `sf` (default), `sp` and `matrix`.
+     #' @param format If the metric graph has a coordinate reference system, the
+     #' format for the exported object. The options are `sf` (default), `sp`
+     #' and `matrix`.
      #' @return A bounding box of the metric graph
-
      get_bounding_box = function(format = "sf"){
        bounding_box <- private$bounding_box
        if (private$longlat) {
@@ -1071,8 +1252,12 @@ metric_graph <-  R6Class("metric_graph",
 
            bounding_box <- sp::SpatialPolygons(
              list(sp::Polygons(list(sp::Polygon(cbind(
-               c(sp_bbox_matrix[1, "min"], sp_bbox_matrix[1, "max"], sp_bbox_matrix[1, "max"], sp_bbox_matrix[1, "min"], sp_bbox_matrix[1, "min"]),
-               c(sp_bbox_matrix[2, "min"], sp_bbox_matrix[2, "min"], sp_bbox_matrix[2, "max"], sp_bbox_matrix[2, "max"], sp_bbox_matrix[2, "min"])
+               c(sp_bbox_matrix[1, "min"], sp_bbox_matrix[1, "max"],
+                 sp_bbox_matrix[1, "max"], sp_bbox_matrix[1, "min"],
+                 sp_bbox_matrix[1, "min"]),
+               c(sp_bbox_matrix[2, "min"], sp_bbox_matrix[2, "min"],
+                 sp_bbox_matrix[2, "max"], sp_bbox_matrix[2, "max"],
+                 sp_bbox_matrix[2, "min"])
              ))), ID = "1")),
              proj4string = private$proj4string
            )
@@ -1081,12 +1266,16 @@ metric_graph <-  R6Class("metric_graph",
        return(bounding_box)
      },
 
-     #' @description Exports the vertices of the MetricGraph object as an `sf`, `sp` or as a matrix.
-     #' @param format The format for the exported object. The options are `sf` (default), `sp` and `matrix`.
+     #' @description Exports the vertices of the MetricGraph object as an `sf`,
+     #' `sp` or as a matrix.
+     #' @param format The format for the exported object. The options are `sf`
+     #' (default), `sp` and `matrix`.
      #' @return
-     #' For `which_format == "sf"`, the function returns an `sf` object of `POINT` geometries.
+     #' For `which_format == "sf"`, the function returns an `sf` object of `POINT`
+     #' geometries.
      #'
-     #' For `which_format == "sp"`, the function returns a `SpatialPointsDataFrame` object.
+     #' For `which_format == "sp"`, the function returns a `SpatialPointsDataFrame`
+     #' object.
 
      get_vertices = function(format = c("sf", "sp", "list")){
        format <- format[[1]]
@@ -1120,15 +1309,17 @@ metric_graph <-  R6Class("metric_graph",
        }
        return(vertices_df)
      },
-
      #' @description Exports the MetricGraph object as an `sf` or `sp` object.
-     #' @param format The format for the exported object. The options are `sf` (default) and `sp`.
+     #' @param format The format for the exported object. The options are `sf`
+     #' (default) and `sp`.
      #' @return Returns a list with three elements: `edges`, `vertices`, and `data`.
      #'
-     #' For `format == "sf"`, `edges` is an `sf` object of `LINESTRING` geometries with edge weights, and `vertices` and `data` are `sf` objects with `POINT` geometries.
+     #' For `format == "sf"`, `edges` is an `sf` object of `LINESTRING` geometries
+     #' with edge weights, and `vertices` and `data` are `sf` objects with
+     #' `POINT` geometries.
      #'
-     #' For `format == "sp"`, `edges` is a `SpatialLinesDataFrame` with edge weights, and `vertices` and `data` are `SpatialPointsDataFrame`.
-
+     #' For `format == "sp"`, `edges` is a `SpatialLinesDataFrame` with edge weights,
+     #' and `vertices` and `data` are `SpatialPointsDataFrame`.
      export = function(format = "sf"){
        edges <- self$get_edges(format = format)
        vertices <- self$get_vertices(format = format)
@@ -1138,78 +1329,53 @@ metric_graph <-  R6Class("metric_graph",
          data = NULL
        }
        exported_metric_graph = list(edges = edges, vertices = vertices, data = data)
-       # if(format == "sf"){
-       #   edges_geometries <- lapply(self$edges, sf::st_linestring)
-
-       #   if(is.vector(private$edge_weights)){
-       #     ew_tmp <- data.frame(.weights = private$edge_weights)
-       #   } else{
-       #     ew_tmp <- as.data.frame(private$edge_weights)
-       #   }
-
-       #   edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
-
-       #   if(!is.null(private$data)){
-       #     data_tmp <- as.data.frame(private$data)
-       #     data_geometries <- lapply(1:nrow(data_tmp), function(i) sf::st_point(as.numeric(data_tmp[i, c('.coord_x', '.coord_y')])))
-       #     data_sf <- sf::st_sf(data_tmp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
-       #     class(data_sf) <- c("metric_graph_data", class(data_sf))
-       #   } else{
-       #     data_sf <- NULL
-       #   }
-       #   exported_metric_graph <- list(edges = edges_sf, data = data_sf)
-       # } else if(format == "sp"){
-       #   edges_list <- lapply(1:length(self$edges), function(i) {
-       #     sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
-       #   })
-       #   sp_edges <- sp::SpatialLines(
-       #       lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
-       #       proj4string = if (!is.null(private$crs)) private$proj4string else NULL
-       #   )
-       #   if(is.vector(private$edge_weights)){
-       #     ew_tmp <- data.frame(.weights = private$edge_weights)
-       #   } else{
-       #     ew_tmp <- as.data.frame(private$edge_weights)
-       #   }
-       #   ew_tmp[[".ID"]] <- as.character(1:length(sp_edges))
-       #   edges_sldf <- sp::SpatialLinesDataFrame(sp_edges, data = ew_tmp, match.ID = ".ID")
-       #   data_sp <- as.data.frame(private$data)
-       #   sp::coordinates(data_sp) <- ~ .coord_x + .coord_y
-       #   exported_metric_graph <- list(edges = edges_sldf, data = data_sp)
-       # } else{
-       #   stop(paste(format,"is not currently not a valid format to be exported."))
-       # }
        return(exported_metric_graph)
      },
 
-     #' @description Return the metric graph as a `leaflet::leaflet()` object to be built upon.
+     #' @description Return the metric graph as a `leaflet::leaflet()` object to
+     #' be built upon.
      #' @param width	the width of the map
      #' @param height the height of the map
      #' @param padding	the padding of the map
      #' @param options	the map options
-     #' @param elementId	Use an explicit element ID for the widget (rather than an automatically generated one).
-     #' @param sizingPolicy	htmlwidgets sizing policy object. Defaults to `leafletSizingPolicy()`.
+     #' @param elementId	Use an explicit element ID for the widget (rather than
+     #' an automatically generated one).
+     #' @param sizingPolicy	htmlwidgets sizing policy object. Defaults to
+     #' `leafletSizingPolicy()`.
 
-     leaflet = function(width = NULL, height = NULL, padding = 0, options = leafletOptions(), elementId = NULL,
+     leaflet = function(width = NULL, height = NULL, padding = 0,
+                        options = leafletOptions(), elementId = NULL,
                         sizingPolicy = leafletSizingPolicy(padding = padding)){
        edges_sf <- self$get_edges(format = "sf")
-       return(leaflet::leaflet(data = edges_sf, width = width, height = height, padding = padding, options = options, elementId = elementId, sizingPolicy = sizingPolicy))
+       return(leaflet::leaflet(data = edges_sf, width = width, height = height,
+                               padding = padding, options = options,
+                               elementId = elementId, sizingPolicy = sizingPolicy))
      },
 
      #' @description Returns a `mapview::mapview()` object of the metric graph
-     #' @param ... Additional arguments to be passed to `mapview::mapview()`. The `x` argument of mapview, containing the metric graph is already passed internally.
-
+     #' @param ... Additional arguments to be passed to `mapview::mapview()`.
+     #' The `x` argument of mapview, containing the metric graph is already
+     #' passed internally.
      mapview = function(...){
        edges_sf <- self$get_edges(format = "sf")
        return(mapview::mapview(x = edges_sf, ...))
      },
 
      #' @description Sets the edge weights
-     #' @param weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
+     #' @param weights Either a number, a numerical vector with length given by
+     #' the number of edges, providing the edge weights, or a `data.frame` with
+     #' the number of rows being equal to the number of edges, where
      #' each row gives a vector of weights to its corresponding edge.
-     #' @param kirchhoff_weights If non-null, the name (or number) of the column of `weights` that contain the Kirchhoff weights. Must be equal to 1 (or `TRUE`) in case `weights` is a single number and those are the Kirchhoff weights.
-     #' @param directional_weights If non-null, the name (or number) of the column of `weights` that contain the directional weights.
-     #' @param verbose There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param kirchhoff_weights If non-null, the name (or number) of the column
+     #' of `weights` that contain the Kirchhoff weights. Must be equal to 1
+     #' (or `TRUE`) in case `weights` is a single number and those are the
+     #' Kirchhoff weights.
+     #' @param directional_weights If non-null, the name (or number) of the column
+     #' of `weights` that contain the directional weights.
+     #' @param verbose There are 3 levels of verbose, level 0, 1 and 2. In level
+     #' 0, no messages are printed. In level 1, only messages regarding important
+     #' steps are printed. Finally, in level 2, messages detailing all the steps
+     #' are printed. The default is 1.
      #' @return No return value. Called for its side effects.
 
      set_edge_weights = function(weights = NULL, kirchhoff_weights = NULL,
@@ -1227,7 +1393,8 @@ metric_graph <-  R6Class("metric_graph",
        if(!is.null(weights)){
          if(is.vector(weights)){
            if ( (length(weights) != 1) && (length(weights) != self$nE)){
-             stop(paste0("The length of 'weights' must be either 1 or ", self$nE))
+             stop(paste0("The length of 'weights' must be either 1 or ",
+                         self$nE))
            }
            if(length(weights)==1){
              private$edge_weights <- rep(weights, self$nE)
@@ -1235,7 +1402,8 @@ metric_graph <-  R6Class("metric_graph",
              private$edge_weights <- weights
            }
            # Strip units from vector weights
-           private$edge_weights <- sapply(private$edge_weights, strip_units_if_present)
+           private$edge_weights <- sapply(private$edge_weights,
+                                          strip_units_if_present)
          } else{
            if(nrow(weights) != self$nE){
              stop("The number of rows of weights must be equal to the number of edges!")
@@ -1245,7 +1413,8 @@ metric_graph <-  R6Class("metric_graph",
              private$edge_weights[, ".weights"] <- 1
            }
            # Strip units from data.frame weights
-           private$edge_weights[] <- lapply(private$edge_weights, strip_units_if_present)
+           private$edge_weights[] <- lapply(private$edge_weights,
+                                            strip_units_if_present)
          }
        } else{
          weights <- private$edge_weights
@@ -1354,15 +1523,20 @@ metric_graph <-  R6Class("metric_graph",
 
 
      #' @description Gets the edge weights
-     #' @param data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
-     #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
+     #' @param data.frame If the edge weights are given as vectors, should the
+     #' result be returned as a data.frame?
+     #' @param format Which format should the data be returned? The options are
+     #' `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for
+     #' `SpatialPointsDataFrame` and `list` for the internal list format.
      #' @param tibble `r lifecycle::badge("deprecated")` Use `format` instead.
      #' @return A vector or `data.frame` containing the edge weights.
 
-     get_edge_weights = function(data.frame = FALSE, format = c("tibble", "sf", "sp", "list"), tibble = deprecated()){
+     get_edge_weights = function(data.frame = FALSE, format = c("tibble", "sf", "sp", "list"),
+                                 tibble = deprecated()){
 
        if (lifecycle::is_present(tibble)) {
-         lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)", "get_edge_weights(format)",
+         lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)",
+                                   "get_edge_weights(format)",
                                    details = c("The argument `tibble` was deprecated in favor of the argument `format`.")
          )
          if(tibble){
@@ -1420,13 +1594,19 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Prints a summary of various informations of the graph
-     #' @param messages Should message explaining how to build the results be given for missing quantities?
-     #' @param compute_characteristics Should the characteristics of the graph be computed? If `NULL` it will be determined based on the size of the graph.
-     #' @param check_euclidean Check if the graph has Euclidean edges? If `NULL` it will be determined based on the size of the graph.
-     #' @param check_distance_consistency Check the distance consistency assumption? If `NULL` it will be determined based on the size of the graph.
+     #' @param messages Should message explaining how to build the results be
+     #' given for missing quantities?
+     #' @param compute_characteristics Should the characteristics of the graph
+     #' be computed? If `NULL` it will be determined based on the size of the graph.
+     #' @param check_euclidean Check if the graph has Euclidean edges? If `NULL`
+     #' it will be determined based on the size of the graph.
+     #' @param check_distance_consistency Check the distance consistency assumption?
+     #' If `NULL` it will be determined based on the size of the graph.
      #' @return No return value. Called for its side effects.
-
-     summary = function(messages = FALSE, compute_characteristics = NULL, check_euclidean = NULL, check_distance_consistency = NULL){
+     summary = function(messages = FALSE,
+                        compute_characteristics = NULL,
+                        check_euclidean = NULL,
+                        check_distance_consistency = NULL){
 
        if(self$nV > 10000){
          if(is.null(compute_characteristics)){
@@ -1469,18 +1649,23 @@ metric_graph <-  R6Class("metric_graph",
          if((i>1) && (i%%5 == 1)){
            cat("\n\t")
          }
-         cat(paste0(" Degree ", degrees_u[i],": ",sum(degrees == degrees_u[i]), "; "))
+         cat(paste0(" Degree ", degrees_u[i],": ",
+                    sum(degrees == degrees_u[i]), "; "))
        }
        cat("\n")
 
-       cat("\t With incompatible directions: ", length(self$get_vertices_incomp_dir()), "\n\n")
+       cat("\t With incompatible directions: ",
+           length(self$get_vertices_incomp_dir()), "\n\n")
        cat("Edges: \n")
        cat("\t Total:", self$nE,"\n")
        cat("\t Lengths: \n")
-       cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
+       cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:",
+           max(self$get_edge_lengths()), " ; Total:",
+           sum(self$get_edge_lengths()), "\n")
        cat("\t Weights: \n")
        if(is.vector(private$edge_weights)){
-         cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+         cat("\t\t Min:", min(private$edge_weights), " ; Max:",
+             max(private$edge_weights), "\n")
        } else{
          if(!is.null(colnames(private$edge_weights))){
            cat("\t\t Columns:", colnames(private$edge_weights),"\n")
@@ -1490,7 +1675,10 @@ metric_graph <-  R6Class("metric_graph",
        }
        cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
        cat("Graph units: \n")
-       cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
+       cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None",
+                                        private$vertex_unit), " ; Lengths unit: ",
+           ifelse(is.null(private$length_unit), "None", private$length_unit),
+           "\n\n")
        cat("Longitude and Latitude coordinates: ", private$longlat)
        if(private$longlat){
          cat("\n\t Which spatial package: ", private$which_longlat, "\n")
@@ -1551,7 +1739,8 @@ metric_graph <-  R6Class("metric_graph",
        }
        cat("\n")
        cat("Computed quantities inside the graph: \n")
-       cat("\t Laplacian: ", !is.null(self$Laplacian), " ; Geodesic distances: ", !is.null(self$geo_dist), "\n")
+       cat("\t Laplacian: ", !is.null(self$Laplacian), " ; Geodesic distances: ",
+           !is.null(self$geo_dist), "\n")
        if(is.null(self$Laplacian)){
          if(messages){
            message("To compute the Laplacian, run the 'compute_laplacian()' method.")
@@ -1562,7 +1751,8 @@ metric_graph <-  R6Class("metric_graph",
            message("To compute the geodesic distances, run the 'compute_geodist()' method.")
          }
        }
-       cat("\t Resistance distances: ", !is.null(self$res_dist), " ; Finite element matrices: ", !is.null(self$mesh$C), "\n")
+       cat("\t Resistance distances: ", !is.null(self$res_dist),
+           " ; Finite element matrices: ", !is.null(self$mesh$C), "\n")
        if(is.null(self$res_dist)){
          if(messages){
            message("To compute the resistance distances, run the 'compute_resdist()' method.")
@@ -1581,7 +1771,8 @@ metric_graph <-  R6Class("metric_graph",
          }
        } else{
          cat("Mesh: \n")
-         cat("\t Max h_e: ", max(self$mesh$h_e), " ; Min n_e: ", min(self$mesh$n_e), "\n")
+         cat("\t Max h_e: ", max(self$mesh$h_e), " ; Min n_e: ",
+             min(self$mesh$n_e), "\n")
        }
        cat("\n")
        if(is.null(private$data)){
@@ -1593,7 +1784,8 @@ metric_graph <-  R6Class("metric_graph",
          cat("Data: \n")
          col_names_valid <- grepl("^[^.]+$", names(private$data))
          cat("\t Columns: ", names(private$data)[col_names_valid], "\n")
-         cat("\t Groups: ", ifelse(is.null(private$group_col), "None", private$group_col), "\n")
+         cat("\t Groups: ", ifelse(is.null(private$group_col), "None",
+                                   private$group_col), "\n")
        }
        cat("\n")
        cat("Tolerances: \n")
@@ -1607,7 +1799,8 @@ metric_graph <-  R6Class("metric_graph",
      #' @return No return value. Called for its side effects.
 
      print = function() {
-       cat("A metric graph with ", self$nV, " vertices and ", self$nE, " edges.\n\n")
+       cat("A metric graph with ", self$nV, " vertices and ",
+           self$nE, " edges.\n\n")
        cat("Vertices:\n")
        degrees <- self$get_degrees()
        cat("\t")
@@ -1616,16 +1809,21 @@ metric_graph <-  R6Class("metric_graph",
          if((i>1) && (i%%5 == 1)){
            cat("\n\t")
          }
-         cat(paste0(" Degree ", degrees_u[i],": ",sum(degrees == degrees_u[i]), "; "))
+         cat(paste0(" Degree ", degrees_u[i],": ",
+                    sum(degrees == degrees_u[i]), "; "))
        }
        cat("\n")
-       cat("\t With incompatible directions: ", length(self$get_vertices_incomp_dir()), "\n\n")
+       cat("\t With incompatible directions: ",
+           length(self$get_vertices_incomp_dir()), "\n\n")
        cat("Edges: \n")
        cat("\t Lengths: \n")
-       cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:", max(self$get_edge_lengths()), " ; Total:", sum(self$get_edge_lengths()), "\n")
+       cat("\t\t Min:", min(self$get_edge_lengths()), " ; Max:",
+           max(self$get_edge_lengths()), " ; Total:",
+           sum(self$get_edge_lengths()), "\n")
        cat("\t Weights: \n")
        if(is.vector(private$edge_weights)){
-         cat("\t\t Min:", min(private$edge_weights), " ; Max:", max(private$edge_weights), "\n")
+         cat("\t\t Min:", min(private$edge_weights), " ; Max:",
+             max(private$edge_weights), "\n")
        } else{
          if(!is.null(colnames(private$edge_weights))){
            cat("\t\t Columns:", colnames(private$edge_weights),"\n")
@@ -1635,7 +1833,10 @@ metric_graph <-  R6Class("metric_graph",
        }
        cat("\t That are circles: ", sum(self$E[,1] == self$E[,2]), "\n\n")
        cat("Graph units: \n")
-       cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None", private$vertex_unit), " ; Lengths unit: ", ifelse(is.null(private$length_unit), "None", private$length_unit), "\n\n")
+       cat("\t Vertices unit: ", ifelse(is.null(private$vertex_unit), "None",
+                                        private$vertex_unit),
+           " ; Lengths unit: ", ifelse(is.null(private$length_unit),
+                                       "None", private$length_unit), "\n\n")
        cat("Longitude and Latitude coordinates: ", private$longlat)
        if(private$longlat){
          cat("\n\t Which spatial package: ", private$which_longlat, "\n")
@@ -1689,9 +1890,14 @@ metric_graph <-  R6Class("metric_graph",
        invisible(self)
      },
      #' @description Computes various characteristics of the graph
-     #' @param check_euclidean Also check if the graph has Euclidean edges? This essentially means that the distance consistency check will also be perfomed. If the graph does not have Euclidean edges due to another reason rather than the distance consistency, then it will already be indicated that the graph does not have Euclidean edges.
-     #' @return No return value. Called for its side effects. The computed characteristics
-     #' are stored in the `characteristics` element of the `metric_graph` object.
+     #' @param check_euclidean Also check if the graph has Euclidean edges?
+     #' This essentially means that the distance consistency check will also be
+     #' perfomed. If the graph does not have Euclidean edges due to another reason
+     #' rather than the distance consistency, then it will already be indicated that
+     #' the graph does not have Euclidean edges.
+     #' @return No return value. Called for its side effects. The computed
+     #' characteristics are stored in the `characteristics` element of the
+     #' `metric_graph` object.
      compute_characteristics = function(check_euclidean = FALSE) {
        if(is.null(self$characteristics)){
          self$characteristics <- list()
@@ -1706,6 +1912,14 @@ metric_graph <-  R6Class("metric_graph",
          }
        }
 
+       # Always verify connectivity rather than trusting private$connected,
+       # which is only set to FALSE when the constructor's check_connected
+       # check actually ran. A user who passes check_connected = FALSE on a
+       # disconnected graph would otherwise see characteristics$connected
+       # incorrectly reported as TRUE.
+       g_ig <- igraph::make_graph(edges = c(t(self$E)), directed = FALSE)
+       n_comp <- igraph::components(g_ig, mode = "weak")$no
+       private$connected <- (n_comp == 1L)
        self$characteristics$connected <- private$connected
 
        #check for multiple edges
@@ -1730,7 +1944,8 @@ metric_graph <-  R6Class("metric_graph",
          self$characteristics$is_tree <- FALSE
        }
 
-       if(!self$characteristics$connected || self$characteristics$has_loops || self$characteristics$has_multiple_edges){
+       if(!self$characteristics$connected || self$characteristics$has_loops ||
+          self$characteristics$has_multiple_edges){
          self$characteristics$euclidean <- FALSE
        } else if(self$characteristics$is_tree){
          self$characteristics$euclidean <- TRUE
@@ -1742,7 +1957,6 @@ metric_graph <-  R6Class("metric_graph",
      #' @return Returns `TRUE` if the graph has Euclidean edges, or `FALSE` otherwise.
      #' The result is stored in the `characteristics` element of the `metric_graph` object.
      #' The result is displayed when the graph is printed.
-
      check_euclidean = function(){
        self$compute_characteristics()
        if(!is.null(self$characteristics$euclidean)){
@@ -1769,7 +1983,6 @@ metric_graph <-  R6Class("metric_graph",
      #' @return No return value.
      #' The result is stored in the `characteristics` element of the `metric_graph` object.
      #' The result is displayed when the graph is printed.
-
      check_distance_consistency = function(){
        self$compute_characteristics()
        if(is.null(self$geo_dist)){
@@ -1794,13 +2007,17 @@ metric_graph <-  R6Class("metric_graph",
      #' graph
      #' @param obs Should the geodesic distances be computed at the observation
      #' locations or only at vertices?
-     #' @param include_vertices If `obs` is `TRUE`, should the vertex locations be included in the resulting distance matrix?
+     #' @param include_vertices If `obs` is `TRUE`, should the vertex locations be
+     #' included in the resulting distance matrix?
      #' @param all_groups Should the geodesic distances be computed for all
      #' the available locations accross all groups? If `FALSE`, it will be computed
      #' separately for the locations of each group.
      #' @param group Vector or list containing which groups to compute the distance
      #' for. If `NULL`, it will be computed for all groups.
-     #' @param verbose Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param verbose Print progress of the computation of the geodesic distances.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed. The default is 1.
      #' @param full `r lifecycle::badge("deprecated")` Use `all_groups` instead.
      #' @return No return value. Called for its side effects. The computed geodesic
      #' distances are stored in the `geo_dist` element of the `metric_graph` object.
@@ -1811,7 +2028,8 @@ metric_graph <-  R6Class("metric_graph",
                                 verbose = 0,
                                 full = lifecycle::deprecated()) {
        if(lifecycle::is_present(full)){
-         lifecycle::deprecate_warn("1.5.0.9000", "compute_geodist(full)", "compute_geodist(all_groups)")
+         lifecycle::deprecate_warn("1.5.0.9000", "compute_geodist(full)",
+                                   "compute_geodist(all_groups)")
          all_groups <- full
        }
        if(is.null(self$geo_dist)){
@@ -1844,7 +2062,9 @@ metric_graph <-  R6Class("metric_graph",
        } else if(all_groups){
          PtE_full <- self$get_PtE()
          self$geo_dist[[".complete"]] <- self$compute_geodist_PtE(PtE = PtE_full,
-                                                                  normalized = TRUE, verbose = verbose, include_vertices = include_vertices)
+                                                                  normalized = TRUE,
+                                                                  verbose = verbose,
+                                                                  include_vertices = include_vertices)
        } else{
          if(is.null(group)){
            group <- unique(private$data[[".group"]])
@@ -1855,7 +2075,9 @@ metric_graph <-  R6Class("metric_graph",
            PtE_group <- cbind(data_grp[[".edge_number"]][idx_notna],
                               data_grp[[".distance_on_edge"]][idx_notna])
            self$geo_dist[[grp]] <- self$compute_geodist_PtE(PtE = PtE_group,
-                                                            normalized = TRUE, verbose = verbose, include_vertices = include_vertices)
+                                                            normalized = TRUE,
+                                                            verbose = verbose,
+                                                            include_vertices = include_vertices)
          }
        }
      },
@@ -1865,7 +2087,11 @@ metric_graph <-  R6Class("metric_graph",
      #' @param normalized are the locations in PtE in normalized distance?
      #' @param include_vertices Should the original vertices be included in the
      #' distance matrix?
-     #' @param verbose Print progress of the computation of the geodesic distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param verbose Print progress of the computation of the geodesic distances.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed.
+     #' The default is 1.
      #' @return A matrix containing the geodesic distances.
      compute_geodist_PtE = function(PtE,
                                     normalized = TRUE,
@@ -1889,7 +2115,8 @@ metric_graph <-  R6Class("metric_graph",
 
          graph.temp$build_mesh(h = 10000)
 
-         df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+         df_temp2 <- data.frame(y = 0,
+                                edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                 distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
 
          df_temp2 <- standardize_df_positions(df_temp2, self)
@@ -1912,7 +2139,8 @@ metric_graph <-  R6Class("metric_graph",
          graph.temp$add_observations(data = df_temp,
                                      normalized = normalized,
                                      verbose=0,
-                                     suppress_warnings = TRUE)
+                                     suppress_warnings = TRUE,
+                                     .allow_disconnected = TRUE)
 
        })
 
@@ -1965,11 +2193,13 @@ metric_graph <-  R6Class("metric_graph",
        } else{
          geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
          #Ordering back in the input order
-         geodist_temp[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- geodist_temp
+         geodist_temp[graph.temp$.__enclos_env__$private$data[["__dummy"]],
+                      graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- geodist_temp
        }
 
        if(!include_vertices){
-         geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp), (nV_new+1):nrow(geodist_temp)]
+         geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp),
+                                      (nV_new+1):nrow(geodist_temp)]
        }
 
        attr(geodist_temp, "unit") <- private$length_unit
@@ -1996,13 +2226,24 @@ metric_graph <-  R6Class("metric_graph",
      #' locations?
      #' @param group Vector or list containing which groups to compute the distance
      #' for. If `NULL`, it will be computed for all groups.
-     #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
-     #' @param include_vertices Should the vertices of the graph be also included in the resulting matrix when using `FULL=TRUE`?
-     #' @param verbose Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param check_euclidean Check if the graph used to compute the resistance
+     #' distance has Euclidean edges? The graph used to compute the resistance
+     #' distance has the observation locations as vertices.
+     #' @param include_vertices Should the vertices of the graph be also included
+     #' in the resulting matrix when using `FULL=TRUE`?
+     #' @param verbose Print progress of the computation of the resistance
+     #' distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0,
+     #' no messages are printed. In level 1, only messages regarding important
+     #' steps are printed. Finally, in level 2, messages detailing all the steps
+     #' are printed. The default is 1.
      #' @return No return value. Called for its side effects. The geodesic distances
      #' are stored in the `res_dist` element of the `metric_graph` object.
-     compute_resdist = function(full = FALSE, obs = TRUE, group = NULL,
-                                check_euclidean = FALSE, include_vertices = FALSE, verbose = 0) {
+     compute_resdist = function(full = FALSE,
+                                obs = TRUE,
+                                group = NULL,
+                                check_euclidean = FALSE,
+                                include_vertices = FALSE,
+                                verbose = 0) {
        self$res_dist <- list()
        if(is.null(private$data)){
          obs <- FALSE
@@ -2015,17 +2256,22 @@ metric_graph <-  R6Class("metric_graph",
          rm(graph.temp)
          self$res_dist[[".vertices"]] <- self$compute_resdist_PtE(PtE,
                                                                   normalized=TRUE,
-                                                                  check_euclidean = check_euclidean, verbose = verbose)
+                                                                  check_euclidean = check_euclidean,
+                                                                  verbose = verbose)
        } else if(full){
          PtE <- self$get_PtE()
          if(!include_vertices){
            self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
-                                                                    normalized=TRUE, include_vertices = FALSE,
-                                                                    check_euclidean = check_euclidean, verbose = verbose)
+                                                                    normalized=TRUE,
+                                                                    include_vertices = FALSE,
+                                                                    check_euclidean = check_euclidean,
+                                                                    verbose = verbose)
          } else{
            self$res_dist[[".complete"]] <- self$compute_resdist_PtE(PtE,
-                                                                    normalized=TRUE, include_vertices = TRUE,
-                                                                    check_euclidean = check_euclidean, verbose = verbose)
+                                                                    normalized=TRUE,
+                                                                    include_vertices = TRUE,
+                                                                    check_euclidean = check_euclidean,
+                                                                    verbose = verbose)
          }
 
        } else{
@@ -2042,7 +2288,8 @@ metric_graph <-  R6Class("metric_graph",
                         data_grp[[".distance_on_edge"]][idx_notna])
            self$res_dist[[as.character(grp)]] <- self$compute_resdist_PtE(PtE,
                                                                           normalized=TRUE,
-                                                                          check_euclidean = check_euclidean, verbose = verbose)
+                                                                          check_euclidean = check_euclidean,
+                                                                          verbose = verbose)
          }
        }
      },
@@ -2053,13 +2300,24 @@ metric_graph <-  R6Class("metric_graph",
      #' @param normalized Are the locations in PtE in normalized distance?
      #' @param include_vertices Should the original vertices be included in the
      #' Laplacian matrix?
-     #' @param check_euclidean Check if the graph used to compute the resistance distance has Euclidean edges? The graph used to compute the resistance distance has the observation locations as vertices.
-     #' @param verbose Print progress of the computation of the resistance distances. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param check_euclidean Check if the graph used to compute the resistance
+     #' distance has Euclidean edges? The graph used to compute the resistance
+     #' distance has the observation locations as vertices.
+     #' @param verbose Print progress of the computation of the resistance distances.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed. The default is 1.
      #' @return A matrix containing the resistance distances.
      compute_resdist_PtE = function(PtE,
                                     normalized = TRUE,
                                     include_vertices = FALSE,
                                     check_euclidean = FALSE, verbose = 0) {
+       # On disconnected graphs the Laplacian has more than one zero
+       # eigenvalue, so the standard regularization `L[1, 1] <- L[1, 1] + 1`
+       # leaves the matrix singular and `solve(L)` fails. Handle this by
+       # adding the regularization on one vertex per connected component,
+       # and explicitly setting the resistance distance to `Inf` between
+       # vertices in different components (the mathematically correct value).
        if(verbose == 2){
          message("Processing the graph locations...")
        }
@@ -2102,7 +2360,8 @@ metric_graph <-  R6Class("metric_graph",
 
          graph.temp$add_observations(data = df_temp,
                                      normalized = normalized, verbose = 0,
-                                     suppress_warnings = TRUE)
+                                     suppress_warnings = TRUE,
+                                     .allow_disconnected = TRUE)
        })
        if(verbose == 2){
          message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -2149,14 +2408,35 @@ metric_graph <-  R6Class("metric_graph",
          for(i in 1:graph.temp$nV){
            L[i, i] <- -sum(L[i, -i])
          }
-         L[1, 1] <- L[1, 1] + 1
+         # Regularize one vertex per connected component to make L invertible
+         # (each component contributes one zero eigenvalue to L).
+         g_ig_temp <- igraph::make_graph(
+           edges = c(t(graph.temp$E)), directed = FALSE)
+         comp_membership <- igraph::components(
+           g_ig_temp, mode = "weak")$membership
+         for (cid in unique(comp_membership)) {
+           v_anchor <- which(comp_membership == cid)[1]
+           L[v_anchor, v_anchor] <- L[v_anchor, v_anchor] + 1
+         }
 
          Li <- solve(L)
          R <- -2*Li + t(diag(Li)) %x% rep(1, graph.temp$nV) +
            t(rep(1, graph.temp$nV)) %x% diag(Li)
 
+         # Resistance distance between vertices in different components is
+         # mathematically infinite. The Klein-Randic formula above gives a
+         # finite (incorrect) value for cross-component pairs; overwrite
+         # those entries explicitly.
+         if (length(unique(comp_membership)) > 1L) {
+           R <- as.matrix(R)
+           cross_mask <- outer(comp_membership, comp_membership,
+                               function(a, b) a != b)
+           R[cross_mask] <- Inf
+         }
+
          R <- R[graph.temp$PtV, graph.temp$PtV]
-         R[graph.temp$.__enclos_env__$private$data[["__dummy"]],graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- R
+         R[graph.temp$.__enclos_env__$private$data[["__dummy"]],
+           graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- R
 
          if(!include_vertices){
            R <- R[(nV_new+1):nrow(R), (nV_new+1):nrow(R)]
@@ -2175,8 +2455,8 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Returns the degrees of the vertices in the metric graph.
-     #' @param which If "degree", returns the degree of the vertex. If "indegree", returns the indegree,
-     #' and if "outdegree", it returns the outdegree.
+     #' @param which If "degree", returns the degree of the vertex. If "indegree",
+     #' returns the indegree, and if "outdegree", it returns the outdegree.
      #' @return A vector containing the degrees of the vertices.
      get_degrees = function(which = "degree"){
        which <- which[[1]]
@@ -2193,8 +2473,13 @@ metric_graph <-  R6Class("metric_graph",
        return(degrees)
      },
 
-     #' @description Computes the relative positions of the coordinates of the edges and save it as an attribute to each edge. This improves the quality of plots obtained by the `plot_function()` method, however it might be costly to compute.
-     #' @param approx Should the computation of the relative positions be approximate? Default is `TRUE`. If `FALSE`, the speed can be considerably slower, especially for large metric graphs.
+     #' @description Computes the relative positions of the coordinates of the
+     #' edges and save it as an attribute to each edge. This improves the quality
+     #' of plots obtained by the `plot_function()` method, however it might
+     #' be costly to compute.
+     #' @param approx Should the computation of the relative positions be
+     #' approximate? Default is `TRUE`. If `FALSE`, the speed can be considerably
+     #' slower, especially for large metric graphs.
      #' @param verbose Level of verbosity, 0, 1 or 2. The default is 0.
      #' @return No return value, called for its side effects.
      compute_PtE_edges = function(approx = TRUE, verbose = 0){
@@ -2263,10 +2548,15 @@ metric_graph <-  R6Class("metric_graph",
      #' the available locations. If `FALSE`, it will be computed
      #' separately for the locations of each group.
      #' @param obs Should the resistance distances be computed at the observation
-     #' locations? It will only compute for locations in which there is at least one observations that is not NA.
+     #' locations? It will only compute for locations in which there is at least
+     #' one observations that is not NA.
      #' @param group Vector or list containing which groups to compute the
      #' Laplacian for. If `NULL`, it will be computed for all groups.
-     #' @param verbose Print progress of the computation of the Laplacian. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param verbose Print progress of the computation of the Laplacian.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed.
+     #' The default is 1.
      #' @return No reutrn value. Called for its side effects. The Laplacian is stored
      #' in the `Laplacian` element in the `metric_graph` object.
      compute_laplacian = function(full = FALSE, obs = TRUE, group = NULL, verbose = 0) {
@@ -2281,11 +2571,13 @@ metric_graph <-  R6Class("metric_graph",
          PtE <- graph.temp$mesh$VtE[1:nrow(self$V),]
          rm(graph.temp)
          self$Laplacian[[".vertices"]] <- private$compute_laplacian_PtE(PtE,
-                                                                        normalized = TRUE, verbose = verbose)
+                                                                        normalized = TRUE,
+                                                                        verbose = verbose)
        } else if(full){
          PtE <- self$get_PtE()
          self$Laplacian[[".complete"]] <- private$compute_laplacian_PtE(PtE,
-                                                                        normalized = TRUE, verbose = verbose)
+                                                                        normalized = TRUE,
+                                                                        verbose = verbose)
        } else{
          if(is.null(group)){
            group <- unique(private$data[[".group"]])
@@ -2299,7 +2591,8 @@ metric_graph <-  R6Class("metric_graph",
              stop("All the observations are NA.")
            }
            self$Laplacian[[grp]] <- private$compute_laplacian_PtE(PtE,
-                                                                  normalized = TRUE, verbose = verbose)
+                                                                  normalized = TRUE,
+                                                                  verbose = verbose)
          }
        }
      },
@@ -2307,13 +2600,19 @@ metric_graph <-  R6Class("metric_graph",
      #' @description Removes vertices of degree 2 from the metric graph.
      #' @return No return value. Called for its side effects.
      #' @param check_weights If `TRUE` will only prune edges with different weights.
-     #' @param check_circles If `TRUE` will not prune a vertex such that the resulting edge is a circle.
-     #' @param verbose Print progress of pruning. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param check_circles If `TRUE` will not prune a vertex such that the
+     #' resulting edge is a circle.
+     #' @param verbose Print progress of pruning. There are 3 levels of verbose,
+     #' level 0, 1 and 2. In level 0, no messages are printed. In level 1, only
+     #' messages regarding important steps are printed. Finally, in level 2,
+     #' messages detailing all the steps are printed. The default is 1.
      #' @details
      #' Vertices of degree 2 are removed as long as the corresponding edges that
      #' would be merged are compatible in terms of direction.
      #'
-     prune_vertices = function(check_weights = TRUE, check_circles = TRUE, verbose = FALSE){
+     prune_vertices = function(check_weights = TRUE,
+                               check_circles = TRUE,
+                               verbose = FALSE){
 
        t <- system.time({
          degrees <- private$degrees$degrees
@@ -2407,7 +2706,7 @@ metric_graph <-  R6Class("metric_graph",
            chain_e1[v_sorted[first]] <- e_sorted[first]
            chain_e2[v_sorted[dup]]   <- e_sorted[dup]
 
-           # ----- Walk chains -----
+           # Walk chains
            edge_consumed  <- logical(nE_loc)
            vertex_visited <- logical(nV_loc)
            chains <- vector("list", 64L)
@@ -2603,7 +2902,7 @@ metric_graph <-  R6Class("metric_graph",
            }
          }
 
-         # ----- Serial fallback for any residual loop chains ---------------------
+         # Serial fallback for any residual loop chains
          # After the batch step, the only remaining deg-2 non-problematic vertices
          # are those on closed loops (chains whose anchors are the same vertex).
          #
@@ -2660,25 +2959,6 @@ metric_graph <-  R6Class("metric_graph",
            message("Updating attributes of the edges")
            bar_update_attr_edges <- msg_progress_bar(length(self$edges))
          }
-         # for(i in 1:length(self$edges)){
-         #    attr(self$edges[[i]], "id") <- i
-         #    attr(self$edges[[i]], "longlat") <- private$longlat
-         #    attr(self$edges[[i]], "crs") <- private$crs$input
-         #    attr(self$edges[[i]], "length") <- self$edge_lengths[i]
-         #    class(self$edges[[i]]) <- "metric_graph_edge"
-         #   if(!is.null(private$length_unit)){
-         #     units(attr(self$edges[[i]], "length")) <- private$length_unit
-         #   }
-         #   if(is.vector(private$edge_weights)){
-         #     attr(self$edges[[i]], "weight") <- private$edge_weights[i]
-         #   } else{
-         #     attr(self$edges[[i]], "weight") <- private$edge_weights[i,]
-         #   }
-         #   attr(self$edges[[i]], "kirchhoff_weight") <- private$kirchhoff_weights
-         #   if(verbose == 2){
-         #     bar_update_attr_edges$increment()
-         #   }
-         # }
 
          edge_lengths_ <- self$get_edge_lengths()
 
@@ -2731,8 +3011,6 @@ metric_graph <-  R6Class("metric_graph",
          }
          class(edges_local) <- "metric_graph_edges"
          self$edges <- edges_local
-
-
 
        })
        if(verbose == 2){
@@ -2799,12 +3077,10 @@ metric_graph <-  R6Class("metric_graph",
        }
      },
 
-
      #' @description Gets the groups from the data.
      #' @param edge_lengths edge lengths to be set to the metric graph edges.
      #' @param unit set or override the edge lengths unit.
      #' @return does not return anything. Called for its side effects.
-
      set_manual_edge_lengths = function(edge_lengths, unit = NULL){
        if(is.null(edge_lengths)){
          warning("edge_lengths is NULL, edge lengths were not set.")
@@ -2820,7 +3096,8 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Gets the groups from the data.
-     #' @param get_cols Should the names of the columns that created the group variable be returned?
+     #' @param get_cols Should the names of the columns that created the group
+     #' variable be returned?
      #' @return A vector containing the available groups in the internal data.
 
      get_groups = function(get_cols = FALSE){
@@ -2835,8 +3112,11 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Gets PtE from the data.
-     #' @param group For which group, should the PtE be returned? `NULL` means that all PtEs available will be returned.
-     #' @param include_group Should the group be included as a column? If `TRUE`, the PtEs for each group will be concatenated, otherwise a single matrix containing the unique PtEs will be returned.
+     #' @param group For which group, should the PtE be returned? `NULL` means
+     #' that all PtEs available will be returned.
+     #' @param include_group Should the group be included as a column? If `TRUE`,
+     #' the PtEs for each group will be concatenated, otherwise a single matrix
+     #' containing the unique PtEs will be returned.
      #' @return A matrix with two columns, where the first column contains the edge
      #' number and the second column contains the distance on edge of the
      #' observation locations.
@@ -2870,8 +3150,10 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Gets the edge lengths with the corresponding unit.
-     #' @param unit If non-NULL, changes from `length_unit` from the graph construction to `unit`.
-     #' @return a vector with the length unit (if the graph was constructed with a length unit).
+     #' @param unit If non-NULL, changes from `length_unit` from the graph
+     #' construction to `unit`.
+     #' @return a vector with the length unit (if the graph was constructed with
+     #' a length unit).
 
      get_edge_lengths = function(unit = NULL){
        el <- self$edge_lengths
@@ -2884,7 +3166,8 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Gets the spatial locations from the data.
-     #' @return A `data.frame` object with observation locations. If `longlat = TRUE`, the column names are lon and lat, otherwise the column names are x and y.
+     #' @return A `data.frame` object with observation locations. If `longlat = TRUE`,
+     #' the column names are lon and lat, otherwise the column names are x and y.
      get_locations = function(){
        if(is.null(private$data)){
          warning("There is no data!")
@@ -2892,7 +3175,8 @@ metric_graph <-  R6Class("metric_graph",
        }
        group <- private$data[[".group"]]
        group <- which(group == group[1])
-       Spoints <- data.frame(x = private$data[[".coord_x"]][group], y = private$data[[".coord_y"]][group])
+       Spoints <- data.frame(x = private$data[[".coord_x"]][group],
+                             y = private$data[[".coord_y"]][group])
        if(private$longlat){
          colnames(Spoints) <- c("lon", "lat")
        }
@@ -2900,13 +3184,21 @@ metric_graph <-  R6Class("metric_graph",
      },
 
      #' @description Adds observation locations as vertices in the graph.
-     #' @param share_weights Should the same weight be shared among the split edges? If `FALSE`, the weights will be removed, and a common weight given by 1 will be given.
-     #' @param mesh_warning Display a warning if the graph structure change and the metric graph has a mesh object.
-     #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param share_weights Should the same weight be shared among the split
+     #' edges? If `FALSE`, the weights will be removed, and a common weight given
+     #' by 1 will be given.
+     #' @param mesh_warning Display a warning if the graph structure change and
+     #' the metric graph has a mesh object.
+     #' @param verbose Print progress of the steps when adding observations.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are
+     #' printed. Finally, in level 2, messages detailing all the steps are printed.
+     #' The default is 1.
      #' @param tolerance `r lifecycle::badge("deprecated")`. Not used anymore
      #' @return No return value. Called for its side effects.
-
-     observation_to_vertex = function(mesh_warning = TRUE, verbose = 0, tolerance = deprecated()) {
+     observation_to_vertex = function(mesh_warning = TRUE,
+                                      verbose = 0,
+                                      tolerance = deprecated()) {
        if (lifecycle::is_present(tolerance)) {
          lifecycle::deprecate_warn("1.3.0.9000", "observation_to_vertex(tolerance)")
        }
@@ -2921,7 +3213,7 @@ metric_graph <-  R6Class("metric_graph",
        distances    <- private$data[[".distance_on_edge"]]
        loc_idx_orig <- private$data[[".loc_idx"]]
 
-       # ── Build unique-location table ────────────────────────────────────────
+       # Build unique-location table
        # Sparse format: .loc_idx maps each row to its unique (edge, dist).
        # Fall back to first-group approach when .loc_idx is absent (legacy).
        if (!is.null(loc_idx_orig)) {
@@ -2966,14 +3258,17 @@ metric_graph <-  R6Class("metric_graph",
          if (verbose > 1) message("Grouping observations by edges...")
          remaining_data <- private$temp_PtE[remaining_mask, , drop = FALSE]
          edge_ids       <- remaining_data[, 1]
-         edge_groups    <- split.data.frame(remaining_data[, c(2, 3), drop = FALSE], edge_ids)
+         edge_groups    <- split.data.frame(remaining_data[, c(2, 3),
+                                                           drop = FALSE],
+                                            edge_ids)
 
          if (verbose == 2) {
            bar_otv <- msg_progress_bar(length(edge_groups))
            message("Processing edge splits in batches...")
          }
 
-         new_vertices_list <- private$split_edge_batch(edge_groups, verbose = verbose)
+         new_vertices_list <- private$split_edge_batch(edge_groups,
+                                                       verbose = verbose)
 
          for (i in seq_along(edge_groups)) {
            gdi     <- edge_groups[[i]]
@@ -3056,7 +3351,8 @@ metric_graph <-  R6Class("metric_graph",
        rkey_fin   <- paste(new_e_fin, new_d_fin, sep = sep_fin)
        private$data[[".loc_idx"]] <- match(rkey_fin, ukey_fin)
        # Each canonical (edge, dist) maps to exactly one vertex via ref_edges
-       ref_key_fin <- paste(private$ref_edges[, 1], private$ref_edges[, 2], sep = sep_fin)
+       ref_key_fin <- paste(private$ref_edges[, 1], private$ref_edges[, 2],
+                            sep = sep_fin)
        self$PtV    <- match(ukey_fin, ref_key_fin)
 
        self$set_edge_weights(
@@ -3069,11 +3365,26 @@ metric_graph <-  R6Class("metric_graph",
 
 
      #' @description Turns edge weights into data on the metric graph
-     #' @param loc A `matrix` or `data.frame` with two columns containing the locations to generate the data from the edge weights. If `data_coords` is 'spatial', the first column must be the x-coordinate of the data, and the second column must be the y-coordinate. If `data_coords` is 'PtE', the first column must be the edge number and the second column must be the distance on edge.
-     #' @param data_loc Should the data be generated to the data locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have data for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.
-     #' @param mesh Should the data be generated to the mesh locations? In this case, the `loc` argument will be ignored. Observe that the metric graph must have a mesh built for one to use this option. CAUTION: To add edgeweight to data to both the data locations and mesh locations, please, add at the data locations first, then to mesh locations.
-     #' @param weight_col Which columns of the edge weights should be turned into data? If `NULL`, all columns will be turned into data.
-     #' @param add Should the data generated be added to the metric graph internal data?
+     #' @param loc A `matrix` or `data.frame` with two columns containing the
+     #' locations to generate the data from the edge weights. If `data_coords`
+     #' is 'spatial', the first column must be the x-coordinate of the data, and
+     #' the second column must be the y-coordinate. If `data_coords` is 'PtE', the
+     #' first column must be the edge number and the second column must be the
+     #' distance on edge.
+     #' @param data_loc Should the data be generated to the data locations? In
+     #' this case, the `loc` argument will be ignored. Observe that the metric
+     #' graph must have data for one to use this option. CAUTION: To add edgeweight
+     #' to data to both the data locations and mesh locations, please, add at the
+     #' data locations first, then to mesh locations.
+     #' @param mesh Should the data be generated to the mesh locations? In this
+     #' case, the `loc` argument will be ignored. Observe that the metric graph
+     #' must have a mesh built for one to use this option. CAUTION: To add
+     #' edgeweight to data to both the data locations and mesh locations, please,
+     #' add at the data locations first, then to mesh locations.
+     #' @param weight_col Which columns of the edge weights should be turned into
+     #' data? If `NULL`, all columns will be turned into data.
+     #' @param add Should the data generated be added to the metric graph
+     #' internal data?
      #' @param data_coords To be used only if `mesh` is `FALSE`. It decides which
      #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
      #' `distance_on_edge`, otherwise if `spatial`, the user must provide
@@ -3081,10 +3392,16 @@ metric_graph <-  R6Class("metric_graph",
      #' @param normalized if TRUE, then the distances in `distance_on_edge` are
      #' assumed to be normalized to (0,1). Default FALSE.
      #' @param tibble Should the data be returned in a `tibble` format?
-     #' @param format If `return` is `TRUE`, the format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param format If `return` is `TRUE`, the format of the output: "tibble",
+     #' "sf", or "sp". Default is "tibble".
+     #' @param verbose Print progress of the steps when adding observations.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed.
+     #' The default is 1.
      #' @param suppress_warnings Suppress warnings related to duplicated observations?
-     #' @param return Should the data be returned? If `return_removed` is `TRUE`, only the removed locations will be return (if there is any).
+     #' @param return Should the data be returned? If `return_removed` is `TRUE`,
+     #' only the removed locations will be return (if there is any).
      edgeweight_to_data = function(loc = NULL, mesh = FALSE,
                                    data_loc = FALSE,
                                    weight_col = NULL, add = TRUE,
@@ -3199,14 +3516,19 @@ metric_graph <-  R6Class("metric_graph",
 
      #' @description Returns a list or a matrix with the mesh locations.
      #' @param bru Should an 'inlabru'-friendly list be returned?
-     #' @param loc If `bru` is set to `TRUE`, the column names of the location variables.
+     #' @param loc If `bru` is set to `TRUE`, the column names of the location
+     #' variables.
      #' The default name is `c('.edge_number', '.distance_on_edge')`.
      #' @param normalized If TRUE, then the distances in `distance_on_edge` are
      #' assumed to be normalized to (0,1). Default TRUE.
-     #' @param loc_name The name of the location variables. Not needed for `rSPDE` models.
+     #' @param loc_name The name of the location variables. Not needed for
+     #' `rSPDE` models.
      #'
      #' @return A list or a matrix containing the mesh locations.
-     get_mesh_locations = function(bru = FALSE, loc = c(".edge_number", ".distance_on_edge"), loc_name = NULL, normalized = TRUE) {
+     get_mesh_locations = function(bru = FALSE,
+                                   loc = c(".edge_number", ".distance_on_edge"),
+                                   loc_name = NULL,
+                                   normalized = TRUE) {
        if(is.null(self$mesh)){
          warning("There is no mesh!")
          return(invisible(NULL))
@@ -3268,18 +3590,30 @@ metric_graph <-  R6Class("metric_graph",
      #' @param data_coords It decides which
      #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
      #' `distance_on_edge`, otherwise if `spatial`, the user must provide
-     #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
-     #' @param group Vector. If the data is grouped (for example measured at different time
-     #' points), this argument specifies the columns (or entries on the list) in
-     #' which the group variables are stored. It will be stored as a single column `.group` with the combined entries.
-     #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
+     #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`.
+     #' Use `spatial` instead.
+     #' @param group Vector. If the data is grouped (for example measured at
+     #' different time points), this argument specifies the columns (or entries
+     #' on the list) in which the group variables are stored. It will be stored
+     #' as a single column `.group` with the combined entries.
+     #' @param group_sep separator character for creating the new group variable
+     #' when grouping two or more variables.
      #' @param normalized if TRUE, then the distances in `distance_on_edge` are
      #' assumed to be normalized to (0,1). Default FALSE.
-     #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
-     #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
-     #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
-     #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
-     #' @param only_return_removed Should the removed data (if it exists) when using 'closest' `duplicated_strategy` be returned instead of the processed data?
+     #' @param format Which format should the data be returned? The options are
+     #' `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame`
+     #' and `list` for the internal list format.
+     #' @param duplicated_strategy Which strategy to handle observations on the
+     #' same location on the metric graph (that is, if there are two or more
+     #' observations projected at the same location).
+     #' The options are 'closest' and 'jitter'. If 'closest', only the closest
+     #' observation will be used. If 'jitter', a small perturbation will be
+     #' performed on the projected observation location. The default is 'closest'.
+     #' @param include_distance_to_graph When `data_coord` is 'spatial', should
+     #' the distance of the observations to the graph be included as a column?
+     #' @param only_return_removed Should the removed data (if it exists) when
+     #' using 'closest' `duplicated_strategy` be returned instead of the processed
+     #' data?
      #' @param tolerance Parameter to control a warning when adding observations.
      #' If the distance of some location and the closest point on the graph is
      #' greater than the tolerance, the function will display a warning.
@@ -3311,7 +3645,8 @@ metric_graph <-  R6Class("metric_graph",
                                  tibble = lifecycle::deprecated()) {
 
        if (lifecycle::is_present(tibble)) {
-         lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)", "get_edge_weights(format)",
+         lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)",
+                                   "get_edge_weights(format)",
                                    details = c("The argument `tibble` was deprecated in favor of the argument `format`.")
          )
          if(tibble){
@@ -3410,7 +3745,8 @@ metric_graph <-  R6Class("metric_graph",
        }
 
        if(inherits(data, "metric_graph_data")){
-         if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
+         if(!any(c(".edge_number", ".distance_on_edge", ".group",
+                   ".coord_x", ".coord_y") %in% names(data))){
            warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
            class(data) <- setdiff(class(data), "metric_graph_data")
          } else{
@@ -3438,11 +3774,13 @@ metric_graph <-  R6Class("metric_graph",
        if(!strc_data){
          if(data_coords == "PtE"){
            if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
-             stop(paste("The data does not contain either the column", edge_number,"or the column",distance_on_edge))
+             stop(paste("The data does not contain either the column",
+                        edge_number, "or the column", distance_on_edge))
            }
          } else{
            if(any( !(c(coord_x, coord_y) %in% names(data)))){
-             stop(paste("The data does not contain either the column", coord_x,"or the column",coord_y))
+             stop(paste("The data does not contain either the column",
+                        coord_x,"or the column", coord_y))
            }
          }
        }
@@ -3484,7 +3822,8 @@ metric_graph <-  R6Class("metric_graph",
          if(is.null(group)){
            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
          } else{
-           data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[".group"]])
+           data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]],
+                             data[[".group"]])
          }
        }
 
@@ -3597,10 +3936,13 @@ coordinates!"))
 
          # Process the data (find all the different coordinates
          # across the different replicates, and also merge the new data to the old data)
-         data <- process_data_add_obs(PtE, new_data = data, old_data = NULL,
-                                      group_vector, suppress_warnings = suppress_warnings)
+         data <- process_data_add_obs(PtE, new_data = data,
+                                      old_data = NULL,
+                                      group_vector,
+                                      suppress_warnings = suppress_warnings)
 
-         data <- standardize_df_positions(data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
+         data <- standardize_df_positions(data, self, edge_number = ".edge_number",
+                                          distance_on_edge = ".distance_on_edge")
          ## convert to Spoints and add
          loc_idx_stored <- data[[".loc_idx"]]
          if (!is.null(loc_idx_stored)) {
@@ -3609,7 +3951,8 @@ coordinates!"))
            first_occ <- ord_u[!duplicated(loc_idx_stored[ord_u])]
            PtE_uniq <- cbind(data[[".edge_number"]][first_occ],
                              data[[".distance_on_edge"]][first_occ])
-           spatial_points_uniq <- self$coordinates(PtE = PtE_uniq, normalized = TRUE)
+           spatial_points_uniq <- self$coordinates(PtE = PtE_uniq,
+                                                   normalized = TRUE)
            data[[".coord_x"]] <- spatial_points_uniq[loc_idx_stored, 1]
            data[[".coord_y"]] <- spatial_points_uniq[loc_idx_stored, 2]
          } else {
@@ -3628,8 +3971,10 @@ coordinates!"))
 
          if(format == "sf"){
            data <- as.data.frame(data)
-           data_geometries <- lapply(1:nrow(data), function(i) sf::st_point(as.numeric(data[i, c('.coord_x', '.coord_y')])))
-           data <- sf::st_sf(data, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+           data_geometries <- lapply(1:nrow(data),
+                                     function(i) sf::st_point(as.numeric(data[i, c('.coord_x', '.coord_y')])))
+           data <- sf::st_sf(data, geometry = sf::st_sfc(data_geometries),
+                             crs = if(!is.null(private$crs)) private$crs else NULL)
          }
 
          class(data) <- c("metric_graph_data", class(data))
@@ -3655,9 +4000,10 @@ coordinates!"))
      #' @description Add observations to the metric graph.
      #' @param data A `data.frame` or named list containing the observations. In
      #' case of groups, the data.frames for the groups should be stacked vertically,
-     #' with a column indicating the index of the group. `data` can also be an `sf` object, a
-     #' `SpatialPointsDataFrame` object or an `SSN` object.
-     #' in which case `data_coords` will automatically be spatial, and there is no need to specify the `coord_x` or `coord_y` arguments.
+     #' with a column indicating the index of the group. `data` can also be an
+     #' `sf` object, a `SpatialPointsDataFrame` object or an `SSN` object.
+     #' in which case `data_coords` will automatically be spatial, and there is
+     #' no need to specify the `coord_x` or `coord_y` arguments.
      #' @param edge_number Column (or entry on the list) of the `data` that
      #' contains the edge numbers. If not supplied, the column with name
      #' "edge_number" will be chosen. Will not be used if `Spoints` is not `NULL`.
@@ -3671,33 +4017,59 @@ coordinates!"))
      #' `PtE`.
      #' @param coord_y Column (or entry on the list) of the `data` that contains
      #' the y coordinate. If not supplied, the column with name "coord_x" will be
-     #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords` is
-     #' `PtE`.
+     #' chosen. Will not be used if `Spoints` is not `NULL` or if `data_coords`
+     #' is `PtE`.
      #' @param data_coords It decides which
-     #' coordinate system to use. If `PtE`, the user must provide `edge_number` and
-     #' `distance_on_edge`, otherwise if `spatial`, the user must provide
-     #' `coord_x` and `coord_y`. The option `euclidean` is `r lifecycle::badge("deprecated")`. Use `spatial` instead.
-     #' @param group Vector. If the data is grouped (for example measured at different time
-     #' points), this argument specifies the columns (or entries on the list) in
-     #' which the group variables are stored. It will be stored as a single column `.group` with the combined entries.
-     #' @param group_sep separator character for creating the new group variable when grouping two or more variables.
+     #' coordinate system to use. If `PtE`, the user must provide `edge_number`
+     #' and `distance_on_edge`, otherwise if `spatial`, the user must provide
+     #' `coord_x` and `coord_y`. The option `euclidean` is
+     #' `r lifecycle::badge("deprecated")`. Use `spatial` instead.
+     #' @param group Vector. If the data is grouped (for example measured at
+     #' different time points), this argument specifies the columns (or entries
+     #' on the list) in which the group variables are stored. It will be stored
+     #' as a single column `.group` with the combined entries.
+     #' @param group_sep separator character for creating the new group variable
+     #' when grouping two or more variables.
      #' @param normalized if TRUE, then the distances in `distance_on_edge` are
      #' assumed to be normalized to (0,1). Default FALSE.
-     #' @param clear_obs Should the existing observations be removed before adding the data?
+     #' @param clear_obs Should the existing observations be removed before adding
+     #' the data?
      #' @param tibble Should the data be returned as a `tidyr::tibble`?
-     #' @param duplicated_strategy Which strategy to handle observations on the same location on the metric graph (that is, if there are two or more observations projected at the same location).
-     #' The options are 'closest' and 'jitter'. If 'closest', only the closest observation will be used. If 'jitter', a small perturbation will be performed on the projected observation location. The default is 'closest'.
-     #' @param include_distance_to_graph When `data_coord` is 'spatial', should the distance of the observations to the graph be included as a column?
+     #' @param duplicated_strategy Which strategy to handle observations on the
+     #' same location on the metric graph (that is, if there are two or more
+     #' observations projected at the same location).
+     #' The options are 'closest' and 'jitter'. If 'closest', only the closest
+     #' observation will be used. If 'jitter', a small perturbation will be
+     #' performed on the projected observation location. The default is 'closest'.
+     #' @param include_distance_to_graph When `data_coord` is 'spatial', should
+     #' the distance of the observations to the graph be included as a column?
      #' @param tolerance Parameter to control a warning when adding observations.
      #' If the distance of some location and the closest point on the graph is
      #' greater than the tolerance, the function will display a warning.
      #' This helps detecting mistakes on the input locations when adding new data.
-     #' @param tolerance_merge tolerance (in edge_length units) for merging points that are very close and are on a common edge. By default, this tolerance is zero, meaning no merges will be performed.
-     #' @param merge_strategy The strategies to handle observations that are within the tolerance. The options are `remove`, `merge`, `average`. The default is `merge`, in which one of the observations will be chosen, and the remaining will be used to try to fill all columns with non-NA values. The second strategy is `remove`, meaning that if two observations are within the tolerance one of them will be removed. Finally, `average` will take the average over the close observations for numerical variables, and will choose one non-NA for non-numerical variables.
-     #' @param return_removed Should the removed data (if it exists) due to being projected to the same place when using 'closest' `duplicated_strategy`, or due to some merge strategy, be returned?
-     #' @param verbose Print progress of the steps when adding observations. There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages are printed. In level 1, only messages regarding important steps are printed. Finally, in level 2, messages detailing all the steps are printed. The default is 1.
+     #' @param tolerance_merge tolerance (in edge_length units) for merging points
+     #' that are very close and are on a common edge. By default, this tolerance
+     #' is zero, meaning no merges will be performed.
+     #' @param merge_strategy The strategies to handle observations that are
+     #' within the tolerance. The options are `remove`, `merge`, `average`.
+     #' The default is `merge`, in which one of the observations will be chosen,
+     #' and the remaining will be used to try to fill all columns with non-NA values.
+     #' The second strategy is `remove`, meaning that if two observations are within
+     #' the tolerance one of them will be removed. Finally, `average` will take
+     #' the average over the close observations for numerical variables, and will
+     #' choose one non-NA for non-numerical variables.
+     #' @param return_removed Should the removed data (if it exists) due to being
+     #' projected to the same place when using 'closest' `duplicated_strategy`,
+     #' or due to some merge strategy, be returned?
+     #' @param verbose Print progress of the steps when adding observations.
+     #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
+     #' are printed. In level 1, only messages regarding important steps are printed.
+     #' Finally, in level 2, messages detailing all the steps are printed.
+     #' The default is 1.
      #' @param suppress_warnings Suppress warnings related to duplicated observations?
      #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
+     #' @param .allow_disconnected Expert option intended for internal use to
+     #' allow for adding observations to disconnected graphs.
      #' @return No return value. Called for its side effects. The observations are
      #' stored in the `data` element of the `metric_graph` object.
      add_observations = function(data = NULL,
@@ -3719,7 +4091,17 @@ coordinates!"))
                                  merge_strategy = "merge",
                                  verbose = 1,
                                  suppress_warnings = FALSE,
-                                 Spoints = lifecycle::deprecated()) {
+                                 Spoints = lifecycle::deprecated(),
+                                 .allow_disconnected = FALSE) {
+
+       if (isTRUE(private$disconnected) && !isTRUE(.allow_disconnected)) {
+         stop("This metric_graph was assembled from a 'graph_components' object via ",
+              "'as_metric_graph()'. Adding observations directly is disallowed because ",
+              "the edge numbering of this graph is the combined one across components, ",
+              "not the per-component numbering of the original 'graph_components'. ",
+              "Add observations to the original 'graph_components' instead, then call ",
+              "'as_metric_graph()' again.")
+       }
 
        merge_strategy <- match.arg(merge_strategy, c("remove", "merge", "average"))
        duplicated_strategy <- match.arg(duplicated_strategy, c("closest", "jitter"))
@@ -3736,7 +4118,8 @@ coordinates!"))
        }
 
        if(lifecycle::is_present(Spoints)){
-         lifecycle::deprecate_warn("1.2.9000", "add_observations(Spoints)", "add_observations(data)",
+         lifecycle::deprecate_warn("1.2.9000", "add_observations(Spoints)",
+                                   "add_observations(data)",
                                    details = c("`Spoints` is deprecated, use `data` instead.")
          )
          data <- Spoints
@@ -3824,7 +4207,8 @@ coordinates!"))
          }
          if(private$longlat){
            message(paste("The unit for edge lengths is", private$length_unit))
-           message(paste0("The current tolerance for removing distant observations is (in ",private$length_unit,"): ", tolerance))
+           message(paste0("The current tolerance for removing distant observations is (in ",
+                          private$length_unit,"): ", tolerance))
          }
        }
 
@@ -3833,7 +4217,8 @@ coordinates!"))
        }
 
        if(inherits(data, "metric_graph_data")){
-         if(!any(c(".edge_number", ".distance_on_edge", ".group", ".coord_x", ".coord_y") %in% names(data))){
+         if(!any(c(".edge_number", ".distance_on_edge",
+                   ".group", ".coord_x", ".coord_y") %in% names(data))){
            warning("The data is of class 'metric_graph_data', but it is not a proper 'metric_graph_data' object. The data will be added as a regular data.")
            class(data) <- setdiff(class(data), "metric_graph_data")
          } else{
@@ -3847,7 +4232,8 @@ coordinates!"))
 
        data_coords <- data_coords[[1]]
        if(data_coords == "euclidean"){
-         lifecycle::deprecate_warn("1.2.0", "add_observations(data_coords = 'must be either PtE or spatial')")
+         lifecycle::deprecate_warn("1.2.0",
+                                   "add_observations(data_coords = 'must be either PtE or spatial')")
          data_coords <- "spatial"
        }
        if(is.null(data)){
@@ -3866,11 +4252,13 @@ coordinates!"))
        if(!strc_data){
          if(data_coords == "PtE"){
            if(any( !(c(edge_number, distance_on_edge) %in% names(data)))){
-             stop(paste("The data does not contain either the column", edge_number,"or the column",distance_on_edge))
+             stop(paste("The data does not contain either the column",
+                        edge_number, "or the column", distance_on_edge))
            }
          } else{
            if(any( !(c(coord_x, coord_y) %in% names(data)))){
-             stop(paste("The data does not contain either the column", coord_x,"or the column",coord_y))
+             stop(paste("The data does not contain either the column",
+                        coord_x, "or the column", coord_y))
            }
          }
        }
@@ -3915,7 +4303,8 @@ coordinates!"))
          if(is.null(group)){
            data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]])
          } else{
-           data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]], data[[".group"]])
+           data_tmp <- cbind(data[[edge_number]], data[[distance_on_edge]],
+                             data[[".group"]])
          }
        }
 
@@ -3938,7 +4327,8 @@ coordinates!"))
            point_coords <- cbind(data[[coord_x]], data[[coord_y]])
            PtE <- self$coordinates(XY = point_coords)
 
-           fact    <- process_factor_unit(private$vertex_unit, private$length_unit)
+           fact    <- process_factor_unit(private$vertex_unit,
+                                          private$length_unit)
            grp_dat <- data[[".group"]]
            if(length(grp_dat) == 0) grp_dat <- rep(1L, nrow(PtE))
 
@@ -4052,7 +4442,9 @@ coordinates!"))
 
            aux_length <- self$edge_lengths[PtE[,1]] * PtE[,2]
 
-           merge_idx <- get_idx_within_merge_tolerance(PtE, group_vector, aux_length, tolerance_merge)
+           merge_idx <- get_idx_within_merge_tolerance(PtE, group_vector,
+                                                       aux_length,
+                                                       tolerance_merge)
 
            removed_merge_idx <- setdiff(1:length(ord_idx), merge_idx)
 
@@ -4065,9 +4457,12 @@ coordinates!"))
            PtE <- PtE[merge_idx,,drop=FALSE]
 
            if(merge_strategy %in% c("average", "merge")){
-             merge_idx_map <- setNames(seq_along(merge_idx), as.character(merge_idx))
-             ref_idx_merges <- find_merged_indices_for_unselected(merge_idx, length(ord_idx))
-             data <- apply_merge_strategy(data, removed_merge, merge_idx_map, ref_idx_merges, merge_strategy)
+             merge_idx_map <- setNames(seq_along(merge_idx),
+                                       as.character(merge_idx))
+             ref_idx_merges <- find_merged_indices_for_unselected(merge_idx,
+                                                                  length(ord_idx))
+             data <- apply_merge_strategy(data, removed_merge, merge_idx_map,
+                                          ref_idx_merges, merge_strategy)
            }
          }
 
@@ -4079,10 +4474,14 @@ coordinates!"))
            stop("There was a problem when processing the data. The number of observations and observation locations (after projecting on the metric graph) are not matching.")
          }
 
-         private$data <- process_data_add_obs(PtE, new_data = data, private$data,
-                                              group_vector, suppress_warnings = suppress_warnings)
+         private$data <- process_data_add_obs(PtE, new_data = data,
+                                              private$data,
+                                              group_vector,
+                                              suppress_warnings = suppress_warnings)
 
-         private$data <- standardize_df_positions(private$data, self, edge_number = ".edge_number", distance_on_edge = ".distance_on_edge")
+         private$data <- standardize_df_positions(private$data, self,
+                                                  edge_number = ".edge_number",
+                                                  distance_on_edge = ".distance_on_edge")
 
          ## convert to Spoints and add
          PtE <- self$get_PtE()
@@ -4138,12 +4537,20 @@ coordinates!"))
 
      #' @description Use `dplyr::mutate` function on the internal edge weights object.
      #' @param ... Arguments to be passed to `dplyr::mutate()`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::mutate()` on the internal edge weights object and return the result in the requested format.
-     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the mutate.
-     mutate_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .drop_na Should the rows with at least one NA for one of the columns
+     #' be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::mutate()` on the internal edge weights
+     #' object and return the result in the requested format.
+     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting
+     #' data list after the mutate.
+     mutate_weights = function(...,
+                               .drop_na = FALSE,
+                               .drop_all_na = TRUE,
+                               format = "tibble") {
        if (!inherits(private$edge_weights, "tbl_df")) {
          edge_weights_res <- tidyr::as_tibble(private$edge_weights)
        } else {
@@ -4180,12 +4587,20 @@ coordinates!"))
 
      #' @description Use `dplyr::select` function on the internal edge weights object.
      #' @param ... Arguments to be passed to `dplyr::select()`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::select()` on the internal edge weights object and return the result in the requested format.
-     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the select.
-     select_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::select()` on the internal edge weights
+     #' object and return the result in the requested format.
+     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting
+     #' data list after the select.
+     select_weights = function(...,
+                               .drop_na = FALSE,
+                               .drop_all_na = TRUE,
+                               format = "tibble") {
        if (!inherits(private$edge_weights, "tbl_df")) {
          edge_weights_res <- tidyr::as_tibble(private$edge_weights)
        } else {
@@ -4222,12 +4637,20 @@ coordinates!"))
 
      #' @description Use `dplyr::filter` function on the internal edge weights object.
      #' @param ... Arguments to be passed to `dplyr::filter()`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::filter()` on the internal edge weights object and return the result in the requested format.
-     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the filter.
-     filter_weights = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::filter()` on the internal edge weights
+     #' object and return the result in the requested format.
+     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting
+     #' data list after the filter.
+     filter_weights = function(...,
+                               .drop_na = FALSE,
+                               .drop_all_na = TRUE,
+                               format = "tibble") {
        if (!inherits(private$edge_weights, "tbl_df")) {
          edge_weights_res <- tidyr::as_tibble(private$edge_weights)
        } else {
@@ -4262,15 +4685,26 @@ coordinates!"))
      },
 
 
-     #' @description Use `dplyr::summarise` function on the internal edge weights object grouped by the edge numbers.
+     #' @description Use `dplyr::summarise` function on the internal edge weights
+     #' object grouped by the edge numbers.
      #' @param ... Arguments to be passed to `dplyr::summarise()`.
-     #' @param .groups A vector of strings containing the names of the columns to be grouped, when computing the summaries. The default is `NULL`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::summarise()` on the internal edge weights object and return the result in the requested format.
-     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting data list after the summarise.
-     summarise_weights = function(..., .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .groups A vector of strings containing the names of the columns to
+     #' be grouped, when computing the summaries. The default is `NULL`.
+     #' @param .drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::summarise()` on the internal edge weights
+     #' object and return the result in the requested format.
+     #' @return A `tidyr::tibble`, `sf` or `sp` object containing the resulting
+     #' data list after the summarise.
+     summarise_weights = function(...,
+                                  .groups = NULL,
+                                  .drop_na = FALSE,
+                                  .drop_all_na = TRUE,
+                                  format = "tibble") {
        if (!inherits(private$edge_weights, "tbl_df")) {
          edge_weights_res <- tidyr::as_tibble(private$edge_weights)
        } else {
@@ -4306,11 +4740,15 @@ coordinates!"))
        return(private$format_weights(edge_weights_res, format))
      },
 
-     #' @description Use `tidyr::drop_na()` function on the internal edge weights object.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
+     #' @description Use `tidyr::drop_na()` function on the internal edge
+     #' weights object.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
      #' @param ... Arguments to be passed to `tidyr::drop_na()`.
-     #' @details A wrapper to use `tidyr::drop_na()` within the internal edge weights object.
-     #' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting data list after the drop_na.
+     #' @details A wrapper to use `tidyr::drop_na()` within the internal edge
+     #' weights object.
+     #' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting
+     #' data list after the drop_na.
      drop_na_weights = function(...,format = "tibble") {
        if (!inherits(private$edge_weights, "tbl_df")) {
          edge_weights_res <- tidyr::as_tibble(private$edge_weights)
@@ -4328,14 +4766,23 @@ coordinates!"))
      },
 
 
-     #' @description Use `dplyr::mutate` function on the internal metric graph data object.
+     #' @description Use `dplyr::mutate` function on the internal metric graph
+     #' data object.
      #' @param ... Arguments to be passed to `dplyr::mutate()`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::mutate()` within the internal metric graph data object and return the result in the requested format.
-     #' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting data list after the mutate.
-     mutate = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::mutate()` within the internal metric graph
+     #' data object and return the result in the requested format.
+     #' @return A `tidyr::tibble`, `sf`, or `sp` object containing the resulting
+     #' data list after the mutate.
+     mutate = function(...,
+                       .drop_na = FALSE,
+                       .drop_all_na = TRUE,
+                       format = "tibble") {
        if (!inherits(private$data, "tbl_df")) {
          data_res <- tidyr::as_tibble(private$data)
        } else {
@@ -4369,11 +4816,15 @@ coordinates!"))
        return(private$format_data(data_res, format))
      },
 
-     #' @description Use `tidyr::drop_na()` function on the internal metric graph data object.
+     #' @description Use `tidyr::drop_na()` function on the internal metric graph
+     #' data object.
      #' @param ... Arguments to be passed to `tidyr::drop_na()`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::drop_na()` within the internal metric graph data object.
-     #' @return A `tidyr::tibble` object containing the resulting data list after the drop_na.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::drop_na()` within the internal metric
+     #' graph data object.
+     #' @return A `tidyr::tibble` object containing the resulting data list
+     #' after the drop_na.
      drop_na = function(..., format = "tibble") {
        if(!inherits(private$data, "tbl_df")){
          data_res <- tidyr::as_tibble(private$data)
@@ -4392,13 +4843,21 @@ coordinates!"))
 
 
 
-     #' @description Use `dplyr::select` function on the internal metric graph data object.
+     #' @description Use `dplyr::select` function on the internal metric graph
+     #' data object.
      #' @param ... Arguments to be passed to `dplyr::select()`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::select()` within the internal metric graph data object. Observe that it is a bit different from directly using `dplyr::select()` since it does not allow to remove the internal positions that are needed for the metric_graph methods to work.
-     #' @return A `tidyr::tibble` object containing the resulting data list after the selection.
+     #' @param .drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be
+     #' removed? DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::select()` within the internal metric
+     #' graph data object. Observe that it is a bit different from directly
+     #' using `dplyr::select()` since it does not allow to remove the internal
+     #' positions that are needed for the metric_graph methods to work.
+     #' @return A `tidyr::tibble` object containing the resulting data list
+     #' after the selection.
      select = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
        if(!inherits(private$data, "tbl_df")){
          data_res <- tidyr::as_tibble(private$data)
@@ -4437,14 +4896,23 @@ coordinates!"))
        return(private$format_data(data_res, format))
      },
 
-     #' @description Use `dplyr::filter` function on the internal metric graph data object.
+     #' @description Use `dplyr::filter` function on the internal metric graph
+     #' data object.
      #' @param ... Arguments to be passed to `dplyr::filter()`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::filter()` within the internal metric graph data object.
-     #' @return A `tidyr::tibble` object containing the resulting data list after the filter.
-     filter = function(..., .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be
+     #' removed? DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp".
+     #' Default is "tibble".
+     #' @details A wrapper to use `dplyr::filter()` within the internal metric
+     #' graph data object.
+     #' @return A `tidyr::tibble` object containing the resulting data list
+     #' after the filter.
+     filter = function(...,
+                       .drop_na = FALSE,
+                       .drop_all_na = TRUE,
+                       format = "tibble") {
        if(!inherits(private$data, "tbl_df")){
          data_res <- tidyr::as_tibble(private$data)
        } else{
@@ -4471,7 +4939,8 @@ coordinates!"))
        }
 
        data_res <- dplyr::filter(.data = data_res, ...)
-       data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)
+       data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`,
+                                  `.distance_on_edge`)
 
        if(!inherits(data_res, "metric_graph_data")){
          class(data_res) <- c("metric_graph_data", class(data_res))
@@ -4481,16 +4950,35 @@ coordinates!"))
      },
 
 
-     #' @description Use `dplyr::summarise` function on the internal metric graph data object grouped by the spatial locations and the internal group variable.
+     #' @description Use `dplyr::summarise` function on the internal metric graph
+     #' data object grouped by the spatial locations and the internal group variable.
      #' @param ... Arguments to be passed to `dplyr::summarise()`.
-     #' @param .include_graph_groups Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
-     #' @param .groups A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
-     #' @param .drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param .drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
-     #' @param format The format of the output: "tibble", "sf", or "sp". Default is "tibble".
-     #' @details A wrapper to use `dplyr::summarise()` within the internal metric graph data object grouped by manually inserted groups (optional), the internal group variable (optional) and the spatial locations. Observe that if the integral group variable was not used as a grouping variable for the summarise, a new column, called `.group`, will be added, with the same value 1 for all rows.
-     #' @return A `tidyr::tibble` object containing the resulting data list after the summarise.
-     summarise = function(..., .include_graph_groups = FALSE, .groups = NULL, .drop_na = FALSE, .drop_all_na = TRUE, format = "tibble") {
+     #' @param .include_graph_groups Should the internal graph groups be included
+     #' in the grouping variables? The default is `FALSE`. This means that, when
+     #' summarising, the data will be grouped by the internal group variable
+     #' together with the spatial locations.
+     #' @param .groups A vector of strings containing the names of the columns to
+     #' be additionally grouped, when computing the summaries. The default is `NULL`.
+     #' @param .drop_na Should the rows with at least one NA for one of the columns
+     #' be removed? DEFAULT is `FALSE`.
+     #' @param .drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
+     #' @param format The format of the output: "tibble", "sf", or "sp". Default
+     #' is "tibble".
+     #' @details A wrapper to use `dplyr::summarise()` within the internal metric
+     #' graph data object grouped by manually inserted groups (optional), the
+     #' internal group variable (optional) and the spatial locations. Observe
+     #' that if the integral group variable was not used as a grouping variable
+     #' for the summarise, a new column, called `.group`, will be added, with the
+     #' same value 1 for all rows.
+     #' @return A `tidyr::tibble` object containing the resulting data list after
+     #' the summarise.
+     summarise = function(...,
+                          .include_graph_groups = FALSE,
+                          .groups = NULL,
+                          .drop_na = FALSE,
+                          .drop_all_na = TRUE,
+                          format = "tibble") {
        if(!inherits(private$data, "tbl_df")){
          data_res <- tidyr::as_tibble(private$data)
        } else{
@@ -4517,7 +5005,8 @@ coordinates!"))
        }
 
 
-       group_vars <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y")
+       group_vars <- c(".edge_number", ".distance_on_edge",
+                       ".coord_x", ".coord_y")
        if(.include_graph_groups){
          group_vars <- c(".group", group_vars)
        }
@@ -4529,7 +5018,8 @@ coordinates!"))
          data_res[[".group"]] <- 1
        }
 
-       data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`, `.distance_on_edge`)
+       data_res <- dplyr::arrange(.data = data_res, `.group`, `.edge_number`,
+                                  `.distance_on_edge`)
 
        if(!inherits(data_res, "metric_graph_data")){
          class(data_res) <- c("metric_graph_data", class(data_res))
@@ -4540,19 +5030,29 @@ coordinates!"))
      },
 
      #' @description Return the internal data with the option to filter by groups.
-     #' @param group A vector contaning which groups should be returned? The default is `NULL`, which gives the result for the all groups.
-     #' @param format Which format should the data be returned? The options are `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame` and `list` for the internal list format.
-     #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`.
-     #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`.
+     #' @param group A vector contaning which groups should be returned?
+     #' The default is `NULL`, which gives the result for the all groups.
+     #' @param format Which format should the data be returned? The options are
+     #' `tibble` for `tidyr::tibble`, `sf` for `POINT`, `sp` for `SpatialPointsDataFrame`
+     #' and `list` for the internal list format.
+     #' @param drop_na Should the rows with at least one NA for one of the
+     #' columns be removed? DEFAULT is `FALSE`.
+     #' @param drop_all_na Should the rows with all variables being NA be removed?
+     #' DEFAULT is `TRUE`.
      #' @param tibble `r lifecycle::badge("deprecated")` Use `format` instead.
 
-     get_data = function(group = NULL, format = c("tibble", "sf", "sp", "list"), drop_na = FALSE, drop_all_na = TRUE, tibble = deprecated()){
+     get_data = function(group = NULL,
+                         format = c("tibble", "sf", "sp", "list"),
+                         drop_na = FALSE,
+                         drop_all_na = TRUE,
+                         tibble = deprecated()){
        if(is.null(private$data)){
          stop("The graph does not contain data.")
        }
 
        if (lifecycle::is_present(tibble)) {
-         lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)", "get_edge_weights(format)",
+         lifecycle::deprecate_warn("1.3.0.9000", "get_edge_weights(tibble)",
+                                   "get_edge_weights(format)",
                                    details = c("The argument `tibble` was deprecated in favor of the argument `format`.")
          )
          if(tibble){
@@ -4609,8 +5109,10 @@ coordinates!"))
 
        if(format == "sf"){
          data_temp <- as.data.frame(data_temp)
-         data_geometries <- lapply(1:nrow(data_temp), function(i) sf::st_point(as.numeric(data_temp[i, c('.coord_x', '.coord_y')])))
-         data_temp <- sf::st_sf(data_temp, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+         data_geometries <- lapply(1:nrow(data_temp),
+                                   function(i) sf::st_point(as.numeric(data_temp[i, c('.coord_x', '.coord_y')])))
+         data_temp <- sf::st_sf(data_temp, geometry = sf::st_sfc(data_geometries),
+                                crs = if(!is.null(private$crs)) private$crs else NULL)
        }
 
        if(!inherits(data_temp, "metric_graph_data")){
@@ -4627,8 +5129,10 @@ coordinates!"))
      #' @description Define the columns to be used for creating the directional vertex
      #' weights. Also possible to supply user defined functions for input and output
      #' to create ones own weights.
-     #' @param f_in functions for the input vertex (default `w/sum(w)`) uses the columns of name_column
-     #' @param f_out functions for the output vertex (deafult `rep(-1,length(w))`) uses the columns of name_column
+     #' @param f_in functions for the input vertex (default `w/sum(w)`) uses the
+     #' columns of name_column
+     #' @param f_out functions for the output vertex (deafult `rep(-1,length(w))`)
+     #' uses the columns of name_column
      #' @details For more details see paper (that does not exists yet).
      #' @return No return value.
      setDirectionalWeightFunction = function(f_in = NULL,
@@ -4715,8 +5219,10 @@ coordinates!"))
          temp_E <- self$E
          temp_E[] <- as.integer(temp_E)
 
-         self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV), as.integer(edge_constraint))
-         self$CoB <- c_basis2_graph(temp_E, as.integer(self$nV), as.integer(edge_constraint))
+         self$C <- construct_constraint_matrix(temp_E, as.integer(self$nV),
+                                               as.integer(edge_constraint))
+         self$CoB <- c_basis2_graph(temp_E, as.integer(self$nV),
+                                    as.integer(edge_constraint))
          self$CoB$T <- t(self$CoB$T)
          self$CoB$alpha <- 2
        }else{
@@ -4732,8 +5238,8 @@ coordinates!"))
      #' @param  continuous If `TRUE` (default), the mesh contains only one node per vertex.
      #' If `FALSE`, each vertex v is split into deg(v) disconnected nodes to allow
      #' for the creation of discontinuities at the vertices.
-     #' @param continuous.outs If `continuous = FALSE` and `continuous.outs = TRUE`, continuity is
-     #' assumed for the outgoing edges from each vertex.
+     #' @param continuous.outs If `continuous = FALSE` and `continuous.outs = TRUE`,
+     #' continuity is assumed for the outgoing edges from each vertex.
      #' @param continuous.deg2 If `TRUE`, continuity is assumed at degree 2 vertices.
      #' @details The mesh is a list with the objects:
      #' - `PtE` The mesh locations excluding the original vertices;
@@ -4766,7 +5272,9 @@ coordinates!"))
          }
        }
 
-       mesh <- list(PtE = NULL, V = NULL, E = NULL, n_e = integer(length(self$edges)), h_e = NULL, ind = NULL, VtE = NULL)
+       mesh <- list(PtE = NULL, V = NULL, E = NULL,
+                    n_e = integer(length(self$edges)),
+                    h_e = NULL, ind = NULL, VtE = NULL)
        mesh$n_e <- integer(length(self$edges))
        attr(mesh, "continuous") <- continuous
 
@@ -4784,7 +5292,8 @@ coordinates!"))
          }
 
          # Call the Rcpp function
-         mesh_data <- generate_mesh(n_edges, edge_lengths, mesh$n_e, self$E, mesh$ind, continuous)
+         mesh_data <- generate_mesh(n_edges, edge_lengths, mesh$n_e, self$E,
+                                    mesh$ind, continuous)
 
          mesh$PtE <- cbind(mesh_data$PtE_edge, mesh_data$PtE_pos)
          mesh$h_e <- mesh_data$h_e
@@ -4805,7 +5314,8 @@ coordinates!"))
          }
 
          # Call the Rcpp function for the non-continuous case
-         mesh_data <- generate_mesh(n_edges, edge_lengths, mesh$n_e, self$E, mesh$ind, continuous = FALSE)
+         mesh_data <- generate_mesh(n_edges, edge_lengths, mesh$n_e, self$E,
+                                    mesh$ind, continuous = FALSE)
 
          mesh$PtE <- cbind(mesh_data$PtE_edge, mesh_data$PtE_pos)
          mesh$h_e <- mesh_data$h_e
@@ -4828,6 +5338,17 @@ coordinates!"))
        return(private$version)
      },
 
+     #' @description Was this graph assembled from a `graph_components` object
+     #' via `graph_components$as_metric_graph()`? Such graphs use a combined
+     #' edge numbering across components, so calling `add_observations()` on
+     #' them is disallowed (the user-facing edge indices would no longer match
+     #' the original per-component ones).
+     #' @return `TRUE` if the graph was assembled from disconnected components,
+     #' `FALSE` otherwise.
+     is_disconnected = function() {
+       isTRUE(private$disconnected)
+     },
+
      #' @description Build mass and stiffness matrices for given mesh object.
      #' @details The function builds: The matrix `C` which is the mass matrix with
      #' elements \eqn{C_{ij} = <\phi_i, \phi_j>}, the matrix `G` which is the stiffness
@@ -4848,15 +5369,18 @@ coordinates!"))
          stop("no mesh provided")
        }
        nV <- dim(self$mesh$V)[1]
-       fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV, petrov = petrov)
+       fem_temp <- assemble_fem(E = self$mesh$E, h_e = self$mesh$h_e, nV = nV,
+                                petrov = petrov)
        self$mesh$C <- fem_temp$C
        self$mesh$G <- fem_temp$G
        self$mesh$B <- fem_temp$B
        self$mesh$D <- Diagonal(dim(self$mesh$C)[1],
-                               c(rep(1, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
+                               c(rep(1, self$nV),
+                                 rep(0, dim(self$mesh$C)[1] - self$nV)))
        #set weighted Krichhoff matrix
        self$mesh$K <- Diagonal(dim(self$mesh$C)[1],
-                               c(rep(0, self$nV), rep(0, dim(self$mesh$C)[1] - self$nV)))
+                               c(rep(0, self$nV),
+                                 rep(0, dim(self$mesh$C)[1] - self$nV)))
 
        if(!is.null(private$kirchhoff_weights)){
          nV_loc      <- self$nV
@@ -4922,7 +5446,8 @@ coordinates!"))
 
      #' @description Compute the weights of the mesh nodes.
      #' @details Compute the weights of the mesh nodes.
-     #' @return No return value. Called for its side effects. The weights are stored in the `mesh` element in the
+     #' @return No return value. Called for its side effects.
+     #' The weights are stored in the `mesh` element in the
      #' `metric_graph` object.
      compute_mesh_weights = function() {
        if (is.null(self$mesh)) {
@@ -4943,7 +5468,8 @@ coordinates!"))
      #'
 
      mesh_A = function(PtE){
-       lifecycle::deprecate_warn("1.2.0", "metric_graph$mesh_A()", "metric_graph$fem_basis()")
+       lifecycle::deprecate_warn("1.2.0", "metric_graph$mesh_A()",
+                                 "metric_graph$fem_basis()")
        self$fem_basis(PtE)
      },
 
@@ -5018,15 +5544,25 @@ larger than 1")
      #' @description Plots the metric graph.
      #' @param data Which column of the data to plot? If `NULL`, no data will be
      #' plotted.
-     #' @param newdata A dataset of class `metric_graph_data`, obtained by any `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods of metric graphs, see the vignette on data manipulation for more details.
+     #' @param newdata A dataset of class `metric_graph_data`, obtained by any
+     #' `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods
+     #' of metric graphs, see the vignette on data manipulation for more details.
      #' @param group If there are groups, which group to plot? If `group` is a
-     #' number and `newdata` is `NULL`, it will be the index of the group as stored internally and if `newdata` is provided, it will be the index of the group stored in `newdata`. If `group`
+     #' number and `newdata` is `NULL`, it will be the index of the group as stored
+     #' internally and if `newdata` is provided, it will be the index of the group
+     #' stored in `newdata`. If `group`
      #' is a character, then the group will be chosen by its name.
-     #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
-     #' @param interactive Only works for 2d plots. If `TRUE`, an interactive plot will be displayed. Unfortunately, `interactive` is not compatible with `edge_weight` if `add_new_scale_weights` is TRUE.
+     #' @param type The type of plot to be returned. The options are `ggplot` (the default),
+     #' that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which
+     #' requires the `plotly` package, and `mapview` that uses the `mapview` function,
+     #' to build interactive plots, which requires the `mapview` package.
+     #' @param interactive Only works for 2d plots. If `TRUE`, an interactive plot
+     #' will be displayed. Unfortunately, `interactive` is not compatible with
+     #' `edge_weight` if `add_new_scale_weights` is TRUE.
      #' @param vertex_size Size of the vertices.
      #' @param vertex_color Color of vertices.
-     #' @param edge_width Line width for edges. If `edge_width_weight` is not `NULL`, this determines the maximum edge width.
+     #' @param edge_width Line width for edges. If `edge_width_weight` is not `NULL`,
+     #' this determines the maximum edge width.
      #' @param edge_color Color of edges.
      #' @param data_size Size of markers for data.
      #' @param support_width For 3D plot, width of support lines.
@@ -5037,27 +5573,38 @@ larger than 1")
      #' (edge, normalized distance on edge).
      #' @param p Existing objects obtained from 'ggplot2' or 'plotly' to add the graph to
      #' @param degree Show the degrees of the vertices?
-     #' @param direction Show the direction of the edges? For `type == "mapview"` the arrows are not shown, only the color of the vertices indicating whether they are problematic or not.
+     #' @param direction Show the direction of the edges? For `type == "mapview"`
+     #' the arrows are not shown, only the color of the vertices indicating whether
+     #' they are problematic or not.
      #' @param arrow_size The size of the arrows if direction is TRUE.
-     #' @param edge_weight Which column from edge weights to determine the colors of the edges? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
-     #' `edge_weight` is only available for 2d plots. For 3d plots with edge weights, please use the `plot_function()` method.
-     #' @param edge_width_weight Which column from edge weights to determine the edges widths? If `NULL` edge width will be determined from `edge_width`. Currently it is not supported for `type = "mapview"`.
+     #' @param edge_weight Which column from edge weights to determine the colors
+     #' of the edges? If `NULL` edge weights are not plotted. To plot the edge
+     #' weights when the metric graph `edge_weights` is a vector instead of a
+     #' `data.frame`, simply set to 1. `edge_weight` is only available for 2d plots.
+     #' For 3d plots with edge weights, please use the `plot_function()` method.
+     #' @param edge_width_weight Which column from edge weights to determine the
+     #' edges widths? If `NULL` edge width will be determined from `edge_width`.
+     #' Currently it is not supported for `type = "mapview"`.
      #' @param scale_color_main Color scale for the data to be plotted.
-     #' @param scale_color_weights Color scale for the edge weights. Will only be used if `add_new_scale_weights` is TRUE.
-     #' @param scale_color_main_discrete Color scale for the data to be plotted, for discrete data.
-     #' @param scale_color_weights_discrete Color scale for discrete edge weights. Will only be used if `add_new_scale_weights` is TRUE.
+     #' @param scale_color_weights Color scale for the edge weights. Will only
+     #' be used if `add_new_scale_weights` is TRUE.
+     #' @param scale_color_main_discrete Color scale for the data to be plotted,
+     #' for discrete data.
+     #' @param scale_color_weights_discrete Color scale for discrete edge weights.
+     #' Will only be used if `add_new_scale_weights` is TRUE.
      #' @param scale_color_degree Color scale for the degrees.
-     #' @param add_new_scale_weights Should a new color scale for the edge weights be created?
+     #' @param add_new_scale_weights Should a new color scale for the edge weights
+     #' be created?
      #' @param scale_color_mapview Color scale to be applied for data when `type = "mapview"`.
-     #' @param scale_color_weights_mapview Color scale to be applied for edge weights when `type = "mapview"`.
-     #' @param scale_color_weights_discrete_mapview Color scale to be applied for degrees when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_weights, "Set1")` will be used where `n_weights` is the number of different degrees.
-     #' @param scale_color_degree_mapview Color scale to be applied for degrees when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_degrees, "Set1")` will be used where `n_degrees` is the number of different degrees.
+     #' @param scale_color_weights_mapview Color scale to be applied for edge
+     #' weights when `type = "mapview"`.
+     #' @param scale_color_weights_discrete_mapview Color scale to be applied for
+     #' degrees when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_weights, "Set1")`
+     #' will be used where `n_weights` is the number of different degrees.
+     #' @param scale_color_degree_mapview Color scale to be applied for degrees
+     #' when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_degrees, "Set1")`
+     #' will be used where `n_degrees` is the number of different degrees.
      #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
-     ##  # ' @param mutate A string containing the commands to be passed to `dplyr::mutate` function in order to obtain new variables as functions of the existing variables.
-     ##  # ' @param filter A string containing the commands to be passed to `dplyr::filter` function in order to obtain new filtered data frame.
-     ##  # ' @param summarise A string containing the commands to be passed to `dplyr::summarise` function in order to obtain new  data frame containing the summarised variable.
-     ##  # ' @param summarise_group_by A vector of strings containing the names of the columns to be additionally grouped, when computing the summaries. The default is `NULL`.
-     ##  # ' @param summarise_by_graph_group Should the internal graph groups be included in the grouping variables? The default is `FALSE`. This means that, when summarising, the data will be grouped by the internal group variable together with the spatial locations.
      #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
      #' @return A `plot_ly` (if `type = "plotly"`) or `ggplot` object.
      plot = function(data = NULL,
@@ -5154,7 +5701,8 @@ larger than 1")
            if(private$vertex_unit == "degree" && !private$transform){
              p <- p + labs(x = "Longitude",  y = "Latitude")
            } else{
-             p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
+             p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),
+                           y = paste0("y (in ",private$vertex_unit, ")"))
            }
          }
        } else if(type == "plotly") {
@@ -5178,9 +5726,13 @@ larger than 1")
          p <-  plotly::layout(p, scene = list(xaxis = list(autorange = "reversed")))
          if(!is.null(private$vertex_unit)){
            if(private$vertex_unit == "degree" && !private$transform){
-             p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
+             p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"),
+                                                 yaxis = list(title = "Latitude")))
            } else{
-             p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
+             p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",
+                                                                             private$vertex_unit, ")")),
+                                                 yaxis = list(title = paste0("y (in ",
+                                                                             private$vertex_unit, ")"))))
            }
          }
        } else if(type == "mapview"){
@@ -5194,8 +5746,10 @@ larger than 1")
            class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
          } else if (!is.null(data)){
            data_sf <- as.data.frame(newdata)
-           data_geometries <- lapply(1:nrow(data_sf), function(i) sf::st_point(as.numeric(data_sf[i, c('.coord_x', '.coord_y')])))
-           data_sf <- sf::st_sf(data_sf, geometry = sf::st_sfc(data_geometries), crs = if(!is.null(private$crs)) private$crs else NULL)
+           data_geometries <- lapply(1:nrow(data_sf),
+                                     function(i) sf::st_point(as.numeric(data_sf[i, c('.coord_x', '.coord_y')])))
+           data_sf <- sf::st_sf(data_sf, geometry = sf::st_sfc(data_geometries),
+                                crs = if(!is.null(private$crs)) private$crs else NULL)
            idx_grp <- (data_sf[[".group"]] == group)
            data_sf <- data_sf[idx_grp, , drop=FALSE]
            class(data_sf) <- setdiff(class(data_sf), "metric_graph_data")
@@ -5375,7 +5929,9 @@ larger than 1")
            }
 
            points_xy <- self$coordinates(PtE = X_loc)
-           x_loc_sf <- sf::st_as_sf(data.frame(x = points_xy[, 1], y = points_xy[, 2], val = as.vector(X)),
+           x_loc_sf <- sf::st_as_sf(data.frame(x = points_xy[, 1],
+                                               y = points_xy[, 2],
+                                               val = as.vector(X)),
                                     coords = c("x", "y"))
 
            mapview_output <- mapview_output + mapview::mapview(
@@ -5415,17 +5971,25 @@ larger than 1")
      #' @description Plots continuous function on the graph.
      #' @param data Which column of the data to plot? If `NULL`, no data will be
      #' plotted.
-     #' @param newdata A dataset of class `metric_graph_data`, obtained by any `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods of metric graphs, see the vignette on data manipulation for more details.
+     #' @param newdata A dataset of class `metric_graph_data`, obtained by any
+     #' `get_data()`, `mutate()`, `filter()`, `summarise()`, `drop_na()` methods
+     #' of metric graphs, see the vignette on data manipulation for more details.
      #' @param group If there are groups, which group to plot? If `group` is a
      #' number, it will be the index of the group as stored internally. If `group`
      #' is a character, then the group will be chosen by its name.
-     #' @param type The type of plot to be returned. The options are `ggplot` (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D plots, which requires the `plotly` package, and `mapview` that uses the `mapview` function, to build interactive plots, which requires the `mapview` package.
+     #' @param type The type of plot to be returned. The options are `ggplot`
+     #' (the default), that uses `ggplot2`; `plotly` that uses `plot_ly` for 3D
+     #' plots, which requires the `plotly` package, and `mapview` that uses the
+     #' `mapview` function, to build interactive plots, which requires the
+     #' `mapview` package.
      #' @param continuous Should continuity be assumed when the plot uses `newdata`?
      #' @param interpolate_plot Should the values to be plotted be interpolated?
      #' @param vertex_size Size of the vertices.
      #' @param vertex_color Color of vertices.
      #' @param edge_width Width for edges.
-     #' @param edge_weight Which column from edge weights to plot? If `NULL` edge weights are not plotted. To plot the edge weights when the metric graph `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
+     #' @param edge_weight Which column from edge weights to plot? If `NULL` edge
+     #' weights are not plotted. To plot the edge weights when the metric graph
+     #' `edge_weights` is a vector instead of a `data.frame`, simply set to 1.
      #' @param edge_color For 3D plot, color of edges.
      #' @param line_width For 3D plot, line width of the function curve.
      #' @param line_color Color of the function curve.
@@ -5436,7 +6000,8 @@ larger than 1")
      #' @param mapview_caption Caption for the function if `type = "mapview"`.
      #' @param p Previous plot to which the new plot should be added.
      #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
-     #' @param improve_plot  `r lifecycle::badge("deprecated")` Use `interpolate` instead. There is no need to use it to improve the edges.
+     #' @param improve_plot  `r lifecycle::badge("deprecated")` Use `interpolate`
+     #' instead. There is no need to use it to improve the edges.
      #' @param X `r lifecycle::badge("deprecated")` Use `newdata` instead.
      #' @param ... Additional arguments for `ggplot()` or `plot_ly()`
      #' @return Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
@@ -5657,7 +6222,8 @@ larger than 1")
              PtE_new <- PtE_tmp[is.na(match(PtE_tmp, vals[,1]))]
              if(length(PtE_new) > 0){
                n_old <- nrow(vals)
-               combined <- matrix(NA_real_, nrow = n_old + length(PtE_new), ncol = 2)
+               combined <- matrix(NA_real_, nrow = n_old + length(PtE_new),
+                                  ncol = 2)
                combined[seq_len(n_old), ] <- vals
                combined[n_old + seq_along(PtE_new), 1] <- PtE_new
                vals <- combined[order(combined[,1]), , drop = FALSE]
@@ -5807,7 +6373,8 @@ larger than 1")
                    edge_new <- .end_at_Vs[1]
                    new_val <- .X_by_edge[[edge_new]]
                    if (NROW(new_val) > 0) {
-                     sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, max(new_val[, 1]))
+                     sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6,
+                                        max(new_val[, 1]))
                      new_val[, 1] <- new_val[, 1] - sub_fact
                      vals <- rbind(vals, new_val)
                    }
@@ -5826,7 +6393,8 @@ larger than 1")
                    edge_new <- .start_at_Ve[1]
                    new_val <- .X_by_edge[[edge_new]]
                    if (NROW(new_val) > 0) {
-                     sum_fact <- ifelse(any(vals[, 1] == 1), 1 + 1e-6, 1 - min(new_val[, 1]))
+                     sum_fact <- ifelse(any(vals[, 1] == 1), 1 + 1e-6,
+                                        1 - min(new_val[, 1]))
                      new_val[, 1] <- new_val[, 1] + sum_fact
                      vals <- rbind(vals, new_val)
                    }
@@ -5834,7 +6402,8 @@ larger than 1")
                    edge_new <- .end_at_Ve[1]
                    new_val <- .X_by_edge[[edge_new]]
                    if (NROW(new_val) > 0) {
-                     sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6, -max(new_val[, 1]) - 1)
+                     sub_fact <- ifelse(any(vals[, 1] == 0), 1 + 1e-6,
+                                        -max(new_val[, 1]) - 1)
                      new_val[, 1] <- -new_val[, 1] - sub_fact
                      vals <- rbind(vals, new_val)
                    }
@@ -5844,7 +6413,8 @@ larger than 1")
                  PtE_new <- PtE_tmp[is.na(match(PtE_tmp, vals[, 1]))]
                  if (length(PtE_new) > 0) {
                    n_old <- NROW(vals)
-                   combined <- matrix(NA_real_, nrow = n_old + length(PtE_new), ncol = 2)
+                   combined <- matrix(NA_real_, nrow = n_old + length(PtE_new),
+                                      ncol = 2)
                    combined[seq_len(n_old), ] <- as.matrix(vals[, 1:2])
                    combined[n_old + seq_along(PtE_new), 1] <- PtE_new
                    vals <- combined[order(combined[,1]), , drop = FALSE]
@@ -6103,9 +6673,13 @@ larger than 1")
 
          if(!is.null(private$vertex_unit)){
            if(private$vertex_unit == "degree" && !private$transform){
-             p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
+             p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"),
+                                                 yaxis = list(title = "Latitude")))
            } else{
-             p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
+             p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",
+                                                                             private$vertex_unit, ")")),
+                                                 yaxis = list(title = paste0("y (in ",
+                                                                             private$vertex_unit, ")"))))
            }
          }
 
@@ -6114,7 +6688,8 @@ larger than 1")
            p <- ggplot(data = data) +
              geom_path( mapping = aes(x = x, y = y,
                                       group = i,
-                                      colour = z), linewidth = line_width) + labs(colour = "") + scale_color
+                                      colour = z),
+                        linewidth = line_width) + labs(colour = "") + scale_color
          } else {
            p <- p + geom_path(data = data, mapping =
                                 aes(x = x, y = y,
@@ -6127,7 +6702,8 @@ larger than 1")
            if(private$vertex_unit == "degree" && !private$transform){
              p <- p + labs(x = "Longitude",  y = "Latitude")
            } else{
-             p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),  y = paste0("y (in ",private$vertex_unit, ")"))
+             p <- p + labs(x = paste0("x (in ",private$vertex_unit, ")"),
+                           y = paste0("y (in ",private$vertex_unit, ")"))
            }
          }
        } else if(type == "mapview"){
@@ -6194,8 +6770,6 @@ larger than 1")
      },
 
 
-
-
      #' @description Plots a movie of a continuous function evolving on the graph.
      #' @param X A m x T matrix where the ith column represents the function at the
      #' ith time, evaluated at the mesh locations.
@@ -6244,7 +6818,8 @@ larger than 1")
        }
 
        if (dim(X)[1] != dim(unique(self$mesh$V))[1]) {
-         stop(paste0("X does not have the correct size (the possible sizes are ", PtE_dim, " and ", dim(unique(self$mesh$V))[1],")"))
+         stop(paste0("X does not have the correct size (the possible sizes are ",
+                     PtE_dim, " and ", dim(unique(self$mesh$V))[1],")"))
        }
 
        n.v <- dim(self$V)[1]
@@ -6355,9 +6930,13 @@ larger than 1")
 
          if(!is.null(private$vertex_unit)){
            if(private$vertex_unit == "degree" && !private$transform){
-             p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"), yaxis = list(title = "Latitude")))
+             p <- plotly::layout(p, scene = list(xaxis = list(title = "Longitude"),
+                                                 yaxis = list(title = "Latitude")))
            } else{
-             p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",private$vertex_unit, ")")), yaxis = list(title = paste0("y (in ",private$vertex_unit, ")"))))
+             p <- plotly::layout(p, scene = list(xaxis = list(title = paste0("x (in ",
+                                                                             private$vertex_unit, ")")),
+                                                 yaxis = list(title = paste0("y (in ",
+                                                                             private$vertex_unit, ")"))))
            }
          }
 
@@ -6673,9 +7252,11 @@ larger than 1")
 
    private = list(
      #function for creating Vertex and Edges from self$edges
-     line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs, proj4string, which_longlat, length_unit, vertex_unit, project, which_projection, project_data) {
+     line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs,
+                               proj4string, which_longlat, length_unit, vertex_unit,
+                               project, which_projection, project_data) {
 
-       # ----- Step 0: Optional projection of all edge coordinates (unchanged) -----
+       # Step 0: Optional projection of all edge coordinates (unchanged)
        if(project_data && longlat){
          if(verbose == 2) {
            message("Projecting edges")
@@ -6695,7 +7276,8 @@ larger than 1")
              if(verbose == 2) {
                bar_edges_proj$increment()
              }
-             sf_points <- sf::st_as_sf(as.data.frame(self$edges[[i]]), coords = 1:2, crs = crs)
+             sf_points <- sf::st_as_sf(as.data.frame(self$edges[[i]]),
+                                       coords = 1:2, crs = crs)
              sf_points_eucl <- sf::st_transform(sf_points, crs=sf::st_crs(str_proj))
              self$edges[[i]] <- sf::st_coordinates(sf_points_eucl) * fact
            }
@@ -6712,7 +7294,8 @@ larger than 1")
              if(verbose == 2) {
                bar_edges_proj$increment()
              }
-             sp_points <- sp::SpatialPoints(coords = self$edges[[i]], proj4string = proj4string)
+             sp_points <- sp::SpatialPoints(coords = self$edges[[i]],
+                                            proj4string = proj4string)
              sp_points_eucl <- sp::spTransform(sp_points,CRSobj=sp::CRS(str_proj))
              self$edges[[i]] <- sp::coordinates(sp_points_eucl) * fact
            }
@@ -6743,7 +7326,7 @@ larger than 1")
 
        edges_local <- self$edges
 
-       # ----- Step 1: collect first/last point of every edge -----
+       # Step 1: collect first/last point of every edge
        endpoints <- matrix(NA_real_, nrow = 2L * nE, ncol = 2L)
        for (i in seq_len(nE)) {
          pts <- edges_local[[i]]
@@ -6752,7 +7335,7 @@ larger than 1")
          endpoints[2L*i,      ] <- pts[np, ]
        }
 
-       # ----- Step 2: build "working" Euclidean coords for the kd-tree -----
+       # Step 2: build "working" Euclidean coords for the kd-tree
        # work_coords are scaled so that Euclidean distance is in `length_unit`,
        # which is the same unit as `tolerance`.
        #
@@ -6784,7 +7367,7 @@ larger than 1")
          work_coords <- endpoints * fact_work
        }
 
-       # ----- Step 3: cluster endpoints within `tolerance` -----
+       # Step 3: cluster endpoints within `tolerance`
        n_pts <- nrow(work_coords)
 
        if (tolerance <= 0) {
@@ -6852,7 +7435,7 @@ larger than 1")
          message("Part 2/2 (vectorized)")
        }
 
-       # ----- Step 4: snap each edge's first/last point to its cluster vertex -----
+       # Step 4: snap each edge's first/last point to its cluster vertex
        start_v <- cluster_id[seq.int(1L, n_pts, by = 2L)]
        end_v   <- cluster_id[seq.int(2L, n_pts, by = 2L)]
 
@@ -6867,7 +7450,7 @@ larger than 1")
        # write the locally-mutated edge list back to self in one shot
        self$edges <- edges_local
 
-       # ----- Step 5: compute all edge lengths in one batch -----
+       # Step 5: compute all edge lengths in one batch
        edge_ll <- private$compute_lengths(longlat       = longlat,
                                           unit          = length_unit,
                                           crs           = crs,
@@ -6877,7 +7460,7 @@ larger than 1")
                                           project_data  = project_data,
                                           transform     = private$transform)
 
-       # ----- Step 6: drop edges of length <= tolerance (matches original) -----
+       # Step 6: drop edges of length <= tolerance (matches original)
        keep_e <- edge_ll > tolerance
        if (!all(keep_e)) {
          self$edges <- self$edges[keep_e]
@@ -7009,14 +7592,16 @@ larger than 1")
              scale_weights <- scale_color_weights
            }
            p <- p + geom_path(data = df_plot,
-                              mapping = aes(x = x, y = y, group = grp, colour = weights, linewidth =widths),
+                              mapping = aes(x = x, y = y, group = grp,
+                                            colour = weights, linewidth =widths),
                               ...) + ggplot2::scale_linewidth_identity() + scale_weights + labs(colour = edge_weight)
            if(add_new_scale_weights){
              p <- p + new_scale_color()
            }
          } else{
            p <- p + geom_path(data = df_plot,
-                              mapping = aes(x = x, y = y, group = grp,  linewidth = widths), color = edge_color, ...) + ggplot2::scale_linewidth_identity()
+                              mapping = aes(x = x, y = y, group = grp,
+                                            linewidth = widths), color = edge_color, ...) + ggplot2::scale_linewidth_identity()
          }
        }
 
@@ -7251,7 +7836,9 @@ larger than 1")
 
      ## Coordinates function to return all the lines intersecting within a tolerance
 
-     coordinates_multiple_snaps = function(XY, tolerance, verbose = verbose, crs, proj4string, longlat, fact, which_longlat) {
+     coordinates_multiple_snaps = function(XY, tolerance, verbose = verbose,
+                                           crs, proj4string, longlat, fact,
+                                           which_longlat) {
 
        coords_line <- c()
        coords_tmp <- c()
@@ -7266,19 +7853,27 @@ larger than 1")
          points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2)
          crs <- NULL
        } else if (private$which_longlat == "sf"){
-         points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = private$crs)
-         lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = private$crs)
+         points_sf <- sf::st_as_sf(as.data.frame(XY),
+                                   coords = 1:2, crs = private$crs)
+         lines_sf <- sf::st_sfc(lapply(self$edges,
+                                       function(i){sf::st_linestring(i)}),
+                                crs = private$crs)
        } else{
-         lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(private$proj4string))
+         lines_sf <- sf::st_sfc(lapply(self$edges,
+                                       function(i){sf::st_linestring(i)}),
+                                crs = sf::st_crs(private$proj4string))
          crs <- sf::st_crs(private$proj4string)
-         points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2, crs = private$crs)
+         points_sf <- sf::st_as_sf(as.data.frame(XY), coords = 1:2,
+                                   crs = private$crs)
        }
 
        if(verbose == 2) {
          message("Computing auxiliary distances")
        }
 
-       within_dist <- t(as.matrix(sf::st_is_within_distance(points_sf, lines_sf, dist = tolerance)))
+       within_dist <- t(as.matrix(sf::st_is_within_distance(points_sf,
+                                                            lines_sf,
+                                                            dist = tolerance)))
 
        if(verbose == 2) {
          message("Done!")
@@ -7312,7 +7907,8 @@ larger than 1")
          }
          index.p <- PtE[, 1] == ind
 
-         PtE[index.p,2] <- projectVecLine2(self$edges[[ind]], XY[index.p,,drop=FALSE],
+         PtE[index.p,2] <- projectVecLine2(self$edges[[ind]],
+                                           XY[index.p,,drop=FALSE],
                                            normalized=TRUE)
        }
        return(PtE)
@@ -7332,7 +7928,7 @@ larger than 1")
        # 1. working metric coords for nn2
        if (private$longlat) {
          # Closed-form spherical AEQD centered on the bbox of the vertices.
-         # See compute_PtE_edges optimization notes -- this is ~460x faster than
+         # This is much faster than
          # sp::spTransform / sf::st_transform and produces identical clustering
          # decisions for any reasonable merge tolerance.
          bb_x <- 0.5 * (min(self$V[, 1]) + max(self$V[, 1]))
@@ -7391,7 +7987,7 @@ larger than 1")
 
        if (length(unique_roots) == nv) return(invisible(NULL))  # nothing changed
 
-       # ----- 4. apply relabelling in a single vectorized pass -----------------
+       # 4. apply relabelling in a single vectorized pass
        new_V <- self$V[unique_roots, , drop = FALSE]
        new_E <- self$E
        new_E[, 1] <- cluster_id[new_E[, 1]]
@@ -7419,7 +8015,9 @@ larger than 1")
      },
 
      # utility function to remove small circles
-     remove_circles = function(threshold, verbose,longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data) {
+     remove_circles = function(threshold, verbose,longlat, unit, crs,
+                               proj4string, which_longlat, vertex_unit,
+                               project_data) {
        if(verbose == 2) {
          message("Removing small circles")
        }
@@ -7560,13 +8158,12 @@ larger than 1")
              self$nE <- self$nE - 1
 
              if(is.vector(private$edge_weights)){
-               # if(private$edge_weights[e_rem[2]] != private$edge_weights[e_rem[1]]){
-               if(compare_with_na(private$edge_weights[e_rem[2]], private$edge_weights[e_rem[1]])){
+               if(compare_with_na(private$edge_weights[e_rem[2]],
+                                  private$edge_weights[e_rem[1]])){
                  private$prune_warning <- TRUE
                }
                private$edge_weights <- private$edge_weights[-e_rem[2]]
              } else{
-               # if(any(private$edge_weights[e_rem[2],,drop=FALSE] != private$edge_weights[e_rem[1],,drop=FALSE])){
                if(compare_with_na(private$edge_weights[e_rem[2],,drop=FALSE],
                                   private$edge_weights[e_rem[1],,drop=FALSE],
                                   is_matrix = TRUE)){
@@ -7587,21 +8184,29 @@ larger than 1")
 
      # Compute lengths
 
-     compute_lengths = function(longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data, transform){
+     compute_lengths = function(longlat, unit, crs, proj4string, which_longlat,
+                                vertex_unit, project_data, transform){
 
        # The fall-back branch (transform = TRUE) is rare -- it
        # triggers only when longlat is TRUE AND which_longlat == 'sp'
        # AND a non-WGS84 CRS was provided -- and goes through the
        # original per-edge sapply because it needs sp::spTransform
        # per edge.
-
        nE <- length(self$edges)
        if (nE == 0L) return(numeric(0))
 
        if (transform) {
          # rare fallback path; preserve original behavior verbatim
          ll <- sapply(self$edges,
-                      function(edge){compute_line_lengths(edge, longlat = longlat, unit = unit, crs = crs, proj4string, which_longlat, vertex_unit, project_data, transform)})
+                      function(edge){compute_line_lengths(edge,
+                                                          longlat = longlat,
+                                                          unit = unit,
+                                                          crs = crs,
+                                                          proj4string,
+                                                          which_longlat,
+                                                          vertex_unit,
+                                                          project_data,
+                                                          transform)})
          return(ll)
        }
 
@@ -7637,10 +8242,14 @@ larger than 1")
        points <- edge[-nrow(edge), , drop = FALSE] # All rows except the last
 
        # Compute distances between each consecutive point
-       dists <- compute_aux_distances(lines = lines, crs = private$crs, longlat = private$longlat,
-                                      proj4string = private$proj4string, points = points,
-                                      fact = private$fact, which_longlat = private$which_longlat,
-                                      length_unit = private$length_unit, transform = private$transform)
+       dists <- compute_aux_distances(lines = lines, crs = private$crs,
+                                      longlat = private$longlat,
+                                      proj4string = private$proj4string,
+                                      points = points,
+                                      fact = private$fact,
+                                      which_longlat = private$which_longlat,
+                                      length_unit = private$length_unit,
+                                      transform = private$transform)
 
        # Calculate the relative positions using cumulative sums
        total_length <- sum(dists)
@@ -7716,7 +8325,8 @@ turned to vertices and the A matrix will then be computed")
 
 
      #'  Gets the edge weights
-     #'  data.frame If the edge weights are given as vectors, should the result be returned as a data.frame?
+     #'  data.frame If the edge weights are given as vectors, should the result
+     #'  be returned as a data.frame?
      #'  A vector or `data.frame` containing the edge weights.
 
      get_edge_weights_internal = function(data.frame = FALSE){
@@ -7741,7 +8351,8 @@ turned to vertices and the A matrix will then be computed")
          }
 
          # Create sf object from coordinates
-         data_res_sf <- sf::st_as_sf(data_res, coords = c(".coord_x", ".coord_y"), crs = sf::NA_crs_)
+         data_res_sf <- sf::st_as_sf(data_res, coords = c(".coord_x", ".coord_y"),
+                                     crs = sf::NA_crs_)
          class(data_res_sf) <- c("metric_graph_data", class(data_res_sf))
          return(data_res_sf)
 
@@ -7784,16 +8395,19 @@ turned to vertices and the A matrix will then be computed")
          }
          ew_tmp[[".edge_lengths"]] <- self$edge_lengths
 
-         edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries), crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_)
+         edges_sf <- sf::st_sf(ew_tmp, geometry = sf::st_sfc(edges_geometries),
+                               crs = if (!is.null(private$crs)) private$crs else sf::NA_crs_)
          class(edges_sf) <- c("metric_graph_weights", class(edges_sf))
          return(edges_sf)
 
        } else if (format == "sp") {
          edges_list <- lapply(1:length(self$edges), function(i) {
-           sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1], ncol = dim(self$edges[[i]])[2]))
+           sp::Line(coords = matrix(self$edges[[i]], nrow = dim(self$edges[[i]])[1],
+                                    ncol = dim(self$edges[[i]])[2]))
          })
          sp_edges <- sp::SpatialLines(
-           lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]), ID = as.character(i))),
+           lapply(1:length(edges_list), function(i) sp::Lines(list(edges_list[[i]]),
+                                                              ID = as.character(i))),
            proj4string = if (!is.null(private$crs)) private$proj4string else sp::CRS(NA_character_)
          )
 
@@ -7866,6 +8480,15 @@ turned to vertices and the A matrix will then be computed")
 
      connected = TRUE,
 
+     # disconnected: TRUE if this graph was assembled from a graph_components
+     # object via the fast `.assemble` path of `metric_graph$new()` (typically
+     # via `graph_components$as_metric_graph()`). Used to disallow direct
+     # `add_observations()` calls because the user-facing edge numbering of
+     # this graph is the combined one across components, not the per-component
+     # numbering of the original `graph_components`.
+
+     disconnected = FALSE,
+
      # group columns
 
      group_col = NULL,
@@ -7908,7 +8531,8 @@ turned to vertices and the A matrix will then be computed")
        PtE_edge <- attr(edge, "PtE")
 
        # Data frame creation and filling NA values
-       val_results <- interpolate2(edge, pos = t_values, normalized = TRUE, get_idx = TRUE)
+       val_results <- interpolate2(edge, pos = t_values, normalized = TRUE,
+                                   get_idx = TRUE)
        idx_positions <- val_results[["idx"]]
        val_lines <- val_results[["coords"]]
 
@@ -7961,7 +8585,9 @@ turned to vertices and the A matrix will then be computed")
                edge[(idx_positions[i] + 1):idx_positions[i + 1], , drop = FALSE],
                val_line_end
              )
-             tmp_vec <- c(t_values[i], PtE_edge[(idx_positions[i] + 1):idx_positions[i + 1]], t_values[i + 1])
+             tmp_vec <- c(t_values[i],
+                          PtE_edge[(idx_positions[i] + 1):idx_positions[i + 1]],
+                          t_values[i + 1])
            } else {
              coords_list2[[i]] <- rbind(
                val_line_start,
@@ -8112,12 +8738,16 @@ turned to vertices and the A matrix will then be computed")
        PtE_full <- lapply(edges_loc, function(e) attr(e, "PtE"))
 
        # ONE batched C++ call processes all edge groups
-       cpp_results <- split_edges_batch_cpp(edges_loc, PtE_full, E_loc, edge_len_loc,
-                                            edge_names, t_values_list, first_new_vs)
+       cpp_results <- split_edges_batch_cpp(edges_loc, PtE_full, E_loc,
+                                            edge_len_loc,
+                                            edge_names, t_values_list,
+                                            first_new_vs)
 
        # Pre-allocate output buffers
-       all_new_coords    <- matrix(0.0, nrow = total_new_vertices, ncol = ncol_V)
-       new_E_rows        <- matrix(NA_integer_, nrow = total_new_vertices, ncol = 2L)
+       all_new_coords    <- matrix(0.0, nrow = total_new_vertices,
+                                   ncol = ncol_V)
+       new_E_rows        <- matrix(NA_integer_, nrow = total_new_vertices,
+                                   ncol = 2L)
        new_edges_list    <- vector("list", total_new_vertices)
        new_edge_lengths  <- numeric(total_new_vertices)
        new_vertices_list <- vector("list", n_groups)
@@ -8169,12 +8799,14 @@ turned to vertices and the A matrix will then be computed")
 
        # Append new vertices to local V
        if (vertex_counter > 0L) {
-         V_loc <- rbind(V_loc, all_new_coords[seq_len(vertex_counter), , drop = FALSE])
+         V_loc <- rbind(V_loc, all_new_coords[seq_len(vertex_counter), ,
+                                              drop = FALSE])
        }
 
        # Append new edges to local E / edges / edge_lengths
        if (edge_counter > 0L) {
-         E_loc        <- rbind(E_loc, new_E_rows[seq_len(edge_counter), , drop = FALSE])
+         E_loc        <- rbind(E_loc, new_E_rows[seq_len(edge_counter), ,
+                                                 drop = FALSE])
          edges_loc    <- c(edges_loc, new_edges_list[seq_len(edge_counter)])
          edge_len_loc <- c(edge_len_loc, new_edge_lengths[seq_len(edge_counter)])
 
@@ -8227,7 +8859,8 @@ turned to vertices and the A matrix will then be computed")
 
          graph.temp$build_mesh(h = 1000)
 
-         df_temp2 <- data.frame(y = 0, edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
+         df_temp2 <- data.frame(y = 0,
+                                edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
                                 distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
          df_temp$included <- TRUE
          temp_merge <- merge(df_temp, df_temp2, all = TRUE)
@@ -8241,8 +8874,11 @@ turned to vertices and the A matrix will then be computed")
 
          df_temp[["__dummy"]] <- 1:nrow(df_temp)
 
-         graph.temp$add_observations(data = df_temp, normalized = normalized, verbose = 0,
-                                     suppress_warnings = TRUE)
+         graph.temp$add_observations(data = df_temp,
+                                     normalized = normalized,
+                                     verbose = 0,
+                                     suppress_warnings = TRUE,
+                                     .allow_disconnected = TRUE)
        })
        if(verbose == 2){
          message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -8269,7 +8905,8 @@ turned to vertices and the A matrix will then be computed")
          # Reordering from vertices to points
          Laplacian <- Laplacian[graph.temp$PtV, graph.temp$PtV]
          # Order back to the input order
-         Laplacian[graph.temp$.__enclos_env__$private$data[["__dummy"]], graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- Laplacian
+         Laplacian[graph.temp$.__enclos_env__$private$data[["__dummy"]],
+                   graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- Laplacian
        })
        if(verbose == 2){
          message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -8280,15 +8917,21 @@ turned to vertices and the A matrix will then be computed")
        return(Laplacian)
      },
 
-     find_edge_edge_points = function(tol,verbose, crs, proj4string, longlat, fact, which_longlat) {
+     find_edge_edge_points = function(tol,verbose, crs,
+                                      proj4string, longlat,
+                                      fact, which_longlat) {
 
        if(!private$longlat){
          lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}))
          crs <- NULL
        } else if (private$which_longlat == "sf"){
-         lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = private$crs)
+         lines_sf <- sf::st_sfc(lapply(self$edges,
+                                       function(i){sf::st_linestring(i)}),
+                                crs = private$crs)
        } else{
-         lines_sf <- sf::st_sfc(lapply(self$edges, function(i){sf::st_linestring(i)}), crs = sf::st_crs(private$proj4string))
+         lines_sf <- sf::st_sfc(lapply(self$edges,
+                                       function(i){sf::st_linestring(i)}),
+                                crs = sf::st_crs(private$proj4string))
          crs <- sf::st_crs(proj4string)
        }
 
@@ -8347,7 +8990,13 @@ turned to vertices and the A matrix will then be computed")
                  if(!is.matrix(self$V)){
                    self$V <- matrix(self$V,ncol=2)
                  }
-                 if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform))>tol) {
+                 if(min(compute_aux_distances(lines = self$V, crs=private$crs,
+                                              longlat=private$longlat,
+                                              proj4string = private$proj4string,
+                                              points = p, fact = fact,
+                                              which_longlat = private$which_longlat,
+                                              length_unit = private$length_unit,
+                                              transform = private$transform))>tol) {
                    p_cur <- rbind(p_cur,p)
                    p2 <- snapPointsToLines(p,self$edges[i], longlat, crs)
                    p2 <- t(p2[["coords"]])
@@ -8388,13 +9037,22 @@ turned to vertices and the A matrix will then be computed")
                  }
 
                  #add points if they are not close to V or previous points
-                 if(min(compute_aux_distances(lines = self$V, crs=private$crs, longlat=private$longlat, proj4string = private$proj4string, points = p, fact = fact, which_longlat = private$which_longlat, length_unit = private$length_unit, transform = private$transform))>tol) {
+                 if(min(compute_aux_distances(lines = self$V, crs=private$crs,
+                                              longlat=private$longlat,
+                                              proj4string = private$proj4string,
+                                              points = p, fact = fact,
+                                              which_longlat = private$which_longlat,
+                                              length_unit = private$length_unit,
+                                              transform = private$transform))>tol) {
                    # if(is.null(p_cur) || gDistance(SpatialPoints(p_cur), intersect_tmp[k])>tol) {
                    if(!private$longlat && !is.null(p_cur)){
-                     dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2), intersect_tmp[k])
+                     dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2),
+                                                 intersect_tmp[k])
                    } else if (!is.null(p_cur)) {
                      intersect_tmp_sfc <- sf::st_sfc(intersect_tmp[k], crs = private$crs)
-                     dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur), coords = 1:2, crs = private$crs), intersect_tmp_sfc)
+                     dist_tmp <- sf::st_distance(sf::st_as_sf(as.data.frame(p_cur),
+                                                              coords = 1:2, crs = private$crs),
+                                                 intersect_tmp_sfc)
                      units(dist_tmp) <- private$length_unit
                      units(dist_tmp) <- NULL
                    }
@@ -8460,10 +9118,12 @@ turned to vertices and the A matrix will then be computed")
        degrees <- degrees_in + degrees_out
 
        if (add) {
-         private$degrees <- list(degrees = degrees, indegrees = degrees_in, outdegrees = degrees_out)
+         private$degrees <- list(degrees = degrees, indegrees = degrees_in,
+                                 outdegrees = degrees_out)
        }
 
-       return(list(degrees = degrees, indegrees = degrees_in, outdegrees = degrees_out))
+       return(list(degrees = degrees, indegrees = degrees_in,
+                   outdegrees = degrees_out))
      },
 
      # Reference edges for the vertices
@@ -8658,7 +9318,8 @@ turned to vertices and the A matrix will then be computed")
 
            G <- rbind(sparseMatrix(i = 1:length(starts), j = starts,
                                    x = rep(0, length(starts)),
-                                   dims = c(length(starts), dim(self$mesh$Cpet)[1])),
+                                   dims = c(length(starts),
+                                            dim(self$mesh$Cpet)[1])),
                       t(self$mesh$Gpet[,-starts[-1]]))
          } else {
            C <- rbind(sparseMatrix(i = 1, j = starts, x = 1,
@@ -8694,7 +9355,8 @@ turned to vertices and the A matrix will then be computed")
            } else {
              C <- rbind(sparseMatrix(i = rep(1,length(bc[[i]])+1),
                                      j = c(starts[i], bc[[i]]),
-                                     x = c(1, rep(-1/length(bc[[i]]), length(bc[[i]]))),
+                                     x = c(1, rep(-1/length(bc[[i]]),
+                                                  length(bc[[i]]))),
                                      dims = c(1, dim(self$mesh$Cpet)[1])), C)
            }
 
@@ -8719,7 +9381,8 @@ turned to vertices and the A matrix will then be computed")
        min_y <- min(all_coords[, 2])
        max_y <- max(all_coords[, 2])
 
-       private$bounding_box <- list(min_x = min_x, max_x = max_x, min_y = min_y, max_y = max_y)
+       private$bounding_box <- list(min_x = min_x, max_x = max_x,
+                                    min_y = min_y, max_y = max_y)
      },
 
      # Temp PtE
@@ -8771,288 +9434,6 @@ turned to vertices and the A matrix will then be computed")
      }
 
    ))
-
-#' @title Connected components of metric graph
-#' @description Class representing connected components of a metric graph.
-#' @details A list of `metric_graph` objects (representing the different
-#' connected components in the full graph) created from vertex and edge matrices,
-#' or from an sp::SpatialLines object where each line is representing and edge.
-#' For more details, see the vignette:
-#' \code{vignette("metric_graph", package = "MetricGraph")}
-#' @return Object of \code{\link[R6]{R6Class}} for creating metric graph components.
-#' @examples
-#' library(sp)
-#' edge1 <- rbind(c(0, 0), c(1, 0))
-#' edge2 <- rbind(c(1, 0), c(2, 0))
-#' edge3 <- rbind(c(1, 1), c(2, 1))
-#' edges <- list(edge1, edge2, edge3)
-#'
-#' graphs <- graph_components$new(edges)
-#' graphs$plot()
-#' @export
-graph_components <-  R6::R6Class("graph_components",
-           public = list(
-             #' @field graphs List of the graphs representing the connected components.
-             graphs = NULL,
-
-             #' @field n The number of graphs.
-             n = 0,
-
-             #' @field sizes Number of vertices for each of the graphs.
-             sizes = NULL,
-
-             #' @field lengths Total edge lengths for each of the graphs.
-             lengths = NULL,
-
-             #' Create metric graphs for connected components
-             #'
-             #' @param edges A list containing coordinates as `m x 2` matrices (that is, of `matrix` type) or m x 2 data frames (`data.frame` type) of sequence of points connected by straightlines. Alternatively, you can also prove an object of type `SpatialLinesDataFrame` or `SpatialLines` (from `sp` package) or `MULTILINESTRING` (from `sf` package).
-             #' @param V n x 2 matrix with Euclidean coordinates of the n vertices.
-             #' @param E m x 2 matrix where each row represents an edge.
-             #' @param vertex_unit The unit in which the vertices are specified. The options are 'degree' (the great circle distance in km), 'km', 'm' and 'miles'. The default is `NULL`, which means no unit. However, if you set `length_unit`, you need to set `vertex_unit`.
-             #' @param length_unit The unit in which the lengths will be computed. The options are 'km', 'm' and 'miles'. The default is `vertex_unit`. Observe that if `vertex_unit` is `NULL`, `length_unit` can only be `NULL`.
-             #' If `vertex_unit` is 'degree', then the default value for `length_unit` is 'km'.
-             #' @param longlat If TRUE, then it is assumed that the coordinates are given.
-             #' in Longitude/Latitude and that distances should be computed in meters. It takes precedence over
-             #' `vertex_unit` and `length_unit`, and is equivalent to `vertex_unit = 'degree'` and `length_unit = 'm'`.
-             #' @param tolerance Vertices that are closer than this number are merged when
-             #' constructing the graph (default = 1e-10). If `longlat = TRUE`, the
-             #' tolerance is given in km.
-             #' @param by_length Sort the components by total edge length? If `FALSE`,
-             #' the components are sorted by the number of vertices.
-             #' @param edge_weights Either a number, a numerical vector with length given by the number of edges, providing the edge weights, or a `data.frame` with the number of rows being equal to the number of edges, where
-             #' @param ... Additional arguments used when specifying the graphs
-             #' @param lines `r lifecycle::badge("deprecated")` Use `edges` instead.
-             #' @return A `graph_components` object.
-             initialize = function(edges = NULL,
-                                   V = NULL,
-                                   E = NULL,
-                                   by_length = TRUE,
-                                   edge_weights = NULL,
-                                   ...,
-                                   lines = deprecated()) {
-
-               if (lifecycle::is_present(lines)) {
-                 if (is.null(edges)) {
-                   lifecycle::deprecate_warn("1.2.0", "graph_components$new(lines)", "graph_components$new(edges)",
-                                             details = c("`lines` was provided but not `edges`. Setting `edges <- lines`.")
-                   )
-                   edges <- lines
-                 } else {
-                   lifecycle::deprecate_warn("1.2.0", "graph_components$new(lines)", "graph_components$new(edges)",
-                                             details = c("Both `edges` and `lines` were provided. Only `edges` will be considered.")
-                   )
-                 }
-                 lines <- NULL
-               }
-
-               dots_args <- list(...)
-               dots_list <- as.list(dots_args)
-
-               if (is.null(dots_args$verbose)) {
-                 verbose <- 1
-               } else {
-                 verbose <- dots_args$verbose
-               }
-
-               if(!is.null(dots_list[["project_data"]])){
-                 warning("The argument project_data is not compatible with graph_components. Setting project_data to FALSE.")
-                 dots_list[["project_data"]] <- FALSE
-                 dots_list[["edges"]] <- edges
-                 dots_list[["V"]] <- V
-                 dots_list[["E"]] <- E
-                 dots_list[["check_connected"]] <- FALSE
-                 dots_list[["edge_weights"]] <- edge_weights
-                 graph <- do.call(metric_graph$new, dots_list)
-               } else{
-                 graph <- metric_graph$new(edges = edges, V = V, E = E,
-                                           check_connected = FALSE, edge_weights = edge_weights,...)
-               }
-
-
-               # Making a combinatorial graph to extract the components
-
-               if(verbose > 0){
-                 message("Extracting components...")
-               }
-
-               g <- make_graph(edges = c(t(graph$E)), directed = FALSE)
-
-               if(!is.null(edge_weights)){
-                 edge_weights <- graph$get_edge_weights(data.frame=TRUE)
-               }
-
-               igraph::E(g)$weight <- graph$edge_lengths
-               #  components <- igraph::clusters(g, mode="weak")
-               components <- igraph::components(g, mode="weak")
-
-               self$n <- components$no
-
-               if(verbose > 0){
-                 message(sprintf("Number of components: %d", self$n))
-               }
-
-               dots_list[["longlat"]] <- graph$.__enclos_env__$private$longlat
-               dots_list[["crs"]] <- graph$.__enclos_env__$private$crs
-               dots_list[["proj4string"]] <- graph$.__enclos_env__$private$proj4string
-               dots_list[["which_longlat"]] <- graph$.__enclos_env__$private$which_longlat
-               dots_list[["check_connected"]] <- FALSE
-
-               if(is.null(edge_weights)){
-                 edge_weights <- graph$.__enclos_env__$private$edge_weights
-               }
-
-               data_tmp <- graph$.__enclos_env__$private$data
-
-               if(verbose > 0){
-                 message("Constructing graphs...")
-               }
-
-               if(self$n > 1) {
-                 self$graphs <- vector(mode = "list", length = self$n)
-                 for(k in 1:self$n) {
-                   if(verbose > 0){
-                     message(paste("Processing component", k))
-                   }
-                   vert_ids <- igraph::V(g)[components$membership == k]
-                   edge_rem <- NULL
-                   if(verbose == 2){
-                     message("Detecting the edges of the component...")
-                   }
-                   # Vectorized operation to identify edges to remove
-                   edge_rem <- which(!(graph$E[, 1] %in% vert_ids) & !(graph$E[, 2] %in% vert_ids))
-                   if(verbose == 2){
-                     message("Processing the edges to keep...")
-                   }
-                   edge_keep <- setdiff(1:graph$nE, edge_rem)
-                   ind_keep <- rep(0,graph$nE)
-                   ind_keep[edge_keep] <- 1
-                   if(is.null(edge_weights)){
-                     ew_tmp <- NULL
-                   } else{
-                     if(verbose == 2){
-                       message("Processing the edge weights...")
-                     }
-                     if(is.vector(edge_weights)){
-                       ew_tmp <- edge_weights[which(ind_keep!=0)]
-                     } else{
-                       ew_tmp <- edge_weights[which(ind_keep!=0), , drop= FALSE]
-                     }
-                   }
-                   if(!is.null(data_tmp)){
-                     if(verbose == 2){
-                       message("Processing the data...")
-                     }
-                     add_obs_opts <- dots_list[["add_obs_options"]]
-                     if(is.null(add_obs_opts)){
-                       add_obs_opts <- list()
-                     }
-                     idx_obs_add <- (data_tmp[[".edge_number"]]%in%edge_keep)
-                     data_tmp_graph <- lapply(data_tmp, function(dat){dat[idx_obs_add]})
-                     data_tmp_graph[[".edge_number"]] <- match(data_tmp_graph[[".edge_number"]], edge_keep)
-                     class(data_tmp_graph) <- "metric_graph_data"
-                     add_obs_opts[["data"]] <- data_tmp_graph
-                   }
-                   if(length(graph$edges[which(ind_keep!=0)]) > 0){
-                     if(verbose > 0){
-                       message("Starting graph construction...")
-                     }
-                     dots_list[["edges"]] <- graph$edges[which(ind_keep!=0)]
-                     dots_list[["edge_weights"]] <- ew_tmp
-                     self$graphs[[k]] = do.call(metric_graph$new, dots_list)
-                     if(!is.null(data_tmp)){
-                       do.call(self$graphs[[k]]$add_observations, add_obs_opts)
-                     }
-                   }
-                 }
-                 for(i in self$n:1){
-                   if(is.null(self$graphs[[i]])){
-                     self$graphs[[i]] <- NULL
-                     self$n <- self$n - 1
-                   }
-                 }
-                 self$sizes <- components$csize
-                 self$lengths <- unlist(lapply(1:self$n,
-                                               function(x) sum(self$graphs[[x]]$edge_lengths)))
-                 if(inherits(self$graphs[[1]]$get_edge_lengths(), "units")){
-                   units(self$lengths) <- units(self$graphs[[1]]$get_edge_lengths())
-                 }
-
-                 if(by_length) {
-                   reo <- order(self$lengths, decreasing = TRUE)
-                 } else {
-                   reo <- sort(self$sizes, decreasing = TRUE)
-                 }
-                 self$graphs <- self$graphs[reo]
-                 self$lengths <- self$lengths[reo]
-                 self$sizes <- self$sizes[reo]
-               } else {
-                 self$graphs <- list(graph)
-                 self$lengths <- sum(graph$edge_lengths)
-                 self$sizes <- graph$nV
-               }
-             },
-
-             #' @description Returns the largest component in the graph.
-             #' @return A `metric_graph` object.
-             get_largest = function() {
-               return(self$graphs[[1]])
-             },
-
-             #' @description Plots all components.
-             #' @param edge_colors A 3 x nc matrix with RGB values for the edge colors to
-             #' be used when plotting each graph.
-             #' @param vertex_colors A 3 x nc matrix with RGB values for the edge colors to
-             #' be used when plotting each graph.
-             #' @param ... Additional arguments for plotting the individual graphs.
-             #' @return A `ggplot` object.
-             plot = function(edge_colors = NULL, vertex_colors = NULL, ...) {
-
-               if (is.null(edge_colors)) {
-                 edge_colors <- matrix(0, nrow = self$n, ncol = 3)
-                 if(self$n > 1) {
-                   for(i in 2:self$n) {
-                     edge_colors[i, ] = runif(3)
-                   }
-                 }
-               } else {
-                 if (ncol(edge_colors)!= 3) {
-                   stop("edge_colors must have three columns!")
-                 }
-                 if (nrow(edge_colors)!= self$n) {
-                   stop("edge_colors must have the same number of rows as there are components!")
-                 }
-               }
-               if (is.null(vertex_colors)) {
-                 vertex_colors <- edge_colors
-               } else {
-                 if (ncol(vertex_colors)!= 3) {
-                   stop("vertex_colors must have three columns!")
-                 }
-                 if (nrow(vertex_colors)!= self$n) {
-                   stop("vertex_colors must have the same number of rows as there are components!")
-                 }
-               }
-               p <- self$graphs[[1]]$plot(edge_color = rgb(edge_colors[1, 1],
-                                                           edge_colors[1, 2],
-                                                           edge_colors[1, 3]),
-                                          vertex_color = rgb(vertex_colors[1, 1],
-                                                             vertex_colors[1, 2],
-                                                             vertex_colors[1, 3]), ...)
-               if (self$n > 1) {
-                 for(i in 2:self$n){
-                   suppressMessages(p <- self$graphs[[i]]$plot(edge_color = rgb(edge_colors[i, 1],
-                                                                                edge_colors[i, 2],
-                                                                                edge_colors[i, 3]),
-                                                               vertex_color = rgb(vertex_colors[i, 1],
-                                                                                  vertex_colors[i, 2],
-                                                                                  vertex_colors[i, 3]),
-                                                               p = p, ...))
-                 }
-               }
-               return(p)
-             }))
-
 
 #' Update an older version metric graph to the current package version
 #'

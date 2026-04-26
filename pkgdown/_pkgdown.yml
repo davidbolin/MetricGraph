@@ -23,6 +23,8 @@ navbar:
       menu:
       - text: Working with metric graphs
         href: articles/metric_graph.html
+      - text: Working with disconnected metric graphs
+        href: articles/graph_components.html
       - text: Gaussian random fields on metric graphs
         href: articles/random_fields.html
       - text: Data manipulation on metric graphs

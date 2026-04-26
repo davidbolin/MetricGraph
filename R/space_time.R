@@ -49,6 +49,20 @@ make.G <- function(n,C,G) {
 #' @export
 make_Q_spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 
+  if (inherits(graph, "graph_components")) {
+    if (any(vapply(graph$graphs,
+                   function(g) is.null(g$mesh) || is.null(g$mesh$C),
+                   logical(1)))) {
+      stop("Every component must have FEM matrices; call graph$build_mesh() and graph$compute_fem() first.")
+    }
+    graph <- list(
+      mesh = list(
+        G = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$G)),
+        C = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$C)),
+        B = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$B))
+      )
+    )
+  }
   G <- graph$mesh$G
   C <- graph$mesh$C
   B <- graph$mesh$B
@@ -111,6 +125,20 @@ make_Q_spacetime <- function(graph,t,kappa, rho, gamma, alpha, beta, sigma) {
 #' @export
 make_Q_euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 
+  if (inherits(graph, "graph_components")) {
+    if (any(vapply(graph$graphs,
+                   function(g) is.null(g$mesh) || is.null(g$mesh$C),
+                   logical(1)))) {
+      stop("Every component must have FEM matrices; call graph$build_mesh() and graph$compute_fem() first.")
+    }
+    graph <- list(
+      mesh = list(
+        G = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$G)),
+        C = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$C)),
+        B = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$B))
+      )
+    )
+  }
   G <- graph$mesh$G
   C <- graph$mesh$C
   B <- graph$mesh$B
@@ -166,6 +194,26 @@ make_Q_euler <- function(graph,t,kappa,rho,gamma,alpha,beta,sigma, theta = 1) {
 #' @export
 simulate_spacetime <- function(graph, t, kappa, rho, gamma, alpha,
                                beta, sigma, u0, BC = 0) {
+  if (inherits(graph, "graph_components")) {
+    if (any(vapply(graph$graphs,
+                   function(g) is.null(g$mesh) || is.null(g$mesh$C),
+                   logical(1)))) {
+      stop("Every component must have FEM matrices; call graph$build_mesh() and graph$compute_fem() first.")
+    }
+    nV_total <- sum(vapply(graph$graphs, function(g) g$nV, integer(1)))
+    deg_combined <- unlist(lapply(graph$graphs,
+                                  function(g) g$get_degrees()),
+                           use.names = FALSE)
+    graph <- list(
+      nV = nV_total,
+      mesh = list(
+        G = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$G)),
+        C = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$C)),
+        B = Matrix::bdiag(lapply(graph$graphs, function(g) g$mesh$B))
+      ),
+      get_degrees = function(...) deg_combined
+    )
+  }
   n <- length(u0)
   Cd <- Diagonal(rowSums(graph$mesh$C),n=n)
   Cd[1:graph$nV] <- (graph$get_degrees()==1)*BC

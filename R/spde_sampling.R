@@ -38,6 +38,77 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
                         method = c("conditional", "Q"),
                         BC = 1) {
 
+  if (inherits(graph, "graph_components")) {
+    method <- match.arg(method, c("conditional", "Q"))
+    has_kappa <- !missing(kappa)
+    has_tau   <- !missing(tau)
+    has_range <- !missing(range)
+    has_sigma <- !missing(sigma)
+    build_args <- function(extra) {
+      a <- c(extra, list(posterior = posterior, nsim = nsim,
+                         method = method, BC = BC, sigma_e = sigma_e,
+                         alpha = alpha, directional = directional))
+      if (has_kappa) a$kappa <- kappa
+      if (has_tau)   a$tau   <- tau
+      if (has_range) a$range <- range
+      if (has_sigma) a$sigma <- sigma
+      a
+    }
+
+    if (type == "manual") {
+      if (is.null(PtE)) stop("must provide PtE for manual mode.")
+      if (NCOL(PtE) != 3) {
+        stop("For 'graph_components', PtE must have 3 columns: (component, edge, distance).")
+      }
+      PtE <- as.matrix(PtE)
+      comp_id <- as.integer(PtE[, 1])
+      orig_order <- seq_len(nrow(PtE))
+      out_pieces <- vector("list", graph$n)
+      out_idx    <- vector("list", graph$n)
+      for (k in seq_len(graph$n)) {
+        sel <- which(comp_id == k)
+        if (length(sel) == 0L) next
+        sub_PtE <- PtE[sel, 2:3, drop = FALSE]
+        out_pieces[[k]] <- do.call(sample_spde, build_args(list(
+          graph = graph$graphs[[k]], PtE = sub_PtE, type = "manual"
+        )))
+        out_idx[[k]] <- orig_order[sel]
+      }
+      flat_idx <- unlist(out_idx, use.names = FALSE)
+      if (nsim == 1L) {
+        u <- numeric(nrow(PtE))
+        u[flat_idx] <- unlist(out_pieces, use.names = FALSE)
+        return(u)
+      }
+      u <- matrix(0, nrow = nrow(PtE), ncol = nsim)
+      for (k in seq_len(graph$n)) {
+        if (is.null(out_pieces[[k]])) next
+        u[out_idx[[k]], ] <- out_pieces[[k]]
+      }
+      return(u)
+    }
+
+    # type = "mesh" or "obs": per-component sampling, concat
+    if (type == "mesh") {
+      if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
+                     logical(1)))) {
+        stop("Every component must have a mesh; call graph$build_mesh() first.")
+      }
+    }
+    out_pieces <- vector("list", graph$n)
+    for (k in seq_len(graph$n)) {
+      g <- graph$graphs[[k]]
+      if (type == "obs" && is.null(g$.__enclos_env__$private$data)) next
+      out_pieces[[k]] <- do.call(sample_spde, build_args(list(
+        graph = g, type = type
+      )))
+    }
+    if (nsim == 1L) {
+      return(unlist(out_pieces, use.names = FALSE))
+    }
+    return(do.call(rbind, out_pieces))
+  }
+
   check <- check_graph(graph)
   method <- method[[1]]
 

@@ -29,6 +29,28 @@ spde_variance <- function( kappa,
                            directional = F){
 
 
+  if (inherits(graph, "graph_components")) {
+    if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
+                   logical(1)))) {
+      stop("Every component must have a mesh; call graph$build_mesh() first.")
+    }
+    has_kappa <- !missing(kappa)
+    has_tau   <- !missing(tau)
+    has_range <- !missing(range)
+    has_sigma <- !missing(sigma)
+    out_list <- lapply(graph$graphs, function(g) {
+      args <- list(alpha = alpha, graph = g, BC = BC,
+                   include_vertices = include_vertices,
+                   directional = directional)
+      if (has_kappa) args$kappa <- kappa
+      if (has_tau)   args$tau   <- tau
+      if (has_range) args$range <- range
+      if (has_sigma) args$sigma <- sigma
+      do.call(spde_variance, args)
+    })
+    return(unlist(out_list, use.names = FALSE))
+  }
+
   check <- check_graph(graph)
 
   if(!check$has.mesh) {
@@ -139,6 +161,44 @@ spde_covariance <- function(P,
                             alpha,
                             graph,
                             directional = F) {
+
+  if (inherits(graph, "graph_components")) {
+    if (length(P) != 3) {
+      stop("For 'graph_components', P must be c(component, edge, distance).")
+    }
+    if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
+                   logical(1)))) {
+      stop("Every component must have a mesh; call graph$build_mesh() first.")
+    }
+    comp_id <- as.integer(P[1])
+    if (comp_id < 1L || comp_id > graph$n) {
+      stop("P[1] (component index) must be between 1 and graph$n.")
+    }
+    has_kappa <- !missing(kappa)
+    has_tau   <- !missing(tau)
+    has_range <- !missing(range)
+    has_sigma <- !missing(sigma)
+    out <- vector("list", graph$n)
+    for (k in seq_len(graph$n)) {
+      g <- graph$graphs[[k]]
+      n_mesh <- nrow(g$mesh$V)
+      if (k == comp_id) {
+        args <- list(P = P[2:3], alpha = alpha, graph = g,
+                     directional = directional)
+        if (has_kappa) args$kappa <- kappa
+        if (has_tau)   args$tau   <- tau
+        if (has_range) args$range <- range
+        if (has_sigma) args$sigma <- sigma
+        out[[k]] <- do.call(spde_covariance, args)
+      } else {
+        # Independence across components: covariance is zero. Match the layout
+        # produced by spde_covariance on this component (vertices first, then
+        # mesh-only locations).
+        out[[k]] <- numeric(n_mesh)
+      }
+    }
+    return(unlist(out, use.names = FALSE))
+  }
 
   check <- check_graph(graph)
 

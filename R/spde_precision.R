@@ -14,7 +14,9 @@
 #' @export
 spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
 
-  check <- check_graph(graph)
+  if (!inherits(graph, c("metric_graph", "graph_components"))) {
+    stop("graph must be a 'metric_graph' or 'graph_components' object.")
+  }
 
   if (alpha == 1) {
     return(Qalpha1(theta = c(tau, kappa),
@@ -55,6 +57,17 @@ Q_BM <- function(theta, graph, w, BC = 0, build = TRUE) {
 #' @return Precision matrix or list
 #' @noRd
 Qalpha1_edges <- function(theta, graph, w, BC = 0, stationary_points = "all", build = TRUE) {
+
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    Qs <- lapply(graph$graphs, function(g) {
+      Qalpha1_edges(theta, g, w = w, BC = BC,
+                    stationary_points = stationary_points, build = TRUE)
+    })
+    return(Matrix::bdiag(Qs))
+  }
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -150,6 +163,16 @@ Qalpha1_edges <- function(theta, graph, w, BC = 0, stationary_points = "all", bu
 #' @return Precision matrix or list
 #' @noRd
 Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
+
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    Qs <- lapply(graph$graphs, function(g) {
+      Qalpha1(theta, g, BC = BC, build = TRUE)
+    })
+    return(Matrix::bdiag(Qs))
+  }
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -261,6 +284,19 @@ Q00 <- function(l,kappa,tau) {
 #' @return Precision matrix or list
 #' @noRd
 Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_points = NULL) {
+
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    if (!is.null(stationary_points)) {
+      stop("'stationary_points' is not supported for 'graph_components'; specify per-component instead.")
+    }
+    Qs <- lapply(graph$graphs, function(g) {
+      Qalpha2(theta, g, w = w, BC = BC, build = TRUE, stationary_points = NULL)
+    })
+    return(Matrix::bdiag(Qs))
+  }
 
   kappa <- theta[2]
   tau <- theta[1]
@@ -462,6 +498,16 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
 #' @noRd
 Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
 
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    Qs <- lapply(graph$graphs, function(g) {
+      Qalpha1_v2(theta, g, w = w, BC = BC, build = TRUE)
+    })
+    return(Matrix::bdiag(Qs))
+  }
+
   kappa <- theta[2]
   tau <- theta[1]
   i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
@@ -549,6 +595,14 @@ Qalpha1_v2 <- function(theta, graph, w = 0.5 ,BC = 0, build = TRUE) {
 #' @return Precision matrix or list
 #' @noRd
 Qrandomwalk <- function(theta, graph, build = TRUE) {
+
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    Qs <- lapply(graph$graphs, function(g) Qrandomwalk(theta, g, build = TRUE))
+    return(Matrix::bdiag(Qs))
+  }
 
   tau <- theta[1]
   i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)

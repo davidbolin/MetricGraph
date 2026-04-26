@@ -1,0 +1,472 @@
+---
+title: "Working with disconnected metric graphs"
+author: "David Bolin, Alexandre B. Simas, and Jonas Wallin"
+date: "Created: `r Sys.Date()`. Last modified: `r Sys.Date()`."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with disconnected metric graphs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center")
+library(MetricGraph)
+set.seed(1)
+```
+
+# Introduction
+
+A metric graph need not be connected: real-world networks (street segments,
+isolated stretches of river, fragmented sensor coverage, etc.) often consist of
+several disjoint components.  In `MetricGraph`, the `graph_components` class
+represents such a graph as a collection of `metric_graph` objects, one per
+connected component.
+
+`graph_components` mirrors the public interface of `metric_graph`. The same
+methods used to add data, build a mesh, compute finite-element matrices, and
+plot functions are available, and they are dispatched to the appropriate
+component automatically. This vignette illustrates this functionality on a
+small example.
+
+For the basics of constructing and working with a single connected metric
+graph, see [Working with metric graphs](metric_graph.html).
+
+# Constructing a disconnected metric graph
+
+We build a small graph with three disjoint components:
+
+* **Component A** is a small "L"-shape with a curved arc, similar to the
+  example used in the other vignettes.
+* **Component B** is a triangle.
+* **Component C** is a single straight edge.
+
+```{r, message=FALSE}
+# Component A: L-shape with a curved arc
+edgeA1 <- rbind(c(0, 0), c(1, 0))
+edgeA2 <- rbind(c(0, 0), c(0, 1))
+edgeA3 <- rbind(c(0, 1), c(-1, 1))
+theta  <- seq(from = pi, to = 3 * pi / 2, length.out = 20)
+edgeA4 <- cbind(sin(theta), 1 + cos(theta))
+
+# Component B: a triangle, translated to the right
+edgeB1 <- rbind(c(4, 0), c(5, 0))
+edgeB2 <- rbind(c(5, 0), c(4.5, 1))
+edgeB3 <- rbind(c(4.5, 1), c(4, 0))
+
+# Component C: a single straight edge, placed below
+edgeC1 <- rbind(c(1, -2), c(3, -2))
+
+edges <- list(edgeA1, edgeA2, edgeA3, edgeA4,
+              edgeB1, edgeB2, edgeB3,
+              edgeC1)
+```
+
+We construct the `graph_components` object directly from the list of edges:
+
+```{r, message=FALSE}
+graphs <- graph_components$new(edges = edges)
+```
+
+The number of components, the number of vertices in each, and the total edge
+length per component are exposed as fields:
+
+```{r}
+graphs$n
+graphs$sizes
+graphs$lengths
+```
+
+By default, components are sorted by total edge length (set
+`by_length = FALSE` in the constructor to sort by vertex count instead). The
+underlying `metric_graph` objects are stored in `graphs$graphs`:
+
+```{r}
+class(graphs$graphs[[1]])
+```
+
+The `plot` method draws every component on a single ggplot, using a different
+colour for each:
+
+```{r, message=FALSE}
+graphs$plot()
+```
+
+If only the largest component is of interest, `get_largest()` returns it as a
+standalone `metric_graph` object that can be used with the rest of the package
+exactly as before:
+
+```{r}
+g_largest <- graphs$get_largest()
+class(g_largest)
+g_largest$nE
+```
+
+# Determining the component of a spatial point
+
+For a set of spatial coordinates, `which_component()` returns the index of the
+component each point is closest to (in Euclidean snap distance):
+
+```{r}
+XY <- rbind(c(0.5,  0.0),   # near component A
+            c(4.5,  0.5),   # inside the triangle (component B)
+            c(2.0, -2.0))   # on the bottom edge (component C)
+graphs$which_component(XY)
+```
+
+This is the routing rule used internally when adding observations in spatial
+coordinates.
+
+# Adding observations
+
+`graph_components$add_observations()` accepts the same arguments as
+`metric_graph$add_observations()`, with two extensions:
+
+* When `data_coords = "spatial"`, each observation is routed to the component
+  whose nearest network location is closest. No further bookkeeping is needed
+  from the user.
+* When `data_coords = "PtE"`, the data must include a column identifying the
+  component, alongside the usual `edge_number` and `distance_on_edge`
+  columns. The convention is the triple
+  `(component number, edge number, distance on edge)`.
+
+## Adding spatial observations
+
+We sample some random locations near each component and let
+`add_observations()` route them automatically:
+
+```{r}
+n_obs <- 30
+df_spatial <- data.frame(
+  coord_x = c(runif(n_obs, -1, 1),       # near component A
+              runif(n_obs,  4,  5),      # near component B
+              runif(n_obs,  1,  3)),     # on component C
+  coord_y = c(runif(n_obs,  0, 1),
+              runif(n_obs,  0, 1),
+              rep(-2, n_obs)),
+  y       = rnorm(3 * n_obs)
+)
+
+graphs$add_observations(data = df_spatial, data_coords = "spatial",
+                        verbose = 0)
+```
+Note that some observations were not added as they were too far away from the graph. To add all observations,
+we can increase the `tolerance` argument which is passed to the addition in the different components. 
+```{r}
+graphs$add_observations(data = df_spatial, 
+                        data_coords = "spatial",
+                        clear_obs = TRUE,
+                        verbose = 0,
+                        tolerance = 3)
+```
+`get_data()` retrieves all observations as a tibble; the additional
+`.component` column tells us which component each row was routed to:
+
+```{r}
+obs <- graphs$get_data()
+obs
+table(obs$.component)
+```
+
+The same data can be visualised on the graph with `plot(data = ...)`:
+
+```{r, message=FALSE}
+graphs$plot(data = "y")
+```
+
+Note: `plot()` automatically skips components that do not contain the
+specified data column, so this works seamlessly even if some components have
+no observations.
+
+## Adding observations in graph coordinates
+
+When the data is already specified in graph coordinates, supply a column with
+the component index. Here we add four observations, one on each component
+(component C only has one edge):
+
+```{r}
+df_pte <- data.frame(
+  component        = c(1, 1, 2, 3),
+  edge_number      = c(1, 2, 1, 1),
+  distance_on_edge = c(0.25, 0.75, 0.5, 0.5),
+  z                = c(10, 20, 30, 40)
+)
+
+graphs$add_observations(data = df_pte, data_coords = "PtE",
+                        normalized = TRUE, verbose = 0)
+```
+
+The new observations are added to the existing ones (set `clear_obs = TRUE`
+to wipe the existing data first). We can confirm the routing by inspecting
+`get_PtE()`, which returns a matrix of `(component, edge, distance)` triples:
+
+```{r}
+tail(graphs$get_PtE(), 4)
+```
+
+To remove all observations from every component, use `clear_observations()`:
+
+```{r}
+graphs$clear_observations()
+```
+
+We re-add the spatial observations for the rest of the vignette:
+
+```{r}
+graphs$add_observations(data = df_spatial, data_coords = "spatial",
+                        verbose = 0)
+```
+
+## Grouped observations
+
+The `group` argument behaves exactly as in `metric_graph$add_observations()`.
+The `get_groups()` method returns the union of group identifiers across all
+components:
+
+```{r}
+df_grouped <- data.frame(
+  coord_x = c(0.2, 0.6, 4.5, 2.5),
+  coord_y = c(0.0, 0.0, 0.5, -2.0),
+  rep     = c("a", "b", "a", "b"),
+  y2      = c(1, 2, 3, 4)
+)
+
+graphs$add_observations(data = df_grouped, data_coords = "spatial",
+                        group = "rep", verbose = 0)
+graphs$get_groups()
+```
+
+# Converting between coordinate systems
+
+The `coordinates()` method converts between graph coordinates (now expressed
+as `(component, edge, distance)`) and spatial coordinates.
+
+From PtE to XY:
+
+```{r}
+PtE_in <- rbind(c(1, 1, 0.5),   # midpoint of edge 1 of component 1
+                c(2, 1, 0.5),   # midpoint of edge 1 of component 2
+                c(3, 1, 0.5))   # midpoint of the only edge of component 3
+graphs$coordinates(PtE = PtE_in, normalized = TRUE)
+```
+
+From XY to PtE — note that the result has three columns, with the first being
+the component index:
+
+```{r}
+graphs$coordinates(XY = rbind(c(0.5, 0.0),
+                              c(4.5, 0.5),
+                              c(2.0, -2.0)))
+```
+
+The two operations round-trip:
+
+```{r}
+all.equal(
+  graphs$coordinates(XY = graphs$coordinates(PtE = PtE_in, normalized = TRUE)),
+  PtE_in,
+  tolerance = 1e-8
+)
+```
+
+# Building meshes and FEM matrices
+
+`build_mesh()` and `compute_fem()` are forwarded to every component, so the
+same call equips all of them at once:
+
+```{r}
+graphs$build_mesh(h = 0.1)
+graphs$compute_fem()
+
+# Inspect the per-component mesh sizes
+sapply(graphs$graphs, function(g) nrow(g$mesh$V))
+```
+
+Each component now has its own mass matrix `C`, stiffness matrix `G`, and so
+on, ready to be used by the FEM-based models elsewhere in the package.
+
+# Plotting functions on the components
+
+`plot_function()` works in two modes, both mirroring
+`metric_graph$plot_function()`.
+
+## Plotting a stored data column
+
+Pass `data = "<column name>"` to plot an observed quantity. Components without
+that column are skipped silently:
+
+```{r, message=FALSE, warning = FALSE}
+graphs$plot_function(data = "y")
+```
+
+## Plotting a function specified at arbitrary locations
+
+To plot values at user-supplied locations, pass `newdata` as a
+`metric_graph_data` object containing the columns `.component`,
+`.edge_number`, `.distance_on_edge`, and the value column. Below we draw a
+smooth function on each component:
+
+```{r, message=FALSE, warning = FALSE}
+make_locs <- function(component_id, n_e, n_per_edge = 30) {
+  do.call(rbind, lapply(seq_len(n_e), function(e) {
+    data.frame(.component        = component_id,
+               .edge_number      = e,
+               .distance_on_edge = seq(0, 1, length.out = n_per_edge))
+  }))
+}
+
+newdata <- rbind(
+  make_locs(1, n_e = graphs$graphs[[1]]$nE),
+  make_locs(2, n_e = graphs$graphs[[2]]$nE),
+  make_locs(3, n_e = graphs$graphs[[3]]$nE)
+)
+newdata$f <- with(newdata, sin(2 * pi * .distance_on_edge) +
+                            0.5 * .component)
+class(newdata) <- c("metric_graph_data", class(newdata))
+
+graphs$plot_function(data = "f", newdata = newdata)
+```
+
+# Modelling with `graph_components`
+
+The SPDE machinery (`graph_lme`, `graph_spde`, `sample_spde`,
+`spde_precision`, `spde_variance`, `spde_covariance`,
+`make_Q_spacetime`, `make_Q_euler`, `simulate_spacetime`) accepts a
+`graph_components` object directly. Internally each function either
+block-stacks the per-component matrices (for example, the precision
+matrix is `Matrix::bdiag()` of the per-component precision matrices) or
+delegates the work to each component independently. No
+`metric_graph$new()` constructor pipeline runs in the process, so
+calling these functions on a `graph_components` is essentially as cheap
+as calling them on a single connected `metric_graph`.
+
+For example, fitting a Whittle--Matérn model with the same syntax as on
+a regular metric graph:
+```{r, message=FALSE, warning=FALSE}
+graphs$clear_observations()
+df_fit <- data.frame(
+  coord_x = c(runif(50, -1, 1), runif(50, 4, 5), runif(50, 1, 3)),
+  coord_y = c(runif(50, 0, 1), runif(50, 0, 1), rep(-2, 50)),
+  y       = rnorm(150)
+)
+graphs$add_observations(data = df_fit, data_coords = "spatial",
+                        verbose = 0)
+
+fit <- graph_lme(y ~ 1, graph = graphs, model = "WM1")
+```
+
+Sampling a Whittle--Matérn field on the mesh of every component in one
+call:
+```{r}
+sample <- sample_spde(graph = graphs, alpha = 1,
+                      kappa = 5, tau = 1,
+                      type = "mesh")
+length(sample)
+```
+
+For "manual" sampling at user-specified locations, pass a 3-column
+`PtE` matrix `(component, edge, distance)`:
+```{r}
+PtE_in <- rbind(c(1, 1, 0.25), c(2, 2, 0.5), c(3, 1, 0.5))
+sample_spde(graph = graphs, alpha = 1,
+            kappa = 5, tau = 1,
+            PtE = PtE_in, type = "manual")
+```
+
+The marginal variance of the field at every mesh location:
+```{r}
+v <- spde_variance(kappa = 5, tau = 1, alpha = 1, graph = graphs)
+length(v)
+```
+
+# Avoiding repeated assembly with `as_metric_graph()`
+
+When passing a `graph_components` to one of these functions, the
+package internally calls `as_metric_graph()` to produce a single
+combined `metric_graph` view of the components. The conversion bypasses
+the regular `metric_graph$new()` constructor — it stacks the
+per-component fields directly, with edge and vertex indices shifted by
+the cumulative offsets, and block-diagonally combines the FEM matrices.
+The cost is therefore $O(N)$ memcopy rather than the
+$O(N \log N)$ vertex deduplication of the full constructor.
+
+For repeated downstream calls (e.g., several `sample_spde()` invocations
+or fitting several models on the same data), call `as_metric_graph()`
+once yourself to amortise even that small assembly cost:
+
+```{r}
+mg <- graphs$as_metric_graph()
+class(mg)
+mg$is_disconnected()
+```
+
+The returned object is an ordinary `metric_graph` and can be passed to
+the same downstream functions:
+```{r, warning=FALSE, message=FALSE}
+fit2 <- graph_lme(y ~ 1, graph = mg, model = "WM1")
+```
+
+The two fits are numerically equivalent (the second simply re-uses the
+already-assembled view):
+```{r}
+all.equal(as.numeric(stats::logLik(fit)),
+          as.numeric(stats::logLik(fit2)))
+```
+
+# The `disconnected` flag
+
+A `metric_graph` returned by `as_metric_graph()` carries a
+`disconnected = TRUE` flag, queryable via `metric_graph$is_disconnected()`:
+```{r}
+mg$is_disconnected()
+```
+
+The flag protects against a class of subtle errors: the edge numbering
+of `mg` is the *combined* one across components, not the
+per-component numbering of the original `graph_components`. Adding
+observations directly to `mg` is therefore disallowed:
+
+```{r, error=TRUE}
+mg$add_observations(
+  data = data.frame(edge_number = 1, distance_on_edge = 0.5, y = 1),
+  verbose = 0
+)
+```
+
+The intended workflow is to add data to the original
+`graph_components` and call `as_metric_graph()` again:
+
+```{r, warning=FALSE, message=FALSE}
+graphs$add_observations(
+  data = data.frame(coord_x = 1.5, coord_y = -2, y3 = 99),
+  data_coords = "spatial", verbose = 0
+)
+mg <- graphs$as_metric_graph()
+```
+
+# Summary of the API mirrored from `metric_graph`
+
+The table below summarises the methods that `graph_components` adds to mirror
+the `metric_graph` API. Each method dispatches to the underlying components
+and either combines the results (for query methods) or routes the input to
+the appropriate component (for write methods).
+
+| Method                    | Behaviour                                                         |
+|---------------------------|-------------------------------------------------------------------|
+| `which_component(XY)`     | Closest component for each spatial point                          |
+| `add_observations(...)`   | Routes spatial points; splits PtE data by `component` column      |
+| `clear_observations()`    | Clears observations on every component                            |
+| `get_data(...)`           | Combined data with an extra `.component` column                   |
+| `get_PtE()`               | Matrix of `(component, edge, distance)` triples                   |
+| `get_groups()`            | Union of group identifiers across components                      |
+| `coordinates(PtE, XY)`    | Converts between `(component, edge, distance)` and `XY`           |
+| `build_mesh(...)`         | Builds a mesh on every component                                  |
+| `compute_fem(...)`        | Computes FEM matrices on every meshed component                   |
+| `plot(...)`               | Plots all components; supports `data = ...`                       |
+| `plot_function(...)`      | Plots a function on each component (uses `.component` in newdata) |
+| `as_metric_graph()`       | Cheap, block-stacked view as a single (disconnected) `metric_graph` |
+
+These methods are designed so that, in most use cases, working with a
+disconnected graph requires no more code than working with a connected one,
+and at no extra cost — `graph_lme`, `graph_spde`, `sample_spde`, and friends
+all accept a `graph_components` directly.

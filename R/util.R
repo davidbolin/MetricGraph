@@ -2,11 +2,15 @@
 #' @noRd
 check_graph <- function(graph)
 {
+  if (inherits(graph, "graph_components")) {
+    graph <- graph$as_metric_graph()
+  }
   if (!inherits(graph, "metric_graph")) {
     stop("The graph object is not a metric graph")
   }
   out <- list(has.mesh = FALSE,
-              has.obs = FALSE)
+              has.obs = FALSE,
+              graph = graph)
   if(!is.null(graph$mesh)){
     out$has.mesh = TRUE
   }

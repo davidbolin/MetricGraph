@@ -175,6 +175,10 @@ graph_spde <- function(graph_object,
     stop("tau_prec_inc must be a non-negative numeric value.")
   }
 
+  if (inherits(graph_object, "graph_components")) {
+    graph_object <- graph_object$as_metric_graph()
+  }
+
   if (LGCP) {
     result <- list(
       graph_object = graph_object,
