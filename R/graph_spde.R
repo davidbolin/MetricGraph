@@ -1702,7 +1702,7 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
       input[i, ]
     })
     pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i) {
-      pte_tmp[i, ]
+      unname(pte_tmp[i, ])
     })
     idx_tmp <- match(input_list, pte_tmp_list)
     A_tmp <- model$graph_spde$.__enclos_env__$private$A()
@@ -1713,7 +1713,7 @@ ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
       input[i, ]
     })
     pte_tmp_list <- lapply(1:nrow(pte_tmp), function(i) {
-      pte_tmp[i, ]
+      unname(pte_tmp[i, ])
     })
     idx_tmp <- match(input_list, pte_tmp_list)
     A_tmp <- model$A
