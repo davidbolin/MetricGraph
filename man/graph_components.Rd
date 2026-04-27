@@ -7,7 +7,17 @@
 Object of \code{\link[R6]{R6Class}} for creating metric graph components.
 }
 \description{
-Class representing connected components of a metric graph.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} \code{graph_components} is
+deprecated. \code{metric_graph} now handles disconnected graphs directly:
+construct it with \code{check_connected = FALSE}, then use
+\code{mg$get_components()} to obtain a list of per-component
+\code{metric_graph} objects, \code{mg$which_component(XY)} to route spatial
+points, and \code{mg$plot(components = TRUE)} to colour the components.
+Distance methods (\code{compute_geodist}, \code{compute_resdist},
+\code{compute_laplacian}) and SPDE machinery (\code{spde_precision},
+\code{sample_spde}, \code{graph_lme}, ...) all work on disconnected
+\code{metric_graph} objects natively — precision matrices come out
+block-diagonal by construction.
 }
 \details{
 A list of \code{metric_graph} objects (representing the different
@@ -23,9 +33,10 @@ edge2 <- rbind(c(1, 0), c(2, 0))
 edge3 <- rbind(c(1, 1), c(2, 1))
 edges <- list(edge1, edge2, edge3)
 
-graphs <- graph_components$new(edges)
+suppressWarnings(graphs <- graph_components$new(edges))
 graphs$plot()
 }
+\keyword{internal}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -35,7 +46,14 @@ graphs$plot()
 
 \item{\code{sizes}}{Number of vertices for each of the graphs.}
 
-\item{\code{lengths}}{Total edge lengths for each of the graphs.
+\item{\code{lengths}}{Total edge lengths for each of the graphs.}
+
+\item{\code{nE_total}}{Total number of edges across all components.}
+
+\item{\code{edge_offsets}}{Integer vector of length \code{n} giving the
+cumulative number of edges in components before each one. The
+global edge number of local edge \code{e} in component \code{k} is
+\code{edge_offsets[k] + e}.
 Create metric graphs for connected components}
 }
 \if{html}{\out{</div>}}
@@ -44,6 +62,7 @@ Create metric graphs for connected components}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-graph_components-new}{\code{graph_components$new()}}
+\item \href{#method-graph_components-edge_to_component}{\code{graph_components$edge_to_component()}}
 \item \href{#method-graph_components-get_largest}{\code{graph_components$get_largest()}}
 \item \href{#method-graph_components-as_metric_graph}{\code{graph_components$as_metric_graph()}}
 \item \href{#method-graph_components-which_component}{\code{graph_components$which_component()}}
@@ -129,6 +148,30 @@ A \code{graph_components} object.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-graph_components-edge_to_component"></a>}}
+\if{latex}{\out{\hypertarget{method-graph_components-edge_to_component}{}}}
+\subsection{Method \code{edge_to_component()}}{
+Map global edge numbers to component indices.
+Each edge in the disconnected graph has a unique global edge
+number; this method returns the component each edge belongs to.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{graph_components$edge_to_component(edge_number)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{edge_number}}{Integer vector of global edge numbers in
+\code{1:self$nE_total}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Integer vector of component indices, the same length as
+\code{edge_number}.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-graph_components-get_largest"></a>}}
 \if{latex}{\out{\hypertarget{method-graph_components-get_largest}{}}}
 \subsection{Method \code{get_largest()}}{
@@ -201,11 +244,11 @@ Add observations to the components. Mirrors
 \code{metric_graph$add_observations}. For \code{data_coords = "spatial"},
 each observation is routed to the component whose nearest network
 location is closest to it. For \code{data_coords = "PtE"}, the data
-must contain a column identifying the component.
+specifies a global \code{edge_number} (in \code{1:self$nE_total}) and the
+component is inferred automatically from it.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph_components$add_observations(
   data = NULL,
-  component = "component",
   edge_number = "edge_number",
   distance_on_edge = "distance_on_edge",
   coord_x = "coord_x",
@@ -226,11 +269,8 @@ must contain a column identifying the component.
 \item{\code{data}}{A \code{data.frame}, list, \code{sf} object, or
 \code{SpatialPointsDataFrame} with the observations.}
 
-\item{\code{component}}{Name of the column with the component index when
-\code{data_coords = "PtE"}. Default is \code{"component"}.}
-
-\item{\code{edge_number}}{Name of the edge-number column. Default is
-\code{"edge_number"}.}
+\item{\code{edge_number}}{Name of the (global) edge-number column.
+Default is \code{"edge_number"}.}
 
 \item{\code{distance_on_edge}}{Name of the distance-on-edge column.
 Default is \code{"distance_on_edge"}.}
@@ -242,7 +282,8 @@ Default is \code{"distance_on_edge"}.}
 \code{"coord_y"}.}
 
 \item{\code{data_coords}}{Either \code{"PtE"} (the convention is then
-\verb{(component, edge_number, distance_on_edge)}) or \code{"spatial"}.}
+\verb{(edge_number, distance_on_edge)} with global edge numbering) or
+\code{"spatial"}.}
 
 \item{\code{group}}{Optional grouping variable, see
 \code{metric_graph$add_observations}.}
@@ -331,14 +372,15 @@ Character vector of unique group identifiers.
 \if{html}{\out{<a id="method-graph_components-get_PtE"></a>}}
 \if{latex}{\out{\hypertarget{method-graph_components-get_PtE}{}}}
 \subsection{Method \code{get_PtE()}}{
-Get the (component, edge, distance) triples for the
-observations across all components.
+Get the (edge_number, distance_on_edge) pairs for
+the observations across all components, using global edge
+numbering.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph_components$get_PtE()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A matrix with three columns: \code{component}, \code{edge_number},
+A matrix with two columns: \code{edge_number},
 \code{distance_on_edge}.
 }
 }
@@ -346,8 +388,8 @@ A matrix with three columns: \code{component}, \code{edge_number},
 \if{html}{\out{<a id="method-graph_components-coordinates"></a>}}
 \if{latex}{\out{\hypertarget{method-graph_components-coordinates}{}}}
 \subsection{Method \code{coordinates()}}{
-Convert between graph coordinates (component,
-edge, distance) and spatial coordinates.
+Convert between graph coordinates (global
+\code{edge_number}, \code{distance_on_edge}) and spatial coordinates.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph_components$coordinates(PtE = NULL, XY = NULL, normalized = TRUE)}\if{html}{\out{</div>}}
 }
@@ -355,8 +397,9 @@ edge, distance) and spatial coordinates.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{PtE}}{A matrix or vector with three columns/entries:
-\verb{(component, edge_number, distance_on_edge)}.}
+\item{\code{PtE}}{A matrix or vector with two columns/entries:
+\verb{(edge_number, distance_on_edge)}. Edge numbers are global
+across components.}
 
 \item{\code{XY}}{An \verb{n x 2} matrix of spatial coordinates.}
 
@@ -366,8 +409,8 @@ edge, distance) and spatial coordinates.
 }
 \subsection{Returns}{
 If \code{PtE} is supplied, an \verb{n x 2} matrix of spatial
-coordinates. If \code{XY} is supplied, an \verb{n x 3} matrix with
-\verb{(component, edge_number, distance_on_edge)}.
+coordinates. If \code{XY} is supplied, an \verb{n x 2} matrix with
+\verb{(edge_number, distance_on_edge)} using global edge numbering.
 }
 }
 \if{html}{\out{<hr>}}
@@ -493,8 +536,9 @@ No return value. Called for its side effects.
 \subsection{Method \code{plot_function()}}{
 Plot a function on the components. Mirrors
 \code{metric_graph$plot_function}. When supplying \code{newdata}, it must
-include a \code{.component} column identifying the component for each
-row.
+include \code{.edge_number} (global edge numbering) and
+\code{.distance_on_edge}; the component for each row is inferred from
+the global edge number.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{graph_components$plot_function(
   data = NULL,
@@ -512,8 +556,8 @@ row.
 \describe{
 \item{\code{data}}{Column name of the stored observations to plot.}
 
-\item{\code{newdata}}{Optional \code{metric_graph_data} with \code{.component},
-\code{.edge_number}, \code{.distance_on_edge}, and the value column.}
+\item{\code{newdata}}{Optional \code{metric_graph_data} with \code{.edge_number}
+(global), \code{.distance_on_edge}, and the value column.}
 
 \item{\code{group}}{Group identifier passed to each component.}
 

@@ -1,11 +1,22 @@
 #' @title Connected components of metric graph
-#' @description Class representing connected components of a metric graph.
+#' @description `r lifecycle::badge("deprecated")` `graph_components` is
+#' deprecated. `metric_graph` now handles disconnected graphs directly:
+#' construct it with `check_connected = FALSE`, then use
+#' `mg$get_components()` to obtain a list of per-component
+#' `metric_graph` objects, `mg$which_component(XY)` to route spatial
+#' points, and `mg$plot(components = TRUE)` to colour the components.
+#' Distance methods (`compute_geodist`, `compute_resdist`,
+#' `compute_laplacian`) and SPDE machinery (`spde_precision`,
+#' `sample_spde`, `graph_lme`, ...) all work on disconnected
+#' `metric_graph` objects natively — precision matrices come out
+#' block-diagonal by construction.
 #' @details A list of `metric_graph` objects (representing the different
 #' connected components in the full graph) created from vertex and edge matrices,
 #' or from an sp::SpatialLines object where each line is representing and edge.
 #' For more details, see the vignette:
 #' \code{vignette("metric_graph", package = "MetricGraph")}
 #' @return Object of \code{\link[R6]{R6Class}} for creating metric graph components.
+#' @keywords internal
 #' @examples
 #' library(sp)
 #' edge1 <- rbind(c(0, 0), c(1, 0))
@@ -13,7 +24,7 @@
 #' edge3 <- rbind(c(1, 1), c(2, 1))
 #' edges <- list(edge1, edge2, edge3)
 #'
-#' graphs <- graph_components$new(edges)
+#' suppressWarnings(graphs <- graph_components$new(edges))
 #' graphs$plot()
 #' @export
 graph_components <-  R6::R6Class("graph_components",
@@ -29,6 +40,15 @@ graph_components <-  R6::R6Class("graph_components",
 
      #' @field lengths Total edge lengths for each of the graphs.
      lengths = NULL,
+
+     #' @field nE_total Total number of edges across all components.
+     nE_total = 0L,
+
+     #' @field edge_offsets Integer vector of length `n` giving the
+     #' cumulative number of edges in components before each one. The
+     #' global edge number of local edge `e` in component `k` is
+     #' `edge_offsets[k] + e`.
+     edge_offsets = NULL,
 
      #' Create metric graphs for connected components
      #'
@@ -69,6 +89,17 @@ graph_components <-  R6::R6Class("graph_components",
                            edge_weights = NULL,
                            ...,
                            lines = deprecated()) {
+
+       lifecycle::deprecate_warn(
+         "1.5.2",
+         "graph_components$new()",
+         details = c(
+           "metric_graph now handles disconnected graphs directly.",
+           i = "Construct with `metric_graph$new(..., check_connected = FALSE)`.",
+           i = "Use `mg$get_components()` for the per-component list, `mg$which_component(XY)` for spatial routing, and `mg$plot(components = TRUE)` for per-component colouring.",
+           i = "See `vignette(\"graph_components\", package = \"MetricGraph\")` for the full migration guide."
+         )
+       )
 
        if (lifecycle::is_present(lines)) {
          if (is.null(edges)) {
@@ -232,6 +263,33 @@ graph_components <-  R6::R6Class("graph_components",
          self$lengths <- sum(graph$edge_lengths)
          self$sizes <- graph$nV
        }
+
+       nE_per <- vapply(self$graphs, function(g) g$nE, integer(1))
+       self$nE_total <- as.integer(sum(nE_per))
+       if (self$n > 0L) {
+         self$edge_offsets <- as.integer(c(0L, cumsum(nE_per)[-self$n]))
+       } else {
+         self$edge_offsets <- integer(0)
+       }
+     },
+
+     #' @description Map global edge numbers to component indices.
+     #' Each edge in the disconnected graph has a unique global edge
+     #' number; this method returns the component each edge belongs to.
+     #' @param edge_number Integer vector of global edge numbers in
+     #' `1:self$nE_total`.
+     #' @return Integer vector of component indices, the same length as
+     #' `edge_number`.
+     edge_to_component = function(edge_number) {
+       edge_number <- as.integer(edge_number)
+       if (any(is.na(edge_number)) ||
+           any(edge_number < 1L) ||
+           any(edge_number > self$nE_total)) {
+         stop(sprintf(
+           "edge_number must be integers between 1 and %d.",
+           self$nE_total))
+       }
+       findInterval(edge_number, self$edge_offsets + 1L)
      },
 
      #' @description Returns the largest component in the graph.
@@ -598,13 +656,12 @@ graph_components <-  R6::R6Class("graph_components",
      #' `metric_graph$add_observations`. For `data_coords = "spatial"`,
      #' each observation is routed to the component whose nearest network
      #' location is closest to it. For `data_coords = "PtE"`, the data
-     #' must contain a column identifying the component.
+     #' specifies a global `edge_number` (in `1:self$nE_total`) and the
+     #' component is inferred automatically from it.
      #' @param data A `data.frame`, list, `sf` object, or
      #' `SpatialPointsDataFrame` with the observations.
-     #' @param component Name of the column with the component index when
-     #' `data_coords = "PtE"`. Default is `"component"`.
-     #' @param edge_number Name of the edge-number column. Default is
-     #' `"edge_number"`.
+     #' @param edge_number Name of the (global) edge-number column.
+     #' Default is `"edge_number"`.
      #' @param distance_on_edge Name of the distance-on-edge column.
      #' Default is `"distance_on_edge"`.
      #' @param coord_x Name of the x-coordinate column. Default is
@@ -612,7 +669,8 @@ graph_components <-  R6::R6Class("graph_components",
      #' @param coord_y Name of the y-coordinate column. Default is
      #' `"coord_y"`.
      #' @param data_coords Either `"PtE"` (the convention is then
-     #' `(component, edge_number, distance_on_edge)`) or `"spatial"`.
+     #' `(edge_number, distance_on_edge)` with global edge numbering) or
+     #' `"spatial"`.
      #' @param group Optional grouping variable, see
      #' `metric_graph$add_observations`.
      #' @param normalized If TRUE, distances are assumed normalized to
@@ -626,7 +684,6 @@ graph_components <-  R6::R6Class("graph_components",
      #' `add_observations` method.
      #' @return No return value. Called for its side effects.
      add_observations = function(data = NULL,
-                                 component = "component",
                                  edge_number = "edge_number",
                                  distance_on_edge = "distance_on_edge",
                                  coord_x = "coord_x",
@@ -698,24 +755,17 @@ graph_components <-  R6::R6Class("graph_components",
          }
          XY <- cbind(data_as_list[[coord_x]], data_as_list[[coord_y]])
          component_idx <- self$which_component(XY)
+         local_edges <- NULL
        } else {
-         if (is.null(data_as_list[[component]])) {
-           stop(sprintf(
-             "Data does not contain the column '%s' specifying the component.",
-             component))
-         }
          if (is.null(data_as_list[[edge_number]]) ||
              is.null(data_as_list[[distance_on_edge]])) {
            stop(sprintf(
              "Data does not contain the columns '%s' and/or '%s'.",
              edge_number, distance_on_edge))
          }
-         component_idx <- as.integer(data_as_list[[component]])
-         if (any(is.na(component_idx)) ||
-             any(component_idx < 1L) || any(component_idx > self$n)) {
-           stop(paste0("Component values must be integers between 1 and ",
-                       self$n, "."))
-         }
+         global_edges <- as.integer(data_as_list[[edge_number]])
+         component_idx <- self$edge_to_component(global_edges)
+         local_edges <- global_edges - self$edge_offsets[component_idx]
        }
 
        if (verbose > 0) {
@@ -730,7 +780,7 @@ graph_components <-  R6::R6Class("graph_components",
          sub_data <- lapply(data_as_list, function(col) col[sel])
 
          if (data_coords == "PtE") {
-           sub_data[[component]] <- NULL
+           sub_data[[edge_number]] <- local_edges[sel]
            self$graphs[[k]]$add_observations(
              data = sub_data,
              edge_number = edge_number,
@@ -790,6 +840,7 @@ graph_components <-  R6::R6Class("graph_components",
          if (is.null(g$.__enclos_env__$private$data)) next
          d <- g$get_data(group = group, format = "list",
                          drop_na = drop_na, drop_all_na = drop_all_na)
+         d[[".edge_number"]] <- d[[".edge_number"]] + self$edge_offsets[k]
          d[[".component"]] <- rep(k, length(d[[".edge_number"]]))
          out[[k]] <- d
          any_data <- TRUE
@@ -856,9 +907,10 @@ graph_components <-  R6::R6Class("graph_components",
        groups
      },
 
-     #' @description Get the (component, edge, distance) triples for the
-     #' observations across all components.
-     #' @return A matrix with three columns: `component`, `edge_number`,
+     #' @description Get the (edge_number, distance_on_edge) pairs for
+     #' the observations across all components, using global edge
+     #' numbering.
+     #' @return A matrix with two columns: `edge_number`,
      #' `distance_on_edge`.
      get_PtE = function() {
        out_list <- list()
@@ -866,8 +918,8 @@ graph_components <-  R6::R6Class("graph_components",
          g_data <- self$graphs[[k]]$.__enclos_env__$private$data
          if (!is.null(g_data)) {
            pte_k <- self$graphs[[k]]$get_PtE()
-           out_list[[length(out_list) + 1L]] <- cbind(component = k,
-                                                      pte_k)
+           pte_k[, 1] <- pte_k[, 1] + self$edge_offsets[k]
+           out_list[[length(out_list) + 1L]] <- pte_k
          }
        }
        if (length(out_list) == 0L) {
@@ -877,15 +929,16 @@ graph_components <-  R6::R6Class("graph_components",
        do.call(rbind, out_list)
      },
 
-     #' @description Convert between graph coordinates (component,
-     #' edge, distance) and spatial coordinates.
-     #' @param PtE A matrix or vector with three columns/entries:
-     #' `(component, edge_number, distance_on_edge)`.
+     #' @description Convert between graph coordinates (global
+     #' `edge_number`, `distance_on_edge`) and spatial coordinates.
+     #' @param PtE A matrix or vector with two columns/entries:
+     #' `(edge_number, distance_on_edge)`. Edge numbers are global
+     #' across components.
      #' @param XY An `n x 2` matrix of spatial coordinates.
      #' @param normalized If TRUE, the distances are normalized to (0,1).
      #' @return If `PtE` is supplied, an `n x 2` matrix of spatial
-     #' coordinates. If `XY` is supplied, an `n x 3` matrix with
-     #' `(component, edge_number, distance_on_edge)`.
+     #' coordinates. If `XY` is supplied, an `n x 2` matrix with
+     #' `(edge_number, distance_on_edge)` using global edge numbering.
      coordinates = function(PtE = NULL, XY = NULL, normalized = TRUE) {
        if (is.null(PtE) && is.null(XY)) {
          stop("PtE or XY must be provided")
@@ -895,25 +948,21 @@ graph_components <-  R6::R6Class("graph_components",
 
        if (!is.null(PtE)) {
          if (is.vector(PtE)) {
-           if (length(PtE) != 3) {
-             stop("PtE is a vector but does not have length 3 (component, edge, distance)")
+           if (length(PtE) != 2) {
+             stop("PtE is a vector but does not have length 2 (edge, distance)")
            }
-           PtE <- matrix(PtE, 1, 3)
+           PtE <- matrix(PtE, 1, 2)
          }
-         if (ncol(PtE) != 3) {
-           stop("PtE must have three columns: component, edge, distance.")
+         if (ncol(PtE) != 2) {
+           stop("PtE must have two columns: edge_number, distance_on_edge.")
          }
-         comp <- as.integer(PtE[, 1])
-         if (any(is.na(comp)) || any(comp < 1L) || any(comp > self$n)) {
-           stop(paste0(
-             "Component values must be integers between 1 and ",
-             self$n, "."))
-         }
+         comp <- self$edge_to_component(PtE[, 1])
+         local_edges <- as.integer(PtE[, 1]) - self$edge_offsets[comp]
          Points <- matrix(NA_real_, nrow = nrow(PtE), ncol = 2L)
          for (k in unique(comp)) {
            idx <- which(comp == k)
            Points[idx, ] <- self$graphs[[k]]$coordinates(
-             PtE = PtE[idx, 2:3, drop = FALSE],
+             PtE = cbind(local_edges[idx], PtE[idx, 2]),
              normalized = normalized
            )
          }
@@ -929,14 +978,14 @@ graph_components <-  R6::R6Class("graph_components",
            stop("XY must have two columns!")
          }
          component_idx <- self$which_component(XY)
-         out <- matrix(NA_real_, nrow = nrow(XY), ncol = 3L)
-         out[, 1] <- component_idx
+         out <- matrix(NA_real_, nrow = nrow(XY), ncol = 2L)
          for (k in unique(component_idx)) {
            idx <- which(component_idx == k)
            pte_k <- self$graphs[[k]]$coordinates(
              XY = XY[idx, , drop = FALSE], normalized = normalized
            )
-           out[idx, 2:3] <- pte_k
+           out[idx, 1] <- pte_k[, 1] + self$edge_offsets[k]
+           out[idx, 2] <- pte_k[, 2]
          }
          return(out)
        }
@@ -1013,11 +1062,12 @@ graph_components <-  R6::R6Class("graph_components",
 
      #' @description Plot a function on the components. Mirrors
      #' `metric_graph$plot_function`. When supplying `newdata`, it must
-     #' include a `.component` column identifying the component for each
-     #' row.
+     #' include `.edge_number` (global edge numbering) and
+     #' `.distance_on_edge`; the component for each row is inferred from
+     #' the global edge number.
      #' @param data Column name of the stored observations to plot.
-     #' @param newdata Optional `metric_graph_data` with `.component`,
-     #' `.edge_number`, `.distance_on_edge`, and the value column.
+     #' @param newdata Optional `metric_graph_data` with `.edge_number`
+     #' (global), `.distance_on_edge`, and the value column.
      #' @param group Group identifier passed to each component.
      #' @param type Plot type: `"ggplot"` or `"plotly"`.
      #' @param continuous See `metric_graph$plot_function`.
@@ -1034,19 +1084,23 @@ graph_components <-  R6::R6Class("graph_components",
          stop("You must provide either 'data' or 'newdata'.")
        }
 
+       newdata_comp <- NULL
        if (!is.null(newdata)) {
-         if (!".component" %in% names(newdata)) {
-           stop("'newdata' must include a '.component' column when used with graph_components.")
+         if (!".edge_number" %in% names(newdata)) {
+           stop("'newdata' must include a '.edge_number' column.")
          }
+         newdata_comp <- self$edge_to_component(newdata[[".edge_number"]])
        }
 
        for (k in seq_len(self$n)) {
          g <- self$graphs[[k]]
          sub_newdata <- NULL
          if (!is.null(newdata)) {
-           sel <- (newdata[[".component"]] == k)
+           sel <- (newdata_comp == k)
            if (!any(sel)) next
            sub_newdata <- as.data.frame(newdata)[sel, , drop = FALSE]
+           sub_newdata[[".edge_number"]] <- sub_newdata[[".edge_number"]] -
+             self$edge_offsets[k]
            if (!inherits(sub_newdata, "metric_graph_data")) {
              class(sub_newdata) <- c("metric_graph_data", class(sub_newdata))
            }

@@ -250,7 +250,7 @@ metric_graph <-  R6Class("metric_graph",
              assign(nm, priv[[nm]], envir = private)
            }
          }
-         private$disconnected <- TRUE
+         private$compute_component_membership()
          return(invisible(self))
        }
 
@@ -1082,16 +1082,13 @@ metric_graph <-  R6Class("metric_graph",
                          units(construction_time)))
        }
 
-       # Checking if graph is connected
-       if (check_connected) {
-         g <- make_graph(edges = c(t(self$E)), directed = FALSE)
-         # components <- igraph::clusters(g, mode="weak")
-         components <- igraph::components(g, mode="weak")
-         nc <- components$no
-         if(nc>1){
-           message("The graph is disconnected. You can either use the function 'graph_components' to obtain the different connected components or set 'perform_merges' to 'TRUE' and adjust the 'tolerances' to create a single connected graph.")
-           private$connected = FALSE
-         }
+       # Compute the connected-component decomposition once and cache it.
+       # `is_disconnected()`, `get_components()`, `which_component()`, and
+       # `plot(components = ...)` all read from this cache.
+       private$compute_component_membership()
+       private$connected <- (private$nC <= 1L)
+       if (check_connected && private$nC > 1L) {
+         message("The graph is disconnected. You can either use 'mg$get_components()' to obtain the connected components, or set 'perform_merges = TRUE' (and adjust the 'tolerances') to merge them into a single connected graph. To suppress this message, pass 'check_connected = FALSE'.")
        }
        # creating/updating reference edges
        private$ref_edges <- map_into_reference_edge(self, verbose=verbose)
@@ -1174,6 +1171,10 @@ metric_graph <-  R6Class("metric_graph",
                               vertex_unit = private$vertex_unit,
                               project_data = private$project_data)
        private$create_update_vertices(verbose=verbose)
+       # Removing edges can change the component decomposition; refresh
+       # the cache.
+       private$compute_component_membership()
+       private$components_cache <- NULL
      },
      #' @description Exports the edges of the MetricGraph object as an `sf` or `sp`.
      #' @param format The format for the exported object. The options are `sf` (default), `sp` and `list`.
@@ -1912,14 +1913,13 @@ metric_graph <-  R6Class("metric_graph",
          }
        }
 
-       # Always verify connectivity rather than trusting private$connected,
-       # which is only set to FALSE when the constructor's check_connected
-       # check actually ran. A user who passes check_connected = FALSE on a
-       # disconnected graph would otherwise see characteristics$connected
-       # incorrectly reported as TRUE.
-       g_ig <- igraph::make_graph(edges = c(t(self$E)), directed = FALSE)
-       n_comp <- igraph::components(g_ig, mode = "weak")$no
-       private$connected <- (n_comp == 1L)
+       # Read connectivity from the cached component decomposition computed
+       # in `initialize()`. Recompute defensively if the cache hasn't been
+       # populated yet (e.g. partially-initialised legacy objects).
+       if (is.null(private$component_membership)) {
+         private$compute_component_membership()
+       }
+       private$connected <- (private$nC <= 1L)
        self$characteristics$connected <- private$connected
 
        #check for multiple edges
@@ -2139,8 +2139,7 @@ metric_graph <-  R6Class("metric_graph",
          graph.temp$add_observations(data = df_temp,
                                      normalized = normalized,
                                      verbose=0,
-                                     suppress_warnings = TRUE,
-                                     .allow_disconnected = TRUE)
+                                     suppress_warnings = TRUE)
 
        })
 
@@ -2360,8 +2359,7 @@ metric_graph <-  R6Class("metric_graph",
 
          graph.temp$add_observations(data = df_temp,
                                      normalized = normalized, verbose = 0,
-                                     suppress_warnings = TRUE,
-                                     .allow_disconnected = TRUE)
+                                     suppress_warnings = TRUE)
        })
        if(verbose == 2){
          message(sprintf("time: %.3f s", t[["elapsed"]]))
@@ -3071,6 +3069,13 @@ metric_graph <-  R6Class("metric_graph",
 
        private$pruned <- TRUE
        private$degrees <- NULL
+       # Pruning rewrites E / V / nE / nV, so the cached component
+       # decomposition is now stale. Recompute the membership vector and
+       # invalidate the lazy per-component metric_graph snapshot so that
+       # `is_disconnected()`, `which_component()`, and `get_components()`
+       # see the post-prune topology.
+       private$compute_component_membership()
+       private$components_cache <- NULL
        if(private$prune_warning){
          warning("At least two edges with different weights were merged due to pruning. Only one of the weights has been assigned to the merged edge. Please, review carefully.")
          private$prune_warning <- FALSE
@@ -3092,6 +3097,11 @@ metric_graph <-  R6Class("metric_graph",
        private$manual_edge_lengths <- TRUE
        self$edge_lengths <- edge_lengths
        private$length_unit <- unit
+       # Components are sorted by total edge length; updating the lengths
+       # may permute the component ordering. Recompute the membership and
+       # invalidate the per-component snapshot.
+       private$compute_component_membership()
+       private$components_cache <- NULL
        return(invisible(NULL))
      },
 
@@ -3564,6 +3574,7 @@ metric_graph <-  R6Class("metric_graph",
        self$geo_dist <- NULL
        self$res_dist <- NULL
        self$PtV <- NULL
+       private$components_cache <- NULL  # invalidate per-component snapshot
      },
 
 
@@ -4068,8 +4079,6 @@ coordinates!"))
      #' The default is 1.
      #' @param suppress_warnings Suppress warnings related to duplicated observations?
      #' @param Spoints `r lifecycle::badge("deprecated")` Use `data` instead.
-     #' @param .allow_disconnected Expert option intended for internal use to
-     #' allow for adding observations to disconnected graphs.
      #' @return No return value. Called for its side effects. The observations are
      #' stored in the `data` element of the `metric_graph` object.
      add_observations = function(data = NULL,
@@ -4091,17 +4100,9 @@ coordinates!"))
                                  merge_strategy = "merge",
                                  verbose = 1,
                                  suppress_warnings = FALSE,
-                                 Spoints = lifecycle::deprecated(),
-                                 .allow_disconnected = FALSE) {
+                                 Spoints = lifecycle::deprecated()) {
 
-       if (isTRUE(private$disconnected) && !isTRUE(.allow_disconnected)) {
-         stop("This metric_graph was assembled from a 'graph_components' object via ",
-              "'as_metric_graph()'. Adding observations directly is disallowed because ",
-              "the edge numbering of this graph is the combined one across components, ",
-              "not the per-component numbering of the original 'graph_components'. ",
-              "Add observations to the original 'graph_components' instead, then call ",
-              "'as_metric_graph()' again.")
-       }
+       private$components_cache <- NULL  # invalidate per-component snapshot
 
        merge_strategy <- match.arg(merge_strategy, c("remove", "merge", "average"))
        duplicated_strategy <- match.arg(duplicated_strategy, c("closest", "jitter"))
@@ -5338,15 +5339,117 @@ coordinates!"))
        return(private$version)
      },
 
-     #' @description Was this graph assembled from a `graph_components` object
-     #' via `graph_components$as_metric_graph()`? Such graphs use a combined
-     #' edge numbering across components, so calling `add_observations()` on
-     #' them is disallowed (the user-facing edge indices would no longer match
-     #' the original per-component ones).
-     #' @return `TRUE` if the graph was assembled from disconnected components,
+     #' @description Does this graph have more than one connected component?
+     #' The decomposition is computed and cached at construction time, so
+     #' this is an O(1) lookup.
+     #' @return `TRUE` if the graph has two or more connected components,
      #' `FALSE` otherwise.
      is_disconnected = function() {
-       isTRUE(private$disconnected)
+       isTRUE(private$nC > 1L)
+     },
+
+     #' @description Return the connected components of the graph as a
+     #' list of `metric_graph` objects. For a connected graph this is
+     #' simply `list(self)`. For a disconnected graph, the components are
+     #' returned in order of decreasing total edge length and any
+     #' observations stored on `self` are routed to the appropriate
+     #' component. The result is cached internally; subsequent calls are
+     #' O(1) until observations change (which invalidates the cache).
+     #' @param verbose Verbosity level passed to the per-component
+     #' constructors (default `0`).
+     #' @return A list of `metric_graph` objects.
+     get_components = function(verbose = 0) {
+       if (!is.null(private$components_cache)) {
+         return(private$components_cache)
+       }
+       if (self$nE == 0L) {
+         private$components_cache <- list()
+         return(private$components_cache)
+       }
+       if (private$nC <= 1L) {
+         private$components_cache <- list(self)
+         return(private$components_cache)
+       }
+
+       # Per-component edge ID lists, in canonical (length-sorted)
+       # component order — `compute_component_membership()` already sorted
+       # so that component 1 is the largest.
+       edge_component <- private$component_membership[self$E[, 1]]
+       out <- vector("list", private$nC)
+       for (k in seq_len(private$nC)) {
+         edge_keep <- which(edge_component == k)
+         if (length(edge_keep) == 0L) next
+
+         args <- list(
+           edges = self$edges[edge_keep],
+           check_connected = FALSE,
+           perform_merges = FALSE,
+           verbose = verbose,
+           longlat = private$longlat,
+           crs = private$crs,
+           proj4string = private$proj4string,
+           tolerance = private$tolerance
+         )
+         ew <- private$edge_weights
+         if (!is.null(ew)) {
+           if (is.data.frame(ew)) {
+             args$edge_weights <- ew[edge_keep, , drop = FALSE]
+           } else {
+             args$edge_weights <- ew[edge_keep]
+           }
+         }
+         g_k <- do.call(metric_graph$new, args)
+
+         if (!is.null(private$data)) {
+           idx <- private$data[[".edge_number"]] %in% edge_keep
+           if (any(idx)) {
+             d <- lapply(private$data, function(x) x[idx])
+             d[[".edge_number"]] <- match(d[[".edge_number"]], edge_keep)
+             class(d) <- "metric_graph_data"
+             suppressMessages(suppressWarnings(
+               g_k$add_observations(data = d, verbose = 0,
+                                    suppress_warnings = TRUE)
+             ))
+           }
+         }
+         out[[k]] <- g_k
+       }
+       private$components_cache <- out[!vapply(out, is.null, logical(1))]
+       private$components_cache
+     },
+
+     #' @description For each spatial point, determine which connected
+     #' component of the graph it belongs to. The component is the one
+     #' whose nearest edge is closest in Euclidean distance to the point.
+     #' @param XY An `n x 2` matrix of spatial coordinates (or a
+     #' length-2 numeric vector for a single point).
+     #' @return An integer vector of length `n` with the component
+     #' index for each point. Indices match those of
+     #' `get_components()` (i.e. components are sorted by total edge
+     #' length, descending).
+     which_component = function(XY) {
+       if (is.vector(XY)) {
+         if (length(XY) != 2) {
+           stop("XY is a vector but does not have length 2")
+         }
+         XY <- matrix(XY, 1, 2)
+       }
+       if (ncol(XY) != 2) {
+         stop("XY must have two columns!")
+       }
+       if (private$nC <= 1L) {
+         return(rep(1L, nrow(XY)))
+       }
+       # One snap to the full edge set; look up the component of the
+       # nearest edge directly via the cached `component_membership`.
+       res <- snapPointsToLines(
+         points = XY,
+         lines = self$edges,
+         longlat = FALSE,
+         crs = NULL
+       )
+       nearest_edge <- as.integer(res$df$nearest_line_index)
+       private$component_membership[self$E[nearest_edge, 1]]
      },
 
      #' @description Build mass and stiffness matrices for given mesh object.
@@ -5605,6 +5708,11 @@ larger than 1")
      #' when `type = "mapview"`. If `NULL` `RColorBrewer::brewer.pal(n = n_degrees, "Set1")`
      #' will be used where `n_degrees` is the number of different degrees.
      #' @param plotly  `r lifecycle::badge("deprecated")` Use `type` instead.
+     #' @param components Color the connected components separately.
+     #' Either `FALSE` (the default; the graph is plotted as-is),
+     #' `TRUE` (each component is drawn in a randomly-chosen color), or
+     #' an `n x 3` numeric matrix of RGB values in `[0, 1]` (one row
+     #' per component, indices matching `get_components()`).
      #' @param ... Additional arguments to pass to `ggplot()` or `plot_ly()`
      #' @return A `plot_ly` (if `type = "plotly"`) or `ggplot` object.
      plot = function(data = NULL,
@@ -5639,7 +5747,59 @@ larger than 1")
                      scale_color_weights_discrete_mapview = NULL,
                      scale_color_degree_mapview = NULL,
                      plotly = deprecated(),
+                     components = FALSE,
                      ...) {
+
+       if (!isFALSE(components)) {
+         comp_list <- self$get_components()
+         nc <- length(comp_list)
+         if (nc > 1L) {
+           if (isTRUE(components)) {
+             col_mat <- matrix(0, nrow = nc, ncol = 3)
+             if (nc > 1L) {
+               for (i in 2:nc) col_mat[i, ] <- runif(3)
+             }
+           } else if (is.matrix(components) && ncol(components) == 3 &&
+                      nrow(components) == nc) {
+             col_mat <- components
+           } else {
+             stop("'components' must be FALSE, TRUE, or an n x 3 matrix of RGB values, where n is the number of components.")
+           }
+           p_out <- p
+           for (i in seq_len(nc)) {
+             col_i <- rgb(col_mat[i, 1], col_mat[i, 2], col_mat[i, 3])
+             g_data <- comp_list[[i]]$.__enclos_env__$private$data
+             has_data_i <- is.null(data) || !is.character(data) ||
+               (!is.null(g_data) && data %in% names(g_data))
+             p_out <- suppressMessages(comp_list[[i]]$plot(
+               data = if (has_data_i) data else NULL,
+               newdata = newdata, group = group, type = type,
+               interactive = interactive,
+               vertex_size = vertex_size, vertex_color = col_i,
+               edge_width = edge_width, edge_color = col_i,
+               data_size = data_size,
+               support_width = support_width, support_color = support_color,
+               mesh = mesh, X = X, X_loc = X_loc, p = p_out,
+               degree = degree, direction = direction,
+               arrow_size = arrow_size,
+               edge_weight = edge_weight,
+               edge_width_weight = edge_width_weight,
+               scale_color_main = scale_color_main,
+               scale_color_weights = scale_color_weights,
+               scale_color_degree = scale_color_degree,
+               scale_color_weights_discrete = scale_color_weights_discrete,
+               scale_color_main_discrete = scale_color_main_discrete,
+               add_new_scale_weights = add_new_scale_weights,
+               scale_color_mapview = scale_color_mapview,
+               scale_color_weights_mapview = scale_color_weights_mapview,
+               scale_color_weights_discrete_mapview = scale_color_weights_discrete_mapview,
+               scale_color_degree_mapview = scale_color_degree_mapview,
+               components = FALSE,
+               ...))
+           }
+           return(p_out)
+         }
+       }
 
        if (lifecycle::is_present(plotly)) {
          lifecycle::deprecate_warn("1.3.0.9000", "plot(plotly)", "plot(type)",
@@ -7251,6 +7411,43 @@ larger than 1")
    ),
 
    private = list(
+     # Compute and cache the connected-component decomposition. Called once
+     # at the end of `initialize()` (and after the `.assemble` shortcut),
+     # then never recomputed: edges/vertices don't change after
+     # construction, so `nC` and `component_membership` are stable for the
+     # lifetime of the object. The lazy `components_cache` (per-component
+     # `metric_graph` objects, with current observations routed in) is
+     # populated on the first `get_components()` call and invalidated on
+     # `add_observations()` / `clear_observations()`.
+     compute_component_membership = function() {
+       if (is.null(self$E) || nrow(self$E) == 0L) {
+         private$component_membership <- integer(0)
+         private$nC <- 0L
+         return(invisible(NULL))
+       }
+       g_ig <- igraph::make_graph(edges = c(t(self$E)), directed = FALSE)
+       comps <- igraph::components(g_ig, mode = "weak")
+       membership_in <- as.integer(comps$membership)
+       n_comp <- comps$no
+       if (n_comp <= 1L) {
+         private$component_membership <- rep(1L, self$nV)
+         private$nC <- 1L
+         return(invisible(NULL))
+       }
+       # Sort components by total edge length, descending. Component 1 is
+       # the largest. Update `membership_in` to use the new ordering.
+       totals <- vapply(seq_len(n_comp), function(k) {
+         e_in_k <- which(membership_in[self$E[, 1]] == k)
+         sum(as.numeric(self$edge_lengths[e_in_k]))
+       }, numeric(1))
+       new_order <- order(totals, decreasing = TRUE)
+       remap <- integer(n_comp)
+       remap[new_order] <- seq_len(n_comp)
+       private$component_membership <- remap[membership_in]
+       private$nC <- n_comp
+       invisible(NULL)
+     },
+
      #function for creating Vertex and Edges from self$edges
      line_to_vertex = function(tolerance = 0, longlat = FALSE, fact, verbose, crs,
                                proj4string, which_longlat, length_unit, vertex_unit,
@@ -8480,14 +8677,22 @@ turned to vertices and the A matrix will then be computed")
 
      connected = TRUE,
 
-     # disconnected: TRUE if this graph was assembled from a graph_components
-     # object via the fast `.assemble` path of `metric_graph$new()` (typically
-     # via `graph_components$as_metric_graph()`). Used to disallow direct
-     # `add_observations()` calls because the user-facing edge numbering of
-     # this graph is the combined one across components, not the per-component
-     # numbering of the original `graph_components`.
-
-     disconnected = FALSE,
+     # Connected-component bookkeeping. Computed eagerly at construction
+     # time (in `initialize`) so that `is_disconnected()`,
+     # `get_components()`, `which_component()`, and `plot(components = ...)`
+     # are all O(1) lookups thereafter.
+     #
+     # - component_membership: integer vector of length nV, giving the
+     #   component index of each vertex. Components are numbered in order
+     #   of decreasing total edge length (so component 1 is the largest).
+     # - nC: number of connected components (== max(component_membership)).
+     # - components_cache: lazy cache for the list of per-component
+     #   `metric_graph` objects returned by `get_components()`. NULL until
+     #   the first call; invalidated on `add_observations` /
+     #   `clear_observations` to keep per-component data in sync.
+     component_membership = NULL,
+     nC = 0L,
+     components_cache = NULL,
 
      # group columns
 
@@ -8877,8 +9082,7 @@ turned to vertices and the A matrix will then be computed")
          graph.temp$add_observations(data = df_temp,
                                      normalized = normalized,
                                      verbose = 0,
-                                     suppress_warnings = TRUE,
-                                     .allow_disconnected = TRUE)
+                                     suppress_warnings = TRUE)
        })
        if(verbose == 2){
          message(sprintf("time: %.3f s", t[["elapsed"]]))

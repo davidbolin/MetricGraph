@@ -57,18 +57,19 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
 
     if (type == "manual") {
       if (is.null(PtE)) stop("must provide PtE for manual mode.")
-      if (NCOL(PtE) != 3) {
-        stop("For 'graph_components', PtE must have 3 columns: (component, edge, distance).")
+      if (NCOL(PtE) != 2) {
+        stop("For 'graph_components', PtE must have 2 columns: (edge_number, distance_on_edge), with global edge numbering.")
       }
       PtE <- as.matrix(PtE)
-      comp_id <- as.integer(PtE[, 1])
+      comp_id <- graph$edge_to_component(PtE[, 1])
+      local_edges <- as.integer(PtE[, 1]) - graph$edge_offsets[comp_id]
       orig_order <- seq_len(nrow(PtE))
       out_pieces <- vector("list", graph$n)
       out_idx    <- vector("list", graph$n)
       for (k in seq_len(graph$n)) {
         sel <- which(comp_id == k)
         if (length(sel) == 0L) next
-        sub_PtE <- PtE[sel, 2:3, drop = FALSE]
+        sub_PtE <- cbind(local_edges[sel], PtE[sel, 2])
         out_pieces[[k]] <- do.call(sample_spde, build_args(list(
           graph = graph$graphs[[k]], PtE = sub_PtE, type = "manual"
         )))

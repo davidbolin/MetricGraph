@@ -163,17 +163,15 @@ spde_covariance <- function(P,
                             directional = F) {
 
   if (inherits(graph, "graph_components")) {
-    if (length(P) != 3) {
-      stop("For 'graph_components', P must be c(component, edge, distance).")
+    if (length(P) != 2) {
+      stop("For 'graph_components', P must be c(edge_number, distance_on_edge), with global edge numbering.")
     }
     if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
                    logical(1)))) {
       stop("Every component must have a mesh; call graph$build_mesh() first.")
     }
-    comp_id <- as.integer(P[1])
-    if (comp_id < 1L || comp_id > graph$n) {
-      stop("P[1] (component index) must be between 1 and graph$n.")
-    }
+    comp_id <- graph$edge_to_component(P[1])
+    local_edge <- as.integer(P[1]) - graph$edge_offsets[comp_id]
     has_kappa <- !missing(kappa)
     has_tau   <- !missing(tau)
     has_range <- !missing(range)
@@ -183,7 +181,7 @@ spde_covariance <- function(P,
       g <- graph$graphs[[k]]
       n_mesh <- nrow(g$mesh$V)
       if (k == comp_id) {
-        args <- list(P = P[2:3], alpha = alpha, graph = g,
+        args <- list(P = c(local_edge, P[2]), alpha = alpha, graph = g,
                      directional = directional)
         if (has_kappa) args$kappa <- kappa
         if (has_tau)   args$tau   <- tau

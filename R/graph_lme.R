@@ -2036,14 +2036,12 @@ predict.graph_lme <- function(object,
     graph_bkp$add_observations(data = data, edge_number = edge_number,
                                distance_on_edge = distance_on_edge,
                                normalized = TRUE, group = ".group", verbose = 0,
-                    suppress_warnings = TRUE,
-                    .allow_disconnected = TRUE)
+                    suppress_warnings = TRUE)
 
     graph_bkp$add_observations(data = old_data, edge_number = ".edge_number",
                                distance_on_edge = ".distance_on_edge",
                                group = ".group", normalized = TRUE, verbose = 0,
-                    suppress_warnings = TRUE,
-                    .allow_disconnected = TRUE)
+                    suppress_warnings = TRUE)
   
     graph_bkp$.__enclos_env__$private$data[["__dummy_ord_var"]] <- 1:length(graph_bkp$.__enclos_env__$private$data[[".edge_number"]])
 

@@ -79,11 +79,13 @@ Observe that when we create this graph from `osmdata`, it also includes the edge
 graph$get_edge_weights()
 ```
 
-Now, note that when creating the graph there was a warning saying that the graph is not connected, so let us create a 
-`graph_components` object that contains all connected components as graphs and then extract the largest connected component to work with
+Now, note that when creating the graph there was a warning saying that the
+graph is not connected. The `metric_graph` class handles disconnected graphs
+directly, so we can extract the connected components with `get_components()`
+and then keep the largest one (components are sorted by total edge length,
+descending) for further analysis:
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
-graphs <- graph_components$new(edges = data)
-graph <- graphs$get_largest()
+graph <- graph$get_components()[[1]]
 graph$plot(vertex_size = 0)
 ```
 

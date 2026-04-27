@@ -766,94 +766,60 @@ test_that("compute_resdist on a disconnected graph matches per-component computa
   expect_true(all(is.infinite(R[3:4, 1:2])))
 })
 
-## ── graph_components: broadcast distance methods ─────────────────────────────
+## ── disconnected metric_graph: distance/Laplacian methods ───────────────────
 
-test_that("graph_components compute_geodist/compute_resdist/compute_laplacian broadcast", {
+test_that("compute_geodist/compute_resdist/compute_laplacian work on a disconnected metric_graph", {
   e1 <- rbind(c(0, 0), c(1, 0)); e2 <- rbind(c(1, 0), c(2, 0))
   e3 <- rbind(c(10, 0), c(11, 0))
-  gc <- graph_components$new(edges = list(e1, e2, e3), verbose = 0)
+  mg <- metric_graph$new(edges = list(e1, e2, e3),
+                         verbose = 0, check_connected = FALSE)
   set.seed(1)
   df <- data.frame(coord_x = c(0.5, 1.5, 10.5), coord_y = 0,
                    y = c(1, 2, 3))
-  gc$add_observations(data = df, data_coords = "spatial", verbose = 0)
+  mg$add_observations(data = df, data_coords = "spatial", verbose = 0)
 
-  gc$compute_geodist(obs = TRUE)
-  for (k in seq_len(gc$n)) {
-    expect_false(is.null(gc$graphs[[k]]$geo_dist))
-  }
+  mg$compute_geodist(obs = TRUE)
+  expect_false(is.null(mg$geo_dist))
 
-  gc$compute_resdist(obs = TRUE)
-  for (k in seq_len(gc$n)) {
-    expect_false(is.null(gc$graphs[[k]]$res_dist))
-  }
-
-  gc$compute_laplacian()
-  for (k in seq_len(gc$n)) {
-    expect_false(is.null(gc$graphs[[k]]$Laplacian))
-  }
-})
-
-test_that("as_metric_graph stacks precomputed distance/Laplacian matrices", {
-  e1 <- rbind(c(0, 0), c(1, 0)); e2 <- rbind(c(1, 0), c(2, 0))
-  e3 <- rbind(c(10, 0), c(11, 0)); e4 <- rbind(c(11, 0), c(12, 0))
-  gc <- graph_components$new(edges = list(e1, e2, e3, e4), verbose = 0)
-  set.seed(1)
-  df <- data.frame(coord_x = c(0.5, 1.5, 10.5, 11.5), coord_y = 0,
-                   y = c(1, 2, 3, 4))
-  gc$add_observations(data = df, data_coords = "spatial", verbose = 0)
-
-  gc$compute_resdist(full = TRUE)
-  gc$compute_laplacian(full = TRUE)
-
-  mg <- gc$as_metric_graph()
+  mg$compute_resdist(obs = TRUE)
   expect_false(is.null(mg$res_dist))
+
+  mg$compute_laplacian()
   expect_false(is.null(mg$Laplacian))
-
-  # res_dist[[".complete"]] is dim = total observations, with Inf cross-comp
-  R <- mg$res_dist[[".complete"]]
-  expect_equal(nrow(R), nrow(df))
-  expect_true(all(is.infinite(R[1:2, 3:4])))
-
-  # Laplacian is block-diagonal (no Inf entries). Its size equals the sum
-  # of per-component Laplacian sizes.
-  L <- mg$Laplacian[[".complete"]]
-  expected_n <- sum(vapply(gc$graphs,
-                           function(g) nrow(g$Laplacian[[".complete"]]),
-                           integer(1)))
-  expect_equal(nrow(L), expected_n)
-  expect_true(all(is.finite(as.matrix(L))))
 })
 
-## ── graph_lme(isoExp/GL1) on graph_components: native end-to-end ────────────
+## ── graph_lme(isoExp/GL1) on a disconnected metric_graph ────────────────────
 
-test_that("graph_lme(isoExp) fits on a graph_components", {
+test_that("graph_lme(isoExp) fits on a disconnected metric_graph", {
   e1 <- rbind(c(0, 0), c(1, 0)); e2 <- rbind(c(1, 0), c(2, 0))
   e3 <- rbind(c(10, 0), c(11, 0)); e4 <- rbind(c(11, 0), c(12, 0))
-  gc <- graph_components$new(edges = list(e1, e2, e3, e4), verbose = 0)
+  mg <- metric_graph$new(edges = list(e1, e2, e3, e4),
+                         verbose = 0, check_connected = FALSE)
   set.seed(2)
   df <- data.frame(
     coord_x = c(runif(15, 0, 2), runif(15, 10, 12)),
     coord_y = 0, y = rnorm(30)
   )
-  gc$add_observations(data = df, data_coords = "spatial", verbose = 0)
+  mg$add_observations(data = df, data_coords = "spatial", verbose = 0)
 
-  fit <- suppressWarnings(graph_lme(y ~ 1, graph = gc, model = "isoExp"))
+  fit <- suppressWarnings(graph_lme(y ~ 1, graph = mg, model = "isoExp"))
   expect_s3_class(fit, "graph_lme")
   expect_true(is.finite(as.numeric(stats::logLik(fit))))
 })
 
-test_that("graph_lme(GL1) fits on a graph_components", {
+test_that("graph_lme(GL1) fits on a disconnected metric_graph", {
   e1 <- rbind(c(0, 0), c(1, 0)); e2 <- rbind(c(1, 0), c(2, 0))
   e3 <- rbind(c(10, 0), c(11, 0)); e4 <- rbind(c(11, 0), c(12, 0))
-  gc <- graph_components$new(edges = list(e1, e2, e3, e4), verbose = 0)
+  mg <- metric_graph$new(edges = list(e1, e2, e3, e4),
+                         verbose = 0, check_connected = FALSE)
   set.seed(3)
   df <- data.frame(
     coord_x = c(runif(15, 0, 2), runif(15, 10, 12)),
     coord_y = 0, y = rnorm(30)
   )
-  gc$add_observations(data = df, data_coords = "spatial", verbose = 0)
+  mg$add_observations(data = df, data_coords = "spatial", verbose = 0)
 
-  fit <- suppressWarnings(graph_lme(y ~ 1, graph = gc, model = "GL1"))
+  fit <- suppressWarnings(graph_lme(y ~ 1, graph = mg, model = "GL1"))
   expect_s3_class(fit, "graph_lme")
   expect_true(is.finite(as.numeric(stats::logLik(fit))))
 })

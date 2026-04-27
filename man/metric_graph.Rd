@@ -128,6 +128,8 @@ graph. The weights are given by the edge lengths.}
 \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
 \item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
 \item \href{#method-metric_graph-is_disconnected}{\code{metric_graph$is_disconnected()}}
+\item \href{#method-metric_graph-get_components}{\code{metric_graph$get_components()}}
+\item \href{#method-metric_graph-which_component}{\code{metric_graph$which_component()}}
 \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
 \item \href{#method-metric_graph-compute_mesh_weights}{\code{metric_graph$compute_mesh_weights()}}
 \item \href{#method-metric_graph-mesh_A}{\code{metric_graph$mesh_A()}}
@@ -1464,8 +1466,7 @@ Add observations to the metric graph.
   merge_strategy = "merge",
   verbose = 1,
   suppress_warnings = FALSE,
-  Spoints = lifecycle::deprecated(),
-  .allow_disconnected = FALSE
+  Spoints = lifecycle::deprecated()
 )}\if{html}{\out{</div>}}
 }
 
@@ -1561,9 +1562,6 @@ The default is 1.}
 \item{\code{suppress_warnings}}{Suppress warnings related to duplicated observations?}
 
 \item{\code{Spoints}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{data} instead.}
-
-\item{\code{.allow_disconnected}}{Expert option intended for internal use to
-allow for adding observations to disconnected graphs.}
 }
 \if{html}{\out{</div>}}
 }
@@ -2167,18 +2165,69 @@ A character string with the version number
 \if{html}{\out{<a id="method-metric_graph-is_disconnected"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-is_disconnected}{}}}
 \subsection{Method \code{is_disconnected()}}{
-Was this graph assembled from a \code{graph_components} object
-via \code{graph_components$as_metric_graph()}? Such graphs use a combined
-edge numbering across components, so calling \code{add_observations()} on
-them is disallowed (the user-facing edge indices would no longer match
-the original per-component ones).
+Does this graph have more than one connected component?
+The decomposition is computed and cached at construction time, so
+this is an O(1) lookup.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{metric_graph$is_disconnected()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-\code{TRUE} if the graph was assembled from disconnected components,
+\code{TRUE} if the graph has two or more connected components,
 \code{FALSE} otherwise.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_components"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_components}{}}}
+\subsection{Method \code{get_components()}}{
+Return the connected components of the graph as a
+list of \code{metric_graph} objects. For a connected graph this is
+simply \code{list(self)}. For a disconnected graph, the components are
+returned in order of decreasing total edge length and any
+observations stored on \code{self} are routed to the appropriate
+component. The result is cached internally; subsequent calls are
+O(1) until observations change (which invalidates the cache).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$get_components(verbose = 0)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verbose}}{Verbosity level passed to the per-component
+constructors (default \code{0}).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list of \code{metric_graph} objects.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-which_component"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-which_component}{}}}
+\subsection{Method \code{which_component()}}{
+For each spatial point, determine which connected
+component of the graph it belongs to. The component is the one
+whose nearest edge is closest in Euclidean distance to the point.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{metric_graph$which_component(XY)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{XY}}{An \verb{n x 2} matrix of spatial coordinates (or a
+length-2 numeric vector for a single point).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An integer vector of length \code{n} with the component
+index for each point. Indices match those of
+\code{get_components()} (i.e. components are sorted by total edge
+length, descending).
 }
 }
 \if{html}{\out{<hr>}}
@@ -2344,6 +2393,7 @@ Plots the metric graph.
   scale_color_weights_discrete_mapview = NULL,
   scale_color_degree_mapview = NULL,
   plotly = deprecated(),
+  components = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -2445,6 +2495,12 @@ when \code{type = "mapview"}. If \code{NULL} \code{RColorBrewer::brewer.pal(n = 
 will be used where \code{n_degrees} is the number of different degrees.}
 
 \item{\code{plotly}}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{type} instead.}
+
+\item{\code{components}}{Color the connected components separately.
+Either \code{FALSE} (the default; the graph is plotted as-is),
+\code{TRUE} (each component is drawn in a randomly-chosen color), or
+an \verb{n x 3} numeric matrix of RGB values in \verb{[0, 1]} (one row
+per component, indices matching \code{get_components()}).}
 
 \item{\code{...}}{Additional arguments to pass to \code{ggplot()} or \code{plot_ly()}}
 }
