@@ -3272,6 +3272,21 @@ metric_graph <-  R6Class("metric_graph",
                                                            drop = FALSE],
                                             edge_ids)
 
+         # split_edges_batch_cpp computes segment_lengths as the successive
+         # differences (t[j] - t[j-1]) * edge_len and assumes monotone-
+         # increasing t-values within each edge group. Group input order is
+         # determined by the upstream sort (loc_idx), which after
+         # prune_vertices' chain merges is no longer monotone in t per edge.
+         # Sort each group's t-values ascending here to keep that invariant
+         # and avoid negative segment lengths.
+         edge_groups <- lapply(edge_groups, function(g) {
+           if (is.matrix(g)) {
+             if (nrow(g) > 1L) g[order(g[, 1]), , drop = FALSE] else g
+           } else if (is.data.frame(g)) {
+             if (nrow(g) > 1L) g[order(g[[1]]), , drop = FALSE] else g
+           } else g
+         })
+
          if (verbose == 2) {
            bar_otv <- msg_progress_bar(length(edge_groups))
            message("Processing edge splits in batches...")

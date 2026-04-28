@@ -1427,6 +1427,21 @@ spde_metric_graph_result <- function(inla, name,
   }
 
 
+  if (is.null(inla$summary.hyperpar) ||
+      !any(grepl(paste0("Theta1 for ", name, "$"), rownames(inla$summary.hyperpar)))) {
+    stop(
+      "Cannot extract hyperparameter summary for component '", name, "': ",
+      "the fit's `summary.hyperpar` does not contain rows matching ",
+      "'Theta1 for ", name, "' / 'Theta2 for ", name, "'. ",
+      "This usually means the INLA optimisation did not converge or returned ",
+      "without a hyperparameter summary. Re-fit with `verbose = TRUE` and check the ",
+      "INLA log; on macOS arm64 the `compact` mode can fail on these models, in ",
+      "which case adding `inla.mode = 'classic'` to the `bru(..., options = ...)` ",
+      "call often resolves the issue.",
+      call. = FALSE
+    )
+  }
+
   result[[paste0("summary.log.", name_theta1)]] <- INLA::inla.extract.el(
     inla$summary.hyperpar,
     paste("Theta1 for ", name, "$", sep = "")
