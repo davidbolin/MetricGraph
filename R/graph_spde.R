@@ -1,3 +1,14 @@
+## Convert a bru effect's `$main$input$input` to a plain character name.
+## In recent inlabru versions this slot returns a quosure rather than a
+## string, which broke list-subscript usages (`data[[name_locations]]`).
+## `rlang::as_name()` handles characters, symbols, calls, and quosures.
+#' @noRd
+.bru_input_to_name <- function(x) {
+  if (is.null(x)) return(NULL)
+  if (is.character(x)) return(x[[1]])
+  rlang::as_name(x)
+}
+
 #' 'INLA' implementation of Whittle-Matérn fields for metric graphs
 #'
 #' This function creates an 'INLA' object that can be used
@@ -1931,7 +1942,7 @@ predict.inla_metric_graph_spde <- function(object,
   graph_tmp <- object$graph_spde$get_initial_graph()
   graph_tmp$clear_observations()
   # graph_tmp <- object$graph_spde$clone()
-  name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
+  name_locations <- .bru_input_to_name(bru_fit$bru_info$model$effects$field$main$input$input)
   original_data <- object$original_data
 
   group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
@@ -2078,7 +2089,10 @@ predict.inla_metric_graph_spde <- function(object,
     data = new_data_tmp, options = info[["options"]], allow_combine = FALSE
   )
 
-  pred <- predict(
+  # Build the predict() argument list, only including `include` / `exclude`
+  # when the user actually supplied them (as of inlabru 2.12.0.9003 these
+  # arguments are deprecated; passing them as NULL still trips the warning).
+  pred_args <- list(
     object = bru_fit_new,
     newdata = new_data_list,
     formula = formula,
@@ -2086,11 +2100,12 @@ predict.inla_metric_graph_spde <- function(object,
     seed = seed,
     probs = probs,
     num.threads = num.threads,
-    include = include,
-    exclude = exclude,
     drop = drop,
     ...
   )
+  if (!is.null(include)) pred_args$include <- include
+  if (!is.null(exclude)) pred_args$exclude <- exclude
+  pred <- do.call(predict, pred_args)
 
   pred_list <- list()
   pred_list[["pred"]] <- pred
@@ -2229,7 +2244,7 @@ predict.rspde_metric_graph <- function(object,
     stop("data_coords must be either 'PtE' or 'euclidean'!")
   }
   graph_tmp <- object$mesh$get_initial_graph()
-  name_locations <- bru_fit$bru_info$model$effects$field$main$input$input
+  name_locations <- .bru_input_to_name(bru_fit$bru_info$model$effects$field$main$input$input)
 
   if (data_coords == "PtE") {
     if (normalized) {
@@ -2242,7 +2257,8 @@ predict.rspde_metric_graph <- function(object,
     pred_PtE <- graph_tmp$coordinates(XY = data[[name_locations]])
   }
 
-  pred <- predict(
+  # Same deprecation guard as in predict.inla_metric_graph_spde.
+  pred_args <- list(
     object = bru_fit,
     newdata = newdata,
     formula = formula,
@@ -2250,11 +2266,12 @@ predict.rspde_metric_graph <- function(object,
     seed = seed,
     probs = probs,
     num.threads = num.threads,
-    include = include,
-    exclude = exclude,
     drop = drop,
     ...
   )
+  if (!is.null(include)) pred_args$include <- include
+  if (!is.null(exclude)) pred_args$exclude <- exclude
+  pred <- do.call(predict, pred_args)
   pred_list <- list()
   pred_list[["pred"]] <- pred
   pred_list[["PtE_pred"]] <- pred_PtE

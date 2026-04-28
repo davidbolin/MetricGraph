@@ -1,4 +1,6 @@
 # MetricGraph (development version)
+* Added a `cross_validation()` function for `inlabru` (`bru`) fits on metric graphs, mirroring [rSPDE::cross_validation()] with the full set of scoring rules (MSE, MAE, CRPS, SCRPS, DSS, wCRPS, swCRPS), multi-likelihood support, `model_names`, `orientation_results`, `include_best`, `return_post_samples`/`return_true_test_values`/`save_settings`, parallelised CRPS/SCRPS, and `cv_type` of `k-fold`/`loo`/`lpo`. For models containing an `inla_metric_graph_spde` component (exact, non-FEM SPDE on metric graphs) the function follows the augmented-graph refit/sample pattern used by `predict.inla_metric_graph_spde()` so that CV works correctly for these custom models. Re-exports `create_train_test_indices()` from `rSPDE` for fold construction.
+* Bumped minimum `rSPDE` version to 2.5.0.
 
 # MetricGraph 1.5.1
 * Added `precompute_lgcp_graph()` to precompute expensive quantities for LGCP models.
