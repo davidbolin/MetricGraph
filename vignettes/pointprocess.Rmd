@@ -12,7 +12,7 @@ bibliography: references.bib
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-set.seed(1)
+set.seed(123)
 ```
 
 ## Introduction
@@ -591,7 +591,7 @@ time_precomputed <- system.time({
 time_precompute <- system.time({
   precomputed_temp <- precompute_lgcp_graph(
   resp_variable_name = "y",
-  spde_model = rspde_model,
+  spde_model = spde_model,
   model_name = "field",
   graph = graph,
   covariates = c("Intercept", "cov_lgcp"),
