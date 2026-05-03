@@ -90,6 +90,9 @@ graph_lme <- function(formula, graph,
                 improve_hessian = FALSE,
                 hessian_args = list(),
                 check_euclidean = TRUE) {
+  if(!is.null(which_repl)){
+    which_repl <- as.character(which_repl)
+  }
 
   if(!is.list(model)){
     if(!is.character(model)){
@@ -1463,6 +1466,9 @@ augment.graph_lme <- function(x, newdata = NULL, which_repl = NULL, sd_post_re =
   .resid <- FALSE
   if(is.null(newdata)){
     .resid <-  TRUE
+  }
+  if(!is.null(which_repl)){
+    which_repl <- as.character(which_repl)
   }
 
 

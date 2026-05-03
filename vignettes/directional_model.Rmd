@@ -79,8 +79,15 @@ C.sym <-spde_covariance(P1,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
                             directional = F)
-fig.sym <- graph$plot_function(X = C.sym,line_width=2,vertex_size=2) 
-fig.dir <- graph$plot_function(X = C.dir,line_width=2,vertex_size=2) 
+df_C_sym <- data.frame(C = C.sym, edge_number = graph$mesh$VtE[,1],
+                       distance_on_edge = graph$mesh$VtE[,2])
+df_C_sym <- graph$process_data(data = df_C_sym, normalized = TRUE)
+fig.sym <- graph$plot_function(data = "C", newdata = df_C_sym, line_width=2, vertex_size=2)
+
+df_C_dir <- data.frame(C = C.dir, edge_number = graph$mesh$VtE[,1],
+                       distance_on_edge = graph$mesh$VtE[,2])
+df_C_dir <- graph$process_data(data = df_C_dir, normalized = TRUE)
+fig.dir <- graph$plot_function(data = "C", newdata = df_C_dir, line_width=2, vertex_size=2)
 C.dir2 <-spde_covariance(P2,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
@@ -89,8 +96,15 @@ C.sym2 <-spde_covariance(P2,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
                             directional = F)
-fig.sym2 <- graph$plot_function(X = C.sym2 ,line_width=2,vertex_size=2) 
-fig.dir2 <- graph$plot_function(X = C.dir2 ,line_width=2,vertex_size=2) 
+df_C_sym2 <- data.frame(C = C.sym2, edge_number = graph$mesh$VtE[,1],
+                        distance_on_edge = graph$mesh$VtE[,2])
+df_C_sym2 <- graph$process_data(data = df_C_sym2, normalized = TRUE)
+fig.sym2 <- graph$plot_function(data = "C", newdata = df_C_sym2, line_width=2, vertex_size=2)
+
+df_C_dir2 <- data.frame(C = C.dir2, edge_number = graph$mesh$VtE[,1],
+                        distance_on_edge = graph$mesh$VtE[,2])
+df_C_dir2 <- graph$process_data(data = df_C_dir2, normalized = TRUE)
+fig.dir2 <- graph$plot_function(data = "C", newdata = df_C_dir2, line_width=2, vertex_size=2)
 plot_grid(fig.sym + theme(legend.position="none"),
           fig.dir + theme(legend.position="none"), 
           fig.sym2 + theme(legend.position="none"),

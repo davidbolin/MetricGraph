@@ -3058,11 +3058,25 @@ metric_graph <-  R6Class("metric_graph",
          }
        }
 
-       if(!is.null(self$mesh)){
-         max_h <- max(self$mesh$h_e)
-         self$mesh <- NULL
-         self$build_mesh(h = max_h)
-       }
+      if (!is.null(self$mesh)) {
+        max_h <- max(self$mesh$h_e)
+      
+        old_continuous <- attr(self$mesh, "continuous")
+        old_continuous_outs <- attr(self$mesh, "continuous.outs")
+        old_continuous_deg2 <- attr(self$mesh, "continuous.deg2")
+      
+        if (is.null(old_continuous)) old_continuous <- TRUE
+        if (is.null(old_continuous_outs)) old_continuous_outs <- FALSE
+        if (is.null(old_continuous_deg2)) old_continuous_deg2 <- FALSE
+      
+        self$mesh <- NULL
+        self$build_mesh(
+          h = max_h,
+          continuous = old_continuous,
+          continuous.outs = old_continuous_outs,
+          continuous.deg2 = old_continuous_deg2
+        )
+      }
 
        self$C <- NULL
        self$CoB <- NULL
@@ -5764,6 +5778,10 @@ larger than 1")
                      plotly = deprecated(),
                      components = FALSE,
                      ...) {
+        
+       if(!is.null(group)){
+        group <- as.character(group)
+       } 
 
        if (!isFALSE(components)) {
          comp_list <- self$get_components()
@@ -6205,6 +6223,9 @@ larger than 1")
                               ...){
        if (is.null(line_width)) {
          line_width = edge_width
+       }
+       if(!is.null(group)){
+        group <- as.character(group)
        }
 
        if(lifecycle::is_present(X)){
