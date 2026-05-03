@@ -227,8 +227,9 @@ We can also use the `augment()` function to easily plot the predictions. Let us 
 and add the observed values on top of the predictions:
 
 ```{r, message=FALSE, warning=FALSE}
+df_pred <- graph$process_data(data = df_pred, normalized = TRUE)
 p <- augment(fit, newdata = df_pred, normalized = TRUE) %>%
-          graph$plot_function(data = ".fitted", newdata = df_pred, type = "plotly")
+          graph$plot_function(data = ".fitted", type = "plotly")
 
 graph$plot(data = "y", p = p, type = "plotly")
 ```
