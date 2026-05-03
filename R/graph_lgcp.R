@@ -400,7 +400,8 @@ precompute_lgcp_graph <- function(graph,
     aux_spde_model = spde_model,
     type_model = type_model,
     model_name = model_name,
-    nrow_int_points = nrow(int_points)
+    nrow_int_points = nrow(int_points),
+    int_points = int_points
   )
   
   class(precomputed) <- "precomputed_lgcp"
@@ -623,6 +624,7 @@ lgcp_graph <- function(formula,
             graph_bkp <- precomputed_data$graph
             stk <- precomputed_data$stk
             nrow_int_points <- precomputed_data$nrow_int_points
+            int_points <- precomputed_data$int_points
             if(precomputed_data$resp_variable_name != resp_variable_name){
               warning(paste0("The response variable name in the precomputed data (", precomputed_data$resp_variable_name, ") does not match the response variable name in the formula (", resp_variable_name, "). The variable in the precomputed data will be used."))
             }
@@ -769,6 +771,7 @@ lgcp_graph <- function(formula,
             }
           }
           }
+
             
           inla_fit <- INLA::inla(formula,
                            data = INLA::inla.stack.data(stk),

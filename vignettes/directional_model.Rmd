@@ -129,13 +129,13 @@ var.sym <-spde_variance(P2,kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph,
                             directional = F)
-df_var_sym <- data.frame(var = var.sym, edge_number = graph$mesh$VtE[,1],
-                         distance_on_edge = graph$mesh$VtE[,2])
+df_var_sym <- data.frame(var = var.sym, edge_number = graph$mesh$PtE[,1],
+                         distance_on_edge = graph$mesh$PtE[,2])
 df_var_sym <- graph$process_data(data = df_var_sym, normalized = TRUE)
 fig.sym <- graph$plot_function(data = "var", newdata = df_var_sym, line_width=2, vertex_size=2)
 
-df_var_dir <- data.frame(var = var.dir, edge_number = graph$mesh$VtE[,1],
-                         distance_on_edge = graph$mesh$VtE[,2])
+df_var_dir <- data.frame(var = var.dir, edge_number = graph$mesh$PtE[,1],
+                         distance_on_edge = graph$mesh$PtE[,2])
 df_var_dir <- graph$process_data(data = df_var_dir, normalized = TRUE)
 fig.dir <- graph$plot_function(data = "var", newdata = df_var_dir, line_width=2, vertex_size=2)
 plot_grid(fig.sym + theme(legend.position="none"),
@@ -160,8 +160,8 @@ C<-spde_variance(kappa=kappa,tau=tau,
                             alpha=1,
                             graph=graph2,
                             directional = T)
-df_C <- data.frame(C = C, edge_number = graph2$mesh$VtE[,1],
-                   distance_on_edge = graph2$mesh$VtE[,2])
+df_C <- data.frame(C = C, edge_number = graph2$mesh$PtE[,1],
+                   distance_on_edge = graph2$mesh$PtE[,2])
 df_C <- graph2$process_data(data = df_C, normalized = TRUE)
 graph2$plot_function(data = "C", newdata = df_C, plotly = FALSE)
 ```
@@ -179,8 +179,8 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph2$mesh$PtE,
                             type = "PtE",
                             directional = T)
-df_Eu <- data.frame(Eu = Eu, edge_number = graph2$mesh$VtE[,1],
-                    distance_on_edge = graph2$mesh$VtE[,2])
+df_Eu <- data.frame(Eu = Eu, edge_number = graph2$mesh$PtE[,1],
+                    distance_on_edge = graph2$mesh$PtE[,2])
 df_Eu <- graph2$process_data(data = df_Eu, normalized = TRUE)
 fig<- graph2$plot_function(data = "Eu", newdata = df_Eu, type = "plotly")
 fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
@@ -196,8 +196,8 @@ Eu <- MetricGraph:::posterior_mean_obs_alpha1(c(0,tau, kappa),
                             graph$mesh$PtE,
                             type = "PtE",
                             directional = T)
-df_Eu <- data.frame(Eu = Eu, edge_number = graph$mesh$VtE[,1],
-                    distance_on_edge = graph$mesh$VtE[,2])
+df_Eu <- data.frame(Eu = Eu, edge_number = graph$mesh$PtE[,1],
+                    distance_on_edge = graph$mesh$PtE[,2])
 df_Eu <- graph$process_data(data = df_Eu, normalized = TRUE)
 fig <- graph$plot_function(data = "Eu", newdata = df_Eu, type = "plotly")
 fig <- fig %>% layout(scene = list( camera=list( eye =  list(x=-2., y=-0.8, z=.5))))
