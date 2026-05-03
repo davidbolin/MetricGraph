@@ -3016,47 +3016,121 @@ metric_graph <-  R6Class("metric_graph",
        }
 
 
-       if(!is.null(private$data)){
-         if(verbose > 0){
-           message("Updating data locations.")
-         }
-         t <- system.time({
-           has_remap <- exists("edge_remap_new_idx", inherits = FALSE) &&
-                        !needs_fallback
-           if (has_remap) {
-             # Fast analytical remap: O(N) instead of O(N*E) snap
-             old_en  <- private$data[[".edge_number"]]
-             old_doe <- private$data[[".distance_on_edge"]]
-             old_len <- edge_len_orig[old_en]
-             new_en  <- as.numeric(edge_remap_new_idx[old_en])
-             new_doe <- (edge_remap_offset[old_en] +
-                           ifelse(edge_remap_flip[old_en],
-                                  (1 - old_doe) * old_len,
-                                  old_doe * old_len)) /
-                        edge_remap_mlen[old_en]
-             group_vec <- private$data[[".group"]]
-             private$data[[".edge_number"]] <- new_en
-             private$data[[".distance_on_edge"]] <- new_doe
-           } else {
-             # Fallback: full geometric re-snap
-             x_coord <- private$data[[".coord_x"]]
-             y_coord <- private$data[[".coord_y"]]
-             new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
-             group_vec <- private$data[[".group"]]
-             private$data[[".edge_number"]] <- new_PtE[, 1]
-             private$data[[".distance_on_edge"]] <- new_PtE[, 2]
-           }
-           order_idx <- order(group_vec,
-                              private$data[[".edge_number"]],
-                              private$data[[".distance_on_edge"]])
-           old_group_variable <- attr(private$data, "group_variable")
-           private$data <- lapply(private$data, function(dat){dat[order_idx]})
-           attr(private$data, "group_variable") <- old_group_variable
-         })
-         if(verbose == 2){
-           message(sprintf("time: %.3f s", t[["elapsed"]]))
-         }
-       }
+      if (!is.null(private$data)) {
+        if (verbose > 0) {
+          message("Updating data locations.")
+        }
+
+        t <- system.time({
+          has_remap <- exists("edge_remap_new_idx", inherits = FALSE) &&
+            exists("needs_fallback", inherits = FALSE) &&
+            !needs_fallback
+
+          if (has_remap) {
+            # Fast analytical remap: update old (edge, distance) to new
+            # (edge, distance) after batch pruning.
+            old_en  <- private$data[[".edge_number"]]
+            old_doe <- private$data[[".distance_on_edge"]]
+
+            old_len <- edge_len_orig[old_en]
+
+            new_en <- as.numeric(edge_remap_new_idx[old_en])
+
+            new_doe <- (
+              edge_remap_offset[old_en] +
+                ifelse(
+                  edge_remap_flip[old_en],
+                  (1 - old_doe) * old_len,
+                  old_doe * old_len
+                )
+            ) / edge_remap_mlen[old_en]
+
+            private$data[[".edge_number"]] <- new_en
+            private$data[[".distance_on_edge"]] <- new_doe
+
+          } else {
+            # Safe fallback: recompute graph locations from stored spatial coords.
+            x_coord <- private$data[[".coord_x"]]
+            y_coord <- private$data[[".coord_y"]]
+
+            new_PtE <- self$coordinates(XY = cbind(x_coord, y_coord))
+
+            private$data[[".edge_number"]] <- new_PtE[, 1]
+            private$data[[".distance_on_edge"]] <- new_PtE[, 2]
+          }
+
+          # Re-standardize positions after pruning.
+          # This handles boundary cases such as distance_on_edge == 1 being moved
+          # to the reference edge with distance_on_edge == 0.
+          private$data <- standardize_df_positions(
+            private$data,
+            self,
+            edge_number = ".edge_number",
+            distance_on_edge = ".distance_on_edge"
+          )
+
+          # Sort rows in the canonical internal order.
+          group_vec <- private$data[[".group"]]
+          if (is.null(group_vec)) {
+            group_vec <- rep(1L, length(private$data[[".edge_number"]]))
+          }
+
+          order_idx <- order(
+            group_vec,
+            private$data[[".edge_number"]],
+            private$data[[".distance_on_edge"]]
+          )
+
+          old_group_variables <- attr(private$data, "group_variables")
+
+          private$data <- lapply(private$data, function(dat) {
+            dat[order_idx]
+          })
+
+          attr(private$data, "group_variables") <- old_group_variables
+          class(private$data) <- unique(c("metric_graph_data", class(private$data)))
+
+          # Rebuild .loc_idx from the NEW canonical locations.
+          #
+          # This is the important missing part. The old .loc_idx refers to unique
+          # locations before pruning, so it may no longer match the new
+          # (.edge_number, .distance_on_edge) pairs.
+          e <- private$data[[".edge_number"]]
+          d <- private$data[[".distance_on_edge"]]
+
+          uloc <- unique(data.frame(
+            e = e,
+            d = d
+          ))
+
+          uloc <- uloc[order(uloc$e, uloc$d), , drop = FALSE]
+
+          row_key <- paste(e, d, sep = "|")
+          loc_key <- paste(uloc$e, uloc$d, sep = "|")
+
+          private$data[[".loc_idx"]] <- match(row_key, loc_key)
+
+          # Refresh stored spatial coordinates from the new graph representation.
+          #
+          # This should usually reproduce the same coordinates, but it keeps the
+          # internal representation fully consistent after pruning and after
+          # standardize_df_positions().
+          xy <- self$coordinates(
+            PtE = cbind(
+              private$data[[".edge_number"]],
+              private$data[[".distance_on_edge"]]
+            ),
+            normalized = TRUE
+          )
+
+          private$data[[".coord_x"]] <- xy[, 1]
+          private$data[[".coord_y"]] <- xy[, 2]
+        })
+
+        if (verbose == 2) {
+          message(sprintf("time: %.3f s", t[["elapsed"]]))
+        }
+      }
 
       if (!is.null(self$mesh)) {
         max_h <- max(self$mesh$h_e)
@@ -3346,9 +3420,9 @@ metric_graph <-  R6Class("metric_graph",
                             private$data[[".edge_number"]],
                             private$data[[".distance_on_edge"]])
 
-       old_group_variable <- attr(private$data, "group_variable")
+       old_group_variables <- attr(private$data, "group_variables")
        private$data       <- lapply(private$data, `[`, index_order)
-       attr(private$data, "group_variable") <- old_group_variable
+       attr(private$data, "group_variables") <- old_group_variables
 
        private$temp_PtE <- NULL
 

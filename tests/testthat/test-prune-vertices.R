@@ -17,6 +17,88 @@ test_that("prune_vertices collapses an open chain into a single edge", {
   expect_true(all(all_pte_valid(g)))
 })
 
+test_that("prune_vertices rebuilds .loc_idx so get_PtE() returns correct unique locations", {
+  # Path graph:
+  #
+  # v1 ---- e1 ---- v2 ---- e2 ---- v3 ---- e3 ---- v4
+  #
+  # After pruning degree-2 vertices v2 and v3, this should become one edge.
+  edges <- list(
+    rbind(c(0, 0), c(1, 0)),
+    rbind(c(1, 0), c(2, 0)),
+    rbind(c(2, 0), c(3, 0))
+  )
+
+  graph <- metric_graph$new(
+    edges = edges,
+    perform_merges = FALSE,
+    merge_close_vertices = FALSE,
+    remove_deg2 = FALSE,
+    check_connected = FALSE,
+    verbose = 0
+  )
+
+  # Add observations in two groups. We intentionally use repeated spatial
+  # locations across groups so that .loc_idx is meaningful.
+  dat <- data.frame(
+    y = c(10, 20, 30, 40, 50, 60),
+    x = c(0.25, 1.50, 2.75, 0.25, 1.50, 2.75),
+    ycoord = c(0, 0, 0, 0, 0, 0),
+    group = c("a", "a", "a", "b", "b", "b")
+  )
+
+  graph$add_observations(
+    data = dat,
+    data_coords = "spatial",
+    coord_x = "x",
+    coord_y = "ycoord",
+    group = "group",
+    tolerance = 1,
+    verbose = 0,
+    suppress_warnings = TRUE
+  )
+
+  # Sanity check: before pruning there are 3 unique locations.
+  expect_equal(nrow(graph$get_PtE()), 3L)
+
+  graph$prune_vertices(verbose = 0)
+
+  # After pruning, all observations should lie on the single merged edge.
+  expect_equal(graph$nE, 1L)
+  expect_equal(graph$nV, 2L)
+
+  dat_after <- graph$get_data(format = "list", drop_all_na = FALSE)
+
+  # The authoritative post-prune unique locations are the unique
+  # (.edge_number, .distance_on_edge) pairs in the internal data.
+  expected <- unique(data.frame(
+    edge = dat_after[[".edge_number"]],
+    dist = dat_after[[".distance_on_edge"]]
+  ))
+  expected <- expected[order(expected$edge, expected$dist), , drop = FALSE]
+  expected <- as.matrix(expected)
+
+  got <- graph$get_PtE()
+  colnames(got) <- NULL
+  colnames(expected) <- NULL
+  rownames(got) <- NULL
+  rownames(expected) <- NULL
+
+  expect_equal(got, expected, tolerance = 1e-12)
+
+  # Stronger expected values: original spatial x positions were 0.25, 1.50, 2.75
+  # on a total length-3 merged edge, hence normalized positions:
+  # 0.25/3, 1.50/3, 2.75/3.
+  expect_equal(got[, 1], rep(1, 3))
+  expect_equal(got[, 2], c(0.25, 1.50, 2.75) / 3, tolerance = 1e-12)
+
+  # .loc_idx should match the canonical unique locations.
+  loc_idx <- dat_after[[".loc_idx"]]
+  expect_false(is.null(loc_idx))
+  expect_true(all(!is.na(loc_idx)))
+  expect_equal(sort(unique(loc_idx)), seq_len(nrow(expected)))
+})
+
 test_that("prune_vertices leaves a star graph unchanged (no deg-2 vertices to merge)", {
   edges <- make_star(5)
   g <- metric_graph$new(edges = edges, perform_merges = TRUE,
