@@ -237,7 +237,7 @@ summary(spde_result)
 We start by simulating the data.
 
 ```{r}
-  n.rep <- 30
+  n.rep <- 5
   sigma <- 0.5
   range <- 2
   alpha <- 2
@@ -300,8 +300,8 @@ As in the previous case, we can also supply the covariates manually:
 ```{r}
 manual_covariates <- data.frame(
       Intercept = 1,
-      cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
-      .group = rep(1:30, each = nrow(graph$mesh$VtE))
+      cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 5),
+      .group = rep(1:5, each = nrow(graph$mesh$VtE))
     )
 inla_fit <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + 
             f(field, model = rspde_model, replicate = field.repl), 
@@ -812,8 +812,8 @@ For replicated data, manual covariates must include the replicate structure. Sin
 # Create manual covariates for replicated data based on mesh nodes
 manual_covariates_rep <- data.frame(
   Intercept = 1,
-  cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 30),
-  rep = rep(1:30, each = nrow(graph$mesh$VtE))
+  cov_lgcp = rep(graph$mesh$VtE[,1]/max(graph$mesh$VtE[,1]), 5),
+  rep = rep(1:5, each = nrow(graph$mesh$VtE))
 )
 
 # Precompute with manual covariates for replicates
