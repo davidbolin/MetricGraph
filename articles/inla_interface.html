@@ -6,15 +6,14 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>INLA interface for Whittle--Matérn fields on metric graphs • MetricGraph</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.9/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="INLA interface for Whittle--Matérn fields on metric graphs">
@@ -27,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +41,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
 <li><a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/graph_components.html">Working with disconnected metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a></li>
@@ -83,9 +83,9 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2022-11-23. Last
-modified: 2025-05-21.</h4>
+modified: 2026-05-04.</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/inla_interface.Rmd" class="external-link"><code>vignettes/inla_interface.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/inla_interface.Rmd" class="external-link"><code>vignettes/inla_interface.Rmd</code></a></small>
       <div class="d-none name"><code>inla_interface.Rmd</code></div>
     </div>
 
@@ -96,8 +96,8 @@ modified: 2025-05-21.</h4>
 </h2>
 <p>In this vignette we will present our <code>R-INLA</code> interface to
 Whittle–Matérn fields. The underlying theory for this approach is
-provided in <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin, Simas, and Wallin (2024)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin,
-Simas, and Wallin (2023)</span></a>.</p>
+provided in <a href="https://arxiv.org/abs/2205.06163" class="external-link"><span class="citation">Bolin et al. (2024)</span></a> and <a href="https://arxiv.org/abs/2304.10372" class="external-link"><span class="citation">Bolin et
+al. (2023)</span></a>.</p>
 <p>For an introduction to the <code>metric_graph</code> class, please
 see the <a href="metric_graph.html">Working with metric graphs</a>
 vignette.</p>
@@ -113,10 +113,10 @@ on these models, but without the <code>R-INLA</code> or
 Whittle-Matérn fields by providing a step-by-step illustration.</p>
 <p>The Whittle–Matérn fields are specified as solutions to the
 stochastic differential equation
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mo>−</mo><mi>Δ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>α</mi></msup><mi>τ</mi><mi>u</mi><mo>=</mo><mi>𝒲</mi></mrow><annotation encoding="application/x-tex">
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mo>−</mo><mi mathvariant="normal">Δ</mi><msup><mo stretchy="false" form="postfix">)</mo><mi>α</mi></msup><mi>τ</mi><mi>u</mi><mo>=</mo><mi>𝒲</mi></mrow><annotation encoding="application/x-tex">
   (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
 </annotation></semantics></math> on the metric graph
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>.
 We can work with these models without any approximations if the
 smoothness parameter
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
@@ -161,7 +161,7 @@ field:</p>
 <span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_spde.html">sample_spde</a></span><span class="op">(</span>range <span class="op">=</span> <span class="va">r</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
 <span>                 graph <span class="op">=</span> <span class="va">graph</span>, PtE <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-3-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>Let us now generate the observed responses, which we will call
 <code>y</code>. We will also plot the observed responses on the metric
 graph.</p>
@@ -171,7 +171,7 @@ graph.</p>
 <span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">u</span> <span class="op">+</span> <span class="va">sigma.e</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">y</span>, X_loc <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-4-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="r-inla-implementation">
@@ -187,7 +187,7 @@ observations to the graph, which we will do with the
 <span><span class="co"># Adding observations</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data<span class="op">=</span><span class="va">df_graph</span>, normalized<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-5-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>Now, we load the <code>R-INLA</code> package and create the
 <code>inla</code> model object with the <code>graph_spde</code>
 function. By default we have <code>alpha=1</code>.</p>
@@ -230,9 +230,9 @@ and should be supplied to the stack by the components of the
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            mean        sd 0.025quant  0.5quant 0.975quant      mode</span></span>
-<span><span class="co">## sigma 1.6508700 0.1333010  1.4082800 1.6438200    1.93277 1.6347300</span></span>
-<span><span class="co">## range 0.0864037 0.0170515  0.0583712 0.0844895    0.12511 0.0806471</span></span></code></pre>
+<pre><code><span><span class="co">##           mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 2.116200 0.220524   1.725430 2.100160   2.599080 2.092080</span></span>
+<span><span class="co">## range 0.167043 0.039501   0.105883 0.161263   0.260101 0.149487</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -249,9 +249,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true       mean       mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 1.65087190 1.63472513</span></span>
-<span><span class="co">## 2     range 0.15 0.08640373 0.08064711</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev 2.00 2.1162047 2.0920839</span></span>
+<span><span class="co">## 2     range 0.15 0.1670426 0.1494869</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -261,7 +261,7 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">posterior_df_fit</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">parameter</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-13-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <div class="section level3">
 <h3 id="kriging-with-our-inla-implementation">Kriging with our INLA implementation<a class="anchor" aria-label="anchor" href="#kriging-with-our-inla-implementation"></a>
 </h3>
@@ -273,7 +273,7 @@ base graph:</p>
 <p>Let us plot the resulting graph:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>mesh<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-15-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>We will now add the observations on the mesh locations to the graph
 we fitted the <code>R-INLA</code> model. To this end we will use the
 <code>add_mesh_observations()</code> method. We will enter the response
@@ -324,12 +324,12 @@ model:</p>
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">m_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-22-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-22-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, we can plot the predictions together with the data:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">m_prd</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, edge_width <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span>, vertex_size <span class="op">=</span> <span class="fl">0</span>, data_size <span class="op">=</span> <span class="fl">2</span>, p <span class="op">=</span> <span class="va">p</span>, edge_width <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-23-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-23-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="an-example-with-alpha-2">An example with <code>alpha = 2</code><a class="anchor" aria-label="anchor" href="#an-example-with-alpha-2"></a>
@@ -351,7 +351,7 @@ sample in these observation locations and plot the latent field:</p>
 <span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_spde.html">sample_spde</a></span><span class="op">(</span>range <span class="op">=</span> <span class="va">r</span>, sigma <span class="op">=</span> <span class="va">sigma</span>, alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
 <span>                 graph <span class="op">=</span> <span class="va">graph</span>, PtE <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u</span>, X_loc <span class="op">=</span> <span class="va">obs_loc</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-25-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-25-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>In the same way as before we will generate <code>y</code> and add the
 observations:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
@@ -398,9 +398,9 @@ name for the random effect, which we will call <code>field</code>:</p>
 <span>                            <span class="st">"field"</span>, <span class="va">spde_model_alpha2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_alpha2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.175770 0.2397380   1.749840 2.160380   2.687850 2.103510</span></span>
-<span><span class="co">## range 0.157442 0.0166733   0.127249 0.156589   0.192676 0.154826</span></span></code></pre>
+<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 2.55857 0.3262490   1.987960 2.536740   3.255440 2.491350</span></span>
+<span><span class="co">## range 0.19386 0.0212556   0.155689 0.192641   0.239074 0.190136</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
@@ -418,8 +418,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_alpha2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev 2.00 2.1757736 2.1035070</span></span>
-<span><span class="co">## 2     range 0.15 0.1574425 0.1548255</span></span></code></pre>
+<span><span class="co">## 1   std.dev 2.00 2.5585737 2.4913499</span></span>
+<span><span class="co">## 2     range 0.15 0.1938598 0.1901357</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
@@ -429,7 +429,7 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">posterior_df_fit</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">parameter</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-33-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-33-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="fitting-r-inla-models-with-replicates">Fitting <code>R-INLA</code> models with replicates<a class="anchor" aria-label="anchor" href="#fitting-r-inla-models-with-replicates"></a>
@@ -487,11 +487,11 @@ replicate. We can select the other replicates with the
 details.</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-39-1.png" width="700"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-39-1.png" class="r-plt" alt="" width="700"></p>
 <p>Let us plot another replicate:</p>
 <div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span>, group<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="inla_interface_files/figure-html/unnamed-chunk-40-1.png" width="700"></p>
+<p><img src="inla_interface_files/figure-html/unnamed-chunk-40-1.png" class="r-plt" alt="" width="700"></p>
 <p>Let us now create the model object:</p>
 <div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_model_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
@@ -537,9 +537,9 @@ function.</p>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## sigma 1.604430 0.0853516   1.447790  1.60164   1.782440 1.60450</span></span>
-<span><span class="co">## range 0.225481 0.0267713   0.175859  0.22464   0.280786 0.22369</span></span></code></pre>
+<pre><code><span><span class="co">##          mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.41226 0.0652423   1.292730 1.408940   1.548810 1.400100</span></span>
+<span><span class="co">## range 0.16634 0.0171329   0.136205 0.165059   0.203433 0.161916</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -555,9 +555,9 @@ function.</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.604434 1.6045011</span></span>
-<span><span class="co">## 2     range  0.2 0.225481 0.2236899</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  1.5 1.4122632 1.4000988</span></span>
+<span><span class="co">## 2     range  0.2 0.1663403 0.1619156</span></span></code></pre>
 <p>Now, let us consider the case with all replicates. We create a new
 data object by using the <code><a href="../reference/graph_data_spde.html">graph_data_spde()</a></code> function with
 the argument <code>repl</code> set to <code>.all</code>:</p>
@@ -592,9 +592,9 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <span>                        <span class="st">"field"</span>, <span class="va">spde_model_rep</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 1.527000 0.0329772   1.464190 1.526420   1.593700 1.527360</span></span>
-<span><span class="co">## range 0.222955 0.0105912   0.202879 0.222686   0.244488 0.222146</span></span></code></pre>
+<pre><code><span><span class="co">##           mean         sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 1.502150 0.03220090   1.437560 1.502740   1.562840 1.502170</span></span>
+<span><span class="co">## range 0.209892 0.00988506   0.190056 0.210128   0.228819 0.211209</span></span></code></pre>
 <p>Let us compare with the true values:</p>
 <div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -611,17 +611,18 @@ the argument <code>repl</code> set to <code>.all</code>:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  1.5 1.5270026 1.5273595</span></span>
-<span><span class="co">## 2     range  0.2 0.2229553 0.2221459</span></span></code></pre>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<span><span class="co">## 1   std.dev  1.5 1.5021478 1.5021722</span></span>
+<span><span class="co">## 2     range  0.2 0.2098923 0.2112093</span></span></code></pre>
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-BSW2022b" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023.
 <span>“Statistical Properties of Gaussian Whittle–Matérn Fields on
 Metric Graphs.”</span> <em>arXiv:2304.10372</em>.
 </div>
 <div id="ref-BSW2022a" class="csl-entry">
-———. 2024. <span>“Gaussian Whittle–Matérn Fields on Metric
-Graphs.”</span> <em>Bernoulli</em> 30: 1611–39.
+Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2024.
+<span>“Gaussian Whittle–Matérn Fields on Metric Graphs.”</span>
+<em>Bernoulli</em> 30: 1611–39.
 </div>
 </div>
 </div>
@@ -637,7 +638,7 @@ Graphs.”</span> <em>Bernoulli</em> 30: 1611–39.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

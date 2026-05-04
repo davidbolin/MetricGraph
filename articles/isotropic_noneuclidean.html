@@ -6,15 +6,14 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>On isotropic covariances on metric graphs with non-Euclidean edges • MetricGraph</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.9/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="On isotropic covariances on metric graphs with non-Euclidean edges">
@@ -27,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +41,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
 <li><a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/graph_components.html">Working with disconnected metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a></li>
@@ -83,9 +83,9 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-11. Last
-modified: 2025-05-21.</h4>
+modified: 2026-05-04.</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/isotropic_noneuclidean.rmd" class="external-link"><code>vignettes/isotropic_noneuclidean.rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/isotropic_noneuclidean.rmd" class="external-link"><code>vignettes/isotropic_noneuclidean.rmd</code></a></small>
       <div class="d-none name"><code>isotropic_noneuclidean.rmd</code></div>
     </div>
 
@@ -108,13 +108,12 @@ vertices, then the resulting model is different from what one would
 expect. Indeed, the model might change when doing predictions (as one
 would need to add further observations as vertices to obtain
 predictions). Furthermore, if one does not add observations as vertices,
-then the actual covariance function might not be valid <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>.
-Actually, in <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes, Møller, and Rasmussen (2020)</span></a>, such
-models were not defined, as they only define Gaussian models with
-isotropic covariance functions for metric graphs with Euclidean edges.
-One option, therefore, would be to simply not allow one to fit such
-models at all as they are not consistent. However, in the package we
-chose to only give a warning, and let the user decide what to do.</p>
+then the actual covariance function might not be valid <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes et al. (2020)</span></a>. Actually, in <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-48/issue-4/Isotropic-covariance-functions-on-graphs-and-their-edges/10.1214/19-AOS1896.full" class="external-link"><span class="citation">Anderes et al. (2020)</span></a>, such models were not
+defined, as they only define Gaussian models with isotropic covariance
+functions for metric graphs with Euclidean edges. One option, therefore,
+would be to simply not allow one to fit such models at all as they are
+not consistent. However, in the package we chose to only give a warning,
+and let the user decide what to do.</p>
 </div>
 <div class="section level2">
 <h2 id="a-simple-example">A simple example<a class="anchor" aria-label="anchor" href="#a-simple-example"></a>
@@ -132,7 +131,7 @@ graph does not have Euclidean edges:</p>
 <span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">edges</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
+<p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-1-1.png" class="r-plt" alt="" width="700"></p>
 <p>One can also check if a metric graph has Euclidean edges by calling
 the <code>check_euclidean()</code> method, then calling the
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
@@ -201,7 +200,7 @@ by creating such a metric graph:</p>
 <span><span class="va">graph2</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>edges <span class="op">=</span> <span class="va">edges2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">graph2</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
 <p>Observe that it has Euclidean edges:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph2</span><span class="op">$</span><span class="fu">check_euclidean</span><span class="op">(</span><span class="op">)</span></span>
@@ -252,7 +251,7 @@ by creating such a metric graph:</p>
 <p>Now, let us compare the resistance distances:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">res_dist_graph</span>, <span class="va">graph2</span><span class="op">$</span><span class="va">res_dist</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p>Therefore, indeed, one of the edges is being ignored in practice.</p>
 <p>Let us now see what happens when we have observations on both edges,
 and compute the resistance distances on the resulting metric graph (in
@@ -267,7 +266,7 @@ which the observations were turned into vertices).</p>
 <span><span class="co">#&gt; Assuming the observations are normalized by the length of the edge.</span></span>
 <span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>data<span class="op">=</span><span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<p><img src="isotropic_noneuclidean_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
 <p>Let us now compute the resistance distances between the original
 vertices. To this end we will use the <code>compute_resdist()</code>
 method with the arguments <code>full=TRUE</code> to compute the
@@ -332,11 +331,11 @@ do prediction, we need to add the observation locations as vertices,
 thus modifying the graph. This means that there is an inconsistency
 between the model used to fit the data, and the model used to obtain
 prediction.</p>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-Anderes2020" class="csl-entry">
 Anderes, Ethan, Jesper Møller, and Jakob G. Rasmussen. 2020.
 <span>“Isotropic Covariance Functions on Graphs and Their Edges.”</span>
-<em>Annals of Statistics</em> 48: 2478–2503.
+<em>Annals of Statistics</em> 48: 2478–503.
 </div>
 </div>
 </div>
@@ -351,7 +350,7 @@ Anderes, Ethan, Jesper Møller, and Jakob G. Rasmussen. 2020.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

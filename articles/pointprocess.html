@@ -6,15 +6,14 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Log-Gaussian Cox processes on metric graphs • MetricGraph</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.9/font.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Log-Gaussian Cox processes on metric graphs">
@@ -27,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +41,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
 <li><a class="dropdown-item" href="../articles/metric_graph.html">Working with metric graphs</a></li>
+    <li><a class="dropdown-item" href="../articles/graph_components.html">Working with disconnected metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/random_fields.html">Gaussian random fields on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/metric_graph_data.html">Data manipulation on metric graphs</a></li>
     <li><a class="dropdown-item" href="../articles/inlabru_interface.html">inlabru interface of Whittle--Matern fields</a></li>
@@ -80,12 +80,12 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Log-Gaussian Cox processes on metric graphs</h1>
                         <h4 data-toc-skip class="author">David Bolin,
-Alexandre B. Simas</h4>
+Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2023-01-30. Last
-modified: 2025-05-21.</h4>
+modified: 2026-05-04.</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/HEAD/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/pointprocess.Rmd" class="external-link"><code>vignettes/pointprocess.Rmd</code></a></small>
       <div class="d-none name"><code>pointprocess.Rmd</code></div>
     </div>
 
@@ -99,8 +99,8 @@ processes based on Whittle–Matérn fields on metric graphs. To simplify
 the integration with <code>R-INLA</code> and <code>inlabru</code> hese
 models are constructed using finite element approximations as
 implemented in the <code>rSPDE</code> package. The theoretical details
-will be given in the forthcoming article <span class="citation">(Bolin,
-Simas, and Wallin 2023)</span>.</p>
+will be given in the forthcoming article <span class="citation">(Bolin
+et al. 2023)</span>.</p>
 </div>
 <div class="section level3">
 <h3 id="constructing-the-graph-and-the-mesh">Constructing the graph and the mesh<a class="anchor" aria-label="anchor" href="#constructing-the-graph-and-the-mesh"></a>
@@ -116,26 +116,26 @@ and <code>INLA</code> packages:</p>
 <code class="sourceCode R"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/metric_graph.html">metric_graph</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>tolerance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>vertex_vertex <span class="op">=</span> <span class="fl">1e-1</span>, vertex_edge <span class="op">=</span> <span class="fl">1e-3</span>, edge_edge <span class="op">=</span> <span class="fl">1e-3</span><span class="op">)</span>,</span>
 <span>                          remove_deg2 <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-2-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>To construct a FEM approximation of a Whittle–Matérn field, we must
 first construct a mesh on the graph.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span>h <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>mesh<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-3-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>The next step is to build the mass and stiffness matrices for the FEM
 basis.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">compute_fem</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>We are now ready to specify the and sample from a log-Gaussian Cox
 process model with intensity
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>β</mi><mo>+</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\lambda = \exp(\beta + u)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo>+</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\lambda = \exp(\beta + u)</annotation></semantics></math>
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
 is an intercept and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
 is a Gaussian Whittle–Matérn field specified by
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mo>−</mo><mi>Δ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msup><mi>τ</mi><mi>u</mi><mo>=</mo><mi>𝒲</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>κ</mi><mn>2</mn></msup><mo>−</mo><mi mathvariant="normal">Δ</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msup><mi>τ</mi><mi>u</mi><mo>=</mo><mi>𝒲</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
 (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
 </annotation></semantics></math> For this we can use the function
 <code>graph_lgcp</code> as follows:</p>
@@ -152,7 +152,7 @@ Gaussian process and the points on the graph. We can plot the simulated
 intensity function as</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span><span class="op">)</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-6-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>To plot the simulated points, we can add them to the graph and then
 plot:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -165,7 +165,7 @@ plot:</p>
 <pre><code><span><span class="co">## Assuming the observations are normalized by the length of the edge.</span></span></code></pre>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>vertex_size <span class="op">=</span> <span class="fl">0</span>, data <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-7-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>In order to fit a log-Gaussian Cox process model, we need to specify
 integration points on the graph, be able to evaluate the covariates at
 such integration points. This process is a bit involved, so we have
@@ -215,11 +215,11 @@ function:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 2.06, Running = 0.552, Post = 0.0457, Total = 2.66 </span></span>
+<span><span class="co">##     Pre = 0.303, Running = 0.532, Post = 0.0529, Total = 0.888 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
-<span><span class="co">## Intercept -0.545 0.331     -1.238   -0.533      0.071 -0.534   0</span></span>
-<span><span class="co">## cov_lgcp   0.976 0.491      0.030    0.969      1.964  0.969   0</span></span>
+<span><span class="co">## Intercept -0.549 0.315     -1.183   -0.545      0.058 -0.545   0</span></span>
+<span><span class="co">## cov_lgcp   1.043 0.475      0.112    1.042      1.980  1.042   0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##   Name     Model</span></span>
@@ -227,10 +227,10 @@ function:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model hyperparameters:</span></span>
 <span><span class="co">##                    mean    sd 0.025quant 0.5quant 0.975quant   mode</span></span>
-<span><span class="co">## Theta1 for field -0.832 0.394     -1.680   -0.807     -0.141 -0.686</span></span>
-<span><span class="co">## Theta2 for field  1.120 0.658     -0.174    1.119      2.418  1.116</span></span>
+<span><span class="co">## Theta1 for field -0.701 0.305     -1.345   -0.687      -0.15 -0.616</span></span>
+<span><span class="co">## Theta2 for field  0.800 0.635     -0.498    0.817       2.00  0.890</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Marginal log-Likelihood:  -109.72 </span></span>
+<span><span class="co">## Marginal log-Likelihood:  -106.72 </span></span>
 <span><span class="co">##  is computed </span></span>
 <span><span class="co">## Posterior summaries for the linear predictor and the fitted values are computed</span></span>
 <span><span class="co">## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')</span></span></code></pre>
@@ -241,9 +241,9 @@ function:</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             mean      sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.468737 0.17586   0.188141 0.450051   0.864532 0.403134</span></span>
-<span><span class="co">## range   3.794120 2.73377   0.849470 3.061360  11.099200 1.991310</span></span></code></pre>
+<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.518762 0.153425   0.262206 0.505776   0.857188 0.477153</span></span>
+<span><span class="co">## range   2.700780 1.770710   0.615944 2.273860   7.318860 1.517500</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
@@ -261,8 +261,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4687368 0.4031343</span></span>
-<span><span class="co">## 2     range  2.0 3.7941226 1.9913116</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.5187621 0.4771531</span></span>
+<span><span class="co">## 2     range  2.0 2.7007840 1.5175004</span></span></code></pre>
 <p>If we have the actual values of the covariates at the integration
 points, we can pass them to the <code><a href="../reference/lgcp_graph.html">lgcp_graph()</a></code> function via
 the <code>manual_covariates</code> argument.</p>
@@ -276,11 +276,11 @@ the <code>manual_covariates</code> argument.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 2.06, Running = 0.544, Post = 0.04, Total = 2.65 </span></span>
+<span><span class="co">##     Pre = 0.136, Running = 0.498, Post = 0.0268, Total = 0.661 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
-<span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode   kld</span></span>
-<span><span class="co">## Intercept -0.726 0.362     -1.499   -0.714     -0.037 -0.716 0.001</span></span>
-<span><span class="co">## cov_lgcp   1.424 0.412      0.628    1.420      2.247  1.420 0.000</span></span>
+<span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
+<span><span class="co">## Intercept -0.903 0.291      -1.50   -0.896     -0.352 -0.896   0</span></span>
+<span><span class="co">## cov_lgcp   1.905 0.398       1.14    1.899      2.707  1.899   0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##   Name     Model</span></span>
@@ -288,10 +288,10 @@ the <code>manual_covariates</code> argument.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model hyperparameters:</span></span>
 <span><span class="co">##                    mean    sd 0.025quant 0.5quant 0.975quant   mode</span></span>
-<span><span class="co">## Theta1 for field -0.866 0.417      -1.76    -0.84     -0.136 -0.712</span></span>
-<span><span class="co">## Theta2 for field  1.352 0.696       0.00     1.35      2.741  1.320</span></span>
+<span><span class="co">## Theta1 for field -0.951 0.410     -1.837   -0.925     -0.239 -0.792</span></span>
+<span><span class="co">## Theta2 for field  1.035 0.737     -0.472    1.054      2.430  1.137</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Marginal log-Likelihood:  -105.92 </span></span>
+<span><span class="co">## Marginal log-Likelihood:  -97.83 </span></span>
 <span><span class="co">##  is computed </span></span>
 <span><span class="co">## Posterior summaries for the linear predictor and the fitted values are computed</span></span>
 <span><span class="co">## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')</span></span></code></pre>
@@ -300,9 +300,9 @@ the <code>manual_covariates</code> argument.</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            mean       sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## std.dev 0.45652 0.181032   0.172997 0.435522   0.868429 0.38128</span></span>
-<span><span class="co">## range   4.91905 3.849620   1.011020 3.835800  15.305900 2.37008</span></span></code></pre>
+<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.418133 0.162334   0.160837 0.400456   0.784069 0.354264</span></span>
+<span><span class="co">## range   3.649220 2.841920   0.633682 2.884500  11.237300 1.643780</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
@@ -312,7 +312,7 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">posterior_df_fit</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">parameter</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"Density"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-17-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-17-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>Finally, we can plot the estimated field
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
@@ -320,16 +320,17 @@ the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a>
 <span><span class="va">n.field</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">u_posterior</span> <span class="op">&lt;-</span> <span class="va">inla_fit</span><span class="op">$</span><span class="va">summary.linear.predictor</span><span class="op">$</span><span class="va">mean</span><span class="op">[</span><span class="op">(</span><span class="va">n.obs</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="op">(</span><span class="va">n.obs</span><span class="op">+</span><span class="va">n.field</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">u_posterior</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-18-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-18-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>This can be compared with the field that was used to generate the
 data:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span><span class="op">$</span><span class="fu">plot_function</span><span class="op">(</span>X <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">u</span>, vertex_size <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pointprocess_files/figure-html/unnamed-chunk-19-1.png" width="700" style="display: block; margin: auto;"></p>
+<p><img src="pointprocess_files/figure-html/unnamed-chunk-19-1.png" class="r-plt" alt="" width="700" style="display: block; margin: auto;"></p>
 <p>We can also fit the model using the exact model by using the
-<code><a href="../reference/graph_spde.html">graph_spde()</a></code> function as the SPDE model:</p>
+<code><a href="../reference/graph_spde.html">graph_spde()</a></code> function as the SPDE model, and we also set
+the <code>LGCP</code> argument to <code>TRUE</code>:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">spde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_spde.html">graph_spde</a></span><span class="op">(</span><span class="va">graph</span>, alpha <span class="op">=</span> <span class="fl">1</span>, LGCP <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Let us now fit the model:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inla_fit_spde</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> </span>
@@ -338,22 +339,22 @@ data:</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit_spde</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 1.76, Running = 0.525, Post = 0.0494, Total = 2.33 </span></span>
+<span><span class="co">##     Pre = 0.139, Running = 0.565, Post = 0.296, Total = 1 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
-<span><span class="co">## Intercept -0.551 0.336     -1.253   -0.539      0.077 -0.540   0</span></span>
-<span><span class="co">## cov_lgcp   0.961 0.487      0.026    0.953      1.944  0.953   0</span></span>
+<span><span class="co">## Intercept -0.512 0.250     -1.002   -0.512     -0.023 -0.512   0</span></span>
+<span><span class="co">## cov_lgcp   1.050 0.403      0.261    1.050      1.839  1.050   0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##   Name     Model</span></span>
 <span><span class="co">##     field CGeneric</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model hyperparameters:</span></span>
-<span><span class="co">##                    mean    sd 0.025quant 0.5quant 0.975quant   mode</span></span>
-<span><span class="co">## Theta1 for field -0.654 0.548     -1.789   -0.635      0.366 -0.549</span></span>
-<span><span class="co">## Theta2 for field  1.343 0.922     -0.425    1.328      3.204  1.260</span></span>
+<span><span class="co">##                   mean    sd 0.025quant 0.5quant 0.975quant  mode</span></span>
+<span><span class="co">## Theta1 for field  1.37 0.876     -0.276     1.34      3.170  1.23</span></span>
+<span><span class="co">## Theta2 for field -1.75 1.430     -4.706    -1.71      0.915 -1.50</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Marginal log-Likelihood:  -109.45 </span></span>
+<span><span class="co">## Marginal log-Likelihood:  -105.40 </span></span>
 <span><span class="co">##  is computed </span></span>
 <span><span class="co">## Posterior summaries for the linear predictor and the fitted values are computed</span></span>
 <span><span class="co">## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')</span></span></code></pre>
@@ -362,16 +363,16 @@ data:</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit_spde</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##          mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 0.50432 0.200714   0.189121 0.480533   0.951447 0.397901</span></span>
-<span><span class="co">## range 5.87995 6.768320   0.663066 3.757220  24.215300 1.661400</span></span></code></pre>
+<pre><code><span><span class="co">##           mean       sd 0.025quant 0.5quant 0.975quant      mode</span></span>
+<span><span class="co">## sigma 2.412250 0.734914 1.22944000 2.333230    4.09432 2.2613400</span></span>
+<span><span class="co">## range 0.434012 0.792710 0.00934148 0.183891    2.44878 0.0174303</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="an-example-with-replicates-in-our-inla-interface">An example with replicates in our <code>INLA</code> interface<a class="anchor" aria-label="anchor" href="#an-example-with-replicates-in-our-inla-interface"></a>
 </h2>
 <p>We start by simulating the data.</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">n.rep</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
+<code class="sourceCode R"><span>  <span class="va">n.rep</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span>  <span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
 <span>  <span class="va">range</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span>  <span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
@@ -411,17 +412,15 @@ replicates is <code>.group</code>, and also, by default, all replicates
 will be used.</p>
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inla_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, graph<span class="op">=</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in formula.character(object, env = baseenv()): Using formula(x) is deprecated when x is a character vector of length &gt; 1.</span></span>
-<span><span class="co">##   Consider formula(paste(x, collapse = " ")) instead.</span></span></code></pre>
 <p>Let us observe the <code>inla_fit</code> object:</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 2.13, Running = 25.4, Post = 1.1, Total = 28.7 </span></span>
+<span><span class="co">##     Pre = 0.145, Running = 2.55, Post = 0.109, Total = 2.81 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
-<span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
-<span><span class="co">## Intercept -0.685 0.053     -0.789   -0.685     -0.581 -0.685   0</span></span>
-<span><span class="co">## cov_lgcp   1.221 0.083      1.057    1.221      1.384  1.221   0</span></span>
+<span><span class="co">##             mean   sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
+<span><span class="co">## Intercept -0.735 0.13     -0.993   -0.734     -0.482 -0.734   0</span></span>
+<span><span class="co">## cov_lgcp   1.498 0.21      1.085    1.498      1.910  1.498   0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##   Name     Model</span></span>
@@ -429,43 +428,41 @@ will be used.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model hyperparameters:</span></span>
 <span><span class="co">##                    mean    sd 0.025quant 0.5quant 0.975quant   mode</span></span>
-<span><span class="co">## Theta1 for field -0.481 0.046     -0.572   -0.481     -0.392 -0.480</span></span>
-<span><span class="co">## Theta2 for field  0.585 0.106      0.377    0.585      0.793  0.584</span></span>
+<span><span class="co">## Theta1 for field -0.600 0.121     -0.845   -0.598      -0.37 -0.587</span></span>
+<span><span class="co">## Theta2 for field  0.532 0.264      0.011    0.532       1.05  0.534</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Marginal log-Likelihood:  -2658.04 </span></span>
+<span><span class="co">## Marginal log-Likelihood:  -443.90 </span></span>
 <span><span class="co">##  is computed </span></span>
 <span><span class="co">## Posterior summaries for the linear predictor and the fitted values are computed</span></span>
 <span><span class="co">## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')</span></span></code></pre>
 <p>Let us now extract the estimates in the original scale</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.618695 0.0280739   0.564892 0.618286   0.675097 0.617726</span></span>
-<span><span class="co">## range   1.804520 0.1900280   1.460460 1.794450   2.206100 1.773610</span></span></code></pre>
+<span><span class="co">## std.dev 0.552803 0.0660176   0.430808 0.550509   0.689613 0.547646</span></span>
+<span><span class="co">## range   1.762360 0.4700610   1.015160 1.703180   2.850290 1.591560</span></span></code></pre>
 <p>As in the previous case, we can also supply the covariates
 manually:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">manual_covariates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>      Intercept <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>      cov_lgcp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="fl">30</span><span class="op">)</span>,</span>
-<span>      .group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">30</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span><span class="op">)</span></span>
+<span>      cov_lgcp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="fl">5</span><span class="op">)</span>,</span>
+<span>      .group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="va">inla_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> </span>
 <span>            <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
 <span>              graph<span class="op">=</span><span class="va">graph</span>, manual_covariates <span class="op">=</span> <span class="va">manual_covariates</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in formula.character(object, env = baseenv()): Using formula(x) is deprecated when x is a character vector of length &gt; 1.</span></span>
-<span><span class="co">##   Consider formula(paste(x, collapse = " ")) instead.</span></span></code></pre>
 <p>Let us observe the <code>inla_fit</code> object:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 1.9, Running = 25.2, Post = 1.19, Total = 28.2 </span></span>
+<span><span class="co">##     Pre = 0.142, Running = 2.39, Post = 0.107, Total = 2.64 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
-<span><span class="co">## Intercept -0.931 0.049     -1.026   -0.930     -0.836 -0.930   0</span></span>
-<span><span class="co">## cov_lgcp   1.866 0.075      1.718    1.865      2.013  1.865   0</span></span>
+<span><span class="co">## Intercept -0.896 0.116     -1.127   -0.895     -0.671 -0.895   0</span></span>
+<span><span class="co">## cov_lgcp   1.949 0.179      1.600    1.948      2.301  1.948   0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Random effects:</span></span>
 <span><span class="co">##   Name     Model</span></span>
@@ -473,21 +470,57 @@ manually:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Model hyperparameters:</span></span>
 <span><span class="co">##                    mean    sd 0.025quant 0.5quant 0.975quant   mode</span></span>
-<span><span class="co">## Theta1 for field -0.655 0.057     -0.768   -0.654     -0.545 -0.652</span></span>
-<span><span class="co">## Theta2 for field  0.591 0.131      0.334    0.590      0.850  0.588</span></span>
+<span><span class="co">## Theta1 for field -0.733 0.141      -1.02   -0.730     -0.467 -0.713</span></span>
+<span><span class="co">## Theta2 for field  0.591 0.310      -0.02    0.592      1.199  0.594</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Marginal log-Likelihood:  -2472.17 </span></span>
+<span><span class="co">## Marginal log-Likelihood:  -412.97 </span></span>
 <span><span class="co">##  is computed </span></span>
 <span><span class="co">## Posterior summaries for the linear predictor and the fitted values are computed</span></span>
 <span><span class="co">## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')</span></span></code></pre>
 <p>Let us now extract the estimates in the original scale</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.520492 0.0293267   0.464441 0.520035   0.579539 0.519559</span></span>
-<span><span class="co">## range   1.820460 0.2384790   1.399000 1.804160   2.334290 1.771910</span></span></code></pre>
+<span><span class="co">## std.dev 0.485059 0.0677648   0.360526 0.482622   0.625803 0.480093</span></span>
+<span><span class="co">## range   1.893320 0.5942050   0.985258 1.806900   3.298770 1.640960</span></span></code></pre>
+<p>We can also fit the model with replicates using the exact model:</p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">inla_fit_spde_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> </span>
+<span>                               <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                               graph<span class="op">=</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
+<p>Let us observe the <code>inla_fit_spde_rep</code> object:</p>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit_spde_rep</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Time used:</span></span>
+<span><span class="co">##     Pre = 0.153, Running = 3.42, Post = 0.406, Total = 3.97 </span></span>
+<span><span class="co">## Fixed effects:</span></span>
+<span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
+<span><span class="co">## Intercept -0.773 0.133     -1.036   -0.772     -0.515 -0.772   0</span></span>
+<span><span class="co">## cov_lgcp   1.485 0.209      1.075    1.485      1.895  1.485   0</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Random effects:</span></span>
+<span><span class="co">##   Name     Model</span></span>
+<span><span class="co">##     field CGeneric</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Model hyperparameters:</span></span>
+<span><span class="co">##                   mean    sd 0.025quant 0.5quant 0.975quant  mode</span></span>
+<span><span class="co">## Theta1 for field 0.076 0.246     -0.404    0.075      0.564 0.069</span></span>
+<span><span class="co">## Theta2 for field 0.352 0.384     -0.414    0.355      1.097 0.369</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Marginal log-Likelihood:  -442.69 </span></span>
+<span><span class="co">##  is computed </span></span>
+<span><span class="co">## Posterior summaries for the linear predictor and the fitted values are computed</span></span>
+<span><span class="co">## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')</span></span></code></pre>
+<p>We can now extract the estimates in the original scale</p>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spde_result_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit_spde_rep</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## sigma 0.643556 0.0767314   0.502334 0.640117   0.802428 0.624037</span></span>
+<span><span class="co">## range 1.528080 0.5961870   0.665991 1.427480   2.977480 1.240410</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="fitting-lgcp-models-without-our-inla-interface">Fitting LGCP models without our <code>INLA</code> interface<a class="anchor" aria-label="anchor" href="#fitting-lgcp-models-without-our-inla-interface"></a>
@@ -496,30 +529,30 @@ manually:</p>
 <code>R-INLA</code> implementation, without using our <code>INLA</code>
 interface for LGCP models. When working with log-Gaussian Cox processes,
 the likelihood has a term
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><mi>Γ</mi></msub><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">\int_\Gamma \exp(u(s)) ds</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><mi mathvariant="normal">Γ</mi></msub><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mi>d</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">\int_\Gamma \exp(u(s)) ds</annotation></semantics></math>
 that needs to be handled separately. This is done by using the mid-point
 rule as suggested for SPDE models by <a href="https://academic.oup.com/biomet/article/103/1/49/2389990" class="external-link"><span class="citation">Simpson et al. (2016)</span></a> where we approximate
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><mi>Γ</mi></msub><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>s</mi><mo>≈</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><msub><mover><mi>a</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>s</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><mi mathvariant="normal">Γ</mi></msub><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mi>d</mi><mi>s</mi><mo>≈</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><msub><mover><mi>a</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>s</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \int_\Gamma \exp(u(s)) ds \approx \sum_{i=1}^p \widetilde{a}_i \exp\left(u(\widetilde{s}_i)\right).
 </annotation></semantics></math> Using the fact that
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup><mi>φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u(s) = \sum_{j=1}^n \varphi(s) u_i</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>u</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">u(s) = \sum_{j=1}^n \varphi(s) u_i</annotation></semantics></math>
 from the FEM approximation, we can write the integral as
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mover><mi>α</mi><mo accent="true">̃</mo></mover><mi>T</mi></msup><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>A</mi><mo accent="true">̃</mo></mover><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\widetilde{\alpha}^T\exp(\widetilde{A}u)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mover><mi>α</mi><mo accent="true">̃</mo></mover><mi>T</mi></msup><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mover><mi>A</mi><mo accent="true">̃</mo></mover><mi>u</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\widetilde{\alpha}^T\exp(\widetilde{A}u)</annotation></semantics></math>
 where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>A</mi><mo accent="true">̃</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>φ</mi><mi>j</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>s</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\widetilde{A}_{ij} = \varphi_j(\widetilde{s}_i)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>A</mi><mo accent="true">̃</mo></mover><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>φ</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>s</mi><mo accent="true">̃</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\widetilde{A}_{ij} = \varphi_j(\widetilde{s}_i)</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>a</mi><mo accent="true">̃</mo></mover><annotation encoding="application/x-tex">\widetilde{a}</annotation></semantics></math>
 is a vector with integration weights. These quantities can be obtained
 as</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Atilde</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="fu">fem_basis</span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span></span>
 <span><span class="va">atilde</span> <span class="op">&lt;-</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">weights</span></span></code></pre></div>
-<p>The weights are used as exposure terms in the Poisson likelihiood in
+<p>The weights are used as exposure terms in the Poisson likelihood in
 R-INLA. Because of this, the easiest way to construct the model is to
 add the integration points as zero observations in the graph, with
 corresponding exposure weights. We also need to add the exposure terms
 (which are zero) for the actual observation locations:</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#clear the previous data in the graph</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -533,7 +566,7 @@ corresponding exposure weights. We also need to add the exposure terms
 <span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## Assuming the observations are normalized by the length of the edge.</span></span></code></pre>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Add integration points</span></span>
 <span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">atilde</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                         e <span class="op">=</span> <span class="va">atilde</span>,</span>
@@ -548,21 +581,21 @@ corresponding exposure weights. We also need to add the exposure terms
 <code>graph_spde</code> function. For simplicity, we assume that
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
 is known and fixed to the true value in the model.</p>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p>Next, we compute the auxiliary data:</p>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name<span class="op">=</span><span class="st">"field"</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>,<span class="st">"cov_lgcp"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We now create the <code>inla.stack</code> object with the
 <code><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack()</a></code> function. At this stage, it is important that
 the data has been added to the <code>graph</code> since it is supplied
 to the stack by using the <code>graph_spde_data()</code> function.</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                  A <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"basis"</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>                  effects <span class="op">=</span> <span class="va">data_rspde</span><span class="op">[[</span><span class="st">"index"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>We can now fit the model using <code>R-INLA</code>:</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.html" class="external-link">inla</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span><span class="op">)</span>, </span>
 <span>                 family <span class="op">=</span> <span class="st">"poisson"</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>,</span>
 <span>                 control.predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>, compute <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
@@ -570,16 +603,16 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <p>Let us extract the estimates in the original scale by using the
 <code><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result()</a></code> function, then taking a
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:</p>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##            mean       sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## std.dev 0.45652 0.181032   0.172996 0.435521    0.86843 0.38128</span></span>
-<span><span class="co">## range   4.91904 3.849600   1.011020 3.835800   15.30590 2.37008</span></span></code></pre>
+<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.418133 0.162334   0.160838 0.400456   0.784068 0.354264</span></span>
+<span><span class="co">## range   3.649210 2.841880   0.633691 2.884500  11.237200 1.643800</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
-<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -593,16 +626,16 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true      mean     mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4565199 0.381280</span></span>
-<span><span class="co">## 2     range  2.0 4.9190434 2.370085</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.4181328 0.3542644</span></span>
+<span><span class="co">## 2     range  2.0 3.6492064 1.6437952</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="an-example-with-replicates">An example with replicates<a class="anchor" aria-label="anchor" href="#an-example-with-replicates"></a>
 </h2>
 <p>We now clear the previous data and add the new data together with the
 exposure terms</p>
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="va">df_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample_rep</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                             e <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample_rep</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -643,7 +676,7 @@ exposure terms</p>
 <pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
 <pre><code><span><span class="co">## Assuming the observations are normalized by the length of the edge.</span></span></code></pre>
 <p>We can now define and fit the model as previously</p>
-<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rspde_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.metric_graph.html" class="external-link">rspde.metric_graph</a></span><span class="op">(</span><span class="va">graph</span>, nu <span class="op">=</span> <span class="va">alpha</span> <span class="op">-</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">data_rspde</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graph_data_spde.html">graph_data_spde</a></span><span class="op">(</span><span class="va">rspde_model</span>, name <span class="op">=</span> <span class="st">"field"</span>, </span>
@@ -660,13 +693,13 @@ exposure terms</p>
 <span>                 control.predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.A</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span>, compute <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                 E <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/inla.stack.html" class="external-link">inla.stack.data</a></span><span class="op">(</span><span class="va">stk</span><span class="op">)</span><span class="op">$</span><span class="va">e</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s look at the summaries</p>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.520491 0.0293267   0.464441 0.520035   0.579539 0.519558</span></span>
-<span><span class="co">## range   1.820460 0.2384790   1.399000 1.804160   2.334290 1.771910</span></span></code></pre>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<span><span class="co">## std.dev 0.485059 0.0677648   0.360526 0.482622   0.625803 0.480093</span></span>
+<span><span class="co">## range   1.893320 0.5942080   0.985255 1.806900   3.298770 1.640960</span></span></code></pre>
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
 <span>    true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sigma</span>, <span class="va">range</span><span class="op">)</span>,</span>
@@ -681,21 +714,373 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.5204915 0.5195585</span></span>
-<span><span class="co">## 2     range  2.0 1.8204601 1.7719073</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4850586 0.4800928</span></span>
+<span><span class="co">## 2     range  2.0 1.8933189 1.6409589</span></span></code></pre>
+</div>
+<div class="section level2">
+<h2 id="using-precomputed-data-for-efficient-model-fitting">Using precomputed data for efficient model fitting<a class="anchor" aria-label="anchor" href="#using-precomputed-data-for-efficient-model-fitting"></a>
+</h2>
+<p>When fitting multiple LGCP models with different formulas but the
+same spatial structure and covariates, it can be very efficient to
+precompute the expensive quantities once and reuse them. This is
+particularly useful for model selection, cross-validation, or exploring
+different covariate combinations.</p>
+<p>The <code><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph()</a></code> function allows us to
+precompute integration points, mesh setup, and SPDE model structures.
+Then <code><a href="../reference/lgcp_graph.html">lgcp_graph()</a></code> can use this precomputed data to fit
+models much faster. This approach is especially beneficial when using
+exact SPDE models created with the <code><a href="../reference/graph_spde.html">graph_spde()</a></code> function,
+as these models require more computationally expensive setup operations
+compared to the rational SPDE models from the rSPDE package.</p>
 <div class="section level3">
-<h3 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+<h3 id="example-without-replicates">Example without replicates<a class="anchor" aria-label="anchor" href="#example-without-replicates"></a>
 </h3>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<p>Let’s start with a timing comparison for the single replicate case.
+First, we’ll set up the data and create a precomputed object:</p>
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Clear and add the single replicate data</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                         edge_number <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_number</span>,</span>
+<span>                                         distance_on_edge <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_loc</span>,</span>
+<span>                                         Intercept <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                                         cov_lgcp <span class="op">=</span> <span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_number</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">lgcp_sample</span><span class="op">$</span><span class="va">edge_number</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                       normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
+<pre><code><span><span class="co">## Assuming the observations are normalized by the length of the edge.</span></span></code></pre>
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create precomputed object with all available covariates</span></span>
+<span><span class="va">precomputed_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>  resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  spde_model <span class="op">=</span> <span class="va">spde_model</span>,</span>
+<span>  model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>  graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>  use_current_mesh <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Now let’s compare timings between the original approach and using
+precomputed data:</p>
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Time the original approach (multiple fits)</span></span>
+<span><span class="va">time_original</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit1_orig</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                          graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
+<span>  <span class="va">fit2_orig</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                          graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
+<span>  <span class="va">fit3_orig</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                          graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Time the precomputed approach (multiple fits)</span></span>
+<span><span class="va">time_precomputed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit1_precomp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                             graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_data</span><span class="op">)</span></span>
+<span>  <span class="va">fit2_precomp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                             graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_data</span><span class="op">)</span></span>
+<span>  <span class="va">fit3_precomp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                             graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_data</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Time for creating precomputed object</span></span>
+<span><span class="va">time_precompute</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">precomputed_temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>  resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  spde_model <span class="op">=</span> <span class="va">spde_model</span>,</span>
+<span>  model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>  graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>  use_current_mesh <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create timing comparison table</span></span>
+<span><span class="va">timing_single</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Original (3 fits)"</span>, <span class="st">"Precomputation"</span>, <span class="st">"Precomputed (3 fits)"</span>, <span class="st">"Total precomputed"</span><span class="op">)</span>,</span>
+<span>  Time_seconds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="va">time_original</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>    <span class="va">time_precompute</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>    <span class="va">time_precomputed</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    <span class="va">time_precompute</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">time_precomputed</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Timing comparison for single replicate:"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "Timing comparison for single replicate:"</span></span></code></pre>
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_single</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##                 Method Time_seconds</span></span>
+<span><span class="co">## 1    Original (3 fits)        4.162</span></span>
+<span><span class="co">## 2       Precomputation        0.695</span></span>
+<span><span class="co">## 3 Precomputed (3 fits)        2.216</span></span>
+<span><span class="co">## 4    Total precomputed        2.911</span></span></code></pre>
+<p>Let’s verify that the results are equivalent by comparing the log
+marginal likelihoods:</p>
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Compare log marginal likelihoods to verify equivalence</span></span>
+<span><span class="co"># Log marginal likelihood comparison (fit2):</span></span>
+<span><span class="co"># Original:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit2_orig</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] -107.524</span></span></code></pre>
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Precomputed:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit2_precomp</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] -107.5241</span></span></code></pre>
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Difference:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">fit2_orig</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit2_precomp</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 7.027988e-05</span></span></code></pre>
+<div class="section level4">
+<h4 id="using-manual-covariates-with-precomputation">Using manual covariates with precomputation<a class="anchor" aria-label="anchor" href="#using-manual-covariates-with-precomputation"></a>
+</h4>
+<p>We can also use manual covariates with precomputation. This is useful
+when you have the exact values of covariates at the integration points
+(mesh nodes in <code>graph$mesh$VtE</code>):</p>
+<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create manual covariates based on mesh nodes</span></span>
+<span><span class="va">manual_covariates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Intercept <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cov_lgcp <span class="op">=</span> <span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  .group <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Precompute with manual covariates (interpolate = FALSE)</span></span>
+<span><span class="va">precomputed_manual</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>  graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>  resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>  spde_model <span class="op">=</span> <span class="va">spde_model</span>,</span>
+<span>  manual_covariates <span class="op">=</span> <span class="va">manual_covariates</span>,</span>
+<span>  interpolate <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_current_mesh <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit model using manual covariates precomputed data</span></span>
+<span><span class="va">time_manual</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit_manual</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                          graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_manual</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Manual covariates fit time (seconds):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_manual</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.718</span></span></code></pre>
+<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Manual covariates log marginal likelihood:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit_manual</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] -99.11596</span></span></code></pre>
+</div>
+<div class="section level4">
+<h4 id="performance-optimization-avoiding-graph-cloning">Performance optimization: avoiding graph cloning<a class="anchor" aria-label="anchor" href="#performance-optimization-avoiding-graph-cloning"></a>
+</h4>
+<p>For maximum performance, you can avoid cloning the graph by setting
+<code>clone_graph = FALSE</code>. This works directly on the original
+graph, which is faster but modifies the input:</p>
+<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Performance comparison: with and without cloning</span></span>
+<span><span class="va">time_with_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                         graph <span class="op">=</span> <span class="va">graph</span>, clone_graph <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">time_without_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit_no_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span><span class="op">)</span>, </span>
+<span>                            graph <span class="op">=</span> <span class="va">graph</span>, clone_graph <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Time with cloning (seconds):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_with_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 1.462</span></span></code></pre>
+<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Time without cloning (seconds):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_without_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 1.465</span></span></code></pre>
+<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Speedup factor:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">time_with_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span> <span class="op">/</span> <span class="va">time_without_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"x"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "1 x"</span></span></code></pre>
+<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># The results should be identical</span></span>
+<span><span class="co"># Log marginal likelihood difference:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">fit_clone</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit_no_clone</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 4.430935e-05</span></span></code></pre>
+<p>You can also use <code>clone_graph = FALSE</code> with precomputation
+for even better performance:</p>
+<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Precompute without cloning (faster but modifies the graph)</span></span>
+<span><span class="va">time_precomp_no_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">precomputed_no_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>    resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>    model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>    graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>    spde_model <span class="op">=</span> <span class="va">spde_model</span>,    </span>
+<span>    clone_graph <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit using precomputed data without cloning</span></span>
+<span><span class="va">time_fit_no_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit_precomp_no_clone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span><span class="op">)</span>, </span>
+<span>                                    graph <span class="op">=</span> <span class="va">graph</span>, </span>
+<span>                                    precomputed_data <span class="op">=</span> <span class="va">precomputed_no_clone</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Precomputation time (no clone, seconds):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_precomp_no_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.737</span></span></code></pre>
+<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fit time with precomputed data (no clone, seconds):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_fit_no_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.752</span></span></code></pre>
+</div>
+</div>
+<div class="section level3">
+<h3 id="example-with-replicates">Example with replicates<a class="anchor" aria-label="anchor" href="#example-with-replicates"></a>
+</h3>
+<p>Now let’s do the same comparison for the replicated data. Since the
+replicates coincide with the “.group” column, we can use the default
+value for <code>repl</code> and <code>repl_col</code>. If this is not
+the case, you can specify the <code>repl</code> (to determined which
+replicates to use, and set it to “.all”, which is the default, if you
+want to use all replicates) and <code>repl_col</code> arguments.</p>
+<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Clear and add the replicated data</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">graph</span><span class="op">$</span><span class="fu">add_observations</span><span class="op">(</span>data <span class="op">=</span> <span class="va">df_rep</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span>, group <span class="op">=</span> <span class="st">"rep"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Adding observations...</span></span></code></pre>
+<pre><code><span><span class="co">## Assuming the observations are normalized by the length of the edge.</span></span></code></pre>
+<div class="sourceCode" id="cb110"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create precomputed object for replicated data</span></span>
+<span><span class="va">precomputed_data_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>  graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>  resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>  spde_model <span class="op">=</span> <span class="va">spde_model</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>  use_current_mesh <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Time comparisons for replicated data:</p>
+<div class="sourceCode" id="cb111"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Time the original approach (multiple fits with replicates)</span></span>
+<span><span class="va">time_original_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit1_orig_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                              graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
+<span>  <span class="va">fit2_orig_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                              graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
+<span>  <span class="va">fit3_orig_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                              graph <span class="op">=</span> <span class="va">graph</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Time the precomputed approach (multiple fits with replicates)</span></span>
+<span><span class="va">time_precomputed_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit1_precomp_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                                 graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_data_rep</span><span class="op">)</span></span>
+<span>  <span class="va">fit2_precomp_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                                 graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_data_rep</span><span class="op">)</span></span>
+<span>  <span class="va">fit3_precomp_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">spde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                                 graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_data_rep</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Time for creating precomputed object with replicates</span></span>
+<span><span class="va">time_precompute_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">precomputed_temp_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>    graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>    resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>    model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>    spde_model <span class="op">=</span> <span class="va">spde_model</span>,</span>
+<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>    use_current_mesh <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create timing comparison table for replicates</span></span>
+<span><span class="va">timing_replicates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Original (3 fits)"</span>, <span class="st">"Precomputation"</span>, <span class="st">"Precomputed (3 fits)"</span>, <span class="st">"Total precomputed"</span><span class="op">)</span>,</span>
+<span>  Time_seconds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="va">time_original_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>    <span class="va">time_precompute_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>, </span>
+<span>    <span class="va">time_precomputed_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    <span class="va">time_precompute_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">time_precomputed_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Timing comparison for replicated data:"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "Timing comparison for replicated data:"</span></span></code></pre>
+<div class="sourceCode" id="cb113"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_replicates</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##                 Method Time_seconds</span></span>
+<span><span class="co">## 1    Original (3 fits)       13.857</span></span>
+<span><span class="co">## 2       Precomputation        1.037</span></span>
+<span><span class="co">## 3 Precomputed (3 fits)       11.137</span></span>
+<span><span class="co">## 4    Total precomputed       12.174</span></span></code></pre>
+<p>Let’s verify that the results are equivalent by comparing the log
+marginal likelihoods:</p>
+<div class="sourceCode" id="cb115"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Compare log marginal likelihoods to verify equivalence</span></span>
+<span><span class="co"># Log marginal likelihood comparison (fit2):</span></span>
+<span><span class="co"># Original:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit2_orig_rep</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] -412.8223</span></span></code></pre>
+<div class="sourceCode" id="cb117"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Precomputed:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit2_precomp_rep</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] -412.8223</span></span></code></pre>
+<div class="sourceCode" id="cb119"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Difference:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">fit2_orig_rep</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit2_precomp_rep</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 2.391765e-06</span></span></code></pre>
+<div class="section level4">
+<h4 id="using-manual-covariates-with-replicates">Using manual covariates with replicates<a class="anchor" aria-label="anchor" href="#using-manual-covariates-with-replicates"></a>
+</h4>
+<p>For replicated data, manual covariates must include the replicate
+structure. Since the replicates in the manual covariates are not
+<code>.group</code>, we need to specify the <code>repl_col</code>
+argument.</p>
+<div class="sourceCode" id="cb121"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create manual covariates for replicated data based on mesh nodes</span></span>
+<span><span class="va">manual_covariates_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Intercept <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cov_lgcp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span>, <span class="fl">5</span><span class="op">)</span>,</span>
+<span>  rep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">mesh</span><span class="op">$</span><span class="va">VtE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Precompute with manual covariates for replicates</span></span>
+<span><span class="va">precomputed_manual_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/precompute_lgcp_graph.html">precompute_lgcp_graph</a></span><span class="op">(</span></span>
+<span>  graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>  resp_variable_name <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  model_name <span class="op">=</span> <span class="st">"field"</span>,</span>
+<span>  spde_model <span class="op">=</span> <span class="va">rspde_model</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Intercept"</span>, <span class="st">"cov_lgcp"</span><span class="op">)</span>,</span>
+<span>  manual_covariates <span class="op">=</span> <span class="va">manual_covariates_rep</span>,</span>
+<span>  interpolate <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  repl_col <span class="op">=</span> <span class="st">"rep"</span>,</span>
+<span>  use_current_mesh <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit model using manual covariates for replicates</span></span>
+<span><span class="va">time_manual_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">fit_manual_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/pkg/INLA/man/f.html" class="external-link">f</a></span><span class="op">(</span><span class="va">field</span>, model <span class="op">=</span> <span class="va">rspde_model</span>, replicate <span class="op">=</span> <span class="va">field.repl</span><span class="op">)</span>, </span>
+<span>                              graph <span class="op">=</span> <span class="va">graph</span>, precomputed_data <span class="op">=</span> <span class="va">precomputed_manual_rep</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Manual covariates (replicates) fit time (seconds):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_manual_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 2.634</span></span></code></pre>
+<div class="sourceCode" id="cb123"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Manual covariates (replicates) log marginal likelihood:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit_manual_rep</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] -413.3523</span></span></code></pre>
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-BSW2023PPST" class="csl-entry">
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023. <span>“Log-Cox
 Gaussian Processes and Space-Time Models on Compact Metric
-Graphs.”</span> <em>In Preparation</em>.
+Graphs.”</span> In <em>In Preparation</em>.
 </div>
 <div id="ref-lgcp" class="csl-entry">
 Simpson, Daniel, Janine B. Illian, Finn Lindgren, Siv H. Sørbye, and
 Håvard Rue. 2016. <span>“Going Off Grid: Computationally Efficient
 Inference for Log-Gaussian Cox Processes.”</span> <em>Biometrika</em>.
+</div>
 </div>
 </div>
 </div>
@@ -711,7 +1096,7 @@ Inference for Log-Gaussian Cox Processes.”</span> <em>Biometrika</em>.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

@@ -1,0 +1,878 @@
+# inlabru interface of Whittle--Matérn fields
+
+## Introduction
+
+In this vignette we will present our `inlabru` interface to
+Whittle–Matérn fields. The underlying theory for this approach is
+provided in [Bolin et al. (2024)](https://arxiv.org/abs/2205.06163) and
+[Bolin et al. (2023)](https://arxiv.org/abs/2304.10372).
+
+For an introduction to the `metric_graph` class, please see the [Working
+with metric
+graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graph.md)
+vignette.
+
+For handling data manipulation on metric graphs, see [Data manipulation
+on metric
+graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graph_data.md)
+
+For our `R-INLA` interface, see the [INLA interface of Whittle–Matérn
+fields](https://davidbolin.github.io/MetricGraph/articles/inla_interface.md)
+vignette.
+
+In the [Gaussian random fields on metric
+graphs](https://davidbolin.github.io/MetricGraph/articles/random_fields.md)
+vignette, we introduce all the models in metric graphs contained in this
+package, as well as, how to perform statistical tasks on these models,
+but without the `R-INLA` or `inlabru` interfaces.
+
+We will present our `inlabru` interface to the Whittle-Matérn fields by
+providing a step-by-step illustration.
+
+The Whittle–Matérn fields are specified as solutions to the stochastic
+differential equation
+``` math
+  (\kappa^2 - \Delta)^{\alpha} \tau u = \mathcal{W}
+```
+on the metric graph $`\Gamma`$. We can work with these models without
+any approximations if the smoothness parameter $`\alpha`$ is an integer,
+and this is what we focus on in this vignette. For details on the case
+of a general smoothness parameter, see [Whittle–Matérn fields with
+general
+smoothness](https://davidbolin.github.io/MetricGraph/articles/fem_models.md).
+
+## A toy dataset
+
+Let us begin by loading the `MetricGraph` package and creating a metric
+graph:
+
+``` r
+
+library(MetricGraph)
+
+edge1 <- rbind(c(0,0),c(1,0))
+edge2 <- rbind(c(0,0),c(0,1))
+edge3 <- rbind(c(0,1),c(-1,1))
+theta <- seq(from=pi,to=3*pi/2,length.out = 20)
+edge4 <- cbind(sin(theta),1+ cos(theta))
+edges = list(edge1, edge2, edge3, edge4)
+graph_bru <- metric_graph$new(edges = edges)
+```
+
+Let us add 50 random locations in each edge where we will have
+observations:
+
+``` r
+
+obs_per_edge <- 50
+obs_loc <- NULL
+for(i in 1:(graph_bru$nE)) {
+  obs_loc <- rbind(obs_loc,
+                   cbind(rep(i,obs_per_edge), 
+                   runif(obs_per_edge)))
+}
+```
+
+We will now sample in these observation locations and plot the latent
+field:
+
+``` r
+
+sigma <- 2
+alpha <- 1
+nu <- alpha - 0.5
+r <- 0.15 # r stands for range
+
+u <- sample_spde(range = r, sigma = sigma, alpha = alpha,
+                 graph = graph_bru, PtE = obs_loc)
+graph_bru$plot(X = u, X_loc = obs_loc)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-3-1.png)
+
+Let us now generate the observed responses, which we will call `y`. We
+will also plot the observed responses on the metric graph.
+
+``` r
+
+n_obs <- length(u)
+sigma.e <- 0.1
+
+y <- u + sigma.e * rnorm(n_obs)
+graph_bru$plot(X = y, X_loc = obs_loc)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-4-1.png)
+
+## `inlabru` implementation
+
+We will now present our `inlabru` implementation of the Whittle-Matérn
+fields for metric graphs. It has the advantage, over our `R-INLA`
+implementation, of not requiring the user to provide observation
+matrices, indices nor stack objects.
+
+We are now in a position to fit the model with our `inlabru`
+implementation. Because of this, we need to add the observations to the
+graph, which we will do with the `add_observations()` method.
+
+``` r
+
+# Creating the data frame
+df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
+                      distance_on_edge = obs_loc[,2])
+# Adding observations and turning them to vertices
+graph_bru$add_observations(data = df_graph, normalized=TRUE)
+```
+
+    ## Adding observations...
+
+    ## Assuming the observations are normalized by the length of the edge.
+
+``` r
+
+graph_bru$plot(data="y")
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-5-1.png)
+
+Now, we load `INLA` and `inlabru` packages. We will also need to create
+the `inla` model object with the `graph_spde` function. By default we
+have `alpha=1`.
+
+``` r
+
+library(INLA)
+library(inlabru)
+spde_model_bru <- graph_spde(graph_bru)
+```
+
+Now, we create `inlabru`’s component, which is a formula-like object.
+The index parameter in `inlabru` is not used in our implementation,
+thus, we replace it by the `repl` argument, which tells which replicates
+to use. If there is no replicates, we supply `NULL`.
+
+``` r
+
+cmp <-
+    y ~ -1 + Intercept(1) + field(loc,
+                    model = spde_model_bru)
+```
+
+Now, we create the data object to be passed to the
+[`bru()`](https://inlabru-org.github.io/inlabru/reference/bru.html)
+function:
+
+``` r
+
+data_spde_bru <- graph_data_spde(spde_model_bru, loc_name = "loc")
+```
+
+we directly fit the model by providing the `data` component of the
+`data_spde_bru` list:
+
+``` r
+
+spde_bru_fit <-
+    bru(cmp, data=data_spde_bru[["data"]],
+        options = list(num.threads = "1:1")
+        )
+```
+
+Let us now obtain the estimates in the original scale by using the
+[`spde_metric_graph_result()`](https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.md)
+function, then taking a
+[`summary()`](https://rdrr.io/r/base/summary.html):
+
+``` r
+
+spde_bru_result <- spde_metric_graph_result(spde_bru_fit, 
+                    "field", spde_model_bru)
+
+summary(spde_bru_result)
+```
+
+    ##           mean       sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 2.113060 0.220913   1.726900 2.097610   2.586950 2.066910
+    ## range 0.167043 0.039501   0.105883 0.161263   0.260101 0.149487
+
+We will now compare the means of the estimated values with the true
+values:
+
+``` r
+
+  result_df_bru <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, r),
+    mean = c(
+      spde_bru_result$summary.sigma$mean,
+      spde_bru_result$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result$summary.sigma$mode,
+      spde_bru_result$summary.range$mode
+    )
+  )
+  print(result_df_bru)
+```
+
+    ##   parameter true      mean      mode
+    ## 1   std.dev 2.00 2.1130565 2.0669085
+    ## 2     range 0.15 0.1670426 0.1494869
+
+We can also plot the posterior marginal densities with the help of the
+[`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
+function:
+
+``` r
+
+  posterior_df_bru_fit <- gg_df(spde_bru_result)
+
+  library(ggplot2)
+
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-12-1.png)
+
+### Kriging with the `inlabru` implementation
+
+Unfortunately, our `inlabru` implementation is not compatible with
+`inlabru`’s [`predict()`](https://rdrr.io/r/stats/predict.html) method.
+This has to do with the nature of the metric graph’s object.
+
+To this end, we have provided a different
+[`predict()`](https://rdrr.io/r/stats/predict.html) method. We will now
+show how to do kriging with the help of this function.
+
+We begin by creating a data list with the positions we want the
+predictions. In this case, we will want the predictions on a mesh.
+
+Let us begin by obtaining an evenly spaced mesh with respect to the base
+graph:
+
+``` r
+
+obs_per_edge_prd <- 30
+graph_bru$build_mesh(n = obs_per_edge_prd)
+```
+
+Let us plot the resulting graph:
+
+``` r
+
+graph_bru$plot(mesh=TRUE)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-14-1.png)
+
+The positions we want are the mesh positions, which can be obtained by
+using the `get_mesh_locations()` method. We also set `bru=TRUE` and
+`loc="loc"` to obtain a data list suitable to be used with `inlabru`.
+
+``` r
+
+data_list <- graph_bru$get_mesh_locations(bru = TRUE,
+                                            loc_name = "loc")
+```
+
+We can now obtain the predictions by using the
+[`predict()`](https://rdrr.io/r/stats/predict.html) method. Observe that
+our [`predict()`](https://rdrr.io/r/stats/predict.html) method for graph
+models is a bit different from `inlabru`’s standard
+[`predict()`](https://rdrr.io/r/stats/predict.html) method. Indeed, the
+first argument is the model created with the
+[`graph_spde()`](https://davidbolin.github.io/MetricGraph/reference/graph_spde.md)
+function, the second is `inlabru`’s component, and the remaining is as
+done with the standard
+[`predict()`](https://rdrr.io/r/stats/predict.html) method in `inlabru`.
+
+``` r
+
+field_pred <- predict(spde_model_bru, 
+                                cmp,
+                                spde_bru_fit, 
+                                newdata = data_list,
+                                formula = ~field)
+```
+
+Finally, we can plot the predictions together with the data:
+
+``` r
+
+plot(field_pred)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-17-1.png)
+
+We can also obtain a 3d plot by setting `plotly` to `TRUE`:
+
+``` r
+
+plot(field_pred, type = "plotly")
+```
+
+### An example with `alpha = 2`
+
+We will now show an example where the parameter `alpha` is equal to 2.
+There is essentially no change in the commands above. Let us first clear
+the observations:
+
+``` r
+
+graph_bru$clear_observations()
+```
+
+Let us now simulate the data with `alpha=2`. We will now sample in these
+observation locations and plot the latent field:
+
+``` r
+
+sigma <- 2
+alpha <- 2
+nu <- alpha - 0.5
+r <- 0.15 # r stands for range
+
+
+u <- sample_spde(range = r, sigma = sigma, alpha = alpha,
+                 graph = graph_bru, PtE = obs_loc)
+graph_bru$plot(X = u, X_loc = obs_loc)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-20-1.png)
+
+In the same way as before we will generate `y` and add the observations:
+
+``` r
+
+n_obs <- length(u)
+sigma.e <- 0.1
+
+y <- u + sigma.e * rnorm(n_obs)
+
+df_graph <- data.frame(y = y, edge_number = obs_loc[,1],
+                        distance_on_edge = obs_loc[,2])
+
+graph_bru$add_observations(data=df_graph, normalized=TRUE)
+```
+
+Let us now create the model object for `alpha=2`:
+
+``` r
+
+spde_model_alpha2 <- graph_spde(graph_bru, alpha = 2)
+```
+
+Now, we will create the new data object with the
+[`graph_data_spde()`](https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.md)
+function, in which we need to pass the argument `loc_name` that is
+needed for
+[`bru()`](https://inlabru-org.github.io/inlabru/reference/bru.html):
+
+``` r
+
+data_spde_alpha2 <- graph_data_spde(graph_spde = spde_model_alpha2, 
+                            loc_name = "loc")
+```
+
+Now, we create `inlabru`’s component:
+
+``` r
+
+cmp_alpha2 <-
+    y ~ -1 + Intercept(1) + field(loc,
+                    model = spde_model_alpha2)
+```
+
+we directly fit the model by providing the `data` component of the
+`data_spde_bru` list:
+
+``` r
+
+spde_bru_fit_alpha2 <-
+    bru(cmp_alpha2, data=data_spde_alpha2[["data"]],
+    options = list(num.threads = "1:1"))
+```
+
+Let us now obtain the estimates in the original scale by using the
+[`spde_metric_graph_result()`](https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.md)
+function, then taking a
+[`summary()`](https://rdrr.io/r/base/summary.html):
+
+``` r
+
+spde_bru_result_alpha2 <- spde_metric_graph_result(spde_bru_fit_alpha2, 
+                    "field", spde_model_alpha2)
+
+summary(spde_bru_result_alpha2)
+```
+
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 2.034640 0.2235370   1.636340 2.022080    2.50933 1.984160
+    ## range 0.152917 0.0154667   0.124912 0.152061    0.18561 0.150376
+
+We will now compare the means of the estimated values with the true
+values:
+
+``` r
+
+  result_df_bru <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma, r),
+    mean = c(
+      spde_bru_result_alpha2$summary.sigma$mean,
+      spde_bru_result_alpha2$summary.range$mean
+    ),
+    mode = c(
+      spde_bru_result_alpha2$summary.sigma$mode,
+      spde_bru_result_alpha2$summary.range$mode
+    )
+  )
+  print(result_df_bru)
+```
+
+    ##   parameter true      mean      mode
+    ## 1   std.dev 2.00 2.0346411 1.9841623
+    ## 2     range 0.15 0.1529171 0.1503756
+
+We can also plot the posterior marginal densities with the help of the
+[`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
+function:
+
+``` r
+
+  posterior_df_bru_fit <- gg_df(spde_bru_result_alpha2)
+
+  library(ggplot2)
+
+  ggplot(posterior_df_bru_fit) + geom_line(aes(x = x, y = y)) + 
+  facet_wrap(~parameter, scales = "free") + labs(y = "Density")
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-28-1.png)
+
+Let us now do prediction with `alpha=2`. We proceed as before, and we
+will use the same data list `data_list` to do prediction on the mesh
+locations. Thus, we will obtain predictions by using the
+[`predict()`](https://rdrr.io/r/stats/predict.html) method. Observe
+that, again, we will use our `predict` method, instead of the default
+one from `inlabru`.
+
+``` r
+
+field_pred_alpha2 <- predict(spde_model_alpha2, 
+                                cmp_alpha2,
+                                spde_bru_fit_alpha2, 
+                                newdata = data_list,
+                                formula = ~field)
+```
+
+Finally, we can plot the predictions together with the data:
+
+``` r
+
+plot(field_pred_alpha2)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-30-1.png)
+
+We can also obtain a 3d plot by setting `plotly` to `TRUE`:
+
+``` r
+
+plot(field_pred_alpha2, type = "plotly")
+```
+
+### Fitting `inlabru` models with replicates
+
+We will now illustrate how to use our `inlabru` implementation to fit
+models with replicates.
+
+To simplify exposition, we will use the same base graph. So, we begin by
+clearing the observations:
+
+``` r
+
+graph_bru$clear_observations()
+```
+
+We will use the same observation locations as for the previous cases.
+Let us sample 30 replicates:
+
+``` r
+
+sigma_rep <- 1.5
+alpha_rep <- 1
+nu_rep <- alpha_rep - 0.5
+r_rep <- 0.2 # r stands for range
+
+n_repl <- 30
+
+u_rep <- sample_spde(range = r_rep, sigma = sigma_rep,
+                 alpha = alpha_rep,
+                 graph = graph_bru, PtE = obs_loc,
+                 nsim = n_repl)
+```
+
+Let us now generate the observed responses, which we will call `y_rep`.
+
+``` r
+
+n_obs_rep <- nrow(u_rep)
+sigma_e <- 0.1
+
+y_rep <- u_rep + sigma_e * matrix(rnorm(n_obs_rep * n_repl),
+                                    ncol=n_repl)
+```
+
+We can now add the the observations by setting the `group` argument to
+`repl`:
+
+``` r
+
+dl_rep_graph <- lapply(1:ncol(y_rep), function(i){data.frame(y = y_rep[,i],
+                                          edge_number = obs_loc[,1],
+                                          distance_on_edge = obs_loc[,2],
+                                          repl = i)})
+dl_rep_graph <- do.call(rbind, dl_rep_graph)
+
+graph_bru$add_observations(data = dl_rep_graph, normalized=TRUE,
+                                    group = "repl")
+```
+
+    ## Adding observations...
+
+    ## Assuming the observations are normalized by the length of the edge.
+
+By definition the
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method plots
+the first replicate. We can select the other replicates with the `group`
+argument. See the [Working with metric
+graphs](https://davidbolin.github.io/MetricGraph/articles/metric_graphs.md)
+for more details.
+
+``` r
+
+graph_bru$plot(data="y")
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-36-1.png)
+
+Let us plot another replicate:
+
+``` r
+
+graph_bru$plot(data="y", group=2)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-37-1.png)
+
+Let us now create the model object:
+
+``` r
+
+spde_model_bru_rep <- graph_spde(graph_bru)
+```
+
+Let us first create a model using the replicates 1, 3, 5, 7 and 9. To
+this end, we provide the vector of the replicates we want as the `input`
+argument to the `field`. The
+[`graph_data_spde()`](https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.md)
+acts as a helper function when building this vector. All we need to do,
+is to use the `repl` component of the list created when using the
+[`graph_data_spde()`](https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.md)
+
+``` r
+
+data_spde_bru <- graph_data_spde(spde_model_bru_rep, 
+        loc_name = "loc",
+        repl=c(1,3,5,7,9),
+        repl_col = "repl")
+
+repl <- data_spde_bru[["repl"]]
+cmp_rep <-
+    y ~ -1 + Intercept(1) + field(loc, 
+                        model = spde_model_bru_rep,
+                        replicate = repl)
+```
+
+Now, we fit the model:
+
+``` r
+
+spde_bru_fit_rep <-
+    bru(cmp_rep,
+        data=data_spde_bru[["data"]],
+        options=list(
+        num.threads = "1:1")
+    )
+```
+
+    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
+    ##   Specify is_rowwise explicitly to avoid this warning.
+
+Let us see the estimated values in the original scale:
+
+``` r
+
+spde_result_bru_rep <- spde_metric_graph_result(spde_bru_fit_rep, 
+                        "field", spde_model_bru_rep)
+
+summary(spde_result_bru_rep)
+```
+
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 1.582740 0.0823491   1.427550 1.580540   1.748790 1.576530
+    ## range 0.205036 0.0233902   0.162277 0.204071   0.254025 0.202399
+
+Let us compare with the true values:
+
+``` r
+
+  result_df_bru_rep <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_result_bru_rep$summary.sigma$mean,
+      spde_result_bru_rep$summary.range$mean
+    ),
+    mode = c(
+      spde_result_bru_rep$summary.sigma$mode,
+      spde_result_bru_rep$summary.range$mode
+    )
+  )
+  print(result_df_bru_rep)
+```
+
+    ##   parameter true     mean      mode
+    ## 1   std.dev  1.5 1.582736 1.5765293
+    ## 2     range  0.2 0.205036 0.2023988
+
+We will now show how to fit the model considering all replicates. To
+this end, we simply set the `repl` argument in
+[`graph_data_spde()`](https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.md)
+function to `.all`.
+
+``` r
+
+data_spde_bru_rep <- graph_data_spde(spde_model_bru_rep, 
+        loc_name = "loc",
+        repl=".all",
+        repl_col = "repl")
+
+repl <- data_spde_bru_rep[["repl"]]
+
+cmp_rep <-  y ~ -1 + Intercept(1) + field(loc, 
+                        model = spde_model_bru_rep,
+                        replicate = repl)
+```
+
+Similarly, we fit the model, by setting the `repl` argument to “.all”
+inside the
+[`graph_data_spde()`](https://davidbolin.github.io/MetricGraph/reference/graph_data_spde.md)
+function:
+
+``` r
+
+spde_bru_fit_rep <-
+    bru(cmp_rep,
+        data=data_spde_bru_rep[["data"]],
+        options=list(
+        num.threads = "1:1")
+    )
+```
+
+    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
+    ##   Specify is_rowwise explicitly to avoid this warning.
+
+Let us see the estimated values in the original scale:
+
+``` r
+
+spde_result_bru_rep <- spde_metric_graph_result(spde_bru_fit_rep, 
+                        "field", spde_model_bru_rep)
+
+summary(spde_result_bru_rep)
+```
+
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 1.543410 0.0320613   1.484690 1.542480   1.609820 1.546580
+    ## range 0.208291 0.0096452   0.190901 0.207697   0.228724 0.205978
+
+Let us compare with the true values:
+
+``` r
+
+  result_df_bru_rep <- data.frame(
+    parameter = c("std.dev", "range"),
+    true = c(sigma_rep, r_rep),
+    mean = c(
+      spde_result_bru_rep$summary.sigma$mean,
+      spde_result_bru_rep$summary.range$mean
+    ),
+    mode = c(
+      spde_result_bru_rep$summary.sigma$mode,
+      spde_result_bru_rep$summary.range$mode
+    )
+  )
+  print(result_df_bru_rep)
+```
+
+    ##   parameter true      mean      mode
+    ## 1   std.dev  1.5 1.5434075 1.5465788
+    ## 2     range  0.2 0.2082905 0.2059784
+
+### An application with real data
+
+For this example we will consider the `pems` data contained in the
+MetricGraph package. This data was illustrated in (Bolin et al. 2023).
+The data consists of traffic speed observations on highways in the city
+of San Jose, California. The traffic speeds are stored in the variable
+`y`. We will also add the observations to the metric graph object:
+
+``` r
+
+pems_graph <- metric_graph$new(edges=pems$edges)
+pems_graph$add_observations(data=pems$data)
+pems_graph$prune_vertices()
+```
+
+Let us now plot the data. We will choose the data such that longitude is
+between `-121.905` and `121.875`, and latitude is between `37.312` and
+`37.328`:
+
+``` r
+
+p <- pems_graph$filter(-121.905< .coord_x, .coord_x < -121.875,
+                          37.312 < .coord_y, .coord_y < 37.328) %>%
+                          pems_graph$plot(data="y", vertex_size=0,
+                                          data_size=4)
+      p + xlim(-121.905,-121.875) + ylim(37.312,37.328)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-48-1.png)
+
+We will now create and fit models with both $`\alpha=1`$ and
+$`\alpha=2`$ using `inlabru`:
+
+``` r
+
+# Model with alpha = 1
+spde_model_bru_pems_1 <- graph_spde(pems_graph, alpha=1)
+cmp_1 <- y ~ -1 + Intercept(1) + field(loc,
+                                  model = spde_model_bru_pems_1)
+data_spde_bru_pems_1 <- graph_data_spde(spde_model_bru_pems_1, loc_name = "loc")
+spde_bru_fit_pems_1 <- bru(cmp_1, data=data_spde_bru_pems_1[["data"]],
+                          options=list(num.threads = "1:1"))
+```
+
+    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
+    ##   Specify is_rowwise explicitly to avoid this warning.
+
+``` r
+
+# Model with alpha = 2
+spde_model_bru_pems_2 <- graph_spde(pems_graph, alpha=2, start_sigma = 10)
+cmp_2 <- y ~ -1 + Intercept(1) + field(loc,
+                                    model = spde_model_bru_pems_2)
+data_spde_bru_pems_2 <- graph_data_spde(spde_model_bru_pems_2, loc_name = "loc")
+spde_bru_fit_pems_2 <- bru(cmp_2, data=data_spde_bru_pems_2[["data"]],
+                          options=list(num.threads = "1:1"))
+```
+
+    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
+    ##   Specify is_rowwise explicitly to avoid this warning.
+
+Let us see the estimated values in the original scale for both models:
+
+``` r
+
+# Results for alpha = 1
+spde_result_bru_pems_1 <- spde_metric_graph_result(spde_bru_fit_pems_1, 
+                        "field", spde_model_bru_pems_1)
+cat("Results for alpha = 1:\n")
+```
+
+    ## Results for alpha = 1:
+
+``` r
+
+summary(spde_result_bru_pems_1)
+```
+
+    ##             mean         sd  0.025quant   0.5quant 0.975quant        mode
+    ## sigma 14.8030000 0.60415300 13.60400000 14.8125000 15.9915000 14.79410000
+    ## range  0.0131658 0.00861396  0.00188224  0.0114391  0.0338774  0.00584248
+
+``` r
+
+# Results for alpha = 2
+spde_result_bru_pems_2 <- spde_metric_graph_result(spde_bru_fit_pems_2, 
+                        "field", spde_model_bru_pems_2)
+cat("\nResults for alpha = 2:\n")
+```
+
+    ## 
+    ## Results for alpha = 2:
+
+``` r
+
+summary(spde_result_bru_pems_2)
+```
+
+    ##           mean      sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 20.99100 3.20692   15.47110 20.69000    28.1044 20.40780
+    ## range  8.83274 1.58267    6.18079  8.67279    12.3792  8.34354
+
+We can now get the mesh locations to do prediction. We start by creating
+a mesh and extracting the indexes of the mesh such that longitude is
+between `-121.905` and `121.875`, and latitude is between `37.312` and
+`37.328`:
+
+``` r
+
+pems_graph$build_mesh(h=0.1)
+
+# Getting mesh coordinates
+mesh_coords <- pems_graph$mesh$V
+
+# Finding coordinates such that longitude is between 
+# `-121.905` and `121.875`, and latitude is between `37.312` and `37.328`
+idx_x <- (mesh_coords[,1] > -121.905) & (mesh_coords[,1] < -121.875)
+idx_y <- (mesh_coords[,2] > 37.312) & (mesh_coords[,2] < 37.328)
+idx_xy <- idx_x & idx_y
+
+# Create prediction data list
+pred_coords <- list()
+pred_coords[["loc"]] <- pems_graph$mesh$VtE[idx_xy,]
+```
+
+Finally, we will do prediction and plot them for the model with
+`alpha=1`.
+
+``` r
+
+field_pred_pems_1 <- predict(spde_model_bru_pems_1, cmp_1, 
+                        spde_bru_fit_pems_1,
+                        newdata = pred_coords,
+                        formula = ~ Intercept + field)
+
+cat("Predictions for alpha = 1:\n")
+```
+
+    ## Predictions for alpha = 1:
+
+``` r
+
+plot(field_pred_pems_1, edge_width = 0.5, vertex_size = 0) +
+      xlim(-121.905,-121.875) + ylim(37.316,37.328)
+```
+
+![](inlabru_interface_files/figure-html/unnamed-chunk-52-1.png)
+
+Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023. “Statistical
+Properties of Gaussian Whittle–Matérn Fields on Metric Graphs.”
+*arXiv:2304.10372*.
+
+Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2024. “Gaussian
+Whittle–Matérn Fields on Metric Graphs.” *Bernoulli* 30: 1611–39.
