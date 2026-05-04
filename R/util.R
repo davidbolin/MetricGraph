@@ -3352,14 +3352,14 @@ match_mesh_data <- function(graph,
   
   # Group by edge_number and rank by distance within each group
   mesh_ranked <- mesh_df |>
-    dplyr::group_by(edge_number) |>
-    dplyr::arrange(distance, .by_group = TRUE) |>
+    dplyr::group_by(.data[["edge_number"]]) |>
+    dplyr::arrange(.data[["distance"]], .by_group = TRUE) |>
     dplyr::mutate(rank = dplyr::row_number()) |>
     dplyr::ungroup()
   
   data_ranked <- data_df |>
-    dplyr::group_by(edge_number) |>
-    dplyr::arrange(distance, .by_group = TRUE) |>
+    dplyr::group_by(.data[["edge_number"]]) |>
+    dplyr::arrange(.data[["distance"]], .by_group = TRUE) |>
     dplyr::mutate(rank = dplyr::row_number()) |>
     dplyr::ungroup()
   
@@ -3369,7 +3369,7 @@ match_mesh_data <- function(graph,
     dplyr::left_join(data_ranked, by = c("edge_number", "rank"), suffix = c("_mesh", "_data"))
   
   # Check for missing matches
-  n_na <- sum(is.na(matched$data_idx))
+  n_na <- sum(is.na(matched[["data_idx"]]))
   if (n_na > 0) {
     warning("Matching resulted in ", n_na, " NA values out of ", 
             nrow(matched), " total rows. ",
@@ -3377,8 +3377,8 @@ match_mesh_data <- function(graph,
     
     # Identify problematic edges
     problem_edges <- matched |>
-      dplyr::filter(is.na(data_idx)) |>
-      dplyr::pull(edge_number) |>
+      dplyr::filter(is.na(.data[["data_idx"]])) |>
+      dplyr::pull(.data[["edge_number"]]) |>
       unique()
     
     if (length(problem_edges) > 0) {
@@ -3388,8 +3388,8 @@ match_mesh_data <- function(graph,
   
   # Sort by original mesh index to maintain mesh order, then extract data indices
   result_indices <- matched |>
-    dplyr::arrange(mesh_idx) |>
-    dplyr::pull(data_idx)
+    dplyr::arrange(.data[["mesh_idx"]]) |>
+    dplyr::pull(.data[["data_idx"]])
   
   # Check if we have NA indices and stop with informative error
   if (any(is.na(result_indices))) {

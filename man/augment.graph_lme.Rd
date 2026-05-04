@@ -74,7 +74,7 @@ coordinate system to use. If \code{PtE}, the user must provide \code{edge_number
 \item{...}{Additional arguments.}
 }
 \value{
-A \code{\link[tidyr:reexports]{tidyr::tibble()}} with columns:
+A \code{\link[tidyr:tibble]{tidyr::tibble()}} with columns:
 \itemize{
 \item \code{.fitted} Fitted or predicted value.
 \item \code{.relwrconf} Lower bound of the confidence interval of the random effects, if conf_int = TRUE

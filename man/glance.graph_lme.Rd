@@ -13,7 +13,7 @@
 \item{...}{Additional arguments. Currently not used.}
 }
 \value{
-A \code{\link[tidyr:reexports]{tidyr::tibble()}} with exactly one row and columns:
+A \code{\link[tidyr:tibble]{tidyr::tibble()}} with exactly one row and columns:
 \itemize{
 \item \code{nobs} Number of observations used.
 \item \code{sigma} the square root of the estimated residual variance
@@ -27,7 +27,7 @@ A \code{\link[tidyr:reexports]{tidyr::tibble()}} with exactly one row and column
 }
 \description{
 Glance accepts a \code{graph_lme} object and returns a
-\code{\link[tidyr:reexports]{tidyr::tibble()}} with exactly one row of model summaries.
+\code{\link[tidyr:tibble]{tidyr::tibble()}} with exactly one row of model summaries.
 The summaries are the square root of the estimated variance of the measurement error, residual
 degrees of freedom, AIC, BIC, log-likelihood,
 the type of latent model used in the fit and the total number of observations.
