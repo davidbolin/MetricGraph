@@ -1695,13 +1695,7 @@ summary.metric_graph_spde_result <- function(object,
 #' @param model An `inla_metric_graph_spde` for which to construct or extract a mapper
 #' @param \dots Arguments passed on to other methods
 #' @rdname bru_mapper.inla_metric_graph_spde
-#' @rawNamespace if (getRversion() >= "3.6.0") {
-#'   S3method(inlabru::bru_get_mapper, inla_metric_graph_spde)
-#'   S3method(inlabru::ibm_n, bru_mapper_inla_metric_graph_spde)
-#'   S3method(inlabru::ibm_values, bru_mapper_inla_metric_graph_spde)
-#'   S3method(inlabru::ibm_jacobian, bru_mapper_inla_metric_graph_spde)
-#' }
-#'
+#' @exportS3Method inlabru::bru_get_mapper
 
 bru_get_mapper.inla_metric_graph_spde <- function(model, ...) {
   mapper <- list(model = model)
@@ -1710,16 +1704,19 @@ bru_get_mapper.inla_metric_graph_spde <- function(model, ...) {
 
 #' @param mapper A `bru_mapper.inla_metric_graph_spde` object
 #' @rdname bru_mapper.inla_metric_graph_spde
+#' @exportS3Method inlabru::ibm_n
 ibm_n.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   model <- mapper[["model"]]
   return(model$f$n)
 }
 #' @rdname bru_mapper.inla_metric_graph_spde
+#' @exportS3Method inlabru::ibm_values
 ibm_values.bru_mapper_inla_metric_graph_spde <- function(mapper, ...) {
   seq_len(inlabru::ibm_n(mapper))
 }
 #' @param input The values for which to produce a mapping matrix
 #' @rdname bru_mapper.inla_metric_graph_spde
+#' @exportS3Method inlabru::ibm_jacobian
 ibm_jacobian.bru_mapper_inla_metric_graph_spde <- function(mapper, input, ...) {
   model <- mapper[["model"]]
   if (model$alpha == 1 && !(model$directional)) {

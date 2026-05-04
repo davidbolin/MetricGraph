@@ -40,7 +40,6 @@
 #' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq spline
 #' @importFrom ggplot2 ggplot geom_path aes geom_point coord_fixed labs scale_colour_gradientn guide_legend scale_colour_discrete
 #' @importFrom spatstat.geom psp owin
-#' @importFrom spatstat.data simplenet
 #' @importFrom igraph E E<-
 #' @importFrom RANN nn2
 #' @importFrom Rcpp evalCpp
@@ -61,7 +60,8 @@
 #' @importFrom broom glance augment
 # @importFrom broom tidy
 #' @export glance
-
+#' @useDynLib MetricGraph, .registration = TRUE
+NULL
 #' @importFrom foreach `%dopar%`
 #' @importFrom doParallel registerDoParallel
 #' @export augment
