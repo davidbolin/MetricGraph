@@ -70,12 +70,12 @@ Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A,
   Eigen::VectorXd singular_values(A.rows());
   //
   Eigen::SparseMatrix<double, Eigen::RowMajor> A_ID_rowm(A_ID);
-  int count_subcluster = 0;
+  // int count_subcluster = 0;
   std::vector<int> n_subcluster(0);
   std::vector<int> index_largest;
   int n_largest_cluster = 0;
   while (index_A.size() != 0) {
-    count_subcluster++;
+    // count_subcluster++;
     std::vector<int> index_temp(1);
     std::vector<int> index_new(1);
     std::vector<int> col_index_A(0);

@@ -34,7 +34,7 @@
 #' @export Cholesky t
 #' @importFrom igraph make_graph distances is_tree
 #' @importFrom rSPDE matern.covariance gg_df create_train_test_indices
-#' @export create_train_test_indices
+#' @importFrom rlang .data
 #' @importFrom methods is slot new as
 #' @export gg_df
 #' @importFrom stats predict approx nobs deviance lm logLik na.omit dist sd dnorm pnorm rnorm var as.formula delete.response model.matrix optim terms simulate rpois runif profile qchisq spline
@@ -58,14 +58,12 @@
 #' @export select
 #' @export drop_na
 #' @importFrom broom glance augment
-# @importFrom broom tidy
 #' @export glance
 #' @useDynLib MetricGraph, .registration = TRUE
 NULL
 #' @importFrom foreach `%dopar%`
 #' @importFrom doParallel registerDoParallel
 #' @export augment
-# @export tidy
 
 .onAttach <- function(libname, pkgname) {
   version <- utils::packageVersion("MetricGraph")

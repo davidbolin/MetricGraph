@@ -739,69 +739,10 @@ precomputed_data_rep <- precompute_lgcp_graph(
   covariates = c("Intercept", "cov_lgcp"),
   use_current_mesh = TRUE
 )
-```
 
-Time comparisons for replicated data:
-
-```{r, warning=FALSE}
-# Time the original approach (multiple fits with replicates)
-time_original_rep <- system.time({
-  fit1_orig_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
-                              graph = graph)
-  fit2_orig_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                              graph = graph)
-  fit3_orig_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                              graph = graph)
-})
-
-# Time the precomputed approach (multiple fits with replicates)
-time_precomputed_rep <- system.time({
-  fit1_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
+fit_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + f(field, model = spde_model, replicate = field.repl), 
                                  graph = graph, precomputed_data = precomputed_data_rep)
-  fit2_precomp_rep <- lgcp_graph(y ~ -1 + Intercept + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                                 graph = graph, precomputed_data = precomputed_data_rep)
-  fit3_precomp_rep <- lgcp_graph(y ~ -1 + cov_lgcp + f(field, model = spde_model, replicate = field.repl), 
-                                 graph = graph, precomputed_data = precomputed_data_rep)
-})
 
-# Time for creating precomputed object with replicates
-time_precompute_rep <- system.time({
-  precomputed_temp_rep <- precompute_lgcp_graph(
-    graph = graph,
-    resp_variable_name = "y",
-    model_name = "field",
-    spde_model = spde_model,
-    covariates = c("Intercept", "cov_lgcp"),
-    use_current_mesh = TRUE
-  )
-})
-
-# Create timing comparison table for replicates
-timing_replicates <- data.frame(
-  Method = c("Original (3 fits)", "Precomputation", "Precomputed (3 fits)", "Total precomputed"),
-  Time_seconds = c(
-    time_original_rep[["elapsed"]], 
-    time_precompute_rep[["elapsed"]], 
-    time_precomputed_rep[["elapsed"]],
-    time_precompute_rep[["elapsed"]] + time_precomputed_rep[["elapsed"]]
-  )
-)
-
-print("Timing comparison for replicated data:")
-print(timing_replicates)
-```
-
-Let's verify that the results are equivalent by comparing the log marginal likelihoods:
-
-```{r}
-# Compare log marginal likelihoods to verify equivalence
-# Log marginal likelihood comparison (fit2):
-# Original:
-print(fit2_orig_rep$mlik[1])
-# Precomputed:
-print(fit2_precomp_rep$mlik[1])
-# Difference:
-print(abs(fit2_orig_rep$mlik[1] - fit2_precomp_rep$mlik[1]))
 ```
 
 ### Using manual covariates with replicates
