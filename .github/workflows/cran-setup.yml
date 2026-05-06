@@ -4,26 +4,34 @@ on:
       - cran
 
 name: cran_setup
-  
+
 jobs:
-    cran_setup:
-      runs-on: ubuntu-20.04
-      env:
-        GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      steps:
-        - uses: actions/checkout@v2      
-        
-        - name: Delete vignettes and pkgdown, then copy cran vign
-          run: |
-            git config --local user.email "actions@github.com"
-            git config --local user.name "GitHub Actions"          
-            mkdir vignettes
-            cd cran_vignettes
-            cp * ../vignettes
-            cd ..
-            git rm -rf cran_vignettes
-            git rm -rf examples
-            git add vignettes
-            git commit -m "Doing the setup"
-            git push
-          shell: bash
+  cran_setup:
+    runs-on: macOS-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Delete vignettes, pkgdown, selected tests, then copy cran vign
+        run: |
+          git rm -rf vignettes
+          git rm -rf pkgdown/
+          git rm -f index.md
+          git rm -rf examples
+          git rm -rf inst/shared
+
+          git rm -f tests/testthat/test_inla_inlabru_interfaces.R
+          git rm -f tests/testthat/test_inlabru_predict.R
+          git rm -f tests/testthat/test_cgeneric.R
+          git rm -f tests/testthat/test_cross_validation.R
+
+          rm -rf vignettes
+          mkdir vignettes
+          cd cran_vignettes
+          cp * ../vignettes
+          cd ..
+
+          git rm -rf cran_vignettes
+          git add vignettes
+          git commit -m "Doing the setup"
+          git push
+        shell: bash

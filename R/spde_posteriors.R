@@ -10,7 +10,7 @@
 #' @param directional use directional model
 #' @param leave.edge.out compute the mean of the graph if the observations
 #' are not on the edge
-#' @param no_nugget depricated set theta[1]=0 to fix
+#' @param no_nugget Deprecated; set `theta[1] = 0` to fix
 #' @noRd
 posterior_mean_obs_alpha1 <- function(theta,
                                       graph,
@@ -259,6 +259,193 @@ posterior_mean_obs_alpha2 <- function(theta,
   return(y_hat)
 }
 
+
+
+#' Computes the posterior expectation for each node in the graph
+#' @param theta     - (sigma_e, tau)
+#' @param graph - metric_graph object
+#' @param resp      - data
+#' @param PtE_resp - location
+#' @param rem.edge  - remove edge
+#' @noRd
+posterior_mean_random_walk <- function(theta,
+                                  graph,
+                                  resp,
+                                  PtE_resp,
+                                  rem.edge = FALSE,
+                                  no_nugget = FALSE) {
+
+  sigma_e <- theta[1]
+  tau <- theta[2]
+
+  Qp.list <- Qrandomwalk(tau,graph = graph, build = FALSE)
+  #build BSIGMAB
+  Qpmu <- rep(0, graph$nV)
+
+  # obs.edges <- unique(graph$PtE[,1])
+  obs.edges <- unique(PtE_resp[,1])
+  if(is.logical(rem.edge) == FALSE)
+    obs.edges <- setdiff(obs.edges, rem.edge)
+  i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
+  count <- 0
+  for (e in obs.edges) {
+    # obs.id <- graph$PtE[,1] == e
+    obs.id <- PtE_resp[,1] == e
+    # y_i <- graph$y[obs.id]
+    y_i <- resp[obs.id]
+    l <- graph$edge_lengths[e]
+    PtE_temp <- PtE_resp[obs.id, 2]
+    t <- c( l*PtE_temp)
+
+
+    Bt <- rbind(l-t, t)/l
+    Sigma_i <-  bb_cov_0_ell( t, l, sigma = sqrt(1/tau)) #
+    if(!no_nugget){
+      diag(Sigma_i) <- diag(Sigma_i) + sigma_e^2
+    }
+    R <- base::chol(Sigma_i)
+    Sigma_iB <- solve(Sigma_i, t(Bt))
+    BtSinvB <- Bt %*% Sigma_iB
+
+    E <- graph$E[e, ]
+    if(E[1] == E[2]){
+      Qpmu[E[1]] <- Qpmu[E[1]] + sum(t(Sigma_iB)%*%y_i)
+      Qp[E[1],E[1]] <- Qp[E[1],E[1]] + sum(Bt %*% Sigma_iB)
+      i_[count+1] <- E[1]
+      j_[count+1] <- E[1]
+      x_[count+1] <- sum(Bt %*% Sigma_iB)
+      count <- count + 1
+    }else{
+      i_[count+(1:4)] <- c(E[1], E[1], E[2], E[2])
+      j_[count+(1:4)] <- c(E[1], E[2], E[1], E[2])
+      x_[count+(1:4)] <- c(BtSinvB[1,1], BtSinvB[1,2],
+                           BtSinvB[1,2], BtSinvB[2,2])
+      count <- count + 4
+      Qpmu[E] <- Qpmu[E] + t(Sigma_iB) %*% y_i
+    }
+  }
+  i_ <- c(Qp.list$i, i_[1:count])
+  j_ <- c(Qp.list$j, j_[1:count])
+  x_ <- c(Qp.list$x, x_[1:count])
+  Qp <- Matrix::sparseMatrix(i = i_,
+                             j = j_,
+                             x = x_,
+                             dims = Qp.list$dims)
+
+  R <- Matrix::Cholesky(Qp, LDL = FALSE, perm = TRUE)
+
+  v <- c(as.matrix(Matrix::solve(R,Matrix::solve(R, Qpmu,system = 'P'),
+                                 system='L')))
+  Qpmu <- as.vector(Matrix::solve(R,Matrix::solve(R, v,system = 'Lt'),
+                                  system='Pt'))
+
+  return(Qpmu)
+
+}
+
+
+#' Computes the posterior mean for the random walk model
+#' @param theta parameters (sigma_e, tau)
+#' @param graph metric_graph object
+#' @param resp observerations
+#' @param PtE_resp observations location
+#' @param PtE_pred prediction location
+#' @param type decides where to predict, 'obs' or 'mesh'.
+#' @param leave.edge.out compute the mean of the graph if the observations
+#' are not on the edge
+#' @param no_nugget Deprecated; set `theta[1] = 0` to fix
+#' @noRd
+posterior_mean_obs_random_walk <- function(theta,
+                                      graph,
+                                      resp, #resp must be in the graph's internal order
+                                      PtE_resp,
+                                      PtE_pred,
+                                      type = "PtE",
+                                      leave.edge.out = FALSE, no_nugget = FALSE) {
+  sigma_e <- theta[1]
+  tau <- theta[2]
+
+
+  if(leave.edge.out == FALSE){
+      V.post <- posterior_mean_random_walk(theta = theta, graph = graph,
+                                      resp = resp, PtE_resp = PtE_resp, no_nugget = no_nugget)
+  }
+
+  Qpmu <- rep(0, nrow(graph$V))
+  if(type == "obs") {
+    # y_hat <- rep(0, length(graph$y))
+    y_hat <- rep(0, length(resp))
+    obs.edges <- unique(PtE_resp[,1])
+  }  else {
+    y_hat <- rep(0, dim(PtE_pred)[1])
+    obs.edges <- unique(PtE_pred[,1])
+  }
+
+
+  for (e in obs.edges) {
+    if(leave.edge.out == TRUE){
+        V.post <- posterior_mean_random_walk(theta = theta, graph = graph,
+                                        rem.edge = e, resp = resp,
+                                        PtE_resp = PtE_resp, no_nugget = no_nugget)}
+
+
+    obs.id <- which(PtE_resp[,1] == e)
+    obs.loc <- PtE_resp[obs.id,2]
+    y_i <- resp[obs.id]
+    l <- graph$edge_lengths[e]
+    V.index <- graph$E[e, ]
+
+    if (type == "obs") {
+      t <- c( l*obs.loc)
+      Bt <- rbind(l-t,  t)/l
+      Sigma_i <-  bb_cov_0_ell( t, l, sigma = sqrt(1/tau)) #
+
+      y_hat[obs.id] <- t(Bt) %*% V.post[V.index]
+      if(leave.edge.out == FALSE){
+        Sigma_noise <- Sigma_i
+        if(!no_nugget){
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        }
+
+        y_hat[obs.id] <- y_hat[obs.id] + Sigma_i %*% solve(Sigma_noise,
+                                                           y_i-y_hat[obs.id])
+      }
+    } else {
+      pred.id <- PtE_pred[, 1] == e
+      pred.loc <- PtE_pred[pred.id,2]
+
+      t <- c( l*obs.loc, l*pred.loc)
+      Bt <- rbind(l-t,  t)/l
+      Sigma_i <-  bb_cov_0_ell( t, l, sigma = sqrt(1/tau)) #
+
+
+      Obs.ind <- seq_len(length(obs.loc))
+      Pred.ind <-  length(obs.loc) + seq_len(length(pred.loc))
+      Bt_p <- Bt[,Pred.ind]
+
+      y_hat[pred.id] <- t(Bt_p) %*% V.post[V.index]
+      if(leave.edge.out == FALSE && length(obs.loc)>0){
+        Bt <-  Bt[,Obs.ind]
+        Sigma_noise <- Sigma_i[Obs.ind, Obs.ind]
+        Sigma_op <- Sigma_i[Obs.ind, Pred.ind]
+        if(!no_nugget){
+          diag(Sigma_noise) <- diag(Sigma_noise) + sigma_e^2
+        }
+        y_hat_obs <- t(Bt) %*% V.post[V.index]
+
+        y_hat[pred.id] <- y_hat[pred.id] + t(Sigma_op) %*% solve(Sigma_noise,
+                                                                 y_i-y_hat_obs)
+      }
+    }
+  }
+
+  if(type == "obs"){
+    return(y_hat)
+  } else {
+    # return(c(V.post,y_hat))
+    return(y_hat)
+  }
+}
 
 #' Computes the posterior expectation for each node in the graph
 #' @param theta     - (sigma_e, sigma, kappa)

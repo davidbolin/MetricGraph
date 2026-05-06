@@ -9,9 +9,9 @@ using namespace Rcpp;
 //' @name assemble_fem
 //' @title Construction of FEM matrices
 //' @description Function used to construct FEM matrices on metric graphs.
-//' @param E [nx2 matrix] Matrix of edges
-//' @param h_e [n vector] Vector of h's
-//' @param nV [int] Number of vertices
+//' @param E `nx2 matrix` Matrix of edges
+//' @param h_e `n vector` Vector of h's
+//' @param nV `int` Number of vertices
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -78,6 +78,52 @@ Rcpp::List assemble_fem(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV, bool pet
     }
 
     return(out);
+}
+
+// [[Rcpp::depends(RcppEigen)]]
+//
+
+//' @name compute_mesh_weights
+//' @title Compute the weights of the mesh nodes
+//' @description Function used to compute the weights of the mesh nodes on metric graphs.
+//' @param E `nx2 matrix` Matrix of edges
+//' @param h_e `n vector` Vector of h's
+//' @param nV `int` Number of vertices.
+//' @noRd
+//'
+// [[Rcpp::export]]
+
+Eigen::VectorXd compute_mesh_weights(Eigen::MatrixXd E, Eigen::VectorXd h_e, int nV){
+
+  typedef Eigen::Triplet<double> Trip;
+  std::vector<Trip> trp_C;
+  int i;
+  int v1,v2;
+  int nE  = E.rows();
+  Eigen::SparseMatrix<double> C(nV,nV);
+
+  for(i=0; i<nE; i++){
+      v1 = E(i, 0)-1;
+      v2 = E(i, 1)-1;
+
+      // Assembling C
+      trp_C.push_back(Trip(v1,v1,h_e(i)/3));
+      trp_C.push_back(Trip(v2,v2,h_e(i)/3));
+      trp_C.push_back(Trip(v1,v2,h_e(i)/6));
+      trp_C.push_back(Trip(v2,v1,h_e(i)/6));
+  }
+
+  C.setFromTriplets(trp_C.begin(), trp_C.end());
+
+  // Compute row sums
+  Eigen::VectorXd row_sums = Eigen::VectorXd::Zero(nV);
+  for (int k=0; k<C.outerSize(); ++k) {
+    for (Eigen::SparseMatrix<double>::InnerIterator it(C,k); it; ++it) {
+      row_sums(it.row()) += it.value();
+    }
+  }
+
+  return(row_sums);
 }
 
 // Obtain the coordinates of the projection of a point in a line. line = p0 + vt, point p
@@ -158,9 +204,9 @@ double proj_vec_line(Eigen::MatrixXd line, Eigen::VectorXd point, int normalized
 //' @name projectVecLine
 //' @title Projects SpatialPoints into SpatialLines
 //' @description Obtain the coordinates of the projection of points into lines.
-//' @param lines [nx2 matrix] Matrix of the points of the lines
-//' @param points [nx2 matrix] Matrix of the points
-//' @param normalized [int] 0 means not normalized, 1 means normalized
+//' @param lines `nx2 matrix` Matrix of the points of the lines
+//' @param points `nx2 matrix` Matrix of the points
+//' @param normalized `int` 0 means not normalized, 1 means normalized
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -179,9 +225,9 @@ Eigen::VectorXd projectVecLine(Eigen::MatrixXd lines, Eigen::MatrixXd points, in
 //' @name interpolate2
 //' @title Finds the point with respect to a distance along the line
 //' @description Finds the point with respect to a distance along the line
-//' @param lines [nx2 matrix] Matrix of the points of the lines
-//' @param pos [k vector] vector of positions.
-//' @param normalized [int] 0 means not normalized, 1 means normalized
+//' @param lines `nx2 matrix` Matrix of the points of the lines
+//' @param pos `k vector` vector of positions.
+//' @param normalized `int` 0 means not normalized, 1 means normalized
 //' @noRd
 //'
 // [[Rcpp::export]]
@@ -219,7 +265,8 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
             }
         }
 
-        double dist_pos = (pos_rel(i) - dist_vec(tmp_ind))/(dist_vec(tmp_ind+1)-dist_vec(tmp_ind));
+        double denom    = dist_vec(tmp_ind+1) - dist_vec(tmp_ind);
+        double dist_pos = (denom == 0.0) ? 0.0 : (pos_rel(i) - dist_vec(tmp_ind)) / denom;
 
         out_mat.row(i) = lines.row(tmp_ind) + (lines.row(tmp_ind+1) - lines.row(tmp_ind))*dist_pos;
         idx_pos(i) = tmp_ind+1;
@@ -235,22 +282,28 @@ Rcpp::List interpolate2_aux(Eigen::MatrixXd lines, Eigen::VectorXd pos, int norm
 //' @name compute_length
 //' @title Compute length
 //' @description Computes the length of a piecewise-linear function whose coordinates are given in a matrix.
-//' @param coords nx2 matrix Matrix of the points of the lines
+//' The function expects coordinates with at least 2 columns (x, y). If more columns are provided,
+//' only the first two columns (x, y) are used for the calculation.
+//' @param coords nxk matrix Matrix of the points of the lines (k >= 2, typically nx2)
 //' @noRd
 //'
 // [[Rcpp::export]]
-double compute_length(Eigen::MatrixXd coords) {
-
-    double arclength = 0;
-
-    int i;
-
-    for(i = 0 ; i < coords.rows()-1; i++){
-         Eigen::VectorXd v = coords.row(i+1) - coords.row(i);
-         arclength = arclength + v.norm();
-     }
-
-    return(arclength);
+double compute_length(const Eigen::MatrixXd& coords) {
+  // Safety checks
+  if (coords.rows() < 2 || coords.cols() < 2) {
+      return 0.0;
+  }
+  
+  double arclength = 0.0;
+  
+  // Compute sum of Euclidean distances between consecutive points
+  for (int i = 0; i < coords.rows() - 1; ++i) {
+      const double dx = coords(i + 1, 0) - coords(i, 0);
+      const double dy = coords(i + 1, 1) - coords(i, 1);
+      arclength += std::sqrt(dx * dx + dy * dy);
+  }
+  
+  return arclength;
 }
 
 
@@ -313,4 +366,157 @@ List generate_mesh(int n_edges, NumericVector edge_lengths, IntegerVector n_e,
     Named("E_start") = wrap(E_start),
     Named("E_end") = wrap(E_end)
   );
+}
+
+//' @name PtE_to_mesh_cpp
+//' @title Convert PtE for mesh given PtE for graph
+//' @description C++ implementation of PtE_to_mesh function
+//' @param PtE `nx2 matrix` Matrix with edge indices and positions
+//' @param VtE `nx2 matrix` Matrix from VtEfirst()
+//' @param mesh_PtE `nx2 matrix` Mesh PtE matrix
+//' @param E `nx2 matrix` Graph edge matrix
+//' @param mesh_E `nx2 matrix` Mesh edge matrix
+//' @param edge_lengths `n vector` Vector of edge lengths
+//' @param mesh_h_e `n vector` Vector of mesh edge lengths
+//' @param nV `int` Number of vertices
+//' @noRd
+//'
+// [[Rcpp::export]]
+Eigen::MatrixXd PtE_to_mesh_cpp(const Eigen::MatrixXd& PtE,
+                                 const Eigen::MatrixXd& VtE,
+                                 const Eigen::MatrixXd& mesh_PtE,
+                                 const Eigen::MatrixXi& E,
+                                 const Eigen::MatrixXi& mesh_E,
+                                 const Eigen::VectorXd& edge_lengths,
+                                 const Eigen::VectorXd& mesh_h_e,
+                                 int nV) {
+    
+    int n_points = PtE.rows();
+    Eigen::MatrixXd PtE_update = Eigen::MatrixXd::Zero(n_points, 2);
+    
+    for (int i = 0; i < n_points; i++) {
+        int ei = static_cast<int>(PtE(i, 0)) - 1; // Convert to 0-based indexing
+        double target_pos = PtE(i, 1);
+        
+        // Find mesh nodes on this edge
+        std::vector<int> ind_nodes;
+        std::vector<double> dist_nodes;
+        
+        for (int j = 0; j < mesh_PtE.rows(); j++) {
+            if (static_cast<int>(mesh_PtE(j, 0)) - 1 == ei) {
+                ind_nodes.push_back(j);
+                dist_nodes.push_back(mesh_PtE(j, 1));
+            }
+        }
+        
+        // Create combined index and distance vectors
+        std::vector<int> ind;
+        std::vector<double> dists;
+        
+        // Add start vertex
+        ind.push_back(E(ei, 0) - 1); // Convert to 0-based
+        dists.push_back(0.0);
+        
+        // Add mesh nodes
+        for (size_t j = 0; j < ind_nodes.size(); j++) {
+            ind.push_back(ind_nodes[j] + nV); // Mesh nodes come after vertices
+            dists.push_back(dist_nodes[j]);
+        }
+        
+        // Add end vertex
+        ind.push_back(E(ei, 1) - 1); // Convert to 0-based
+        dists.push_back(1.0);
+        
+        // Find two closest points
+        std::vector<std::pair<double, int>> dist_pairs;
+        for (size_t j = 0; j < dists.size(); j++) {
+            dist_pairs.push_back(std::make_pair(std::abs(dists[j] - target_pos), j));
+        }
+        
+        std::sort(dist_pairs.begin(), dist_pairs.end());
+        
+        int idx1 = dist_pairs[0].second;
+        int idx2 = dist_pairs[1].second;
+        
+        // Ensure idx1 < idx2 for proper ordering
+        if (idx1 > idx2) {
+            std::swap(idx1, idx2);
+        }
+        
+        int v1 = ind[idx1];
+        int v2 = ind[idx2];
+        double d1 = dists[idx1];
+        double d2 = dists[idx2];
+        
+        // Find the mesh edge containing this point
+        std::vector<int> candidate_edges;
+        
+        if (v1 != v2) {
+            // Different vertices - find edges connecting them
+            for (int j = 0; j < mesh_E.rows(); j++) {
+                int edge_v1 = mesh_E(j, 0) - 1; // Convert to 0-based
+                int edge_v2 = mesh_E(j, 1) - 1; // Convert to 0-based
+                
+                if ((edge_v1 == v1 && edge_v2 == v2) || (edge_v1 == v2 && edge_v2 == v1)) {
+                    candidate_edges.push_back(j);
+                }
+            }
+        } else {
+            // Same vertex - find self-loops
+            for (int j = 0; j < mesh_E.rows(); j++) {
+                int edge_v1 = mesh_E(j, 0) - 1; // Convert to 0-based
+                int edge_v2 = mesh_E(j, 1) - 1; // Convert to 0-based
+                
+                if (edge_v1 == v1 && edge_v2 == v1) {
+                    candidate_edges.push_back(j);
+                }
+            }
+        }
+        
+        // Handle multiple edges case
+        int selected_edge = candidate_edges[0];
+        
+        if (candidate_edges.size() > 1) {
+            // Try to match edge lengths
+            double target_length = edge_lengths(ei);
+            for (int edge_idx : candidate_edges) {
+                if (std::abs(mesh_h_e(edge_idx) - target_length) < 1e-10) {
+                    selected_edge = edge_idx;
+                    break;
+                }
+            }
+            
+            // Check if the original edge length equals sum of candidate edge lengths
+            double sum_lengths = 0.0;
+            for (int edge_idx : candidate_edges) {
+                sum_lengths += mesh_h_e(edge_idx);
+            }
+            
+            if (std::abs(target_length - sum_lengths) < 1e-10) {
+                // Find the edge that starts with v1
+                for (int edge_idx : candidate_edges) {
+                    if (mesh_E(edge_idx, 0) - 1 == v1) {
+                        selected_edge = edge_idx;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Calculate the position on the selected edge
+        double d;
+        if (mesh_E(selected_edge, 0) - 1 == v1) {
+            // Edge starts at v1
+            d = (target_pos - d1) / (d2 - d1);
+        } else {
+            // Edge starts at v2
+            d = 1.0 - (target_pos - d1) / (d2 - d1);
+        }
+        
+        // Store result (convert back to 1-based indexing for R)
+        PtE_update(i, 0) = selected_edge + 1;
+        PtE_update(i, 1) = d;
+    }
+    
+    return PtE_update;
 }

@@ -1,3 +1,28 @@
+# MetricGraph 1.6.0
+
+* `metric_graph` now fully supports disconnected graphs, and `graph_components` 
+has therefore been deprecated.
+* The internal data storage system has been improved to reduce memory requirements. 
+* Several improvements to internal methods to speed up the construction and data 
+handling for of very large graphs.
+* Various stability improvements and bug fixes. 
+* Added a `cross_validation()` function for `inlabru` fits on metric
+  graphs, mirroring `rSPDE::cross_validation()`.
+* Bumped minimum `rSPDE` version to 2.5.0 and added `rlang` to `Imports`.
+* Added various unit tests covering input validation, smoke tests, multi-model 
+comparison, all CV types, `inla` and `inlabru` models. 
+
+# MetricGraph 1.5.1
+* Added `precompute_lgcp_graph()` to precompute expensive quantities for LGCP models.
+* Added `update_graph()` method to update graph objects to newer versions of the package.
+* Added lower and upper bounds for hyperparameters in SPDE and LGCP exact models.
+* Improved speed and robustness of the `observations_to_vertex` method.
+* Converted `fem_basis` computation to C for improved performance.
+* Updated SPDE result object for exact models.
+* Fixed a prediction bug in `graph_lme`.
+* Fixed handling of units in edge weights.
+* Fixed documentation macros in `graph_lgcp_sim()` and `lgcp_graph()` man pages.
+
 # MetricGraph 1.5.0
 * Several optimization improvements for the models in `graph_lme`.
 * Added a `parallel` option to `posterior_crossvalidation`.
