@@ -33,14 +33,23 @@ jobs:
           git rm -f --ignore-unmatch tests/testthat/test_inlabru_predict.R
           git rm -f --ignore-unmatch tests/testthat/test_cgeneric.R
           git rm -f --ignore-unmatch tests/testthat/test_cross_validation.R
-          git rm -f --ignore-unmatch tests/testthat/test-prune-vertices-perf.R 
+          git rm -f --ignore-unmatch tests/testthat/test-prune-vertices-perf.R
           git rm -f --ignore-unmatch tests/testthat/test-disconnected-models.R
           git rm -f --ignore-unmatch tests/testthat/test-compute-distances.R
-          git rm -f --ignore-unmatch tests/testthat/test-cpp-helpers.R 
-          git rm -f --ignore-unmatch tests/testthat/test-metric-graph-components.R          
-          git rm -f --ignore-unmatch tests/testthat/test-coverage-gaps.R       
-          git rm -f --ignore-unmatch tests/testthat/test_random_fields_vignette.R   
+          git rm -f --ignore-unmatch tests/testthat/test-cpp-helpers.R
+          git rm -f --ignore-unmatch tests/testthat/test-metric-graph-components.R
+          git rm -f --ignore-unmatch tests/testthat/test-coverage-gaps.R
+          git rm -f --ignore-unmatch tests/testthat/test_random_fields_vignette.R
           git rm -f --ignore-unmatch tests/testthat/test-observation-to-vertex.R
+          git rm -f --ignore-unmatch tests/testthat/test_crossval.R
+          git rm -f --ignore-unmatch tests/testthat/test_directional.R
+          git rm -f --ignore-unmatch tests/testthat/test_exp.R
+          git rm -f --ignore-unmatch tests/testthat/test_isoExp.R
+          git rm -f --ignore-unmatch tests/testthat/test_obs_improvements.R
+          git rm -f --ignore-unmatch tests/testthat/test_precomputed_likelihood.R
+          git rm -f --ignore-unmatch tests/testthat/test_split_line.R
+          git rm -f --ignore-unmatch tests/testthat/test.alpha2.R
+          git rm -f --ignore-unmatch tests/testthat/test.alpha2.constraints.R
 
           rm -rf vignettes
           mkdir -p vignettes
