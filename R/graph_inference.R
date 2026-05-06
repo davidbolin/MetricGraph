@@ -236,7 +236,9 @@ posterior_crossvalidation_manual <- function(theta,
                                                           Sigma.o[-i, i])
       var.p[i] <- diag(Sigma.p)
     } else {
-      A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+      .row_idx <- graph$PtV[-i]
+      A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                x = 1, dims = c(length(.row_idx), graph$nV))
       Q.p <- Q + t(A) %*% A / sigma_e^2
       mu.p[i] <- solve(Q.p,
                        as.vector(t(A) %*% graph$.__enclos_env__$private$data[[data_name]][-i] / sigma_e^2))[graph$PtV[i]]
@@ -1178,7 +1180,9 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
                                                               Sigma.o[-i, i])
           var.p[i] <- diag(Sigma.p)
         } else {
-          A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+          .row_idx <- graph$PtV[-i]
+          A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                    x = 1, dims = c(length(.row_idx), graph$nV))
           Q.p <- Q + t(A) %*% A / sigma_e^2
           mu.p[i] <- solve(Q.p,
                            as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
@@ -1210,7 +1214,9 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
                                                                 Sigma.o[-i, i])
             var.p[i] <- diag(Sigma.p)
           } else {
-            A <- Matrix::Diagonal(graph$nV, rep(1, graph$nV))[graph$PtV[-i], ]
+            .row_idx <- graph$PtV[-i]
+            A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                      x = 1, dims = c(length(.row_idx), graph$nV))
             Q.p <- Q + t(A) %*% A / sigma_e^2
             mu.p[i] <- solve(Q.p,
                              as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe

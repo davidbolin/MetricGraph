@@ -38,6 +38,78 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
                         method = c("conditional", "Q"),
                         BC = 1) {
 
+  if (inherits(graph, "graph_components")) {
+    method <- match.arg(method, c("conditional", "Q"))
+    has_kappa <- !missing(kappa)
+    has_tau   <- !missing(tau)
+    has_range <- !missing(range)
+    has_sigma <- !missing(sigma)
+    build_args <- function(extra) {
+      a <- c(extra, list(posterior = posterior, nsim = nsim,
+                         method = method, BC = BC, sigma_e = sigma_e,
+                         alpha = alpha, directional = directional))
+      if (has_kappa) a$kappa <- kappa
+      if (has_tau)   a$tau   <- tau
+      if (has_range) a$range <- range
+      if (has_sigma) a$sigma <- sigma
+      a
+    }
+
+    if (type == "manual") {
+      if (is.null(PtE)) stop("must provide PtE for manual mode.")
+      if (NCOL(PtE) != 2) {
+        stop("For 'graph_components', PtE must have 2 columns: (edge_number, distance_on_edge), with global edge numbering.")
+      }
+      PtE <- as.matrix(PtE)
+      comp_id <- graph$edge_to_component(PtE[, 1])
+      local_edges <- as.integer(PtE[, 1]) - graph$edge_offsets[comp_id]
+      orig_order <- seq_len(nrow(PtE))
+      out_pieces <- vector("list", graph$n)
+      out_idx    <- vector("list", graph$n)
+      for (k in seq_len(graph$n)) {
+        sel <- which(comp_id == k)
+        if (length(sel) == 0L) next
+        sub_PtE <- cbind(local_edges[sel], PtE[sel, 2])
+        out_pieces[[k]] <- do.call(sample_spde, build_args(list(
+          graph = graph$graphs[[k]], PtE = sub_PtE, type = "manual"
+        )))
+        out_idx[[k]] <- orig_order[sel]
+      }
+      flat_idx <- unlist(out_idx, use.names = FALSE)
+      if (nsim == 1L) {
+        u <- numeric(nrow(PtE))
+        u[flat_idx] <- unlist(out_pieces, use.names = FALSE)
+        return(u)
+      }
+      u <- matrix(0, nrow = nrow(PtE), ncol = nsim)
+      for (k in seq_len(graph$n)) {
+        if (is.null(out_pieces[[k]])) next
+        u[out_idx[[k]], ] <- out_pieces[[k]]
+      }
+      return(u)
+    }
+
+    # type = "mesh" or "obs": per-component sampling, concat
+    if (type == "mesh") {
+      if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
+                     logical(1)))) {
+        stop("Every component must have a mesh; call graph$build_mesh() first.")
+      }
+    }
+    out_pieces <- vector("list", graph$n)
+    for (k in seq_len(graph$n)) {
+      g <- graph$graphs[[k]]
+      if (type == "obs" && is.null(g$.__enclos_env__$private$data)) next
+      out_pieces[[k]] <- do.call(sample_spde, build_args(list(
+        graph = g, type = type
+      )))
+    }
+    if (nsim == 1L) {
+      return(unlist(out_pieces, use.names = FALSE))
+    }
+    return(do.call(rbind, out_pieces))
+  }
+
   check <- check_graph(graph)
   method <- method[[1]]
 
@@ -90,33 +162,36 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
               if(type == "mesh") {
                 u <- V0
                 inds_PtE <- unique(graph$mesh$PtE[,1])
+                t_by_edge <- split(graph$mesh$PtE[,2], graph$mesh$PtE[,1])
               } else if (type == "obs") {
-                u <- NULL
                 inds_PtE <- unique(graph$PtE[,1])
+                t_by_edge <- split(graph$PtE[,2], graph$PtE[,1])
               } else {
                 order_PtE <- order(PtE[,1], PtE[,2])
-                ordered_PtE <- PtE[order_PtE,]
-                u <- NULL
+                ordered_PtE <- PtE[order_PtE, , drop = FALSE]
                 inds_PtE <- unique(ordered_PtE[,1])
+                t_by_edge <- split(ordered_PtE[,2], ordered_PtE[,1])
               }
 
-              for (i in inds_PtE) {
-                if(type == "mesh") {
-                  t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
-                } else if (type == "obs") {
-                  t <- graph$PtE[graph$PtE[,1] == i, 2]
-                } else {
-                  t <- ordered_PtE[ordered_PtE[,1] == i, 2]
-                }
-
+              E_loc <- graph$E
+              el_loc <- graph$edge_lengths
+              u_list <- vector("list", length(inds_PtE))
+              for (k in seq_along(inds_PtE)) {
+                i <- inds_PtE[k]
+                t <- t_by_edge[[as.character(i)]]
                 samp <- sample_alpha1_line(kappa = kappa, tau = tau,
-                                           u_e = V0[graph$E[i, ]], t = t,
-                                           l_e = graph$edge_lengths[i])
-                u <- c(u, samp[,2])
+                                           u_e = V0[E_loc[i, ]], t = t,
+                                           l_e = el_loc[i])
+                u_list[[k]] <- samp[,2]
               }
-                if(type == "manual"){
-                  u[order_PtE] <- u
-                }
+              if(type == "mesh") {
+                u <- c(u, unlist(u_list, use.names = FALSE))
+              } else {
+                u <- unlist(u_list, use.names = FALSE)
+              }
+              if(type == "manual"){
+                u[order_PtE] <- u
+              }
     }else if(method == "Q"){
         if(type == "manual"){
           graph_tmp <- graph$get_initial_graph()
@@ -153,11 +228,12 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
           sizeQ <- nrow(Q_tmp)
           Z <- rnorm(sizeQ * nsim)
           dim(Z) <- c(sizeQ, nsim)
-          LQ <- chol(forceSymmetric(Q_tmp))
-          u <- solve(LQ, Z)
+          LQ <- Cholesky(forceSymmetric(Q_tmp), LDL = FALSE, perm = TRUE)
+          u <- solve(LQ, solve(LQ, Z, system = "Lt"), system = "Pt")
           gap <- sizeQ - n_obs_tmp
-          u <- as.vector(u[(gap+1):sizeQ])
-          u[order_PtE] <- u
+          u <- as.matrix(u[(gap+1):sizeQ, , drop = FALSE])
+          u[order_PtE, ] <- u
+          if (nsim == 1) u <- as.vector(u)
 
     } else{
       stop("Method should be either 'conditional' or 'Q'!")
@@ -187,30 +263,33 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
         u_s <- u_e
         u <- u_s[which(!duplicated(c(t(initial_graph$E))))]
         inds_PtE <- unique(graph$mesh$PtE[,1])
+        t_by_edge <- split(graph$mesh$PtE[,2], graph$mesh$PtE[,1])
       } else if (type == "obs") {
-        u <- NULL
         inds_PtE <- unique(graph$PtE[,1])
+        t_by_edge <- split(graph$PtE[,2], graph$PtE[,1])
       } else {
         order_PtE <- order(PtE[,1], PtE[,2])
         ordered_PtE <- PtE[order_PtE,]
-        u <- NULL
         inds_PtE <- unique(ordered_PtE[,1])
+        t_by_edge <- split(ordered_PtE[,2], ordered_PtE[,1])
       }
 
-      for (i in inds_PtE) {
-        if(type == "mesh") {
-          t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
-        } else if (type == "obs") {
-          t <- graph$PtE[graph$PtE[,1] == i, 2]
-        } else {
-          t <- ordered_PtE[ordered_PtE[,1] == i, 2]
-        }
+      el_loc <- graph$edge_lengths
+      u_list <- vector("list", length(inds_PtE))
+      for (k in seq_along(inds_PtE)) {
+        i <- inds_PtE[k]
+        t <- t_by_edge[[as.character(i)]]
         samp <- sample_alpha1_line(kappa = kappa, tau = tau,
                                    sigma_e = sigma_e,
                                    u_e = u_e[2*(i-1) +1:2],
                                    t = t,
-                                   l_e = graph$edge_lengths[i])
-        u <- c(u, samp[,2])
+                                   l_e = el_loc[i])
+        u_list[[k]] <- samp[,2]
+      }
+      if(type == "mesh") {
+        u <- c(u, unlist(u_list, use.names = FALSE))
+      } else {
+        u <- unlist(u_list, use.names = FALSE)
       }
       if(type == "manual"){
         u[order_PtE] <- u
@@ -240,30 +319,33 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
         u_s <- u_e[seq(from=1, by = 2, to = length(u_e))]
         u <- u_s[which(!duplicated(c(t(initial_graph$E))))]
         inds_PtE <- unique(graph$mesh$PtE[,1])
+        t_by_edge <- split(graph$mesh$PtE[,2], graph$mesh$PtE[,1])
       } else if (type == "obs") {
-        u <- NULL
         inds_PtE <- unique(graph$PtE[,1])
+        t_by_edge <- split(graph$PtE[,2], graph$PtE[,1])
       } else {
         order_PtE <- order(PtE[,1], PtE[,2])
         ordered_PtE <- PtE[order_PtE,]
-        u <- NULL
         inds_PtE <- unique(ordered_PtE[,1])
+        t_by_edge <- split(ordered_PtE[,2], ordered_PtE[,1])
       }
 
-      for (i in inds_PtE) {
-        if(type == "mesh") {
-          t <- graph$mesh$PtE[graph$mesh$PtE[,1] == i, 2]
-        } else if (type == "obs") {
-          t <- graph$PtE[graph$PtE[,1] == i, 2]
-        } else {
-          t <- ordered_PtE[ordered_PtE[,1] == i, 2]
-        }
+      el_loc <- graph$edge_lengths
+      u_list <- vector("list", length(inds_PtE))
+      for (k in seq_along(inds_PtE)) {
+        i <- inds_PtE[k]
+        t <- t_by_edge[[as.character(i)]]
         samp <- sample_alpha2_line(kappa = kappa, tau = tau,
                                    sigma_e = sigma_e,
                                    u_e = u_e[4*(i-1) +1:4],
                                    t = t,
-                                   l_e = graph$edge_lengths[i])
-        u <- c(u, samp[,2])
+                                   l_e = el_loc[i])
+        u_list[[k]] <- samp[,2]
+      }
+      if(type == "mesh") {
+        u <- c(u, unlist(u_list, use.names = FALSE))
+      } else {
+        u <- unlist(u_list, use.names = FALSE)
       }
       if(type == "manual"){
         u[order_PtE] <- u
@@ -345,39 +427,61 @@ sample_alpha1_line <- function(kappa, tau, sigma_e,
     t <- c(py, t)
   }
 
-  Q <- precision_exp_line(kappa = kappa, tau = tau, t = t)
+  # Build tridiagonal precision matrix as dense (small per-edge matrices;
+  # dense base-R chol/solve avoids S4 dispatch overhead from Matrix package)
+  l_t <- length(t)
+  order_t <- order(t)
+  t_sorted <- t[order_t]
+  # inv_order_t maps sorted indices back to original positions
+  inv_order_t <- integer(l_t)
+  inv_order_t[order_t] <- seq_len(l_t)
+
+  Q_sorted <- matrix(0, l_t, l_t)
+  scale <- 2 * kappa * tau^2
+  for (i in 2:l_t) {
+    c1 <- exp(-kappa * (t_sorted[i] - t_sorted[i - 1]))
+    c2 <- c1 * c1
+    one_m_c2 <- 1 - c2
+    c_1 <- scale * (0.5 + c2 / one_m_c2)
+    c_2 <- scale * (-c1 / one_m_c2)
+    Q_sorted[i, i]         <- Q_sorted[i, i]         + c_1
+    Q_sorted[i - 1, i - 1] <- Q_sorted[i - 1, i - 1] + c_1
+    Q_sorted[i, i - 1]     <- Q_sorted[i, i - 1]     + c_2
+    Q_sorted[i - 1, i]     <- Q_sorted[i - 1, i]     + c_2
+  }
+  Q_sorted[1, 1]     <- Q_sorted[1, 1]     + scale * 0.5
+  Q_sorted[l_t, l_t] <- Q_sorted[l_t, l_t] + scale * 0.5
+
+  # Unsort to match original t ordering
+  Q <- Q_sorted[inv_order_t, inv_order_t]
 
   index_E <- length(py) + 1:2
-  Q_X <- Q[-index_E,-index_E, drop=F]
-  mu_X <- as.vector(Matrix::solve(Q_X, -Q[-index_E, index_E] %*% u_e))
-  if (is.null(py) == FALSE) {
-    Matrix::diag(Q_X)[1:length(py)] <- Matrix::diag(Q_X)[1:length(py)] + 1/sigma_e^2
-    AtY <- rep(0,dim(Q_X)[1])
+  Q_X <- Q[-index_E, -index_E, drop = FALSE]
+  rhs <- -Q[-index_E, index_E, drop = FALSE] %*% u_e
+  mu_X <- as.vector(solve(Q_X, rhs))
+
+  if (!is.null(py)) {
+    diag(Q_X)[1:length(py)] <- diag(Q_X)[1:length(py)] + 1 / sigma_e^2
+    AtY <- rep(0, nrow(Q_X))
     AtY[1:length(py)] <- (y - mu_X[1:length(py)]) / sigma_e^2
-    mu_X <- mu_X + as.vector(Matrix::solve(Q_X, AtY))
+    mu_X <- mu_X + as.vector(solve(Q_X, AtY))
   }
 
-  x <- rep(0, length(t))
+  x <- rep(0, l_t)
 
-  if(sample){
-    R_X <- Matrix::Cholesky(Q_X, LDL = FALSE, perm = TRUE)
-    z <- rnorm(dim(R_X)[1])
-    x[-index_E] <- mu_X + as.vector(Matrix::solve(R_X, Matrix::solve(R_X,z,system = 'Lt'),
-                                                  system='Pt'))
+  if (sample) {
+    R_X <- chol(Q_X)
+    z <- rnorm(nrow(Q_X))
+    x[-index_E] <- mu_X + backsolve(R_X, z)
     x[index_E] <- u_e
-  }else{
+  } else {
     x[-index_E] <- mu_X
     x[index_E] <- u_e
-
   }
 
-  x_out <- matrix(0, nrow=length(t0), 2)
+  x_out <- matrix(0, nrow = length(t0), 2)
   x_out[, 1] <- t0
-  for (i in 1:length(t0))
-  {
-    ind <- which(t == t0[i])
-    x_out[i,2] <- x[ind]
-  }
+  x_out[, 2] <- x[match(t0, t)]
   return(x_out)
 }
 
@@ -462,7 +566,7 @@ sample_alpha2_line <-function(kappa, tau, sigma_e,
   if(is.null(py) == FALSE){
     index_y <- 1:length(py)
     Sigma_Y <- Sigma_X[index_y, index_y, drop = FALSE]
-    Matrix::diag(Sigma_Y) <-  Matrix::diag(Sigma_Y) + sigma_e^2
+    diag(Sigma_Y) <- diag(Sigma_Y) + sigma_e^2
 
     SinvS <- solve(Sigma_Y, Sigma_X[index_y,,drop = FALSE])
     Sigma_X <- Sigma_X - Sigma_X[,index_y, drop = FALSE] %*% SinvS
@@ -483,10 +587,6 @@ sample_alpha2_line <-function(kappa, tau, sigma_e,
   }
   x_out <- matrix(0, nrow = length(t0), 2)
   x_out[, 1] <- t0
-  for(i in 1:length(t0))
-  {
-    ind <- which(t == t0[i])
-    x_out[i, 2] <- x[ind]
-  }
+  x_out[, 2] <- x[match(t0, t)]
   return(x_out)
 }

@@ -23,6 +23,8 @@ navbar:
       menu:
       - text: Working with metric graphs
         href: articles/metric_graph.html
+      - text: Working with disconnected metric graphs
+        href: articles/graph_components.html
       - text: Gaussian random fields on metric graphs
         href: articles/random_fields.html
       - text: Data manipulation on metric graphs
@@ -92,6 +94,7 @@ reference:
     - plot.graph_bru_proc_pred
     - graph_bru_process_data
     - process_rspde_predictions
+    - cross_validation
   - title: Linear mixed-effects models
     contents:
     - graph_lme
@@ -123,6 +126,7 @@ reference:
     - mutate.metric_graph_data
     - summarise.metric_graph_data
     - drop_na.metric_graph_data
+    - match_mesh_data
   - title: Methods for metric graphs
     contents:
     - summary.metric_graph

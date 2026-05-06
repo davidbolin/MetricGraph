@@ -540,48 +540,49 @@ The argument `include_edge_weights` can also be used in same manner for `osmdata
 The second thing to note is that the constructor gave a warning that the graph
 is not connected. This might not be ideal for modeling and we may want to study
 the different connected components separately. If this is not a concern, one can
-set the argument `check_connected = FALSE` while creating the graph. In this case
-the check is not done and no warning message is printed. To construct all connected components, we can create a `graph_components` object:
-```{r message=FALSE, warning=FALSE, message=FALSE}
-graphs <- graph_components$new(data_sf)
-```
-The `graph_components` class contains a list of `metric_graph` objects, one for
-each connected component. In this case, we have 
+set the argument `check_connected = FALSE` while creating the graph. In this
+case the check is skipped and no warning is printed; the resulting
+`metric_graph` works exactly as a connected one (see [Working with disconnected
+metric graphs](graph_components.html) for a focused walkthrough).
+
+To inspect the components we can use `get_components()`, which returns a list
+of `metric_graph` objects sorted by total edge length:
 ```{r}
-graphs$n
+comps <- graph5$get_components()
+length(comps)
+sapply(comps, function(g) sum(as.numeric(g$edge_lengths)))
 ```
-components in total, and their total edge lengths in km at 
-```{r}
-graphs$lengths
-```
-To plot all of them, we can use the `plot` command of the class:
+To draw every component in its own colour we pass `components = TRUE` to
+`plot()`:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE}
-graphs$plot(vertex_size = 0, type = "mapview")
+graph5$plot(vertex_size = 0, type = "mapview", components = TRUE)
 ```
 
-One reason for having multiple components here might be that we set the tolerance for merging nodes too low. In fact, 
-by looking at the edge lengths we see that we have vertices that are as close 
-as 
+One reason for having multiple components here might be that we set the tolerance for merging nodes too low. In fact,
+by looking at the edge lengths we see that we have vertices that are as close
+as
 ```{r}
 min(graph5$get_edge_lengths(unit='m'))
 ```
 meters. Let us increase the tolerances so that vertices that are at most
 a distance of 100 meters (0.1km) apart should be merged:
 ```{r, message=FALSE, warning = FALSE, fig.show='hold',fig.align = "center",fig.height = 7,echo=TRUE, message=FALSE}
-graphs <- graph_components$new(data_sf,
-                               tolerance = list(vertex_vertex = 0.1))
-graphs$plot(vertex_size = 0, type = "mapview")
+graph5 <- metric_graph$new(data_sf,
+                           tolerance = list(vertex_vertex = 0.1),
+                           check_connected = FALSE)
+graph5$plot(vertex_size = 0, type = "mapview", components = TRUE)
 ```
 
 With this choice, let us check the number of connected components:
 ```{r}
-graphs$n
+length(graph5$get_components())
 ```
 
-We can retrieve the graph as a standard `metric_graph` object to work 
-with in further analysis via the `get_largest` command:
+If we want to keep only the largest connected component for further analysis,
+we can take the first entry of `get_components()` (components are sorted by
+total edge length, descending):
 ```{r}
-graph5 <- graphs$get_largest()
+graph5 <- graph5$get_components()[[1]]
 ```
 
 Let us take a quick look at its vertices and edges:

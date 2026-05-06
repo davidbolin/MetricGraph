@@ -615,18 +615,18 @@ We will now create and fit models with both $\alpha=1$ and $\alpha=2$ using `inl
 ```{r}
 # Model with alpha = 1
 spde_model_bru_pems_1 <- graph_spde(pems_graph, alpha=1)
-cmp_1 <- y ~ -1 + Intercept(1) + field(loc, 
+cmp_1 <- y ~ -1 + Intercept(1) + field(loc,
                                   model = spde_model_bru_pems_1)
 data_spde_bru_pems_1 <- graph_data_spde(spde_model_bru_pems_1, loc_name = "loc")
-spde_bru_fit_pems_1 <- bru(cmp_1, data=data_spde_bru_pems_1[["data"]], 
+spde_bru_fit_pems_1 <- bru(cmp_1, data=data_spde_bru_pems_1[["data"]],
                           options=list(num.threads = "1:1"))
 
 # Model with alpha = 2
 spde_model_bru_pems_2 <- graph_spde(pems_graph, alpha=2, start_sigma = 10)
-cmp_2 <- y ~ -1 + Intercept(1) + field(loc, 
+cmp_2 <- y ~ -1 + Intercept(1) + field(loc,
                                     model = spde_model_bru_pems_2)
 data_spde_bru_pems_2 <- graph_data_spde(spde_model_bru_pems_2, loc_name = "loc")
-spde_bru_fit_pems_2 <- bru(cmp_2, data=data_spde_bru_pems_2[["data"]], 
+spde_bru_fit_pems_2 <- bru(cmp_2, data=data_spde_bru_pems_2[["data"]],
                           options=list(num.threads = "1:1"))
 ```
 

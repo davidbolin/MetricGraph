@@ -2,11 +2,15 @@
 #' @noRd
 check_graph <- function(graph)
 {
+  if (inherits(graph, "graph_components")) {
+    graph <- graph$as_metric_graph()
+  }
   if (!inherits(graph, "metric_graph")) {
     stop("The graph object is not a metric graph")
   }
   out <- list(has.mesh = FALSE,
-              has.obs = FALSE)
+              has.obs = FALSE,
+              graph = graph)
   if(!is.null(graph$mesh)){
     out$has.mesh = TRUE
   }
@@ -783,71 +787,75 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
     }
   }
 
-  # Get unique group values
-  group_val <- if (is.null(old_data)) {
-    unique(group_vector)
-  } else {
-    unique(c(old_data[[".group"]], group_vector))
-  }
-
-  # Combine and order coordinates
-  data_coords <- unique(rbind(
-    data.frame(PtE1 = PtE[, 1], PtE2 = PtE[, 2]),
-    if (!is.null(old_data)) data.frame(PtE1 = old_data[[".edge_number"]], PtE2 = old_data[[".distance_on_edge"]]) else NULL
-  ))
-  data_coords <- data_coords[order(data_coords$PtE1, data_coords$PtE2), ]
-
-  # Expand coordinates for groups
-  n_group <- length(group_val)
-  data_coords <- data.frame(
-    PtE1 = rep(data_coords$PtE1, n_group),
-    PtE2 = rep(data_coords$PtE2, n_group),
-    group = rep(group_val, each = nrow(data_coords))
-  )
-  data_coords[["idx"]] <- seq_len(nrow(data_coords))
-
-  # Map new and old data to indices
-  idx_new_entries <- merge(
-    data.frame(PtE1 = PtE[, 1], PtE2 = PtE[, 2], group = group_vector),
-    data_coords, by = c("PtE1", "PtE2", "group"), sort = FALSE
-  )[["idx"]]
+  # --- Sparse merge: store only actual (loc, group) pairs, no Cartesian expansion ---
+  # New data takes priority; old entries at the same (loc, group) are dropped.
+  sep <- "|"
+  new_key <- paste(PtE[, 1], PtE[, 2], group_vector, sep = sep)
 
   if (!is.null(old_data)) {
-    idx_old_entries <- merge(
-      data.frame(PtE1 = old_data[[".edge_number"]], PtE2 = old_data[[".distance_on_edge"]], group = old_data[[".group"]]),
-      data_coords, by = c("PtE1", "PtE2", "group"), sort = FALSE
-    )[["idx"]]
+    old_key <- paste(old_data[[".edge_number"]], old_data[[".distance_on_edge"]],
+                     old_data[[".group"]], sep = sep)
+    if (!suppress_warnings && any(old_key %in% new_key)) {
+      warning("Conflicting data detected. New data may overwrite existing data.")
+    }
+    keep_old <- !old_key %in% new_key
   } else {
-    idx_old_entries <- integer(0)
+    keep_old <- logical(0)
   }
 
-  # Warn about conflicts if necessary
-  if (!suppress_warnings && length(intersect(idx_old_entries, idx_new_entries)) > 0) {
-    warning("Conflicting data detected. New data may overwrite existing data.")
-  }
+  n_new      <- nrow(PtE)
+  n_keep_old <- sum(keep_old)
 
-  # Combine data, prioritizing non-NA values from new_data
-  list_result <- lapply(union(names(old_data), names(new_data)), function(col_name) {
-    tmp <- rep(NA, nrow(data_coords))
-    
-    # Prioritize new_data values
-    if (!is.null(new_data[[col_name]])) {
-      tmp[idx_new_entries] <- new_data[[col_name]]
+  # Assemble: new rows first, then kept old rows (reordered below)
+  all_edges  <- c(PtE[, 1],
+                  if (n_keep_old > 0L) old_data[[".edge_number"]][keep_old]       else numeric(0L))
+  all_dists  <- c(PtE[, 2],
+                  if (n_keep_old > 0L) old_data[[".distance_on_edge"]][keep_old]  else numeric(0L))
+  all_groups <- c(group_vector,
+                  if (n_keep_old > 0L) old_data[[".group"]][keep_old]             else character(0L))
+
+  # Deterministic sort: group → edge → dist
+  ord        <- order(all_groups, all_edges, all_dists)
+  all_edges  <- all_edges[ord]
+  all_dists  <- all_dists[ord]
+  all_groups <- all_groups[ord]
+
+  # .loc_idx: each row maps to its sorted unique-(edge,dist) position
+  # Unique locations sorted numerically for stable downstream use.
+  uloc_df  <- unique(data.frame(e = all_edges, d = all_dists))
+  uloc_df  <- uloc_df[order(uloc_df$e, uloc_df$d), , drop = FALSE]
+  uloc_key <- paste(uloc_df$e, uloc_df$d, sep = sep)
+  row_key  <- paste(all_edges, all_dists, sep = sep)
+  loc_idx  <- match(row_key, uloc_key)
+
+  n_result <- length(all_edges)
+
+  # Build result columns (vectorized: assemble before sort, then apply ord)
+  all_cols  <- union(names(old_data), names(new_data))
+  meta_skip <- c(".edge_number", ".distance_on_edge", ".group", ".loc_idx")
+  data_cols <- all_cols[!all_cols %in% meta_skip]
+
+  list_result <- lapply(data_cols, function(col_name) {
+    new_vals <- if (!is.null(new_data[[col_name]])) {
+      new_data[[col_name]]
+    } else {
+      rep(NA_real_, n_new)
     }
-    
-    # Fill missing values with old_data where available
-    if (!is.null(old_data[[col_name]])) {
-      na_idx <- is.na(tmp[idx_old_entries])  # Check missing in new_data
-      tmp[idx_old_entries[na_idx]] <- old_data[[col_name]][na_idx]
+    old_vals <- if (n_keep_old > 0L && !is.null(old_data[[col_name]])) {
+      old_data[[col_name]][keep_old]
+    } else if (n_keep_old > 0L) {
+      rep(NA_real_, n_keep_old)
+    } else {
+      NULL
     }
-    
-    tmp
+    c(new_vals, old_vals)[ord]
   })
 
-  names(list_result) <- union(names(old_data), names(new_data))
-  list_result[[".edge_number"]] <- data_coords$PtE1
-  list_result[[".distance_on_edge"]] <- data_coords$PtE2
-  list_result[[".group"]] <- data_coords$group
+  names(list_result) <- data_cols
+  list_result[[".edge_number"]]      <- all_edges
+  list_result[[".distance_on_edge"]] <- all_dists
+  list_result[[".group"]]            <- all_groups
+  list_result[[".loc_idx"]]          <- loc_idx
 
   # Restore ALL factors with their original levels
   for (col_name in names(factor_metadata)) {
@@ -888,42 +896,29 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
 #' @noRd
 #'
 idx_not_all_NA <- function(data_list){
-     data_list[[".edge_number"]] <- NULL
-     data_list[[".distance_on_edge"]] <- NULL
-     data_list[[".coord_x"]] <- NULL
-     data_list[[".coord_y"]] <- NULL
-     data_list[[".group"]] <- NULL
-     data_names <- names(data_list)
-     n_data <- length(data_list[[data_names[1]]])
-     idx_non_na <- logical(n_data)
-     for(i in 1:n_data){
-        na_idx <- lapply(data_list, function(dat){
-          return(is.na(dat[i]))
-        })
-        idx_non_na[i] <- !all(unlist(na_idx))
-     }
-     return(idx_non_na)
+  meta_cols <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y", ".group")
+  data_list[meta_cols] <- NULL
+  if(length(data_list) == 0) return(logical(0))
+  n <- length(data_list[[1L]])
+  if(n == 0L) return(logical(0L))
+  # Build boolean NA matrix (n x p) and check row-wise: at least one non-NA
+  na_mat <- do.call(cbind, lapply(data_list, is.na))
+  if(!is.matrix(na_mat)) na_mat <- matrix(na_mat, nrow = n)
+  rowSums(na_mat) < ncol(na_mat)
 }
 
 #' find indices of the rows with at least one NA's in lists
 #' @noRd
 #'
 idx_not_any_NA <- function(data_list){
-     data_list[[".edge_number"]] <- NULL
-     data_list[[".distance_on_edge"]] <- NULL
-     data_list[[".coord_x"]] <- NULL
-     data_list[[".coord_y"]] <- NULL
-     data_list[[".group"]] <- NULL
-     data_names <- names(data_list)
-     n_data <- length(data_list[[data_names[1]]])
-     idx_non_na <- logical(n_data)
-     for(i in 1:n_data){
-        na_idx <- lapply(data_list, function(dat){
-          return(is.na(dat[i]))
-        })
-        idx_non_na[i] <- !any(unlist(na_idx))
-     }
-     return(idx_non_na)
+  meta_cols <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y", ".group")
+  data_list[meta_cols] <- NULL
+  if(length(data_list) == 0) return(logical(0))
+  n <- length(data_list[[1L]])
+  if(n == 0L) return(logical(0L))
+  na_mat <- do.call(cbind, lapply(data_list, is.na))
+  if(!is.matrix(na_mat)) na_mat <- matrix(na_mat, nrow = n)
+  rowSums(na_mat) == 0L
 }
 
 
@@ -2066,7 +2061,118 @@ get_only_first <- function(vec){
 }
 
 
-#' @noRd 
+#' Filter spatial observations per group, handling far points and duplicates.
+#'
+#' Shared logic used by both add_observations() and process_data().
+#' Returns a named list:
+#'   PtE          – filtered PtE matrix (non-far, non-closest rows)
+#'   far_mask     – logical, length = nrow(original PtE); TRUE = far point
+#'   norm_XY      – distances to graph for kept points
+#'   closest_mask – logical, length = sum(!far_mask); TRUE = removed as non-closest duplicate
+#'   has_dup      – scalar logical; any duplicated projected location found?
+#' @noRd
+filter_spatial_obs_groups <- function(graph, PtE, point_coords, grp_dat,
+                                      tolerance, duplicated_strategy,
+                                      fact, crs, longlat, proj4string,
+                                      which_longlat, length_unit, transform,
+                                      suppress_warnings) {
+
+  unique_grps <- unique(grp_dat)
+  n_grps      <- length(unique_grps)
+  n_total     <- nrow(PtE)
+
+  PtE_list     <- vector("list", n_grps)
+  norm_list    <- vector("list", n_grps)
+  far_list     <- vector("list", n_grps)
+  closest_list <- vector("list", n_grps)
+  has_dup      <- FALSE
+
+  for (gi in seq_along(unique_grps)) {
+    grp     <- unique_grps[gi]
+    idx_grp <- which(grp_dat == grp)
+
+    PtE_grp         <- PtE[idx_grp, , drop = FALSE]
+    point_coords_grp <- point_coords[idx_grp, , drop = FALSE]
+    XY_new_grp      <- graph$coordinates(PtE = PtE_grp, normalized = TRUE)
+
+    norm_XY_grp <- compute_aux_distances(
+      lines = point_coords_grp, points = XY_new_grp,
+      crs = crs, longlat = longlat, proj4string = proj4string,
+      fact = fact, which_longlat = which_longlat,
+      length_unit = length_unit, transform = transform
+    )
+
+    far_grp <- norm_XY_grp > tolerance
+    far_list[[gi]] <- far_grp  # original group size
+
+    # Filter far points
+    ok           <- !far_grp
+    PtE_grp      <- PtE_grp[ok, , drop = FALSE]
+    XY_new_grp   <- XY_new_grp[ok, , drop = FALSE]
+    norm_XY_grp  <- norm_XY_grp[ok]
+
+    n_valid      <- nrow(PtE_grp)
+    closest_grp  <- rep(FALSE, n_valid)
+
+    if (duplicated_strategy == "closest") {
+      dup_grp <- duplicated(XY_new_grp) | duplicated(XY_new_grp, fromLast = TRUE)
+      if (any(dup_grp)) {
+        has_dup  <- TRUE
+        dup_idx  <- which(dup_grp)
+        proj_key <- paste(XY_new_grp[dup_grp, 1], XY_new_grp[dup_grp, 2], sep = "|")
+        dup_dist <- norm_XY_grp[dup_grp]
+        # stable sort: within each proj location, sort by dist then original order
+        ord          <- order(proj_key, dup_dist)
+        keeper_in_ord <- !duplicated(proj_key[ord])
+        keeper_orig  <- logical(length(dup_idx))
+        keeper_orig[ord[keeper_in_ord]] <- TRUE
+        closest_grp[dup_idx[!keeper_orig]] <- TRUE
+      }
+    } else {  # jitter
+      dup_grp <- duplicated(PtE_grp)
+      while (any(dup_grp)) {
+        d_pts <- which(dup_grp)
+        cond_0 <- PtE_grp[d_pts, 2] == 0
+        cond_1 <- PtE_grp[d_pts, 2] == 1
+        if (any(cond_0))
+          PtE_grp[d_pts[cond_0], 2] <- PtE_grp[d_pts[cond_0], 2] + 1e-2 * runif(sum(cond_0))
+        if (any(cond_1))
+          PtE_grp[d_pts[cond_1], 2] <- PtE_grp[d_pts[cond_1], 2] - 1e-2 * runif(sum(cond_1))
+        other <- !cond_0 & !cond_1
+        if (any(other)) {
+          delta <- min(1e-2, 1 - max(PtE_grp[d_pts[other], 2]), min(PtE_grp[d_pts[other], 2]))
+          PtE_grp[d_pts[other], 2] <- PtE_grp[d_pts[other], 2] + delta * runif(sum(other))
+        }
+        dup_grp <- duplicated(PtE_grp)
+      }
+      # recompute XY and distances after jitter
+      XY_new_grp  <- graph$coordinates(PtE = PtE_grp, normalized = TRUE)
+      norm_XY_grp <- compute_aux_distances(
+        lines = point_coords_grp[ok, , drop = FALSE],
+        points = XY_new_grp,
+        crs = crs, longlat = longlat, proj4string = proj4string,
+        fact = fact, which_longlat = which_longlat,
+        length_unit = length_unit, transform = transform
+      )
+    }
+
+    keep_final       <- !closest_grp
+    PtE_list[[gi]]   <- PtE_grp[keep_final, , drop = FALSE]
+    norm_list[[gi]]  <- norm_XY_grp[keep_final]
+    closest_list[[gi]] <- closest_grp
+  }
+
+  list(
+    PtE          = do.call(rbind, PtE_list),
+    far_mask     = unlist(far_list),           # length = n_total
+    norm_XY      = unlist(norm_list),           # length = sum(!far & !closest)
+    closest_mask = unlist(closest_list),        # length = sum(!far)
+    has_dup      = has_dup
+  )
+}
+
+
+#' @noRd
 # Create a map from vertices into reference edges
 
 map_into_reference_edge <- function(graph, verbose = 0) {
@@ -3246,14 +3352,14 @@ match_mesh_data <- function(graph,
   
   # Group by edge_number and rank by distance within each group
   mesh_ranked <- mesh_df |>
-    dplyr::group_by(edge_number) |>
-    dplyr::arrange(distance, .by_group = TRUE) |>
+    dplyr::group_by(.data[["edge_number"]]) |>
+    dplyr::arrange(.data[["distance"]], .by_group = TRUE) |>
     dplyr::mutate(rank = dplyr::row_number()) |>
     dplyr::ungroup()
   
   data_ranked <- data_df |>
-    dplyr::group_by(edge_number) |>
-    dplyr::arrange(distance, .by_group = TRUE) |>
+    dplyr::group_by(.data[["edge_number"]]) |>
+    dplyr::arrange(.data[["distance"]], .by_group = TRUE) |>
     dplyr::mutate(rank = dplyr::row_number()) |>
     dplyr::ungroup()
   
@@ -3263,7 +3369,7 @@ match_mesh_data <- function(graph,
     dplyr::left_join(data_ranked, by = c("edge_number", "rank"), suffix = c("_mesh", "_data"))
   
   # Check for missing matches
-  n_na <- sum(is.na(matched$data_idx))
+  n_na <- sum(is.na(matched[["data_idx"]]))
   if (n_na > 0) {
     warning("Matching resulted in ", n_na, " NA values out of ", 
             nrow(matched), " total rows. ",
@@ -3271,8 +3377,8 @@ match_mesh_data <- function(graph,
     
     # Identify problematic edges
     problem_edges <- matched |>
-      dplyr::filter(is.na(data_idx)) |>
-      dplyr::pull(edge_number) |>
+      dplyr::filter(is.na(.data[["data_idx"]])) |>
+      dplyr::pull(.data[["edge_number"]]) |>
       unique()
     
     if (length(problem_edges) > 0) {
@@ -3282,8 +3388,8 @@ match_mesh_data <- function(graph,
   
   # Sort by original mesh index to maintain mesh order, then extract data indices
   result_indices <- matched |>
-    dplyr::arrange(mesh_idx) |>
-    dplyr::pull(data_idx)
+    dplyr::arrange(.data[["mesh_idx"]]) |>
+    dplyr::pull(.data[["data_idx"]])
   
   # Check if we have NA indices and stop with informative error
   if (any(is.na(result_indices))) {

@@ -49,6 +49,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item David Bolin \email{davidbolin@gmail.com}
   \item Alexandre Simas \email{alexandre.impa@gmail.com}
   \item Jonas Wallin \email{jonas.wallin81@gmail.com}
 }

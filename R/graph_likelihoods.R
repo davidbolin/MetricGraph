@@ -125,6 +125,7 @@ likelihood_alpha1_directional <- function(theta,
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -164,7 +165,7 @@ likelihood_alpha1_directional <- function(theta,
 
     for (e in obs.edges) {
 
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_rep[obs.id]
       idx_na <- is.na(y_i)
       y_i <- y_i[!idx_na]
@@ -180,7 +181,7 @@ likelihood_alpha1_directional <- function(theta,
         if(n_cov == 0){
           X_cov_repl <- 0
         } else{
-          X_cov_repl <- X_cov_rep[PtE[,1] == e, ,drop = FALSE]
+          X_cov_repl <- X_cov_rep[obs.id, ,drop = FALSE]
           X_cov_repl <- X_cov_repl[!idx_na, , drop = FALSE]
           y_i <- y_i - X_cov_repl %*% theta[4:(3+n_cov)]
         }
@@ -317,6 +318,14 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
+
+  # Get .loc_idx for data-row to unique-loc mapping (handles n_obs > n_unique after obs_to_vertex)
+  loc_idx_all <- tryCatch(
+    graph$.__enclos_env__$private$data[[".loc_idx"]],
+    error = function(e) NULL
+  )
+  need_expand <- !is.null(loc_idx_all) && (length(y) > nrow(PtE))
 
   # Get determinant once
   loglik <- 0
@@ -339,6 +348,9 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       repl_indices <- (repl_vec == curr_repl)
       y_rep <- y[repl_indices]
 
+      # Build loc_idx for this replicate when expansion is needed
+      if (need_expand) loc_idx_repl <- loc_idx_all[repl_indices]
+
       if(!is.null(X_cov)){
         n_cov <- ncol(X_cov)
         if(n_cov > 0){
@@ -352,10 +364,21 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       count <- 0
 
       for (e in obs.edges) {
-        obs.id <- PtE[,1] == e
-        y_i <- y_rep[obs.id]
+        # Find which data rows are on edge e, supporting n_obs > n_unique (duplicate locs)
+        if (need_expand) {
+          uniq_on_e   <- obs_idx_by_edge[[as.character(e)]]
+          obs.id_data <- which(loc_idx_repl %in% uniq_on_e)
+          obs_dists_e <- PtE[loc_idx_repl[obs.id_data], 2]
+          y_i <- y_rep[obs.id_data]
+        } else {
+          obs.id      <- obs_idx_by_edge[[as.character(e)]]
+          obs.id_data <- obs.id
+          obs_dists_e <- PtE[obs.id, 2]
+          y_i <- y_rep[obs.id]
+        }
 
         idx_na <- is.na(y_i)
+        obs_dists_e <- obs_dists_e[!idx_na]
         y_i <- y_i[!idx_na]
 
         # Skip if no observations
@@ -369,7 +392,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         if(!is.null(X_cov)){
           n_cov <- ncol(X_cov)
           if(n_cov > 0){
-            X_cov_repl <- X_cov_rep[obs.id, , drop=FALSE]
+            X_cov_repl <- X_cov_rep[obs.id_data, , drop=FALSE][!idx_na, , drop=FALSE]
             y_i <- y_i - as.vector(X_cov_repl %*% theta[4:(3+n_cov)])
           }
         }
@@ -377,8 +400,8 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         # Get edge length once
         l <- edge_lengths[e]
 
-        # Compute distance matrices efficiently
-        t <- c(0, l, l*PtE[obs.id, 2])
+        # Compute distance matrices efficiently (obs_dists_e are per-data-row distances)
+        t <- c(0, l, l*obs_dists_e)
         D <- outer(t, t, `-`)
 
         # Pre-allocate matrix
@@ -567,6 +590,7 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
   # Get observation points
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   # Precalculate constants
   n_const <- length(graph$CoB$S)
@@ -620,7 +644,7 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
       # Use character names for edge indices
       edge_name <- paste0("edge_", e)
 
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_rep[obs.id]
       idx_na <- is.na(y_i)
       y_i <- y_i[!idx_na]
@@ -940,7 +964,9 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
   l <- 0
 
   for(i in repl){
-      A <- Matrix::Diagonal(graph$nV)[graph$PtV, ]
+      .row_idx <- graph$PtV
+      A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                x = 1, dims = c(length(.row_idx), graph$nV))
       ind_tmp <- (repl_vec %in% i)
       y_tmp <- y[ind_tmp]
       if(ncol(X_cov) == 0){
@@ -1022,6 +1048,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -1065,7 +1092,7 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
     }
     for (e in obs.edges) {
       # Use pre-computed replicate indices
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
 
       # More efficient indexing
       y_i <- y_reply[obs.id]
@@ -1210,6 +1237,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
 
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   repl_vec <- graph$.__enclos_env__$private$data[[".group"]]
 
@@ -1264,7 +1292,7 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
       edge_name <- paste0("edge_", e)
 
       # Use pre-computed replicate indices
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_reply[obs.id]
 
       idx_na <- is.na(y_i)
@@ -1344,6 +1372,7 @@ likelihood_alpha1_precompute <- function(theta, graph, precomputeddata ,data_nam
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- precomputeddata$obs.edges
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -1519,6 +1548,7 @@ likelihood_randomwalk <- function(theta, graph, data_name = NULL, manual_y = NUL
   #build BSIGMAB
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   i_ <- j_ <- x_ <- rep(0, 4 * length(obs.edges))
 
@@ -1562,7 +1592,7 @@ likelihood_randomwalk <- function(theta, graph, data_name = NULL, manual_y = NUL
     }
     for (e in obs.edges) {
       # Use pre-computed replicate indices
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
 
       # More efficient indexing
       y_i <- y_reply[obs.id]
@@ -1861,8 +1891,17 @@ likelihood_graph_covariance <- function(graph,
       }
     )
 
+    # Keep base covariance (without measurement error) for potential loc_idx expansion
+    Sigma_base <- Sigma
+
     # Add measurement error to diagonal
     diag(Sigma) <- diag(Sigma) + sigma_e^2
+
+    # Get .loc_idx for handling n_obs > n_unique (same location observed multiple times)
+    loc_idx_all <- tryCatch(
+      graph$.__enclos_env__$private$data[[".loc_idx"]],
+      error = function(e) NULL
+    )
 
     # Initialize log-likelihood
     loglik_val <- 0
@@ -1878,8 +1917,19 @@ likelihood_graph_covariance <- function(graph,
       # Skip if all observations are NA
       if(all(na_obs)) next
 
+      # Handle case where multiple observations share the same unique location
+      # (e.g., after observation_to_vertex canonicalises boundary observations).
+      # Expand Sigma from n_unique x n_unique to n_obs x n_obs via .loc_idx.
+      if (!is.null(loc_idx_all) && length(na_obs) > nrow(Sigma_base)) {
+        loc_idx_repl <- loc_idx_all[ind_tmp]
+        Sigma_repl <- Sigma_base[loc_idx_repl, loc_idx_repl]
+        diag(Sigma_repl) <- diag(Sigma_repl) + sigma_e^2
+      } else {
+        Sigma_repl <- Sigma
+      }
+
       # Extract observation data
-      Sigma_non_na <- Sigma[!na_obs, !na_obs]
+      Sigma_non_na <- Sigma_repl[!na_obs, !na_obs]
 
       # Compute Cholesky decomposition once
       R <- base::chol(Sigma_non_na)
@@ -1954,6 +2004,12 @@ precompute_graph_covariance <- function(graph,
     u_repl <- unique(repl)
   }
 
+  # Get .loc_idx for handling n_obs > n_unique (same location multiple times)
+  loc_idx_all <- tryCatch(
+    graph$.__enclos_env__$private$data[[".loc_idx"]],
+    error = function(e) NULL
+  )
+
   # Prepare data structures
   precomputed <- list()
   precomputed$model <- model
@@ -1961,6 +2017,7 @@ precompute_graph_covariance <- function(graph,
   precomputed$y_data <- list()
   precomputed$X_data <- list()
   precomputed$na_indices <- list()
+  precomputed$loc_idx <- list()
 
   # Pre-compute covariate dimensions
   precomputed$n_cov <- if(!is.null(X_cov)) ncol(X_cov) else 0
@@ -1998,6 +2055,11 @@ precompute_graph_covariance <- function(graph,
     # Store observation mask and non-NA values
     precomputed$na_indices[[repl_name]] <- na_obs
     precomputed$y_data[[repl_name]] <- y_tmp[!na_obs]
+
+    # Store loc_idx for this replicate (for n_obs > n_unique expansion)
+    if (!is.null(loc_idx_all)) {
+      precomputed$loc_idx[[repl_name]] <- loc_idx_all[ind_tmp]
+    }
 
     # Store covariate data if present
     if(!is.null(X_cov) && precomputed$n_cov > 0) {
@@ -2134,6 +2196,9 @@ likelihood_graph_covariance_precompute <- function(theta,
     }
   )
 
+  # Keep base covariance (without measurement error) for potential loc_idx expansion
+  Sigma_base <- Sigma
+
   # Add measurement error to diagonal
   diag(Sigma) <- diag(Sigma) + sigma_e^2
 
@@ -2154,8 +2219,18 @@ likelihood_graph_covariance_precompute <- function(theta,
     # Extract valid observations
     y_i <- precomputed_data$y_data[[repl_name]]
 
+    # Handle case where multiple observations share the same unique location.
+    # Expand Sigma from n_unique x n_unique to n_obs x n_obs via .loc_idx.
+    loc_idx_repl <- precomputed_data$loc_idx[[repl_name]]
+    if (!is.null(loc_idx_repl) && length(na_obs) > nrow(Sigma_base)) {
+      Sigma_repl <- Sigma_base[loc_idx_repl, loc_idx_repl]
+      diag(Sigma_repl) <- diag(Sigma_repl) + sigma_e^2
+    } else {
+      Sigma_repl <- Sigma
+    }
+
     # Extract observation data - only use the non-NA rows and columns
-    Sigma_non_na <- Sigma[!na_obs, !na_obs]
+    Sigma_non_na <- Sigma_repl[!na_obs, !na_obs]
 
     # Compute Cholesky decomposition once
     R <- base::chol(Sigma_non_na)
@@ -2373,6 +2448,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   # Get observation points
   PtE <- graph$get_PtE()
   obs.edges <- unique(PtE[, 1])
+  obs_idx_by_edge <- split(seq_len(nrow(PtE)), PtE[, 1])
 
   # Initialize precomputed data structure
   precomputed <- list()
@@ -2429,7 +2505,7 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
       # Use character names for edge indices
       edge_name <- paste0("edge_", e)
 
-      obs.id <- PtE[,1] == e
+      obs.id <- obs_idx_by_edge[[as.character(e)]]
       y_i <- y_rep[obs.id]
 
       idx_na <- is.na(y_i)

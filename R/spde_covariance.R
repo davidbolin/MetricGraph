@@ -29,6 +29,28 @@ spde_variance <- function( kappa,
                            directional = F){
 
 
+  if (inherits(graph, "graph_components")) {
+    if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
+                   logical(1)))) {
+      stop("Every component must have a mesh; call graph$build_mesh() first.")
+    }
+    has_kappa <- !missing(kappa)
+    has_tau   <- !missing(tau)
+    has_range <- !missing(range)
+    has_sigma <- !missing(sigma)
+    out_list <- lapply(graph$graphs, function(g) {
+      args <- list(alpha = alpha, graph = g, BC = BC,
+                   include_vertices = include_vertices,
+                   directional = directional)
+      if (has_kappa) args$kappa <- kappa
+      if (has_tau)   args$tau   <- tau
+      if (has_range) args$range <- range
+      if (has_sigma) args$sigma <- sigma
+      do.call(spde_variance, args)
+    })
+    return(unlist(out_list, use.names = FALSE))
+  }
+
   check <- check_graph(graph)
 
   if(!check$has.mesh) {
@@ -73,11 +95,13 @@ spde_variance <- function( kappa,
     #COV[X,Y] = cov[Xtilde+BZ,Y] = B Cov[Z,Y]
 
     C_P <- NULL
-    C <- c()
     inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
-    for (i in inds_PtE) {
+    t_by_edge <- split(graph$mesh$PtE[,2], graph$mesh$PtE[,1])
+    C_list <- vector("list", length(inds_PtE))
+    for (k in seq_along(inds_PtE)) {
+      i <- inds_PtE[k]
       l <- graph$edge_lengths[i]
-      t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+      t_s <- t_by_edge[[as.character(i)]]
       if(!directional){
         ind <- graph$E[i, ]
       }else{
@@ -94,8 +118,9 @@ spde_variance <- function( kappa,
                   S[E.ind, Obs.ind, drop = FALSE])
       C_P <-  S[Obs.ind, Obs.ind]   + t(Bt) %*% (Sigma[ind, ind] -S[E.ind, E.ind]) %*% Bt
 
-      C <- c(C, diag(C_P))
+      C_list[[k]] <- diag(C_P)
     }
+    C <- unlist(C_list, use.names = FALSE)
 
   }else if (alpha == 2) {
     stop("alpha 2 not yet implemented.")
@@ -136,6 +161,42 @@ spde_covariance <- function(P,
                             alpha,
                             graph,
                             directional = F) {
+
+  if (inherits(graph, "graph_components")) {
+    if (length(P) != 2) {
+      stop("For 'graph_components', P must be c(edge_number, distance_on_edge), with global edge numbering.")
+    }
+    if (any(vapply(graph$graphs, function(g) is.null(g$mesh),
+                   logical(1)))) {
+      stop("Every component must have a mesh; call graph$build_mesh() first.")
+    }
+    comp_id <- graph$edge_to_component(P[1])
+    local_edge <- as.integer(P[1]) - graph$edge_offsets[comp_id]
+    has_kappa <- !missing(kappa)
+    has_tau   <- !missing(tau)
+    has_range <- !missing(range)
+    has_sigma <- !missing(sigma)
+    out <- vector("list", graph$n)
+    for (k in seq_len(graph$n)) {
+      g <- graph$graphs[[k]]
+      n_mesh <- nrow(g$mesh$V)
+      if (k == comp_id) {
+        args <- list(P = c(local_edge, P[2]), alpha = alpha, graph = g,
+                     directional = directional)
+        if (has_kappa) args$kappa <- kappa
+        if (has_tau)   args$tau   <- tau
+        if (has_range) args$range <- range
+        if (has_sigma) args$sigma <- sigma
+        out[[k]] <- do.call(spde_covariance, args)
+      } else {
+        # Independence across components: covariance is zero. Match the layout
+        # produced by spde_covariance on this component (vertices first, then
+        # mesh-only locations).
+        out[[k]] <- numeric(n_mesh)
+      }
+    }
+    return(unlist(out, use.names = FALSE))
+  }
 
   check <- check_graph(graph)
 
@@ -210,9 +271,12 @@ spde_covariance <- function(P,
       C <- CV_P[ 2*(VtE[,1]-1)  + 1 + VtE[,2]]
     }
     inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
-    for (i in inds_PtE) {
+    t_by_edge <- split(graph$mesh$PtE[,2], graph$mesh$PtE[,1])
+    C_list <- vector("list", length(inds_PtE))
+    for (k in seq_along(inds_PtE)) {
+      i <- inds_PtE[k]
       l <- graph$edge_lengths[i]
-      t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+      t_s <- t_by_edge[[as.character(i)]]
       if(!directional){
         ind <- graph$E[i, ]
       }else{
@@ -241,8 +305,9 @@ spde_covariance <- function(P,
                     S[E.ind, Obs.ind, drop = FALSE])
           C_P <- CV_P[ind] %*% Bt
       }
-      C <- c(C, C_P)
+      C_list[[k]] <- C_P
     }
+    C <- c(C, unlist(C_list, use.names = FALSE))
   } else if (alpha == 2) {
     if((missing(kappa) || missing(tau)) && (missing(sigma) || missing(range))){
     stop("You should either provide either kappa and tau, or sigma and range.")
@@ -302,10 +367,13 @@ spde_covariance <- function(P,
   VtE <- graph$VtEfirst()
   C <- CV_P[ 4*(VtE[,1]-1)  + 1 + 2 * VtE[,2]]
   inds_PtE <- sort(unique(graph$mesh$PtE[,1])) #inds
-  for (i in inds_PtE) {
+  t_by_edge <- split(graph$mesh$PtE[,2], graph$mesh$PtE[,1])
+  C_list <- vector("list", length(inds_PtE))
+  for (k in seq_along(inds_PtE)) {
+    i <- inds_PtE[k]
     l <- graph$edge_lengths[i]
 
-    t_s <- graph$mesh$PtE[graph$mesh$PtE[,1] == i,2]
+    t_s <- t_by_edge[[as.character(i)]]
     if(i == P[1]){
       Sigma <- matrix(0, length(t_s) + 5, length(t_s) + 5)
       d.index <- c(1, 2)
@@ -347,8 +415,9 @@ spde_covariance <- function(P,
                      Sigma[index_boundary, -index_boundary])
       C_P <-  t(SinvS) %*% u_e
     }
-    C <- c(C,c(C_P))
+    C_list[[k]] <- c(C_P)
   }
+  C <- c(C, unlist(C_list, use.names = FALSE))
   } else {
     stop("alpha should be 1 or 2.")
   }

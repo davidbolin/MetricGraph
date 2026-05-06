@@ -61,6 +61,7 @@
 #' @return A `data.frame` containing the profiled parameters.
 #' @method profile graph_lme
 #' @noRd
+#' @export
 
 profile.graph_lme <- function(fitted, which_par = NULL, parameterization = "matern", alphamax = 0.01, maxpts = 100,
             delta = NULL, delta_cutoff = 1/8, maxmult = 10, minstep = 1e-6, verbose = FALSE,

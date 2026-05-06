@@ -100,10 +100,10 @@ graph_lgcp_sim <- function(n = 1, intercept = 0, sigma, range, alpha, graph) {
   } else {
     stop("not implemented yet")
   }
-  R <- chol(Q)
+  R <- Cholesky(forceSymmetric(Q), LDL = FALSE, perm = TRUE)
   result <- list()
   for(i in 1:n){
-    tmp <- solve(R, rnorm(dim(Q)[1]))
+    tmp <- as.vector(solve(R, solve(R, rnorm(dim(Q)[1]), system = "Lt"), system = "Pt"))
     u <- intercept + tmp
 
     lambda_max <- max(exp(u))
@@ -400,7 +400,8 @@ precompute_lgcp_graph <- function(graph,
     aux_spde_model = spde_model,
     type_model = type_model,
     model_name = model_name,
-    nrow_int_points = nrow(int_points)
+    nrow_int_points = nrow(int_points),
+    int_points = int_points
   )
   
   class(precomputed) <- "precomputed_lgcp"
@@ -623,6 +624,7 @@ lgcp_graph <- function(formula,
             graph_bkp <- precomputed_data$graph
             stk <- precomputed_data$stk
             nrow_int_points <- precomputed_data$nrow_int_points
+            int_points <- precomputed_data$int_points
             if(precomputed_data$resp_variable_name != resp_variable_name){
               warning(paste0("The response variable name in the precomputed data (", precomputed_data$resp_variable_name, ") does not match the response variable name in the formula (", resp_variable_name, "). The variable in the precomputed data will be used."))
             }
@@ -721,7 +723,7 @@ lgcp_graph <- function(formula,
                                      verbose = 0)
 
           if(inherits(aux_spde_model, c("inla_metric_graph_spde", "inla_metric_graph_lgcp_spde"))){
-            aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization, stationary_endpoints = aux_spde_model$args$stationary_endpoints, directional = aux_spde_model$directional, start_range = aux_spde_model$args$start_range, start_kappa = aux_spde_model$args$start_kappa, prior_kappa = aux_spde_model$args$prior_kappa, prior_sigma = aux_spde_model$args$prior_sigma,
+            aux_spde_model <- graph_spde(graph_bkp, alpha = aux_spde_model$alpha, parameterization = aux_spde_model$parameterization, stationary_endpoints = aux_spde_model$args$stationary_endpoints, directional = aux_spde_model$directional, start_range = aux_spde_model$args$start_range, start_kappa = aux_spde_model$args$start_kappa, prior_kappa = aux_spde_model$args$prior_kappa, 
       start_tau = aux_spde_model$args$start_tau, prior_tau = aux_spde_model$args$prior_tau, factor_start_range = aux_spde_model$args$factor_start_range, 
       type_start_range_bbox = aux_spde_model$args$type_start_range_bbox, shared_lib = aux_spde_model$args$shared_lib, debug = aux_spde_model$args$debug,
       verbose = aux_spde_model$args$verbose)
@@ -769,6 +771,7 @@ lgcp_graph <- function(formula,
             }
           }
           }
+
             
           inla_fit <- INLA::inla(formula,
                            data = INLA::inla.stack.data(stk),

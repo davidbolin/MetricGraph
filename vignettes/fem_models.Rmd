@@ -91,9 +91,12 @@ $\sigma, \nu$. Here, `sigma` denotes the standard deviation of the field and `nu
 The object `op` contains the matrices needed for evaluating the distribution of the stochastic weights in the FEM approximation. 
 
 Let us simulate the field $u$ at the mesh locations and plot the result:
-```{r, message=FALSE , warning=FALSE} 
+```{r, message=FALSE , warning=FALSE}
 u <- simulate(op)
-graph$plot_function(X = u, type = "plotly")
+df_u <- data.frame(u = as.vector(u), edge_number = graph$mesh$VtE[,1],
+                   distance_on_edge = graph$mesh$VtE[,2])
+df_u <- graph$process_data(data = df_u, normalized = TRUE)
+graph$plot_function(data = "u", newdata = df_u, type = "plotly")
 ```
 
 If we want to evaluate $u(s)$ at some locations $s_1,\ldots, s_n$, we need to multiply the weights with the FEM basis functions $\varphi_i(s)$ evaluated at the locations. For this, we can construct the observation matrix $\boldsymbol{\mathrm{A}}$, with elements $A_{ij} = \varphi_j(s_i)$, which links the FEM basis functions to the locations. This can be done
@@ -122,7 +125,10 @@ can use the `precision()` method on object returned by the `matern.operators()` 
 As an illustration of the model, let us compute the covariance function between the process at $s=(2,0.1)$, that is, the point at edge 2 and distance on edge 0.1, and all the other mesh points. To this end, we can use the helper function `cov_function_mesh` that is contained in the `op` object:
 ```{r, message=FALSE, warning=FALSE}
   c_cov <- cov_function_mesh(op, matrix(c(2,0.1),1,2))
-  graph$plot_function(c_cov, type = "plotly")
+  df_c_cov <- data.frame(cov = as.vector(c_cov), edge_number = graph$mesh$VtE[,1],
+                         distance_on_edge = graph$mesh$VtE[,2])
+  df_c_cov <- graph$process_data(data = df_c_cov, normalized = TRUE)
+  graph$plot_function(data = "cov", newdata = df_c_cov, type = "plotly")
 ```
 
 
@@ -211,17 +217,21 @@ We will perform kriging with the `predict()` method. To this end, we need to pro
 The estimate is shown in the following figure
 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE, warning=FALSE}
-  graph$plot_function(as.vector(u.krig$mean))  
+  df_krig <- data.frame(mean = as.vector(u.krig$mean), edge_number = graph$mesh$VtE[,1],
+                        distance_on_edge = graph$mesh$VtE[,2])
+  df_krig <- graph$process_data(data = df_krig, normalized = TRUE)
+  graph$plot_function(data = "mean", newdata = df_krig, type = "plotly")
 ```
 
 We can also use the `augment()` function to easily plot the predictions. Let us a build a 3d plot now
 and add the observed values on top of the predictions:
 
 ```{r, message=FALSE, warning=FALSE}
-p <- augment(fit, newdata = df_pred, normalized = TRUE) %>% 
+df_pred <- graph$process_data(data = df_pred, normalized = TRUE)
+p <- augment(fit, newdata = df_pred, normalized = TRUE) %>%
           graph$plot_function(data = ".fitted", type = "plotly")
 
-graph$plot(data = "y", p = p, type = "plotly")          
+graph$plot(data = "y", p = p, type = "plotly")
 ```
 
 ## Further details on `graph_lme`
@@ -329,7 +339,7 @@ print(data.frame(sigma = c(sigma, fit_repl$alt_par_coeff$coeff["sigma"]),
                    row.names = c("Truth", "Estimates")))
 ```
 
-Let us do kriging. We will use the same prediction locations as in the previous example. Let us get prediction for replicate 10, then add the original observations on top of them:
+Let us do kriging. We will use the same prediction locations as in the previous example. Let us get prediction for replicate 10, then add the original observations on top of them. Observe that even though the group/replicate might be a number, it is stored as character in the data frame, so we need to pass it as a character in the `which_repl` argument.
 
 ```{r, message=FALSE, warning=FALSE}
 p <- augment(fit_repl, which_repl = 10, newdata = df_pred, normalized = TRUE) %>% 
@@ -357,7 +367,7 @@ graph$add_observations(data = df_data, normalized = TRUE)
 Let us create the model object:
 ```{r, message=FALSE}
   library(INLA)
-  rspde_model <- rspde.metric_graph(graph)
+  rspde_model <- rspde.metric_graph(graph, shared_lib = "rSPDE")
 ```
 
 By default, the order of the rational approximation is 2.
@@ -500,7 +510,10 @@ m.prd <- rspde_fitprd$summary.fitted.values$mean[id.prd]
 Finally, let us plot the predicted values. To this end 
 we will use the `plot_function()` graph method. 
 ```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE, warning=FALSE}
-  graph$plot_function(m.prd, type = "plotly")  
+  df_prd <- data.frame(mean = m.prd, edge_number = pred_loc[,1],
+                       distance_on_edge = pred_loc[,2])
+  df_prd <- graph$process_data(data = df_prd, normalized = TRUE)
+  graph$plot_function(data = "mean", newdata = df_prd, type = "plotly")
 ```
 
 ## Using `R-INLA` implementation to fit models with replicates
@@ -842,7 +855,7 @@ California. The variable `y` contains the traffic speeds.
 ```{r, message=FALSE}
  pems_graph <- metric_graph$new(edges = pems$edges)
  pems_graph$add_observations(data = pems$data)
- pems_graph$prune_vertices()
+ pems_graph$prune_vertices( )
  pems_graph$build_mesh(h=0.1)
 ```
 
@@ -854,12 +867,10 @@ summary(pems_graph)
 
 Observe that it is a non-Euclidean graph.
 
-Let us create as non-stationary covariates, the position on the edge, which will capture if the traffic speed was taken close to the intersections. We will make this function symmetric around 0.5 by subtracting 0.5 for points larger than 0.5. That is, the covariate is zero close to intersections.
+We now define a non-stationary covariate based on the position along each edge. This covariate is designed to indicate whether the traffic speed observation was taken close to an intersection. More precisely, we identify points whose relative position on the edge is either below 0.1 or above 0.9, corresponding to locations near the endpoints of the edge. Thus, the covariate is equal to TRUE for points close to intersections and FALSE otherwise.
 
 ```{r}
-cov_pos <- 2 * ifelse(pems_graph$mesh$VtE[,2] > 0.5, 
-                    1-pems_graph$mesh$VtE[,2], 
-                    pems_graph$mesh$VtE[,2])
+cov_pos <- (pems_graph$mesh$VtE[,2] > 0.9) | (pems_graph$mesh$VtE[,2] < 0.1)
 ```
 
 We will now build the non-stationary matrices to be used:
@@ -873,9 +884,7 @@ Let us also obtain the same covariate for the observations:
 
 ```{r}
 cov_obs <- pems$data[[".distance_on_edge"]]
-cov_obs <- 2 * ifelse(cov_obs > 0.5, 
-                      1 - cov_obs,
-                      cov_obs)
+cov_obs <- (cov_obs > 0.9) | (cov_obs < 0.1)
 ```
 
 Let add this covariate to the data:
@@ -890,7 +899,7 @@ pems_graph$add_observations(data = pems_graph$mutate(cov_obs = cov_obs),
 We are now in position to fit this model using the `graph_lme()` function. We will also add `cov_obs` as a covariate for the model.
 
 ```{r, warning=FALSE, message=FALSE}
-fit <- graph_lme(y ~ cov_obs, graph = pems_graph, model = list(type = "WhittleMatern", 
+fit <- graph_lme(y ~ 1, graph = pems_graph, model = list(type = "WhittleMatern", 
                     B.sigma = B.sigma, B.range = B.range, fem = TRUE))
 ```
 
@@ -904,7 +913,10 @@ Let us plot the range parameter along the mesh, so we can see how it is varying:
 
 ```{r, message=FALSE, warning=FALSE}
 est_range <- exp(B.range[,-1]%*%fit$coeff$random_effects[2:5])
-pems_graph$plot_function(X = est_range, vertex_size = 0, 
+df_range <- data.frame(range = est_range, edge_number = pems_graph$mesh$VtE[,1],
+                       distance_on_edge = pems_graph$mesh$VtE[,2])
+df_range <- pems_graph$process_data(data = df_range, normalized = TRUE)
+pems_graph$plot_function(data = "range", newdata = df_range, vertex_size = 0,
                     type = "mapview", mapview_caption = "Range")
 ```
 
@@ -912,7 +924,10 @@ Similarly, we have for sigma:
 
 ```{r, message=FALSE, warning=FALSE}
 est_sigma <- exp(B.sigma[,-1]%*%fit$coeff$random_effects[2:5])
-pems_graph$plot_function(X = est_sigma, vertex_size = 0, 
+df_sigma <- data.frame(sigma = est_sigma, edge_number = pems_graph$mesh$VtE[,1],
+                       distance_on_edge = pems_graph$mesh$VtE[,2])
+df_sigma <- pems_graph$process_data(data = df_sigma, normalized = TRUE)
+pems_graph$plot_function(data = "sigma", newdata = df_sigma, vertex_size = 0,
                     type = "mapview", mapview_caption = "Sigma")
 ```
 
@@ -924,20 +939,23 @@ rspde_object_ns <- rSPDE::spde.matern.operators(graph = pems_graph,
                                                 B.sigma = B.sigma,
                                                 B.range = B.range,
                                                 theta = fit$coeff$random_effects[2:5],
-                                                nu = fit$coeff$random_effects[1] - 0.5)
+                                                nu = fit$coeff$random_effects[1])
 ```
 
 Now, we compute the estimated marginal standard deviation:
 
 ```{r}
-est_cov_matrix <- rspde_object_ns$covariance_mesh()
+est_cov_matrix <- covariance_mesh(rspde_object_ns)
 est_std_dev <- sqrt(Matrix::diag(est_cov_matrix))
 ```
 
 We can now plot:
 
 ```{r, message=FALSE, warning=FALSE}
-pems_graph$plot_function(X = est_std_dev, vertex_size = 0, 
+df_std <- data.frame(std = est_std_dev, edge_number = pems_graph$mesh$VtE[,1],
+                     distance_on_edge = pems_graph$mesh$VtE[,2])
+df_std <- pems_graph$process_data(data = df_std, normalized = TRUE)
+pems_graph$plot_function(data = "std", newdata = df_std, vertex_size = 0,
           type = "mapview", mapview_caption = "Std. dev")
 ```
 
@@ -950,7 +968,7 @@ For example, if we want to fix the first coefficient theta1 to 0 in the previous
 
 ```{r}
 # Fit model with fixed theta1 parameter
-fit_ns_fixed_theta1 <- graph_lme(y ~ cov_obs, 
+fit_ns_fixed_theta1 <- graph_lme(y ~ 1, 
                                graph = pems_graph, 
                                model = list(type = "WhittleMatern", 
                                           B.sigma = B.sigma, 
@@ -961,26 +979,12 @@ fit_ns_fixed_theta1 <- graph_lme(y ~ cov_obs,
 summary(fit_ns_fixed_theta1)
 ```
 
-We can also fix the entire theta vector at once using the `fix_theta` parameter. This is particularly useful when we have strong prior knowledge about all the parameters:
-
-```{r}
-# Fit model with all theta parameters fixed
-fit_ns_fixed_all <- graph_lme(y ~ cov_obs, 
-                            graph = pems_graph, 
-                            model = list(type = "WhittleMatern", 
-                                       B.sigma = B.sigma, 
-                                       B.range = B.range, 
-                                       fem = TRUE),
-                            model_options = list(fix_theta = c(0.5, 0.8, 1.2, 0.3)))  # Fix the entire theta vector
-
-summary(fit_ns_fixed_all)
-```
 
 Similarly, we can provide starting values for the entire theta vector with `start_theta`:
 
 ```{r}
 # Fit model with starting values for theta parameters
-fit_ns_start <- graph_lme(y ~ cov_obs, 
+fit_ns_start <- graph_lme(y ~ 1, 
                         graph = pems_graph, 
                         model = list(type = "WhittleMatern", 
                                    B.sigma = B.sigma, 
@@ -1012,7 +1016,7 @@ Let us create the component and fit.
 
 ```{r, message=FALSE, warning=FALSE, message=FALSE}
 cmp_nonstat <-
-  y ~ -1 + Intercept(1) + cov_obs + field(
+  y ~ -1 + Intercept(1) + field(
     cbind(.edge_number, .distance_on_edge),
     model = rspde_model_nonstat
   )
