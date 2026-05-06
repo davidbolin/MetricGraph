@@ -5,33 +5,44 @@ on:
 
 name: cran_setup
 
+permissions:
+  contents: write
+
 jobs:
   cran_setup:
-    runs-on: macOS-latest
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: macos-latest
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Delete vignettes, pkgdown, selected tests, then copy cran vign
         run: |
-          git rm -rf vignettes
-          git rm -rf pkgdown/
-          git rm -f index.md
-          git rm -rf examples
-          git rm -rf inst/shared
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git rm -f tests/testthat/test_inla_inlabru_interfaces.R
-          git rm -f tests/testthat/test_inlabru_predict.R
-          git rm -f tests/testthat/test_cgeneric.R
-          git rm -f tests/testthat/test_cross_validation.R
+          git rm -rf vignettes || true
+          git rm -rf pkgdown/ || true
+          git rm -f index.md || true
+          git rm -rf examples || true
+          git rm -rf inst/shared || true
+
+          git rm -f tests/testthat/test_inla_inlabru_interfaces.R || true
+          git rm -f tests/testthat/test_inlabru_predict.R || true
+          git rm -f tests/testthat/test_cgeneric.R || true
+          git rm -f tests/testthat/test_cross_validation.R || true
 
           rm -rf vignettes
           mkdir vignettes
-          cd cran_vignettes
-          cp * ../vignettes
-          cd ..
 
-          git rm -rf cran_vignettes
+          cp cran_vignettes/* vignettes/
+
+          git rm -rf cran_vignettes || true
+
           git add vignettes
-          git commit -m "Doing the setup"
+
+          git commit -m "Doing the setup" || echo "No changes to commit"
           git push
         shell: bash
