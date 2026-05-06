@@ -33,6 +33,8 @@ jobs:
           git rm -f --ignore-unmatch tests/testthat/test_inlabru_predict.R
           git rm -f --ignore-unmatch tests/testthat/test_cgeneric.R
           git rm -f --ignore-unmatch tests/testthat/test_cross_validation.R
+          git rm -f --ignore-unmatch tests/testthat/test-prune-vertices-perf.R 
+          git rm -f --ignore-unmatch tests/testthat/test-disconnected-models.R
 
           rm -rf vignettes
           mkdir -p vignettes
