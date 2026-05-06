@@ -35,6 +35,12 @@ jobs:
           git rm -f --ignore-unmatch tests/testthat/test_cross_validation.R
           git rm -f --ignore-unmatch tests/testthat/test-prune-vertices-perf.R 
           git rm -f --ignore-unmatch tests/testthat/test-disconnected-models.R
+          git rm -f --ignore-unmatch tests/testthat/test-compute-distances.R
+          git rm -f --ignore-unmatch tests/testthat/test-cpp-helpers.R 
+          git rm -f --ignore-unmatch tests/testthat/test-metric-graph-components.R          
+          git rm -f --ignore-unmatch tests/testthat/test-coverage-gaps.R       
+          git rm -f --ignore-unmatch tests/testthat/test_random_fields_vignette.R   
+          git rm -f --ignore-unmatch tests/testthat/test-observation-to-vertex.R
 
           rm -rf vignettes
           mkdir -p vignettes
