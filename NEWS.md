@@ -1,4 +1,4 @@
-# MetricGraph (development version)
+# MetricGraph 1.6.0
 
 * `metric_graph` now fully supports disconnected graphs, and `graph_components` 
 has therefore been deprecated.
