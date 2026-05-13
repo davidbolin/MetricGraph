@@ -273,7 +273,7 @@ summary(res)
     ## Number of function calls by 'optim' = 19
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  0.78698 secs
+    ## Time used to:     fit the model =  0.7028 secs
 
 We can also take a glance at `res`:
 
@@ -531,7 +531,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 21
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  0.31058 secs
+    ## Time used to:     fit the model =  0.2967 secs
 
 ``` r
 
@@ -980,7 +980,7 @@ summary(fit_repl_isoexp)
     ## Number of function calls by 'optim' = 22
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  4.05242 secs
+    ## Time used to:     fit the model =  3.93768 secs
 
 To do kriging, we proceed in an identical way, by providing a
 `data.frame` with the locations we want to obtain predictions.

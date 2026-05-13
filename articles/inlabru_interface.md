@@ -800,9 +800,9 @@ cat("Results for alpha = 1:\n")
 summary(spde_result_bru_pems_1)
 ```
 
-    ##             mean        sd  0.025quant   0.5quant 0.975quant        mode
-    ## sigma 14.8632000 0.6011500 13.70530000 14.8691000  16.007700 14.86630000
-    ## range  0.0492197 0.0839243  0.00328826  0.0234544   0.259756  0.00773007
+    ##             mean         sd  0.025quant   0.5quant 0.975quant        mode
+    ## sigma 15.0751000 0.71173600 13.99250000 14.9658000 16.7558000 14.76990000
+    ## range  0.0145708 0.00754149  0.00385948  0.0133173  0.0325598  0.00996145
 
 ``` r
 
@@ -821,8 +821,8 @@ summary(spde_result_bru_pems_2)
 ```
 
     ##           mean      sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 20.98920 3.25535   15.31430  20.7126    28.1077 20.55020
-    ## range  8.85834 1.61369    6.14616   8.7004    12.4661  8.37517
+    ## sigma 20.98110 3.23647   15.33480 20.71340    28.0532 20.53780
+    ## range  8.84733 1.57382    6.17206  8.70379    12.3362  8.40866
 
 We can now get the mesh locations to do prediction. We start by creating
 a mesh and extracting the indexes of the mesh such that longitude is

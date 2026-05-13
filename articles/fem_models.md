@@ -272,7 +272,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 502
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  9.61285 secs
+    ## Time used to:     fit the model =  8.75329 secs
 
 An improved estimate of the Hessian can be obtained by setting
 `improve_hessian` to `TRUE`, which improves the precision of the
@@ -325,8 +325,8 @@ summary(fit)
     ## Number of function calls by 'optim' = 125
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  25.61293 secs 
-    ##   compute the Hessian = 3.07984 secs
+    ## Time used to:     fit the model =  23.18599 secs 
+    ##   compute the Hessian = 2.7467 secs
 
 We can also obtain additional information by using the function
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -337,9 +337,9 @@ glance(fit)
 ```
 
     ## # A tibble: 1 × 9
-    ##    nobs  sigma logLik   AIC   BIC deviance df.residual model               alpha
-    ##   <int>  <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>               <dbl>
-    ## 1   400 0.0972  -127.  267.  295.     253.         393 Covariance-Based M…  1.26
+    ##    nobs  sigma logLik   AIC   BIC deviance df.residual model         alpha
+    ##   <int>  <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>         <dbl>
+    ## 1   400 0.0972  -127.  267.  295.     253.         393 WhittleMatern  1.26
 
 Let us compare the values of the parameters of the latent model with the
 true ones:
@@ -490,7 +490,7 @@ summary(fit_fixed)
     ## Number of function calls by 'optim' = 77
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  15.88137 secs
+    ## Time used to:     fit the model =  14.34051 secs
 
 ``` r
 
@@ -606,8 +606,8 @@ summary(fit_repl)
     ## Number of function calls by 'optim' = 117
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  1.15348 mins 
-    ##   set up the parallelization = 2.70636 secs
+    ## Time used to:     fit the model =  1.07147 mins 
+    ##   set up the parallelization = 2.59769 secs
 
 Let us also take a glance of the fit:
 
@@ -617,9 +617,9 @@ glance(fit_repl)
 ```
 
     ## # A tibble: 1 × 9
-    ##    nobs sigma logLik    AIC    BIC deviance df.residual model              alpha
-    ##   <int> <dbl>  <dbl>  <dbl>  <dbl>    <dbl>       <dbl> <chr>              <dbl>
-    ## 1 12000 0.301 -9838. 19683. 19713.   19675.       11996 Covariance-Based …  1.29
+    ##    nobs sigma logLik    AIC    BIC deviance df.residual model         alpha
+    ##   <int> <dbl>  <dbl>  <dbl>  <dbl>    <dbl>       <dbl> <chr>         <dbl>
+    ## 1 12000 0.301 -9838. 19683. 19713.   19675.       11996 WhittleMatern  1.29
 
 Let us compare the values of the parameters of the latent model with the
 true ones:
@@ -1529,7 +1529,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 158
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  13.08952 secs
+    ## Time used to:     fit the model =  11.95768 secs
 
 Let us plot the range parameter along the mesh, so we can see how it is
 varying:
@@ -1653,7 +1653,7 @@ summary(fit_ns_fixed_theta1)
     ## Number of function calls by 'optim' = 123
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  9.90218 secs
+    ## Time used to:     fit the model =  9.22111 secs
 
 Similarly, we can provide starting values for the entire theta vector
 with `start_theta`:
@@ -1711,7 +1711,7 @@ summary(fit_ns_start)
     ## Number of function calls by 'optim' = 158
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  13.2645 secs
+    ## Time used to:     fit the model =  12.19664 secs
 
 ### Fitting the inlabru rSPDE model
 
@@ -1777,7 +1777,7 @@ summary(rspde_fit_nonstat)
     ##     Additive/Linear/Rowwise: TRUE/TRUE/TRUE
     ##     Used components: effect[Intercept, field], latent[] 
     ## Time used:
-    ##     Pre = 0.165, Running = 79.7, Post = 0.349, Total = 80.2 
+    ##     Pre = 0.15, Running = 77.4, Post = 0.318, Total = 77.9 
     ## Fixed effects:
     ##             mean   sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept 50.448 2.92     44.533   50.485     56.151 50.481   0
