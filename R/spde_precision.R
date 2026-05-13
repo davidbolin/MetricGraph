@@ -174,75 +174,117 @@ Qalpha1 <- function(theta, graph, BC = 1, build = TRUE) {
     return(Matrix::bdiag(Qs))
   }
 
-  kappa <- theta[2]
   tau <- theta[1]
+  kappa <- theta[2]
+
   i_ <- j_ <- x_ <- rep(0, dim(graph$V)[1]*4)
   count <- 0
-  for(i in 1:graph$nE){
-    l_e <- graph$edge_lengths[i]
-    c1 <- exp(-kappa*l_e)
-    c2 <- c1^2
-    one_m_c2 = 1-c2
-    c_1 = 0.5 + c2/one_m_c2
-    c_2 = -c1/one_m_c2
+  if(kappa == 0) {
+    for(i in 1:graph$nE){
+      le <- graph$edge_lengths[i]
+      c1 <- 1.0/le
+      c2 <- -1.0/le
 
-    if (graph$E[i, 1] != graph$E[i, 2]) {
+      if (graph$E[i, 1] != graph$E[i, 2]) {
 
-      i_[count + 1] <- graph$E[i, 1]
-      j_[count + 1] <- graph$E[i, 1]
-      x_[count + 1] <- c_1
+        i_[count + 1] <- graph$E[i, 1]
+        j_[count + 1] <- graph$E[i, 1]
+        x_[count + 1] <- c1
 
-      i_[count + 2] <- graph$E[i, 2]
-      j_[count + 2] <- graph$E[i, 2]
-      x_[count + 2] <- c_1
+        i_[count + 2] <- graph$E[i, 2]
+        j_[count + 2] <- graph$E[i, 2]
+        x_[count + 2] <- c1
 
 
-      i_[count + 3] <- graph$E[i, 1]
-      j_[count + 3] <- graph$E[i, 2]
-      x_[count + 3] <- c_2
+        i_[count + 3] <- graph$E[i, 1]
+        j_[count + 3] <- graph$E[i, 2]
+        x_[count + 3] <- c2
 
-      i_[count + 4] <- graph$E[i, 2]
-      j_[count + 4] <- graph$E[i, 1]
-      x_[count + 4] <- c_2
-      count <- count + 4
-    }else{
-      i_[count + 1] <- graph$E[i, 1]
-      j_[count + 1] <- graph$E[i, 1]
-      x_[count + 1] <- tanh(0.5 * kappa * l_e)
-      count <- count + 1
+        i_[count + 4] <- graph$E[i, 2]
+        j_[count + 4] <- graph$E[i, 1]
+        x_[count + 4] <- c2
+        count <- count + 4
+      }
     }
-  }
-  if(BC == 1){
-    #does this work for circle?
-    i.table <- table(i_[1:count])
-    index = as.integer(names(which(i.table < 3)))
-    i_ <- c(i_[1:count], index)
-    j_ <- c(j_[1:count], index)
-    x_ <- c(x_[1:count], rep(0.5, length(index)))
-    count <- count + length(index)
-  }else if(BC==2){
-
-    dV <- graph$get_vertices()$degree
-    index <- 1:length(dV)
-    i_ <- c(i_[1:count], index)
-    j_ <- c(j_[1:count], index)
-    x_ <- c(x_[1:count], -0.5*dV + 1)
-    count <- count + length(index)
-
-  }
-  if(build){
-    Q <- Matrix::sparseMatrix(i = i_[1:count],
-                              j = j_[1:count],
-                              x = (2 * kappa * tau^2) * x_[1:count],
-                              dims = c(graph$nV, graph$nV))
+    if(build){
+      Q <- Matrix::sparseMatrix(i = i_[1:count],
+                                j = j_[1:count],
+                                x =  tau^2 * x_[1:count],
+                                dims = c(graph$nV, graph$nV))
 
 
-    return(Q)
+      return(Q)
+    } else {
+      return(list(i = i_[1:count],
+                  j = j_[1:count],
+                  x = tau^2 * x_[1:count],
+                  dims = c(graph$nV, graph$nV)))
+    }
   } else {
-    return(list(i = i_[1:count],
-                j = j_[1:count],
-                x = (2 * kappa * tau^2) * x_[1:count],
-                dims = c(graph$nV, graph$nV)))
+    for(i in 1:graph$nE){
+      l_e <- graph$edge_lengths[i]
+      c1 <- exp(-kappa*l_e)
+      c2 <- c1^2
+      one_m_c2 = 1-c2
+      c_1 = 0.5 + c2/one_m_c2
+      c_2 = -c1/one_m_c2
+
+      if (graph$E[i, 1] != graph$E[i, 2]) {
+
+        i_[count + 1] <- graph$E[i, 1]
+        j_[count + 1] <- graph$E[i, 1]
+        x_[count + 1] <- c_1
+
+        i_[count + 2] <- graph$E[i, 2]
+        j_[count + 2] <- graph$E[i, 2]
+        x_[count + 2] <- c_1
+
+
+        i_[count + 3] <- graph$E[i, 1]
+        j_[count + 3] <- graph$E[i, 2]
+        x_[count + 3] <- c_2
+
+        i_[count + 4] <- graph$E[i, 2]
+        j_[count + 4] <- graph$E[i, 1]
+        x_[count + 4] <- c_2
+        count <- count + 4
+      }else{
+        i_[count + 1] <- graph$E[i, 1]
+        j_[count + 1] <- graph$E[i, 1]
+        x_[count + 1] <- tanh(0.5 * kappa * l_e)
+        count <- count + 1
+      }
+    }
+    if(BC == 1){
+      #does this work for circle?
+      i.table <- table(i_[1:count])
+      index = as.integer(names(which(i.table < 3)))
+      i_ <- c(i_[1:count], index)
+      j_ <- c(j_[1:count], index)
+      x_ <- c(x_[1:count], rep(0.5, length(index)))
+      count <- count + length(index)
+    }else if(BC==2){
+      dV <- graph$get_vertices()$degree
+      index <- 1:length(dV)
+      i_ <- c(i_[1:count], index)
+      j_ <- c(j_[1:count], index)
+      x_ <- c(x_[1:count], -0.5*dV + 1)
+      count <- count + length(index)
+    }
+    if(build){
+      Q <- Matrix::sparseMatrix(i = i_[1:count],
+                                j = j_[1:count],
+                                x = (2 * kappa * tau^2) * x_[1:count],
+                                dims = c(graph$nV, graph$nV))
+
+
+      return(Q)
+    } else {
+      return(list(i = i_[1:count],
+                  j = j_[1:count],
+                  x = (2 * kappa * tau^2) * x_[1:count],
+                  dims = c(graph$nV, graph$nV)))
+    }
   }
 }
 
