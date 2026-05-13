@@ -633,9 +633,14 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       cv_graph$.__enclos_env__$private$data[[response_name]][test_indices] <- NA
       
       model_options <- object$options_model
-      # Set starting values based on the original model parameters
-      if(tolower(object$latent_model$type) %in% c("whittlematern", "graphlaplacian")) {
-        # For WhittleMatern or graphLaplacian models
+      # For rSPDE-backed (FEM) fits we let graph_lme/rspde_lme do the
+      # name-based extraction of starting values via `previous_fit = object`
+      # — the positional kappa/tau extraction below would silently pick the
+      # wrong elements (e.g. "nu (fixed)" or "theta1") for nonstationary fits.
+      refit_previous_fit <- NULL
+      if(inherits(object, "rspde_lme")){
+        refit_previous_fit <- object
+      } else if(tolower(object$latent_model$type) %in% c("whittlematern", "graphlaplacian")) {
         if(!is.null(object$coeff$random_effects)) {
           model_options$start_kappa <- object$coeff$random_effects[2]
           model_options$start_tau <- object$coeff$random_effects[1]
@@ -654,10 +659,9 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       }
 
       # Refit the model using the same optimization method.
-      # Prefer `model_arg` (original user input) over `latent_model`, since
-      # rspde-backed fits (fem=TRUE) overwrite `latent_model$type` with
-      # "Covariance-Based Matern SPDE Approximation", which graph_lme cannot
-      # re-dispatch on.
+      # Prefer `model_arg` (original user input) over `latent_model`: the
+      # latter is the rSPDE operator for FEM fits and does not carry the
+      # B.sigma/B.range or fem=TRUE flags graph_lme needs to re-dispatch.
       refit_model <- if(!is.null(object$model_arg)) object$model_arg else object$latent_model
       refit_is_fem <- isTRUE(refit_model$fem)
       refit_optim_method <- if(!is.null(object$optim_method)) object$optim_method else "L-BFGS-B"
@@ -672,6 +676,9 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
         parallel = parallel_fitting,
         n_cores = n_cores
       )
+      if(!is.null(refit_previous_fit)){
+        refit_args$previous_fit <- refit_previous_fit
+      }
       # Only pass BC when it is meaningful for the model (i.e. non-FEM
       # WhittleMatern). Passing it for FEM fits would trigger a spurious
       # "BC has no effect" warning on every fold.

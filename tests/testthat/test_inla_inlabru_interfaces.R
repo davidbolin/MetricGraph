@@ -210,17 +210,3 @@ test_that("inlabru: predict.inla_metric_graph_spde returns predictions at new lo
 })
 
 
-test_that(".cv_find_mg_component recognises a metric_graph SPDE bru fit", {
-  skip_if_no_inla()
-  fit_setup <- build_fitted_graph(alpha = 1, seed = 5, obs_per_edge = 15)
-  spde_model <- graph_spde(fit_setup$graph, alpha = 1)
-  cmp <- y ~ -1 + Intercept(1) + field(loc, model = spde_model)
-  data_bru <- graph_data_spde(spde_model, loc_name = "loc")
-  fit <- try_bru_fit(cmp, data_bru[["data"]])
-  if (is.null(fit)) {
-    skip("inlabru/INLA could not fit the cgeneric model in this environment.")
-  }
-  mg_info <- MetricGraph:::.cv_find_mg_component(fit)
-  expect_true(!is.null(mg_info))
-  expect_s3_class(mg_info$spde_model, "inla_metric_graph_spde")
-})

@@ -147,7 +147,14 @@ graph_lme <- function(formula, graph,
     if(!inherits(previous_fit, "graph_lme")){
       warning("previous_fit is not a 'graph_lme' object, thus will be ignored.")
     }
-    if(tolower(previous_fit$latent_model$type) %in% c("whittlematern", "graphlaplacian")){
+    if(inherits(previous_fit, "rspde_lme")){
+      # FEM-based WhittleMatern fit: random_effects are named (theta1..thetaN,
+      # nu, sigma, range, tau, kappa, ...) and may include a "(fixed)" suffix.
+      # Skip the legacy positional extraction below — rspde_lme handles
+      # previous_fit via extract_starting_values, which does name-based
+      # extraction (and strips the " (fixed)" suffix).
+      par_vec <- FALSE
+    } else if(tolower(previous_fit$latent_model$type) %in% c("whittlematern", "graphlaplacian")){
       par_vec <- FALSE
       if(tolower(model_type) == "isocov"){
         warning("previous_fit is of type 'isoCov' and thus will be ignored.")
@@ -464,9 +471,14 @@ graph_lme <- function(formula, graph,
       # BC is intentionally not stored: it has no effect for FEM-based
       # WhittleMatern fits. `model_arg` preserves the user-supplied model
       # spec so callers (e.g. posterior_crossvalidation) can refit through
-      # this same branch — `fit$latent_model$type` is overwritten by
-      # rspde_lme to a string graph_lme cannot re-dispatch on.
+      # this same branch.
       fit$model_arg <- model
+      # Normalize $latent_model$type so MetricGraph dispatch (glance,
+      # previous_fit, posterior_crossvalidation, ...) treats FEM-based fits
+      # the same way as closed-form WhittleMatern fits. The CBrSPDEobj/
+      # rSPDEobj class on $latent_model is kept intact, and the fit's
+      # "rspde_lme" class still distinguishes FEM from non-FEM.
+      fit$latent_model$type <- "WhittleMatern"
       class(fit) <- c("graph_lme", class(fit))
       return(fit)
     } else{
@@ -1414,8 +1426,20 @@ deviance.graph_lme <- function(object, ...){
 
 glance.graph_lme <- function(x, ...){
   alpha <- NULL
-  if(x$latent_model$type == "Covariance-Based Matern SPDE Approximation"){
-    alpha <- x$coeff$random_effects[[1]]
+  if(inherits(x, "rspde_lme")){
+    # FEM-based fit: alpha/nu lives in random_effects (with a possible
+    # "(fixed)" suffix when fixed) or on the latent_model itself.
+    re <- x$coeff$random_effects
+    nm <- sub(" \\(fixed\\)$", "", names(re))
+    if("alpha" %in% nm){
+      alpha <- as.numeric(re[[which(nm == "alpha")[1]]])
+    } else if("nu" %in% nm){
+      alpha <- as.numeric(re[[which(nm == "nu")[1]]]) + 0.5
+    } else if(!is.null(x$latent_model$alpha)){
+      alpha <- x$latent_model$alpha
+    } else if(!is.null(x$latent_model$nu)){
+      alpha <- x$latent_model$nu + 0.5
+    }
   } else if(!is.null(x$latent_model$alpha)){
     alpha <- x$latent_model$alpha
   }
