@@ -89,14 +89,12 @@ Either a \code{data.frame} (default), or a list with \code{scores_df} plus the
 optional components requested by \verb{return_*} / \code{save_settings} arguments.
 }
 \description{
-Mirrors \code{\link[rSPDE:cross_validation]{rSPDE::cross_validation()}} for \code{bru} fits (output from \code{inlabru::bru()}),
-with built-in support for the exact, non-FEM SPDE models in
-\pkg{MetricGraph} (objects of class \code{inla_metric_graph_spde}). For models
-fit with such a component, the function rebuilds the SPDE on a graph clone
-with held-out responses set to NA, refits when \code{true_CV = TRUE}, and draws
-posterior samples via the \code{inlabru::generate} path used by
-\code{\link{predict.inla_metric_graph_spde}}. For models without a metric-graph SPDE
-component (e.g. FEM-based rSPDE models), it uses the standard
-\code{inlabru::bru_set_missing()} + \code{bru_rerun()} + \code{inlabru::generate()} path
-shared with \code{\link[rSPDE:cross_validation]{rSPDE::cross_validation()}}.
+Mirrors \code{\link[rSPDE:cross_validation]{rSPDE::cross_validation()}} for \code{bru} fits (output from \code{inlabru::bru()}).
+For each fold, the held-out responses are set to NA with
+\code{inlabru::bru_set_missing()} and the model is refit with \code{inlabru::bru_rerun()}.
+When \code{true_CV = FALSE}, the original fit's \code{mode$theta} is held fixed so only
+the latent posterior is updated; when \code{TRUE}, theta is re-estimated. Posterior
+response samples are then drawn at the held-out locations via \code{inlabru::generate()}.
+Works with the exact, non-FEM SPDE models in \pkg{MetricGraph}
+(\code{inla_metric_graph_spde}) and FEM-based rSPDE models alike.
 }
