@@ -1886,25 +1886,37 @@ predict.graph_lme <- function(object,
   # Initialize train/test indices
   train_idx <- NULL
   test_idx <- NULL
+  # na_test_idx: positions in graph_bkp's full data vector to mask as NA
+  # for the prediction (i.e. the held-out observations). For single-
+  # replicate models this is identical to test_idx, but for multi-
+  # replicate models test_idx is interpreted as a WITHIN-replicate index
+  # (it indexes the per-replicate location array used to build PtV / A /
+  # PtE_full), while NA-setting needs to address the full per-row data
+  # vector. Defaults to test_idx so existing callers see no change.
+  na_test_idx <- NULL
 
-  
+
   if (length(advanced_options) > 0) {
     # Extract precomputation options
     if (!is.null(advanced_options$precompute_data)) {
       precompute_data <- advanced_options$precompute_data
     }
-    
+
     if (!is.null(advanced_options$precompute_type)) {
       precompute_type <- advanced_options$precompute_type
     }
-    
+
     # Extract train/test indices if provided
     if (!is.null(advanced_options$train_idx)) {
       train_idx <- advanced_options$train_idx
     }
-    
+
     if (!is.null(advanced_options$test_idx)) {
       test_idx <- advanced_options$test_idx
+    }
+
+    if (!is.null(advanced_options$na_test_idx)) {
+      na_test_idx <- advanced_options$na_test_idx
     }
   }
 
@@ -1926,13 +1938,20 @@ predict.graph_lme <- function(object,
 
   if(inherits(object, "rspde_lme")){
     class(object) <- "rspde_lme"
+    # Forward advanced_options so callers (notably posterior_crossvalidation)
+    # can pass precompute_data / na_test_idx through to predict.rspde_lme.
     return(stats::predict(object = object,
               newdata = newdata,
               mesh = mesh, which_repl = which_repl,
-              compute_variances = compute_variances, posterior_samples = posterior_samples,
-                               n_samples = n_samples, edge_number = edge_number,
-                               distance_on_edge = distance_on_edge, normalized = normalized, return_as_list = return_as_list, return_original_order = return_original_order)
-              )
+              compute_variances = compute_variances,
+              posterior_samples = posterior_samples,
+              n_samples = n_samples, edge_number = edge_number,
+              distance_on_edge = distance_on_edge,
+              normalized = normalized,
+              return_as_list = return_as_list,
+              return_original_order = return_original_order,
+              advanced_options = advanced_options)
+           )
   }
 
   out <- list()
@@ -1957,8 +1976,12 @@ predict.graph_lme <- function(object,
     response_var <- object$response_var
     graph_bkp <- precomputed$graph_bkp
     bkp_data <- graph_bkp$.__enclos_env__$private$data[[response_var]]
-    if(!is.null(test_idx)){
-      graph_bkp$.__enclos_env__$private$data[[response_var]][test_idx] <- NA
+    # na_test_idx (global, indexes into graph_bkp's full data vector)
+    # takes precedence; otherwise fall back to test_idx, which is the
+    # single-replicate convention where the two indices coincide.
+    na_idx <- if(!is.null(na_test_idx)) na_test_idx else test_idx
+    if(!is.null(na_idx)){
+      graph_bkp$.__enclos_env__$private$data[[response_var]][na_idx] <- NA
     }
   }
 
@@ -2603,9 +2626,14 @@ predict.graph_lme <- function(object,
         }
       } 
       if(!return_as_list){
-        out$variance <- rep(var_tmp, length(u_repl))
+        # Append the current replicate's variance to the running vector,
+        # mirroring how $mean is built up across the per-replicate loop.
+        # The previous code replaced $variance with rep(var_tmp,
+        # length(u_repl)) on every iteration, so every replicate ended up
+        # reporting the LAST replicate's kriging variance.
+        out$variance <- c(out$variance, var_tmp)
         if(compute_pred_variances  || pred_samples) {
-            out$pred_variance <- rep(pred_var_tmp, length(u_repl))
+            out$pred_variance <- c(out$pred_variance, pred_var_tmp)
         }
       }
       else {
@@ -2742,7 +2770,8 @@ predict.graph_lme <- function(object,
     out$precomputed_data <- precomputed_data
   }
 
-  if(!is.null(test_idx)){
+  # Restore the original response vector if we masked any entries above.
+  if(!is.null(test_idx) || !is.null(na_test_idx)){
     graph_bkp$.__enclos_env__$private$data[[response_var]] <- bkp_data
   }
   return(out)
@@ -3013,27 +3042,38 @@ update_graph_lme_with_na <- function(object, index_to_replace) {
   if (!inherits(object, "graph_lme")) {
     stop("input object is not of class graph_lme")
   }
-  
+
   # Clone the graph to avoid modifying the original
   new_graph <- object$graph$clone()
-  
+
   # Get the response variable from the object
   y_term <- as.character(object$response_var)
-  
+
   # Check if the response variable exists in the graph's private data
   if (!y_term %in% names(new_graph$.__enclos_env__$private$data)) {
     stop(paste("Response variable", y_term, "not found in graph data"))
   }
-  
+
   # Replace the specified indices with NA
   new_graph$.__enclos_env__$private$data[[y_term]][index_to_replace] <- NA
-  
+
   # Create a copy of the original object
   new_object <- object
-  
+
   # Update the graph in the new object
   new_object$graph <- new_graph
-  
+
+  # For rspde_lme fits, predict() reads the training response from
+  # object$model_matrix (not from the graph), so we must mirror the NA
+  # mask there. Without this, posterior_crossvalidation silently
+  # produced "leak-in" predictions where the held-out observation was
+  # still used as a training point.
+  if (inherits(object, "rspde_lme") && !is.null(object$model_matrix)) {
+    mm <- as.matrix(object$model_matrix)
+    mm[index_to_replace, 1] <- NA
+    new_object$model_matrix <- mm
+  }
+
   return(new_object)
 }
 
