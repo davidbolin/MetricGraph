@@ -27,7 +27,7 @@ block-diagonal by construction."><meta property="og:image" content="https://davi
 
     <a class="navbar-brand me-2" href="../index.html">MetricGraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,23 +106,23 @@ For more details, see the vignette:
 <dd><p>List of the graphs representing the connected components.</p></dd>
 
 
-<dt><code>n</code></dt>
+    <dt><code>n</code></dt>
 <dd><p>The number of graphs.</p></dd>
 
 
-<dt><code>sizes</code></dt>
+    <dt><code>sizes</code></dt>
 <dd><p>Number of vertices for each of the graphs.</p></dd>
 
 
-<dt><code>lengths</code></dt>
+    <dt><code>lengths</code></dt>
 <dd><p>Total edge lengths for each of the graphs.</p></dd>
 
 
-<dt><code>nE_total</code></dt>
+    <dt><code>nE_total</code></dt>
 <dd><p>Total number of edges across all components.</p></dd>
 
 
-<dt><code>edge_offsets</code></dt>
+    <dt><code>edge_offsets</code></dt>
 <dd><p>Integer vector of length <code>n</code> giving the
 cumulative number of edges in components before each one. The
 global edge number of local edge <code>e</code> in component <code>k</code> is
@@ -137,8 +137,7 @@ Create metric graphs for connected components</p></dd>
 
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
-
-<ul><li><p><a href="#method-graph_components-new"><code>graph_components$new()</code></a></p></li>
+<p></p><ul><li><p><a href="#method-graph_components-initialize"><code>graph_components$new()</code></a></p></li>
 <li><p><a href="#method-graph_components-edge_to_component"><code>graph_components$edge_to_component()</code></a></p></li>
 <li><p><a href="#method-graph_components-get_largest"><code>graph_components$get_largest()</code></a></p></li>
 <li><p><a href="#method-graph_components-as_metric_graph"><code>graph_components$as_metric_graph()</code></a></p></li>
@@ -157,10 +156,9 @@ Create metric graphs for connected components</p></dd>
 <li><p><a href="#method-graph_components-plot_function"><code>graph_components$plot_function()</code></a></p></li>
 <li><p><a href="#method-graph_components-plot"><code>graph_components$plot()</code></a></p></li>
 <li><p><a href="#method-graph_components-clone"><code>graph_components$clone()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-graph_components-new"></a><div class="section">
-<h3 id="method-new-">Method <code><a href="https://rdrr.io/r/methods/new.html" class="external-link">new()</a></code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
-
-<div class="section">
+</ul></div><p></p><hr><a id="method-graph_components-initialize"></a><div class="section">
+<h3 id="graph-components-new-"><code>graph_components$new()</code><a class="anchor" aria-label="anchor" href="#graph-components-new-"></a></h3>
+<p></p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/graph_components.html">graph_components</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
 <span>  edges <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -171,9 +169,7 @@ Create metric graphs for connected components</p></dd>
 <span>  <span class="va">...</span>,</span>
 <span>  lines <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>edges</code></dt>
 <dd><p>A list containing coordinates as <code>m x 2</code> matrices (that is,
@@ -182,78 +178,67 @@ points connected by straightlines. Alternatively, you can also prove an
 object of type <code>SpatialLinesDataFrame</code> or <code>SpatialLines</code> (from <code>sp</code> package)
 or <code>MULTILINESTRING</code> (from <code>sf</code> package).</p></dd>
 
-
-<dt><code>V</code></dt>
+      <dt><code>V</code></dt>
 <dd><p>n x 2 matrix with Euclidean coordinates of the n vertices.</p></dd>
 
-
-<dt><code>E</code></dt>
+      <dt><code>E</code></dt>
 <dd><p>m x 2 matrix where each row represents an edge.</p></dd>
 
-
-<dt><code>by_length</code></dt>
+      <dt><code>by_length</code></dt>
 <dd><p>Sort the components by total edge length? If <code>FALSE</code>,
 the components are sorted by the number of vertices.</p></dd>
 
-
-<dt><code>edge_weights</code></dt>
+      <dt><code>edge_weights</code></dt>
 <dd><p>Either a number, a numerical vector with length given
 by the number of edges, providing the edge weights, or a <code>data.frame</code> with
 the number of rows being equal to the number of edges, where</p></dd>
 
-
-<dt><code>...</code></dt>
+      <dt><code>...</code></dt>
 <dd><p>Additional arguments used when specifying the graphs</p></dd>
 
-
-<dt><code>lines</code></dt>
+      <dt><code>lines</code></dt>
 <dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a> Use <code>edges</code> instead.</p></dd>
 
-
-<dt><code>vertex_unit</code></dt>
+      <dt><code>vertex_unit</code></dt>
 <dd><p>The unit in which the vertices are specified.
 The options are 'degree' (the great circle distance in km), 'km', 'm' and
 'miles'. The default is <code>NULL</code>, which means no unit. However, if you set
 <code>length_unit</code>, you need to set <code>vertex_unit</code>.</p></dd>
 
-
-<dt><code>length_unit</code></dt>
+      <dt><code>length_unit</code></dt>
 <dd><p>The unit in which the lengths will be computed.
 The options are 'km', 'm' and 'miles'. The default is <code>vertex_unit</code>.
 Observe that if <code>vertex_unit</code> is <code>NULL</code>, <code>length_unit</code> can only be <code>NULL</code>.
 If <code>vertex_unit</code> is 'degree', then the default value for <code>length_unit</code> is 'km'.</p></dd>
 
-
-<dt><code>longlat</code></dt>
+      <dt><code>longlat</code></dt>
 <dd><p>If TRUE, then it is assumed that the coordinates are given.
 in Longitude/Latitude and that distances should be computed in meters.
 It takes precedence over <code>vertex_unit</code> and <code>length_unit</code>, and is equivalent
 to <code>vertex_unit = 'degree'</code> and <code>length_unit = 'm'</code>.</p></dd>
 
-
-<dt><code>tolerance</code></dt>
+      <dt><code>tolerance</code></dt>
 <dd><p>Vertices that are closer than this number are merged when
 constructing the graph (default = 1e-10). If <code>longlat = TRUE</code>, the
 tolerance is given in km.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
 <p>A <code>graph_components</code> object.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-edge_to_component"></a><div class="section">
-<h3 id="method-edge-to-component-">Method <code>edge_to_component()</code><a class="anchor" aria-label="anchor" href="#method-edge-to-component-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-edge_to_component"></a><div class="section">
+<h3 id="graph-components-edge-to-component-"><code>graph_components$edge_to_component()</code><a class="anchor" aria-label="anchor" href="#graph-components-edge-to-component-"></a></h3>
 <p>Map global edge numbers to component indices.
 Each edge in the disconnected graph has a unique global edge
 number; this method returns the component each edge belongs to.</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">edge_to_component</span><span class="op">(</span><span class="va">edge_number</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>edge_number</code></dt>
 <dd><p>Integer vector of global edge numbers in
@@ -261,27 +246,28 @@ number; this method returns the component each edge belongs to.</p><div class="s
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
 <p>Integer vector of component indices, the same length as
 <code>edge_number</code>.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-get_largest"></a><div class="section">
-<h3 id="method-get-largest-">Method <code>get_largest()</code><a class="anchor" aria-label="anchor" href="#method-get-largest-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-get_largest"></a><div class="section">
+<h3 id="graph-components-get-largest-"><code>graph_components$get_largest()</code><a class="anchor" aria-label="anchor" href="#graph-components-get-largest-"></a></h3>
 <p>Returns the largest component in the graph.</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">get_largest</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
 <p>A <code>metric_graph</code> object.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-as_metric_graph"></a><div class="section">
-<h3 id="method-as-metric-graph-">Method <code>as_metric_graph()</code><a class="anchor" aria-label="anchor" href="#method-as-metric-graph-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-as_metric_graph"></a><div class="section">
+<h3 id="graph-components-as-metric-graph-"><code>graph_components$as_metric_graph()</code><a class="anchor" aria-label="anchor" href="#graph-components-as-metric-graph-"></a></h3>
 <p>Combine all components into a single (disconnected)
 <code>metric_graph</code> object via fast in-memory stacking.
 Edges keep their relative order within each component, and the
@@ -298,40 +284,39 @@ downstream operations (e.g., <code>graph_lme</code>, <code>graph_spde</code>,
 <code>sample_spde</code>) to amortise the assembly cost across calls.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">as_metric_graph</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
 <p>A <code>metric_graph</code> object representing the disjoint union
 of the components, with mesh and FEM matrices block-diagonally
 stacked when every component has them.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-which_component"></a><div class="section">
-<h3 id="method-which-component-">Method <code>which_component()</code><a class="anchor" aria-label="anchor" href="#method-which-component-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-which_component"></a><div class="section">
+<h3 id="graph-components-which-component-"><code>graph_components$which_component()</code><a class="anchor" aria-label="anchor" href="#graph-components-which-component-"></a></h3>
 <p>For each spatial point, determine which component it
 belongs to. The component is the one whose nearest network location
 is closest in Euclidean distance to the point.</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">which_component</span><span class="op">(</span><span class="va">XY</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>XY</code></dt>
 <dd><p>An <code>n x 2</code> matrix of spatial coordinates.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
 <p>An integer vector of length <code>n</code> with the component index
 for each point.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-add_observations"></a><div class="section">
-<h3 id="method-add-observations-">Method <code>add_observations()</code><a class="anchor" aria-label="anchor" href="#method-add-observations-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-add_observations"></a><div class="section">
+<h3 id="graph-components-add-observations-"><code>graph_components$add_observations()</code><a class="anchor" aria-label="anchor" href="#graph-components-add-observations-"></a></h3>
 <p>Add observations to the components. Mirrors
 <code>metric_graph$add_observations</code>. For <code>data_coords = "spatial"</code>,
 each observation is routed to the component whose nearest network
@@ -353,91 +338,79 @@ component is inferred automatically from it.</p><div class="section">
 <span>  suppress_warnings <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.frame</code>, list, <code>sf</code> object, or
 <code>SpatialPointsDataFrame</code> with the observations.</p></dd>
 
-
-<dt><code>edge_number</code></dt>
+      <dt><code>edge_number</code></dt>
 <dd><p>Name of the (global) edge-number column.
 Default is <code>"edge_number"</code>.</p></dd>
 
-
-<dt><code>distance_on_edge</code></dt>
+      <dt><code>distance_on_edge</code></dt>
 <dd><p>Name of the distance-on-edge column.
 Default is <code>"distance_on_edge"</code>.</p></dd>
 
-
-<dt><code>coord_x</code></dt>
+      <dt><code>coord_x</code></dt>
 <dd><p>Name of the x-coordinate column. Default is
 <code>"coord_x"</code>.</p></dd>
 
-
-<dt><code>coord_y</code></dt>
+      <dt><code>coord_y</code></dt>
 <dd><p>Name of the y-coordinate column. Default is
 <code>"coord_y"</code>.</p></dd>
 
-
-<dt><code>data_coords</code></dt>
+      <dt><code>data_coords</code></dt>
 <dd><p>Either <code>"PtE"</code> (the convention is then
 <code>(edge_number, distance_on_edge)</code> with global edge numbering) or
 <code>"spatial"</code>.</p></dd>
 
-
-<dt><code>group</code></dt>
+      <dt><code>group</code></dt>
 <dd><p>Optional grouping variable, see
 <code>metric_graph$add_observations</code>.</p></dd>
 
-
-<dt><code>normalized</code></dt>
+      <dt><code>normalized</code></dt>
 <dd><p>If TRUE, distances are assumed normalized to
 (0,1).</p></dd>
 
-
-<dt><code>clear_obs</code></dt>
+      <dt><code>clear_obs</code></dt>
 <dd><p>If TRUE, all existing observations are cleared
 first.</p></dd>
 
-
-<dt><code>verbose</code></dt>
+      <dt><code>verbose</code></dt>
 <dd><p>Verbosity level.</p></dd>
 
-
-<dt><code>suppress_warnings</code></dt>
+      <dt><code>suppress_warnings</code></dt>
 <dd><p>If TRUE, warnings from the per-component
 add_observations are suppressed.</p></dd>
 
-
-<dt><code>...</code></dt>
+      <dt><code>...</code></dt>
 <dd><p>Additional arguments forwarded to each component's
 <code>add_observations</code> method.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-5">Returns<a class="anchor" aria-label="anchor" href="#returns-5"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-clear_observations"></a><div class="section">
-<h3 id="method-clear-observations-">Method <code>clear_observations()</code><a class="anchor" aria-label="anchor" href="#method-clear-observations-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-clear_observations"></a><div class="section">
+<h3 id="graph-components-clear-observations-"><code>graph_components$clear_observations()</code><a class="anchor" aria-label="anchor" href="#graph-components-clear-observations-"></a></h3>
 <p>Clear observations from all components.</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">clear_observations</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-6">Returns<a class="anchor" aria-label="anchor" href="#returns-6"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-get_data"></a><div class="section">
-<h3 id="method-get-data-">Method <code>get_data()</code><a class="anchor" aria-label="anchor" href="#method-get-data-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-get_data"></a><div class="section">
+<h3 id="graph-components-get-data-"><code>graph_components$get_data()</code><a class="anchor" aria-label="anchor" href="#graph-components-get-data-"></a></h3>
 <p>Combine observations from all components.
 Returns a single data structure with an additional <code>.component</code>
 column indicating which component each row belongs to.</p><div class="section">
@@ -448,137 +421,128 @@ column indicating which component each row belongs to.</p><div class="section">
 <span>  drop_na <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  drop_all_na <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>group</code></dt>
 <dd><p>Optional group filter passed to each component's
 <code>get_data</code>.</p></dd>
 
-
-<dt><code>format</code></dt>
+      <dt><code>format</code></dt>
 <dd><p>One of <code>"tibble"</code>, <code>"sf"</code>, <code>"sp"</code>, <code>"list"</code>.</p></dd>
 
-
-<dt><code>drop_na</code></dt>
+      <dt><code>drop_na</code></dt>
 <dd><p>See <code>metric_graph$get_data</code>.</p></dd>
 
-
-<dt><code>drop_all_na</code></dt>
+      <dt><code>drop_all_na</code></dt>
 <dd><p>See <code>metric_graph$get_data</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-7">Returns<a class="anchor" aria-label="anchor" href="#returns-7"></a></h4>
 <p>A combined data object with a <code>.component</code> column.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-get_groups"></a><div class="section">
-<h3 id="method-get-groups-">Method <code>get_groups()</code><a class="anchor" aria-label="anchor" href="#method-get-groups-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-get_groups"></a><div class="section">
+<h3 id="graph-components-get-groups-"><code>graph_components$get_groups()</code><a class="anchor" aria-label="anchor" href="#graph-components-get-groups-"></a></h3>
 <p>Get the unique groups across all components.</p><div class="section">
 <h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">get_groups</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-8">Returns<a class="anchor" aria-label="anchor" href="#returns-8"></a></h4>
 <p>Character vector of unique group identifiers.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-get_PtE"></a><div class="section">
-<h3 id="method-get-pte-">Method <code>get_PtE()</code><a class="anchor" aria-label="anchor" href="#method-get-pte-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-get_PtE"></a><div class="section">
+<h3 id="graph-components-get-pte-"><code>graph_components$get_PtE()</code><a class="anchor" aria-label="anchor" href="#graph-components-get-pte-"></a></h3>
 <p>Get the (edge_number, distance_on_edge) pairs for
 the observations across all components, using global edge
 numbering.</p><div class="section">
 <h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">get_PtE</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-9">Returns<a class="anchor" aria-label="anchor" href="#returns-9"></a></h4>
 <p>A matrix with two columns: <code>edge_number</code>,
 <code>distance_on_edge</code>.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-coordinates"></a><div class="section">
-<h3 id="method-coordinates-">Method <code><a href="https://edzer.github.io/sp/reference/coordinates.html" class="external-link">coordinates()</a></code><a class="anchor" aria-label="anchor" href="#method-coordinates-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-coordinates"></a><div class="section">
+<h3 id="graph-components-coordinates-"><code>graph_components$coordinates()</code><a class="anchor" aria-label="anchor" href="#graph-components-coordinates-"></a></h3>
 <p>Convert between graph coordinates (global
 <code>edge_number</code>, <code>distance_on_edge</code>) and spatial coordinates.</p><div class="section">
 <h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">coordinates</span><span class="op">(</span>PtE <span class="op">=</span> <span class="cn">NULL</span>, XY <span class="op">=</span> <span class="cn">NULL</span>, normalized <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>PtE</code></dt>
 <dd><p>A matrix or vector with two columns/entries:
 <code>(edge_number, distance_on_edge)</code>. Edge numbers are global
 across components.</p></dd>
 
-
-<dt><code>XY</code></dt>
+      <dt><code>XY</code></dt>
 <dd><p>An <code>n x 2</code> matrix of spatial coordinates.</p></dd>
 
-
-<dt><code>normalized</code></dt>
+      <dt><code>normalized</code></dt>
 <dd><p>If TRUE, the distances are normalized to (0,1).</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-10">Returns<a class="anchor" aria-label="anchor" href="#returns-10"></a></h4>
 <p>If <code>PtE</code> is supplied, an <code>n x 2</code> matrix of spatial
 coordinates. If <code>XY</code> is supplied, an <code>n x 2</code> matrix with
 <code>(edge_number, distance_on_edge)</code> using global edge numbering.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-build_mesh"></a><div class="section">
-<h3 id="method-build-mesh-">Method <code>build_mesh()</code><a class="anchor" aria-label="anchor" href="#method-build-mesh-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-build_mesh"></a><div class="section">
+<h3 id="graph-components-build-mesh-"><code>graph_components$build_mesh()</code><a class="anchor" aria-label="anchor" href="#graph-components-build-mesh-"></a></h3>
 <p>Build a mesh on each component.</p><div class="section">
 <h4 id="usage-11">Usage<a class="anchor" aria-label="anchor" href="#usage-11"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">build_mesh</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments forwarded to <code>metric_graph$build_mesh</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-11">Returns<a class="anchor" aria-label="anchor" href="#returns-11"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-compute_fem"></a><div class="section">
-<h3 id="method-compute-fem-">Method <code>compute_fem()</code><a class="anchor" aria-label="anchor" href="#method-compute-fem-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-compute_fem"></a><div class="section">
+<h3 id="graph-components-compute-fem-"><code>graph_components$compute_fem()</code><a class="anchor" aria-label="anchor" href="#graph-components-compute-fem-"></a></h3>
 <p>Compute finite-element matrices on each component
 that has a mesh.</p><div class="section">
 <h4 id="usage-12">Usage<a class="anchor" aria-label="anchor" href="#usage-12"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">compute_fem</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments forwarded to <code>metric_graph$compute_fem</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-12">Returns<a class="anchor" aria-label="anchor" href="#returns-12"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-compute_geodist"></a><div class="section">
-<h3 id="method-compute-geodist-">Method <code>compute_geodist()</code><a class="anchor" aria-label="anchor" href="#method-compute-geodist-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-compute_geodist"></a><div class="section">
+<h3 id="graph-components-compute-geodist-"><code>graph_components$compute_geodist()</code><a class="anchor" aria-label="anchor" href="#graph-components-compute-geodist-"></a></h3>
 <p>Compute geodesic distances per component. The
 geodesic distance between vertices in different components is
 infinite, so the per-component computation gives well-defined
@@ -588,23 +552,22 @@ is subsequently called, they are stacked into a combined
 distance matrix with <code>Inf</code> cross-component entries.</p><div class="section">
 <h4 id="usage-13">Usage<a class="anchor" aria-label="anchor" href="#usage-13"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">compute_geodist</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments forwarded to <code>metric_graph$compute_geodist</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-13">Returns<a class="anchor" aria-label="anchor" href="#returns-13"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-compute_resdist"></a><div class="section">
-<h3 id="method-compute-resdist-">Method <code>compute_resdist()</code><a class="anchor" aria-label="anchor" href="#method-compute-resdist-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-compute_resdist"></a><div class="section">
+<h3 id="graph-components-compute-resdist-"><code>graph_components$compute_resdist()</code><a class="anchor" aria-label="anchor" href="#graph-components-compute-resdist-"></a></h3>
 <p>Compute resistance distances per component.
 Resistance distance is undefined (infinite) between vertices in
 different components, so per-component computation is the only
@@ -615,46 +578,44 @@ with <code>Inf</code> cross-component entries, making
 fit per-component automatically.</p><div class="section">
 <h4 id="usage-14">Usage<a class="anchor" aria-label="anchor" href="#usage-14"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">compute_resdist</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-9">Arguments<a class="anchor" aria-label="anchor" href="#arguments-9"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments forwarded to <code>metric_graph$compute_resdist</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-14">Returns<a class="anchor" aria-label="anchor" href="#returns-14"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-compute_laplacian"></a><div class="section">
-<h3 id="method-compute-laplacian-">Method <code>compute_laplacian()</code><a class="anchor" aria-label="anchor" href="#method-compute-laplacian-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-compute_laplacian"></a><div class="section">
+<h3 id="graph-components-compute-laplacian-"><code>graph_components$compute_laplacian()</code><a class="anchor" aria-label="anchor" href="#graph-components-compute-laplacian-"></a></h3>
 <p>Compute the (weighted) graph Laplacian per
 component. The combined Laplacian on the disjoint union is
 block-diagonal in the per-component Laplacians, so
 <code>as_metric_graph()</code> simply stacks them via <code><a href="https://rdrr.io/pkg/Matrix/man/bdiag.html" class="external-link">Matrix::bdiag()</a></code>.</p><div class="section">
 <h4 id="usage-15">Usage<a class="anchor" aria-label="anchor" href="#usage-15"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">compute_laplacian</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-10">Arguments<a class="anchor" aria-label="anchor" href="#arguments-10"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Arguments forwarded to <code>metric_graph$compute_laplacian</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-15">Returns<a class="anchor" aria-label="anchor" href="#returns-15"></a></h4>
 <p>No return value. Called for its side effects.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-plot_function"></a><div class="section">
-<h3 id="method-plot-function-">Method <code>plot_function()</code><a class="anchor" aria-label="anchor" href="#method-plot-function-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-plot_function"></a><div class="section">
+<h3 id="graph-components-plot-function-"><code>graph_components$plot_function()</code><a class="anchor" aria-label="anchor" href="#graph-components-plot-function-"></a></h3>
 <p>Plot a function on the components. Mirrors
 <code>metric_graph$plot_function</code>. When supplying <code>newdata</code>, it must
 include <code>.edge_number</code> (global edge numbering) and
@@ -670,49 +631,42 @@ the global edge number.</p><div class="section">
 <span>  p <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-11">Arguments<a class="anchor" aria-label="anchor" href="#arguments-11"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>Column name of the stored observations to plot.</p></dd>
 
-
-<dt><code>newdata</code></dt>
+      <dt><code>newdata</code></dt>
 <dd><p>Optional <code>metric_graph_data</code> with <code>.edge_number</code>
 (global), <code>.distance_on_edge</code>, and the value column.</p></dd>
 
-
-<dt><code>group</code></dt>
+      <dt><code>group</code></dt>
 <dd><p>Group identifier passed to each component.</p></dd>
 
-
-<dt><code>type</code></dt>
+      <dt><code>type</code></dt>
 <dd><p>Plot type: <code>"ggplot"</code> or <code>"plotly"</code>.</p></dd>
 
-
-<dt><code>continuous</code></dt>
+      <dt><code>continuous</code></dt>
 <dd><p>See <code>metric_graph$plot_function</code>.</p></dd>
 
-
-<dt><code>p</code></dt>
+      <dt><code>p</code></dt>
 <dd><p>Optional existing plot to add to.</p></dd>
 
-
-<dt><code>...</code></dt>
+      <dt><code>...</code></dt>
 <dd><p>Additional arguments forwarded to each component's
 <code>plot_function</code>.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-16">Returns<a class="anchor" aria-label="anchor" href="#returns-16"></a></h4>
 <p>A plot object.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-plot"></a><div class="section">
-<h3 id="method-plot-">Method <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code><a class="anchor" aria-label="anchor" href="#method-plot-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-plot"></a><div class="section">
+<h3 id="graph-components-plot-"><code>graph_components$plot()</code><a class="anchor" aria-label="anchor" href="#graph-components-plot-"></a></h3>
 <p>Plots all components.</p><div class="section">
 <h4 id="usage-17">Usage<a class="anchor" aria-label="anchor" href="#usage-17"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span></span>
@@ -721,44 +675,38 @@ the global edge number.</p><div class="section">
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-12">Arguments<a class="anchor" aria-label="anchor" href="#arguments-12"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>edge_colors</code></dt>
 <dd><p>A 3 x nc matrix with RGB values for the edge colors to
 be used when plotting each graph.</p></dd>
 
-
-<dt><code>vertex_colors</code></dt>
+      <dt><code>vertex_colors</code></dt>
 <dd><p>A 3 x nc matrix with RGB values for the edge colors to
 be used when plotting each graph.</p></dd>
 
-
-<dt><code>data</code></dt>
+      <dt><code>data</code></dt>
 <dd><p>Optional column name of the stored observations to
 plot. Components without that column are skipped.</p></dd>
 
-
-<dt><code>...</code></dt>
+      <dt><code>...</code></dt>
 <dd><p>Additional arguments for plotting the individual graphs.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="returns-17">Returns<a class="anchor" aria-label="anchor" href="#returns-17"></a></h4>
 <p>A <code>ggplot</code> object.</p>
 </div>
 
-</div><p></p><hr><a id="method-graph_components-clone"></a><div class="section">
-<h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
+</div>
+
+<p></p><hr><a id="method-graph_components-clone"></a><div class="section">
+<h3 id="graph-components-clone-"><code>graph_components$clone()</code><a class="anchor" aria-label="anchor" href="#graph-components-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
 <h4 id="usage-18">Usage<a class="anchor" aria-label="anchor" href="#usage-18"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">graph_components</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-13">Arguments<a class="anchor" aria-label="anchor" href="#arguments-13"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
@@ -768,6 +716,7 @@ plot. Components without that column are skipped.</p></dd>
 </div>
 
 </div>
+
 
     </div>
 
@@ -787,7 +736,7 @@ plot. Components without that column are skipped.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing bounding box...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.25 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.24 secs</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Creating and updating vertices...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Storing the initial graph...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing the relative positions of the edges...</span>
@@ -803,7 +752,7 @@ plot. Components without that column are skipped.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing bounding box...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Setting up edges</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Merging close vertices</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.25 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Total construction time: 0.24 secs</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Creating and updating vertices...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Storing the initial graph...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Computing the relative positions of the edges...</span>

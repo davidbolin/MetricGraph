@@ -5,13 +5,17 @@ Metric graph 'inlabru' mapper
 ## Usage
 
 ``` r
-bru_get_mapper.inla_metric_graph_spde(model, ...)
+# S3 method for class 'inla_metric_graph_spde'
+bru_get_mapper(model, ...)
 
-ibm_n.bru_mapper_inla_metric_graph_spde(mapper, ...)
+# S3 method for class 'bru_mapper_inla_metric_graph_spde'
+ibm_n(mapper, ...)
 
-ibm_values.bru_mapper_inla_metric_graph_spde(mapper, ...)
+# S3 method for class 'bru_mapper_inla_metric_graph_spde'
+ibm_values(mapper, ...)
 
-ibm_jacobian.bru_mapper_inla_metric_graph_spde(mapper, input, ...)
+# S3 method for class 'bru_mapper_inla_metric_graph_spde'
+ibm_jacobian(mapper, input, ...)
 ```
 
 ## Arguments

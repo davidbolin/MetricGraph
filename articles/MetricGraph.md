@@ -609,31 +609,31 @@ summary(res)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)  -0.9788    0.1349  -7.256 3.98e-13 ***
-    ## lon           0.9543    0.1342   7.109 1.17e-12 ***
-    ## lat           1.9668    0.1387  14.181  < 2e-16 ***
+    ## (Intercept)  -0.9787    0.1349  -7.256 3.98e-13 ***
+    ## lon           0.9543    0.1342   7.110 1.16e-12 ***
+    ## lat           1.9669    0.1387  14.183  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## tau    0.10174   0.00445  22.862
-    ## kappa 11.51258   1.53370   7.506
+    ## tau    0.10173   0.00445  22.861
+    ## kappa 11.51396   1.53384   7.507
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## sigma  2.04846   0.09870  20.755
-    ## range  0.17372   0.02312   7.514
+    ## sigma  2.04841   0.09869  20.756
+    ## range  0.17370   0.02312   7.514
     ## 
     ## Measurement error:
     ##           Estimate Std.error z-value
-    ## std. dev 0.0001837 0.0770559   0.002
+    ## std. dev 0.0001542 0.0746645   0.002
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -872.717 
-    ## Number of function calls by 'optim' = 44
+    ## Log-Likelihood:  -872.7168 
+    ## Number of function calls by 'optim' = 45
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  25.75702 secs
+    ## Time used to:     fit the model =  26.9598 secs
 
 We can obtain additional information by using
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -646,7 +646,7 @@ glance(res)
     ## # A tibble: 1 × 9
     ##    nobs    sigma logLik   AIC   BIC deviance df.residual model         alpha
     ##   <int>    <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>         <dbl>
-    ## 1   500 0.000184  -873. 1757. 1783.    1745.         494 WhittleMatern     1
+    ## 1   500 0.000154  -873. 1757. 1783.    1745.         494 WhittleMatern     1
 
 We will now compare with the true values of the random effects:
 
@@ -662,9 +662,9 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
 print(results)
 ```
 
-    ##               sigma_e   sigma    range
-    ## Truth    0.1000000000 2.00000 0.200000
-    ## Estimate 0.0001837155 2.04846 0.173723
+    ##               sigma_e   sigma     range
+    ## Truth    0.1000000000 2.00000 0.2000000
+    ## Estimate 0.0001541647 2.04841 0.1737022
 
 Given these estimated parameters, we can now do kriging to estimate the
 field at locations in the graph. As an example, we now obtain
@@ -835,7 +835,7 @@ graph
     ## 
     ## Edges: 
     ##   Lengths: 
-    ##       Min: 0.009342043  ; Max: 1.680324  ; Total: 57.22931 
+    ##       Min: 0.009342043  ; Max: 1.680324  ; Total: 57.22887 
     ##   Weights: 
     ##       Columns: osm_id name bridge cycleway:left cycleway:right highway lane_markings lanes layer lit maxaxleload maxspeed maxspeed:type maxweight oneway sidewalk:both sidewalk:left sidewalk:right smoothness source:maxspeed surface .weights 
     ##   That are circles:  0 
@@ -889,26 +889,26 @@ summary(res_exp)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)  -1.0836    0.1743  -6.216 5.09e-10 ***
-    ## lon           0.8832    0.1404   6.291 3.16e-10 ***
-    ## lat           1.8432    0.1533  12.022  < 2e-16 ***
+    ## (Intercept)  -1.0838    0.1743  -6.217 5.07e-10 ***
+    ## lon           0.8833    0.1404   6.290 3.17e-10 ***
+    ## lat           1.8429    0.1533  12.020  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## tau    1.85291   0.08205  22.582
-    ## kappa 15.36710   1.92989   7.963
+    ## tau    1.85291   0.08206  22.581
+    ## kappa 15.36611   1.92978   7.963
     ## 
     ## Measurement error:
     ##           Estimate Std.error z-value
-    ## std. dev 0.0005179 0.0653213   0.008
+    ## std. dev 0.0004633 0.0653197   0.007
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -871.8518 
-    ## Number of function calls by 'optim' = 45
+    ## Log-Likelihood:  -871.8516 
+    ## Number of function calls by 'optim' = 47
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  8.74974 secs
+    ## Time used to:     fit the model =  6.94429 secs
 
 We can also have a glance at the fitted model:
 
@@ -920,7 +920,7 @@ glance(res_exp)
     ## # A tibble: 1 × 9
     ##    nobs    sigma logLik   AIC   BIC deviance df.residual model  cov_function  
     ##   <int>    <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>  <chr>         
-    ## 1   500 0.000518  -872. 1756. 1781.    1744.         494 isoCov exp_covariance
+    ## 1   500 0.000463  -872. 1756. 1781.    1744.         494 isoCov exp_covariance
 
 Let us now compute the posterior mean for the field at the observation
 locations and plot the residuals between the field and the posterior
@@ -1003,12 +1003,12 @@ summary(res_gl)
     ## Random effects:
     ##       Estimate Std.error z-value
     ## tau   0.100741  0.004689  21.486
-    ## kappa 2.526480  0.304728   8.291
+    ## kappa 2.526499  0.304730   8.291
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## sigma  4.41590   0.18227   24.23
-    ## range  0.79162   0.09537    8.30
+    ## sigma  4.41591   0.18227   24.23
+    ## range  0.79161   0.09537    8.30
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
@@ -1016,11 +1016,11 @@ summary(res_gl)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -884.5768 
+    ## Log-Likelihood:  -884.5764 
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.84 secs
+    ## Time used to:     fit the model =  3.47693 secs
 
 We can also have a glance at the fitted model:
 
@@ -1131,15 +1131,15 @@ summary(res_gl_pred)
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev   0.8046    0.1355   5.936
+    ## std. dev   0.8046    0.1355   5.937
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -989.5673 
+    ## Log-Likelihood:  -989.5669 
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  4.0253 secs
+    ## Time used to:     fit the model =  4.08769 secs
 
 One should compare the estimates with the ones obtained in the model
 without the prediction locations.
@@ -1238,8 +1238,8 @@ summary(spde_bru_result)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.078930 0.1048320   1.882470 2.075750   2.291450 2.050760
-    ## range 0.182322 0.0248939   0.138951 0.180371   0.236523 0.176107
+    ## sigma 2.078630 0.1050020   1.882190 2.075570   2.291570 2.050110
+    ## range 0.182225 0.0248096   0.138727 0.180394   0.235986 0.176577
 
 Here we are showing the estimate of the practical correlation range
 ($`2/\kappa`$) instead of $`\kappa`$ since that is easier to interpret.
@@ -1263,8 +1263,8 @@ We now compare the means of the estimated values with the true values:
 ```
 
     ##   parameter true      mean     mode
-    ## 1   std.dev  2.0 2.0789292 2.050759
-    ## 2     range  0.2 0.1823219 0.176107
+    ## 1   std.dev  2.0 2.0786329 2.050112
+    ## 2     range  0.2 0.1822254 0.176577
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

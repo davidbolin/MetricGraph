@@ -50,6 +50,8 @@ Useful links:
 
 Authors:
 
+- David Bolin <davidbolin@gmail.com>
+
 - Alexandre Simas <alexandre.impa@gmail.com>
 
 - Jonas Wallin <jonas.wallin81@gmail.com>

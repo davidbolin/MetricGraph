@@ -130,7 +130,7 @@ augment(
 ## Value
 
 A
-[`tidyr::tibble()`](https://tidyr.tidyverse.org/reference/reexports.html)
+[`tidyr::tibble()`](https://tibble.tidyverse.org/reference/tibble.html)
 with columns:
 
 - `.fitted` Fitted or predicted value.

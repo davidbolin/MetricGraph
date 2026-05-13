@@ -126,10 +126,10 @@ remotes::install_github("davidbolin/metricgraph", ref = "devel")
 
 ## inlabru and SPDE approach on metric graphs
 
-- [`bru_get_mapper.inla_metric_graph_spde()`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
-  [`ibm_n.bru_mapper_inla_metric_graph_spde()`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
-  [`ibm_values.bru_mapper_inla_metric_graph_spde()`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
-  [`ibm_jacobian.bru_mapper_inla_metric_graph_spde()`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
+- [`bru_get_mapper(`*`<inla_metric_graph_spde>`*`)`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
+  [`ibm_n(`*`<bru_mapper_inla_metric_graph_spde>`*`)`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
+  [`ibm_values(`*`<bru_mapper_inla_metric_graph_spde>`*`)`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
+  [`ibm_jacobian(`*`<bru_mapper_inla_metric_graph_spde>`*`)`](https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.md)
   : Metric graph 'inlabru' mapper
 
 - [`predict(`*`<inla_metric_graph_spde>`*`)`](https://davidbolin.github.io/MetricGraph/reference/predict.inla_metric_graph_spde.md)

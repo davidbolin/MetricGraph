@@ -57,7 +57,7 @@ edge. For more details, see the vignette:
 
 ### Public methods
 
-- [`graph_components$new()`](#method-graph_components-new)
+- [`graph_components$new()`](#method-graph_components-initialize)
 
 - [`graph_components$edge_to_component()`](#method-graph_components-edge_to_component)
 
@@ -97,7 +97,7 @@ edge. For more details, see the vignette:
 
 ------------------------------------------------------------------------
 
-### Method [`new()`](https://rdrr.io/r/methods/new.html)
+### `graph_components$new()`
 
 #### Usage
 
@@ -182,7 +182,7 @@ A `graph_components` object.
 
 ------------------------------------------------------------------------
 
-### Method `edge_to_component()`
+### `graph_components$edge_to_component()`
 
 Map global edge numbers to component indices. Each edge in the
 disconnected graph has a unique global edge number; this method returns
@@ -204,7 +204,7 @@ Integer vector of component indices, the same length as `edge_number`.
 
 ------------------------------------------------------------------------
 
-### Method `get_largest()`
+### `graph_components$get_largest()`
 
 Returns the largest component in the graph.
 
@@ -218,7 +218,7 @@ A `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `as_metric_graph()`
+### `graph_components$as_metric_graph()`
 
 Combine all components into a single (disconnected) `metric_graph`
 object via fast in-memory stacking. Edges keep their relative order
@@ -246,7 +246,7 @@ every component has them.
 
 ------------------------------------------------------------------------
 
-### Method `which_component()`
+### `graph_components$which_component()`
 
 For each spatial point, determine which component it belongs to. The
 component is the one whose nearest network location is closest in
@@ -268,7 +268,7 @@ An integer vector of length `n` with the component index for each point.
 
 ------------------------------------------------------------------------
 
-### Method `add_observations()`
+### `graph_components$add_observations()`
 
 Add observations to the components. Mirrors
 `metric_graph$add_observations`. For `data_coords = "spatial"`, each
@@ -355,7 +355,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `clear_observations()`
+### `graph_components$clear_observations()`
 
 Clear observations from all components.
 
@@ -369,7 +369,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `get_data()`
+### `graph_components$get_data()`
 
 Combine observations from all components. Returns a single data
 structure with an additional `.component` column indicating which
@@ -408,7 +408,7 @@ A combined data object with a `.component` column.
 
 ------------------------------------------------------------------------
 
-### Method `get_groups()`
+### `graph_components$get_groups()`
 
 Get the unique groups across all components.
 
@@ -422,7 +422,7 @@ Character vector of unique group identifiers.
 
 ------------------------------------------------------------------------
 
-### Method `get_PtE()`
+### `graph_components$get_PtE()`
 
 Get the (edge_number, distance_on_edge) pairs for the observations
 across all components, using global edge numbering.
@@ -437,7 +437,7 @@ A matrix with two columns: `edge_number`, `distance_on_edge`.
 
 ------------------------------------------------------------------------
 
-### Method [`coordinates()`](https://edzer.github.io/sp/reference/coordinates.html)
+### `graph_components$coordinates()`
 
 Convert between graph coordinates (global `edge_number`,
 `distance_on_edge`) and spatial coordinates.
@@ -470,7 +470,7 @@ using global edge numbering.
 
 ------------------------------------------------------------------------
 
-### Method `build_mesh()`
+### `graph_components$build_mesh()`
 
 Build a mesh on each component.
 
@@ -490,7 +490,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `compute_fem()`
+### `graph_components$compute_fem()`
 
 Compute finite-element matrices on each component that has a mesh.
 
@@ -510,7 +510,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `compute_geodist()`
+### `graph_components$compute_geodist()`
 
 Compute geodesic distances per component. The geodesic distance between
 vertices in different components is infinite, so the per-component
@@ -535,7 +535,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `compute_resdist()`
+### `graph_components$compute_resdist()`
 
 Compute resistance distances per component. Resistance distance is
 undefined (infinite) between vertices in different components, so
@@ -561,7 +561,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `compute_laplacian()`
+### `graph_components$compute_laplacian()`
 
 Compute the (weighted) graph Laplacian per component. The combined
 Laplacian on the disjoint union is block-diagonal in the per-component
@@ -584,7 +584,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `plot_function()`
+### `graph_components$plot_function()`
 
 Plot a function on the components. Mirrors `metric_graph$plot_function`.
 When supplying `newdata`, it must include `.edge_number` (global edge
@@ -640,7 +640,7 @@ A plot object.
 
 ------------------------------------------------------------------------
 
-### Method [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+### `graph_components$plot()`
 
 Plots all components.
 
@@ -680,7 +680,7 @@ A `ggplot` object.
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `graph_components$clone()`
 
 The objects of this class are cloneable with this method.
 
@@ -711,7 +711,7 @@ suppressWarnings(graphs <- graph_components$new(edges))
 #> Computing bounding box...
 #> Setting up edges
 #> Merging close vertices
-#> Total construction time: 0.25 secs
+#> Total construction time: 0.24 secs
 #> Creating and updating vertices...
 #> Storing the initial graph...
 #> Computing the relative positions of the edges...
@@ -727,7 +727,7 @@ suppressWarnings(graphs <- graph_components$new(edges))
 #> Computing bounding box...
 #> Setting up edges
 #> Merging close vertices
-#> Total construction time: 0.25 secs
+#> Total construction time: 0.24 secs
 #> Creating and updating vertices...
 #> Storing the initial graph...
 #> Computing the relative positions of the edges...

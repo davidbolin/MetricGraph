@@ -2,6 +2,10 @@
 
 ## MetricGraph (development version)
 
+## MetricGraph 1.6.0
+
+CRAN release: 2026-05-06
+
 - `metric_graph` now fully supports disconnected graphs, and
   `graph_components` has therefore been deprecated.
 - The internal data storage system has been improved to reduce memory

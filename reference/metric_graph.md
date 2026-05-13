@@ -94,7 +94,7 @@ the vignette:
 
 ### Public methods
 
-- [`metric_graph$new()`](#method-metric_graph-new)
+- [`metric_graph$new()`](#method-metric_graph-initialize)
 
 - [`metric_graph$remove_small_circles()`](#method-metric_graph-remove_small_circles)
 
@@ -238,7 +238,7 @@ the vignette:
 
 ------------------------------------------------------------------------
 
-### Method [`new()`](https://rdrr.io/r/methods/new.html)
+### `metric_graph$new()`
 
 Create a new `metric_graph` object.
 
@@ -515,7 +515,7 @@ A `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `remove_small_circles()`
+### `metric_graph$remove_small_circles()`
 
 Sets the edge weights
 
@@ -542,7 +542,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `get_edges()`
+### `metric_graph$get_edges()`
 
 Exports the edges of the MetricGraph object as an `sf` or `sp`.
 
@@ -568,7 +568,7 @@ where the data frame includes edge weights.
 
 ------------------------------------------------------------------------
 
-### Method `get_bounding_box()`
+### `metric_graph$get_bounding_box()`
 
 Bounding box of the metric graph
 
@@ -590,7 +590,7 @@ A bounding box of the metric graph
 
 ------------------------------------------------------------------------
 
-### Method `get_vertices()`
+### `metric_graph$get_vertices()`
 
 Exports the vertices of the MetricGraph object as an `sf`, `sp` or as a
 matrix.
@@ -616,7 +616,7 @@ For `which_format == "sp"`, the function returns a
 
 ------------------------------------------------------------------------
 
-### Method `export()`
+### `metric_graph$export()`
 
 Exports the MetricGraph object as an `sf` or `sp` object.
 
@@ -644,7 +644,7 @@ weights, and `vertices` and `data` are `SpatialPointsDataFrame`.
 
 ------------------------------------------------------------------------
 
-### Method `leaflet()`
+### `metric_graph$leaflet()`
 
 Return the metric graph as a
 [`leaflet::leaflet()`](https://rstudio.github.io/leaflet/reference/leaflet.html)
@@ -690,7 +690,7 @@ object to be built upon.
 
 ------------------------------------------------------------------------
 
-### Method `mapview()`
+### `metric_graph$mapview()`
 
 Returns a
 [`mapview::mapview()`](https://r-spatial.github.io/mapview/reference/mapView.html)
@@ -711,7 +711,7 @@ object of the metric graph
 
 ------------------------------------------------------------------------
 
-### Method `set_edge_weights()`
+### `metric_graph$set_edge_weights()`
 
 Sets the edge weights
 
@@ -757,7 +757,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `get_edge_weights()`
+### `metric_graph$get_edge_weights()`
 
 Gets the edge weights
 
@@ -793,7 +793,7 @@ A vector or `data.frame` containing the edge weights.
 
 ------------------------------------------------------------------------
 
-### Method `get_vertices_incomp_dir()`
+### `metric_graph$get_vertices_incomp_dir()`
 
 Gets vertices with incompatible directions
 
@@ -807,7 +807,7 @@ A vector containing the vertices with incompatible directions.
 
 ------------------------------------------------------------------------
 
-### Method [`summary()`](https://rdrr.io/r/base/summary.html)
+### `metric_graph$summary()`
 
 Prints a summary of various informations of the graph
 
@@ -848,7 +848,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method [`print()`](https://rdrr.io/r/base/print.html)
+### `metric_graph$print()`
 
 Prints various characteristics of the graph
 
@@ -862,7 +862,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `compute_characteristics()`
+### `metric_graph$compute_characteristics()`
 
 Computes various characteristics of the graph
 
@@ -888,7 +888,7 @@ characteristics are stored in the `characteristics` element of the
 
 ------------------------------------------------------------------------
 
-### Method `check_euclidean()`
+### `metric_graph$check_euclidean()`
 
 Check if the graph has Euclidean edges.
 
@@ -905,7 +905,7 @@ printed.
 
 ------------------------------------------------------------------------
 
-### Method `check_distance_consistency()`
+### `metric_graph$check_distance_consistency()`
 
 Checks distance consistency of the graph.
 
@@ -921,7 +921,7 @@ printed.
 
 ------------------------------------------------------------------------
 
-### Method `compute_geodist()`
+### `metric_graph$compute_geodist()`
 
 Computes shortest path distances between the vertices in the graph
 
@@ -979,7 +979,7 @@ object.
 
 ------------------------------------------------------------------------
 
-### Method `compute_geodist_PtE()`
+### `metric_graph$compute_geodist_PtE()`
 
 Computes shortest path distances between the vertices in the graph.
 
@@ -1020,7 +1020,7 @@ A matrix containing the geodesic distances.
 
 ------------------------------------------------------------------------
 
-### Method `compute_geodist_mesh()`
+### `metric_graph$compute_geodist_mesh()`
 
 Computes shortest path distances between the vertices in the mesh.
 
@@ -1035,7 +1035,7 @@ the mesh are stored in `mesh$geo_dist` in the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `compute_resdist()`
+### `metric_graph$compute_resdist()`
 
 Computes the resistance distance between the observation locations.
 
@@ -1094,7 +1094,7 @@ stored in the `res_dist` element of the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `compute_resdist_PtE()`
+### `metric_graph$compute_resdist_PtE()`
 
 Computes the resistance distance between the observation locations.
 
@@ -1142,7 +1142,7 @@ A matrix containing the resistance distances.
 
 ------------------------------------------------------------------------
 
-### Method `get_degrees()`
+### `metric_graph$get_degrees()`
 
 Returns the degrees of the vertices in the metric graph.
 
@@ -1163,7 +1163,7 @@ A vector containing the degrees of the vertices.
 
 ------------------------------------------------------------------------
 
-### Method `compute_PtE_edges()`
+### `metric_graph$compute_PtE_edges()`
 
 Computes the relative positions of the coordinates of the edges and save
 it as an attribute to each edge. This improves the quality of plots
@@ -1192,7 +1192,7 @@ No return value, called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `compute_resdist_mesh()`
+### `metric_graph$compute_resdist_mesh()`
 
 Computes the resistance metric between the vertices in the mesh.
 
@@ -1208,7 +1208,7 @@ object.
 
 ------------------------------------------------------------------------
 
-### Method `compute_laplacian()`
+### `metric_graph$compute_laplacian()`
 
 Computes the weigthed graph Laplacian for the graph.
 
@@ -1255,7 +1255,7 @@ the `Laplacian` element in the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `prune_vertices()`
+### `metric_graph$prune_vertices()`
 
 Removes vertices of degree 2 from the metric graph.
 
@@ -1296,7 +1296,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `set_manual_edge_lengths()`
+### `metric_graph$set_manual_edge_lengths()`
 
 Gets the groups from the data.
 
@@ -1320,7 +1320,7 @@ does not return anything. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `get_groups()`
+### `metric_graph$get_groups()`
 
 Gets the groups from the data.
 
@@ -1341,26 +1341,13 @@ A vector containing the available groups in the internal data.
 
 ------------------------------------------------------------------------
 
-### Method `get_PtE()`
+### `metric_graph$get_PtE()`
 
 Gets PtE from the data.
 
 #### Usage
 
     metric_graph$get_PtE()
-
-#### Arguments
-
-- `group`:
-
-  For which group, should the PtE be returned? `NULL` means that all
-  PtEs available will be returned.
-
-- `include_group`:
-
-  Should the group be included as a column? If `TRUE`, the PtEs for each
-  group will be concatenated, otherwise a single matrix containing the
-  unique PtEs will be returned.
 
 #### Returns
 
@@ -1370,7 +1357,7 @@ observation locations.
 
 ------------------------------------------------------------------------
 
-### Method `get_edge_lengths()`
+### `metric_graph$get_edge_lengths()`
 
 Gets the edge lengths with the corresponding unit.
 
@@ -1392,7 +1379,7 @@ length unit).
 
 ------------------------------------------------------------------------
 
-### Method `get_locations()`
+### `metric_graph$get_locations()`
 
 Gets the spatial locations from the data.
 
@@ -1408,7 +1395,7 @@ y.
 
 ------------------------------------------------------------------------
 
-### Method `observation_to_vertex()`
+### `metric_graph$observation_to_vertex()`
 
 Adds observation locations as vertices in the graph.
 
@@ -1451,7 +1438,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `edgeweight_to_data()`
+### `metric_graph$edgeweight_to_data()`
 
 Turns edge weights into data on the metric graph
 
@@ -1548,7 +1535,7 @@ Turns edge weights into data on the metric graph
 
 ------------------------------------------------------------------------
 
-### Method `get_mesh_locations()`
+### `metric_graph$get_mesh_locations()`
 
 Returns a list or a matrix with the mesh locations.
 
@@ -1587,7 +1574,7 @@ A list or a matrix containing the mesh locations.
 
 ------------------------------------------------------------------------
 
-### Method `clear_observations()`
+### `metric_graph$clear_observations()`
 
 Clear all observations from the `metric_graph` object.
 
@@ -1601,7 +1588,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `process_data()`
+### `metric_graph$process_data()`
 
 Process data to the metric graph data format.
 
@@ -1743,7 +1730,7 @@ stored in the `data` element of the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `add_observations()`
+### `metric_graph$add_observations()`
 
 Add observations to the metric graph.
 
@@ -1909,7 +1896,7 @@ stored in the `data` element of the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `mutate_weights()`
+### `metric_graph$mutate_weights()`
 
 Use [`dplyr::mutate`](https://dplyr.tidyverse.org/reference/mutate.html)
 function on the internal edge weights object.
@@ -1959,7 +1946,7 @@ A [`tidyr::tibble`](https://tibble.tidyverse.org/reference/tibble.html),
 
 ------------------------------------------------------------------------
 
-### Method `select_weights()`
+### `metric_graph$select_weights()`
 
 Use [`dplyr::select`](https://dplyr.tidyverse.org/reference/select.html)
 function on the internal edge weights object.
@@ -2009,7 +1996,7 @@ A [`tidyr::tibble`](https://tibble.tidyverse.org/reference/tibble.html),
 
 ------------------------------------------------------------------------
 
-### Method `filter_weights()`
+### `metric_graph$filter_weights()`
 
 Use [`dplyr::filter`](https://dplyr.tidyverse.org/reference/filter.html)
 function on the internal edge weights object.
@@ -2059,7 +2046,7 @@ A [`tidyr::tibble`](https://tibble.tidyverse.org/reference/tibble.html),
 
 ------------------------------------------------------------------------
 
-### Method `summarise_weights()`
+### `metric_graph$summarise_weights()`
 
 Use
 [`dplyr::summarise`](https://dplyr.tidyverse.org/reference/summarise.html)
@@ -2118,7 +2105,7 @@ summarise.
 
 ------------------------------------------------------------------------
 
-### Method `drop_na_weights()`
+### `metric_graph$drop_na_weights()`
 
 Use
 [`tidyr::drop_na()`](https://tidyr.tidyverse.org/reference/drop_na.html)
@@ -2154,7 +2141,7 @@ drop_na.
 
 ------------------------------------------------------------------------
 
-### Method [`mutate()`](https://davidbolin.github.io/MetricGraph/reference/mutate.metric_graph_data.md)
+### `metric_graph$mutate()`
 
 Use [`dplyr::mutate`](https://dplyr.tidyverse.org/reference/mutate.html)
 function on the internal metric graph data object.
@@ -2205,7 +2192,7 @@ mutate.
 
 ------------------------------------------------------------------------
 
-### Method [`drop_na()`](https://davidbolin.github.io/MetricGraph/reference/drop_na.metric_graph_data.md)
+### `metric_graph$drop_na()`
 
 Use
 [`tidyr::drop_na()`](https://tidyr.tidyverse.org/reference/drop_na.html)
@@ -2239,7 +2226,7 @@ object containing the resulting data list after the drop_na.
 
 ------------------------------------------------------------------------
 
-### Method [`select()`](https://davidbolin.github.io/MetricGraph/reference/select.metric_graph_data.md)
+### `metric_graph$select()`
 
 Use [`dplyr::select`](https://dplyr.tidyverse.org/reference/select.html)
 function on the internal metric graph data object.
@@ -2292,7 +2279,7 @@ object containing the resulting data list after the selection.
 
 ------------------------------------------------------------------------
 
-### Method [`filter()`](https://davidbolin.github.io/MetricGraph/reference/filter.metric_graph_data.md)
+### `metric_graph$filter()`
 
 Use [`dplyr::filter`](https://dplyr.tidyverse.org/reference/filter.html)
 function on the internal metric graph data object.
@@ -2341,7 +2328,7 @@ object containing the resulting data list after the filter.
 
 ------------------------------------------------------------------------
 
-### Method [`summarise()`](https://davidbolin.github.io/MetricGraph/reference/summarise.metric_graph_data.md)
+### `metric_graph$summarise()`
 
 Use
 [`dplyr::summarise`](https://dplyr.tidyverse.org/reference/summarise.html)
@@ -2411,7 +2398,7 @@ object containing the resulting data list after the summarise.
 
 ------------------------------------------------------------------------
 
-### Method `get_data()`
+### `metric_graph$get_data()`
 
 Return the internal data with the option to filter by groups.
 
@@ -2455,7 +2442,7 @@ Return the internal data with the option to filter by groups.
 
 ------------------------------------------------------------------------
 
-### Method `setDirectionalWeightFunction()`
+### `metric_graph$setDirectionalWeightFunction()`
 
 Define the columns to be used for creating the directional vertex
 weights. Also possible to supply user defined functions for input and
@@ -2487,7 +2474,7 @@ No return value.
 
 ------------------------------------------------------------------------
 
-### Method `buildDirectionalConstraints()`
+### `metric_graph$buildDirectionalConstraints()`
 
 Build directional ODE constraint matrix from edges.
 
@@ -2516,7 +2503,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `buildC()`
+### `metric_graph$buildC()`
 
 Build Kirchoff constraint matrix from edges.
 
@@ -2545,7 +2532,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `build_mesh()`
+### `metric_graph$build_mesh()`
 
 Builds mesh object for graph.
 
@@ -2612,7 +2599,7 @@ No return value. Called for its side effects. The mesh is stored in the
 
 ------------------------------------------------------------------------
 
-### Method `get_version()`
+### `metric_graph$get_version()`
 
 Get the version of MetricGraph package used to build the graph
 
@@ -2626,7 +2613,7 @@ A character string with the version number
 
 ------------------------------------------------------------------------
 
-### Method `is_disconnected()`
+### `metric_graph$is_disconnected()`
 
 Does this graph have more than one connected component? The
 decomposition is computed and cached at construction time, so this is an
@@ -2643,7 +2630,7 @@ otherwise.
 
 ------------------------------------------------------------------------
 
-### Method `get_components()`
+### `metric_graph$get_components()`
 
 Return the connected components of the graph as a list of `metric_graph`
 objects. For a connected graph this is simply `list(self)`. For a
@@ -2669,7 +2656,7 @@ A list of `metric_graph` objects.
 
 ------------------------------------------------------------------------
 
-### Method `which_component()`
+### `metric_graph$which_component()`
 
 For each spatial point, determine which connected component of the graph
 it belongs to. The component is the one whose nearest edge is closest in
@@ -2694,7 +2681,7 @@ total edge length, descending).
 
 ------------------------------------------------------------------------
 
-### Method `compute_fem()`
+### `metric_graph$compute_fem()`
 
 Build mass and stiffness matrices for given mesh object.
 
@@ -2729,7 +2716,7 @@ Petrov-Galerkin matrices are stored in `Cpet` and `Gpet`.
 
 ------------------------------------------------------------------------
 
-### Method `compute_mesh_weights()`
+### `metric_graph$compute_mesh_weights()`
 
 Compute the weights of the mesh nodes.
 
@@ -2748,7 +2735,7 @@ the `mesh` element in the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `mesh_A()`
+### `metric_graph$mesh_A()`
 
 Deprecated - Computes observation matrix for mesh.
 
@@ -2775,7 +2762,7 @@ The observation matrix.
 
 ------------------------------------------------------------------------
 
-### Method `fem_basis()`
+### `metric_graph$fem_basis()`
 
 Computes observation matrix for mesh.
 
@@ -2800,7 +2787,7 @@ The observation matrix.
 
 ------------------------------------------------------------------------
 
-### Method `VtEfirst()`
+### `metric_graph$VtEfirst()`
 
 Find one edge corresponding to each vertex.
 
@@ -2817,7 +2804,7 @@ the edge.
 
 ------------------------------------------------------------------------
 
-### Method [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+### `metric_graph$plot()`
 
 Plots the metric graph.
 
@@ -3041,7 +3028,7 @@ A `plot_ly` (if `type = "plotly"`) or `ggplot` object.
 
 ------------------------------------------------------------------------
 
-### Method `plot_connections()`
+### `metric_graph$plot_connections()`
 
 Plots the connections in the graph
 
@@ -3055,7 +3042,7 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
-### Method `is_tree()`
+### `metric_graph$is_tree()`
 
 Checks if the graph is a tree (without considering directions)
 
@@ -3069,7 +3056,7 @@ TRUE if the graph is a tree and FALSE otherwise.
 
 ------------------------------------------------------------------------
 
-### Method `plot_function()`
+### `metric_graph$plot_function()`
 
 Plots continuous function on the graph.
 
@@ -3216,7 +3203,7 @@ Either a `ggplot` (if `plotly = FALSE`) or a `plot_ly` object.
 
 ------------------------------------------------------------------------
 
-### Method `plot_movie()`
+### `metric_graph$plot_movie()`
 
 Plots a movie of a continuous function evolving on the graph.
 
@@ -3279,7 +3266,7 @@ Either a `ggplot` (if `plotly=FALSE`) or a `plot_ly` object.
 
 ------------------------------------------------------------------------
 
-### Method `add_mesh_observations()`
+### `metric_graph$add_mesh_observations()`
 
 Add observations on mesh to the object.
 
@@ -3308,7 +3295,7 @@ stored in the `data` element in the `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method `get_initial_graph()`
+### `metric_graph$get_initial_graph()`
 
 Returns a copy of the initial metric graph.
 
@@ -3322,7 +3309,7 @@ A `metric_graph` object.
 
 ------------------------------------------------------------------------
 
-### Method [`update_graph()`](https://davidbolin.github.io/MetricGraph/reference/update_graph.md)
+### `metric_graph$update_graph()`
 
 Update an older version metric graph to the current package version.
 
@@ -3350,7 +3337,7 @@ A new `metric_graph` object compatible with the current package version.
 
 ------------------------------------------------------------------------
 
-### Method [`coordinates()`](https://edzer.github.io/sp/reference/coordinates.html)
+### `metric_graph$coordinates()`
 
 Convert between locations on the graph and Euclidean coordinates.
 
@@ -3386,7 +3373,7 @@ edge weights. data List containing data on the metric graph.
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `metric_graph$clone()`
 
 The objects of this class are cloneable with this method.
 

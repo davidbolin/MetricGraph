@@ -217,9 +217,9 @@ spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 summary(spde_result)
 ```
 
-    ##           mean        sd 0.025quant 0.5quant 0.975quant      mode
-    ## sigma 1.812710 0.1505710  1.5373300 1.804330   2.131780 1.7622800
-    ## range 0.105875 0.0193226  0.0739313 0.103744   0.149581 0.0993824
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 1.812860 0.1509240  1.5366400 1.804540   2.131960 1.763170
+    ## range 0.105935 0.0193518  0.0739219 0.103808   0.149687 0.099463
 
 We will now compare the means of the estimated values with the true
 values:
@@ -242,8 +242,8 @@ values:
 ```
 
     ##   parameter true      mean       mode
-    ## 1   std.dev 2.00 1.8127141 1.76227576
-    ## 2     range 0.15 0.1058747 0.09938235
+    ## 1   std.dev 2.00 1.8128644 1.76316565
+    ## 2     range 0.15 0.1059354 0.09946304
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -260,8 +260,8 @@ print(meas_err_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.1375004 0.1565566
-    ## 2  sigma2.e  0.5 0.5263937 0.5283836
+    ## 1  sigma1.e  0.2 0.1375007 0.1565961
+    ## 2  sigma2.e  0.5 0.5264126 0.5279455
 
 Finally, let us look at the estimates of the intercepts:
 
@@ -277,8 +277,8 @@ print(intercept_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  2.112196  2.112311
-    ## 2     beta2   -2 -1.890963 -1.890849
+    ## 1     beta1    2  2.112192  2.112307
+    ## 2     beta2   -2 -1.890967 -1.890853
 
 ## Fitting models with multiple likelihoods in `inlabru`
 
@@ -353,9 +353,9 @@ spde_bru_result <- spde_metric_graph_result(spde_bru_fit, "field", spde_model)
 summary(spde_bru_result)
 ```
 
-    ##           mean        sd 0.025quant 0.5quant 0.975quant      mode
-    ## sigma 1.814400 0.1470300  1.5476000 1.806240   2.121770 1.7826300
-    ## range 0.105875 0.0193226  0.0739313 0.103744   0.149581 0.0993824
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 1.814500 0.1474470  1.5470000 1.806330   2.122160 1.782390
+    ## range 0.105935 0.0193518  0.0739219 0.103808   0.149687 0.099463
 
 We will now compare the means of the estimated values with the true
 values:
@@ -378,8 +378,8 @@ values:
 ```
 
     ##   parameter true      mean       mode
-    ## 1   std.dev 2.00 1.8144016 1.78262777
-    ## 2     range 0.15 0.1058747 0.09938235
+    ## 1   std.dev 2.00 1.8145049 1.78239287
+    ## 2     range 0.15 0.1059354 0.09946304
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -396,8 +396,8 @@ print(meas_err_bru_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.1375004 0.1565566
-    ## 2  sigma2.e  0.5 0.5263937 0.5283836
+    ## 1  sigma1.e  0.2 0.1375007 0.1565961
+    ## 2  sigma2.e  0.5 0.5264126 0.5279455
 
 Finally, let us look at the estimates of the intercepts:
 
@@ -413,8 +413,8 @@ print(intercept_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  2.112196  2.112311
-    ## 2     beta2   -2 -1.890963 -1.890849
+    ## 1     beta1    2  2.112192  2.112307
+    ## 2     beta2   -2 -1.890967 -1.890853
 
 ## A toy dataset with multiple likelihoods and replicates
 
@@ -601,8 +601,8 @@ summary(spde_result_rep)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.362710 0.0623030   1.245220 1.361530   1.488450 1.362950
-    ## range 0.180086 0.0181401   0.147774 0.178876   0.218905 0.176196
+    ## sigma 1.362740 0.0623526   1.245160 1.361560   1.488610 1.363110
+    ## range 0.180097 0.0181558   0.147756 0.178886   0.218948 0.176227
 
 Let us compare with the true values:
 
@@ -623,9 +623,9 @@ Let us compare with the true values:
   print(result_df_rep)
 ```
 
-    ##   parameter true      mean     mode
-    ## 1   std.dev  1.5 1.3627082 1.362947
-    ## 2     range  0.2 0.1800859 0.176196
+    ##   parameter true      mean      mode
+    ## 1   std.dev  1.5 1.3627373 1.3631132
+    ## 2     range  0.2 0.1800973 0.1762266
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -642,8 +642,8 @@ print(meas_err_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.2009009 0.2020441
-    ## 2  sigma2.e  0.5 0.4954272 0.4958153
+    ## 1  sigma1.e  0.2 0.2009016 0.2020468
+    ## 2  sigma2.e  0.5 0.4954263 0.4958198
 
 Finally, let us look at the estimates of the intercepts:
 
@@ -659,8 +659,8 @@ print(intercept_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  1.873590  1.873742
-    ## 2     beta2   -2 -2.114198 -2.114046
+    ## 1     beta1    2  1.873589  1.873742
+    ## 2     beta2   -2 -2.114198 -2.114047
 
 ## Fitting models with multiple likelihoods and replicates in `inlabru`
 
@@ -733,8 +733,8 @@ summary(spde_bru_result_repl)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.362140 0.0627913   1.242760 1.359700   1.488530 1.346930
-    ## range 0.180086 0.0181401   0.147774 0.178876   0.218905 0.176196
+    ## sigma 1.362170 0.0628719   1.242690 1.359750   1.488670 1.346980
+    ## range 0.180097 0.0181558   0.147756 0.178886   0.218948 0.176227
 
 We will now compare the means of the estimated values with the true
 values:
@@ -756,9 +756,9 @@ values:
   print(result_bru_repl_df)
 ```
 
-    ##   parameter true      mean     mode
-    ## 1   std.dev  1.5 1.3621351 1.346932
-    ## 2     range  0.2 0.1800859 0.176196
+    ##   parameter true      mean      mode
+    ## 1   std.dev  1.5 1.3621712 1.3469763
+    ## 2     range  0.2 0.1800973 0.1762266
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -775,8 +775,8 @@ print(meas_err_bru_repl_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.2009009 0.2020441
-    ## 2  sigma2.e  0.5 0.4954272 0.4958153
+    ## 1  sigma1.e  0.2 0.2009016 0.2020468
+    ## 2  sigma2.e  0.5 0.4954263 0.4958198
 
 Finally, let us look at the estimbates of the intercepts:
 
@@ -792,5 +792,5 @@ print(intercept_repl_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  1.873590  1.873742
-    ## 2     beta2   -2 -2.114198 -2.114046
+    ## 1     beta1    2  1.873589  1.873742
+    ## 2     beta2   -2 -2.114198 -2.114047

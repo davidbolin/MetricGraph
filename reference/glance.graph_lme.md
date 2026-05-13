@@ -1,7 +1,7 @@
 # Glance at a `graph_lme` object
 
 Glance accepts a `graph_lme` object and returns a
-[`tidyr::tibble()`](https://tidyr.tidyverse.org/reference/reexports.html)
+[`tidyr::tibble()`](https://tibble.tidyverse.org/reference/tibble.html)
 with exactly one row of model summaries. The summaries are the square
 root of the estimated variance of the measurement error, residual
 degrees of freedom, AIC, BIC, log-likelihood, the type of latent model
@@ -27,7 +27,7 @@ glance(x, ...)
 ## Value
 
 A
-[`tidyr::tibble()`](https://tidyr.tidyverse.org/reference/reexports.html)
+[`tidyr::tibble()`](https://tibble.tidyverse.org/reference/tibble.html)
 with exactly one row and columns:
 
 - `nobs` Number of observations used.

@@ -191,9 +191,9 @@ spde_bru_result <- spde_metric_graph_result(spde_bru_fit,
 summary(spde_bru_result)
 ```
 
-    ##           mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.113060 0.220913   1.726900 2.097610   2.586950 2.066910
-    ## range 0.167043 0.039501   0.105883 0.161263   0.260101 0.149487
+    ##          mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 2.11356 0.2199020   1.730180 2.097810   2.588830 2.066800
+    ## range 0.16703 0.0394892   0.106525 0.161026   0.260663 0.148907
 
 We will now compare the means of the estimated values with the true
 values:
@@ -216,8 +216,8 @@ values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 2.00 2.1130565 2.0669085
-    ## 2     range 0.15 0.1670426 0.1494869
+    ## 1   std.dev 2.00 2.1135616 2.0667984
+    ## 2     range 0.15 0.1670303 0.1489066
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -408,8 +408,8 @@ summary(spde_bru_result_alpha2)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.034640 0.2235370   1.636340 2.022080    2.50933 1.984160
-    ## range 0.152917 0.0154667   0.124912 0.152061    0.18561 0.150376
+    ## sigma 2.034650 0.2235590   1.636340  2.02207   2.509330 1.984160
+    ## range 0.152916 0.0154663   0.124912  0.15206   0.185609 0.150375
 
 We will now compare the means of the estimated values with the true
 values:
@@ -432,8 +432,8 @@ values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 2.00 2.0346411 1.9841623
-    ## 2     range 0.15 0.1529171 0.1503756
+    ## 1   std.dev 2.00 2.0346511 1.9841639
+    ## 2     range 0.15 0.1529161 0.1503746
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -622,8 +622,8 @@ summary(spde_result_bru_rep)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.582740 0.0823491   1.427550 1.580540   1.748790 1.576530
-    ## range 0.205036 0.0233902   0.162277 0.204071   0.254025 0.202399
+    ## sigma 1.575530 0.0819540   1.422420 1.573780   1.741030 1.572210
+    ## range 0.221418 0.0251583   0.177136 0.219568   0.275827 0.215303
 
 Let us compare with the true values:
 
@@ -644,9 +644,9 @@ Let us compare with the true values:
   print(result_df_bru_rep)
 ```
 
-    ##   parameter true     mean      mode
-    ## 1   std.dev  1.5 1.582736 1.5765293
-    ## 2     range  0.2 0.205036 0.2023988
+    ##   parameter true      mean      mode
+    ## 1   std.dev  1.5 1.5755340 1.5722103
+    ## 2     range  0.2 0.2214181 0.2153034
 
 We will now show how to fit the model considering all replicates. To
 this end, we simply set the `repl` argument in
@@ -695,9 +695,9 @@ spde_result_bru_rep <- spde_metric_graph_result(spde_bru_fit_rep,
 summary(spde_result_bru_rep)
 ```
 
-    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.543410 0.0320613   1.484690 1.542480   1.609820 1.546580
-    ## range 0.208291 0.0096452   0.190901 0.207697   0.228724 0.205978
+    ##           mean         sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 1.543470 0.03211740   1.484720 1.542420   1.610130 1.546340
+    ## range 0.208386 0.00964928   0.191039 0.207772   0.228876 0.205994
 
 Let us compare with the true values:
 
@@ -719,8 +719,8 @@ Let us compare with the true values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev  1.5 1.5434075 1.5465788
-    ## 2     range  0.2 0.2082905 0.2059784
+    ## 1   std.dev  1.5 1.5434743 1.5463443
+    ## 2     range  0.2 0.2083855 0.2059943
 
 ### An application with real data
 
@@ -800,9 +800,9 @@ cat("Results for alpha = 1:\n")
 summary(spde_result_bru_pems_1)
 ```
 
-    ##             mean         sd  0.025quant   0.5quant 0.975quant        mode
-    ## sigma 14.8030000 0.60415300 13.60400000 14.8125000 15.9915000 14.79410000
-    ## range  0.0131658 0.00861396  0.00188224  0.0114391  0.0338774  0.00584248
+    ##             mean        sd  0.025quant   0.5quant 0.975quant        mode
+    ## sigma 14.8632000 0.6011500 13.70530000 14.8691000  16.007700 14.86630000
+    ## range  0.0492197 0.0839243  0.00328826  0.0234544   0.259756  0.00773007
 
 ``` r
 
@@ -821,8 +821,8 @@ summary(spde_result_bru_pems_2)
 ```
 
     ##           mean      sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 20.99100 3.20692   15.47110 20.69000    28.1044 20.40780
-    ## range  8.83274 1.58267    6.18079  8.67279    12.3792  8.34354
+    ## sigma 20.98920 3.25535   15.31430  20.7126    28.1077 20.55020
+    ## range  8.85834 1.61369    6.14616   8.7004    12.4661  8.37517
 
 We can now get the mesh locations to do prediction. We start by creating
 a mesh and extracting the indexes of the mesh such that longitude is

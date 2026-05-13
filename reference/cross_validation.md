@@ -3,22 +3,18 @@
 Mirrors
 [`rSPDE::cross_validation()`](https://davidbolin.github.io/rSPDE/reference/cross_validation.html)
 for `bru` fits (output from
-[`inlabru::bru()`](https://inlabru-org.github.io/inlabru/reference/bru.html)),
-with built-in support for the exact, non-FEM SPDE models in MetricGraph
-(objects of class `inla_metric_graph_spde`). For models fit with such a
-component, the function rebuilds the SPDE on a graph clone with held-out
-responses set to NA, refits when `true_CV = TRUE`, and draws posterior
-samples via the
-[`inlabru::generate`](https://inlabru-org.github.io/inlabru/reference/generate.html)
-path used by
-[`predict.inla_metric_graph_spde`](https://davidbolin.github.io/MetricGraph/reference/predict.inla_metric_graph_spde.md).
-For models without a metric-graph SPDE component (e.g. FEM-based rSPDE
-models), it uses the standard
-[`inlabru::bru_set_missing()`](https://inlabru-org.github.io/inlabru/reference/bru_set_missing.html) +
-`bru_rerun()` +
-[`inlabru::generate()`](https://inlabru-org.github.io/inlabru/reference/generate.html)
-path shared with
-[`rSPDE::cross_validation()`](https://davidbolin.github.io/rSPDE/reference/cross_validation.html).
+[`inlabru::bru()`](https://inlabru-org.github.io/inlabru/reference/bru.html)).
+For each fold, the held-out responses are set to NA with
+[`inlabru::bru_set_missing()`](https://inlabru-org.github.io/inlabru/reference/bru_set_missing.html)
+and the model is refit with
+[`inlabru::bru_rerun()`](https://inlabru-org.github.io/inlabru/reference/bru.html).
+When `true_CV = FALSE`, the original fit's `mode$theta` is held fixed so
+only the latent posterior is updated; when `TRUE`, theta is
+re-estimated. Posterior response samples are then drawn at the held-out
+locations via
+[`inlabru::generate()`](https://inlabru-org.github.io/inlabru/reference/generate.html).
+Works with the exact, non-FEM SPDE models in MetricGraph
+(`inla_metric_graph_spde`) and FEM-based rSPDE models alike.
 
 ## Usage
 
