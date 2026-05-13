@@ -197,7 +197,15 @@ graph_lme <- function(formula, graph,
   #   stop("The possible values for 'parameterization_latent' are 'matern' and 'spde'!")
   # }
 
-  if(!(BC%in%c(0,1))){
+  is_fem_whittle <- (model_type == "whittlematern") && isTRUE(model[["fem"]])
+  if(is_fem_whittle){
+    # BC has no effect for FEM-based WhittleMatern models (boundary
+    # conditions are baked into the FEM operator). Warn only if the
+    # caller explicitly passed a non-default value.
+    if(!is.null(BC) && !identical(BC, 1)){
+      warning("The 'BC' argument has no effect for FEM-based WhittleMatern models (fem = TRUE) and will be ignored.")
+    }
+  } else if(!(BC %in% c(0, 1))){
     stop("The possible values for 'BC' are 0 and 1!")
   }
 
@@ -453,6 +461,12 @@ graph_lme <- function(formula, graph,
       #   names(fit$coeff$random_effects)[1] <- "alpha"
       #   fit$coeff$random_effects[1] <- fit$coeff$random_effects[1] + 0.5
       # }
+      # BC is intentionally not stored: it has no effect for FEM-based
+      # WhittleMatern fits. `model_arg` preserves the user-supplied model
+      # spec so callers (e.g. posterior_crossvalidation) can refit through
+      # this same branch — `fit$latent_model$type` is overwritten by
+      # rspde_lme to a string graph_lme cannot re-dispatch on.
+      fit$model_arg <- model
       class(fit) <- c("graph_lme", class(fit))
       return(fit)
     } else{
@@ -1277,6 +1291,7 @@ graph_lme <- function(formula, graph,
   object$nobs <- sum(graph$.__enclos_env__$private$data[[".group"]] %in% which_repl)
   object$optim_controls <- optim_controls
   object$latent_model <- model
+  object$model_arg <- model
   object$loglik <- loglik
   object$BC <- BC
   object$niter <- res$counts

@@ -653,18 +653,32 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
         }
       }
 
-      # Refit the model using the same optimization method
-      cv_model <- graph_lme(
+      # Refit the model using the same optimization method.
+      # Prefer `model_arg` (original user input) over `latent_model`, since
+      # rspde-backed fits (fem=TRUE) overwrite `latent_model$type` with
+      # "Covariance-Based Matern SPDE Approximation", which graph_lme cannot
+      # re-dispatch on.
+      refit_model <- if(!is.null(object$model_arg)) object$model_arg else object$latent_model
+      refit_is_fem <- isTRUE(refit_model$fem)
+      refit_optim_method <- if(!is.null(object$optim_method)) object$optim_method else "L-BFGS-B"
+      refit_optim_controls <- if(!is.null(object$optim_controls)) object$optim_controls else list()
+      refit_args <- list(
         formula = object$formula,
         graph = cv_graph,
-        model = object$latent_model,
-        BC = object$BC,
-        optim_method = object$optim_method,
-        optim_controls = object$optim_controls,
+        model = refit_model,
+        optim_method = refit_optim_method,
+        optim_controls = refit_optim_controls,
         model_options = model_options,
         parallel = parallel_fitting,
         n_cores = n_cores
       )
+      # Only pass BC when it is meaningful for the model (i.e. non-FEM
+      # WhittleMatern). Passing it for FEM fits would trigger a spurious
+      # "BC has no effect" warning on every fold.
+      if(!refit_is_fem && !is.null(object$BC)){
+        refit_args$BC <- object$BC
+      }
+      cv_model <- do.call(graph_lme, refit_args)
 
     } else {
       # Pseudo cross-validation: use the original model parameters
