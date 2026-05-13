@@ -348,14 +348,23 @@ graph_lme <- function(formula, graph,
         nu <- NULL
       }
 
-      # Determine parameterization from model_options
-      parameterization <- "spde" # default
+      # Determine parameterization: start from the rspde_object's own
+      # parameterization (which depends on whether B.tau/B.kappa or
+      # B.sigma/B.range were supplied), then allow model_options to override.
+      if (!is.null(rspde_object$parameterization)) {
+        parameterization <- rspde_object$parameterization
+      } else {
+        parameterization <- "spde"
+      }
       if (!is.null(model_options)) {
-        # Check for matern parameterization indicators
-        matern_params <- c("fix_nu", "fix_sigma", "fix_range", 
+        matern_params <- c("fix_nu", "fix_sigma", "fix_range",
                           "start_nu", "start_sigma", "start_range")
+        spde_params <- c("fix_alpha", "fix_kappa", "fix_tau",
+                         "start_alpha", "start_kappa", "start_tau")
         if (any(names(model_options) %in% matern_params)) {
           parameterization <- "matern"
+        } else if (any(names(model_options) %in% spde_params)) {
+          parameterization <- "spde"
         }
       }
 
