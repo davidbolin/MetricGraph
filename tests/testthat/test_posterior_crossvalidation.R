@@ -514,3 +514,209 @@ test_that("predict.rspde_lme reports per-replicate kriging variances independent
   # the last replicate's value.
   expect_gt(v1 / v2, 2)
 })
+
+# ---------------------------------------------------------------------------
+# Multi-replicate rspde_lme (FEM) cross-validation. Regression tests for the
+# bug class where a fold spanning multiple replicates was passed as one
+# multi-replicate newdata into predict.rspde_lme, which:
+#   - emits no $edge_number / $distance_on_edge, so MetricGraph's key-based
+#     lookup falls through to position-based indexing, scoring each test
+#     point against the wrong replicate's prediction;
+#   - iterates kriging over every training replicate, wasting work;
+#   - warns about "duplicated locations for prediction" because the same
+#     physical (edge, distance) appears in multiple replicates' rows.
+# The fix replaces the single multi-replicate predict call with a
+# per-replicate sub-predict loop that reuses the rspde precompute, and
+# additionally passes `which_repl` to the fallback path so single-rep
+# folds in a multi-rep model do not iterate over irrelevant replicates.
+# ---------------------------------------------------------------------------
+
+.fit_fem_multirep <- function(n_repl = 3, obs_per_edge = 5, mesh_h = 0.05,
+                              seed = 11) {
+  set.seed(seed)
+  V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1))
+  E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 1))
+  graph <- metric_graph$new(V = V, E = E, verbose = 0)
+  graph$build_mesh(h = mesh_h)
+  PtE <- NULL
+  for (i in seq_len(graph$nE)) {
+    PtE <- rbind(PtE, cbind(rep(i, obs_per_edge), runif(obs_per_edge)))
+  }
+  df_all <- NULL
+  for (r in seq_len(n_repl)) {
+    u <- sample_spde(kappa = 5, tau = 1, alpha = 1, graph = graph, PtE = PtE)
+    df_all <- rbind(df_all,
+      data.frame(y = u + 0.3 * rnorm(length(u)),
+                 edge_number = PtE[, 1],
+                 distance_on_edge = PtE[, 2],
+                 repl = r))
+  }
+  graph$add_observations(data = df_all, normalized = TRUE, verbose = 0,
+                         group = "repl")
+  graph_lme(y ~ -1, graph = graph,
+            model = list(type = "WhittleMatern", alpha = 1, fem = TRUE))
+}
+
+# Manual proper-LOO for a single observation of an rspde_lme fit: mask
+# the row in model_matrix, drop its row from A_list[[repl]], and predict
+# at that location with which_repl set to its replicate. The
+# corresponding posterior_crossvalidation prediction must match this.
+.manual_fem_loo_one <- function(fit, i_test) {
+  gd <- fit$graph$.__enclos_env__$private$data
+  repl_i <- gd[[".group"]][i_test]
+  # Within-replicate position of the test point — A_list is per-replicate
+  # and indexed within-replicate.
+  pos_in_repl <- which(which(gd[[".group"]] == repl_i) == i_test)
+  nd <- lapply(gd, function(x) x[i_test])
+  cv_model <- fit
+  mm <- as.matrix(cv_model$model_matrix)
+  mm[i_test, 1] <- NA
+  cv_model$model_matrix <- mm
+  cv_model$A_list <- fit$A_list
+  cv_model$A_list[[repl_i]] <-
+    cv_model$A_list[[repl_i]][-pos_in_repl, , drop = FALSE]
+  p <- predict(cv_model,
+               newdata = nd,
+               edge_number = ".edge_number",
+               distance_on_edge = ".distance_on_edge",
+               normalized = TRUE,
+               compute_variances = TRUE,
+               which_repl = repl_i)
+  list(mean = unname(as.numeric(p$mean)),
+       variance = unname(as.numeric(p$variance) +
+                         fit$coeff$measurement_error^2))
+}
+
+test_that("posterior_crossvalidation LOO is a true LOO on a multi-rep FEM fit", {
+  skip_if_not_installed("rSPDE")
+  fit <- .fit_fem_multirep(n_repl = 3, obs_per_edge = 5)
+
+  res_pre <- posterior_crossvalidation(fit, mode = "loo", true_CV = FALSE,
+                                       use_precomputed = TRUE,
+                                       scores = c("logscore", "crps", "mae", "rmse"))
+  res_no  <- posterior_crossvalidation(fit, mode = "loo", true_CV = FALSE,
+                                       use_precomputed = FALSE,
+                                       scores = c("logscore", "crps", "mae", "rmse"))
+
+  # Pre-/non-precomputed paths must agree to machine precision. Before the
+  # fallback fix (passing which_repl), the non-precomputed path iterated
+  # over every training replicate and reported the wrong replicate's
+  # prediction at every test point.
+  expect_equal(res_pre$mu,  res_no$mu,  tolerance = 1e-9)
+  expect_equal(res_pre$var, res_no$var, tolerance = 1e-9)
+
+  # Each per-observation prediction must match the proper LOO for the
+  # test point's own replicate. Probe one test point in each replicate.
+  gd <- fit$graph$.__enclos_env__$private$data
+  for (r in unique(gd[[".group"]])) {
+    i_test <- which(gd[[".group"]] == r)[1]
+    m <- .manual_fem_loo_one(fit, i_test)
+    expect_equal(unname(res_pre$mu[i_test]),  m$mean,
+                 tolerance = 1e-7,
+                 info = paste("mu mismatch at i =", i_test, "(rep", r, ")"))
+    expect_equal(unname(res_pre$var[i_test]), m$variance,
+                 tolerance = 1e-7,
+                 info = paste("var mismatch at i =", i_test, "(rep", r, ")"))
+  }
+})
+
+test_that("posterior_crossvalidation k-fold is a true CV on a multi-rep FEM fit", {
+  skip_if_not_installed("rSPDE")
+  fit <- .fit_fem_multirep(n_repl = 3, obs_per_edge = 5)
+
+  # k-fold with random fold assignment makes most folds span multiple
+  # replicates — exactly the case that exercised the per-rep-split path.
+  res_pre <- posterior_crossvalidation(fit, mode = "k-fold", k = 5,
+                                       seed = 42, true_CV = FALSE,
+                                       use_precomputed = TRUE,
+                                       scores = c("logscore", "crps", "mae", "rmse"))
+  res_no  <- posterior_crossvalidation(fit, mode = "k-fold", k = 5,
+                                       seed = 42, true_CV = FALSE,
+                                       use_precomputed = FALSE,
+                                       scores = c("logscore", "crps", "mae", "rmse"))
+
+  expect_equal(res_pre$mu,  res_no$mu,  tolerance = 1e-9)
+  expect_equal(res_pre$var, res_no$var, tolerance = 1e-9)
+
+  # Each prediction is essentially a leave-the-fold-out kriging using
+  # only that replicate's remaining observations. For the strictest
+  # check, compare a few test points against the manual proper LOO at
+  # the same point: although they are computed against different
+  # held-out sets, k-fold CV with a single test point per replicate is
+  # numerically identical to LOO. We pick the (at most one) replicate
+  # whose fold-test set is a single point and verify that point's
+  # prediction matches the manual LOO. If no such fold exists, fall
+  # back to the LOO consistency check above.
+  gd <- fit$graph$.__enclos_env__$private$data
+  for (i_test in unique(c(1L, fit$nobs, sample(seq_len(fit$nobs), 2L)))) {
+    r <- gd[[".group"]][i_test]
+    held_out_in_r <- which(is.na(res_pre$mu[gd[[".group"]] == r]))
+    if (length(held_out_in_r) == 1L) {
+      # This is effectively a LOO fold for replicate r at i_test.
+      m <- .manual_fem_loo_one(fit, i_test)
+      expect_equal(unname(res_pre$mu[i_test]),  m$mean,
+                   tolerance = 1e-7,
+                   info = paste("mu mismatch at i =", i_test))
+    }
+  }
+
+  # And — the headline regression check — k-fold predictions must be in
+  # the *same ballpark* as LOO predictions. Before the fix, k-fold
+  # silently scored each test point against the WRONG replicate's
+  # prediction, so logscore / RMSE blew up. We pin a generous upper
+  # bound that the old (buggy) code consistently violated on this
+  # scenario.
+  loo_pre <- posterior_crossvalidation(fit, mode = "loo", true_CV = FALSE,
+                                       use_precomputed = TRUE,
+                                       scores = c("rmse"))
+  kfold_rmse <- as.numeric(res_pre$scores$rmse)
+  loo_rmse   <- as.numeric(loo_pre$scores$rmse)
+  expect_lt(kfold_rmse, 2 * loo_rmse)
+})
+
+test_that("multi-rep FEM CV does not emit the 'duplicated locations' warning", {
+  skip_if_not_installed("rSPDE")
+  fit <- .fit_fem_multirep(n_repl = 3, obs_per_edge = 5)
+
+  # Before the per-rep split, every multi-replicate fold built newdata
+  # whose (edge, distance_on_edge) rows repeated across replicates and
+  # triggered the warning. The fix splits the predict per replicate so
+  # each sub-newdata has unique locations.
+  dup_warnings <- 0L
+  withCallingHandlers(
+    posterior_crossvalidation(fit, mode = "k-fold", k = 5, seed = 42,
+                              true_CV = FALSE, use_precomputed = TRUE,
+                              scores = c("mae", "rmse")),
+    warning = function(w) {
+      if (grepl("duplicated locations", conditionMessage(w))) {
+        dup_warnings <<- dup_warnings + 1L
+        invokeRestart("muffleWarning")
+      }
+    })
+  expect_identical(dup_warnings, 0L)
+})
+
+test_that("single-rep fold in a multi-rep FEM model uses the right replicate", {
+  skip_if_not_installed("rSPDE")
+  # Even when every fold is single-replicate (mode = "loo"), the
+  # *non*-precomputed path used to call predict() without `which_repl`,
+  # so predict.rspde_lme iterated over every training replicate. The
+  # downstream key match (predict.rspde_lme emits no $edge_number /
+  # $distance_on_edge) fell through to position-based indexing and
+  # picked rep 1's prediction for every test point. This test pins the
+  # regression: the non-precomputed LOO must match the manual proper
+  # LOO point-by-point.
+  fit <- .fit_fem_multirep(n_repl = 3, obs_per_edge = 5)
+  res_no <- posterior_crossvalidation(fit, mode = "loo", true_CV = FALSE,
+                                      use_precomputed = FALSE,
+                                      scores = c("mae", "rmse"))
+  gd <- fit$graph$.__enclos_env__$private$data
+  # Probe one observation in each replicate beyond the first — these
+  # were the wrong ones under the position-based fallback.
+  for (r in unique(gd[[".group"]])[-1L]) {
+    i_test <- which(gd[[".group"]] == r)[1]
+    m <- .manual_fem_loo_one(fit, i_test)
+    expect_equal(unname(res_no$mu[i_test]), m$mean, tolerance = 1e-7,
+                 info = paste("mu mismatch at i =", i_test, "(rep", r, ")"))
+  }
+})

@@ -574,20 +574,40 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
 
     # Decide whether THIS fold can use the precomputed path. The path
     # supports one replicate per predict() call (test_idx is within-
-    # replicate for native models, na_test_idx is global for rspde), so
-    # multi-replicate folds whose test points span more than one
-    # replicate must fall back. For LOO this is always single.
+    # replicate for native models, na_test_idx is global for rspde).
+    # For rspde, multi-replicate folds split into per-replicate
+    # sub-predicts below (rspde_multi_rep_split). For native models,
+    # multi-replicate folds fall back to a single non-precomputed
+    # predict. For LOO every fold is single-replicate.
     fold_use_precomputed <- use_precomputed
     fold_test_repl <- NULL
-    if(fold_use_precomputed){
+    rspde_multi_rep_split <- FALSE
+    test_repls_in_fold <- NULL
+    # For multi-replicate rspde fits the split path is needed for
+    # correctness regardless of `use_precomputed`: predict.rspde_lme
+    # does not emit $edge_number / $distance_on_edge, so a single
+    # multi-replicate predict() returns $mean rows the downstream key
+    # match cannot disambiguate by (replicate, location) — it silently
+    # falls through to position-based indexing and reports the wrong
+    # replicate's prediction for most test points. Splitting by
+    # replicate avoids this AND lets the cached precompute be reused.
+    if(is_rspde_obj && n_repl_obj > 1){
+      test_repls_in_fold <-
+        object$graph$.__enclos_env__$private$data[[".group"]][test_indices]
+      if(length(unique(test_repls_in_fold)) != 1L){
+        rspde_multi_rep_split <- TRUE
+      } else {
+        fold_test_repl <- test_repls_in_fold[1]
+      }
+    }
+    if(fold_use_precomputed && !rspde_multi_rep_split){
       reordered_train_indices <- train_test_indices[[fold_idx]]$reordered_train
       reordered_test_indices  <- train_test_indices[[fold_idx]]$reordered_test
-      if(n_repl_obj > 1){
+      if(n_repl_obj > 1 && !is_rspde_obj){
+        # Native model: per-fold precompute path needs the test points to
+        # live in a single replicate. Multi-replicate folds fall back.
         test_repls_in_fold <- train_test_indices[[fold_idx]]$test_repl
         if(is.null(test_repls_in_fold)){
-          # rspde precompute path skips the precomputed_graph reordering
-          # so test_repl wasn't pre-cached; derive it from the original
-          # graph data.
           test_repls_in_fold <-
             object$graph$.__enclos_env__$private$data[[".group"]][test_indices]
         }
@@ -595,18 +615,17 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
           fold_use_precomputed <- FALSE
         } else {
           fold_test_repl <- test_repls_in_fold[1]
-          # Native path: predict idx_prd is WITHIN-replicate. Use the
-          # extra mapping built at setup time.
-          if(!is_rspde_obj){
-            reordered_test_indices  <- train_test_indices[[fold_idx]]$reordered_test_within
-            reordered_train_indices <- train_test_indices[[fold_idx]]$reordered_train_within
-          }
+          # Native precompute path: predict idx_prd is WITHIN-replicate.
+          reordered_test_indices  <- train_test_indices[[fold_idx]]$reordered_test_within
+          reordered_train_indices <- train_test_indices[[fold_idx]]$reordered_train_within
         }
       }
     }
     # rspde precompute always uses newdata for the prediction location,
-    # so build new_data unconditionally for that case.
-    if(!fold_use_precomputed || is.null(precomputed_data) || is_rspde_obj){
+    # so build new_data unconditionally for that case (the split path
+    # builds per-replicate newdata below).
+    if(!rspde_multi_rep_split &&
+       (!fold_use_precomputed || is.null(precomputed_data) || is_rspde_obj)){
       new_data <- object$graph$.__enclos_env__$private$data
       new_data <- lapply(new_data, function(x){x[test_indices]})
     }
@@ -694,7 +713,43 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
     }
 
     # Make predictions for test indices
-    if(fold_use_precomputed && !is.null(precomputed_data) && is_rspde_obj) {
+    if(rspde_multi_rep_split){
+      # rspde multi-replicate fold: split into per-replicate
+      # sub-predicts so each one has unique prediction locations (no
+      # duplicate-loc warning), only iterates kriging over the one
+      # relevant replicate, and — critically — assembles predictions
+      # in test_indices order so the downstream key match can't pick
+      # the wrong replicate's row. When `use_precomputed` is on, the
+      # cached new_rspde_obj / Q are reused across sub-predicts.
+      gdata <- object$graph$.__enclos_env__$private$data
+      n_test <- length(test_indices)
+      mu_vec <- rep(NA_real_, n_test)
+      var_vec <- rep(NA_real_, n_test)
+      base_adv_opts <- list(precompute_data = precomputed_data)
+      for(r in unique(test_repls_in_fold)){
+        pos_r <- which(test_repls_in_fold == r)
+        ti_r  <- test_indices[pos_r]
+        nd_r  <- lapply(gdata, function(x){x[ti_r]})
+        adv_opts_r <- base_adv_opts
+        adv_opts_r$na_test_idx <- ti_r
+        pred_r <- predict(cv_model,
+                          newdata = nd_r,
+                          edge_number = ".edge_number",
+                          distance_on_edge = ".distance_on_edge",
+                          normalized = TRUE,
+                          compute_variances = need_variances,
+                          which_repl = r,
+                          advanced_options = adv_opts_r)
+        mu_vec[pos_r]  <- as.numeric(pred_r$mean)
+        if(need_variances){
+          var_vec[pos_r] <- as.numeric(pred_r$variance)
+        }
+      }
+      # Build a `pred` object in test_indices order. The downstream
+      # post-processing detects length(pred$mean) == n_test and skips
+      # the key-based lookup.
+      pred <- list(mean = mu_vec, variance = var_vec)
+    } else if(fold_use_precomputed && !is.null(precomputed_data) && is_rspde_obj) {
       # rspde precompute path: predict.rspde_lme reuses the cached
       # (new_rspde_obj, Q, mu_corr) and masks the held-out points via
       # na_test_idx. The location for the prediction itself still has
@@ -732,69 +787,81 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
                     advanced_options = adv_opts)
     } else {
       # Fallback path (precomputation skipped, failed, or the fold spans
-      # multiple replicates).
+      # multiple replicates). When the fold is confined to a single
+      # replicate (single-rep models, or LOO/per-fold on multi-rep), pass
+      # `which_repl` so predict() does not iterate over every replicate
+      # and return rows the downstream key match cannot disambiguate.
       pred <- predict(cv_model,
                     newdata = new_data,
                     edge_number = ".edge_number",
                     distance_on_edge = ".distance_on_edge",
                     normalized = TRUE,
-                    compute_variances = need_variances)
+                    compute_variances = need_variances,
+                    which_repl = fold_test_repl)
     }
       
-    # predict() returns one entry per (newdata row x replicate). Build a
-    # lookup so we pick the prediction for each test point in the SAME
-    # replicate as that test point (rather than always reading position i,
-    # which silently mixes replicates when the model has more than one).
+    # predict() returns one entry per (newdata row x replicate). In the
+    # precompute path with `which_repl` set and in the single-replicate
+    # fallback (and the rspde multi-rep split path above), the output
+    # already has exactly one entry per test point in `test_indices`
+    # order; we can index directly. The match-based lookup is only
+    # needed for the multi-replicate native fallback, where predict
+    # produces predictions across all replicates.
+    n_test <- length(test_indices)
     full_data <- object$graph$.__enclos_env__$private$data
-    test_repl  <- full_data[[".group"]][test_indices]
-    test_edge  <- full_data[[".edge_number"]][test_indices]
-    test_dist  <- full_data[[".distance_on_edge"]][test_indices]
-    pred_repl  <- pred$repl
-    if(is.null(pred_repl)) {
-      # Older / single-replicate code paths may omit $repl; assume one entry
-      # per test point in input order.
-      pred_repl <- rep(test_repl[1], length(pred$mean))
+    if(length(pred$mean) == n_test){
+      pred_idx_vec <- seq_len(n_test)
+    } else {
+      test_repl <- full_data[[".group"]][test_indices]
+      test_edge <- full_data[[".edge_number"]][test_indices]
+      test_dist <- full_data[[".distance_on_edge"]][test_indices]
+      pred_repl <- pred$repl
+      if(is.null(pred_repl)){
+        # Older / single-replicate code paths may omit $repl; assume
+        # one entry per test point in input order.
+        pred_repl <- rep(test_repl[1], length(pred$mean))
+      }
+      pred_keys <- paste(as.character(pred_repl),
+                         pred$edge_number,
+                         formatC(pred$distance_on_edge, digits = 12, format = "g"),
+                         sep = "")
+      test_keys <- paste(as.character(test_repl),
+                         test_edge,
+                         formatC(test_dist, digits = 12, format = "g"),
+                         sep = "")
+      pred_idx_vec <- match(test_keys, pred_keys)
+      na_pos <- is.na(pred_idx_vec)
+      if(any(na_pos)){
+        pred_idx_vec[na_pos] <- which(na_pos)
+      }
     }
-    pred_keys <- paste(as.character(pred_repl),
-                       pred$edge_number,
-                       formatC(pred$distance_on_edge, digits = 12, format = "g"),
-                       sep = "")
-    test_keys <- paste(as.character(test_repl),
-                       test_edge,
-                       formatC(test_dist, digits = 12, format = "g"),
-                       sep = "")
 
-    # Extract predictions for test indices
-    for(i in seq_along(test_indices)) {
-      idx <- test_indices[i]
-      pred_idx <- match(test_keys[i], pred_keys)
-      if(is.na(pred_idx)) {
-        pred_idx <- i
-      }
-      local_results$mu.p[i] <- pred$mean[pred_idx]
-      if(need_variances) {
-        local_results$var.p[i] <- pred$variance[pred_idx] + object$coeff$measurement_error^2
-      }
-      y_test <- object$graph$.__enclos_env__$private$data[[response_name]][idx]
-      
-      # Calculate scores
-      if("logscore" %in% scores) {
-        local_results$logscore[i] <- LS(y_test, local_results$mu.p[i], sqrt(local_results$var.p[i]))
-      }
-      if("crps" %in% scores) {
-        local_results$crps[i] <- CRPS(y_test, local_results$mu.p[i], sqrt(local_results$var.p[i]))
-      }
-      if("scrps" %in% scores) {
-        local_results$scrps[i] <- SCRPS(y_test, local_results$mu.p[i], sqrt(local_results$var.p[i]))
-      }
-      if("mae" %in% scores) {
-        local_results$mae[i] <- abs(y_test - local_results$mu.p[i])
-      }
-      if("rmse" %in% scores) {
-        local_results$rmse[i] <- (y_test - local_results$mu.p[i])^2
-      }
+    mu_vec <- pred$mean[pred_idx_vec]
+    local_results$mu.p <- mu_vec
+    if(need_variances){
+      var_vec <- pred$variance[pred_idx_vec] + object$coeff$measurement_error^2
+      local_results$var.p <- var_vec
+      sd_vec <- sqrt(var_vec)
     }
-    
+    y_test_vec <- full_data[[response_name]][test_indices]
+    resid_vec  <- y_test_vec - mu_vec
+
+    if("logscore" %in% scores){
+      local_results$logscore <- LS(y_test_vec, mu_vec, sd_vec)
+    }
+    if("crps" %in% scores){
+      local_results$crps <- CRPS(y_test_vec, mu_vec, sd_vec)
+    }
+    if("scrps" %in% scores){
+      local_results$scrps <- SCRPS(y_test_vec, mu_vec, sd_vec)
+    }
+    if("mae" %in% scores){
+      local_results$mae <- abs(resid_vec)
+    }
+    if("rmse" %in% scores){
+      local_results$rmse <- resid_vec^2
+    }
+
     return(local_results)
   }
 
