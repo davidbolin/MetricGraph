@@ -310,19 +310,38 @@ graph_lme <- function(formula, graph,
       }
 
 
+      # When B.range / B.sigma (or B.tau / B.kappa) are supplied along
+      # with a user-specified alpha/nu, the rspde_object MUST be built
+      # with that alpha/nu — `B.tau` and `B.kappa` are computed from
+      # `B.range` and `B.sigma` through formulas that depend on nu (and
+      # similarly the "spde" parameterization carries alpha-dependent
+      # offsets). If we build the operator at rSPDE's default nu (e.g.
+      # 0.75) and then only later apply `fix_nu = 0.5` via
+      # model_options, the operator's B.tau / B.kappa stay at the
+      # default-nu values and the likelihood is optimised against the
+      # wrong model — symptom: a non-stationary FEM fit to data
+      # generated from the same family produces dramatically worse CV
+      # scores than a stationary FEM fit to the same data.
+      .build_alpha <- model[["alpha"]]
+      .build_nu    <- model[["nu"]]
+      if (is.null(.build_nu) && !is.null(.build_alpha)) {
+        .build_nu <- .build_alpha - 0.5
+      }
+      .build_args <- list(graph = graph, m = rspde_order)
+
       if(!is.null(model[["B.tau"]]) && !is.null(model[["B.kappa"]])){
-              rspde_object <- rSPDE::spde.matern.operators(graph = graph,
-                                                m = rspde_order,
-                                                parameterization = "spde",
-                                                B.tau = model[["B.tau"]],
-                                                B.kappa = model[["B.kappa"]])
+              .build_args$parameterization <- "spde"
+              .build_args$B.tau   <- model[["B.tau"]]
+              .build_args$B.kappa <- model[["B.kappa"]]
+              if (!is.null(.build_alpha)) .build_args$alpha <- .build_alpha
+              rspde_object <- do.call(rSPDE::spde.matern.operators, .build_args)
 
       } else if(!is.null(model[["B.sigma"]]) && !is.null(model[["B.range"]])){
-              rspde_object <- rSPDE::spde.matern.operators(graph = graph,
-                                                m = rspde_order,
-                                                parameterization = "matern",
-                                                B.sigma = model[["B.sigma"]],
-                                                B.range = model[["B.range"]])
+              .build_args$parameterization <- "matern"
+              .build_args$B.sigma <- model[["B.sigma"]]
+              .build_args$B.range <- model[["B.range"]]
+              if (!is.null(.build_nu)) .build_args$nu <- .build_nu
+              rspde_object <- do.call(rSPDE::spde.matern.operators, .build_args)
       } else if ( (!is.null(model[["B.tau"]]) && is.null(model[["B.kappa"]])) ||
        (is.null(model[["B.tau"]]) && !is.null(model[["B.kappa"]])) ||
        (!is.null(model[["B.sigma"]]) && is.null(model[["B.range"]])) ||
