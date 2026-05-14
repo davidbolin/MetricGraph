@@ -272,7 +272,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 502
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  8.75329 secs
+    ## Time used to:     fit the model =  8.99445 secs
 
 An improved estimate of the Hessian can be obtained by setting
 `improve_hessian` to `TRUE`, which improves the precision of the
@@ -325,8 +325,8 @@ summary(fit)
     ## Number of function calls by 'optim' = 125
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  23.18599 secs 
-    ##   compute the Hessian = 2.7467 secs
+    ## Time used to:     fit the model =  23.57517 secs 
+    ##   compute the Hessian = 2.79195 secs
 
 We can also obtain additional information by using the function
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -490,7 +490,7 @@ summary(fit_fixed)
     ## Number of function calls by 'optim' = 77
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  14.34051 secs
+    ## Time used to:     fit the model =  14.66546 secs
 
 ``` r
 
@@ -606,8 +606,8 @@ summary(fit_repl)
     ## Number of function calls by 'optim' = 117
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  1.07147 mins 
-    ##   set up the parallelization = 2.59769 secs
+    ## Time used to:     fit the model =  1.08461 mins 
+    ##   set up the parallelization = 2.56674 secs
 
 Let us also take a glance of the fit:
 
@@ -746,9 +746,9 @@ the `result` object:
 ```
 
     ##             mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 1.395080 0.1645560   1.110110 1.381210   1.755100 1.348800
-    ## range   0.190003 0.0605587   0.103065 0.179025   0.338402 0.159372
-    ## nu      0.687484 0.1061780   0.484085 0.686715   0.898670 0.689083
+    ## std.dev 1.390950 0.1549460   1.117720 1.379740   1.725470 1.353820
+    ## range   0.183694 0.0481229   0.109766 0.176557   0.297536 0.162428
+    ## nu      0.693631 0.0960500   0.510891 0.692152   0.886567 0.691051
 
 Let us compare with the true values:
 
@@ -772,9 +772,9 @@ Let us compare with the true values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 1.30 1.3950841 1.3488036
-    ## 2     range 0.15 0.1900028 0.1593721
-    ## 3        nu 0.80 0.6874843 0.6890833
+    ## 1   std.dev 1.30 1.3909469 1.3538230
+    ## 2     range 0.15 0.1836941 0.1624277
+    ## 3        nu 0.80 0.6936312 0.6910508
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -1529,7 +1529,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 158
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  11.95768 secs
+    ## Time used to:     fit the model =  11.90584 secs
 
 Let us plot the range parameter along the mesh, so we can see how it is
 varying:
@@ -1653,7 +1653,7 @@ summary(fit_ns_fixed_theta1)
     ## Number of function calls by 'optim' = 123
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  9.22111 secs
+    ## Time used to:     fit the model =  9.30881 secs
 
 Similarly, we can provide starting values for the entire theta vector
 with `start_theta`:
@@ -1711,7 +1711,7 @@ summary(fit_ns_start)
     ## Number of function calls by 'optim' = 158
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  12.19664 secs
+    ## Time used to:     fit the model =  12.34248 secs
 
 ### Fitting the inlabru rSPDE model
 
@@ -1777,7 +1777,7 @@ summary(rspde_fit_nonstat)
     ##     Additive/Linear/Rowwise: TRUE/TRUE/TRUE
     ##     Used components: effect[Intercept, field], latent[] 
     ## Time used:
-    ##     Pre = 0.15, Running = 77.4, Post = 0.318, Total = 77.9 
+    ##     Pre = 0.199, Running = 85.4, Post = 0.357, Total = 86 
     ## Fixed effects:
     ##             mean   sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept 50.448 2.92     44.533   50.485     56.151 50.481   0

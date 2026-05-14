@@ -167,7 +167,7 @@ graph2 <- metric_graph$new(V = V, E = E)
 
     ## Merging close vertices
 
-    ## Total construction time: 0.29 secs
+    ## Total construction time: 0.27 secs
 
     ## Creating and updating vertices...
 

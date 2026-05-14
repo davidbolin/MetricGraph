@@ -164,8 +164,8 @@ summary(res)
 #> Number of function calls by 'optim' = 70
 #> Optimization method used in 'optim' = L-BFGS-B
 #> 
-#> Time used to:     fit the model =  4.31711 mins 
-#>   set up the parallelization = 9.63423 secs
+#> Time used to:     fit the model =  4.35386 mins 
+#>   set up the parallelization = 9.70637 secs
 
 # Compare estimated results with true values
 results <- data.frame(kappa = c(kappa, res$coeff$random_effects[1]), 
@@ -243,9 +243,9 @@ results <- data.frame(kappa = c(kappa,  param_st[[1]]),
                       row.names = c("True", "Estimate"))
                       
 print(results)
-#>             kappa    sigma     gamma        rho    sigma.e intercept
-#> True     5.000000 10.00000 0.1000000 0.30000000 0.01000000 0.0000000
-#> Estimate 5.119286 10.78839 0.1089542 0.06982964 0.01030154 0.0126247
+#>            kappa    sigma   gamma       rho    sigma.e  intercept
+#> True     5.00000 10.00000 0.10000 0.3000000 0.01000000 0.00000000
+#> Estimate 5.09311 10.55948 0.10626 0.1239843 0.01009543 0.01261086
 ```
 
 ## Fitting Model with Replicates in inlabru
@@ -347,7 +347,7 @@ results_repl <- data.frame(kappa = c(kappa,  param_st_repl[[1]]),
 print(results_repl)
 #>             kappa    sigma      gamma       rho     sigma.e   intercept
 #> True     5.000000 10.00000 0.10000000 0.3000000 0.010000000 0.000000000
-#> Estimate 5.201824 10.52803 0.09848483 0.3358857 0.007494946 0.001960596
+#> Estimate 5.122746 10.40218 0.09955472 0.3437447 0.008413024 0.002147987
 ```
 
 ## Example: Setting `bounded_rho = FALSE`
@@ -465,9 +465,9 @@ results_unbounded <- data.frame(
 )
 
 print(results_unbounded)
-#>             kappa   sigma     gamma       rho     sigma.e  intercept
-#> True     5.000000 10.0000 0.1000000 0.3000000 0.010000000 0.00000000
-#> Estimate 5.124984 10.7754 0.1083053 0.1939454 0.008779651 0.01274582
+#>             kappa    sigma     gamma       rho    sigma.e  intercept
+#> True     5.000000 10.00000 0.1000000 0.3000000 0.01000000 0.00000000
+#> Estimate 5.147775 10.79808 0.1082289 0.1928093 0.01024063 0.01274721
 ```
 
 ## INLA Implementation (Added for Completeness)
@@ -612,9 +612,9 @@ results_inla_repl <- data.frame(kappa = c(kappa,  param_st_rep[[1]]),
                       row.names = c("True", "Estimate"))
                       
 print(results_inla_repl)
-#>             kappa    sigma      gamma       rho     sigma.e   intercept
-#> True     5.000000 10.00000 0.10000000 0.3000000 0.010000000  0.00000000
-#> Estimate 5.176773 10.35186 0.09799171 0.3119515 0.007836145 -0.00469098
+#>             kappa    sigma      gamma       rho     sigma.e    intercept
+#> True     5.000000 10.00000 0.10000000 0.3000000 0.010000000  0.000000000
+#> Estimate 5.199801 10.51014 0.09864272 0.2240463 0.007002379 -0.004553443
 ```
 
 ## References

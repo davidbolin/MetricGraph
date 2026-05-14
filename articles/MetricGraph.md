@@ -633,7 +633,7 @@ summary(res)
     ## Number of function calls by 'optim' = 45
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  22.40604 secs
+    ## Time used to:     fit the model =  22.55473 secs
 
 We can obtain additional information by using
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -908,7 +908,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 47
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  6.65028 secs
+    ## Time used to:     fit the model =  6.79201 secs
 
 We can also have a glance at the fitted model:
 
@@ -1020,7 +1020,7 @@ summary(res_gl)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.18847 secs
+    ## Time used to:     fit the model =  3.13041 secs
 
 We can also have a glance at the fitted model:
 
@@ -1139,7 +1139,7 @@ summary(res_gl_pred)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.79237 secs
+    ## Time used to:     fit the model =  3.77387 secs
 
 One should compare the estimates with the ones obtained in the model
 without the prediction locations.
