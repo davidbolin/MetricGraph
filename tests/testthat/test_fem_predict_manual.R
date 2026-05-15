@@ -671,6 +671,267 @@ test_that("stationary FEM update(latent_model, <random_effects>) matches direct 
   }
 })
 
+# ---------------------------------------------------------------------------
+# Regression: posterior_crossvalidation must work when the underlying fit
+# was restricted to a subset of replicates via graph_lme(..., which_repl).
+# Before the fix it ignored object$which_repl, indexed the graph's full
+# per-row data vector by 1..fit$nobs, and asked predict() for replicates
+# whose A_list entry didn't exist — surfacing as
+# "Error in t.default(A_repl) : argument is not a matrix".
+# Two invariants are pinned: (a) it must not error, and (b) results must
+# match a fit built on a graph that contains ONLY that replicate.
+# ---------------------------------------------------------------------------
+
+test_that("posterior_crossvalidation respects fit$which_repl (FEM, single replicate selected)", {
+  skip_if_not_installed("rSPDE")
+  graph <- .build_fem_multirep_graph(n_repl = 3L, alpha = 1, seed = 11)
+
+  # Fit on replicate 2 only (graph contains all 3 reps).
+  fit_w <- graph_lme(y ~ -1, graph = graph,
+                     model = list(type = "WhittleMatern", alpha = 1, fem = TRUE),
+                     which_repl = 2)
+
+  # User's graph must not be mutated as a side effect of CV.
+  data_before <- length(fit_w$graph$.__enclos_env__$private$data[[".group"]])
+  res_w <- posterior_crossvalidation(fit_w, mode = "loo", true_CV = FALSE,
+                                     scores = c("logscore", "rmse"))
+  data_after <- length(fit_w$graph$.__enclos_env__$private$data[[".group"]])
+  expect_equal(data_after, data_before,
+               info = "posterior_crossvalidation must not mutate fit$graph")
+  expect_true(all(is.finite(res_w$mu)))
+
+  # Build an EQUIVALENT graph that contains only replicate 2 and fit
+  # there directly. The two CVs must agree byte-for-byte.
+  gd <- graph$.__enclos_env__$private$data
+  V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1))
+  E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 1))
+  graph_only2 <- metric_graph$new(V = V, E = E, verbose = 0)
+  graph_only2$build_mesh(h = 0.05)
+  idx2 <- which(gd[[".group"]] == "2")
+  df_only2 <- data.frame(y = gd[["y"]][idx2],
+                         edge_number = gd[[".edge_number"]][idx2],
+                         distance_on_edge = gd[[".distance_on_edge"]][idx2])
+  graph_only2$add_observations(data = df_only2, normalized = TRUE, verbose = 0)
+  fit_only2 <- graph_lme(y ~ -1, graph = graph_only2,
+                         model = list(type = "WhittleMatern", alpha = 1,
+                                      fem = TRUE))
+  res_only2 <- posterior_crossvalidation(fit_only2, mode = "loo",
+                                         true_CV = FALSE,
+                                         scores = c("logscore", "rmse"))
+  expect_equal(as.numeric(res_w$scores$rmse),
+               as.numeric(res_only2$scores$rmse), tolerance = 1e-10)
+  expect_equal(as.numeric(res_w$scores$logscore),
+               as.numeric(res_only2$scores$logscore), tolerance = 1e-10)
+})
+
+test_that("posterior_crossvalidation respects fit$which_repl (native model)", {
+  graph <- .build_fem_multirep_graph(n_repl = 3L, alpha = 1, seed = 11)
+  fit <- graph_lme(y ~ -1, graph = graph,
+                   model = list(type = "WhittleMatern", alpha = 1),
+                   which_repl = 2)
+  # Must not error.
+  res <- posterior_crossvalidation(fit, mode = "loo", true_CV = FALSE,
+                                   scores = "rmse")
+  expect_true(is.finite(as.numeric(res$scores$rmse)))
+})
+
+# ---------------------------------------------------------------------------
+# Cover the variants of which_repl that aren't single-element:
+#   * NULL              -> all 3 reps (graph_lme's default)
+#   * c(2, 3)           -> a contiguous subset
+#   * c(1, 3)           -> a non-contiguous subset (gaps matter — the
+#                          replicate identity must be preserved across
+#                          A_list keys and `.group`, not collapsed to 1:2)
+# For each, the LOO CV must match a fresh fit built on a graph that
+# only contains those replicates, byte-for-byte.
+# ---------------------------------------------------------------------------
+
+test_that("posterior_crossvalidation respects fit$which_repl across all variants", {
+  skip_if_not_installed("rSPDE")
+  graph <- .build_fem_multirep_graph(n_repl = 3L, alpha = 1, seed = 11)
+  gd <- graph$.__enclos_env__$private$data
+  V <- rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1))
+  E <- rbind(c(1, 2), c(2, 3), c(3, 4), c(4, 1))
+
+  make_fresh_fit <- function(reps) {
+    g2 <- metric_graph$new(V = V, E = E, verbose = 0)
+    g2$build_mesh(h = 0.05)
+    idx <- gd[[".group"]] %in% as.character(reps)
+    df <- data.frame(y = gd[["y"]][idx],
+                     edge_number = gd[[".edge_number"]][idx],
+                     distance_on_edge = gd[[".distance_on_edge"]][idx],
+                     repl = as.character(gd[[".group"]][idx]))
+    g2$add_observations(data = df, normalized = TRUE, verbose = 0,
+                        group = if (length(unique(df$repl)) > 1) "repl" else NULL)
+    graph_lme(y ~ -1, graph = g2,
+              model = list(type = "WhittleMatern", alpha = 1, fem = TRUE))
+  }
+
+  cases <- list(
+    "ALL (NULL)" = NULL,
+    "c(2, 3)"    = c(2, 3),
+    "c(1, 3)"    = c(1, 3)
+  )
+  for (nm in names(cases)) {
+    reps <- cases[[nm]]
+    fit_args <- list(
+      formula = y ~ -1, graph = graph,
+      model   = list(type = "WhittleMatern", alpha = 1, fem = TRUE))
+    if (!is.null(reps)) fit_args$which_repl <- reps
+    fit_full <- do.call(graph_lme, fit_args)
+
+    fit_fresh <- make_fresh_fit(if (is.null(reps)) 1:3 else reps)
+
+    cv_full  <- posterior_crossvalidation(fit_full, mode = "loo",
+                                          true_CV = FALSE,
+                                          scores = c("logscore", "rmse"))
+    cv_fresh <- posterior_crossvalidation(fit_fresh, mode = "loo",
+                                          true_CV = FALSE,
+                                          scores = c("logscore", "rmse"))
+    expect_equal(as.numeric(cv_full$scores$rmse),
+                 as.numeric(cv_fresh$scores$rmse),
+                 tolerance = 1e-10,
+                 info = paste("RMSE mismatch for which_repl =", nm))
+    expect_equal(as.numeric(cv_full$scores$logscore),
+                 as.numeric(cv_fresh$scores$logscore),
+                 tolerance = 1e-10,
+                 info = paste("logscore mismatch for which_repl =", nm))
+
+    # User's input graph must not be mutated.
+    expect_equal(length(graph$.__enclos_env__$private$data[[".group"]]), 60L,
+                 info = paste("user graph mutated by CV for which_repl =", nm))
+  }
+})
+
+# ---------------------------------------------------------------------------
+# posterior_crossvalidation_loo must also respect fit$which_repl. Before
+# the fix it pulled repl_vec from the full graph data while y_graph came
+# from the (fit-restricted) model_matrix — y_graph[idx_repl_j] then
+# silently recycled (or errored later in solve()) and the returned
+# scores covered the wrong observations. After the fix it should
+# (a) score only the replicates the fit was actually built on, and
+# (b) agree byte-for-byte with posterior_crossvalidation(..., mode="loo")
+# across every which_repl variant.
+# ---------------------------------------------------------------------------
+
+test_that("posterior_crossvalidation_loo respects fit$which_repl across all variants", {
+  graph <- .build_fem_multirep_graph(n_repl = 3L, alpha = 1, seed = 11)
+
+  make_fit <- function(reps, alpha = 1, type = "WhittleMatern",
+                       cov_function_name = NULL) {
+    args <- list(formula = y ~ -1, graph = graph)
+    if (type == "isoCov") {
+      args$model <- list(type = "isoCov",
+                         cov_function_name = cov_function_name)
+    } else {
+      args$model <- list(type = type, alpha = alpha)
+    }
+    if (!is.null(reps)) args$which_repl <- reps
+    suppressWarnings(do.call(graph_lme, args))
+  }
+
+  scenarios <- list(
+    list(name = "ALL (no which_repl)",  reps = NULL,         alpha = 1),
+    list(name = "which_repl = 2",       reps = 2L,           alpha = 1),
+    list(name = "which_repl = c(2, 3)", reps = c(2L, 3L),    alpha = 1),
+    list(name = "which_repl = c(1, 3)", reps = c(1L, 3L),    alpha = 1),
+    list(name = "alpha=2, which_repl=2", reps = 2L,          alpha = 2)
+  )
+  for (sc in scenarios) {
+    fit <- make_fit(sc$reps, alpha = sc$alpha)
+
+    data_before <- length(fit$graph$.__enclos_env__$private$data[[".group"]])
+    loo_res <- posterior_crossvalidation_loo(fit)
+    data_after <- length(fit$graph$.__enclos_env__$private$data[[".group"]])
+    expect_equal(data_after, data_before,
+                 info = paste("graph mutated by posterior_cv_loo:", sc$name))
+
+    expect_equal(length(loo_res$mu), fit$nobs,
+                 info = paste("length(mu) != nobs for:", sc$name))
+
+    pc_res <- posterior_crossvalidation(
+      fit, mode = "loo", true_CV = FALSE,
+      scores = c("logscore", "crps", "scrps", "mae", "rmse"))
+    expect_equal(as.numeric(loo_res$scores$rmse),
+                 as.numeric(pc_res$scores$rmse),
+                 tolerance = 1e-7,
+                 info = paste("RMSE mismatch for:", sc$name))
+    expect_equal(as.numeric(loo_res$scores$logscore),
+                 as.numeric(pc_res$scores$logscore),
+                 tolerance = 1e-7,
+                 info = paste("logscore mismatch for:", sc$name))
+  }
+})
+
+# ---------------------------------------------------------------------------
+# The function argument `which_repl` of posterior_crossvalidation_loo
+# must:
+#   * default to scoring all replicates the fit was built on
+#     (object$which_repl);
+#   * accept any subset of object$which_repl, and return predictions /
+#     scores for exactly that subset, in the same indexing space as the
+#     corresponding rows of posterior_crossvalidation(...);
+#   * error explicitly when asked to score a replicate the fit was NOT
+#     built on — scoring with parameters never optimised for that data
+#     would otherwise silently return either NaN scores (length-0
+#     output) or wrong scores (length extended past mu.p's allocation),
+#     both of which the old code did.
+# ---------------------------------------------------------------------------
+
+test_that("posterior_crossvalidation_loo function arg which_repl subsets correctly", {
+  graph <- .build_fem_multirep_graph(n_repl = 3L, alpha = 1, seed = 11)
+  fit_w23 <- graph_lme(y ~ -1, graph = graph,
+                       model = list(type = "WhittleMatern", alpha = 1),
+                       which_repl = c(2, 3))
+
+  # arg = single rep in fit
+  r_arg2 <- posterior_crossvalidation_loo(fit_w23, which_repl = 2)
+  expect_equal(length(r_arg2$mu), 20L)
+  expect_false(any(is.na(r_arg2$mu)))
+
+  r_arg3 <- posterior_crossvalidation_loo(fit_w23, which_repl = 3)
+  expect_equal(length(r_arg3$mu), 20L)
+  expect_false(any(is.na(r_arg3$mu)))
+
+  # Subset CV must match the corresponding rows of full-fit CV exactly:
+  # same fit -> same parameters -> same kriging at each held-out point.
+  pc_full <- posterior_crossvalidation(fit_w23, mode = "loo", true_CV = FALSE,
+                                       scores = c("logscore", "rmse"))
+  # posterior_crossvalidation runs on a CLONE of the graph filtered to
+  # object$which_repl. The user's fit_w23$graph is untouched (length 60),
+  # so to index pc_full$mu (length = fit_w23$nobs = 40), we must filter
+  # the .group vector the same way before locating each replicate.
+  gd_full <- fit_w23$graph$.__enclos_env__$private$data
+  keep <- as.character(gd_full[[".group"]]) %in%
+            as.character(fit_w23$which_repl)
+  group_in_pc <- as.character(gd_full[[".group"]])[keep]
+  idx_rep2 <- which(group_in_pc == "2")
+  idx_rep3 <- which(group_in_pc == "3")
+  expect_equal(unname(r_arg2$mu), unname(pc_full$mu[idx_rep2]),
+               tolerance = 1e-10)
+  expect_equal(unname(r_arg3$mu), unname(pc_full$mu[idx_rep3]),
+               tolerance = 1e-10)
+
+  # arg = entire fit set: same as default
+  r_full <- posterior_crossvalidation_loo(fit_w23, which_repl = c(2, 3))
+  r_default <- posterior_crossvalidation_loo(fit_w23)
+  expect_equal(r_full$mu,  r_default$mu,  tolerance = 1e-12)
+  expect_equal(r_full$var, r_default$var, tolerance = 1e-12)
+  expect_equal(length(r_full$mu), fit_w23$nobs)
+
+  # arg NOT in fit set: explicit error
+  expect_error(
+    posterior_crossvalidation_loo(fit_w23, which_repl = 1),
+    regexp = "which_repl values \\[1\\] are not in the fit's replicate set",
+    fixed = FALSE
+  )
+  expect_error(
+    posterior_crossvalidation_loo(fit_w23, which_repl = c(1, 2, 4)),
+    regexp = "which_repl values \\[1, 4\\] are not in the fit's replicate set",
+    fixed = FALSE
+  )
+})
+
 test_that("update(latent_model, theta1=..., theta2=...) matches direct spde.matern.operators(theta=...)", {
   skip_if_not_installed("rSPDE")
   set.seed(7)

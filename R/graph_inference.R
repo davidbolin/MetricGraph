@@ -307,30 +307,40 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
   valid_scores <- c("logscore", "crps", "scrps", "mae", "rmse")
   invalid_scores <- setdiff(scores, valid_scores)
 
-  # Pre-clean the data to only include non-NA values for the response variable
+  # Pre-clean the data:
+  #   * drop NA response rows (otherwise downstream indexing pulls in
+  #     rows whose y is missing — see existing behaviour);
+  #   * drop rows whose replicate is NOT in object$which_repl. When the
+  #     fit was restricted (graph_lme(..., which_repl = 2)), object$nobs
+  #     and object$A_list are sized for that replicate subset only.
+  #     Indexing the graph's full data vector by 1..nobs would otherwise
+  #     pull rows from replicates the fit never saw, and predict() would
+  #     ask for an A_list entry that doesn't exist (symptom: "argument
+  #     is not a matrix" inside t(A_repl)).
+  # We clone the graph first so that we don't mutate the user's
+  # fit$graph (R6 reference) as a side effect.
   if(inherits(object, "graph_lme")) {
-    # Get the response variable name
     response_var <- as.character(object$response_var)
-    
-    # Access the private data from the graph object
     data <- object$graph$.__enclos_env__$private$data
-    
-    # Check if the response variable exists in the data
+    n_data <- length(data[[".group"]])
+    keep <- rep(TRUE, n_data)
+
     if(response_var %in% names(data)) {
-      # Filter out NA values in the response variable
-      non_na_indices <- !is.na(data[[response_var]])
-      
-      # Update all columns in the data to only include non-NA response values
-      data <- lapply(data, function(col) col[non_na_indices])
-      
-      # Update the private data in the graph object
-      object$graph$.__enclos_env__$private$data <- data
-      
-      # Update the number of observations in the object
-      object$nobs <- sum(non_na_indices)
+      keep <- keep & !is.na(data[[response_var]])
     } else {
       warning(paste("Response variable", response_var, "not found in the data."))
     }
+
+    if(!is.null(object$which_repl) && ".group" %in% names(data)) {
+      keep <- keep & (as.character(data[[".group"]]) %in%
+                        as.character(object$which_repl))
+    }
+
+    cv_graph <- object$graph$clone()
+    cv_graph$.__enclos_env__$private$data <-
+      lapply(data, function(col) col[keep])
+    object$graph <- cv_graph
+    object$nobs  <- sum(keep)
   }
   
   if(length(invalid_scores) > 0) {
@@ -1228,6 +1238,46 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
 
   graph <- object$graph$clone()
 
+  # Resolve the effective replicate set for this CV call:
+  #   * default: the replicates the fit was actually built on
+  #     (object$which_repl, populated by graph_lme).
+  #   * user override (function arg which_repl): must be a SUBSET of
+  #     object$which_repl — scoring with parameters that were never
+  #     optimised against a replicate would otherwise silently return
+  #     misleading (or empty) results.
+  # Apply the resolved set as a single filter on the graph private data
+  # AND on model_matrix below, so repl_vec / y_graph / X_cov stay
+  # aligned with the fit's actual observations.
+  if (is.null(which_repl)) {
+    effective_repl <- object$which_repl
+  } else {
+    if (!is.null(object$which_repl)) {
+      bad <- setdiff(as.character(which_repl),
+                     as.character(object$which_repl))
+      if (length(bad) > 0) {
+        stop("posterior_crossvalidation_loo: which_repl values [",
+             paste(bad, collapse = ", "),
+             "] are not in the fit's replicate set [",
+             paste(as.character(object$which_repl), collapse = ", "),
+             "]. The fit's parameters were not optimised for those ",
+             "replicates, so scoring them would be misleading.")
+      }
+    }
+    effective_repl <- which_repl
+  }
+  d <- graph$.__enclos_env__$private$data
+  n_data <- length(d[[".group"]])
+  if (!is.null(effective_repl) && ".group" %in% names(d)) {
+    .keep_repl <- as.character(d[[".group"]]) %in%
+                    as.character(effective_repl)
+  } else {
+    .keep_repl <- rep(TRUE, n_data)
+  }
+  if (any(!.keep_repl)) {
+    graph$.__enclos_env__$private$data <-
+      lapply(d, function(col) col[.keep_repl])
+  }
+
   graph$observation_to_vertex(mesh_warning = FALSE)
 
   beta_cov <- object$coeff$fixed_effects
@@ -1335,12 +1385,23 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
     object$model_matrix <- matrix(object$model_matrix, ncol=1)
   }
 
-  y_graph <- object$model_matrix[,1]
+  # Slice model_matrix to the same observation subset the graph clone
+  # now contains. graph_lme keeps model_matrix at full data length even
+  # when which_repl restricts the fit, so without this y_graph and
+  # repl_vec would have different lengths and y_graph[idx_repl_j] would
+  # silently recycle.
+  if(nrow(object$model_matrix) == length(.keep_repl)){
+    mm <- object$model_matrix[.keep_repl, , drop = FALSE]
+  } else {
+    mm <- object$model_matrix
+  }
+
+  y_graph <- mm[,1]
 
   ind <- 1:length(y_graph)
 
-  if(ncol(object$model_matrix) > 1){
-    X_cov <- object$model_matrix[,-1]
+  if(ncol(mm) > 1){
+    X_cov <- mm[,-1]
   } else{
     X_cov <- NULL
   }
