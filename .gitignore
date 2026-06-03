@@ -35,6 +35,8 @@ cran_vignettes/*.html
 *_cache/
 /cache/
 
+jonas_local/
+
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
