@@ -222,6 +222,38 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// draw_edge_direct_cpp
+Eigen::VectorXd draw_edge_direct_cpp(double kappa, double tau, const Eigen::VectorXd& b_e, double l_e, const Eigen::VectorXd& t_abs, int alpha);
+RcppExport SEXP _MetricGraph_draw_edge_direct_cpp(SEXP kappaSEXP, SEXP tauSEXP, SEXP b_eSEXP, SEXP l_eSEXP, SEXP t_absSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type b_e(b_eSEXP);
+    Rcpp::traits::input_parameter< double >::type l_e(l_eSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type t_abs(t_absSEXP);
+    Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(draw_edge_direct_cpp(kappa, tau, b_e, l_e, t_abs, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
+// draw_edge_kriging_cpp
+Eigen::VectorXd draw_edge_kriging_cpp(double kappa, double tau, const Eigen::VectorXd& b_e, double l_e, const Eigen::VectorXd& t_abs, int alpha);
+RcppExport SEXP _MetricGraph_draw_edge_kriging_cpp(SEXP kappaSEXP, SEXP tauSEXP, SEXP b_eSEXP, SEXP l_eSEXP, SEXP t_absSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type b_e(b_eSEXP);
+    Rcpp::traits::input_parameter< double >::type l_e(l_eSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type t_abs(t_absSEXP);
+    Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(draw_edge_kriging_cpp(kappa, tau, b_e, l_e, t_abs, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_PtE_edges_cpp
 List compute_PtE_edges_cpp(List edges, bool longlat);
 RcppExport SEXP _MetricGraph_compute_PtE_edges_cpp(SEXP edgesSEXP, SEXP longlatSEXP) {
@@ -331,6 +363,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
     {"_MetricGraph_generate_mesh", (DL_FUNC) &_MetricGraph_generate_mesh, 6},
     {"_MetricGraph_PtE_to_mesh_cpp", (DL_FUNC) &_MetricGraph_PtE_to_mesh_cpp, 8},
+    {"_MetricGraph_draw_edge_direct_cpp", (DL_FUNC) &_MetricGraph_draw_edge_direct_cpp, 6},
+    {"_MetricGraph_draw_edge_kriging_cpp", (DL_FUNC) &_MetricGraph_draw_edge_kriging_cpp, 6},
     {"_MetricGraph_compute_PtE_edges_cpp", (DL_FUNC) &_MetricGraph_compute_PtE_edges_cpp, 2},
     {"_MetricGraph_compute_edge_lengths_cpp", (DL_FUNC) &_MetricGraph_compute_edge_lengths_cpp, 2},
     {"_MetricGraph_postprocess_edges_cpp", (DL_FUNC) &_MetricGraph_postprocess_edges_cpp, 1},

@@ -150,6 +150,39 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
     .Call(`_MetricGraph_PtE_to_mesh_cpp`, PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV)
 }
 
+#' @name draw_edge_direct_cpp
+#' @title C++ direct bridge draw (Method A)
+#' @description
+#' Same algorithm as the R reference `draw_edge_direct`.
+#' Builds S_e, Sigma*_e via the closed-form kernel, then draws
+#' S_e b_e + chol(Sigma*_e)^T z.  Uses Eigen::LLT and R::norm_rand().
+#' @param kappa,tau SPDE parameters.
+#' @param b_e Boundary state: length-2 (alpha=1) or length-4 (alpha=2).
+#' @param l_e Edge length.
+#' @param t_abs Interior locations in absolute coordinates (sorted).
+#' @param alpha Smoothness: 1 or 2.
+#' @noRd
+draw_edge_direct_cpp <- function(kappa, tau, b_e, l_e, t_abs, alpha) {
+    .Call(`_MetricGraph_draw_edge_direct_cpp`, kappa, tau, b_e, l_e, t_abs, alpha)
+}
+
+#' @name draw_edge_kriging_cpp
+#' @title C++ kriging-corrected Markov draw (Method B)
+#' @description
+#' Same algorithm as the R reference `draw_edge_kriging`.
+#' Simulates a full Markov path on the edge, then applies the kriging
+#' correction to enforce the vertex boundary conditions.
+#' Uses a unique-lag cache for (A, chol(Omega)) and R::norm_rand().
+#' @param kappa,tau SPDE parameters.
+#' @param b_e Boundary state: length-2 (alpha=1) or length-4 (alpha=2).
+#' @param l_e Edge length.
+#' @param t_abs Interior locations in absolute coordinates (must be sorted).
+#' @param alpha Smoothness: 1 or 2.
+#' @noRd
+draw_edge_kriging_cpp <- function(kappa, tau, b_e, l_e, t_abs, alpha) {
+    .Call(`_MetricGraph_draw_edge_kriging_cpp`, kappa, tau, b_e, l_e, t_abs, alpha)
+}
+
 #' @name compute_PtE_edges_cpp
 #' @title Per-edge cumulative relative positions
 #' @description Given a list of edges (each a 2-column numeric matrix of

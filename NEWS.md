@@ -1,5 +1,21 @@
 # MetricGraph (development version)
 
+* Added `simulate.metric_graph()` S3 method and `simulate_parallel()` for
+  unconditional prior simulation of Whittle-Matérn fields (Section 6.6 of the
+  paper): Method A (`method = "direct"`, O(m³) per edge), Method B
+  (`method = "kriging"`, O(m) per edge), and the extended method
+  (`method = "extended"`, single sparse Cholesky on the graph with simulation
+  locations promoted to vertices). Both α = 1 and α = 2 are supported.
+* C++ (Rcpp/Eigen) implementations of the per-edge bridge draws,
+  `draw_edge_direct_cpp` and `draw_edge_kriging_cpp`, are now the default
+  (`impl = "cpp"`); the pure-R reference implementations remain available via
+  `impl = "R"`.
+* Updated `examples/fast_simulation/run_study.R` with warm-up iterations,
+  `n_rep = 5` medians, extended `n_pts` sweep {8,...,2048}, and all three
+  simulation methods.
+* Added `examples/fast_simulation/benchmark.R` for per-edge R vs C++ speedup
+  and whole-field method comparison.
+
 # MetricGraph 1.6.0
 
 * `metric_graph` now fully supports disconnected graphs, and `graph_components` 
