@@ -222,13 +222,30 @@ Eigen::VectorXd draw_edge_direct_cpp(
     // Sigma*_e = L * L^T  (LLT gives lower Cholesky L)
     // Matches R: mu + t(chol(Sigma*_e)) %*% z  since t(upper_R) == lower_L
     Eigen::LLT<Eigen::MatrixXd> llt(Ss);
-    if (llt.info() != Eigen::Success) return mu;   // near-singular: return mean
 
-    // Draw m normals in the same order as R's rnorm(m)
     Eigen::VectorXd z(m);
     for (int i = 0; i < m; i++) z[i] = R::norm_rand();
 
-    return mu + llt.matrixL() * z;
+    if (llt.info() == Eigen::Success) {
+        return mu + llt.matrixL() * z;
+    }
+
+    // Cholesky failed: Sigma* is near-singular due to floating-point error.
+    // Fall back to eigendecomposition, clamping small negative eigenvalues to zero.
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(Ss);
+    if (es.info() != Eigen::Success) {
+        Rcpp::stop("Eigen decomposition failed for bridge covariance");
+    }
+    Eigen::VectorXd vals = es.eigenvalues();
+    double max_eval = vals.cwiseAbs().maxCoeff();
+    double tol = std::max(1e-14, 1e-6 * max_eval);
+    if (vals.minCoeff() < -tol) {
+        Rcpp::warning("Bridge covariance has materially negative eigenvalues");
+    }
+    for (int i = 0; i < vals.size(); ++i) {
+        vals[i] = vals[i] > 0.0 ? std::sqrt(vals[i]) : 0.0;
+    }
+    return mu + es.eigenvectors() * vals.asDiagonal() * z;
 }
 
 

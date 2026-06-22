@@ -117,12 +117,20 @@ draw_edge_direct <- function(kappa, tau, b_e, l_e, t_abs, alpha) {
   br <- if (alpha == 1L) bridge_alpha1(t_abs, l_e, kappa, tau)
         else             bridge_alpha2(t_abs, l_e, kappa, tau)
   mu <- as.vector(br$S %*% b_e)
-  # Sigma_star is theoretically PSD. When kappa*l_e << 1, bridge variance is
-  # negligible and floating-point errors make it appear non-PD. Returning the
-  # conditional mean is correct in that limit.
   R  <- tryCatch(chol(br$Sigma_star), error = function(e) NULL)
-  if (is.null(R)) return(mu)
-  mu + as.vector(t(R) %*% rnorm(m))
+  if (!is.null(R)) {
+    return(mu + as.vector(t(R) %*% rnorm(m)))
+  }
+  # Cholesky failed: Sigma* is near-singular due to floating-point error.
+  # Fall back to eigendecomposition, clamping small negative eigenvalues to zero.
+  Sigma_star <- 0.5 * (br$Sigma_star + t(br$Sigma_star))
+  eig <- eigen(Sigma_star, symmetric = TRUE)
+  tol <- max(1e-14, 1e-6 * max(abs(eig$values)))
+  if (min(eig$values) < -tol) {
+    warning("Bridge covariance has materially negative eigenvalues")
+  }
+  lambda <- sqrt(pmax(eig$values, 0))
+  mu + as.vector(eig$vectors %*% (lambda * rnorm(m)))
 }
 
 #' @noRd

@@ -1,0 +1,117 @@
+This is MetricGraph 1.6.0.9000
+- See https://davidbolin.github.io/MetricGraph for vignettes and manuals.
+
+Attaching package: ‘MetricGraph’
+
+The following object is masked from ‘package:stats’:
+
+    filter
+
+Loading required package: spatstat.univar
+spatstat.univar 3.2-0
+spatstat.geom 3.8-1
+Starting graph creation...
+LongLat is set to FALSE
+Creating edges...
+Setting edge weights...
+Computing bounding box...
+Setting up edges
+Merging close vertices
+Total construction time: 0.07 secs
+Creating and updating vertices...
+Storing the initial graph...
+Computing the relative positions of the edges...
+Chicago graph: 338 vertices, 503 edges
+Edge lengths: min=9.5  mean=61.9  max=198.7  total=31150
+Parameters: range=3115  sigma=1.0
+  alpha=1: kappa=0.000642  tau=27.9062
+  alpha=2: kappa=0.001112  tau=13482.6587
+
+n_rep: 5
+Edges: 503,  n_pts sweep: 8 16 32 64 128 256 512 1024
+  method=direct   alpha=1 n_pts=   8  median=7.0 ms  IQR=0.0 ms  n_loc=4024
+  method=direct   alpha=1 n_pts=  16  median=8.0 ms  IQR=0.0 ms  n_loc=8048
+  method=direct   alpha=1 n_pts=  32  median=11.0 ms  IQR=0.0 ms  n_loc=16096
+  method=direct   alpha=1 n_pts=  64  median=19.0 ms  IQR=1.0 ms  n_loc=32192
+  method=direct   alpha=1 n_pts= 128  median=50.0 ms  IQR=3.0 ms  n_loc=64384
+  method=direct   alpha=1 n_pts= 256  median=198.0 ms  IQR=3.0 ms  n_loc=128768
+  method=direct   alpha=1 n_pts= 512  median=1232.0 ms  IQR=49.0 ms  n_loc=257536
+  method=direct   alpha=1 n_pts=1024  median=7246.0 ms  IQR=152.0 ms  n_loc=515072
+  method=kriging  alpha=1 n_pts=   8  median=7.0 ms  IQR=1.0 ms  n_loc=4024
+  method=kriging  alpha=1 n_pts=  16  median=8.0 ms  IQR=0.0 ms  n_loc=8048
+  method=kriging  alpha=1 n_pts=  32  median=9.0 ms  IQR=0.0 ms  n_loc=16096
+  method=kriging  alpha=1 n_pts=  64  median=12.0 ms  IQR=0.0 ms  n_loc=32192
+  method=kriging  alpha=1 n_pts= 128  median=18.0 ms  IQR=1.0 ms  n_loc=64384
+  method=kriging  alpha=1 n_pts= 256  median=30.0 ms  IQR=1.0 ms  n_loc=128768
+  method=kriging  alpha=1 n_pts= 512  median=50.0 ms  IQR=0.0 ms  n_loc=257536
+  method=kriging  alpha=1 n_pts=1024  median=99.0 ms  IQR=65.0 ms  n_loc=515072
+  method=extended alpha=1 n_pts=   8  median=52.0 ms  IQR=0.0 ms  n_loc=4024
+  method=extended alpha=1 n_pts=  16  median=64.6 ms  IQR=0.0 ms  n_loc=8048
+  method=extended alpha=1 n_pts=  32  median=104.8 ms  IQR=0.0 ms  n_loc=16096
+  method=extended alpha=1 n_pts=  64  median=183.6 ms  IQR=0.0 ms  n_loc=32192
+  method=extended alpha=1 n_pts= 128  median=400.6 ms  IQR=0.0 ms  n_loc=64384
+  method=extended alpha=1 n_pts= 256  median=856.6 ms  IQR=0.0 ms  n_loc=128768
+  method=extended alpha=1 n_pts= 512  median=1923.2 ms  IQR=0.0 ms  n_loc=257536
+  method=extended alpha=1 n_pts=1024  median=4119.6 ms  IQR=0.0 ms  n_loc=515072
+  method=spectral alpha=1 n_pts=   8  median=370.0 ms  IQR=17.0 ms  n_loc=4024
+  method=spectral alpha=1 n_pts=  16  median=428.0 ms  IQR=4.0 ms  n_loc=8048
+  method=spectral alpha=1 n_pts=  32  median=657.0 ms  IQR=10.0 ms  n_loc=16096
+  method=spectral alpha=1 n_pts=  64  median=1095.0 ms  IQR=4.0 ms  n_loc=32192
+  method=spectral alpha=1 n_pts= 128  median=2017.0 ms  IQR=57.0 ms  n_loc=64384
+  method=spectral alpha=1 n_pts= 256  median=3875.0 ms  IQR=52.0 ms  n_loc=128768
+  method=spectral alpha=1 n_pts= 512  median=7878.0 ms  IQR=34.0 ms  n_loc=257536
+  method=spectral alpha=1 n_pts=1024  median=17906.0 ms  IQR=21.0 ms  n_loc=515072
+  method=direct   alpha=2 n_pts=   8  median=9.0 ms  IQR=0.0 ms  n_loc=4024
+  method=direct   alpha=2 n_pts=  16  median=10.0 ms  IQR=1.0 ms  n_loc=8048
+  method=direct   alpha=2 n_pts=  32  median=14.0 ms  IQR=0.0 ms  n_loc=16096
+  method=direct   alpha=2 n_pts=  64  median=30.0 ms  IQR=0.0 ms  n_loc=32192
+  method=direct   alpha=2 n_pts= 128  median=137.0 ms  IQR=2.0 ms  n_loc=64384
+  method=direct   alpha=2 n_pts= 256  median=1603.0 ms  IQR=4.0 ms  n_loc=128768
+  method=direct   alpha=2 n_pts= 512  median=16862.0 ms  IQR=63.0 ms  n_loc=257536
+  method=direct   alpha=2 n_pts=1024  median=134994.0 ms  IQR=350.0 ms  n_loc=515072
+  method=kriging  alpha=2 n_pts=   8  median=10.0 ms  IQR=1.0 ms  n_loc=4024
+  method=kriging  alpha=2 n_pts=  16  median=10.0 ms  IQR=2.0 ms  n_loc=8048
+  method=kriging  alpha=2 n_pts=  32  median=12.0 ms  IQR=1.0 ms  n_loc=16096
+  method=kriging  alpha=2 n_pts=  64  median=15.0 ms  IQR=1.0 ms  n_loc=32192
+  method=kriging  alpha=2 n_pts= 128  median=21.0 ms  IQR=1.0 ms  n_loc=64384
+  method=kriging  alpha=2 n_pts= 256  median=33.0 ms  IQR=0.0 ms  n_loc=128768
+  method=kriging  alpha=2 n_pts= 512  median=61.0 ms  IQR=4.0 ms  n_loc=257536
+  method=kriging  alpha=2 n_pts=1024  median=109.0 ms  IQR=2.0 ms  n_loc=515072
+  method=extended alpha=2 n_pts=   8  median=53.4 ms  IQR=0.0 ms  n_loc=4024
+  method=extended alpha=2 n_pts=  16  median=79.4 ms  IQR=0.0 ms  n_loc=8048
+  method=extended alpha=2 n_pts=  32  median=127.6 ms  IQR=0.0 ms  n_loc=16096
+  method=extended alpha=2 n_pts=  64  median=242.2 ms  IQR=0.0 ms  n_loc=32192
+  method=extended alpha=2 n_pts= 128  median=NA (not PD)  IQR=0.0 ms  n_loc=64384
+  method=extended alpha=2 n_pts= 256  median=NA (not PD, skipped)  n_loc=128768
+  method=extended alpha=2 n_pts= 512  median=NA (not PD, skipped)  n_loc=257536
+  method=extended alpha=2 n_pts=1024  median=NA (not PD, skipped)  n_loc=515072
+There were 50 or more warnings (use warnings() to see the first 50)
+Saved study_timing.csv and study_timing.rds
+
+=== Timing table: median wall-clock time (seconds), n_rep = 5 ===
+Graph: Chicago (503 edges)
+
+                         16,096   32,192   64,384  128,768  257,536  515,072 
+---------------------------------------------------------------------------- 
+Method A  alpha=1         0.011    0.019    0.050    0.198     1.23     7.25 
+Method A  alpha=2         0.014    0.030    0.137     1.60    16.86   134.99 
+Method B  alpha=1         0.009    0.012    0.018    0.030    0.050    0.099 
+Method B  alpha=2         0.012    0.015    0.021    0.033    0.061    0.109 
+Extended  alpha=1         0.105    0.184    0.401    0.857     1.92     4.12 
+Extended  alpha=2         0.128    0.242    —      —      —      —   
+Spectral  alpha=1         0.657     1.09     2.02     3.88     7.88    17.91 
+Saved study_table.csv
+alpha=1: n_loc=100600  range=[-0.82,1.08]
+Adding observations...
+Assuming the observations are normalized by the length of the edge.
+Saved chicago_field_alpha1.png
+alpha=2: n_loc=100600  range=[-0.48,0.62]
+Adding observations...
+Assuming the observations are normalized by the length of the edge.
+Saved chicago_field_alpha2.png
+spectral: n_loc=100600  range=[-3.27,3.40]
+Adding observations...
+Assuming the observations are normalized by the length of the edge.
+null device 
+          1 
+Saved chicago_field_spectral.png
