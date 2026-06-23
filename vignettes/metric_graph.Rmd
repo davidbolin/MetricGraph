@@ -402,18 +402,17 @@ should be given in normalized distance or not.
 
 ## Methods for working with real data
 
-To illustrate the useage of `metric_graph` on some real data, we use the 
-`osmdata` package to download data from OpenStreetMap. In the following code,
-we extract highways for a part of the city of Copenhagen:
+To illustrate the useage of `metric_graph` on some real data, we
+download OSM data with the `fetch_osm()` helper.
+In the following code we extract highways for a part of the city of
+Copenhagen:
 ```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
-library(osmdata)
 bbox <- c(12.5900, 55.6000, 12.6850, 55.6450)
-call <- opq(bbox)
-call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
-                                                        "secondary", "tertiary"))
-data_sf <- osmdata_sf(call)
+data_sf <- fetch_osm(bbox = bbox,
+                     value = c("motorway", "primary",
+                               "secondary", "tertiary"))
 
-graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
+graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry,
   function(dat){sf::st_coordinates(dat)[,1:2]}))
 graph5$plot(vertex_size = 0)
 ```
@@ -451,6 +450,15 @@ We can see now that `graph5` automatically has the correct CRS:
 
 ```{r}
 graph5
+```
+
+As a shortcut, the OSM download and the graph construction can be done
+in a single call with `metric_graph_from_osm()`:
+
+```{r, eval=FALSE}
+graph5 <- metric_graph_from_osm(bbox  = c(12.5900, 55.6000, 12.6850, 55.6450),
+                                value = c("motorway", "primary",
+                                          "secondary", "tertiary"))
 ```
 
 This also allows us to plot the graph interactively with the underlying world map, if the data has a coordinate reference system, by setting `type = "mapview"` in the
@@ -507,10 +515,12 @@ graph5 <- metric_graph$new(data_sf, include_edge_weights=c("highway", "lanes"))
 graph5$get_edge_weights()
 ```
 
-The same idea also works is one has an `sf` object instead. Let us obtain the `sf` version from the `osmdata` object:
+The same idea also works is one has an `sf` object instead. Let us
+obtain the `sf` version from the `osmdata` object by extracting the
+`osm_lines` element:
 
 ```{r}
-data_sf <- osmdata_sf(call)
+data_sf <- data_sf$osm_lines
 ```
 
 We can now directly create the metric graph object:

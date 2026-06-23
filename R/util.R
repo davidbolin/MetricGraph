@@ -1429,6 +1429,13 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
         if(is.null(points)){
           dists <- sf::st_distance(sf_points, which = "Great Circle")
         } else{
+          ## Broadcast a single point to match `lines` so we can use
+          ## by_element = TRUE; this matches the non-longlat branch
+          ## above and the callers' one-to-many distance pattern.
+          if(nrow(points) == 1L && nrow(lines) > 1L){
+            points <- matrix(rep(points, each = nrow(lines)),
+                             nrow = nrow(lines), ncol = ncol(points))
+          }
           sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
           if(transform){
             sf_p_points <- sf::st_transform(sf_p_points,  crs = 4326)
@@ -1439,16 +1446,23 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
         units(dists) <- length_unit
         units(dists) <- NULL
     } else{
-        sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string) 
+        sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string)
         if(transform){
           sp_points <- sp::spTransform(sp_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
         }
         if(is.null(points)){
           dists <- sp::spDists(sp_points, longlat = TRUE) #* fact
         } else{
-          sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
+          ## Broadcast a single point to match `lines` so we can use
+          ## diagonal = TRUE; same one-to-many pattern as the
+          ## non-longlat branch above.
+          if(nrow(points) == 1L && nrow(lines) > 1L){
+            points <- matrix(rep(points, each = nrow(lines)),
+                             nrow = nrow(lines), ncol = ncol(points))
+          }
+          sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string)
           if(transform){
-            sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))          
+            sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
           }
           dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) #* fact
         }
