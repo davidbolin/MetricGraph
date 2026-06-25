@@ -1957,9 +1957,17 @@ predict.inla_metric_graph_spde <- function(object,
   name_locations <- .bru_input_to_name(bru_fit$bru_info$model$effects$field$main$input$input)
   original_data <- object$original_data
 
-  group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
+  group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variables", exact = TRUE)
+  # Fall back to the (legacy / partial-match) singular attribute name if the
+  # canonical plural attribute is not present.
+  if (is.null(group_variables)) {
+    group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
+  }
+  if (is.null(group_variables)) {
+    group_variables <- ".none"
+  }
 
-  if (group_variables == ".none") {
+  if (identical(group_variables, ".none")) {
     graph_tmp$add_observations(
       data = original_data,
       edge_number = ".edge_number",
@@ -2005,9 +2013,9 @@ predict.inla_metric_graph_spde <- function(object,
 
   new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
 
-  if (group_variables == ".none") {
+  if (identical(group_variables, ".none")) {
     group_variables <- NULL
-  } else if (group_variables == ".group") {
+  } else if (identical(group_variables, ".group")) {
     if (!(".group" %in% names(new_data))) {
       if (length(unique(original_data[[".group"]])) == 1) {
         new_data[[".group"]] <- rep(unique(original_data[[".group"]]), length(new_data[[".edge_number"]]))
@@ -2016,9 +2024,17 @@ predict.inla_metric_graph_spde <- function(object,
   }
 
   if (!is.null(group_variables)) {
-    if (!(group_variables %in% names(new_data))) {
+    missing_group <- setdiff(group_variables, names(new_data))
+    if (length(missing_group) > 0) {
       warning("The replicate variable was not found in newdata. Predictions were only given for the first replicate.")
-      new_data[[".group"]] <- rep(original_data[[group_variables]][1], length(new_data[[".edge_number"]]))
+      n_pred <- length(new_data[[".edge_number"]])
+      for (gv in missing_group) {
+        if (identical(gv, ".group")) {
+          new_data[[".group"]] <- rep(original_data[[".group"]][1], n_pred)
+        } else {
+          new_data[[gv]] <- rep(original_data[[gv]][1], n_pred)
+        }
+      }
     }
   }
 

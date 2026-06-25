@@ -242,9 +242,11 @@ test_that("predict.rspde_lme matches manual prediction (alpha=1 FEM, multi-rep)"
 test_that("predict.rspde_lme matches manual prediction (fractional FEM, multi-rep)", {
   skip_if_not_installed("rSPDE")
   graph <- .build_fem_multirep_graph(n_repl = 3L, alpha = 1, seed = 11)
-  fit <- graph_lme(y ~ -1, graph = graph,
+  # suppressWarnings: small test data can yield a non-positive-definite Hessian,
+  # which only triggers a fallback optimizer (does not affect the result tested).
+  fit <- suppressWarnings(graph_lme(y ~ -1, graph = graph,
                    model = list(type = "WhittleMatern", fem = TRUE),
-                   model_options = list(start_nu = 0.5))
+                   model_options = list(start_nu = 0.5)))
   expect_true(inherits(fit, "rspde_lme"))
   # Sanity: this fit should actually be fractional.
   nu_val <- fit$coeff$random_effects[["nu"]]
@@ -492,11 +494,13 @@ test_that("non-stationary FEM CV is not catastrophically worse than stationary F
   graph$add_observations(data = df_all, normalized = TRUE, verbose = 0,
                          group = "repl")
 
-  fit_ns <- graph_lme(y ~ -1, graph = graph,
+  # suppressWarnings: small test data can yield a non-positive-definite Hessian,
+  # which only triggers a fallback optimizer (does not affect what is tested).
+  fit_ns <- suppressWarnings(graph_lme(y ~ -1, graph = graph,
                 model = list(type = "WhittleMatern", alpha = 1, fem = TRUE,
-                             B.range = B.range, B.sigma = B.sigma))
-  fit_stat <- graph_lme(y ~ -1, graph = graph,
-                model = list(type = "WhittleMatern", alpha = 1, fem = TRUE))
+                             B.range = B.range, B.sigma = B.sigma)))
+  fit_stat <- suppressWarnings(graph_lme(y ~ -1, graph = graph,
+                model = list(type = "WhittleMatern", alpha = 1, fem = TRUE)))
 
   # The non-stationary fit must build the correct operator (the upstream
   # bug it's guarding against).
@@ -763,8 +767,10 @@ test_that("posterior_crossvalidation respects fit$which_repl across all variants
                      repl = as.character(gd[[".group"]][idx]))
     g2$add_observations(data = df, normalized = TRUE, verbose = 0,
                         group = if (length(unique(df$repl)) > 1) "repl" else NULL)
-    graph_lme(y ~ -1, graph = g2,
-              model = list(type = "WhittleMatern", alpha = 1, fem = TRUE))
+    # suppressWarnings: small test data can yield a non-positive-definite
+    # Hessian, which only triggers a fallback optimizer.
+    suppressWarnings(graph_lme(y ~ -1, graph = g2,
+              model = list(type = "WhittleMatern", alpha = 1, fem = TRUE)))
   }
 
   cases <- list(
@@ -778,7 +784,7 @@ test_that("posterior_crossvalidation respects fit$which_repl across all variants
       formula = y ~ -1, graph = graph,
       model   = list(type = "WhittleMatern", alpha = 1, fem = TRUE))
     if (!is.null(reps)) fit_args$which_repl <- reps
-    fit_full <- do.call(graph_lme, fit_args)
+    fit_full <- suppressWarnings(do.call(graph_lme, fit_args))
 
     fit_fresh <- make_fresh_fit(if (is.null(reps)) 1:3 else reps)
 
