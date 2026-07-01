@@ -2000,15 +2000,36 @@ predict.inla_metric_graph_spde <- function(object,
     ".distance_on_edge"
   ))
 
-  # for(name_column in names_columns){
-  #   new_data[[name_column]] <- rep(NA, n_locations)
-  # }
   if (data_coords == "PtE") {
     new_data[[".edge_number"]] <- data[[name_locations]][, 1]
     new_data[[".distance_on_edge"]] <- data[[name_locations]][, 2]
   } else {
     new_data[[".coord_x"]] <- data[[name_locations]][, 1]
     new_data[[".coord_y"]] <- data[[name_locations]][, 2]
+  }
+
+  # The internal refit below uses the full component formula, so every covariate
+  # (and the response) present in the original data must have a value at each of
+  # the `n_locations` prediction points. Recycle user-supplied covariates (e.g. a
+  # scalar `day = 1`) to the right length, and NA-fill any that were not supplied.
+  # Internal book-keeping columns (".loc_idx", ".group", ...) and the grouping /
+  # replicate variables are handled separately and are excluded here.
+  group_cols <- if (identical(group_variables, ".none")) {
+    character(0)
+  } else {
+    group_variables
+  }
+  covariate_columns <- setdiff(
+    grep("^\\.", names_columns, value = TRUE, invert = TRUE),
+    group_cols
+  )
+  for (name_column in covariate_columns) {
+    col <- new_data[[name_column]]
+    if (is.null(col)) {
+      new_data[[name_column]] <- rep(NA, n_locations)
+    } else if (length(col) != n_locations) {
+      new_data[[name_column]] <- rep(col, length.out = n_locations)
+    }
   }
 
   new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
@@ -2098,10 +2119,31 @@ predict.inla_metric_graph_spde <- function(object,
 
   spde____model <- graph_spde(graph_tmp, alpha = object$alpha, directional = object$directional)
 
-  cmp_c <- as.character(cmp)
+  # The user's component formula `cmp` may be one-sided (`~ components`, the
+  # natural 'inlabru' form) or two-sided (`response ~ components`). Replace the
+  # user's model-object name with the internal `spde____model` in the RHS and
+  # rebuild a two-sided formula (the internal refit below needs the response).
   name_model <- deparse(substitute(object))
-  cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
-  cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
+  rhs_txt <- paste(deparse(cmp[[length(cmp)]]), collapse = " ")
+  rhs_txt <- sub(name_model, "spde____model", rhs_txt)
+  if (length(cmp) == 3L) {
+    # Two-sided: keep the user-supplied response.
+    lhs_txt <- paste(deparse(cmp[[2L]]), collapse = " ")
+  } else {
+    # One-sided: recover the response name from the fitted likelihood so the
+    # internal refit knows what to fit against.
+    lhood <- bru_fit[["bru_info"]][["lhoods"]][[1]]
+    if (!is.null(lhood[["formula"]]) && length(lhood[["formula"]]) == 3L) {
+      lhs_txt <- paste(deparse(lhood[["formula"]][[2L]]), collapse = " ")
+    } else {
+      stop(paste0(
+        "Could not determine the response variable from the fitted model. ",
+        "Please supply a two-sided component formula, e.g. ",
+        "'y ~ ...', to predict()."
+      ))
+    }
+  }
+  cmp <- stats::as.formula(paste(lhs_txt, "~", rhs_txt), env = environment())
 
   new_data_tmp <- graph_data_spde(spde____model,
     loc_name = name_locations,

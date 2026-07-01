@@ -172,6 +172,125 @@ test_that("Inlabru predict works with multiple group variables (regression: cond
     expect_true(is.finite(m))
 })
 
+# Helper: fit an SPDE model with a `day` covariate and a fixed intercept, using
+# the natural one-sided inlabru component formula + bru_obs likelihood. Returns
+# the fitted model, the SPDE model object, mesh prediction locations and their
+# count, so tests can call predict() with different `cmp` forms / covariates
+# against a single shared fit.
+.fit_covariate_setup <- function(seed = 7) {
+    set.seed(seed)
+    edge1 <- rbind(c(0, 0), c(1, 0))
+    edge2 <- rbind(c(1, 0), c(1, 1))
+    edge3 <- rbind(c(0, 0), c(-1, 1))
+    graph <- metric_graph$new(edges = list(edge1, edge2, edge3), verbose = 0)
+    n <- 30
+    df <- data.frame(
+        y = rnorm(n) + 0.5 * rep(1:5, length.out = n),
+        day = rep(1:5, length.out = n),
+        edge_number = rep(c(1, 2, 3), length.out = n),
+        distance_on_edge = rep(c(0.2, 0.5, 0.8), length.out = n)
+    )
+    graph$add_observations(
+        data = df, normalized = TRUE, verbose = 0, suppress_warnings = TRUE
+    )
+    spde_model <- graph_spde(graph)
+    data_spde <- graph_data_spde(spde_model, loc_name = "loc")
+    cmp <- ~ Intercept(1) + b_lin(day, model = "linear") +
+        field(loc, model = spde_model)
+    fit <- bru(cmp,
+        bru_obs(
+            formula = y ~ Intercept + b_lin + field,
+            data = data_spde[["data"]], is_rowwise = TRUE
+        ),
+        options = list(
+            num.threads = "1:1", verbose = FALSE,
+            control.inla = list(int.strategy = "eb")
+        )
+    )
+    graph$build_mesh(n = 20)
+    data_list <- graph$get_mesh_locations(bru = TRUE, loc_name = "loc")
+    list(
+        spde_model = spde_model, fit = fit, data_list = data_list,
+        n_loc = nrow(data_list[["loc"]])
+    )
+}
+
+test_that("Inlabru predict accepts a one-sided component formula (regression: invalid model formula in ExtractVars)", {
+    skip_if_not_installed("INLA")
+    skip_if_not_installed("inlabru")
+    library(INLA)
+    library(inlabru)
+    s <- .fit_covariate_setup()
+    spde_model <- s$spde_model
+    # A one-sided `cmp` is the natural inlabru form; predict used to assume a
+    # two-sided formula and failed with
+    #   Error in terms.formula(components) : invalid model formula in ExtractVars
+    cmp <- ~ Intercept(1) + b_lin(day, model = "linear") +
+        field(loc, model = spde_model)
+    nd <- s$data_list
+    nd$day <- 1 # scalar covariate, recycled internally
+    pred <- predict(spde_model, cmp, s$fit,
+        newdata = nd, formula = ~ Intercept + b_lin + field
+    )
+    expect_length(pred$pred$mean, s$n_loc)
+    expect_true(all(is.finite(pred$pred$mean)))
+})
+
+test_that("Inlabru predict one-sided and two-sided component formulas agree (same fit)", {
+    skip_if_not_installed("INLA")
+    skip_if_not_installed("inlabru")
+    library(INLA)
+    library(inlabru)
+    s <- .fit_covariate_setup(seed = 3)
+    spde_model <- s$spde_model
+    # For a single fit, predict must reconstruct the same internal formula
+    # whether `cmp` is given one-sided or two-sided.
+    cmp_one <- ~ Intercept(1) + b_lin(day, model = "linear") +
+        field(loc, model = spde_model)
+    cmp_two <- y ~ Intercept(1) + b_lin(day, model = "linear") +
+        field(loc, model = spde_model)
+    nd <- s$data_list
+    nd$day <- 1
+    # Fixed nonzero seed + single thread so posterior sampling is reproducible.
+    p_one <- predict(spde_model, cmp_one, s$fit,
+        newdata = nd, formula = ~ Intercept + b_lin + field,
+        seed = 1L, num.threads = "1:1"
+    )
+    p_two <- predict(spde_model, cmp_two, s$fit,
+        newdata = nd, formula = ~ Intercept + b_lin + field,
+        seed = 1L, num.threads = "1:1"
+    )
+    # Tolerance well below the ~1e-2 Monte-Carlo spread between genuinely
+    # different samplings, but above residual numerical noise in the refit.
+    expect_equal(p_one$pred$mean, p_two$pred$mean, tolerance = 1e-3)
+})
+
+test_that("Inlabru predict recycles a scalar covariate in newdata (regression: different number of elements than coordinates)", {
+    skip_if_not_installed("INLA")
+    skip_if_not_installed("inlabru")
+    library(INLA)
+    library(inlabru)
+    s <- .fit_covariate_setup(seed = 5)
+    spde_model <- s$spde_model
+    cmp <- ~ Intercept(1) + b_lin(day, model = "linear") +
+        field(loc, model = spde_model)
+    # A scalar `day` in newdata used to raise
+    #   "1 has a different number of elements than the number of coordinates!"
+    # The b_lin term should also shift predictions when `day` changes.
+    nd1 <- s$data_list
+    nd1$day <- 1
+    nd5 <- s$data_list
+    nd5$day <- 5
+    p1 <- predict(spde_model, cmp, s$fit,
+        newdata = nd1, formula = ~ Intercept + b_lin + field
+    )
+    p5 <- predict(spde_model, cmp, s$fit,
+        newdata = nd5, formula = ~ Intercept + b_lin + field
+    )
+    expect_true(all(is.finite(p1$pred$mean)))
+    expect_true(mean(p5$pred$mean) > mean(p1$pred$mean))
+})
+
 
 # test_that("Inlabru predict method works for alpha = 2", {
 #     skip_if_not_installed("INLA")
