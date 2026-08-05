@@ -102,10 +102,10 @@ static Eigen::MatrixXd build_S2(const Eigen::VectorXd& t_abs, double l_e,
     Sbb(1,3) = -r2_s(l_e, kappa, c, 2);
     Sbb(3,1) =  Sbb(1,3);
     Sbb(3,3) =  Sbb(1,1);
-    Sbb(1,0) = -r2_s(0.0 - 0.0, kappa, c, 1);
-    Sbb(1,2) = -r2_s(0.0 - l_e, kappa, c, 1);
-    Sbb(3,0) = -r2_s(l_e - 0.0, kappa, c, 1);
-    Sbb(3,2) = -r2_s(l_e - l_e, kappa, c, 1);
+    Sbb(1,0) = r2_s(0.0 - 0.0, kappa, c, 1);
+    Sbb(1,2) = r2_s(0.0 - l_e, kappa, c, 1);
+    Sbb(3,0) = r2_s(l_e - 0.0, kappa, c, 1);
+    Sbb(3,2) = r2_s(l_e - l_e, kappa, c, 1);
     Sbb(0,1) = Sbb(1,0); Sbb(2,1) = Sbb(1,2);
     Sbb(0,3) = Sbb(3,0); Sbb(2,3) = Sbb(3,2);
 
@@ -115,14 +115,13 @@ static Eigen::MatrixXd build_S2(const Eigen::VectorXd& t_abs, double l_e,
         double dle = t_abs[i] - l_e;
         Sxb(i,0) =  r2_s( d0,  kappa, c, 0);
         Sxb(i,2) =  r2_s( dle, kappa, c, 0);
-        Sxb(i,1) = -r2_s(-d0,  kappa, c, 1);
-        Sxb(i,3) = -r2_s(-dle, kappa, c, 1);
+        Sxb(i,1) =  r2_s(-d0,  kappa, c, 1);
+        Sxb(i,3) =  r2_s(-dle, kappa, c, 1);
     }
     return Sxb * Sbb.inverse();
 }
 
 // alpha = 2: S and Sigma*_e — O(m^2), used by direct
-// Sign convention: u'_code = -u'_physical  (matches Kirchhoff CoB in the package)
 static void build_bridge2(const Eigen::VectorXd& t_abs, double l_e,
                            double kappa, double tau,
                            Eigen::MatrixXd& S, Eigen::MatrixXd& Ss)
@@ -148,11 +147,11 @@ static void build_bridge2(const Eigen::VectorXd& t_abs, double l_e,
     Sbb(3,1) =  Sbb(1,3);
     Sbb(3,3) =  Sbb(1,1);
 
-    // {1,3} x {0,2}: -r_2(D_dv, ., 1), D_dv=outer({0,l_e},{0,l_e},-)
-    Sbb(1,0) = -r2_s(0.0 - 0.0, kappa, c, 1);   // = 0
-    Sbb(1,2) = -r2_s(0.0 - l_e, kappa, c, 1);
-    Sbb(3,0) = -r2_s(l_e - 0.0, kappa, c, 1);
-    Sbb(3,2) = -r2_s(l_e - l_e, kappa, c, 1);   // = 0
+    // {1,3} x {0,2}: r_2(D_dv, ., 1), D_dv=outer({0,l_e},{0,l_e},-)
+    Sbb(1,0) = r2_s(0.0 - 0.0, kappa, c, 1);   // = 0
+    Sbb(1,2) = r2_s(0.0 - l_e, kappa, c, 1);
+    Sbb(3,0) = r2_s(l_e - 0.0, kappa, c, 1);
+    Sbb(3,2) = r2_s(l_e - l_e, kappa, c, 1);   // = 0
 
     // {0,2} x {1,3}: transpose of {1,3} x {0,2}
     Sbb(0,1) = Sbb(1,0);
@@ -163,15 +162,15 @@ static void build_bridge2(const Eigen::VectorXd& t_abs, double l_e,
     // Sigma_xb (m x 4)
     // D_xv = outer(t_abs, {0,l_e}, -)
     // cols {0,2}: r_2(D_xv, ., 0)
-    // cols {1,3}: -r_2(-D_xv, ., 1)
+    // cols {1,3}: r_2(-D_xv, ., 1)
     Eigen::MatrixXd Sxb(m, 4);
     for (int i = 0; i < m; i++) {
         double d0  = t_abs[i];
         double dle = t_abs[i] - l_e;
         Sxb(i,0) =  r2_s( d0,  kappa, c, 0);
         Sxb(i,2) =  r2_s( dle, kappa, c, 0);
-        Sxb(i,1) = -r2_s(-d0,  kappa, c, 1);
-        Sxb(i,3) = -r2_s(-dle, kappa, c, 1);
+        Sxb(i,1) =  r2_s(-d0,  kappa, c, 1);
+        Sxb(i,3) =  r2_s(-dle, kappa, c, 1);
     }
 
     // Sigma_xx (m x m)
@@ -280,7 +279,7 @@ struct MCEntry {
 };
 
 // Alpha = 2: 2-D Matérn-3/2 process
-// State: [u, u'_code] (u'_code = -u'_physical)
+// State: [u, u']
 // Draws 2*(n) normals: 2 for initial state + 2*(n-1) for transitions.
 // Unique-lag cache: builds (A, chol(Omega)) once per distinct h.
 static Eigen::MatrixXd markov2(const std::vector<double>& t_aug,
@@ -400,12 +399,11 @@ Eigen::VectorXd draw_edge_kriging_cpp(
         Eigen::VectorXd x_int(m);
         for (int i = 0; i < m; i++) x_int[i] = X_aug(0, i+1);
 
-        // Sign convention: u'_code = -u'_physical
         Eigen::Vector4d x_ends_state;
-        x_ends_state[0] =  X_aug(0, 0);
-        x_ends_state[1] = -X_aug(1, 0);
-        x_ends_state[2] =  X_aug(0, m+1);
-        x_ends_state[3] = -X_aug(1, m+1);
+        x_ends_state[0] = X_aug(0, 0);
+        x_ends_state[1] = X_aug(1, 0);
+        x_ends_state[2] = X_aug(0, m+1);
+        x_ends_state[3] = X_aug(1, m+1);
 
         Eigen::MatrixXd S = build_S2(t_abs, l_e, kappa, tau);
 

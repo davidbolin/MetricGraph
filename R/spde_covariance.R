@@ -358,7 +358,7 @@ spde_covariance <- function(P,
   Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                   kappa = kappa, tau = tau,
                                   deriv = 2)
-  Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa,
+  Sigma[d.index, -d.index] <- r_2(D[3:4-2,], kappa = kappa,
                                    tau = tau, deriv = 1)
   Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 
@@ -384,7 +384,7 @@ spde_covariance <- function(P,
       Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                       kappa = kappa, tau = tau,
                                       deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
+      Sigma[d.index, -d.index] <- r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index,  -d.index])
 
@@ -405,7 +405,7 @@ spde_covariance <- function(P,
       Sigma[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                        kappa = kappa, tau = tau,
                                        deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
+      Sigma[d.index, -d.index] <- r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 

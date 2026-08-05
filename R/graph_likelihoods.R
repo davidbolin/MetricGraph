@@ -415,7 +415,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
         S[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                      kappa = kappa, tau = 1/reciprocal_tau,
                                      deriv = 2)
-        S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+        S[d.index, -d.index] <- r_2(D[1:2,], kappa = kappa,
                                     tau = 1/reciprocal_tau, deriv = 1)
         S[-d.index, d.index] <- t(S[d.index, -d.index])
 
@@ -785,7 +785,7 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       S[d.index, d.index] <- -r_2(matrix(c(0, -edge_l[j], edge_l[j], 0), 2, 2),
                                  kappa = kappa, tau = 1/reciprocal_tau,
                                  deriv = 2)
-      S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+      S[d.index, -d.index] <- r_2(D[1:2,], kappa = kappa,
                                  tau = 1/reciprocal_tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 

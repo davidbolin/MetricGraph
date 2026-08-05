@@ -545,7 +545,7 @@ sample_alpha2_line <-function(kappa, tau, sigma_e,
                                    tau = tau, deriv = 0)
   Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l_e))),
                                   kappa = kappa, tau = tau, deriv = 2)
-  Sigma[d.index, -d.index] <- -r_2(D[index_E-2,],kappa = kappa,
+  Sigma[d.index, -d.index] <- r_2(D[index_E-2,],kappa = kappa,
                                    tau = tau, deriv = 1)
   Sigma[-d.index,  d.index] <- t(Sigma[d.index,  -d.index])
 

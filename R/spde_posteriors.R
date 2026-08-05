@@ -190,7 +190,7 @@ posterior_mean_obs_alpha2 <- function(theta,
       S[d.index, d.index] <- -r_2(as.matrix(dist(c(0, l))),
                                   kappa = kappa, tau = tau,
                                   deriv = 2)
-      S[d.index, -d.index] <- -r_2(D[1:2, ], kappa = kappa,
+      S[d.index, -d.index] <- r_2(D[1:2, ], kappa = kappa,
                                    tau = tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 
@@ -225,7 +225,7 @@ posterior_mean_obs_alpha2 <- function(theta,
       S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                   kappa = kappa, tau = tau,
                                   deriv = 2)
-      S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+      S[d.index, -d.index] <- r_2(D[1:2,], kappa = kappa,
                                    tau = tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 
@@ -700,7 +700,7 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
     S[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                 kappa = kappa, tau = tau,
                                 deriv = 2)
-    S[d.index, -d.index] <- -r_2(D[1:2,], kappa = kappa,
+    S[d.index, -d.index] <- r_2(D[1:2,], kappa = kappa,
                                  tau = tau, deriv = 1)
     S[-d.index, d.index] <- t(S[d.index, -d.index])
 

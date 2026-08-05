@@ -1,19 +1,12 @@
 # Unconditional prior simulation of Whittle-Matérn fields on metric graphs.
 #
-# Two algorithms from Section 6.6 of the paper:
 #   Method A ("direct")  – O(m^3) per edge via dense Cholesky of Sigma*_e.
 #   Method B ("kriging") – O(m)   per edge via Markov recursion + correction.
 #
-# Public entry points:
+# Public methods:
 #   simulate.metric_graph()  – serial, or parallel when parallel=TRUE
 #   simulate_parallel()      – thin wrapper around simulate.metric_graph
-#
-# Internal helpers (no man pages, @noRd):
-#   bridge_alpha1 / bridge_alpha2       – bridge predictor S_e, Sigma*_e
-#   sim_markov_alpha1 / sim_markov_alpha2 – Markov chain simulation
-#   draw_edge_direct / draw_edge_kriging  – per-edge draw (Method A / B)
-#   .draw_vertex_state_wm               – global vertex state U^sim
-# ---------------------------------------------------------------------------
+
 
 
 # ============================================================
@@ -44,13 +37,13 @@ bridge_alpha2 <- function(t_abs, l_e, kappa, tau) {
   D_dd     <- as.matrix(dist(t_ends))
   Sigma_bb[c(2,4), c(2,4)] <- -r_2(D_dd, kappa, tau, 2)
   D_dv     <- outer(t_ends, t_ends, `-`)
-  Sigma_bb[c(2,4), c(1,3)] <- -r_2(D_dv, kappa, tau, 1)
+  Sigma_bb[c(2,4), c(1,3)] <- r_2(D_dv, kappa, tau, 1)
   Sigma_bb[c(1,3), c(2,4)] <- t(Sigma_bb[c(2,4), c(1,3)])
 
   D_xv     <- outer(t_abs, t_ends, `-`)
   Sigma_xb <- matrix(0, m, 4)
   Sigma_xb[, c(1,3)] <-  r_2(D_xv,  kappa, tau, 0)
-  Sigma_xb[, c(2,4)] <- -r_2(-D_xv, kappa, tau, 1)
+  Sigma_xb[, c(2,4)] <-  r_2(-D_xv, kappa, tau, 1)
 
   D_xx     <- outer(t_abs, t_abs, `-`)
   Sigma_xx <- r_2(D_xx, kappa, tau, 0)
@@ -148,12 +141,12 @@ bridge_s_alpha2 <- function(t_abs, l_e, kappa, tau) {
   D_vv     <- outer(t_ends, t_ends, `-`)
   Sigma_bb[c(1,3), c(1,3)] <-  r_2(D_vv,  kappa, tau, 0)
   Sigma_bb[c(2,4), c(2,4)] <- -r_2(abs(outer(t_ends, t_ends, `-`)), kappa, tau, 2)
-  Sigma_bb[c(2,4), c(1,3)] <- -r_2(outer(t_ends, t_ends, `-`), kappa, tau, 1)
+  Sigma_bb[c(2,4), c(1,3)] <-  r_2(outer(t_ends, t_ends, `-`), kappa, tau, 1)
   Sigma_bb[c(1,3), c(2,4)] <-  t(Sigma_bb[c(2,4), c(1,3)])
   Sigma_xb <- matrix(0, m, 4)
   D_xv     <- outer(t_abs, t_ends, `-`)
   Sigma_xb[, c(1,3)] <-  r_2(D_xv,  kappa, tau, 0)
-  Sigma_xb[, c(2,4)] <- -r_2(-D_xv, kappa, tau, 1)
+  Sigma_xb[, c(2,4)] <-  r_2(-D_xv, kappa, tau, 1)
   Sigma_xb %*% solve(Sigma_bb)
 }
 
@@ -173,9 +166,8 @@ draw_edge_kriging <- function(kappa, tau, b_e, l_e, t_abs, alpha) {
   } else {
     X_aug  <- sim_markov_alpha2(t_aug, kappa, tau)
     x_int  <- X_aug[1, idx_int]
-    # Sign convention: u'_code = -u'_physical (matches Kirchhoff CoB in package)
-    x_ends_state <- c(X_aug[1, 1], -X_aug[2, 1],
-                      X_aug[1, n_aug], -X_aug[2, n_aug])
+    x_ends_state <- c(X_aug[1, 1], X_aug[2, 1],
+                      X_aug[1, n_aug], X_aug[2, n_aug])
     S      <- bridge_s_alpha2(t_abs, l_e, kappa, tau)
     x_int  + as.vector(S %*% (b_e - x_ends_state))
   }

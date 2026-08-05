@@ -1,9 +1,14 @@
 # MetricGraph (development version)
 
+* Fixed a sign-convention inconsistency in the exact α = 2 codes. The 
+  observation-/bridge-side covariance blocks treated the
+  endpoint-derivative states as −u′, while the prior precision (`Q00` /
+  `Qalpha2`) and the vertex constraints used +u′. Because both enter the same
+  quadratic forms, α = 2 covariances, likelihoods, posteriors and exact samples
+  were biased on graphs containing cycles. 
 * Added `simulate.metric_graph()` S3 method and `simulate_parallel()` for
-  unconditional prior simulation of Whittle-Matérn fields (Section 6.6 of the
-  paper): Method A (`method = "direct"`, O(m³) per edge), Method B
-  (`method = "kriging"`, O(m) per edge), and the extended method
+  unconditional prior simulation of Whittle-Matérn fields: Method A (`method = "direct"`, 
+  O(m³) per edge), Method B (`method = "kriging"`, O(m) per edge), and the extended method
   (`method = "extended"`, single sparse Cholesky on the graph with simulation
   locations promoted to vertices). Both α = 1 and α = 2 are supported.
 * C++ (Rcpp/Eigen) implementations of the per-edge bridge draws,
