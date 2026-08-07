@@ -55,3 +55,6 @@
 "extended",2,256,128768,NA,NA
 "extended",2,512,257536,NA,NA
 "extended",2,1024,515072,NA,NA
+"isotropic_exact",NA,8,4024,12198,364.999999999998
+"isotropic_exact",NA,16,8048,77390,3092.00000000004
+"isotropic_exact",NA,32,16096,602604,35177.0000000001

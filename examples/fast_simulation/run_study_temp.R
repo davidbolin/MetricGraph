@@ -120,12 +120,30 @@ master_seed <- 42L
 BC          <- 1L
 methods     <- c("direct", "kriging", "extended", "spectral")
 alphas      <- c(1L, 2L)
+spectral_scale_param <- 0.2
+isotropic_exact_pts  <- head(n_pts_vals, 3L)
 cat(sprintf("\nn_rep: %d\n", n_rep))
 cat(sprintf("Edges: %d,  n_pts sweep: %s\n", g$nE, paste(n_pts_vals, collapse = " ")))
 
 make_PtE <- function(n_pts) {
   t_norm <- seq(0, 1, length.out = n_pts + 2L)[-c(1L, n_pts + 2L)]
   do.call(rbind, lapply(seq_len(g$nE), function(e) cbind(e, t_norm)))
+}
+
+simulate_isotropic_exact <- function(PtE, scale_param = spectral_scale_param) {
+  D <- g$compute_resdist_PtE(PtE, normalized = TRUE)
+  Sigma <- Matrix::forceSymmetric(exp(-0.5 * scale_param^2 * D))
+  R <- tryCatch(
+    chol(Sigma),
+    error = function(e) {
+      stop(
+        "Exact isotropic covariance Cholesky failed: ",
+        conditionMessage(e),
+        call. = FALSE
+      )
+    }
+  )
+  as.numeric(t(R) %*% rnorm(nrow(PtE)))
 }
 
 results <- list()
@@ -152,12 +170,14 @@ for (alpha in alphas) {
         nPointsE_s <- rep(n_pts, nsegments(Net$lines))
 
         # warm-up
-        SimSpec(Net, nPointsE_s, nCopies = 1000L, scaleParam = 0.2)
+        SimSpec(Net, nPointsE_s, nCopies = 1000L,
+                scaleParam = spectral_scale_param)
 
         times_ms <- numeric(n_rep)
         for (r in seq_len(n_rep)) {
           t0 <- proc.time()[3]
-          SimSpec(Net, nPointsE_s, nCopies = 1000L, scaleParam = 0.2)
+          SimSpec(Net, nPointsE_s, nCopies = 1000L,
+                  scaleParam = spectral_scale_param)
           times_ms[r] <- (proc.time()[3] - t0) * 1000
         }
         med_ms <- median(times_ms)
@@ -236,6 +256,47 @@ for (alpha in alphas) {
   }
 }
 
+# Exact isotropic exponential covariance benchmark. This is kept separate from
+# the alpha loop because it is not a Whittle--Matern model.
+for (n_pts in isotropic_exact_pts) {
+  cond_i <- cond_i + 1L
+  PtE <- make_PtE(n_pts)
+
+  cat(sprintf("  method=%-15s n_pts=%4d", "isotropic_exact", n_pts))
+  flush.console()
+
+  set.seed(master_seed)
+  warmup <- simulate_isotropic_exact(PtE)
+  stopifnot(length(warmup) == nrow(PtE), all(is.finite(warmup)))
+  rm(warmup)
+
+  times_ms <- numeric(n_rep)
+  for (r in seq_len(n_rep)) {
+    gc()
+    set.seed(master_seed + r)
+    t0 <- proc.time()[3]
+    u_iso <- simulate_isotropic_exact(PtE)
+    times_ms[r] <- (proc.time()[3] - t0) * 1000
+    stopifnot(length(u_iso) == nrow(PtE), all(is.finite(u_iso)))
+    rm(u_iso)
+  }
+
+  med_ms <- median(times_ms)
+  iqr_ms <- IQR(times_ms)
+  cat(sprintf("  median=%.1f ms  IQR=%.1f ms  n_loc=%d\n",
+              med_ms, iqr_ms, nrow(PtE)))
+
+  results[[cond_i]] <- data.frame(
+    method    = "isotropic_exact",
+    alpha     = NA_integer_,
+    n_pts     = n_pts,
+    n_loc     = nrow(PtE),
+    median_ms = med_ms,
+    iqr_ms    = iqr_ms,
+    stringsAsFactors = FALSE
+  )
+}
+
 timing <- do.call(rbind, results)
 write.csv(timing, file.path(.sd, "study_timing.csv"), row.names = FALSE)
 saveRDS(timing,   file.path(.sd, "study_timing.rds"))
@@ -283,6 +344,19 @@ for (r in row_labels) {
     collapse = ""), "\n")
 }
 
+iso_timing <- timing[timing$method == "isotropic_exact", ]
+iso_col_names <- formatC(iso_timing$n_loc, format = "d", big.mark = ",")
+cat("\n=== Exact isotropic exponential: end-to-end median time (seconds) ===\n\n")
+cat(sprintf("%-22s", ""))
+cat(paste(sprintf("%9s", iso_col_names), collapse = ""), "\n")
+cat(strrep("-", 22 + 9 * nrow(iso_timing)), "\n")
+cat(sprintf("%-22s", "Isotropic exact"))
+cat(paste(sprintf("%9s",
+                  ifelse(iso_timing$median_ms < 1000,
+                         sprintf("%.3f", iso_timing$median_ms / 1000),
+                         sprintf("%.2f", iso_timing$median_ms / 1000))),
+          collapse = ""), "\n")
+
 wide <- as.data.frame(mat)
 wide <- cbind(method_alpha = row_labels, wide)
 write.csv(wide, file.path(.sd, "study_table.csv"), row.names = FALSE)
@@ -325,7 +399,8 @@ for (alpha in c(1L, 2L)) {
 # n_pts_fig + 2 so that after dropping the t=0/1 endpoints we keep n_pts_fig
 # interior points per edge (matching the kriging panels above).
 nPointsE_fig_s <- rep(n_pts_fig + 2L, nsegments(Net$lines))
-spec_df <- SimSpec(Net, nPointsE_fig_s, nCopies = 1000L, scaleParam = 0.2)
+spec_df <- SimSpec(Net, nPointsE_fig_s, nCopies = 1000L,
+                   scaleParam = spectral_scale_param)
 spec_df <- spec_df[spec_df$t > 0 & spec_df$t < 1, ]
 cat(sprintf("spectral: n_loc=%d  range=[%.2f,%.2f]\n",
             nrow(spec_df), min(spec_df$values), max(spec_df$values)))
